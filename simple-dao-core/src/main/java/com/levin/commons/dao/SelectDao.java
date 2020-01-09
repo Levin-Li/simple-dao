@@ -1,0 +1,367 @@
+package com.levin.commons.dao;
+
+import com.levin.commons.dao.annotation.order.OrderBy;
+
+import java.util.List;
+
+/**
+ * 查询接口
+ */
+public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
+
+
+    /**
+     * 是否有统计的列
+     *
+     * @return
+     */
+    boolean hasStatColumns();
+
+
+    /**
+     * 是否有选择的列
+     * <p>
+     * 2018.3.30 增加
+     *
+     * @return
+     */
+    boolean hasSelectColumns();
+
+    /**
+     * 设置查询结果集的的范围
+     *
+     * @param rowStartPosition ，从0开始， -1表示不设置限制
+     * @param rowCount         ,受影响的记录数，-1表示不设置限制
+     * @return
+     * @Deprecated 建议使用limit代替
+     * <p/>
+     * 目前只对查询有效，对于更新和删除语句无效
+     * @see #limit(int, int)
+     */
+    @Deprecated
+    SelectDao<T> range(int rowStartPosition, int rowCount);
+
+
+    /**
+     * 设置查询的分页
+     *
+     * @param pageIndex 第几页，从1开始
+     * @param pageSize  分页大小
+     * @return
+     * @see #limit(int, int)
+     */
+    SelectDao<T> page(int pageIndex, int pageSize);
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 增加select 列，列可以设置参数
+     *
+     * @param columns
+     * @param paramValues
+     * @return
+     */
+
+    SelectDao<T> select(String columns, Object... paramValues);
+
+    /**
+     * @param columns
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> appendSelectColumns(String columns, Object... paramValues);
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 在有必要的情况下，增加连接查询条件
+     * <p/>
+     * 关联 (join)
+     * JPQL 仍然支持和 SQL 中类似的关联语法：
+     * left out join/left join
+     * inner join
+     * left join fetch/inner join fetch
+     * <p/>
+     * <p/>
+     * left out join/left join 等， 都是允许符合条件的右边表达式中的 Entiies 为空（ 需要显式使用 left join/left outer join 的情况会比较少。 ）
+     * 例：
+     * // 获取 26 岁人的订单 , 不管 Order 中是否有 OrderItem
+     * select o from Order o left join o.orderItems where o.ower.age=26 order by o.orderid
+     * <p/>
+     * <p/>
+     * inner join 要求右边的表达式必须返回 Entities 。
+     * 例：
+     * // 获取 26 岁人的订单 ,Order 中必须要有 OrderItem
+     * select o from Order o inner join o.orderItems where o.ower.age=26 order by o.orderid
+     * <p/>
+     * <p/>
+     * ！！重要知识点 ： 在默认的查询中， Entity 中的集合属性默认不会被关联，集合属性默认是延迟加载 ( lazy-load ) 。那么， left fetch/left out fetch/inner join fetch 提供了一种灵活的查询加载方式来提高查询的性能。
+     * 例：
+     * private String QueryInnerJoinLazyLoad(){
+     * // 默认不关联集合属性变量 (orderItems) 对应的表
+     * Query find = em.createQuery("select o from Order o inner join o.orderItems where o.ower.age=26 order by o.orderid");
+     * List result = find.getResultList();
+     * if (result!=null && result.size()>0){
+     * // 这时获得 Order 实体中 orderItems( 集合属性变量 ) 为空
+     * Order order = (Order) result.get(0);
+     * // 当需要时， EJB3 Runtime 才会执行一条 SQL 语句来加载属于当前 Order 的
+     * //OrderItems
+     * Set<OrderItem> list = order.getOrderItems ();
+     * Iterator<OrderItem> iterator = list.iterator();
+     * if (iterator.hasNext()){
+     * OrderItem orderItem =iterator.next();
+     * System.out.println (" 订购产品名： "+ orderItem.getProductname());
+     * }
+     * }
+     * <p/>
+     * <p/>
+     * 为了避免 N+1 的性能问题，我们可以利用 join fetch 一次过用一条 SQL 语句把 Order 的所有信息查询出来
+     * select o from Order o inner join fetch o.orderItems where o.ower.age=26 order by o.orderid
+     *
+     * @param joinStatement inner join 和left join 表达式
+     */
+    SelectDao<T> join(String joinStatement);
+
+    /**
+     * 增加join语句
+     *
+     * @param joinStatements
+     * @return
+     */
+    SelectDao<T> appendJoin(String... joinStatements);
+
+    /**
+     * 增加抓取的集合属性
+     * 针对JPA有效
+     * <p>
+     * JPA 必须设置别名
+     *
+     * @param setAttrs 如 customers orders
+     * @return
+     */
+    SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs);
+
+    /**
+     * @param isLeftJoin
+     * @param setAttrs
+     * @return
+     */
+    SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 清除原来的group by ，并设置新的group by
+     *
+     * @param columns
+     * @return
+     */
+    SelectDao<T> groupBy(String... columns);
+
+    /**
+     * 增加group by字段
+     *
+     * @param columns
+     * @return
+     */
+    SelectDao<T> appendGroupBy(String... columns);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Having与Where的区别
+     * where 子句的作用是在对查询结果进行分组前，将不符合where条件的行去掉，即在分组之前过滤数据，where条件中不能包含聚组函数，使用where条件过滤出特定的行。
+     * having 子句的作用是筛选满足条件的组，即在分组之后过滤数据，条件中经常包含聚组函数，使用having 条件过滤出特定的组，也可以使用多个分组标准进行分组。
+     * 示例1:
+     * <p/>
+     * select 类别, sum(数量) as 数量之和 from A
+     * group by 类别
+     * having sum(数量) > 18
+     * 示例2：Having和Where的联合使用方法
+     * <p/>
+     * select 类别, SUM(数量)from A
+     * where 数量 gt;8
+     * group by 类别
+     * having SUM(数量) > 10
+     *
+     * @param havingStatement
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> having(String havingStatement, Object... paramValues);
+
+    /**
+     * 增加
+     *
+     * @param havingStatement
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> appendHaving(String havingStatement, Object... paramValues);
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 设置排序字段，这个动作会清除原来排序字段
+     *
+     * @param columnNames 例：  "name desc" , "createTime desc"
+     * @return
+     */
+    SelectDao<T> orderBy(String... columnNames);
+
+    /**
+     * 增加排序对象
+     *
+     * @param columnNames 例：  "name desc" , "createTime desc"
+     * @return
+     */
+    SelectDao<T> appendOrderBy(String... columnNames);
+
+    /**
+     * 增加排序对象
+     *
+     * @param columnNames 例：  "name  " , "createTime  "
+     * @return
+     */
+    SelectDao<T> appendOrderBy(OrderBy.Type type, String... columnNames);
+
+    /**
+     * 设置默认的排序语句，注意不能包括含Order By 关键字
+     * <p/>
+     * 在没有其它排序语句的情况下，这个默认语句将会生效
+     *
+     * @param orderByStatement 注意不能包括含Order By 关键字
+     * @return
+     */
+    SelectDao<T> setDefaultOrderByStatement(String orderByStatement);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 是否有查询的列
+     *
+     * @return
+     */
+    // boolean hasColumnsToQuery();
+
+
+    /**
+     * 记录总数
+     * COUNT() ，返回类型为 Long ，注意 count(*) 语法在 hibernate 中可用，但在 toplink 其它产品中并不可用
+     * 目前该方法有一个bug，如果查询本身已经是一个统计语句或是分组统计语句，可能将导致错误
+     * 遇到这种情况，建议手动编写统计，以确保正确
+     *
+     * @return long
+     */
+    long count();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 只查询特定的字段，并把查询结果设置到目标类中
+     * <p/>
+     * 和其它的find方法有较大的区别，只是选择出要获取的列信息
+     *
+     * @param <E> targetType 要求的结果类型
+     * @return
+     */
+    //  <E> List<E> findAndSelectInto(Class<E> targetType, String... ignoreAttrs);
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E> targetType 要求的结果类型
+     * @return
+     */
+    <E> List<E> find(Class<E> targetType);
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E>              targetType 要求的结果类型
+     * @param maxCopyDeep      -1，表示不限层级
+     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     * @return
+     */
+    <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties);
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param
+     * @return
+     */
+
+    <I, O> List<O> find(Converter<I, O> converter);
+
+    /**
+     * 获取结果集
+     *
+     * @param <E>
+     * @return
+     */
+    <E> List<E> find();
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E> targetType 要求的结果类型
+     * @return
+     */
+    <E> E findOne(Class<E> targetType);
+
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E>              targetType 要求的结果类型
+     * @param maxCopyDeep      -1，表示不限层级
+     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     * @return
+     */
+    <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties);
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param
+     * @return
+     */
+
+    <I, O> O findOne(Converter<I, O> converter);
+
+    /**
+     * 获取一个结果
+     * 如果没有数据，可能返回null
+     *
+     * @param <E>
+     * @return
+     */
+    <E> E findOne();
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 获取设置的别名
+     * @return alias
+     */
+    String getAlias();
+
+    /**
+     * 智能属性拷贝
+     *
+     * @param source
+     * @param target
+     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     * @return
+     */
+    void copyProperties(Object source, Object target, String... ignoreProperties);
+
+}

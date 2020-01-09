@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:lang="http://www.springframework.org/schema/lang"
+        xmlns:util="http://www.springframework.org/schema/util"
+        xmlns:tool="http://www.springframework.org/schema/tool"
+        xmlns:jee="http://www.springframework.org/schema/jee"
+        xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xmlns:cache="http://www.springframework.org/schema/cache"
+
+        xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd"
+>
+
+    <!--通用JPA配置文件-->
+    <description>dao config</description>
+
+    <!--
+
+     <jpa:repositories base-package="com.acme.repositories" />
+         <context:exclude-filter type="regex" expression=".*SomeRepository" />
+     -->
+
+    <tx:annotation-driven/>
+
+    <!--允许使用注解方式配置事务 -->
+    <!--<tx:annotation-driven transaction-manager="transactionManager"/>-->
+
+    <!-- 自动扫描的包名 -->
+    <!--<context:component-scan base-package="com.levin.commons.dao.com.doone.zhzs.common.dao.support.impl"/>-->
+
+    <!-- 对标注@PersistenceContext的类经行增强，引入代理后的EntityManager实例 -->
+    <!--<bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>-->
+
+    <!-- 对标注@Repository的类经行增强，将EntityManager异常转换为SpringDAO体系的异常 -->
+    <!--<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>-->
+
+    <!--
+
+            <bean id="dataSource" lazy-init="true"
+                  class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"
+                  p:driverClassName="${jdbc.driverClassName}"
+                  p:url="${jdbc.url}"
+                  p:minIdle="5"
+                  p:maxIdle="20"
+                  p:initialSize="7"
+                  p:testWhileIdle="true"
+                  p:password="${jdbc.password}"
+                  p:maxActive="100"/>
+    -->
+
+    <!--    <bean id="dataSource" lazy-init="true"
+              class="com.zaxxer.hikari.HikariDataSource" destroy-method="close"
+              p:driverClassName="${jdbc.driverClassName}"
+              p:jdbcUrl="#{jdbcConfig.jdbcUrl}"
+              p:username="#{jdbcConfig.username}"
+              p:password="#{jdbcConfig.password}"
+              p:idleTimeout="#{45 * 1000}"
+              p:minimumIdle="5"
+              p:maximumPoolSize="100"/>-->
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          p:testWhileIdle="true" init-method="init" destroy-method="close">
+
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="30"/>
+        <property name="initialSize" value="3"/>
+        <property name="maxWait" value="60000"/>
+        <property name="minIdle" value="5"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="removeAbandonedTimeout" value="360"/>
+        <property name="connectionProperties" value="config.decrypt=true"/>
+    </bean>
+
+    <!--
+        <bean id="dataSource" p:driverClassName="com.mysql.jdbc.Driver"
+              p:url="${jdbc.url}" p:username="${jdbc.username}" p:password="${jdbc.password}"
+              class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        </bean>-->
+
+
+    <!-- 实体管理器 -->
+    <!--    现有Spring4.2及以前的逻辑是默认从当前的系统中有查找到classpath*:META-INF/persistence.xml会优先加载使用
+        packagesToScan扫描到的类都会归到默认的持久化单元,不会优先使用，参考类：DefaultPersistenceUnitManager
+
+        如果要启用packagesToScan则可以故意设置找不到的文件,如：classpath:META-INF/persistence-*.xml
+
+        一个entityManagerFactory只能对应一个PersistenceUnitInfo-->
+
+    <bean id="entityManagerFactory"
+          p:packagesToScan="com.levin.commons.dao.domain"
+          p:dataSource-ref="dataSource"
+          p:persistenceXmlLocation="classpath:META-INF/persistence-*.xml"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+
+        <!--这个属性会覆盖classpath*:META-INF/persistence.xml中的属性，优先级别比较高-->
+        <property name="jpaPropertyMap">
+            <map>
+                <!--<entry key="hibernate.archive.autodetection" value="class,hbm"/>-->
+
+                <entry key="hibernate.jdbc.fetch_size" value="512"/>
+                <entry key="hibernate.jdbc.batch_size" value="256"/>
+
+                <!-- 设置II级缓存供应商 -->
+                <!--<entry key="hibernate.cache.provider_class" value="org.hibernate.cache.EhCacheProvider"/>-->
+                <!--<entry key="hibernate.cache.region.factory_class"-->
+                       <!--value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>-->
+
+                <entry key="hibernate.cache.use_query_cache" value="true"/>
+                <entry key="hibernate.cache.use_second_level_cache" value="true"/>
+                <entry key="hibernate.cache.use_structured_entries" value="true"/>
+                <entry key="hibernate.dialect.storage_engine" value="innodb"/>
+            </map>
+        </property>
+
+        <!--这个属性会也会覆盖classpath*:META-INF/persistence.xml中的属性，优先级别比较高-->
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"
+                  p:databasePlatform="org.hibernate.dialect.MySQL5InnoDBDialect"
+                  p:generateDdl="true" p:showSql="true"/>
+        </property>
+
+    </bean>
+
+    <!--事务管理器的默认名称请不要修改-->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager"
+          p:entityManagerFactory-ref="entityManagerFactory"/>
+
+    <bean id="jdbcTemplate" p:dataSource-ref="dataSource" class="org.springframework.jdbc.core.JdbcTemplate"/>
+
+    <!--
+    spring 3.1后不建议使用，请使用JdbcTemplate
+    <bean id="simpleJdbcTemplate" class="org.springframework.jdbc.core.simple.SimpleJdbcTemplate">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+    -->
+
+    <bean id="simpleJdbcCall" class="org.springframework.jdbc.core.simple.SimpleJdbcCall">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <bean id="simpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <!--# PROPAGATION_REQUIRED 支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。-->
+    <!--# PROPAGATION_SUPPORTS 支持当前事务，如果当前没有事务，就以非事务方式执行。-->
+    <!--# PROPAGATION_MANDATORY 支持当前事务，如果当前没有事务，就抛出异常。-->
+    <!--# PROPAGATION_REQUIRES_NEW 新建事务，如果当前存在事务，把当前事务挂起。-->
+    <!--# PROPAGATION_NOT_SUPPORTED 以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。-->
+    <!--# PROPAGATION_NEVER 以非事务方式执行，如果当前存在事务，则抛出异常。-->
+    <!--# PROPAGATION_NESTED 如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则进行与PROPAGATION_REQUIRED类似的操作。-->
+
+    <tx:advice id="jdbcTxAdvice">
+        <tx:attributes>
+            <tx:method name="execute*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="batchUpdate*" propagation="REQUIRED"/>
+            <tx:method name="call*" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+
+    <!--execution(modifiers-pattern? ret-type-pattern declaring-type-pattern? name-pattern(param-pattern) throws-pattern?)-->
+    <aop:config>
+        <aop:pointcut id="jdbcMethods"
+                      expression="execution(* org.springframework.jdbc.core.Jdbc*Operations.*(..))"/>
+
+        <aop:pointcut id="simpleJdbcMethods"
+                      expression="execution(* org.springframework.jdbc.core.simple.SimpleJdbc*Operations.*(..))"/>
+
+        <aop:advisor advice-ref="jdbcTxAdvice" pointcut-ref="jdbcMethods"/>
+        <aop:advisor advice-ref="jdbcTxAdvice" pointcut-ref="simpleJdbcMethods"/>
+
+    </aop:config>
+
+    <aop:aspectj-autoproxy/>
+
+</beans>

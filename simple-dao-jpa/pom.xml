@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.levin.commons.maven</groupId>
+        <artifactId>simple-dao-parent</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>simple-dao-jpa</artifactId>
+
+    <properties>
+        <proguard.obfuscate.skip>false</proguard.obfuscate.skip>
+        <cglib-version>3.2.5</cglib-version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.levin.commons.maven</groupId>
+            <version>${version}</version>
+            <artifactId>simple-dao-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib-version}</version>
+            <!--不要使用更高版本-需要1.8以上的JDK-->
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.11.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.levin.commons.maven</groupId>
+            <artifactId>service-support</artifactId>
+            <version>1.1.8-SNAPSHOT</version>
+        </dependency>
+
+        <!-- <dependency>
+             <groupId>org.jsoup</groupId>
+             <artifactId>jsoup</artifactId>
+             <version>1.8.3</version>
+             <scope>test</scope>
+         </dependency>-->
+
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+    <profiles>
+
+        <profile>
+            <id>是否跳过混淆代码Maven插件</id>
+            <properties>
+                <proguard.obfuscate.skip>true</proguard.obfuscate.skip>
+            </properties>
+        </profile>
+    </profiles>
+    <build>
+
+
+        <plugins>
+
+            <!-- ProGuard混淆插件-->
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+
+                <version>2.0.14</version>
+
+                <inherited>false</inherited>
+
+                <executions>
+                    <execution>
+                        <!-- 混淆时刻，这里是打包的时候混淆-->
+                        <phase>package</phase>
+                        <goals>
+                            <!-- 使用插件的什么功能，当然是混淆-->
+                            <goal>proguard</goal>
+                        </goals>
+
+
+                        <configuration>
+
+                            <skip>${proguard.obfuscate.skip}</skip>
+
+                            <!-- 是否将生成的PG文件安装部署-->
+                            <attach>false</attach>
+
+                            <!-- 是否混淆-->
+                            <obfuscate>true</obfuscate>
+
+                            <!-- 指定生成文件分类 -->
+                            <!--<attachArtifactClassifier>pg</attachArtifactClassifier>-->
+
+                            <includeDependencyInjar>false</includeDependencyInjar>
+                            <includeDependency>false</includeDependency>
+                            <addMavenDescriptor>false</addMavenDescriptor>
+
+
+                            <injar>${project.build.finalName}.jar</injar>
+                            <!--<injar>classes</injar>-->
+
+                            <!--<attachArtifactClassifier></attachArtifactClassifier>-->
+
+
+                            <options>
+                                <!-- JDK目标版本1.8-->
+                                <!--<option>-target 1.8</option>-->
+
+                                <option>-dontwarn java.**,javax.**,org.springframework.**</option>
+                                <option>-dontnote **</option>
+
+                                <!-- 不做压缩（删除注释、未被引用代码）-->
+                                <!--<option>-dontshrink</option>-->
+
+                                <option>-ignorewarnings</option>
+
+                                <!-- 不做优化（变更代码实现逻辑）-->
+                                <option>-dontoptimize</option>
+
+                                <!-- 不跳过非公用类文件及成员-->
+                                <option>-dontskipnonpubliclibraryclasses</option>
+                                <option>-dontskipnonpubliclibraryclassmembers</option>
+
+                                <!-- 优化时允许访问并修改有修饰符的类和类的成员 -->
+                                <option>-allowaccessmodification</option>
+
+                                <!-- 使用独特的混淆类的成员名称来增加混淆-->
+                                <option>-useuniqueclassmembernames</option>
+
+                                <!-- 不混淆所有包名，本人测试混淆后WEB项目问题实在太多，毕竟Spring配置中有大量固定写法的包名-->
+                                <option>-keeppackagenames</option>
+
+                                <!-- 不混淆所有特殊的类-->
+                                <option>-keepattributes
+                                    Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod
+                                </option>
+
+                                <!-- 不混淆所有的set/get方法，毕竟项目中使用的部分第三方框架（例如Shiro）会用到大量的set/get映射-->
+                                <!--<option>-keepclassmembers public class * {void set*(***);*** get*();}</option>-->
+
+                                <!--<option>-keepnames interface  com.levin.commons.dao.** </option>-->
+                                <!--<option>-keepclasseswithmembernames public class com.levin.commons.dao.**  </option>-->
+                                <!--<option>-keepnames  enum      com.levin.commons.dao.** </option>-->
+
+                                <!-- 以下因为大部分是Spring管理的Bean，不对包类的类名进行混淆，但对类中的属性和方法混淆-->
+                                <!--<option>-keep class com.levin.commons.dao.processor.**</option>-->
+                                <!--<option>-keep class com.levin.commons.dao.support.**</option>-->
+
+                                <!-- 不混淆model包中的所有类以及类的属性及方法，实体包，混淆了会导致ORM框架及前端无法识别-->
+                                <option>-keep class com.levin.commons.dao.** {*;}</option>
+                                <option>-keep interface com.levin.commons.dao.** {*;}</option>
+
+                                <option>-keepnames class com.levin.commons.dao.** {*;}</option>
+                                <option>-keepnames interface com.levin.commons.dao.** {*;}</option>
+                                <option>-keepnames enum com.levin.commons.dao.** {*;}</option>
+
+                                <option>-keepclasseswithmembernames class com.levin.commons.dao.** {*;}</option>
+                                <option>-keepclasseswithmembernames interface com.levin.commons.dao.** {*;}</option>
+                                <option>-keepclasseswithmembernames enum com.levin.commons.dao.** {*;}</option>
+
+                                <!--<option>-keep class com.levin.commons.dao.annotation.** {*;}</option>-->
+                                <!--<option>-keep class com.levin.commons.dao.domain.** {*;}</option>-->
+                                <!--<option>-keep class com.levin.commons.dao.simple.** {*;}</option>-->
+
+                            </options>
+
+
+                            <!-- 添加依赖，这里你可以按你的需要修改，这里测试只需要一个JRE的Runtime包就行了 -->
+
+                            <libs>
+                                <!--<lib>${java.home}/lib/rt.jar</lib>-->
+                            </libs>
+
+
+
+
+                            <!--忽略所有依赖的库-->
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>*</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                            </exclusions>
+
+
+                            <!-- 对什么东西进行加载，这里仅有classes，毕竟你也不可能对配置文件及JSP混淆吧-->
+                            <!--<injar>classes</injar>-->
+
+                            <!-- 输出目录-->
+                            <!--<outputDirectory>${project.build.directory}</outputDirectory>-->
+
+                        </configuration>
+
+                    </execution>
+                </executions>
+
+            </plugin>
+        </plugins>
+
+
+    </build>
+
+</project>

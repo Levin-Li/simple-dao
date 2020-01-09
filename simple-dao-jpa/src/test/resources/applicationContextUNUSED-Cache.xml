@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:lang="http://www.springframework.org/schema/lang"
+        xmlns:util="http://www.springframework.org/schema/util"
+        xmlns:tool="http://www.springframework.org/schema/tool"
+        xmlns:jee="http://www.springframework.org/schema/jee"
+        xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xmlns:cache="http://www.springframework.org/schema/cache"
+        xmlns:redis="http://www.springframework.org/schema/redis"
+
+        xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/redis http://www.springframework.org/schema/cache/spring-redis.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd"
+>
+
+    <!--通用cache配置文件-->
+    <description>cache config</description>
+
+    <!--  <cache:advice>
+          <cache:caching >
+              <cache:cache-put />
+          </cache:caching>
+      </cache:advice>
+      -->
+
+    <cache:annotation-driven/>
+
+    <bean id="cacheManager" class="org.springframework.data.redis.cache.RedisCacheManager">
+        <constructor-arg ref="redisTemplate"/>
+    </bean>
+
+    <!--<bean id="cacheManager" p:caches-ref="caches" class="org.springframework.cache.support.SimpleCacheManager"/>-->
+
+    <!--    <bean id="cacheManager" p:cacheNames="mem" class="org.springframework.cache.concurrent.ConcurrentMapCacheManager"/>
+
+        <util:list id="caches">
+            <bean class="org.springframework.cache.concurrent.ConcurrentMapCache">
+                <constructor-arg value="default"/>
+            </bean>
+        </util:list>-->
+
+    <!-- jedis pool配置 -->
+
+    <bean id="jedisConnectionFactory" p:usePool="true"
+          class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <constructor-arg ref="redisClusterConfiguration"/>
+        <!--  <constructor-arg>
+              <bean class="redis.clients.jedis.JedisPoolConfig"/>
+          </constructor-arg>-->
+    </bean>
+
+    <bean id="redisClusterConfiguration" p:maxRedirects="5"
+          class="org.springframework.data.redis.connection.RedisClusterConfiguration">
+
+        <constructor-arg>
+            <list value-type="java.lang.String">
+                <value>120.25.101.64:7000</value>
+                <value>120.25.101.64:7001</value>
+                <value>120.25.101.64:7002</value>
+                <value>120.25.101.64:7003</value>
+                <value>120.25.101.64:7004</value>
+                <value>120.25.101.64:7005</value>
+                <value>120.25.101.64:7006</value>
+            </list>
+        </constructor-arg>
+
+    </bean>
+
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
+          p:connectionFactory-ref="jedisConnectionFactory"/>
+
+</beans>
