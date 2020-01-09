@@ -1,4 +1,5 @@
-### 简介
+
+### SimpleDao 简介
    SimpleDao是一个使用注解生成SQL语句和参数的小组件，目前组件依赖Spring并结合JPA，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
 
@@ -90,9 +91,9 @@
 
 ###  2、组件使用方式
 
-#### 2.1 直接使用通用Dao（推荐）
+#### 2.1 使用通用Dao（推荐）
 
-##### 2.1.1 使用JpaDao
+##### 2.1.1 通用Dao
    在服务层代码中通过Spring注入JpaDao实例，通过JpaDao动态创建。
 
    使用示例：
@@ -104,23 +105,22 @@
 
       List queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
 
-##### 2.1.1 使用SelectDao 、UpdateDao、DeleteDao
-
+  
     //查询DAO
-    SelectDao dao = new SelectDaoImpl();
+    SelectDao dao = new SelectDaoImpl(); 
     dao.find()
 
     //更新DAO
-    UpdateDao dao = new UpdateDaoImpl();
+    UpdateDao dao = new UpdateDaoImpl(); 
     dao.update()
 
     //删除DAO
-    DeleteDao dao = new DeleteDaoImpl();
-     dao.delete()
+    DeleteDao dao = new DeleteDaoImpl(); 
+    dao.delete()
 
 #### 2.2 使用自定义DAO接口或是DAO类
 
-#### 2.2.1 使用自定义DAO接口（推荐）
+#### 2.2.1 使用自定义DAO接口
 
    接口DAO案例：
 
@@ -429,46 +429,25 @@
 
 ### 10、使用注意事项
 
-#### 10.1 无注解的情况
+#### 10.1 字段无注解的情况
 
-##### 10.1.1 基本类型无注解
+##### 10.1.1 基本类型字段无注解
 
-   基本类型的判断逻辑：
-
-       public static boolean isPrimitive(Type type) {
-
-           if (!(type instanceof Class))
-               return false;
-
-           Class clazz = (Class) type;
-
-           return clazz.isPrimitive()
-                   || String.class.isAssignableFrom(clazz)
-                   || Boolean.class.isAssignableFrom(clazz)
-                   || Date.class.isAssignableFrom(clazz)
-                   || Double.class.isAssignableFrom(clazz)
-                   || Float.class.isAssignableFrom(clazz)
-                   || Enum.class.isAssignableFrom(clazz)
-                   || Long.class.isAssignableFrom(clazz)
-                   || Integer.class.isAssignableFrom(clazz)
-                   || Short.class.isAssignableFrom(clazz)
-                   || Byte.class.isAssignableFrom(clazz)
-                   || Character.class.isAssignableFrom(clazz);
-       }
 
   基本类型无注解示例：
 
        Long id;
+       
        String name = "Echo";
 
-  基本类型且无注解，将默认为等于操作。以上注解将产生如下语句：
+  基本类型且无注解，将默认为 等于 操作。以上注解将产生如下语句：
 
       name = ?
 
   注意以上id字段并没有生产条件，默认情况下，字段值为null将忽略这个字段。  null值或是空字符串，字段都将被忽略。
 
 
-##### 10.1.2 复杂类型无注解
+##### 10.1.2 复杂类型字段无注解
 
    复杂类型的定义为：
 
@@ -519,7 +498,7 @@
    #_isDelete 表示当前是否是DeleteDao
 
 
-#### 10.4 有效的注解
+#### 10.4 无效的注解标注
 
    如果注解标注在 Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT 三种字段上将被忽略。
 
@@ -536,7 +515,7 @@
 
   以上将生成如下语句：
 
-      Having name Not(name = ?)
+      Having Not(name = ?)
 
    示例二：
 
@@ -545,7 +524,7 @@
 
    以上将生成如下语句：
 
-       Where name Not(name = ?)
+       Where Not(name = ?)
 
   示例三：
 
@@ -605,9 +584,7 @@
    
    数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽问题导致的数据安全问题。
    
-            
-         
-
+                   
 ### 12、附录
 
 
