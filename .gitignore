@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+.ssh
+.lock
+*.lock
+.awcache
+node_modules
+*.iml
+*.log
+target
+logs
+overlays
+out
