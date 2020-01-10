@@ -9,7 +9,6 @@
 
    2、简化DAO层，或是直接放弃具体的Domain对象DAO层，使用支持泛型通用的Dao。
 
-   开发思路
 
    通过在DTO对象中加入自定义注解自动生成查询语句。
 
@@ -62,9 +61,7 @@
         SelectDao selectDao = new SelectDaoImpl();
         selectDao.appendByQueryObj(userStatDTO);
 
-        List result = selectDao.find();
-
-        ...转换结果
+        List result = selectDao.find(); 
 
         return result;
      }
@@ -327,7 +324,7 @@
 
 
 
-### 7、逻辑注解(用于实现复杂的查询条件)
+### 7、逻辑嵌套注解(用于实现复杂的查询条件)
 
    逻辑注解：
 
@@ -586,7 +583,6 @@
    
                    
 ### 12、附录
-
 
 
     有使用问题请联系：99668980@qq.com
