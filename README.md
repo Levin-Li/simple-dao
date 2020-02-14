@@ -1,7 +1,8 @@
 
 ### SimpleDao 简介
+
    SimpleDao是一个使用注解生成SQL语句和参数的小组件，目前组件依赖Spring并结合JPA，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
-   在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
+   在项目中应用本组件能大量减少语句的编写和SQL参数的处理，特别是根据条件进行动态语句拼接的场景。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
 
    SimpleDao的目标
 
@@ -24,11 +25,13 @@
 ### 1 快速上手
 
 #### 1.1 引入依赖
+
         <dependency>
             <groupId>com.levin.commons.maven</groupId>
             <artifactId>simple-dao</artifactId>
             <version>x.x.x-SNAPSHOT</version>
         </dependency>
+        
 ##### 1.2 定义DTO及注解
 
      /**
@@ -441,7 +444,7 @@
 
       name = ?
 
-  注意以上id字段并没有生产条件，默认情况下，字段值为null将忽略这个字段。  null值或是空字符串，字段都将被忽略。
+  注意以上id字段并没有生产条件，默认情况下null值或是空字符串，字段都将被忽略。
 
 
 ##### 10.1.2 复杂类型字段无注解
