@@ -28,6 +28,15 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
+     *  xx is null or xx = paramValue
+     *
+     * @param entityAttrName 如 name
+     * @return
+     */
+    T isNullOrEq(String entityAttrName,Object paramValue);
+
+
+    /**
      * =
      * eg：appendWhereEquals("name","echo") 表示 and name = 'echo'
      *

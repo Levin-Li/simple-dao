@@ -18,6 +18,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * 设置上下文用于表达式求值
      *
      * @param context
+     * @return this
      */
     T setContext(Map<String, Object> context);
 
@@ -30,7 +31,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      *
      * @param rowStartPosition ，从0开始， -1表示不设置限制
      * @param rowCount         ,受影响的记录数，-1表示不设置限制
-     * @return
+     * @return this
      * @see
      * @since 1.1.5
      */
@@ -65,7 +66,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @param conditionExpr 如 name = ?，或name = :pName
      * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
      *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
-     * @return
+     * @return this
      */
     T appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues);
 
@@ -150,16 +151,20 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T appendByEL(String paramPrefix, Map<String, Object>... queryParams);
 
     /**
-     * 增加条件注解
+     * 通过注解的方式增加条件
+     * <p>
+     * 例如： table.xx is null or table.xx = aValue
+     * <p>
+     * 可以通过调用这个方法实现（true,"xx",aValue,OR.class,Null.class,Eq.class,END.class）
      *
-     * @param isAppend        是否增加，方便链式调用
-     * @param attrName        不能为空
-     * @param attrType
+     * @param isAppend  是否增加，方便链式调用
+     * @param attrName  不能为空
      * @param attrValue
-     * @param attrAnnotations
-     * @return
+     * @param annoTypes
+     * @return this
      */
-    T appendByAnnotations(Boolean isAppend, @NotNull String attrName, Class<?> attrType, Object attrValue, Annotation... attrAnnotations);
+    T appendByAnnotations(Boolean isAppend, @NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes);
+
 
     ///////////////////////////////////////////////////////////////////////////////
 

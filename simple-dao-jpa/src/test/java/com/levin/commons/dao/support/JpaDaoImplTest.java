@@ -207,6 +207,13 @@ public class JpaDaoImplTest {
 
 
     @Test
+    public void testNullOrEq() {
+
+        Object lily = jpaDao.selectFrom(User.class).isNullOrEq(E_User.name, "lily").findOne();
+
+    }
+
+    @Test
     public void testUserDao() {
 
         DefaultPaging paging = new DefaultPaging();

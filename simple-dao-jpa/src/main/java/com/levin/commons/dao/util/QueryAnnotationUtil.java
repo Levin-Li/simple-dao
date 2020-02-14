@@ -282,6 +282,30 @@ public abstract class QueryAnnotationUtil {
         return allInstanceMap.get(type.getSimpleName());
     }
 
+    public static Annotation[] getAnnotations(Class<? extends Annotation>... types) {
+
+        if (types == null || types.length < 1) {
+            return new Annotation[0];
+        }
+
+        Annotation[] result = new Annotation[types.length];
+
+        int i = 0;
+
+        for (Class<? extends Annotation> type : types) {
+            Annotation annotation = allInstanceMap.get(type.getSimpleName());
+
+            if (annotation == null) {
+                throw new StatementBuildException("Annotation " + type.getName() + " instance cache not found");
+            }
+
+            result[i++] = annotation;
+        }
+
+
+        return result;
+    }
+
     /**
      * @param opAnno
      * @param name

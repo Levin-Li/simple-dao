@@ -333,35 +333,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
     @Override
-    public C appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Class<?> attrType, Object attrValue, Annotation... attrAnnotations) {
+    public C appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-            processAttr(null, null, attrName, attrAnnotations, attrType, attrValue);
-        }
-
-        return (C) this;
-    }
-
-    //    @Override
-    public C appendByAnnotations(Boolean isAppend, String entityAttrName, Object paramValue, Class<Annotation>... annoClasses) {
-
-        if (Boolean.TRUE.equals(isAppend)) {
-
-            if (annoClasses == null) {
-                annoClasses = new Class[0];
-            }
-
-            Annotation[] varAnnotations = new Annotation[annoClasses.length];
-
-            int index = 0;
-
-            for (Class<Annotation> annotationClass : annoClasses) {
-                varAnnotations[index++] = QueryAnnotationUtil.getAnnotation(annotationClass);
-            }
-
-            processAttr(null, null, entityAttrName, varAnnotations,
-                    paramValue != null ? paramValue.getClass() : null, paramValue);
-
+            processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);
         }
 
         return (C) this;
@@ -803,6 +778,16 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         return result;
     }
 
+
+    /**
+     * @param entityAttrName
+     * @param value
+     * @param varAnnotations
+     */
+    protected void processAttr(String entityAttrName, Object value, Annotation... varAnnotations) {
+        processAttr(null, null, varAnnotations, entityAttrName, null, value);
+    }
+
     /**
      * 处理原子属性
      * 关键处理方法
@@ -1085,6 +1070,15 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         return (C) this;
     }
 
+
+    @Override
+    public C isNullOrEq(String entityAttrName, Object paramValue) {
+
+        appendByAnnotations(true, entityAttrName, paramValue, OR.class, Null.class, Eq.class, END.class);
+
+        return (C) this;
+    }
+
     /**
      * =
      * eg：appendWhereEquals("name","echo") 表示 and name = 'echo'
@@ -1311,6 +1305,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         processWhereCondition(null, null, name, value, null, null
                 , QueryAnnotationUtil.getAnnotation(annotationType));
     }
+
 
     protected void addNot(Class annotationType, String name, Object value) {
         processWhereCondition(null, null, name, value, null, (Not) QueryAnnotationUtil.getAnnotation(Not.class)
