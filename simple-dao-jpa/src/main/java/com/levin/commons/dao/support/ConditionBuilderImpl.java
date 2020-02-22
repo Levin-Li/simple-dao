@@ -61,6 +61,8 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     private int paramIndex = 1;
 
+    //hibernate 后期版本不支持问号参数，必须指定索引位置，占位符用于修复这个问题
+//    private String paramPlaceholder = DEFAULT_PLACEHOLDER; // " ? ";
     private String paramPlaceholder = " ? ";
 
     private ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
@@ -1797,6 +1799,8 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         if (column.contains(paramPlaceholder.trim())) {
             return column;
         }
+
+        // :?P
 
         String prefix = getText(alias, "", ".", "");
 

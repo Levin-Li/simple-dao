@@ -5,6 +5,8 @@ import java.lang.annotation.*;
 /**
  * <p>Having class.</p>
  *
+ * Having 注解有最高的优先权
+ *
  * @author llw
  * @version 2.0.0
  */
