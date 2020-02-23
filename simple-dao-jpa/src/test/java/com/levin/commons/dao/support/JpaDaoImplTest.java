@@ -285,7 +285,7 @@ public class JpaDaoImplTest {
         jpaDao.save(entity);
 
         List r = jpaDao.find(true, Group.class, 1, 100
-                , "select * from jpa_dao_test_Group where 1=? and 2=? and '3'=:name"
+                , "select * from jpa_dao_test_Group where 1= ? and 2=? and '3'=:name"
                 , 1, 2, MapUtils.asMap("name", "3"));
 
 
@@ -293,7 +293,7 @@ public class JpaDaoImplTest {
                 .selectFrom("jpa_dao_test_Group", "t")
              //   .select("*")
                 .select("id")
-                .appendWhere("count(distinct o)")
+            //    .appendWhere("count(distinct o)")
 
                 .eq(E_Group.T_category, "adfsdafas")
                 .eq(E_Group.T_name, "adfsdafas")

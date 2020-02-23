@@ -1,13 +1,7 @@
 
 package com.levin.commons.dao;
 
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
-
 import javax.persistence.EntityManager;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * JPA使用支持接口，提供了对jpa实体管理器的简单功能
@@ -222,6 +216,7 @@ public interface JpaDao extends SimpleDao {
      * @return
      */
     EntityManager getEntityManager();
+
 
 
     /**

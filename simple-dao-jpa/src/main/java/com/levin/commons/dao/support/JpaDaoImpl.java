@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -113,8 +114,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 4.       如果 A 是一个 detached 状态的实体，该方法将会抛出异常。
  */
 
-//@ConditionalOnBean(JpaDao.class)
-@Repository
+@ConditionalOnBean({EntityManagerFactory.class})
+@Repository("DefaultJpaDaoImpl")
 //@Service
 public class JpaDaoImpl
         implements JpaDao, ApplicationContextAware {
@@ -183,6 +184,16 @@ public class JpaDaoImpl
         return false;
     }
 
+    @Override
+    public boolean isJpa() {
+        return true;
+    }
+
+
+    @Override
+    public boolean isEntityType(Class type) {
+        return type.isAnnotationPresent(Entity.class);
+    }
 
     public EntityManagerFactory getEntityManagerFactory() {
         return entityManagerFactory;
@@ -214,6 +225,7 @@ public class JpaDaoImpl
         this.applicationContext = applicationContext;
     }
 
+    @Override
     public int getParamStartIndex() {
         return paramStartIndex;
     }

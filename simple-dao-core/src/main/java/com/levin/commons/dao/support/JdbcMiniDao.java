@@ -1,0 +1,103 @@
+package com.levin.commons.dao.support;
+
+import com.levin.commons.dao.MiniDao;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import javax.annotation.PostConstruct;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.sql.DataSource;
+import java.util.List;
+
+/**
+ *
+ *
+ * 还未完成的 DAO 类
+ *   @TODO: 2020/2/24
+ *
+ */
+
+@Component
+@ConditionalOnMissingBean(MiniDao.class)
+@ConditionalOnBean(DataSource.class)
+public class JdbcMiniDao implements MiniDao {
+
+    @Autowired
+    DataSource dataSource;
+
+
+    JdbcOperations jdbcOperations;
+    SimpleJdbcInsertOperations insertOperations;
+
+
+    @PostConstruct
+    public void init() {
+        jdbcOperations = new JdbcTemplate(dataSource);
+        insertOperations = new SimpleJdbcInsert(dataSource);
+    }
+
+    @Override
+    public boolean isJpa() {
+        return false;
+    }
+
+    @Override
+    public boolean isEntityType(Class type) {
+        return type.isAnnotationPresent(Entity.class);
+    }
+
+    @Override
+    public int getParamStartIndex() {
+        return 0;
+    }
+
+    @Override
+    public Object create(Object entity) {
+
+
+        Table annotation = entity.getClass().getAnnotation(Table.class);
+
+        String table = entity.getClass().getSimpleName();
+
+
+        if (annotation != null && StringUtils.hasText(annotation.name())) {
+            table = annotation.name();
+        }
+
+        Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
+
+
+        try {
+            BeanUtils.getPropertyDescriptor(entity.getClass(), "id").createPropertyEditor(entity).setValue(id);
+        } catch (BeansException e) {
+
+        }
+
+
+        return entity;
+    }
+
+    @Override
+    public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
+
+        return jdbcOperations.update(statement, paramValues);
+    }
+
+    @Override
+    public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
+
+
+        return jdbcOperations.queryForList(statement, resultClass, paramValues);
+    }
+}

@@ -49,7 +49,7 @@ public class UserDTO {
 
     @Like
     @END
-    protected String description = "desc";
+    protected String remark = "desc";
 
 
     @UpdateColumn
