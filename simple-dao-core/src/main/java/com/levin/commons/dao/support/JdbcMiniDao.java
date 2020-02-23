@@ -21,11 +21,9 @@ import javax.sql.DataSource;
 import java.util.List;
 
 /**
- *
- *
  * 还未完成的 DAO 类
- *   @TODO: 2020/2/24
  *
+ * @TODO: 2020/2/24
  */
 
 @Component
@@ -91,13 +89,35 @@ public class JdbcMiniDao implements MiniDao {
     @Override
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
 
+
+        statement = addLimit(start, count, statement);
+
         return jdbcOperations.update(statement, paramValues);
     }
+
+    private String addLimit(int start, int count, String statement) {
+        if (count > 0) {
+            if (start < 0) {
+                start = 0;
+            }
+        }
+
+
+        if (start > -1) {
+            statement += " limit " + start;
+        }
+
+        if (count > 0) {
+            statement += " , " + count;
+        }
+        return statement;
+    }
+
 
     @Override
     public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
 
+        return jdbcOperations.queryForList(addLimit(start, count, statement), resultClass, paramValues);
 
-        return jdbcOperations.queryForList(statement, resultClass, paramValues);
     }
 }
