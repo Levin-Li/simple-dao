@@ -343,7 +343,8 @@ public class JpaDaoImplTest {
 
         selectDao
                 .limit(1, 10)
-                .in("area", AppType.Ios, AppType.Android)
+                .gt("area", AppType.Ios )
+//                .in("area", AppType.Ios, AppType.Android)
                 .appendByQueryObj(new UserStatDTO());
 
         selectDao.find();
@@ -435,7 +436,7 @@ public class JpaDaoImplTest {
 //               .appendSelectColumns("id , ( name || 'ddddd' ) AS name ")
 //               .appendSelectColumns(" score AS scoreGt")
                 .appendByQueryObj(new UserDTO3())
-                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500L).build())
+                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500).build())
                 .gt(E_User.T_score, 300)
                 .find(UserDTO3.class);
 

@@ -31,6 +31,9 @@ public class User
 
     Integer score;
 
+
+    String description;
+
     public User() {
     }
 

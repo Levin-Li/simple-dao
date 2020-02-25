@@ -15,6 +15,7 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.SelectColumn;
+import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.stat.Having;
 import com.levin.commons.dao.simple.annotation.QueryRequest;
@@ -111,7 +112,7 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public int getParamStartIndex( ) {
+    public int getParamStartIndex() {
         return dao.getParamStartIndex(isNative());
     }
 
@@ -220,7 +221,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
 
         //仅对 JPA dao 有效
-        if (!dao.isJpa()) {
+        if (!dao.isJpa() || setAttrs == null || setAttrs.length < 1) {
             return this;
         }
 
@@ -565,6 +566,10 @@ public class SelectDaoImpl<T>
         if (!QueryAnnotationUtil.isSamePackage(opAnnotation, GroupBy.class))
             return;
 
+        //平均数的参数要求是 double 型
+        if (opAnnotation instanceof Avg) {
+
+        }
 
         hasStatColumns = true;
 

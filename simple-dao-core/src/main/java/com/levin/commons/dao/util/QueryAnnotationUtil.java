@@ -268,8 +268,9 @@ public abstract class QueryAnnotationUtil {
 
             Field field = ReflectionUtils.findField(type, names[i]);
 
-            if (field == null)
+            if (field == null) {
                 return null;
+            }
 
             type = ResolvableType.forField(field).resolve(field.getType());
         }

@@ -793,6 +793,18 @@ public class JpaDaoImpl
                     }
                 }
             } else {
+
+                //自动转换数据类型
+                //@todo 观察，需要关注性能问题
+                //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
+                Parameter parameter = parameterMap.get("" + pIndex);
+
+                if (parameter != null && parameter.getParameterType() != null) {
+                    if (!parameter.getParameterType().equals(paramValue.getClass())) {
+                        paramValue = ObjectUtil.convert(paramValue, parameter.getParameterType());
+                    }
+                }
+
                 query.setParameter(pIndex++, paramValue);
             }
         }
