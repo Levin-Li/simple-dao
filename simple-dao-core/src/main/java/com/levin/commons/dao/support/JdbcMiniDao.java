@@ -56,7 +56,7 @@ public class JdbcMiniDao implements MiniDao {
     }
 
     @Override
-    public int getParamStartIndex() {
+    public int getParamStartIndex(boolean isNative) {
         return 0;
     }
 

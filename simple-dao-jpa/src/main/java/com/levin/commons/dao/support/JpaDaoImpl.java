@@ -225,7 +225,6 @@ public class JpaDaoImpl
         this.applicationContext = applicationContext;
     }
 
-    @Override
     public int getParamStartIndex() {
         return paramStartIndex;
     }
@@ -571,27 +570,24 @@ public class JpaDaoImpl
         List paramValueList = flattenParams(null, paramValues);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("JPQL:[" + statement + "], StartIndex: " + getParamStartIndex(isNative) + " Params:" + paramValueList);
+            logger.debug("JPQL:[" + statement + "] ResultClass: " + resultClass + ", StartIndex: " + getParamStartIndex(isNative) + " Params:" + paramValueList);
         }
 
         EntityManager em = getEntityManager();
 
         Query query = null;
 
+
+        //@todo hibernate 5.2.17 对结果类的映射，不支持自定义的类型
+        // setResultTransformer 实际使用时无法获取到字段名，也许是 hibernate bug
+        // query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+
+
         if (isNative) {
-            query = resultClass == null ? em.createNativeQuery(statement) : em.createNativeQuery(statement, resultClass);
+            query = (resultClass == null) ? em.createNativeQuery(statement) : em.createNativeQuery(statement, resultClass);
         } else {
-            query = resultClass == null ? em.createQuery(statement) : em.createQuery(statement, resultClass);
+            query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
-
-        //   if (isHibernate5()) {
-
-        //      query.unwrap(NativeQueryImpl.class).setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP);
-        //  }
-
-//        query.unwrap(NativeQueryImpl.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
-        // query.getHints()
-//        query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
@@ -602,10 +598,11 @@ public class JpaDaoImpl
     }
 
 
-    protected int getParamStartIndex(boolean isNative) {
+    @Override
+    public int getParamStartIndex(boolean isNative) {
+        return (isNative && paramStartIndex < 1) ? (paramStartIndex + 1) : paramStartIndex;
 
-        return isNative && paramStartIndex < 1 ? (paramStartIndex + 1) : paramStartIndex;
-
+//        return paramStartIndex;
     }
 
     /**

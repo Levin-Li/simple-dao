@@ -42,7 +42,7 @@ public class DeleteDaoImpl<T>
 
     @Override
     public int getParamStartIndex() {
-        return dao.getParamStartIndex();
+        return dao.getParamStartIndex(isNative());
     }
 
     @Override

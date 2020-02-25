@@ -31,7 +31,7 @@ public interface MiniDao {
      *
      * @return
      */
-    int getParamStartIndex();
+    int getParamStartIndex(boolean isNative);
 
 
     /**

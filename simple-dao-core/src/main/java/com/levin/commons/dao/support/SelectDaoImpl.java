@@ -111,8 +111,8 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public int getParamStartIndex() {
-        return dao.getParamStartIndex();
+    public int getParamStartIndex( ) {
+        return dao.getParamStartIndex(isNative());
     }
 
     @Override
@@ -535,7 +535,7 @@ public class SelectDaoImpl<T>
 
         //如果是子查询加上 as
         if (isSubQuery) {
-            expr = autoAroundParentheses(anno.prefix(), expr, anno.suffix()) + " as " + name;
+            expr = autoAroundParentheses(anno.prefix(), expr, anno.suffix()) + " AS " + name;
         } else {
             expr = anno.prefix() + expr + anno.suffix();
         }
@@ -545,6 +545,7 @@ public class SelectDaoImpl<T>
 
         appendSelectColumns(expr, value);
 
+        //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
         appendColumnMap(expr, (StringUtils.hasText(anno.outputColumnName()) ? anno.outputColumnName() : fieldOrMethod), name);
 
     }
@@ -570,6 +571,12 @@ public class SelectDaoImpl<T>
         AnnotationModel model = AnnotationModel.copy(opAnnotation);
 
         String column = model.getOp() + model.getPrefix() + aroundColumnPrefix(name) + model.getSuffix();
+
+
+        //@todo 增加别名
+//        if (fieldOrMethod instanceof Field) {
+//            column += " AS " +
+//        }
 
         //增加选择字段
         appendSelectColumns(column);
@@ -939,9 +946,11 @@ public class SelectDaoImpl<T>
         if (targetType == null)
             throw new IllegalArgumentException("targetType is null");
 
+        // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
+
         boolean isEntity = dao.isEntityType(targetType) || !dao.isJpa();
 
-        List<Object> queryResultList = isEntity ? (List<Object>) this.findForResultClass(targetType) : find();
+        List<E> queryResultList = this.findForResultClass(null);
 
         if (queryResultList == null || queryResultList.isEmpty())
             return new ArrayList<>(0);
@@ -956,7 +965,7 @@ public class SelectDaoImpl<T>
 
         for (Object data : queryResultList) {
 
-            //尝试自动转换
+            //尝试自动转换成 Map
             data = tryConvert2Map(data, valueHolder);
 
             if (data == null || targetType.isInstance(data)) {
@@ -997,104 +1006,101 @@ public class SelectDaoImpl<T>
      * 单查询返回值是数组时，尝试自动转换成 Map
      *
      * @param data
+     * @param valueHolder 数据缓存
      * @return
      */
     public Object tryConvert2Map(Object data, ValueHolder<String[]> valueHolder) {
 
-        if (data == null) {
-            return null;
+        if (data == null || !data.getClass().isArray()) {
+            return data;
         }
 
-        if (data.getClass().isArray()
-                && selectColumnsMap.size() > 0) {
+        final int arrayLen = Array.getLength(data);
 
+        if (valueHolder != null
+                && valueHolder.value != null
+                && valueHolder.value.length == arrayLen) {
 
-            final int arrayLen = Array.getLength(data);
-
-            if (valueHolder != null
-                    && valueHolder.value != null
-                    && valueHolder.value.length == arrayLen) {
-
-                //如果已经明确字段对应关系，优化性能
-
-                Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
-
-                for (int i = 0; i < arrayLen; i++) {
-                    dataMap.put(valueHolder.value[i], Array.get(data, i));
-                }
-
-                return dataMap;
-
-            }
-
-
-            List<String[]> selectColumns = QLUtils.parseSelectColumns(null, this.selectColumns.toString());
-
-            //如果数组长度
-            if (arrayLen != selectColumns.size()) {
-                return data;
-            }
-
+            //如果已经缓存字段对应关系，优化性能
             Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
 
-            //转化成 Map
-            int idx = 0;
-
-            String[] columnNames = new String[arrayLen];
-
-            for (String[] selectColumn : selectColumns) {
-
-                String key = selectColumn[0];
-
-                Object[] keys = selectColumnsMap.get(key);
-
-                key = removeAlias(key);
-
-                //
-                if (keys != null && keys.length > 0) {
-
-                    //1、优先使用字段名
-                    Object fieldOrMethod = keys[1];
-
-                    //2、其次使用实体属性名
-                    String entityAttrName = (String) keys[0];
-
-                    if (fieldOrMethod != null) {
-
-                        if (fieldOrMethod instanceof Field) {
-                            key = ((Field) fieldOrMethod).getName();
-                        } else if (fieldOrMethod instanceof Method) {
-                            key = ((Method) fieldOrMethod).getName();
-
-                            //去除 get
-                            if (key.startsWith("get")) {
-                                key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
-                            }
-                        } else if (fieldOrMethod instanceof String) {
-                            key = removeAlias((String) fieldOrMethod);
-                        }
-
-                    } else if (StringUtils.hasText(entityAttrName)) {
-                        key = entityAttrName;
-                    }
-
-                }
-
-                //列明对应关系
-                columnNames[idx] = key;
-
-                dataMap.put(key, Array.get(data, idx++));
-            }
-
-
-            if (valueHolder != null) {
-                valueHolder.value = columnNames;
+            for (int i = 0; i < arrayLen; i++) {
+                dataMap.put(valueHolder.value[i], Array.get(data, i));
             }
 
             return dataMap;
         }
 
-        return data;
+
+        List<String[]> selectColumns = QLUtils.parseSelectColumns(null, this.selectColumns.toString());
+
+        //如果数组长度
+        if (arrayLen != selectColumns.size()) {
+            return data;
+        }
+
+        Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
+
+        //转化成 Map
+        int idx = 0;
+
+        String[] columnNames = new String[arrayLen];
+
+        for (String[] selectColumn : selectColumns) {
+
+            String key = selectColumn[selectColumn.length - 1];
+
+            if (key == null) {
+                key = selectColumn[0];
+            }
+
+            Object[] keys = selectColumnsMap.get(key);
+
+            key = removeAlias(key);
+
+            //
+            if (keys != null && keys.length > 0) {
+
+                //1、优先使用字段名
+                Object fieldOrMethod = keys[1];
+
+                //2、其次使用实体属性名
+                String entityAttrName = (String) keys[0];
+
+                if (fieldOrMethod != null) {
+
+                    if (fieldOrMethod instanceof Field) {
+                        key = ((Field) fieldOrMethod).getName();
+                    } else if (fieldOrMethod instanceof Method) {
+                        key = ((Method) fieldOrMethod).getName();
+
+                        //去除 get
+                        if (key.startsWith("get")) {
+                            key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
+                        }
+                    } else if (fieldOrMethod instanceof String) {
+                        key = removeAlias((String) fieldOrMethod);
+                    }
+
+                } else if (StringUtils.hasText(entityAttrName)) {
+                    key = entityAttrName;
+                }
+
+            }
+
+            //列明对应关系
+            columnNames[idx] = key;
+
+            dataMap.put(key, Array.get(data, idx++));
+        }
+
+
+        if (valueHolder != null) {
+            valueHolder.value = columnNames;
+        }
+
+        return dataMap;
+
 
     }
 

@@ -4,12 +4,7 @@ import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.UpdateDao;
-import com.levin.commons.dao.domain.A;
-import com.levin.commons.dao.domain.B;
-import com.levin.commons.dao.domain.E_Group;
-import com.levin.commons.dao.domain.E_User;
-import com.levin.commons.dao.domain.Group;
-import com.levin.commons.dao.domain.User;
+import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.simple.SimpleDao;
@@ -25,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -84,8 +78,15 @@ public class JpaDaoImplTest {
     }
 
 
-    @Test
+    @Before
     public void initTestData() throws Exception {
+
+
+        long cnt = jpaDao.selectFrom(User.class).count();
+
+        if (cnt > 0) {
+            return;
+        }
 
         int count = 15;
 
@@ -137,12 +138,6 @@ public class JpaDaoImplTest {
             parentId = group.getId();
         }
 
-
-        List<GroupStatDTO> statDTOS = jpaDao.findByQueryObj(GroupStatDTO.class,new GroupStatDTO());
-
-
-
-        System.out.println(statDTOS);
 
     }
 
@@ -256,16 +251,13 @@ public class JpaDaoImplTest {
     //@Transactional
     public void testManyToOne() {
 
-       B  b = (B) jpaDao.save(new B());
-       B  b1 = (B) jpaDao.save(new B());
-       B  b2 = (B) jpaDao.save(new B());
+        B b = (B) jpaDao.save(new B());
+        B b1 = (B) jpaDao.save(new B());
+        B b2 = (B) jpaDao.save(new B());
 
         jpaDao.save(new A().setBid(b.getId()));
         jpaDao.save(new A().setBid(b1.getId()));
         jpaDao.save(new A().setBid(b2.getId()));
-
-
-
 
 
         List r = jpaDao.selectFrom(B.class).find();
@@ -291,14 +283,13 @@ public class JpaDaoImplTest {
 
         List<Group> groups = jpaDao
                 .selectFrom("jpa_dao_test_Group", "t")
-             //   .select("*")
+                //   .select("*")
                 .select("id")
-            //    .appendWhere("count(distinct o)")
+                //    .appendWhere("count(distinct o)")
 
                 .eq(E_Group.T_category, "adfsdafas")
                 .eq(E_Group.T_name, "adfsdafas")
                 .findOne();
-
 
 
         System.out.println(r);
@@ -340,7 +331,7 @@ public class JpaDaoImplTest {
 
         userUpdateDao
                 .appendColumn(E_AbstractNamedEntityObject.name, "name1")
-                .eq(E_User.enable,false)
+                .eq(E_User.enable, false)
                 .update();
     }
 
@@ -368,7 +359,7 @@ public class JpaDaoImplTest {
         selectDao
                 .limit(1, 10)
                 .appendByQueryObj(new UserDTO())
-               // .and().or().end()
+                // .and().or().end()
                 .appendWhere("222 != :orderCode")
 //                .appendWhere("3333 < :lastUpdateTime")
                 .find();
@@ -414,6 +405,45 @@ public class JpaDaoImplTest {
 
 
     @org.junit.Test
+    public void testNativeSelect() throws Exception {
+
+        SelectDao<User> selectDao = jpaDao.selectFrom("jpa_dao_test_User");
+
+        List entities = selectDao
+                .limit(1, 10)
+                //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
+//               .appendSelectColumns("id , ( name || 'ddddd' ) AS name ")
+//               .appendSelectColumns(" score AS scoreGt")
+                .appendByQueryObj(new UserDTO3())
+                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500L).build())
+                .gt(E_User.T_score, 300)
+                .find(UserDTO3.class);
+
+        System.out.println("testSelectFrom:" + entities);
+
+    }
+
+
+    @org.junit.Test
+    public void testSelect() throws Exception {
+
+        SelectDao<User> selectDao = jpaDao.selectFrom(User.class);
+
+        List entities = selectDao
+                .limit(1, 10)
+                //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
+//               .appendSelectColumns("id , ( name || 'ddddd' ) AS name ")
+//               .appendSelectColumns(" score AS scoreGt")
+                .appendByQueryObj(new UserDTO3())
+                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500L).build())
+                .gt(E_User.T_score, 300)
+                .find(UserDTO3.class);
+
+        System.out.println("testSelectFrom:" + entities);
+
+    }
+
+    @org.junit.Test
     public void testSelectFrom() throws Exception {
 
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class, "u");
@@ -421,7 +451,7 @@ public class JpaDaoImplTest {
         List entities = selectDao
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
-                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore",224)))
+                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224)))
                 .appendWhereEquals("", "")
                 .find();
 

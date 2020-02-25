@@ -537,6 +537,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
         //Hibernate 位置参数从 0 开始
 
+
         int paramIndex = getParamStartIndex();
 
 

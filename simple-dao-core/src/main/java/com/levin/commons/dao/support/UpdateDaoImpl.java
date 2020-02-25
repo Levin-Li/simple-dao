@@ -50,7 +50,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public int getParamStartIndex() {
-        return dao.getParamStartIndex();
+        return dao.getParamStartIndex(isNative());
     }
 
     @Override
