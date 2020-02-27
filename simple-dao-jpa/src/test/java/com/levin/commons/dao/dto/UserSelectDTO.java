@@ -26,12 +26,13 @@ public class UserSelectDTO extends UserDTO {
 
 
 
+
     @Ignore
     @SelectColumn("score")
     UserStatDTO selectSubQueryDTO = new UserStatDTO();
 
     @Ignore
-    @SelectColumn(value = "score", subQuery = "select 3000 from xxx.tab t where u.id = t.id")
+    @SelectColumn(value = "score", subQuery = "select 3000 from xxx.tab t where u.id = ${:name1}")
     Map param = new HashMap();
 
     //子查询，并使用命名参数，命名参数从Map变量中取

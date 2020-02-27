@@ -3,6 +3,7 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.util.ObjectUtil;
+import com.levin.commons.dao.util.QLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -146,6 +147,8 @@ public class JpaDaoImpl
     //但是原生查询还是从1开始
     private final int paramStartIndex;
 
+    private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
+
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
     private final DeepCopier deepCopier = new DeepCopier() {
@@ -189,8 +192,6 @@ public class JpaDaoImpl
         return true;
     }
 
-
-    @Override
     public boolean isEntityType(Class type) {
         return type.isAnnotationPresent(Entity.class);
     }
@@ -292,6 +293,14 @@ public class JpaDaoImpl
 
 
     @Override
+    public JpaDao setJPQLParamPlaceholder(String paramPlaceholder) {
+
+        this.paramPlaceholder = paramPlaceholder;
+
+        return this;
+    }
+
+    @Override
     public DeepCopier getDeepCopier() {
 
         return deepCopier;
@@ -303,17 +312,16 @@ public class JpaDaoImpl
      * @param object
      */
     @Override
-    public void detach(Object object) {
+    public JpaDao detach(Object object) {
 
-        if (object == null) {
-            return;
+        if (object != null) {
+            try {
+                getEntityManager().detach(object);
+            } catch (IllegalArgumentException e) {
+            }
         }
 
-        try {
-            getEntityManager().detach(object);
-        } catch (IllegalArgumentException e) {
-        }
-
+        return this;
     }
 
     @Override
@@ -419,15 +427,41 @@ public class JpaDaoImpl
         return update(isNative, -1, -1, statement, paramValues);
     }
 
+
+    /**
+     * 替换默认的占位符
+     * <p>
+     * hibernate 要去
+     *
+     * @param sql
+     * @return
+     */
+    public String replacePlaceholder(boolean isNative, String sql) {
+
+        String placeholder = this.getParamPlaceholder(isNative).trim();
+
+        //如果JDBC 是一样的，就不做处理
+        if (MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER.trim().equals(placeholder)) {
+            return sql;
+        }
+
+        return QLUtils.replaceParamPlaceholder(sql, placeholder, getParamStartIndex(isNative), "?", null);
+
+    }
+
     @Override
     @Transactional
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
 
         List paramValueList = flattenParams(null, paramValues);
 
+
+        statement = replacePlaceholder(isNative, statement);
+
         if (logger.isDebugEnabled()) {
-            logger.debug("JPQL:[" + statement + "] Params:" + paramValueList);
+            logger.debug("Update JPQL:[" + statement + "] Params:" + paramValueList);
         }
+
 
         EntityManager em = getEntityManager();
 
@@ -569,9 +603,12 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
+        statement = replacePlaceholder(isNative, statement);
+
         if (logger.isDebugEnabled()) {
-            logger.debug("JPQL:[" + statement + "] ResultClass: " + resultClass + ", StartIndex: " + getParamStartIndex(isNative) + " Params:" + paramValueList);
+            logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + ", StartIndex: " + getParamStartIndex(isNative) + " Params:" + paramValueList);
         }
+
 
         EntityManager em = getEntityManager();
 
@@ -599,10 +636,13 @@ public class JpaDaoImpl
 
 
     @Override
+    public String getParamPlaceholder(boolean isNative) {
+        return isNative ? MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER : this.paramPlaceholder;
+    }
+
+
     public int getParamStartIndex(boolean isNative) {
         return (isNative && paramStartIndex < 1) ? (paramStartIndex + 1) : paramStartIndex;
-
-//        return paramStartIndex;
     }
 
     /**

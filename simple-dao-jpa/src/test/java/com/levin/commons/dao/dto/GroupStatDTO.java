@@ -12,7 +12,6 @@ import com.levin.commons.service.domain.Desc;
 public class GroupStatDTO {
 
 
-
     @Desc
     @GroupBy("state")
     String state;
@@ -21,8 +20,8 @@ public class GroupStatDTO {
     String category;
 
 
-    @Count(value = "id")
-    Integer cnt;
+    @Count(value = "id", havingOp = " > ")
+    Integer cnt = 1;
 
     @Avg(value = "score", suffix = " + 5 )")
     Double avgScore;

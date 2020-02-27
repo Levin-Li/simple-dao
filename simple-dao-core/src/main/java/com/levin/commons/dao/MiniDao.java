@@ -6,32 +6,30 @@ import java.util.List;
 
 public interface MiniDao {
 
+    /**
+     * 默认的占位符,挂号里面不能有空格
+     */
+    String DEFAULT_JDBC_PARAM_PLACEHOLDER = " ? ";
 
     /**
      * 是否 JPA Dao
      *
      * @return
      */
-    boolean isJpa();
+    default boolean isJpa() {
+        return false;
+    }
 
 
     /**
-     * 是否是实体类型
-     * <p>
-     * 对于 jpa 来说 entity 类型是有 @Entity 注解
+     * 获取参数的占位符
      *
-     * @param type
+     * @param isNative 是否是原生查询
      * @return
      */
-    boolean isEntityType(Class type);
-
-
-    /**
-     * 获取参数的开始位置
-     *
-     * @return
-     */
-    int getParamStartIndex(boolean isNative);
+    default String getParamPlaceholder(boolean isNative) {
+        return DEFAULT_JDBC_PARAM_PLACEHOLDER;
+    }
 
 
     /**

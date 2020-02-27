@@ -58,11 +58,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     private final boolean nativeQL;
 
-    private int paramIndex = 1;
-
-    //hibernate 后期版本不支持问号参数，必须指定索引位置，占位符用于修复这个问题
-    private String paramPlaceholder = DEFAULT_PLACEHOLDER; // " ? ";
-//    private String paramPlaceholder = " ? ";
 
     private ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
@@ -82,6 +77,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
     protected boolean safeMode = true;
+
+
+   // protected String localParamPlaceholder = null;
 
 
     protected ConditionBuilderImpl(boolean isNative) {
@@ -176,14 +174,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     protected String getParamPlaceholder(String name) {
-        return StringUtils.hasText(name) ? ":" + name : paramPlaceholder;
+        return StringUtils.hasText(name) ? ":" + name : getParamPlaceholder();
     }
 
-    @Override
-    public C setParamPlaceholder(String paramPlaceholder) {
-        this.paramPlaceholder = paramPlaceholder;
-        return (C) this;
-    }
 
     @Override
     public C setContext(Map<String, Object> context) {
@@ -510,58 +503,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     }
 
-
-    /**
-     * 替换默认的占位符
-     *
-     * @param sql
-     * @return
-     */
-    public String replacePlaceholder(String sql) {
-
-
-        String placeholder = this.paramPlaceholder.trim();
-
-
-        if ("?".equals(placeholder)) {
-            return sql;
-        }
-
-
-        StringBuilder sb = new StringBuilder();
-
-
-        int beginIndex = 0;
-
-        int endIndex = 0;
-
-        //Hibernate 位置参数从 0 开始
-
-
-        int paramIndex = getParamStartIndex();
-
-
-        int len = placeholder.length();
-
-        while ((beginIndex = sql.indexOf(placeholder, endIndex)) != -1) {
-
-            sb.append(sql.substring(endIndex, beginIndex))
-                    .append(" ?")
-                    .append(paramIndex++)
-                    .append(" ");
-
-            endIndex = beginIndex + len;
-
-        }
-
-        if (endIndex < sql.length()) {
-            sb.append(sql.substring(endIndex));
-        }
-
-        return sb.toString();
-
-    }
-
     /**
      * 解析对象所有的属性，过滤并调用回调
      *
@@ -621,8 +562,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             for (Field field : fields) {
 
                 //忽略字段
-                if (QueryAnnotationUtil.isIgnore(field))
+                if (QueryAnnotationUtil.isIgnore(field)) {
                     continue;
+                }
 
                 ResolvableType fieldRT = ResolvableType.forField(field, rootType);
 
@@ -729,12 +671,14 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 }
 
                 //如果属性名为null
-                if (!StringUtils.hasText(name))
+                if (!StringUtils.hasText(name)) {
                     continue;
+                }
 
                 //如果是忽略的条件
-                if (opAnno instanceof Ignore)
+                if (opAnno instanceof Ignore) {
                     continue;
+                }
 
 //                processWhereCondition(name, paramValue, notOp, opAnno);
 
@@ -774,7 +718,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
         //自动进行字段的转换
         //@todo
-      //  value = tryAutoConvert(name, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class), attrType, value);
+        //  value = tryAutoConvert(name, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class), attrType, value);
 
 
         beginLogicGroup(bean, QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations), name, value);
@@ -1526,7 +1470,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 throw new StatementBuildException(name + "属性错误：基本类型的数组必须声明注解");
             } else {
                 //默认是相等操作
-                expr = aroundColumnPrefix(name) + " = " + getParamPlaceholder(null);
+                expr = aroundColumnPrefix(name) + " = " + getParamPlaceholder();
 //                expr = genConditionExpr(complexType, op, name, holder);
             }
         }
@@ -1586,7 +1530,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      */
     protected String buildSubQuery(ValueHolder holder) {
 
-        SelectDao selectDao = new SelectDaoImpl(this.isNative(), null);
+        SelectDaoImpl selectDao = new SelectDaoImpl(this.isNative(), getDao());
+
+       // selectDao.localParamPlaceholder = this.localParamPlaceholder;
 
         Object queryObj = holder.value;
 
@@ -1652,7 +1598,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 //转换为字符串
                 holder.value = "" + prefix + holder.value + suffix;
 
-                return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder(null);
+                return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder();
 
             } else if (opAnno instanceof In || opAnno instanceof NotIn) {
 
@@ -1666,8 +1612,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
                 int eleCount = QueryAnnotationUtil.eleCount(holder.value);
 
-                if (eleCount == 0)
+                if (eleCount == 0) {
                     return "";
+                }
 
                 String subQuery = getSubQuery(opAnno);
 
@@ -1681,7 +1628,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                     return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
                 }
 
-                return aroundColumnPrefix(name) + " " + op + " " + prefix + genParamExpr(",", getParamPlaceholder(null), eleCount) + suffix;
+                return aroundColumnPrefix(name) + " " + op + " " + prefix + genParamExpr(",", getParamPlaceholder(), eleCount) + suffix;
 
             } else if (opAnno instanceof Exists || opAnno instanceof NotExists) {
 
@@ -1723,9 +1670,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 }
 
                 if (eleCount > 1) {
-                    return prefix + aroundColumnPrefix(name) + " Between " + genParamExpr(" " + between.op() + " ", getParamPlaceholder(null), eleCount) + suffix;
+                    return prefix + aroundColumnPrefix(name) + " Between " + genParamExpr(" " + between.op() + " ", getParamPlaceholder(), eleCount) + suffix;
                 } else {
-                    return prefix + aroundColumnPrefix(name) + " >= " + getParamPlaceholder(null) + suffix;
+                    return prefix + aroundColumnPrefix(name) + " >= " + getParamPlaceholder() + suffix;
                 }
 
             } else if (opAnno instanceof Where) {
@@ -1754,7 +1701,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                     expr = autoAroundParentheses("", buildSubQuery(holder), "");
 
                 } else {
-                    expr = getParamPlaceholder(null);
+                    expr = getParamPlaceholder();
                 }
 
                 return aroundColumnPrefix(name) + " " + op + " " + prefix + " " + expr + " " + suffix;
@@ -1771,6 +1718,14 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     private static final Pattern namedParamPattern = Pattern.compile("(\\$\\{\\s*:\\s*([\\w._]+)\\s*\\})");
 
 
+    /**
+     * 替换所有的变量
+     *
+     * @param ql
+     * @param useVarValue
+     * @param holder
+     * @return
+     */
     public String doReplace(String ql, boolean useVarValue, ValueHolder holder) {
 
         if (!StringUtils.hasText(ql)) {
@@ -1804,7 +1759,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
 
         //替换成 ？ 号参数
-        ql = matcher.replaceAll(getParamPlaceholder(null));
+        ql = matcher.replaceAll(getParamPlaceholder());
 
         //
         if (paramValues.size() > 0) {
@@ -1812,7 +1767,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         } else if (!useVarValue) {
             //如果没有发现参数，然后又要求不使用变量值
             //忽略参数值
-            holder.value = new Object[]{};
+            holder.value = EMPTY_PARAM_VALUES;
         }
 
         return ql;
@@ -1863,6 +1818,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     }
 
+    protected String getParamPlaceholder() {
+//        return localParamPlaceholder != null ? localParamPlaceholder : getDao().getParamPlaceholder(isNative());
+        return getDao().getParamPlaceholder(isNative());
+    }
+
+    protected abstract MiniDao getDao();
+
     /**
      * @return
      */
@@ -1883,7 +1845,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     protected String aroundColumnPrefix(String column) {
 
         //如果包含占位符，则直接返回
-        if (column.contains(paramPlaceholder.trim())) {
+        if (column.contains(getParamPlaceholder().trim())) {
             return column;
         }
 

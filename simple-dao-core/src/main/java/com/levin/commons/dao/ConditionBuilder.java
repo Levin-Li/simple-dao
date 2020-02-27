@@ -14,29 +14,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
         SimpleConditionBuilder2<T>,
         StatementBuilder {
 
-
-    /**
-     * 默认的占位符,挂号里面不能有空格
-     */
-    String DEFAULT_PLACEHOLDER = " {:P} ";
-
-
-    /**
-     * 设置查询语句参数占位符
-     *
-     * @param paramPlaceholder
-     * @return
-     */
-    T setParamPlaceholder(String paramPlaceholder);
-
-
-    /**
-     * 获取参数的开始位置
-     *
-     * @return
-     */
-    int getParamStartIndex();
-
     /**
      * 设置上下文用于表达式求值
      *

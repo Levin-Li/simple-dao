@@ -77,4 +77,44 @@ public class QLUtils {
     }
 
 
+    /**
+     * 替换占位符
+     *
+     * @param sql
+     * @return
+     */
+    public static String replaceParamPlaceholder(String sql, String oldParamPlaceholder, Integer paramIndex, String newPlaceholderPrefix,String newPlaceholderSuffix) {
+
+        oldParamPlaceholder = oldParamPlaceholder.trim();
+
+        StringBuilder sb = new StringBuilder();
+
+
+        int beginIndex = 0;
+
+        int endIndex = 0;
+
+
+        int len = oldParamPlaceholder.length();
+
+        while ((beginIndex = sql.indexOf(oldParamPlaceholder, endIndex)) != -1) {
+
+            sb.append(sql.substring(endIndex, beginIndex))
+                    .append(" ")
+                    .append(newPlaceholderPrefix != null ? newPlaceholderPrefix : "")
+                    .append(paramIndex != null ? paramIndex++ : "")
+                    .append(newPlaceholderSuffix != null ? newPlaceholderSuffix : "")
+                    .append(" ");
+
+            endIndex = beginIndex + len;
+        }
+
+        if (endIndex < sql.length()) {
+            sb.append(sql.substring(endIndex));
+        }
+
+        return sb.toString();
+
+    }
+
 }

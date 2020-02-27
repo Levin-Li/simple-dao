@@ -444,6 +444,19 @@ public class JpaDaoImplTest {
 
     }
 
+
+
+    @org.junit.Test
+    public void testStat() throws Exception {
+
+
+        List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class,new GroupStatDTO());
+
+        System.out.println(objects);
+
+    }
+
+
     @org.junit.Test
     public void testSelectFrom() throws Exception {
 
@@ -453,7 +466,7 @@ public class JpaDaoImplTest {
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
                 .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224)))
-                .appendWhereEquals("", "")
+              //  .appendWhereEquals("", "")
                 .find();
 
         System.out.println("testSelectFrom:" + entities);

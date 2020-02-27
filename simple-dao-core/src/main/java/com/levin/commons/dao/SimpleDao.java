@@ -11,8 +11,6 @@ import java.util.List;
 public interface SimpleDao extends MiniDao {
 
 
-
-
     /**
      * 更新或是删除
      *

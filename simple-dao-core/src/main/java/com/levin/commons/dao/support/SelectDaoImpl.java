@@ -75,7 +75,6 @@ public class SelectDaoImpl<T>
 
     boolean hasStatColumns = false;
 
-
     {
         disableSafeMode();
     }
@@ -110,10 +109,15 @@ public class SelectDaoImpl<T>
         super(entityClass, alias);
         this.dao = dao;
     }
+//
+//    @Override
+//    protected String getParamPlaceholder() {
+//        return dao.getParamPlaceholder(isNative());
+//    }
 
     @Override
-    public int getParamStartIndex() {
-        return dao.getParamStartIndex(isNative());
+    protected MiniDao getDao() {
+        return dao;
     }
 
     @Override
@@ -221,7 +225,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
 
         //仅对 JPA dao 有效
-        if (!dao.isJpa() || setAttrs == null || setAttrs.length < 1) {
+        if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
             return this;
         }
 
@@ -229,20 +233,19 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("left join must be set alias");
         }
 
-        if (setAttrs != null) {
-            for (String setAttr : setAttrs) {
+        for (String setAttr : setAttrs) {
 
-                if (!StringUtils.hasText(setAttr))
-                    continue;
+            if (!StringUtils.hasText(setAttr))
+                continue;
 
-                //如果没有使用别名，尝试使用别名
-                if (!setAttr.contains("."))
-                    setAttr = aroundColumnPrefix(setAttr);
+            //如果没有使用别名，尝试使用别名
+            if (!setAttr.contains("."))
+                setAttr = aroundColumnPrefix(setAttr);
 
-                fetchStatement.append(" ").append((isLeftJoin ? "left" : "inner") + " join fetch " + setAttr).append(" ");
+            fetchStatement.append(" ").append((isLeftJoin ? "left" : "inner") + " join fetch " + setAttr).append(" ");
 
-            }
         }
+
 
         return this;
     }
@@ -596,7 +599,7 @@ public class SelectDaoImpl<T>
         }
 
         if (StringUtils.hasText(model.getHavingOp())) {
-            appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(null), value);
+            appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(), value);
         }
     }
 
@@ -740,7 +743,7 @@ public class SelectDaoImpl<T>
 
             //把整个查询做为子查询
             if (isNative())
-                return count("Select Count('*') From (" + replacePlaceholder(this.genFinalStatement()) + ") AS cnt_tmp", genFinalParamList());
+                return count("Select Count('*') From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
 
             column = foundColumn(column, selectColumns.toString());
 
@@ -852,7 +855,7 @@ public class SelectDaoImpl<T>
      */
 //    @Override
     public <E> List<E> findForResultClass(Class<E> resultClass) {
-        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, replacePlaceholder(genQL(false).toString()), genFinalParamList());
+        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genQL(false).toString(), genFinalParamList());
     }
 
     @Override
@@ -953,7 +956,7 @@ public class SelectDaoImpl<T>
 
         // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
 
-        boolean isEntity = dao.isEntityType(targetType) || !dao.isJpa();
+        // boolean isEntity = dao.isEntityType(targetType) || !dao.isJpa();
 
         List<E> queryResultList = this.findForResultClass(null);
 
@@ -1155,8 +1158,9 @@ public class SelectDaoImpl<T>
 
             if (obj instanceof OrderByObj) {
                 return orderByStatement.equals(((OrderByObj) obj).orderByStatement);
-            } else
+            } else {
                 return false;
+            }
         }
 
         @Override

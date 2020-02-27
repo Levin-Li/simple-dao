@@ -210,6 +210,22 @@ import javax.persistence.EntityManager;
 //@Repository
 public interface JpaDao extends SimpleDao {
 
+
+    /**
+     * 默认的占位符,挂号里面不能有空格
+     */
+    String DEFAULT_JPQL_PARAM_PLACEHOLDER = "{:?}";
+
+
+    /**
+     * 设置参数占位符
+     *
+     * @param paramPlaceholder
+     * @return
+     */
+    JpaDao setJPQLParamPlaceholder(String paramPlaceholder);
+
+
     /**
      * 获取jpa实体管理器
      *
@@ -218,12 +234,11 @@ public interface JpaDao extends SimpleDao {
     EntityManager getEntityManager();
 
 
-
     /**
      * 强制让对象脱管
      *
      * @param object
      */
-    void detach(Object object);
+    JpaDao detach(Object object);
 
 }

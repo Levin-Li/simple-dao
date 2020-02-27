@@ -1,8 +1,8 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.DeleteDao;
+import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +40,14 @@ public class DeleteDaoImpl<T>
         this.dao = dao;
     }
 
+//    @Override
+//    protected String getParamPlaceholder() {
+//        return dao.getParamPlaceholder(isNative());
+//    }
+
     @Override
-    public int getParamStartIndex() {
-        return dao.getParamStartIndex(isNative());
+    protected MiniDao getDao() {
+        return dao;
     }
 
     @Override
@@ -76,7 +81,7 @@ public class DeleteDaoImpl<T>
     @Override
     @Transactional
     public int delete() {
-        return dao.update(isNative(), rowStart, rowCount, replacePlaceholder( genFinalStatement()), genFinalParamList());
+        return dao.update(isNative(), rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 }

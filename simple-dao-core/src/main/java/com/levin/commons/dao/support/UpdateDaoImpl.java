@@ -48,9 +48,14 @@ public class UpdateDaoImpl<T>
         this.dao = dao;
     }
 
+//    @Override
+//    protected String getParamPlaceholder() {
+//        return dao.getParamPlaceholder(isNative());
+//    }
+
     @Override
-    public int getParamStartIndex() {
-        return dao.getParamStartIndex(isNative());
+    protected MiniDao getDao() {
+        return dao;
     }
 
     @Override
@@ -65,8 +70,9 @@ public class UpdateDaoImpl<T>
     @Override
     public UpdateDao<T> appendColumns(String columns, Object... paramValues) {
 
-        if (StringUtils.hasText(columns))
+        if (StringUtils.hasText(columns)) {
             append(columns, paramValues);
+        }
 
         return this;
     }
@@ -84,8 +90,9 @@ public class UpdateDaoImpl<T>
     @Override
     public UpdateDao<T> appendColumn(String entityAttrName, Object paramValue) {
 
-        if (StringUtils.hasText(entityAttrName))
-            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(null), paramValue);
+        if (StringUtils.hasText(entityAttrName)) {
+            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
+        }
 
         return this;
     }
@@ -113,8 +120,9 @@ public class UpdateDaoImpl<T>
     }
 
     private void append(String expr, Object... values) {
-        if (updateColumns.add(expr))
+        if (updateColumns.add(expr)) {
             updateParamValues.add(values);
+        }
     }
 
     @Override
@@ -129,20 +137,23 @@ public class UpdateDaoImpl<T>
             @Override
             public boolean onAction(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
-                if (!StringUtils.hasText(name))
+                if (!StringUtils.hasText(name)) {
                     return true;
+                }
 
                 if (ignoreAttrs != null) {
                     for (String ignoreAttr : ignoreAttrs) {
-                        if (name.equals(ignoreAttr))
+                        if (name.equals(ignoreAttr)) {
                             return true;
+                        }
                     }
                 }
 
                 //如果忽略空值，且值为空
                 if (value == null) {
-                    if (ignoreNullValueColumn)
+                    if (ignoreNullValueColumn) {
                         return true;
+                    }
                 } else if (isComplexType(null, value)) {
                     //如果不是原子类型
                     if (logger.isDebugEnabled()) {
@@ -165,8 +176,9 @@ public class UpdateDaoImpl<T>
 
         StringBuilder ql = new StringBuilder();
 
-        if (updateColumns.length() == 0)
+        if (updateColumns.length() == 0) {
             throw new StatementBuildException("no columns to update");
+        }
 
 
         String whereStatement = genWhereStatement();
@@ -211,7 +223,7 @@ public class UpdateDaoImpl<T>
     @Transactional
     @Override
     public int update() {
-        return dao.update(isNative(), rowStart, rowCount, replacePlaceholder(genFinalStatement()), genFinalParamList());
+        return dao.update(isNative(), rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 
@@ -234,16 +246,18 @@ public class UpdateDaoImpl<T>
      */
     protected void processUpdateAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        if (!(opAnnotation instanceof UpdateColumn))
+        if (!(opAnnotation instanceof UpdateColumn)) {
             return;
+        }
 
         UpdateColumn anno = (UpdateColumn) opAnnotation;
 
         //如果忽略空值
         if (anno.useVarValue()
                 && anno.ignoreNullValue()
-                && value == null)
+                && value == null) {
             return;
+        }
 
         String expr = "";
 
@@ -269,7 +283,7 @@ public class UpdateDaoImpl<T>
             expr = buildSubQuery(holder);
             value = holder.value;
         } else {
-            expr = (anno.useVarValue() ? getParamPlaceholder(null) : "");
+            expr = (anno.useVarValue() ? getParamPlaceholder() : "");
             value = anno.useVarValue() ? value : new Object[0];
         }
 
