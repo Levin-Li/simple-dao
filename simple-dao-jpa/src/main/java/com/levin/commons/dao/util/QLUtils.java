@@ -5,11 +5,15 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.parser.SQLParserUtils;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
+import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class QLUtils {
+
+
+    private static ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
 
     /**
      * @param column
@@ -45,18 +49,71 @@ public class QLUtils {
         if (sb.length() < 1)
             return new ArrayList<>(0);
 
-        SQLStatementParser parser = SQLParserUtils.createSQLStatementParser("select " + sb.toString() + " from Test_Table", dbType);
+
+        String cols = sb.toString().trim();
+
+        //使用缓存
+        List<String[]> result = softRefCache.get(cols);
+
+        if (result != null) {
+            return result;
+        }
+
+
+        SQLStatementParser parser = SQLParserUtils.createSQLStatementParser("select " + cols + " from Test_Table", dbType);
 
         List<SQLSelectItem> selectItems = ((SQLSelectQueryBlock) ((SQLSelectStatement) parser.parseSelect()).getSelect().getQuery()).getSelectList();
 
-        List<String[]> result = new ArrayList<>(selectItems.size());
+        result = new ArrayList<>(selectItems.size());
 
         for (SQLSelectItem selectItem : selectItems) {
             result.add(new String[]{selectItem.getExpr().toString(), selectItem.getAlias()});
         }
 
+        //放入缓存
+        softRefCache.put(cols, result);
+
         return result;
     }
 
 
+    /**
+     * 替换占位符
+     *
+     * @param sql
+     * @return
+     */
+    public static String replaceParamPlaceholder(String sql, String oldParamPlaceholder, Integer paramIndex, String newPlaceholderPrefix,String newPlaceholderSuffix) {
+
+        oldParamPlaceholder = oldParamPlaceholder.trim();
+
+        StringBuilder sb = new StringBuilder();
+
+
+        int beginIndex = 0;
+
+        int endIndex = 0;
+
+
+        int len = oldParamPlaceholder.length();
+
+        while ((beginIndex = sql.indexOf(oldParamPlaceholder, endIndex)) != -1) {
+
+            sb.append(sql.substring(endIndex, beginIndex))
+                    .append(" ")
+                    .append(newPlaceholderPrefix != null ? newPlaceholderPrefix : "")
+                    .append(paramIndex != null ? paramIndex++ : "")
+                    .append(newPlaceholderSuffix != null ? newPlaceholderSuffix : "")
+                    .append(" ");
+
+            endIndex = beginIndex + len;
+        }
+
+        if (endIndex < sql.length()) {
+            sb.append(sql.substring(endIndex));
+        }
+
+        return sb.toString();
+
+    }
 }
