@@ -35,6 +35,11 @@ public class DaoFactoryImpl implements DaoFactory {
     }
 
 
+//    @Override
+//    public <T> SelectDao<T> selectFrom(boolean nativeQL) {
+//        return new SelectDaoImpl<T>(getDao(), nativeQL);
+//    }
+
     /**
      * 返回值类型
      *

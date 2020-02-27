@@ -4,7 +4,6 @@ import javax.validation.constraints.NotNull;
 
 public interface DaoFactory {
 
-
     /**
      * @return
      */

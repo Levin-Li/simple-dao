@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -147,6 +148,8 @@ public class JpaDaoImpl
     //但是原生查询还是从1开始
     private final int paramStartIndex;
 
+
+    @Value("${jpa.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
@@ -459,7 +462,8 @@ public class JpaDaoImpl
         statement = replacePlaceholder(isNative, statement);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Update JPQL:[" + statement + "] Params:" + paramValueList);
+            logger.debug("Update JPQL:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
+                    + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
 
@@ -606,7 +610,8 @@ public class JpaDaoImpl
         statement = replacePlaceholder(isNative, statement);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + ", StartIndex: " + getParamStartIndex(isNative) + " Params:" + paramValueList);
+            logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
+                    + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
 
@@ -652,7 +657,8 @@ public class JpaDaoImpl
      *
      * @return
      */
-    protected JpaDao getDao() {
+    @Override
+    public JpaDao getDao() {
 
         if (applicationContext != null) {
 
@@ -678,7 +684,7 @@ public class JpaDaoImpl
 
         if (SelectDao.class.isAssignableFrom(daoClass)) {
 
-            return (DAO) new SelectDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
+            return (DAO) new SelectDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
 
         } else if (UpdateDao.class.isAssignableFrom(daoClass)) {
             return (DAO) new UpdateDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
@@ -711,6 +717,12 @@ public class JpaDaoImpl
     public <E> E findOneByQueryObj(Class<E> type, Object... queryObjs) {
         return (E) newDao(SelectDao.class, queryObjs).findOne(type);
     }
+
+
+//    @Override
+//    public <T> SelectDao<T> selectFrom(boolean nativeQL) {
+//        return new SelectDaoImpl<T>(getDao(), nativeQL);
+//    }
 
     /**
      * 返回值类型
@@ -829,27 +841,43 @@ public class JpaDaoImpl
                     String paramName = entry.getKey().toString();
 
                     if (parameterMap.containsKey(paramName)) {
-                        query.setParameter(paramName, entry.getValue());
+                        query.setParameter(paramName, tryAutoConvertParamValue(parameterMap, paramName, entry.getValue()));
                     }
                 }
             } else {
+                query.setParameter(pIndex, tryAutoConvertParamValue(parameterMap, pIndex, paramValue));
 
-                //自动转换数据类型
-                //@todo 观察，需要关注性能问题
-                //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
-                Parameter parameter = parameterMap.get("" + pIndex);
-
-                if (parameter != null && parameter.getParameterType() != null) {
-                    if (!parameter.getParameterType().equals(paramValue.getClass())) {
-                        paramValue = ObjectUtil.convert(paramValue, parameter.getParameterType());
-                    }
-                }
-
-                query.setParameter(pIndex++, paramValue);
+                //关键步骤
+                pIndex++;
             }
         }
 
         return pIndex;
+    }
+
+    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+        //自动转换数据类型
+        //@todo 观察，需要关注性能问题
+        //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
+
+        if (paramValue == null) {
+            return paramValue;
+        }
+
+        Parameter parameter = parameterMap.get(paramKey);
+
+        if (parameter == null && (paramKey instanceof Number)) {
+            parameter = parameterMap.get(paramKey.toString());
+        }
+
+        Class parameterType = parameter != null ? parameter.getParameterType() : null;
+
+        if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
+            paramValue = ObjectUtil.convert(paramValue, parameterType);
+        }
+
+
+        return paramValue;
     }
 
     /**

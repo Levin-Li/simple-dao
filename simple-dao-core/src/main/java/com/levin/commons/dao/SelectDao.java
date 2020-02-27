@@ -67,9 +67,20 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @param columns
      * @param paramValues
      * @return
+     * @Deprecated 建议使用 appendColumns 代替
      */
+    @Deprecated
     SelectDao<T> appendSelectColumns(String columns, Object... paramValues);
 
+
+    /**
+     * 增加要选择的列
+     *
+     * @param columns
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> appendColumns(String columns, Object... paramValues);
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -120,6 +131,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @param joinStatement inner join 和left join 表达式
      */
     SelectDao<T> join(String joinStatement);
+
 
     /**
      * 增加join语句
@@ -235,14 +247,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 是否有查询的列
-     *
-     * @return
-     */
-    // boolean hasColumnsToQuery();
-
-
-    /**
      * 记录总数
      * COUNT() ，返回类型为 Long ，注意 count(*) 语法在 hibernate 中可用，但在 toplink 其它产品中并不可用
      * 目前该方法有一个bug，如果查询本身已经是一个统计语句或是分组统计语句，可能将导致错误
@@ -347,7 +351,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
     ////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 获取设置的别名
+     * 获取主表的查询别名
+     *
      * @return alias
      */
     String getAlias();

@@ -80,10 +80,10 @@ public class SelectDaoImpl<T>
     }
 
     public SelectDaoImpl() {
-        this(true, null);
+        this(null, true);
     }
 
-    public SelectDaoImpl(boolean isNative, MiniDao dao) {
+    public SelectDaoImpl(MiniDao dao, boolean isNative) {
         super(isNative);
         this.dao = dao;
     }
@@ -122,11 +122,11 @@ public class SelectDaoImpl<T>
 
     @Override
     protected void setFromStatement(String fromStatement) {
-
-        if (!StringUtils.hasText(this.fromStatement)) {
+        if (!StringUtils.hasText(this.fromStatement)
+                && entityClass == null
+                && !StringUtils.hasText(this.tableName)) {
             this.fromStatement = fromStatement;
         }
-
     }
 
     @Override
@@ -138,20 +138,25 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = false;
 
-        appendSelectColumns(columns, paramValues);
+        appendColumns(columns, paramValues);
 
         return this;
     }
 
-
     @Override
-    public SelectDao<T> appendSelectColumns(String columns, Object... paramValues) {
+    public SelectDao<T> appendColumns(String columns, Object... paramValues) {
 
         if (selectColumns.add(columns)) {
             selectParamValues.add(paramValues);
         }
 
         return this;
+    }
+
+    @Override
+    public SelectDao<T> appendSelectColumns(String columns, Object... paramValues) {
+
+        return appendColumns(columns,paramValues);
     }
 
     public SelectDaoImpl<T> setQueryRequest(QueryRequest queryRequest) {
@@ -410,8 +415,9 @@ public class SelectDaoImpl<T>
 
             boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
 
-            if (!complexType)
-                value = tryToConvertValue(name, value);
+            if (!complexType) {
+               // value = tryToConvertValue(name, value);
+            }
 
             ValueHolder holder = new ValueHolder(bean, value);
 

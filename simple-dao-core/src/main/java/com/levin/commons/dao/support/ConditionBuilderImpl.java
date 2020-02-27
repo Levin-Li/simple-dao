@@ -20,6 +20,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.springframework.util.StringUtils.hasText;
 
 
 /**
@@ -79,7 +82,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     protected boolean safeMode = true;
 
 
-   // protected String localParamPlaceholder = null;
+    // protected String localParamPlaceholder = null;
 
 
     protected ConditionBuilderImpl(boolean isNative) {
@@ -174,7 +177,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     protected String getParamPlaceholder(String name) {
-        return StringUtils.hasText(name) ? ":" + name : getParamPlaceholder();
+        return hasText(name) ? ":" + name : getParamPlaceholder();
     }
 
 
@@ -373,22 +376,22 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         targetOptionAnnoList.add(targetOption);
 
         if (this.entityClass == null
-                && targetOption.entityClass() != null
-                && targetOption.entityClass() != Void.class)
+                && targetOption.entityClass() != Void.class) {
             this.entityClass = targetOption.entityClass();
+        }
 
-        if (!StringUtils.hasText(this.tableName)
-                && StringUtils.hasText(targetOption.tableName()))
+        if (!hasText(this.tableName)) {
             this.tableName = targetOption.tableName();
+        }
 
 
-        if (StringUtils.hasText(targetOption.fromStatement())) {
+        if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());
         }
 
-        if (!StringUtils.hasText(this.alias)
-                && StringUtils.hasText(targetOption.alias()))
+        if (!hasText(this.alias)) {
             this.alias = targetOption.alias();
+        }
 
         ValueHolder holder = new ValueHolder(hostObj, null);
 
@@ -429,9 +432,8 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
     }
 
-
     protected void setFromStatement(String fromStatement) {
-        throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
+        //  throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
     }
 
 //////////////////////////////////////////////
@@ -477,7 +479,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             throw new IllegalStateException("method [" + method + "] can't get param name");
 
         for (String parameterName : parameterNames) {
-            if (parameterName == null || !StringUtils.hasText(parameterName))
+            if (parameterName == null || !hasText(parameterName))
                 throw new IllegalStateException("method [" + method + "] can't get param name");
         }
 
@@ -618,7 +620,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         if (queryParams == null)
             return;
 
-        boolean hasPrefix = StringUtils.hasText(paramPrefix);
+        boolean hasPrefix = hasText(paramPrefix);
 
         Map<String, Annotation> annotationMap = QueryAnnotationUtil.getAllAnnotations();
 
@@ -671,7 +673,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 }
 
                 //如果属性名为null
-                if (!StringUtils.hasText(name)) {
+                if (!hasText(name)) {
                     continue;
                 }
 
@@ -1300,7 +1302,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     private void append(String expr, Object value) {
 
-        if (StringUtils.hasText(expr)
+        if (hasText(expr)
                 && whereExprRootNode.addToCurrentNode(expr)) {
             whereParamValues.add(value);
         }
@@ -1387,7 +1389,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             //尝试转换值
             //@modify by llw,20170829，修复 Null和NotNull注解时，并不使用属性值，所以无需进行值转换
             if (!complexType) {
-                value = tryToConvertValue(name, value);
+              //  value = tryToConvertValue(name, value);
             }
 
             ValueHolder holder = new ValueHolder(bean, value);
@@ -1430,7 +1432,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     String processNotTag(Object rootBean, Not notAnnotation, String expr) {
         //如果有非操作，则把已经生成的语句用非语句包围起来
-        if (StringUtils.hasText(expr) && notAnnotation != null)
+        if (hasText(expr) && notAnnotation != null)
             expr = genConditionExpr(false, notAnnotation, "", new ValueHolder(rootBean, expr));
         return expr;
     }
@@ -1530,9 +1532,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      */
     protected String buildSubQuery(ValueHolder holder) {
 
-        SelectDaoImpl selectDao = new SelectDaoImpl(this.isNative(), getDao());
+        SelectDaoImpl selectDao = new SelectDaoImpl(getDao(), this.isNative());
 
-       // selectDao.localParamPlaceholder = this.localParamPlaceholder;
+        // selectDao.localParamPlaceholder = this.localParamPlaceholder;
 
         Object queryObj = holder.value;
 
@@ -1545,7 +1547,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
         String subStatement = selectDao.genFinalStatement();
 
-        if (StringUtils.hasText(subStatement)) {
+        if (hasText(subStatement)) {
             holder.value = selectDao.genFinalParamList();
         } else {
             holder.value = new Object[0];
@@ -1585,6 +1587,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             String prefix = (String) opAnno.getClass().getDeclaredMethod("prefix").invoke(opAnno);
             String suffix = (String) opAnno.getClass().getDeclaredMethod("suffix").invoke(opAnno);
 
+            Class<?> expectType = getExpectType(name);
+
+
             if (opAnno instanceof Not) {
                 //忽略左操作数
                 //示例：NOT (u.name  =   ? )
@@ -1601,6 +1606,15 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder();
 
             } else if (opAnno instanceof In || opAnno instanceof NotIn) {
+
+
+                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
+                //尝试自动解析成数组
+                if(expectType!=null
+                        && !String.class.equals(expectType)
+                        && holder.value instanceof CharSequence){
+                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType,0).getClass());
+                }
 
                 //是否过滤空值
                 //JPA QL 是默认支持 in 语法
@@ -1619,7 +1633,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 String subQuery = getSubQuery(opAnno);
 
                 //最优先使用自定义的子查询
-                if (StringUtils.hasText(subQuery)) {
+                if (hasText(subQuery)) {
                     return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, false, holder), suffix);
                 }
 
@@ -1635,7 +1649,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 String subQuery = getSubQuery(opAnno);
 
                 //最优先使用自定义的子查询
-                if (StringUtils.hasText(subQuery)) {
+                if (hasText(subQuery)) {
                     return " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, false, holder), suffix);
                 }
 
@@ -1647,7 +1661,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
             } else if (opAnno instanceof NotNull || opAnno instanceof Null) {
                 //忽略参数值
-                holder.value = new Object[]{};
+                holder.value = EMPTY_PARAM_VALUES;
                 return getText(prefix, "") + aroundColumnPrefix(name) + getText(suffix, "") + " " + op + " ";
             } else if (opAnno instanceof Between) {
                 //是否过滤空值
@@ -1655,6 +1669,14 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
                 if (complexType)
                     throw new StatementBuildException(name + "注解使用有误,Between 注解只允许使用在原子类型数组上");
+
+                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
+                //尝试自动解析成数组
+                if(expectType!=null
+                        && !String.class.equals(expectType)
+                        && holder.value instanceof CharSequence){
+                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType,0).getClass());
+                }
 
                 Between between = (Between) opAnno;
 
@@ -1692,7 +1714,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 String expr = "";
 
                 //最优先使用自定义的子查询
-                if (StringUtils.hasText(subQuery)) {
+                if (hasText(subQuery)) {
 
                     expr = autoAroundParentheses("", doReplace(subQuery, false, holder), "");
 
@@ -1701,6 +1723,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                     expr = autoAroundParentheses("", buildSubQuery(holder), "");
 
                 } else {
+
+                    //尝试根据数据库字段类型转换值
+                    holder.value = tryToConvertValue(name, holder.value);
+
                     expr = getParamPlaceholder();
                 }
 
@@ -1728,7 +1754,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      */
     public String doReplace(String ql, boolean useVarValue, ValueHolder holder) {
 
-        if (!StringUtils.hasText(ql)) {
+        if (!hasText(ql)) {
             return ql;
         }
 
@@ -1834,7 +1860,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     protected String genEntityStatement() {
 
-        if (StringUtils.hasText(this.tableName))
+        if (hasText(this.tableName))
             return tableName + " " + getText(alias, " ");
         else if (entityClass != null)
             return entityClass.getName() + " " + getText(alias, " ");
@@ -1845,11 +1871,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     protected String aroundColumnPrefix(String column) {
 
         //如果包含占位符，则直接返回
-        if (column.contains(getParamPlaceholder().trim())) {
+        //@fix bug 20200227
+        if (column.contains(getParamPlaceholder().trim()) || column.contains(".")) {
             return column;
         }
 
         // :?P
+
 
         String prefix = getText(alias, "", ".", "");
 
@@ -1895,7 +1923,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
 
         //如果没有内容默认为true
-        if (!StringUtils.hasText(conditionExpr)) {
+        if (!hasText(conditionExpr)) {
             return true;
         }
 
@@ -1953,6 +1981,17 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         if (logicAnnotation instanceof END) {
             end();
         }
+    }
+
+
+    /**
+     * 获取属性的数据类型
+     *
+     * @param name
+     * @return
+     */
+    protected Class<?> getExpectType(String name) {
+        return entityClass != null ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
     }
 
     /**

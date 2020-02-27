@@ -343,7 +343,7 @@ public class JpaDaoImplTest {
 
         selectDao
                 .limit(1, 10)
-                .gt("area", AppType.Ios )
+                .gt("area", AppType.Ios)
 //                .in("area", AppType.Ios, AppType.Android)
                 .appendByQueryObj(new UserStatDTO());
 
@@ -445,17 +445,76 @@ public class JpaDaoImplTest {
     }
 
 
-
     @org.junit.Test
     public void testStat() throws Exception {
 
 
-        List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class,new GroupStatDTO());
+        List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());
 
         System.out.println(objects);
 
     }
 
+
+    @org.junit.Test
+    public void testJoinDto() throws Exception {
+
+
+        List<MulitTableJoinDTO> objects = jpaDao.findByQueryObj(MulitTableJoinDTO.class, new MulitTableJoinDTO());
+
+
+        org.junit.Assert.assertNotNull(objects);
+
+    }
+
+
+    @org.junit.Test
+    public void testJoin() throws Exception {
+
+
+        List<MulitTableJoinDTO> objects = jpaDao.selectFrom(User.class, "u")
+                .join("left join jpa_dao_test_Group g on u.group.id = g.id")
+                .appendByQueryObj(new MulitTableJoinDTO())
+
+                .appendWhere("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
+
+                .gt("u.id", "1")
+                .find(MulitTableJoinDTO.class);
+
+        org.junit.Assert.assertNotNull(objects);
+    }
+
+
+    @org.junit.Test
+    public void testJoin2() throws Exception {
+
+
+        List<MulitTableJoinDTO> objects = jpaDao.selectFrom(false, "jpa_dao_test_User u")
+                .join("left join jpa_dao_test_Group g on u.group.id = g.id")
+                .select("u.id AS uid ,g.id AS gid")
+
+                .where("g.id > " + jpaDao.getParamPlaceholder(false), 2)
+
+                .limit(-1, 100)
+                .find(MulitTableJoinDTO.class);
+
+
+        org.junit.Assert.assertNotNull(objects);
+    }
+
+
+    @org.junit.Test
+    public void testJoin3() throws Exception {
+
+
+        List<MulitTableJoinDTO> objects = jpaDao.selectFrom(false, "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
+                .appendByQueryObj(new MulitTableJoinDTO())
+                .appendWhere("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
+                .find(MulitTableJoinDTO.class);
+
+
+        org.junit.Assert.assertNotNull(objects);
+    }
 
     @org.junit.Test
     public void testSelectFrom() throws Exception {
@@ -466,7 +525,7 @@ public class JpaDaoImplTest {
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
                 .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224)))
-              //  .appendWhereEquals("", "")
+                //  .appendWhereEquals("", "")
                 .find();
 
         System.out.println("testSelectFrom:" + entities);
@@ -497,7 +556,8 @@ public class JpaDaoImplTest {
         n = jpaDao.updateTo(User.class)
                 .appendColumn(E_User.lastUpdateTime, new Date())
 //                .appendColumn(E_User.description, "" + System.currentTimeMillis())
-                .contains(E_User.name, "2").update();
+                .contains(E_User.name, "2")
+                .update();
 
 
         System.out.println("Group E_User:" + n);
@@ -537,12 +597,13 @@ public class JpaDaoImplTest {
 
         Map elMap = new LinkedHashMap();
 
+        elMap.put("Q_Between_id", "12,34");
         elMap.put("Q_Not_In_id", "12,34,534,546,456");
         elMap.put("Q_NotIn_name", "12,34,534,546,456");
         elMap.put("Q_Gt_createTime", "2012/01/30 23:59:00");
-        elMap.put("Q_Not_parentId", "90");
+        elMap.put("Q_Not_parentId", 90);
 
-        int r = jpaDao.deleteFrom("jpa_dao_test_Group", "e")
+        int r = jpaDao.deleteFrom(Group.class, "e")
                 //  .appendWhere("name like ?", "%0%")
                 //   .appendWhereEquals("name", "10")
                 //   .appendWhere(" orderCode > ?", 10)

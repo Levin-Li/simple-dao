@@ -80,5 +80,4 @@ public @interface TargetOption {
      */
     String fixedCondition() default "";
 
-
 }

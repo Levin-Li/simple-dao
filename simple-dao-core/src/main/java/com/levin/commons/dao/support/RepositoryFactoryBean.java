@@ -179,7 +179,7 @@ public class RepositoryFactoryBean<T>
 
             final QueryRequest queryRequest = (QueryRequest) opAnnotation;
 
-            SelectDaoImpl<Object> selectDao = new SelectDaoImpl<>(false, jpaDao);
+            SelectDaoImpl<Object> selectDao = new SelectDaoImpl<>(jpaDao,false);
 
             selectDao.setParameterNameDiscoverer(getParameterNameDiscoverer());
 
