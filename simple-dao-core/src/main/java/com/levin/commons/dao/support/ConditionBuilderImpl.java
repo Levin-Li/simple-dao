@@ -726,9 +726,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
         //支持多个注解
-        //   Annotation logicAnnotation = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+        List<Annotation> logicAnnotations  = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-        List<Annotation> logicAnnotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
+      //  List<Annotation> logicAnnotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
 
 
         logicAnnotations.stream().forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
@@ -751,6 +751,12 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             logicAnnotations.stream()
                     .filter(this::isLogicGroupAutoClose)
                     .forEach(logicAnnotation -> end());
+
+//            for (Annotation logicAnnotation : logicAnnotations) {
+//                if(isLogicGroupAutoClose(logicAnnotation)){
+//                    end();
+//                }
+//            }
 
             endLogicGroup(bean, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, END.class), value);
 

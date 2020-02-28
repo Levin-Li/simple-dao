@@ -42,12 +42,11 @@ public class GroupStatDTO {
     Double maxScore;
 
 
-
     @Null
     @Eq
-    @AND
     @OR(autoClose = true)
     String name = "Group";
+
 
 
     @Like("name")

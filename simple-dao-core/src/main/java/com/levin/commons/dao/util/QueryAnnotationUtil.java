@@ -232,7 +232,7 @@ public abstract class QueryAnnotationUtil {
      * @param varAnnotations
      * @return
      */
-    public static Annotation getLogicAnnotation(String varName, Annotation[] varAnnotations) {
+    public static List<Annotation> getLogicAnnotation(String varName, Annotation[] varAnnotations) {
 
         List<Annotation> annotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
 
@@ -240,7 +240,7 @@ public abstract class QueryAnnotationUtil {
             throw new StatementBuildException(varName + " --> 同一个变量只允许定义一个逻辑注解，已经定义的注解：" + annotations);
         }
 
-        return annotations.size() < 1 ? null : annotations.get(annotations.size() - 1);
+        return annotations;
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
