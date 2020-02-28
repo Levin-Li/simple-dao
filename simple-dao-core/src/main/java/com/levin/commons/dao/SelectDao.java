@@ -288,9 +288,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @param
      * @return
      */
-
-    @Deprecated
-    <I, O> List<O> find(Converter<I, O> converter);
+    <E> List<E> find(Converter<? super Object, E> converter);
 
 
     /**
@@ -300,7 +298,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
 
-    <I, O> List<O> find(Function<I, O> converter);
+    <E> List<E> find(Function<? super Object, E> converter);
 
     /**
      * 获取结果集
@@ -309,6 +307,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
     <E> List<E> find();
+
+
+    //////////////////////////////////////////////
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -340,7 +341,17 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
 
-    <I, O> O findOne(Converter<I, O> converter);
+    <E> E findOne(Converter<? super Object, E> converter);
+
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param
+     * @return
+     */
+
+    <E> E findOne(Function<? super Object, E> converter);
 
     /**
      * 获取一个结果

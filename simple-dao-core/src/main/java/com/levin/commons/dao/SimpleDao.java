@@ -254,7 +254,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
      */
-    <T> T copyProperties(Object source, Object target, String... ignoreProperties);
+    <T> T copyProperties(Object source, T target, String... ignoreProperties);
 
 
     /**

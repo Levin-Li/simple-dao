@@ -8,6 +8,7 @@ import com.alibaba.druid.sql.parser.SQLStatementParser;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class QLUtils {
@@ -47,7 +48,7 @@ public class QLUtils {
         }
 
         if (sb.length() < 1)
-            return new ArrayList<>(0);
+            return Collections.EMPTY_LIST;
 
 
         String cols = sb.toString().trim();

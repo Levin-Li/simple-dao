@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 查询Dao实现类
@@ -52,7 +53,7 @@ public class SelectDaoImpl<T>
 
     final Map<String, Object[/* 实体属性名，DTO 对象字段或方法 */]> selectColumnsMap = new LinkedHashMap<>(7);
 
-    final List selectParamValues = new ArrayList(3);
+    final List selectParamValues = new ArrayList(7);
 
 
     //GroupBy 自动忽略重复字符
@@ -60,7 +61,7 @@ public class SelectDaoImpl<T>
 
     private ExprNode havingExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
-    final List havingParamValues = new ArrayList(3);
+    final List havingParamValues = new ArrayList(5);
 
     final SimpleList<OrderByObj> orderByColumns = new SimpleList<>(false, new ArrayList<OrderByObj>(5), " , ");
 
@@ -75,6 +76,7 @@ public class SelectDaoImpl<T>
     String fromStatement;
 
     boolean hasStatColumns = false;
+
 
     {
         disableSafeMode();
@@ -157,8 +159,15 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> appendSelectColumns(String columns, Object... paramValues) {
 
-        return appendColumns(columns,paramValues);
+        return appendColumns(columns, paramValues);
     }
+
+
+    @Override
+    public String getAlias() {
+        return alias;
+    }
+
 
     public SelectDaoImpl<T> setQueryRequest(QueryRequest queryRequest) {
 
@@ -417,7 +426,7 @@ public class SelectDaoImpl<T>
             boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
 
             if (!complexType) {
-               // value = tryToConvertValue(name, value);
+                // value = tryToConvertValue(name, value);
             }
 
             ValueHolder holder = new ValueHolder(bean, value);
@@ -865,52 +874,7 @@ public class SelectDaoImpl<T>
         return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genQL(false).toString(), genFinalParamList());
     }
 
-    @Override
-    public <E> E findOne() {
-        //设置只取第一条
-        setRowCount(1);
-
-        List<E> list = find();
-
-        return ((list != null && list.size() > 0) ? list.get(0) : null);
-    }
-
-    @Override
-    public <E> E findOne(Class<E> targetType) {
-        return findOne(targetType, 2);
-    }
-
-    /**
-     * 获取结果集，并转换成指定的对对象
-     * 数据转换采用spring智能转换器
-     *
-     * @param targetType
-     * @return
-     */
-    @Override
-    public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
-
-        //尝试自动转换
-        Object data = tryConvert2Map(findOne(), null);
-
-        if (data == null || targetType.isInstance(data))
-            return (E) data;
-
-        return ObjectUtil.copy(data, targetType, maxCopyDeep, ignoreProperties);
-
-    }
-
-    @Override
-    public <I, O> O findOne(Converter<I, O> converter) {
-
-        if (converter == null)
-            throw new IllegalArgumentException("converter is null");
-
-
-        I data = (I) findOne();
-
-        return data != null ? converter.convert(data) : null;
-    }
+/////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -918,44 +882,36 @@ public class SelectDaoImpl<T>
      * @param converter@return
      */
     @Override
-    public <I, O> List<O> find(Converter<I, O> converter) {
-
-        if (converter == null)
-            throw new IllegalArgumentException("converter is null");
-
-        List<Object> queryResult = this.find();
-
-        if (queryResult == null || queryResult.isEmpty())
-            return new ArrayList<>(0);
-
-        List<O> result = new ArrayList<>(queryResult.size());
-
-        for (Object data : queryResult) {
-            result.add(converter.convert((I) data));
-        }
-
-        return result;
+    public <O> List<O> find(Converter<? super Object, O> converter) {
+        return findAndConvert(converter);
     }
 
     @Override
-    public <I, O> List<O> find(Function<I, O> converter) {
+    public <O> List<O> find(Function<? super Object, O> converter) {
+        return findAndConvert(converter);
+    }
+
+
+    public <E> List<E> findAndConvert(Object converter) {
 
         if (converter == null)
             throw new IllegalArgumentException("converter is null");
 
         List<Object> queryResult = this.find();
 
-        if (queryResult == null || queryResult.isEmpty())
-            return new ArrayList<>(0);
-
-        List<O> result = new ArrayList<>(queryResult.size());
-
-        for (Object data : queryResult) {
-            result.add(converter.apply((I) data));
+        if (queryResult == null) {
+            return Collections.EMPTY_LIST;
         }
 
-        return result;
+        if (converter instanceof Converter) {
+            return queryResult.stream().map(e -> ((Converter<Object, E>) converter).convert(e)).collect(Collectors.toList());
+        } else if (converter instanceof Function) {
+            return queryResult.stream().map((Function<Object, E>) converter).collect(Collectors.toList());
+        } else {
+            throw new IllegalArgumentException("unknown converter type " + converter.getClass());
+        }
     }
+
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -1014,6 +970,71 @@ public class SelectDaoImpl<T>
         return returnList;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public <E> E findOne() {
+        //设置只取第一条
+        setRowCount(1);
+
+        List<E> list = find();
+
+        return ((list != null && list.size() > 0) ? list.get(0) : null);
+    }
+
+    @Override
+    public <E> E findOne(Class<E> targetType) {
+        return findOne(targetType, 2);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param targetType
+     * @return
+     */
+    @Override
+    public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
+
+        //尝试自动转换
+        Object data = tryConvert2Map(findOne(), null);
+
+        if (data == null || targetType.isInstance(data))
+            return (E) data;
+
+        return ObjectUtil.copy(data, targetType, maxCopyDeep, ignoreProperties);
+
+    }
+
+    @Override
+    public <O> O findOne(Converter<? super Object, O> converter) {
+
+        if (converter == null)
+            throw new IllegalArgumentException("converter is null");
+
+        Object data = findOne();
+
+        return data != null ? converter.convert(data) : null;
+    }
+
+    @Override
+    public <E> E findOne(Function<? super Object, E> converter) {
+
+        if (converter == null)
+            throw new IllegalArgumentException("converter is null");
+
+        Object data = findOne();
+
+        return data != null ? converter.apply(data) : null;
+    }
+
+
+    @Override
+    public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
+        return (E) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
     public String removeAlias(String column) {
 
@@ -1032,17 +1053,13 @@ public class SelectDaoImpl<T>
         return column;
     }
 
-    @Override
-    public String getAlias() {
-        return alias;
-    }
-
     /**
      * 单查询返回值是数组时，尝试自动转换成 Map
      *
      * @param data
      * @param valueHolder 数据缓存
      * @return
+     * @todo 优化性能，直接转换成对象
      */
     public Object tryConvert2Map(Object data, ValueHolder<String[]> valueHolder) {
 
@@ -1139,11 +1156,6 @@ public class SelectDaoImpl<T>
 
     }
 
-
-    @Override
-    public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
-      return (E) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
-    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     static class OrderByObj

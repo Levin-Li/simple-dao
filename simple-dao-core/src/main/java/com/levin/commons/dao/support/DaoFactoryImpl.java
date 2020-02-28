@@ -2,19 +2,15 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConditionalOnMissingBean(DaoFactory.class)
-@ConditionalOnBean(MiniDao.class)
+//@Component
+//@ConditionalOnMissingBean(DaoFactory.class)
+//@ConditionalOnBean(MiniDao.class)
 public class DaoFactoryImpl implements DaoFactory {
 
     @Autowired
     MiniDao dao;
-
 
     @Autowired(required = false)
     private ParameterNameDiscoverer parameterNameDiscoverer;
@@ -33,12 +29,6 @@ public class DaoFactoryImpl implements DaoFactory {
     public void setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
         this.parameterNameDiscoverer = parameterNameDiscoverer;
     }
-
-
-//    @Override
-//    public <T> SelectDao<T> selectFrom(boolean nativeQL) {
-//        return new SelectDaoImpl<T>(getDao(), nativeQL);
-//    }
 
     /**
      * 返回值类型
@@ -61,23 +51,6 @@ public class DaoFactoryImpl implements DaoFactory {
         return new UpdateDaoImpl<T>(getDao(), clazz, checkAlias(alias));
     }
 
-    private String checkAlias(String... alias) {
-
-        if (alias != null && alias.length > 1) {
-            throw new IllegalArgumentException("alias only allow one");
-        }
-
-        return (alias != null && alias.length > 0) ? alias[0] : null;
-    }
-
-    private String checkTableName(String tableName) {
-
-        if (tableName == null) {
-            throw new IllegalArgumentException("tableName is null");
-        }
-
-        return tableName;
-    }
 
     @Override
     public <T> DeleteDao<T> deleteFrom(Class<T> clazz, String... alias) {
@@ -125,5 +98,23 @@ public class DaoFactoryImpl implements DaoFactory {
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
+
+    private String checkAlias(String... alias) {
+
+        if (alias != null && alias.length > 1) {
+            throw new IllegalArgumentException("alias only allow one");
+        }
+
+        return (alias != null && alias.length > 0) ? alias[0] : null;
+    }
+
+    private String checkTableName(String tableName) {
+
+        if (tableName == null) {
+            throw new IllegalArgumentException("tableName is null");
+        }
+
+        return tableName;
+    }
 
 }
