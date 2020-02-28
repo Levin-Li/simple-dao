@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.levin.commons.dao.util.QueryAnnotationUtil.getAnnotationsByPackage;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -724,9 +725,14 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         //  value = tryAutoConvert(name, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class), attrType, value);
 
 
-        Annotation logicAnnotation = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+        //支持多个注解
+        //   Annotation logicAnnotation = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-        beginLogicGroup(bean, logicAnnotation, name, value);
+        List<Annotation> logicAnnotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
+
+
+        logicAnnotations.stream().forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+        //可以多次逻辑组
 
         try {
 
@@ -742,10 +748,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
         } finally {
 
-            //如果自动关闭逻辑组
-            if (isLogicGroupAutoClose(logicAnnotation)) {
-                end();
-            }
+            logicAnnotations.stream()
+                    .filter(this::isLogicGroupAutoClose)
+                    .forEach(logicAnnotation -> end());
 
             endLogicGroup(bean, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, END.class), value);
 
