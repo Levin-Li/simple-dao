@@ -939,6 +939,7 @@ public class SelectDaoImpl<T>
 
     @Override
     public <I, O> List<O> find(Function<I, O> converter) {
+
         if (converter == null)
             throw new IllegalArgumentException("converter is null");
 
