@@ -116,7 +116,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 4.       如果 A 是一个 detached 状态的实体，该方法将会抛出异常。
  */
 
-@ConditionalOnBean({EntityManagerFactory.class})
+//@ConditionalOnBean({EntityManagerFactory.class})
 @Repository()
 //@Service
 public class JpaDaoImpl
