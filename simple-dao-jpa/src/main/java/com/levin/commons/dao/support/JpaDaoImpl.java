@@ -154,7 +154,7 @@ public class JpaDaoImpl extends DaoFactoryImpl
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
-    private final DeepCopier deepCopier = new DeepCopier() {
+    private static final DeepCopier deepCopier = new DeepCopier() {
         @Override
         public <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
             return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
@@ -229,9 +229,6 @@ public class JpaDaoImpl extends DaoFactoryImpl
         this.applicationContext = applicationContext;
     }
 
-    public int getParamStartIndex() {
-        return paramStartIndex;
-    }
 
     @Override
     public ParameterNameDiscoverer getParameterNameDiscoverer() {

@@ -944,11 +944,11 @@ public class SelectDaoImpl<T>
         List<E> queryResultList = this.findForResultClass(null);
 
         if (queryResultList == null || queryResultList.isEmpty())
-            return new ArrayList<>(0);
+            return Collections.EMPTY_LIST;
 
         //如果是已经需要的类型
         if (targetType.isInstance(queryResultList.get(0)))
-            return (List<E>) queryResultList;
+            return queryResultList;
 
         List<E> returnList = new ArrayList<>(queryResultList.size());
 

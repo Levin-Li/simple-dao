@@ -191,7 +191,7 @@ public abstract class ObjectUtil {
 
 
     /**
-     * 获取属性
+     * 获取对象的多级属性直
      * <p>
      * 支持info.type.name的方式获取属性
      *
@@ -217,7 +217,7 @@ public abstract class ObjectUtil {
     }
 
     /**
-     * 获取属性值
+     * 获取对象的一级属性值
      *
      * @param source
      * @param propertyName
@@ -559,7 +559,9 @@ public abstract class ObjectUtil {
      * @param objectStack         路径堆栈，用来防止出来对象的应用递归
      * @param invokeDeep          当前已经进行的属性深度
      * @param maxCopyDeep         最大的拷贝深度
-     * @param ignoreProperties    忽略的表达
+     * @param ignoreProperties    a.b.c.name* *号表示忽略以什么开头的属性
+     *                            a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                            a.b.c.{com.User}    大括号表示忽略User类型属性
      * @param <T>
      * @return
      * @throws Exception
