@@ -33,7 +33,7 @@ public class UpdateDaoImpl<T>
         this(true, null);
     }
 
-    protected UpdateDaoImpl(boolean isNative, MiniDao dao) {
+    public UpdateDaoImpl(boolean isNative, MiniDao dao) {
         super(isNative);
         this.dao = dao;
     }

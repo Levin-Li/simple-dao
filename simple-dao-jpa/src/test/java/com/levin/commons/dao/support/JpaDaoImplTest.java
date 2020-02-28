@@ -1,15 +1,13 @@
 package com.levin.commons.dao.support;
 
-import com.levin.commons.dao.DaoContext;
-import com.levin.commons.dao.JpaDao;
-import com.levin.commons.dao.SelectDao;
-import com.levin.commons.dao.UpdateDao;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.simple.SimpleDao;
-import com.levin.commons.service.GroupDao;
-import com.levin.commons.service.UserDao;
+import com.levin.commons.dao.starter.EnableJpaDao;
+import com.levin.commons.dao.service.GroupDao;
+import com.levin.commons.dao.service.UserDao;
 import com.levin.commons.utils.MapUtils;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -20,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -31,11 +30,11 @@ import java.util.*;
 @ActiveProfiles("dev")
 @RunWith(SpringJUnit4ClassRunner.class)
 //@BootstrapWith
-@ContextConfiguration(value = "classpath*:/applicationContext-*.xml")
+@ContextConfiguration(value = "classpath*:/applicationContext-*.xml" )
 
 //注意测试时，使用的是h2的内存数据库，所以没有使用事务
-//@Transactional(rollbackFor = {Throwable.class})
-
+@Transactional(rollbackFor = {Throwable.class})
+@EnableJpaDao
 @FixMethodOrder(MethodSorters.JVM)
 public class JpaDaoImplTest {
 
@@ -455,7 +454,6 @@ public class JpaDaoImplTest {
 
     @org.junit.Test
     public void testStat() throws Exception {
-
 
 
         List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());

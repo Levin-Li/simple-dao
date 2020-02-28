@@ -1,4 +1,4 @@
-package com.levin.commons.dao.support;
+package com.levin.commons.dao.simple;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -13,7 +13,7 @@ import org.springframework.context.ApplicationContextAware;
  *
  *
  */
-public class BeanScannerConfigurer
+public class RepositoryBeanConfigurer
         implements
         BeanFactoryPostProcessor,
         ApplicationContextAware {
@@ -22,17 +22,23 @@ public class BeanScannerConfigurer
 
     private ApplicationContext applicationContext;
 
-    public void setScanPackages(String... scanPackages) {
+    public RepositoryBeanConfigurer setScanPackages(String... scanPackages) {
         this.scanPackages = scanPackages;
+        return this;
     }
 
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
+    @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        EntityRepositoryDefinitionScanner scanner = new EntityRepositoryDefinitionScanner((BeanDefinitionRegistry) beanFactory);
+
+        RepositoryDefinitionScanner scanner = new RepositoryDefinitionScanner((BeanDefinitionRegistry) beanFactory);
         scanner.setResourceLoader(this.applicationContext);
+
+
         scanner.scan(scanPackages);
     }
 }

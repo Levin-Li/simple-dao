@@ -39,7 +39,6 @@ public @interface SelectColumn {
     /**
      * 输出时的列名
      *
-     *
      * @return
      */
     String outputColumnName() default "";

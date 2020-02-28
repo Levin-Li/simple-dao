@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -723,7 +724,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         //  value = tryAutoConvert(name, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class), attrType, value);
 
 
-        beginLogicGroup(bean, QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations), name, value);
+        Annotation logicAnnotation = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+
+        beginLogicGroup(bean, logicAnnotation, name, value);
 
         try {
 
@@ -738,10 +741,35 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             processAttr(bean, fieldOrMethod, varAnnotations, name, attrType, value);
 
         } finally {
+
+            //如果自动关闭逻辑组
+            if (isLogicGroupAutoClose(logicAnnotation)) {
+                end();
+            }
+
             endLogicGroup(bean, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, END.class), value);
+
         }
 
         //结束逻辑分组
+    }
+
+    boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
+
+        if (logicAnnotation == null) {
+            return false;
+        }
+
+        try {
+            return (boolean) logicAnnotation.getClass().getDeclaredMethod("autoClose").invoke(logicAnnotation);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+        }
+
+        return false;
     }
 
     /**
@@ -1389,7 +1417,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             //尝试转换值
             //@modify by llw,20170829，修复 Null和NotNull注解时，并不使用属性值，所以无需进行值转换
             if (!complexType) {
-              //  value = tryToConvertValue(name, value);
+                //  value = tryToConvertValue(name, value);
             }
 
             ValueHolder holder = new ValueHolder(bean, value);
@@ -1610,10 +1638,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
                 //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
                 //尝试自动解析成数组
-                if(expectType!=null
+                if (expectType != null
                         && !String.class.equals(expectType)
-                        && holder.value instanceof CharSequence){
-                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType,0).getClass());
+                        && holder.value instanceof CharSequence) {
+                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
                 }
 
                 //是否过滤空值
@@ -1672,10 +1700,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
                 //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
                 //尝试自动解析成数组
-                if(expectType!=null
+                if (expectType != null
                         && !String.class.equals(expectType)
-                        && holder.value instanceof CharSequence){
-                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType,0).getClass());
+                        && holder.value instanceof CharSequence) {
+                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
                 }
 
                 Between between = (Between) opAnno;

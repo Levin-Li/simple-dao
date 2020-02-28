@@ -29,6 +29,18 @@ public @interface OR {
      */
     String value() default "";
 
+
+    /**
+     * 在统一个字段上是否自动闭合逻辑组
+     *
+     * @return
+     */
+    boolean autoClose() default false;
+
+    /**
+     *
+     * @return
+     */
     boolean require() default false;
 
 

@@ -1,9 +1,13 @@
-package com.levin.commons.dao.support;
+package com.levin.commons.dao.simple;
 
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.simple.annotation.*;
+import com.levin.commons.dao.support.DeleteDaoImpl;
+import com.levin.commons.dao.support.MethodParameterNameDiscoverer;
+import com.levin.commons.dao.support.SelectDaoImpl;
+import com.levin.commons.dao.support.UpdateDaoImpl;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +35,7 @@ import java.util.List;
 
 /**
  *
- *
+ *FactoryBean
  *
  */
 public class RepositoryFactoryBean<T>
@@ -60,10 +64,12 @@ public class RepositoryFactoryBean<T>
         this.serviceType = serviceType;
     }
 
+    @Override
     public Class<?> getObjectType() {
         return serviceType;
     }
 
+    @Override
     public boolean isSingleton() {
         return true;
     }
@@ -74,6 +80,7 @@ public class RepositoryFactoryBean<T>
         this.applicationContext = applicationContext;
     }
 
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         if (jpaDao == null)
@@ -291,6 +298,7 @@ public class RepositoryFactoryBean<T>
     }
 
 
+    @Override
     public T getObject() throws Exception {
 
         if (serviceType.isInterface()) {

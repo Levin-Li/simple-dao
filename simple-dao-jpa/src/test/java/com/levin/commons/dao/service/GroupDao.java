@@ -1,4 +1,4 @@
-package com.levin.commons.service;
+package com.levin.commons.dao.service;
 
 
 import com.levin.commons.dao.JpaDao;
@@ -10,7 +10,7 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.simple.annotation.*;
-import com.levin.commons.dao.support.RepositoryFactoryBean;
+import com.levin.commons.dao.simple.RepositoryFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

@@ -25,7 +25,7 @@ public class DeleteDaoImpl<T>
         this(true, null);
     }
 
-    protected DeleteDaoImpl(boolean isNative, MiniDao dao) {
+    public DeleteDaoImpl(boolean isNative, MiniDao dao) {
         super(isNative);
         this.dao = dao;
     }

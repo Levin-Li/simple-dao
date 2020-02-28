@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import com.levin.commons.dao.*;
+import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import org.slf4j.Logger;
@@ -9,13 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -117,7 +116,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 //@ConditionalOnBean({EntityManagerFactory.class})
-@Repository
+//@Repository
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
@@ -779,10 +778,15 @@ public class JpaDaoImpl
             parameter = parameterMap.get(paramKey.toString());
         }
 
-        Class parameterType = parameter != null ? parameter.getParameterType() : null;
+        try {
+            Class parameterType = parameter != null ? parameter.getParameterType() : null;
 
-        if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
-            paramValue = ObjectUtil.convert(paramValue, parameterType);
+            if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
+                paramValue = ObjectUtil.convert(paramValue, parameterType);
+            }
+
+        } catch (Exception e) {
+            logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
         }
 
 

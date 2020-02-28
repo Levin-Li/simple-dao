@@ -1,17 +1,14 @@
-package com.levin.commons.dao.support;
+package com.levin.commons.dao.simple;
 
 import com.levin.commons.dao.simple.annotation.EntityRepository;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
-import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -22,14 +19,14 @@ import java.util.Set;
  */
 
 
-public class EntityRepositoryDefinitionScanner
+public class RepositoryDefinitionScanner
         extends ClassPathBeanDefinitionScanner {
 
     protected Class<? extends Annotation>[] includeTypes;
 
     protected Class factoryBeanClass = RepositoryFactoryBean.class;
 
-    public EntityRepositoryDefinitionScanner(BeanDefinitionRegistry registry) {
+    public RepositoryDefinitionScanner(BeanDefinitionRegistry registry) {
         super(registry, false);
     }
 
@@ -71,6 +68,7 @@ public class EntityRepositoryDefinitionScanner
         Set<BeanDefinitionHolder> beanDefinitionHolderSet = super.doScan(basePackages);
 
         for (BeanDefinitionHolder holder : beanDefinitionHolderSet) {
+
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
 
             definition.getPropertyValues().add("serviceType", definition.getBeanClassName());
@@ -79,6 +77,20 @@ public class EntityRepositoryDefinitionScanner
             //替换为factoryBean
             definition.setBeanClass(factoryBeanClass);
         }
+
+
+
+
+//         * @see org.springframework.beans.factory.config.BeanDefinition
+//                * @see AbstractBeanDefinition
+//                * @see RootBeanDefinition
+//                * @see ChildBeanDefinition
+//                * @see DefaultListableBeanFactory
+//                * @see org.springframework.context.support.GenericApplicationContext
+//                * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
+//                * @see PropertiesBeanDefinitionReader
+//                */
+//        public interface BeanDefinitionRegistry
 
         return beanDefinitionHolderSet;
     }

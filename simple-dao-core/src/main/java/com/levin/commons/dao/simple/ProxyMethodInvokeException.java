@@ -1,4 +1,4 @@
-package com.levin.commons.dao.support;
+package com.levin.commons.dao.simple;
 
 /**
  * 代理方法执行异常
@@ -19,4 +19,5 @@ public class ProxyMethodInvokeException
     public ProxyMethodInvokeException(Throwable cause) {
         super(cause);
     }
+
 }

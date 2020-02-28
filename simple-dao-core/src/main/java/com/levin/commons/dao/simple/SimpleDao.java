@@ -2,7 +2,6 @@ package com.levin.commons.dao.simple;
 
 
 import com.levin.commons.dao.simple.annotation.*;
-import com.levin.commons.dao.support.RepositoryFactoryBean;
 
 import java.util.List;
 

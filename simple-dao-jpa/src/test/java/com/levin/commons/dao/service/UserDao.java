@@ -1,4 +1,4 @@
-package com.levin.commons.service;
+package com.levin.commons.dao.service;
 
 
 import com.levin.commons.dao.Paging;

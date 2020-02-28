@@ -31,49 +31,6 @@
     <!--通用JPA配置文件-->
     <description>dao config</description>
 
-    <!--
-
-     <jpa:repositories base-package="com.acme.repositories" />
-         <context:exclude-filter type="regex" expression=".*SomeRepository" />
-     -->
-
-    <tx:annotation-driven/>
-
-    <!--允许使用注解方式配置事务 -->
-    <!--<tx:annotation-driven transaction-manager="transactionManager"/>-->
-
-    <!-- 自动扫描的包名 -->
-    <!--<context:component-scan base-package="com.levin.commons.dao.com.doone.zhzs.common.dao.support.impl"/>-->
-
-    <!-- 对标注@PersistenceContext的类经行增强，引入代理后的EntityManager实例 -->
-    <!--<bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>-->
-
-    <!-- 对标注@Repository的类经行增强，将EntityManager异常转换为SpringDAO体系的异常 -->
-    <!--<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>-->
-
-    <!--
-
-            <bean id="dataSource" lazy-init="true"
-                  class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"
-                  p:driverClassName="${jdbc.driverClassName}"
-                  p:url="${jdbc.url}"
-                  p:minIdle="5"
-                  p:maxIdle="20"
-                  p:initialSize="7"
-                  p:testWhileIdle="true"
-                  p:password="${jdbc.password}"
-                  p:maxActive="100"/>
-    -->
-
-    <!--    <bean id="dataSource" lazy-init="true"
-              class="com.zaxxer.hikari.HikariDataSource" destroy-method="close"
-              p:driverClassName="${jdbc.driverClassName}"
-              p:jdbcUrl="#{jdbcConfig.jdbcUrl}"
-              p:username="#{jdbcConfig.username}"
-              p:password="#{jdbcConfig.password}"
-              p:idleTimeout="#{45 * 1000}"
-              p:minimumIdle="5"
-              p:maximumPoolSize="100"/>-->
 
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
           p:testWhileIdle="true" init-method="init" destroy-method="close">
@@ -144,54 +101,5 @@
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager"
           p:entityManagerFactory-ref="entityManagerFactory"/>
 
-    <bean id="jdbcTemplate" p:dataSource-ref="dataSource" class="org.springframework.jdbc.core.JdbcTemplate"/>
-
-    <!--
-    spring 3.1后不建议使用，请使用JdbcTemplate
-    <bean id="simpleJdbcTemplate" class="org.springframework.jdbc.core.simple.SimpleJdbcTemplate">
-        <constructor-arg ref="dataSource"/>
-    </bean>
-    -->
-
-    <bean id="simpleJdbcCall" class="org.springframework.jdbc.core.simple.SimpleJdbcCall">
-        <constructor-arg ref="dataSource"/>
-    </bean>
-
-    <bean id="simpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert">
-        <constructor-arg ref="dataSource"/>
-    </bean>
-
-    <!--# PROPAGATION_REQUIRED 支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。-->
-    <!--# PROPAGATION_SUPPORTS 支持当前事务，如果当前没有事务，就以非事务方式执行。-->
-    <!--# PROPAGATION_MANDATORY 支持当前事务，如果当前没有事务，就抛出异常。-->
-    <!--# PROPAGATION_REQUIRES_NEW 新建事务，如果当前存在事务，把当前事务挂起。-->
-    <!--# PROPAGATION_NOT_SUPPORTED 以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。-->
-    <!--# PROPAGATION_NEVER 以非事务方式执行，如果当前存在事务，则抛出异常。-->
-    <!--# PROPAGATION_NESTED 如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则进行与PROPAGATION_REQUIRED类似的操作。-->
-
-    <tx:advice id="jdbcTxAdvice">
-        <tx:attributes>
-            <tx:method name="execute*" propagation="REQUIRED"/>
-            <tx:method name="update*" propagation="REQUIRED"/>
-            <tx:method name="batchUpdate*" propagation="REQUIRED"/>
-            <tx:method name="call*" propagation="REQUIRED"/>
-        </tx:attributes>
-    </tx:advice>
-
-
-    <!--execution(modifiers-pattern? ret-type-pattern declaring-type-pattern? name-pattern(param-pattern) throws-pattern?)-->
-    <aop:config>
-        <aop:pointcut id="jdbcMethods"
-                      expression="execution(* org.springframework.jdbc.core.Jdbc*Operations.*(..))"/>
-
-        <aop:pointcut id="simpleJdbcMethods"
-                      expression="execution(* org.springframework.jdbc.core.simple.SimpleJdbc*Operations.*(..))"/>
-
-        <aop:advisor advice-ref="jdbcTxAdvice" pointcut-ref="jdbcMethods"/>
-        <aop:advisor advice-ref="jdbcTxAdvice" pointcut-ref="simpleJdbcMethods"/>
-
-    </aop:config>
-
-    <aop:aspectj-autoproxy/>
 
 </beans>
