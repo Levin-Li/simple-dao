@@ -31,6 +31,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * 查询Dao实现类
@@ -936,6 +937,25 @@ public class SelectDaoImpl<T>
         return result;
     }
 
+    @Override
+    public <I, O> List<O> find(Function<I, O> converter) {
+        if (converter == null)
+            throw new IllegalArgumentException("converter is null");
+
+        List<Object> queryResult = this.find();
+
+        if (queryResult == null || queryResult.isEmpty())
+            return new ArrayList<>(0);
+
+        List<O> result = new ArrayList<>(queryResult.size());
+
+        for (Object data : queryResult) {
+            result.add(converter.apply((I) data));
+        }
+
+        return result;
+    }
+
     /**
      * 获取结果集，并转换成指定的对对象
      * 数据转换采用spring智能转换器
@@ -1119,17 +1139,9 @@ public class SelectDaoImpl<T>
     }
 
 
-    /**
-     * 属性拷贝
-     *
-     * @param source
-     * @param target
-     * @param ignoreProperties
-     * @return
-     */
     @Override
-    public void copyProperties(Object source, Object target, String... ignoreProperties) {
-        ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
+    public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
+      return (E) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

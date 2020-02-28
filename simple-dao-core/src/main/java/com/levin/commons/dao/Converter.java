@@ -6,6 +6,7 @@ package com.levin.commons.dao;
  * @param <I> 查询结果
  * @param <O> 转换后的结果
  */
+@FunctionalInterface
 public interface Converter<I, O> {
 
     O convert(I data);

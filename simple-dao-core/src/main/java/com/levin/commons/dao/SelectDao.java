@@ -3,6 +3,7 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * 查询接口
@@ -258,15 +259,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * 只查询特定的字段，并把查询结果设置到目标类中
-     * <p/>
-     * 和其它的find方法有较大的区别，只是选择出要获取的列信息
-     *
-     * @param <E> targetType 要求的结果类型
-     * @return
-     */
-    //  <E> List<E> findAndSelectInto(Class<E> targetType, String... ignoreAttrs);
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -297,7 +289,18 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
 
+    @Deprecated
     <I, O> List<O> find(Converter<I, O> converter);
+
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param
+     * @return
+     */
+
+    <I, O> List<O> find(Function<I, O> converter);
 
     /**
      * 获取结果集
@@ -367,6 +370,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
      */
-    void copyProperties(Object source, Object target, String... ignoreProperties);
+    <E extends Object> E copyProperties(Object source, E target, String... ignoreProperties);
 
 }
