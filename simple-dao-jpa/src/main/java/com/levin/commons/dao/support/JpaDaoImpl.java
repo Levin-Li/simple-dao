@@ -763,6 +763,7 @@ public class JpaDaoImpl
         return query;
     }
 
+
     private int setParams(int pIndex, Query query, List paramValueList) {
 
         Set<Parameter<?>> parameters = query.getParameters();
@@ -780,15 +781,44 @@ public class JpaDaoImpl
                     String paramName = entry.getKey().toString();
 
                     if (parameterMap.containsKey(paramName)) {
-                        query.setParameter(paramName, entry.getValue());
+                        query.setParameter(paramName, tryAutoConvertParamValue(parameterMap, paramName, entry.getValue()));
                     }
                 }
             } else {
-                query.setParameter(pIndex++, paramValue);
+                query.setParameter(pIndex, tryAutoConvertParamValue(parameterMap, pIndex, paramValue));
+
+                //关键步骤
+                pIndex++;
             }
         }
 
         return pIndex;
+    }
+
+    
+    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+        //自动转换数据类型
+        //@todo 观察，需要关注性能问题
+        //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
+
+        if (paramValue == null) {
+            return paramValue;
+        }
+
+        Parameter parameter = parameterMap.get(paramKey);
+
+        if (parameter == null && (paramKey instanceof Number)) {
+            parameter = parameterMap.get(paramKey.toString());
+        }
+
+        Class parameterType = parameter != null ? parameter.getParameterType() : null;
+
+        if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
+            paramValue = ObjectUtil.convert(paramValue, parameterType);
+        }
+
+
+        return paramValue;
     }
 
     /**

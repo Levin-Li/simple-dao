@@ -32,6 +32,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * 查询Dao实现类
  * 本类是一个非线程安全类，不要重复使用，应该重新创建使用。
@@ -97,7 +99,7 @@ public class SelectDaoImpl<T>
 
         this.fromStatement = fromStatement;
 
-        if (!StringUtils.hasText(fromStatement))
+        if (!hasText(fromStatement))
             throw new IllegalArgumentException("fromStatement is null");
     }
 
@@ -115,7 +117,9 @@ public class SelectDaoImpl<T>
     @Override
     protected void setFromStatement(String fromStatement) {
 
-        if (!StringUtils.hasText(this.fromStatement)) {
+        if (!hasText(this.fromStatement)
+                && entityClass==null
+                && !hasText(tableName)) {
             this.fromStatement = fromStatement;
         }
 
@@ -151,9 +155,10 @@ public class SelectDaoImpl<T>
         if (queryRequest == null)
             return this;
 
-        if (!StringUtils.hasText(this.fromStatement)
-                && StringUtils.hasText(queryRequest.fromStatement()))
+        if (!hasText(this.fromStatement)
+                && hasText(queryRequest.fromStatement())) {
             this.fromStatement = queryRequest.fromStatement();
+        }
 
         //增加选择字段
         appendSelectColumns(queryRequest.selectStatement());
@@ -195,7 +200,7 @@ public class SelectDaoImpl<T>
 
         if (joinStatements != null) {
             for (String statement : joinStatements) {
-                if (StringUtils.hasText(statement))
+                if (hasText(statement))
                     this.joinStatement.append(" ").append(statement).append(" ");
             }
         }
@@ -216,14 +221,14 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
 
-        if (!StringUtils.hasText(this.alias)) {
+        if (!hasText(this.alias)) {
             throw new StatementBuildException("left join must be set alias");
         }
 
         if (setAttrs != null) {
             for (String setAttr : setAttrs) {
 
-                if (!StringUtils.hasText(setAttr))
+                if (!hasText(setAttr))
                     continue;
 
                 //如果没有使用别名，尝试使用别名
@@ -284,7 +289,7 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> appendHaving(String havingStatement, Object... paramValues) {
 
-        if (StringUtils.hasText(havingStatement)
+        if (hasText(havingStatement)
                 && this.havingExprRootNode.addToCurrentNode(havingStatement)) {
             this.havingParamValues.add(paramValues);
         }
@@ -501,7 +506,7 @@ public class SelectDaoImpl<T>
         ValueHolder holder = new ValueHolder(bean, value);
 
         //子查询
-        if (StringUtils.hasText(anno.subQuery())) {
+        if (hasText(anno.subQuery())) {
 
             isSubQuery = true;
 
@@ -537,7 +542,7 @@ public class SelectDaoImpl<T>
 
         appendSelectColumns(expr, value);
 
-        appendColumnMap(expr, (StringUtils.hasText(anno.outputColumnName()) ? anno.outputColumnName() : fieldOrMethod), name);
+        appendColumnMap(expr, (hasText(anno.outputColumnName()) ? anno.outputColumnName() : fieldOrMethod), name);
 
     }
 
@@ -575,7 +580,7 @@ public class SelectDaoImpl<T>
             appendGroupBy(column);
         }
 
-        if (StringUtils.hasText(model.getHavingOp())) {
+        if (hasText(model.getHavingOp())) {
             appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(null), value);
         }
     }
@@ -607,7 +612,7 @@ public class SelectDaoImpl<T>
     @Override
     protected String genFromStatement() {
 
-        if (StringUtils.hasText(fromStatement)) {
+        if (hasText(fromStatement)) {
             String from = getText(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
             return (hasKey ? " " + fromStatement : " From " + fromStatement) + getText(joinStatement.toString(), " ");
@@ -724,7 +729,7 @@ public class SelectDaoImpl<T>
 
             column = foundColumn(column, selectColumns.toString());
 
-        } else if (StringUtils.hasText(alias)) {
+        } else if (hasText(alias)) {
             //如果没有具体的查询字段，则可以用别名进行统计
             column = alias;
         }
@@ -1067,7 +1072,7 @@ public class SelectDaoImpl<T>
                             key = removeAlias((String) fieldOrMethod);
                         }
 
-                    } else if (StringUtils.hasText(entityAttrName)) {
+                    } else if (hasText(entityAttrName)) {
                         key = entityAttrName;
                     }
 

@@ -433,7 +433,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
     protected void setFromStatement(String fromStatement) {
-        throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
+       // throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
     }
 
 //////////////////////////////////////////////
