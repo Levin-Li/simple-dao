@@ -7,19 +7,17 @@ import org.springframework.core.ParameterNameDiscoverer;
 //@Component
 //@ConditionalOnMissingBean(DaoFactory.class)
 //@ConditionalOnBean(MiniDao.class)
-public class DaoFactoryImpl implements DaoFactory {
+public abstract class AbstractDaoFactory implements DaoFactory {
 
-    @Autowired
-    MiniDao dao;
+//    @Autowired
+//    MiniDao dao;
 
     @Autowired(required = false)
     private ParameterNameDiscoverer parameterNameDiscoverer;
 
 
-    @Override
-    public MiniDao getDao() {
-        return dao;
-    }
+//    @Override
+   abstract public MiniDao getDao();
 
 
     public ParameterNameDiscoverer getParameterNameDiscoverer() {

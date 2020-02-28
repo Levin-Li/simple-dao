@@ -308,7 +308,15 @@ public class JpaDaoImplTest {
     }
 
     @org.junit.Test
-    public void testFind() throws Exception {
+    public void testFindAndConvert() throws Exception {
+
+        jpaDao.selectFrom(User.class,"u")
+                .appendJoinFetchSet(true,E_User.group)
+                .gt(E_User.id,"5")
+                .isNotNull(E_User.name)
+                .find((User u)->u.getGroup())
+                .stream()
+                .forEach(g-> System.out.println(g));
 
     }
 
@@ -329,6 +337,7 @@ public class JpaDaoImplTest {
 
         UpdateDao<User> userUpdateDao = jpaDao.updateTo(User.class);
 
+
         userUpdateDao
                 .appendColumn(E_AbstractNamedEntityObject.name, "name1")
                 .eq(E_User.enable, false)
@@ -346,8 +355,6 @@ public class JpaDaoImplTest {
                 .gt("area", AppType.Ios)
 //                .in("area", AppType.Ios, AppType.Android)
                 .appendByQueryObj(new UserStatDTO());
-
-        selectDao.find();
 
         System.out.println(selectDao.genFinalStatement() + "  -->   params:" + selectDao.genFinalParamList());
     }
@@ -430,6 +437,7 @@ public class JpaDaoImplTest {
 
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class);
 
+
         List entities = selectDao
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
@@ -447,6 +455,7 @@ public class JpaDaoImplTest {
 
     @org.junit.Test
     public void testStat() throws Exception {
+
 
 
         List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());

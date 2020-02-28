@@ -5,9 +5,11 @@ import javax.validation.constraints.NotNull;
 public interface DaoFactory {
 
     /**
+     *
+     * 获取 Dao
      * @return
      */
-    MiniDao getDao();
+  //  MiniDao getDao();
 
     ////////////////////////////////////////////////////////////////////////////////////
 

@@ -3,7 +3,6 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * 查询接口
@@ -288,7 +287,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @param
      * @return
      */
-    <E> List<E> find(Converter<? super Object, E> converter);
+    <I, E> List<E> find(Converter<I, E> converter);
 
 
     /**
@@ -298,7 +297,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
 
-    <E> List<E> find(Function<? super Object, E> converter);
+//    <E> List<E> find(Function<? super Object, E> converter);
 
     /**
      * 获取结果集
@@ -307,7 +306,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
     <E> List<E> find();
-
 
     //////////////////////////////////////////////
 
@@ -341,7 +339,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
 
-    <E> E findOne(Converter<? super Object, E> converter);
+    <I, E> E findOne(Converter<I, E> converter);
 
 
     /**
@@ -350,8 +348,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @param
      * @return
      */
-
-    <E> E findOne(Function<? super Object, E> converter);
+//    <I, E> E findOneAndConvert(Function<I, E> converter);
 
     /**
      * 获取一个结果
@@ -361,7 +358,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      * @return
      */
     <E> E findOne();
-
     ////////////////////////////////////////////////////////////////////////////
 
     /**

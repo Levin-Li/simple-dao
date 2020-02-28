@@ -244,9 +244,6 @@ public class SelectDaoImpl<T>
             return this;
         }
 
-        if (!StringUtils.hasText(this.alias)) {
-            throw new StatementBuildException("left join must be set alias");
-        }
 
         for (String setAttr : setAttrs) {
 
@@ -254,8 +251,14 @@ public class SelectDaoImpl<T>
                 continue;
 
             //如果没有使用别名，尝试使用别名
-            if (!setAttr.contains("."))
+            if (!setAttr.contains(".")) {
+
+                if (!StringUtils.hasText(this.alias)) {
+                    throw new StatementBuildException("join fetch  attr [" + setAttr + "] must be set alias");
+                }
+
                 setAttr = aroundColumnPrefix(setAttr);
+            }
 
             fetchStatement.append(" ").append((isLeftJoin ? "left" : "inner") + " join fetch " + setAttr).append(" ");
 
@@ -861,7 +864,7 @@ public class SelectDaoImpl<T>
      */
     @Override
     public <E> List<E> find() {
-        return findForResultClass((Class<E>) null);
+        return findForResultClass(null);
     }
 
     /**
@@ -876,23 +879,18 @@ public class SelectDaoImpl<T>
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * 获取结果集，并转换成指定的对对象
-     *
-     * @param converter@return
-     */
     @Override
-    public <O> List<O> find(Converter<? super Object, O> converter) {
-        return findAndConvert(converter);
+    public <I, E> List<E> find(Converter<I, E> converter) {
+        return findListAndConvert(converter);
     }
 
-    @Override
+    //    @Override
     public <O> List<O> find(Function<? super Object, O> converter) {
-        return findAndConvert(converter);
+        return findListAndConvert(converter);
     }
 
 
-    public <E> List<E> findAndConvert(Object converter) {
+    public <E> List<E> findListAndConvert(Object converter) {
 
         if (converter == null)
             throw new IllegalArgumentException("converter is null");
@@ -1007,17 +1005,18 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public <O> O findOne(Converter<? super Object, O> converter) {
+    public <I, E> E findOne(Converter<I, E> converter) {
 
         if (converter == null)
             throw new IllegalArgumentException("converter is null");
 
         Object data = findOne();
 
-        return data != null ? converter.convert(data) : null;
+        return data != null ? converter.convert((I) data) : null;
     }
 
-    @Override
+
+    //    @Override
     public <E> E findOne(Function<? super Object, E> converter) {
 
         if (converter == null)

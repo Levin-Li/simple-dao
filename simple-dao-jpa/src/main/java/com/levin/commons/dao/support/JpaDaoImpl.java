@@ -117,9 +117,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 @ConditionalOnBean({EntityManagerFactory.class})
-@Repository("DefaultJpaDaoImpl")
+@Repository()
 //@Service
-public class JpaDaoImpl extends DaoFactoryImpl
+public class JpaDaoImpl
+        extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
