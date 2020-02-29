@@ -756,11 +756,13 @@ public class JpaDaoImpl
 
                 paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
 
-                try {
-                    query.setParameter(pIndex, paramValue);
-                } catch (Exception e) {
-                    query.setParameter("" + pIndex, paramValue);
-                }
+                query.setParameter(pIndex, paramValue);
+
+//                try {
+//                    query.setParameter(pIndex, paramValue);
+//                } catch (Exception e) {
+//                    query.setParameter("" + pIndex, paramValue);
+//                }
 
                 //关键步骤
                 pIndex++;
