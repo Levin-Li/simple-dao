@@ -1,9 +1,12 @@
-package com.levin.commons.dao.simple;
+package com.levin.commons.dao.repository;
 
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.simple.annotation.*;
+import com.levin.commons.dao.repository.annotation.DeleteRequest;
+import com.levin.commons.dao.repository.annotation.EntityRepository;
+import com.levin.commons.dao.repository.annotation.QueryRequest;
+import com.levin.commons.dao.repository.annotation.UpdateRequest;
 import com.levin.commons.dao.support.DeleteDaoImpl;
 import com.levin.commons.dao.support.MethodParameterNameDiscoverer;
 import com.levin.commons.dao.support.SelectDaoImpl;

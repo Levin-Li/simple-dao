@@ -4,7 +4,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.dao.dto.*;
-import com.levin.commons.dao.simple.SimpleDao;
+import com.levin.commons.dao.repository.SimpleDao;
 import com.levin.commons.dao.starter.EnableJpaDao;
 import com.levin.commons.dao.service.GroupDao;
 import com.levin.commons.dao.service.UserDao;
@@ -41,7 +41,7 @@ public class JpaDaoImplTest {
     @Autowired
     JpaDao jpaDao;
 
-    @Autowired
+    @Autowired(required = false)
     SimpleDao simpleDao;
 
     @Autowired

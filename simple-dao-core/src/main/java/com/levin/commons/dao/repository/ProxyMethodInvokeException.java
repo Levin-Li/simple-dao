@@ -1,4 +1,4 @@
-package com.levin.commons.dao.simple;
+package com.levin.commons.dao.repository;
 
 /**
  * 代理方法执行异常

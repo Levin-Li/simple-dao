@@ -51,6 +51,7 @@
         <module>simple-dao-annotations</module>
         <module>simple-dao-core</module>
         <module>simple-dao-jpa</module>
+        <module>simple-dao-jpa-starter</module>
     </modules>
 
     <build>

@@ -161,7 +161,7 @@ public class JpaDaoImpl
     };
 
     public JpaDaoImpl() {
-        this.paramStartIndex = isHibernate5() ? 0 : 1;
+        this.paramStartIndex = isHibernate5() ? 1 : 1;
     }
 
 
@@ -753,7 +753,14 @@ public class JpaDaoImpl
                     }
                 }
             } else {
-                query.setParameter(pIndex, tryAutoConvertParamValue(parameterMap, pIndex, paramValue));
+
+                paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
+
+                try {
+                    query.setParameter(pIndex, paramValue);
+                } catch (Exception e) {
+                    query.setParameter("" + pIndex, paramValue);
+                }
 
                 //关键步骤
                 pIndex++;

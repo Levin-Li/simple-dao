@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
-@Import(JpaDaoAutoConfiguration.class)
+@Import(JpaDaoConfiguration.class)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

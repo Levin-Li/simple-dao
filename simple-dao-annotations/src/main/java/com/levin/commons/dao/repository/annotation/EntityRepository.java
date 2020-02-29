@@ -1,4 +1,4 @@
-package com.levin.commons.dao.simple.annotation;
+package com.levin.commons.dao.repository.annotation;
 
 import java.lang.annotation.*;
 

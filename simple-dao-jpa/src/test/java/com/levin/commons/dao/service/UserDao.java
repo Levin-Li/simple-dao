@@ -7,7 +7,10 @@ import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.dao.simple.annotation.*;
+import com.levin.commons.dao.repository.annotation.DeleteRequest;
+import com.levin.commons.dao.repository.annotation.EntityRepository;
+import com.levin.commons.dao.repository.annotation.QueryRequest;
+import com.levin.commons.dao.repository.annotation.UpdateRequest;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.levin.commons.dao.simple.annotation;
+package com.levin.commons.dao.repository.annotation;
 
 import java.lang.annotation.*;
 
@@ -13,7 +13,15 @@ import java.lang.annotation.*;
  * @author llw
  * @version 2.0.0
  */
-public @interface DeleteRequest {
+public @interface UpdateRequest {
+
+    /**
+     * 静态的更新的字段
+     * 可用于时间更新等
+     *
+     * @return
+     */
+    String updateStatement() default "";
 
     /**
      * 固定条件

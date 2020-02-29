@@ -18,7 +18,7 @@ import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.stat.Having;
-import com.levin.commons.dao.simple.annotation.QueryRequest;
+import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;

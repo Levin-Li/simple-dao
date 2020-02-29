@@ -5,4 +5,4 @@
  * <p/>
  * 其它注解表示是查询还是更新还是删除
  */
-package com.levin.commons.dao.simple.annotation;
+package com.levin.commons.dao.repository.annotation;

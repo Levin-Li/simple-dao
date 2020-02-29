@@ -1,7 +1,10 @@
-package com.levin.commons.dao.simple;
+package com.levin.commons.dao.repository;
 
 
-import com.levin.commons.dao.simple.annotation.*;
+import com.levin.commons.dao.repository.annotation.DeleteRequest;
+import com.levin.commons.dao.repository.annotation.EntityRepository;
+import com.levin.commons.dao.repository.annotation.QueryRequest;
+import com.levin.commons.dao.repository.annotation.UpdateRequest;
 
 import java.util.List;
 

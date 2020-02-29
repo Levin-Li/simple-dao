@@ -1,6 +1,6 @@
-package com.levin.commons.dao.simple;
+package com.levin.commons.dao.repository;
 
-import com.levin.commons.dao.simple.annotation.EntityRepository;
+import com.levin.commons.dao.repository.annotation.EntityRepository;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

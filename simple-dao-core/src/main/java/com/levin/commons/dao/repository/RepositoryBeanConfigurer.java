@@ -1,4 +1,4 @@
-package com.levin.commons.dao.simple;
+package com.levin.commons.dao.repository;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -37,7 +37,6 @@ public class RepositoryBeanConfigurer
 
         RepositoryDefinitionScanner scanner = new RepositoryDefinitionScanner((BeanDefinitionRegistry) beanFactory);
         scanner.setResourceLoader(this.applicationContext);
-
 
         scanner.scan(scanPackages);
     }
