@@ -1,4 +1,4 @@
-package com.levin.commons.dao.repository;
+package com.levin.commons.dao.repository.support;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;

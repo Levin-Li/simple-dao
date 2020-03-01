@@ -16,8 +16,8 @@ public abstract class AbstractDaoFactory implements DaoFactory {
     private ParameterNameDiscoverer parameterNameDiscoverer;
 
 
-//    @Override
-   abstract public MiniDao getDao();
+    //    @Override
+    abstract public MiniDao getDao();
 
 
     public ParameterNameDiscoverer getParameterNameDiscoverer() {

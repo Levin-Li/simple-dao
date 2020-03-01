@@ -214,7 +214,7 @@ public interface JpaDao extends SimpleDao {
     /**
      * 默认的占位符,挂号里面不能有空格
      */
-    String DEFAULT_JPQL_PARAM_PLACEHOLDER = "{:?}";
+    String DEFAULT_JPQL_PARAM_PLACEHOLDER = ":?";
 
 
     /**
@@ -223,7 +223,7 @@ public interface JpaDao extends SimpleDao {
      * @param paramPlaceholder
      * @return
      */
-    JpaDao setJPQLParamPlaceholder(String paramPlaceholder);
+    JpaDao setParamPlaceholder(String paramPlaceholder);
 
 
     /**

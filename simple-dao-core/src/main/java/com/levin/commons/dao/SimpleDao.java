@@ -1,11 +1,9 @@
-
 package com.levin.commons.dao;
 
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public interface SimpleDao extends MiniDao, DaoFactory {

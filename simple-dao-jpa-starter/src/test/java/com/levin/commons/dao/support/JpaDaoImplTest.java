@@ -3,6 +3,7 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
+import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.repository.SimpleDao;
 import com.levin.commons.dao.starter.EnableJpaDao;
@@ -15,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -29,13 +31,8 @@ import java.util.*;
 
 @ActiveProfiles("dev")
 @RunWith(SpringJUnit4ClassRunner.class)
-//@BootstrapWith
-@ContextConfiguration(value = "classpath*:/applicationContext-*.xml" )
-
-//注意测试时，使用的是h2的内存数据库，所以没有使用事务
-@Transactional(rollbackFor = {Throwable.class})
-@EnableJpaDao
-@FixMethodOrder(MethodSorters.JVM)
+@SpringBootTest(classes = {TestConfiguration.class})
+@Transactional
 public class JpaDaoImplTest {
 
     @Autowired
@@ -74,6 +71,16 @@ public class JpaDaoImplTest {
     @Before
     public void testGetEntityManager() throws Exception {
         Assert.notNull(jpaDao.getEntityManager());
+    }
+
+
+    @Before
+    public void initTestEntity() throws Exception {
+
+
+
+        List<TestEntity> e = jpaDao.selectFrom(TestEntity.class, "e").find(TestEntity.class);
+
     }
 
 
@@ -459,6 +466,15 @@ public class JpaDaoImplTest {
         List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());
 
         System.out.println(objects);
+
+    }
+
+
+    @org.junit.Test
+    public void testDeleteById() throws Exception {
+
+
+        jpaDao.deleteById(TestEntity.class,1L);
 
     }
 

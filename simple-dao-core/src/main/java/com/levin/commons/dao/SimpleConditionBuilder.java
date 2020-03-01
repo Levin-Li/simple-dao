@@ -28,12 +28,12 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     *  xx is null or xx = paramValue
+     * xx is null or xx = paramValue
      *
      * @param entityAttrName 如 name
      * @return
      */
-    T isNullOrEq(String entityAttrName,Object paramValue);
+    T isNullOrEq(String entityAttrName, Object paramValue);
 
 
     /**

@@ -9,7 +9,7 @@ public interface MiniDao {
     /**
      * 默认的占位符,挂号里面不能有空格
      */
-    String DEFAULT_JDBC_PARAM_PLACEHOLDER = " ? ";
+    String DEFAULT_JDBC_PARAM_PLACEHOLDER = "?";
 
     /**
      * 是否 JPA Dao

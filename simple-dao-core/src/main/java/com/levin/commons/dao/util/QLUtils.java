@@ -84,7 +84,7 @@ public class QLUtils {
      * @param sql
      * @return
      */
-    public static String replaceParamPlaceholder(String sql, String oldParamPlaceholder, Integer paramIndex, String newPlaceholderPrefix,String newPlaceholderSuffix) {
+    public static String replaceParamPlaceholder(String sql, String oldParamPlaceholder, Integer paramIndex, String newPlaceholderPrefix, String newPlaceholderSuffix) {
 
         oldParamPlaceholder = oldParamPlaceholder.trim();
 

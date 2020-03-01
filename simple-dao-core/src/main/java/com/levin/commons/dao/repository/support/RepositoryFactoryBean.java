@@ -1,14 +1,12 @@
-package com.levin.commons.dao.repository;
+package com.levin.commons.dao.repository.support;
 
 import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.proxy.ProxyFactoryBean;
 import com.levin.commons.dao.repository.annotation.DeleteRequest;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.repository.annotation.UpdateRequest;
-import com.levin.commons.dao.repository.support.ProxyMethodInvokeException;
 import com.levin.commons.dao.support.DeleteDaoImpl;
 import com.levin.commons.dao.support.MethodParameterNameDiscoverer;
 import com.levin.commons.dao.support.SelectDaoImpl;
@@ -16,13 +14,23 @@ import com.levin.commons.dao.support.UpdateDaoImpl;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.SpringNamingPolicy;
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ReflectionUtils;
 
-import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
@@ -32,7 +40,7 @@ import java.util.List;
  * FactoryBean
  */
 public class RepositoryFactoryBean<T>
-        extends ProxyFactoryBean<T> {
+        implements InitializingBean, ApplicationContextAware, FactoryBean<T>, InvocationHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(RepositoryFactoryBean.class);
 
@@ -46,12 +54,34 @@ public class RepositoryFactoryBean<T>
     @Autowired(required = false)
     private ParameterNameDiscoverer parameterNameDiscoverer;
 
+    private Class<T> serviceType;
+
+    private ApplicationContext applicationContext;
 
     //用于传输方法执行结果
     private static final ThreadLocal threadContext = new ThreadLocal<>();
 
+    public void setServiceType(Class<T> serviceType) {
+        this.serviceType = serviceType;
+    }
 
-    @PostConstruct
+    @Override
+    public Class<?> getObjectType() {
+        return serviceType;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return true;
+    }
+
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         if (jpaDao == null)
@@ -129,30 +159,6 @@ public class RepositoryFactoryBean<T>
         return null;
     }
 
-    @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-
-        //如果是抽象方法
-        boolean anAbstract = Modifier.isAbstract(method.getModifiers());
-
-        try {
-            Object returnValue = invoke(obj, method, args);
-
-            if (anAbstract)
-                return returnValue;
-            else
-                threadContext.set(returnValue);
-
-        } catch (Throwable e) {
-            if (anAbstract)
-                throw new ProxyMethodInvokeException(method.toGenericString(), e);
-            else
-                threadContext.set(new InvokeExceptionDesc(obj, method, args, methodProxy, e));
-        }
-
-        //继续执行父类的方法
-        return methodProxy.invokeSuper(obj, args);
-    }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -195,7 +201,7 @@ public class RepositoryFactoryBean<T>
                 selectDao.setQueryRequest(queryRequest);
             }
 
-            ResolvableType resolvableType = ResolvableType.forType(method.getGenericReturnType(), ResolvableType.forType(getActualType()));
+            ResolvableType resolvableType = ResolvableType.forType(method.getGenericReturnType(), ResolvableType.forType(serviceType));
 
             Class<?> returnType = resolvableType.resolve(method.getReturnType());
 
@@ -260,6 +266,55 @@ public class RepositoryFactoryBean<T>
 
     }
 
+
+    protected Object autoInjectProxy(final Object proxyBean) {
+
+        ReflectionUtils.doWithFields(serviceType, new ReflectionUtils.FieldCallback() {
+            @Override
+            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+
+                Class<?> type = ResolvableType.forField(field, serviceType).resolve(field.getType());
+
+                if (type == serviceType || type.isAssignableFrom(serviceType)) {
+                    try {
+                        field.setAccessible(true);
+                        if (field.get(proxyBean) == null) {
+                            ReflectionUtils.setField(field, proxyBean, applicationContext.getBean(type));
+                        }
+                    } catch (Exception e) {
+                        logger.warn(serviceType + "实例，自动注入属性" + field.getName() + "代理对象时错误", e);
+                    }
+                }
+
+            }
+        });
+
+        try {
+            applicationContext.getAutowireCapableBeanFactory().autowireBean(proxyBean);
+        } catch (Exception e) {
+            logger.warn(serviceType + "实例，自动注入属性代理对象时错误", e);
+        }
+
+        return proxyBean;
+    }
+
+
+    @Override
+    public T getObject() throws Exception {
+
+        if (serviceType.isInterface()) {
+            return (T) java.lang.reflect.Proxy.newProxyInstance(serviceType.getClassLoader(), new Class[]{serviceType}, this);
+        } else {
+
+            Enhancer enhancer = new Enhancer();
+            enhancer.setSuperclass(serviceType);
+            enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+            enhancer.setCallback(methodInterceptor);
+
+            return (T) autoInjectProxy(enhancer.create());
+        }
+    }
+
     private static class InvokeDesc {
 
         public final Object invokeTarget;
@@ -310,4 +365,30 @@ public class RepositoryFactoryBean<T>
         }
     }
 
+    private final MethodInterceptor methodInterceptor = new MethodInterceptor() {
+        @Override
+        public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+
+            //如果是抽象方法
+            boolean anAbstract = Modifier.isAbstract(method.getModifiers());
+
+            try {
+                Object returnValue = invoke(obj, method, args);
+
+                if (anAbstract)
+                    return returnValue;
+                else
+                    threadContext.set(returnValue);
+
+            } catch (Throwable e) {
+                if (anAbstract)
+                    throw new ProxyMethodInvokeException(method.toGenericString(), e);
+                else
+                    threadContext.set(new InvokeExceptionDesc(obj, method, args, methodProxy, e));
+            }
+
+            //继续执行父类的方法
+            return methodProxy.invokeSuper(obj, args);
+        }
+    };
 }

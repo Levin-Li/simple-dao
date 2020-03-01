@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.levin.commons.dao.util.QueryAnnotationUtil.getAnnotationsByPackage;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -726,9 +725,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
         //支持多个注解
-        List<Annotation> logicAnnotations  = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+        List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-      //  List<Annotation> logicAnnotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
+        //  List<Annotation> logicAnnotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
 
 
         logicAnnotations.stream().forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));

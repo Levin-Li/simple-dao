@@ -1,4 +1,4 @@
-package com.levin.commons.dao.repository;
+package com.levin.commons.dao.repository.support;
 
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -7,7 +7,6 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -77,8 +76,6 @@ public class RepositoryDefinitionScanner
             //替换为factoryBean
             definition.setBeanClass(factoryBeanClass);
         }
-
-
 
 
 //         * @see org.springframework.beans.factory.config.BeanDefinition

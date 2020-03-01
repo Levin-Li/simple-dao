@@ -1,0 +1,9 @@
+
+spring:
+  datasource:
+    url: jdbc:h2:./dev.db;MODE=MySQL;
+    username: dev
+    password: dev
+
+
+

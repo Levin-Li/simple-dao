@@ -1,8 +1,7 @@
-package com.levin.commons.dao.repository;
+package com.levin.commons.dao.repository.support;
 
 /**
  * 代理方法执行异常
- *
  */
 public class ProxyMethodInvokeException
         extends RuntimeException {

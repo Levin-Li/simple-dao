@@ -237,7 +237,7 @@ public abstract class QueryAnnotationUtil {
         List<Annotation> annotations = getAnnotationsByPackage(AND.class.getPackage().getName(), varAnnotations, END.class);
 
         if (annotations.size() > 1) {
-          //  throw new StatementBuildException(varName + " --> 同一个位置只允许定义一个逻辑注解，已经定义的注解：" + annotations);
+            //  throw new StatementBuildException(varName + " --> 同一个位置只允许定义一个逻辑注解，已经定义的注解：" + annotations);
         }
 
         return annotations;

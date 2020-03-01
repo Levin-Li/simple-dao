@@ -9,23 +9,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(SimpleCondition.class)
-public @interface ConditionalOn {
-
-    enum Action {
-        OnBean,
-        OnMissingBean,
-        OnClass,
-        OnMissingClass,
-        OnProperty,
-        //  OnExpr,
-    }
-
-    /**
-     * 条件类型
-     *
-     * @return
-     */
-    Action action();
+public @interface ConditionalOnList {
 
     /**
      * 是否要求所有的条件都匹配
@@ -35,18 +19,12 @@ public @interface ConditionalOn {
      */
     boolean requireAllMatch() default true;
 
-    /**
-     * 类型
-     *
-     * @return
-     */
-    Class<?>[] types() default {};
 
     /**
-     * 类名，或是属性名，或是表达式脚本
+     * 条件列表
      *
      * @return
      */
-    String[] value() default {};
+    ConditionalOn[] value();
 
 }

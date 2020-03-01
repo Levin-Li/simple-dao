@@ -38,7 +38,6 @@ public @interface OR {
     boolean autoClose() default false;
 
     /**
-     *
      * @return
      */
     boolean require() default false;

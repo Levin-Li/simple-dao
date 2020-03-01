@@ -10,3 +10,4 @@
 2、Import 器 Import @Configuration、 选择器等
 
 3、动态导入器  ImportBeanDefinitionRegistrar
+             ImportBeanDefinitionRegistrar

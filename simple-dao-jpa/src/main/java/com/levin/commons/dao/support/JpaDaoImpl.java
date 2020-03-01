@@ -24,6 +24,7 @@ import javax.persistence.*;
 import javax.validation.Validator;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,9 +124,6 @@ public class JpaDaoImpl
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
 
-    private static final boolean isHibernate = ClassUtils.isPresent("org.hibernate.Version", JpaDaoImpl.class.getClassLoader());
-
-
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
@@ -143,12 +141,11 @@ public class JpaDaoImpl
 
     private ApplicationContext applicationContext;
 
-    //默认hibernate 4 从 1开始，hibernate 5从0开始
-    //但是原生查询还是从1开始
-    private final int paramStartIndex;
+
+    private final Integer hibernateVersion;
 
 
-    @Value("${jpa.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
+    @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
@@ -161,32 +158,32 @@ public class JpaDaoImpl
     };
 
     public JpaDaoImpl() {
-        this.paramStartIndex = isHibernate5() ? 1 : 1;
+        hibernateVersion = getHibernateVersion();
     }
 
+    public static Integer getHibernateVersion() {
 
-    public JpaDaoImpl(int paramStartIndex) {
-        this.paramStartIndex = paramStartIndex;
-    }
-
-
-    public static boolean isHibernate5() {
-
-        if (isHibernate) {
+        try {
             //5.2.10.Final
-            try {
-                String version = (String) ClassUtils
-                        .forName("org.hibernate.Version", JpaDaoImpl.class.getClassLoader())
-                        .getDeclaredMethod("getVersionString")
-                        .invoke(null);
 
-                return Integer.parseInt(version.substring(0, version.indexOf("."))) >= 5;
+            String version = (String) ClassUtils
+                    .forName("org.hibernate.Version", JpaDaoImpl.class.getClassLoader())
+                    .getDeclaredMethod("getVersionString")
+                    .invoke(null);
 
-            } catch (Exception e) {
-            }
+            return Integer.parseInt(version.substring(0, version.indexOf(".")));
+        } catch (IllegalAccessException e) {
+            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
+        } catch (InvocationTargetException e) {
+            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
+        } catch (NoSuchMethodException e) {
+            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
+        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
+            logger.warn("getHibernateVersion " + ExceptionUtils.getRootCauseInfo(e));
         }
 
-        return false;
+        return null;
     }
 
     @Override
@@ -294,7 +291,7 @@ public class JpaDaoImpl
 
 
     @Override
-    public JpaDao setJPQLParamPlaceholder(String paramPlaceholder) {
+    public JpaDao setParamPlaceholder(String paramPlaceholder) {
 
         this.paramPlaceholder = paramPlaceholder;
 
@@ -401,7 +398,7 @@ public class JpaDaoImpl
     @Override
     @Transactional
     public boolean deleteById(Class entityClass, Object id) {
-        Query query = getEntityManager().createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid" + paramStartIndex);
+        Query query = getEntityManager().createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
         query.setParameter("pkid", id);
         return query.executeUpdate() > 0;
         //说明
@@ -457,7 +454,9 @@ public class JpaDaoImpl
         List paramValueList = flattenParams(null, paramValues);
 
 
-        statement = replacePlaceholder(isNative, statement);
+        if (!paramValueList.isEmpty()) {
+            statement = replacePlaceholder(isNative, statement);
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("Update JPQL:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
@@ -605,7 +604,9 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-        statement = replacePlaceholder(isNative, statement);
+        if (!paramValueList.isEmpty()) {
+            statement = replacePlaceholder(isNative, statement);
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
@@ -640,12 +641,23 @@ public class JpaDaoImpl
 
     @Override
     public String getParamPlaceholder(boolean isNative) {
-        return isNative ? MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER : this.paramPlaceholder;
+
+//        return isNative ? MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER : this.paramPlaceholder;
+
+        return this.paramPlaceholder;
     }
 
 
     public int getParamStartIndex(boolean isNative) {
-        return (isNative && paramStartIndex < 1) ? (paramStartIndex + 1) : paramStartIndex;
+        //   return (isNative && paramStartIndex < 1) ? (paramStartIndex + 1) : paramStartIndex;
+
+        boolean isJdbcParamPlaceholder = MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER.trim().equals(this.getParamPlaceholder(isNative).trim());
+
+
+        //如果是？占位符 并且不是原生查询才返回0
+
+        return isJdbcParamPlaceholder && !isNative ? 0 : 1;
+
     }
 
     /**
@@ -690,7 +702,7 @@ public class JpaDaoImpl
         } else if (DeleteDao.class.isAssignableFrom(daoClass)) {
             return (DAO) new DeleteDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
         } else {
-            throw new IllegalArgumentException("type  " + daoClass.getName() + " is not support");
+            throw new IllegalArgumentException("action  " + daoClass.getName() + " is not support");
         }
 
     }
@@ -830,7 +842,9 @@ public class JpaDaoImpl
                     flattenParams(valueHolder, Array.get(paramValue, i));
                 }
             } else if (paramValue instanceof Map) {
-                valueHolder.add(paramValue);
+                if (!((Map) paramValue).isEmpty()) {
+                    valueHolder.add(paramValue);
+                }
             } else {
                 valueHolder.add(paramValue);
             }

@@ -46,14 +46,14 @@ public interface Paging {
      *
      * @return
      */
-   // Paging next();
+    // Paging next();
 
     /**
      * 获取上一页
      *
      * @return
      */
-  //  Paging prev();
+    //  Paging prev();
 
     /**
      * 跳到指定的页
@@ -61,6 +61,6 @@ public interface Paging {
      * @param pageIndex
      * @return
      */
-  //  Paging go(int pageIndex);
+    //  Paging go(int pageIndex);
 
 }
