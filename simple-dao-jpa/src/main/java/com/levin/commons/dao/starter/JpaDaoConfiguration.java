@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Role;
         , basePackages = {"com.levin.commons.dao.repository"})
 @EnableProxyBean(registerTypes = EntityRepository.class)
 public class JpaDaoConfiguration implements ApplicationContextAware, BeanFactoryPostProcessor {
+
     @Bean
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {Eq.class, MiniDao.class, JpaDao.class, JpaDaoImpl.class}),
@@ -47,20 +48,5 @@ public class JpaDaoConfiguration implements ApplicationContextAware, BeanFactory
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
     }
-
-    //    @Value("${com.levin.commons.dao.repository.scanPackages:}")
-//    String[] scanPackages;
-//
-//    @PostConstruct
-//    public void init() {
-//
-//        if (scanPackages != null
-//                && scanPackages.length > 0) {
-//            RepositoryDefinitionScanner scanner = new RepositoryDefinitionScanner((BeanDefinitionRegistry) context);
-//            scanner.setResourceLoader(this.context);
-//            scanner.scan(scanPackages);
-//        }
-//
-//    }
 
 }
