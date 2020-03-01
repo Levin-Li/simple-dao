@@ -124,7 +124,8 @@ public class JpaDaoImpl
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
 
-    @PersistenceUnit
+//    @PersistenceUnit
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
 
     @PersistenceContext

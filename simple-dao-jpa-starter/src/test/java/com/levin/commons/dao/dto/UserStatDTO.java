@@ -1,7 +1,11 @@
 package com.levin.commons.dao.dto;
 
 
-import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.Eq;
+import com.levin.commons.dao.annotation.Like;
+import com.levin.commons.dao.annotation.Not;
+import com.levin.commons.dao.annotation.Where;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -9,7 +13,6 @@ import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.stat.Having;
 import com.levin.commons.dao.annotation.stat.Sum;
-import com.levin.commons.dao.TargetOption;
 
 
 /**

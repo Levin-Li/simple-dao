@@ -1,10 +1,6 @@
 package com.levin.commons.dao.dto;
 
 
-import com.levin.commons.dao.annotation.select.SelectColumn;
-import com.levin.commons.dao.annotation.stat.Avg;
-import com.levin.commons.dao.annotation.stat.GroupBy;
-import com.levin.commons.dao.annotation.stat.Sum;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 
 import java.util.HashMap;

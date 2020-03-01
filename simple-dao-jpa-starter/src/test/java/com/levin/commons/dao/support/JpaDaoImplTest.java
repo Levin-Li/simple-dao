@@ -5,20 +5,18 @@ import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
+import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.repository.SimpleDao;
-import com.levin.commons.dao.starter.EnableJpaDao;
 import com.levin.commons.dao.service.GroupDao;
 import com.levin.commons.dao.service.UserDao;
 import com.levin.commons.utils.MapUtils;
+import org.dao.test.repository.Group2Dao;
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -47,6 +45,11 @@ public class JpaDaoImplTest {
     @Autowired
     GroupDao groupDao;
 
+    @Autowired
+    Group2Dao group2Dao;
+
+    @Autowired
+    UserApi userApi;
 
     public enum AppType {
         Android, Ios, Weixin, Web, H5
@@ -76,8 +79,6 @@ public class JpaDaoImplTest {
 
     @Before
     public void initTestEntity() throws Exception {
-
-
 
         List<TestEntity> e = jpaDao.selectFrom(TestEntity.class, "e").find(TestEntity.class);
 
@@ -143,6 +144,14 @@ public class JpaDaoImplTest {
 
             parentId = group.getId();
         }
+
+
+    }
+
+    @Test
+    public void testProxyBean() {
+
+        System.out.printf(userApi.getEMF());
 
 
     }
@@ -240,7 +249,7 @@ public class JpaDaoImplTest {
     @Test
     public void testGetIdAttr() {
 
-        JpaDaoImpl jpaDao = new JpaDaoImpl();
+       /// JpaDaoImpl jpaDao = new JpaDaoImpl();
 
         String attrName = jpaDao.getEntityIdAttrName(User.class);
 

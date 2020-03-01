@@ -1,7 +1,6 @@
 package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
-import com.levin.commons.dao.domain.support.AbstractTreeObject;
 
 import javax.persistence.*;
 

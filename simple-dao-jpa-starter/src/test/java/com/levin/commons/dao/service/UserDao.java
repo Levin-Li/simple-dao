@@ -3,10 +3,12 @@ package com.levin.commons.dao.service;
 
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.Eq;
+import com.levin.commons.dao.annotation.Gt;
+import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
-import com.levin.commons.dao.domain.*;
+import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.repository.annotation.DeleteRequest;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.repository.annotation.QueryRequest;

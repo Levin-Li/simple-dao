@@ -5,7 +5,9 @@ import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * Created by echo on 2015/11/17.

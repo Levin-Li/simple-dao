@@ -3,22 +3,19 @@ package com.levin.commons.dao.repository;
 import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.proxy.ProxyFactoryBean;
 import com.levin.commons.dao.repository.annotation.DeleteRequest;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.repository.annotation.UpdateRequest;
-import com.levin.commons.dao.repository.support.ProxyMethodInvokeException;
 import com.levin.commons.dao.support.DeleteDaoImpl;
 import com.levin.commons.dao.support.MethodParameterNameDiscoverer;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.UpdateDaoImpl;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.proxy.ProxyFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 
 import javax.annotation.PostConstruct;
@@ -38,17 +35,9 @@ public class RepositoryFactoryBean<T>
 
     private static String PROMPT = "无操作注解，非接口类需要在方法上显式声明注解，如：@QueryRequest";
 
-    private static final Object RESULT_TAKED = new Object();
 
     @Autowired
     private MiniDao jpaDao;
-
-    @Autowired(required = false)
-    private ParameterNameDiscoverer parameterNameDiscoverer;
-
-
-    //用于传输方法执行结果
-    private static final ThreadLocal threadContext = new ThreadLocal<>();
 
 
     @PostConstruct
@@ -59,47 +48,6 @@ public class RepositoryFactoryBean<T>
 
         if (parameterNameDiscoverer == null)
             parameterNameDiscoverer = new MethodParameterNameDiscoverer();
-
-    }
-
-    public ParameterNameDiscoverer getParameterNameDiscoverer() {
-        return parameterNameDiscoverer;
-    }
-
-    public void setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
-        this.parameterNameDiscoverer = parameterNameDiscoverer;
-    }
-
-
-    /**
-     * 如果代理对象发生异常，这个方法将返回异常对象，否则返回正常的方法返回对象
-     * <p/>
-     * 可能获得的结果：
-     * 1、正常返回
-     * 2、方法执行异常，返回异常实体
-     * 3、方法不需要执行代理，返回PROXY_NOOP
-     *
-     * @return
-     */
-    public static <T> T getProxyInvokeResult() {
-
-        Object result = threadContext.get();
-
-        threadContext.set(RESULT_TAKED);
-
-        if (result == null)
-            return null;
-
-        if (result == RESULT_TAKED)
-            throw new IllegalStateException("执行结果已经被取走");
-
-        if (result instanceof InvokeExceptionDesc)
-            throw new ProxyMethodInvokeException(((InvokeExceptionDesc) result).ex);
-
-        if (result instanceof NOOP)
-            throw new ProxyMethodInvokeException(((NOOP) result).info);
-
-        return (T) result;
 
     }
 
@@ -129,33 +77,14 @@ public class RepositoryFactoryBean<T>
         return null;
     }
 
-    @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-
-        //如果是抽象方法
-        boolean anAbstract = Modifier.isAbstract(method.getModifiers());
-
-        try {
-            Object returnValue = invoke(obj, method, args);
-
-            if (anAbstract)
-                return returnValue;
-            else
-                threadContext.set(returnValue);
-
-        } catch (Throwable e) {
-            if (anAbstract)
-                throw new ProxyMethodInvokeException(method.toGenericString(), e);
-            else
-                threadContext.set(new InvokeExceptionDesc(obj, method, args, methodProxy, e));
-        }
-
-        //继续执行父类的方法
-        return methodProxy.invokeSuper(obj, args);
-    }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+
+        if(method.getDeclaringClass() == Object.class){
+            ;
+        }
 
         //获取方法上面的注解
         Annotation opAnnotation = findOpAnnotation(method, method.getAnnotations());
@@ -258,56 +187,6 @@ public class RepositoryFactoryBean<T>
             throw new RuntimeException("unknown operation annotation : " + opAnnotation);
         }
 
-    }
-
-    private static class InvokeDesc {
-
-        public final Object invokeTarget;
-        public final Method method;
-        public final Object[] args;
-
-        private InvokeDesc(Object invokeTarget, Method method, Object[] args) {
-            this.invokeTarget = invokeTarget;
-            this.method = method;
-            this.args = args;
-        }
-
-        @Override
-        public String toString() {
-            return method.toString();
-        }
-    }
-
-    public static class NOOP extends InvokeDesc {
-
-        public final String info;
-
-        private NOOP(Object invokeTarget, Method method, Object[] args, String info) {
-            super(invokeTarget, method, args);
-            this.info = info;
-        }
-
-        @Override
-        public String toString() {
-            return info + ":" + super.toString();
-        }
-    }
-
-    public static class InvokeExceptionDesc extends InvokeDesc {
-
-        public final MethodProxy methodProxy;
-        public final Throwable ex;
-
-        private InvokeExceptionDesc(Object invokeTarget, Method method, Object[] args, MethodProxy methodProxy, Throwable ex) {
-            super(invokeTarget, method, args);
-            this.methodProxy = methodProxy;
-            this.ex = ex;
-        }
-
-        @Override
-        public String toString() {
-            return ex.getMessage() + ":" + super.toString();
-        }
     }
 
 }

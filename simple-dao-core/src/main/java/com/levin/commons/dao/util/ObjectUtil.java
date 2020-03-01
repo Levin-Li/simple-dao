@@ -35,52 +35,6 @@ public abstract class ObjectUtil {
     public static final GenericConversionService conversionService = new DefaultConversionService();
 
 
-    /**
-     * 格式化包名
-     * <p>
-     * 主要用于路径扫描
-     *
-     * @param packages
-     * @return
-     */
-    public static List<String> formatPackages(Collection<String> packages) {
-
-        LinkedList<String> minList = new LinkedList<>();
-
-        packages.stream()
-                .filter(StringUtils::hasText)
-                .map(p -> p.replace(" ", ""))
-                .map(p -> {
-                    while (p.contains("..")) {
-                        p = p.replace("..", ".");
-                    }
-                    return p;
-                })
-                .map(p -> {
-                    while (p.length() > 0 && p.endsWith(".")) {
-                        p = p.substring(0, p.length() - 1);
-                    }
-                    return p;
-                })
-                .filter(StringUtils::hasText)
-                .sorted()
-                .forEach(p -> {
-                    if (minList.isEmpty()) {
-                        minList.add(p);
-                    } else {
-                        String last = minList.getLast();
-
-                        int indexOf = p.indexOf(last);
-
-                        if (indexOf < 0 || (!last.endsWith(".") && p.charAt(indexOf + last.length()) != '.')) {
-                            minList.add(p);
-                        }
-                    }
-
-                });
-
-        return minList;
-    }
 
     /**
      * 属性拷贝器

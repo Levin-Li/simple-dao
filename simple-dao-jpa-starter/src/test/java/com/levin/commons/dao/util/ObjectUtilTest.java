@@ -10,8 +10,6 @@ import com.levin.commons.dao.domain.User;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.ServiceResponse;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-//import org.jsoup.Jsoup;
 import org.junit.Test;
 import org.springframework.core.ResolvableType;
 
@@ -20,6 +18,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
+
+//import org.jsoup.Jsoup;
 
 /**
  * Created by echo on 2016/8/10.

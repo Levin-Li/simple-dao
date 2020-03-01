@@ -5,7 +5,6 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.Null;
-import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.Group;
