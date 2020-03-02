@@ -9,6 +9,7 @@ import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.ServiceResponse;
+import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.springframework.core.ResolvableType;
@@ -169,6 +170,23 @@ public class ObjectUtilTest {
             resp.add(value);
 
         }
+    }
+
+
+
+    @Test
+    public void testSpel() throws Exception {
+
+       String expr = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+
+        Object t = ObjectUtil.evalSpEL(null,
+                expr,
+                MapUtils.put("_val",(Object) 1)
+                        .put("aaa", "bbb")
+                        .build());
+
+        System.out.println(t);
+
     }
 
 

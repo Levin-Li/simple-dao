@@ -35,7 +35,6 @@ public abstract class ObjectUtil {
     public static final GenericConversionService conversionService = new DefaultConversionService();
 
 
-
     /**
      * 属性拷贝器
      * <p>
@@ -279,7 +278,7 @@ public abstract class ObjectUtil {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, Object>... contexts) {
+    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, ? super Object>... contexts) {
 
         EvaluationContext ctx = new StandardEvaluationContext(rootObject);
 
@@ -561,7 +560,8 @@ public abstract class ObjectUtil {
      * @param objectStack         路径堆栈，用来防止出来对象的应用递归
      * @param invokeDeep          当前已经进行的属性深度
      * @param maxCopyDeep         最大的拷贝深度
-     * @param ignoreProperties    a.b.c.name* *号表示忽略以什么开头的属性
+     * @param ignoreProperties    忽略目标对象的属性
+     *                            a.b.c.name* *号表示忽略以什么开头的属性
      *                            a.b.c.{*}    大括号表示忽略所有的复杂类型属性
      *                            a.b.c.{com.User}    大括号表示忽略User类型属性
      * @param <T>

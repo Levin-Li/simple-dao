@@ -11,7 +11,8 @@ public interface DeepCopier {
      *
      * @param source
      * @param target
-     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
      *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      *                         spel:...

@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import javax.persistence.EntityManager;
 import java.util.*;
 
 /**
@@ -30,7 +31,7 @@ import java.util.*;
 @ActiveProfiles("dev")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class})
-@Transactional
+//@Transactional
 public class JpaDaoImplTest {
 
     @Autowired
@@ -73,7 +74,8 @@ public class JpaDaoImplTest {
 
     @Before
     public void testGetEntityManager() throws Exception {
-        Assert.notNull(jpaDao.getEntityManager());
+        EntityManager entityManager = jpaDao.getEntityManager();
+        Assert.notNull(entityManager);
     }
 
 
@@ -82,12 +84,15 @@ public class JpaDaoImplTest {
 
         List<TestEntity> e = jpaDao.selectFrom(TestEntity.class, "e").find(TestEntity.class);
 
+
+
     }
 
 
     @Before
     public void initTestData() throws Exception {
 
+        groupDao.update(1L,"name-1");
 
         long cnt = jpaDao.selectFrom(User.class).count();
 
@@ -249,7 +254,7 @@ public class JpaDaoImplTest {
     @Test
     public void testGetIdAttr() {
 
-       /// JpaDaoImpl jpaDao = new JpaDaoImpl();
+        /// JpaDaoImpl jpaDao = new JpaDaoImpl();
 
         String attrName = jpaDao.getEntityIdAttrName(User.class);
 
@@ -325,13 +330,13 @@ public class JpaDaoImplTest {
     @org.junit.Test
     public void testFindAndConvert() throws Exception {
 
-        jpaDao.selectFrom(User.class,"u")
-                .appendJoinFetchSet(true,E_User.group)
-                .gt(E_User.id,"5")
+        jpaDao.selectFrom(User.class, "u")
+                .appendJoinFetchSet(true, E_User.group)
+                .gt(E_User.id, "5")
                 .isNotNull(E_User.name)
-                .find((User u)->u.getGroup())
+                .find((User u) -> u.getGroup())
                 .stream()
-                .forEach(g-> System.out.println(g));
+                .forEach(g -> System.out.println(g));
 
     }
 
@@ -354,7 +359,7 @@ public class JpaDaoImplTest {
 
 
         userUpdateDao
-                .appendColumn(E_AbstractNamedEntityObject.name, "name1")
+                .appendColumn(E_User.name, "name1")
                 .eq(E_User.enable, false)
                 .update();
     }
@@ -483,7 +488,7 @@ public class JpaDaoImplTest {
     public void testDeleteById() throws Exception {
 
 
-        jpaDao.deleteById(TestEntity.class,1L);
+        jpaDao.deleteById(TestEntity.class, 1L);
 
     }
 

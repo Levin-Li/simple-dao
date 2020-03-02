@@ -206,8 +206,6 @@ import javax.persistence.EntityManager;
  * } <br/><br/>
  */
 
-//@Service
-//@Repository
 public interface JpaDao extends SimpleDao {
 
 

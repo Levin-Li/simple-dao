@@ -10,6 +10,7 @@ import java.lang.annotation.*;
 /**
  *
  *  主要用于处理整个对象的逻辑验证，不针对单个属性
+ *
  *  也就是组合校验，不常用
  *
  *
@@ -28,7 +29,10 @@ public @interface Validator {
     /**
      * 验证表达式，目前支持 SPEL
      * <p>
+     *
      * Root 对象为注解所在的对象
+     *
+     *
      *
      * @return
      */

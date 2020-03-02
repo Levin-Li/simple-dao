@@ -10,43 +10,63 @@ import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.JpaDaoImpl;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Role;
 
 @Configuration
-@Role(BeanDefinition.ROLE_SUPPORT)
+
+//@Role(BeanDefinition.ROLE_SUPPORT)
+
+//@Import(JpaDaoRegistrar.class)
 
 @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
         , basePackages = {"com.levin.commons.dao.repository"})
+
 @EnableProxyBean(registerTypes = EntityRepository.class)
-public class JpaDaoConfiguration implements ApplicationContextAware, BeanFactoryPostProcessor {
+
+//@EnableTransactionManagement
+//@EnableAspectJAutoProxy
+public class JpaDaoConfiguration implements ApplicationContextAware {
 
     @Bean
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {Eq.class, MiniDao.class, JpaDao.class, JpaDaoImpl.class}),
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JpaDao.class),
     })
-    JpaDao newJpaDao() {
-        return new JpaDaoImpl();
+//    JpaDao newJpaDao() {
+//        return new JpaDaoImpl();
+//    }
+
+
+    FactoryBean newJpaDao() {
+
+        //务必要返回代理对象，否则事务扫描，不会生效
+
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+
+        JpaDaoImpl target = new JpaDaoImpl();
+
+       // proxyFactoryBean.setProxyTargetClass(true);
+
+        context.getAutowireCapableBeanFactory().autowireBean(target);
+
+        proxyFactoryBean.setTarget(target);
+        proxyFactoryBean.setSingleton(true);
+
+        return proxyFactoryBean;
     }
+
 
     ApplicationContext context;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.context = applicationContext;
-    }
-
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-
     }
 
 }

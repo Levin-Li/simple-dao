@@ -14,7 +14,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -117,22 +118,22 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 //@ConditionalOnBean({EntityManagerFactory.class})
-//@Repository
+@Repository
+//@Transactional
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
 
-//    @PersistenceUnit
     @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-    @PersistenceContext
+    @Autowired
     private EntityManager defaultEntityManager;
 
-    @Autowired(required = false)
-    private JpaTransactionManager transactionManager;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired(required = false)
     private ParameterNameDiscoverer parameterNameDiscoverer;
@@ -192,33 +193,17 @@ public class JpaDaoImpl
         return true;
     }
 
-    public boolean isEntityType(Class type) {
-        return type.isAnnotationPresent(Entity.class);
-    }
-
     public EntityManagerFactory getEntityManagerFactory() {
         return entityManagerFactory;
-    }
-
-    public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
     }
 
     public EntityManager getDefaultEntityManager() {
         return defaultEntityManager;
     }
 
-    public void setDefaultEntityManager(EntityManager defaultEntityManager) {
-        this.defaultEntityManager = defaultEntityManager;
-    }
-
     @Override
-    public JpaTransactionManager getTransactionManager() {
+    public PlatformTransactionManager getTransactionManager() {
         return transactionManager;
-    }
-
-    public void setTransactionManager(JpaTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
     }
 
     @Override
@@ -248,21 +233,19 @@ public class JpaDaoImpl
             parameterNameDiscoverer = new MethodParameterNameDiscoverer();
         }
 
-        if (entityManagerFactory == null) {
-            if (transactionManager != null) {
-                entityManagerFactory = transactionManager.getEntityManagerFactory();
-            } else if (defaultEntityManager != null) {
-                entityManagerFactory = defaultEntityManager.getEntityManagerFactory();
-            }
-        }
+//        if (entityManagerFactory == null
+//                && defaultEntityManager != null) {
+//            entityManagerFactory = defaultEntityManager.getEntityManagerFactory();
+//        }
 
-        if (transactionManager == null) {
-            if (entityManagerFactory != null) {
-                transactionManager = new JpaTransactionManager(entityManagerFactory);
-            }
-        }
+
+//        if (transactionManager == null
+//                && entityManagerFactory != null) {
+//            transactionManager = new JpaTransactionManager(entityManagerFactory);
+//        }
 
         if (transactionManager == null
+                || defaultEntityManager == null
                 || entityManagerFactory == null) {
             throw new IllegalStateException("transactionManager or entityManagerFactory must be set");
         }
@@ -331,8 +314,16 @@ public class JpaDaoImpl
         }
 
         if (entityManagerFactory != null) {
+
             logger.info("默认实体管理器没有注入，将使用entityManagerFactory创建");
-            return EntityManagerFactoryUtils.getTransactionalEntityManager(entityManagerFactory);
+
+            EntityManager em = EntityManagerFactoryUtils.getTransactionalEntityManager(entityManagerFactory);
+
+            if (em == null) {
+                em = entityManagerFactory.createEntityManager();
+            }
+
+            return em;
         }
 
         throw new IllegalStateException("can't find entityManager instance");
@@ -853,7 +844,6 @@ public class JpaDaoImpl
 
         return valueHolder;
     }
-
 
 }
 

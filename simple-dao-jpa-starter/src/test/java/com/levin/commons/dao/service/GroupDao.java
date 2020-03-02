@@ -14,6 +14,7 @@ import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.repository.annotation.UpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -47,6 +48,7 @@ public abstract class GroupDao {
     }
 
     @UpdateRequest
+//    @Transactional
     public int update(@Eq Long id, @UpdateColumn String name) {
 
         Integer r = RepositoryFactoryBean.getProxyInvokeResult();

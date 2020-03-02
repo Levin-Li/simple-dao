@@ -14,16 +14,15 @@ import java.util.Map;
 @Accessors(chain = true)
 public class UserSelectDTO extends UserDTO {
 
-    @SelectColumn("new com.levin.commons.dao.dto.UserGroupDTO(u,u.group)")
+    @SelectColumn
     @Like("group.name")
     String groupName = "Group";
 
     @Ignore
-    @SelectColumn()
+    @SelectColumn
     String name;
 
-
-
+    
 
     @Ignore
     @SelectColumn("score")

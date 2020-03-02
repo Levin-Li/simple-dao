@@ -3,7 +3,7 @@ package com.levin.commons.dao.annotation;
 import java.lang.annotation.*;
 
 /**
- * <p>NotExists class.</p>
+ * <p>NotLike class.</p>
  *
  * @author llw
  * @version 2.0.0
@@ -12,18 +12,33 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-
-//不存在
-public @interface NotExists {
+public @interface C {
 
     /**
-     * 暂时无用
+     * 不是 NUll 对象 ，也不是空字符串
+     */
+    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+
+
+    /**
+     * 查询字段名称，默认为字段的属性名称
      *
      * @return
      */
     String value() default "";
 
+
     /**
+     * 操作
+     *
+     * @return
+     */
+    Op op();
+
+
+    /**
+     * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+     *
      * @return
      */
     boolean require() default false;
@@ -35,28 +50,16 @@ public @interface NotExists {
      *
      * @return
      */
-    String condition() default "";
+    String condition() default NOT_NULL;
+
 
     /**
-     * 操作符
+     *
+     * 对整个表达式的包围前缀
      *
      * @return
      */
-    String op() default "Not Exists";
-
-    /**
-     * 对右操作数的包围前缀
-     *
-     * @return
-     */
-    String prefix() default " (";
-
-    /**
-     * 对右操作数的包围后缀
-     *
-     * @return
-     */
-    String suffix() default ") ";
+    String aroundPrefix() default "";
 
     /**
      * 子查询语句
@@ -80,8 +83,17 @@ public @interface NotExists {
      */
     String[] subQueryFormatArgs() default {};
 
+
+    /**
+     * 对整个表达式的包围后缀
+     *
+     * @return
+     */
+    String  aroundSuffix() default "";
+
     /**
      * 描述信息
+     *
      *
      * @return
      */

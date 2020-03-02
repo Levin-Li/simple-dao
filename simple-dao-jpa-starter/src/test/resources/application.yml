@@ -29,6 +29,7 @@ spring:
       show-sql: true
       generate-ddl: true
       database: H2
+      open-in-view: false
 
 #      MYSQL 配置选项
 #      properties:

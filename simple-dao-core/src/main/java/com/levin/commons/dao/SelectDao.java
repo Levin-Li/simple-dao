@@ -274,7 +274,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      *
      * @param <E>              targetType 要求的结果类型
      * @param maxCopyDeep      -1，表示不限层级
-     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
      *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
@@ -325,7 +326,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      *
      * @param <E>              targetType 要求的结果类型
      * @param maxCopyDeep      -1，表示不限层级
-     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
      *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
@@ -372,7 +374,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
      *
      * @param source
      * @param target
-     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
      *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
