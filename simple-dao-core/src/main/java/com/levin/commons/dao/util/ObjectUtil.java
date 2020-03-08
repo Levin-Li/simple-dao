@@ -275,6 +275,17 @@ public abstract class ObjectUtil {
      */
     public static <T> T getValue(Object source, String propertyName, boolean isThrowExWhenPropertyNotFound) {
 
+
+        if (source == null) {
+
+            if (isThrowExWhenPropertyNotFound) {
+                throw new IllegalArgumentException("key [" + propertyName + "] not found on null object");
+            }
+
+            return null;
+        }
+
+
         if (source instanceof Map) {
 
             Map map = Map.class.cast(source);

@@ -548,10 +548,6 @@ public class SelectDaoImpl<T>
             appendGroupBy(column);
         }
 
-//        if (StringUtils.hasText(model.getHavingOp())) {
-//            appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(), value);
-//        }
-
     }
 
     /**

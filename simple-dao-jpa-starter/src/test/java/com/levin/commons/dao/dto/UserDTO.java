@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.DefaultPaging;
@@ -24,23 +25,23 @@ public class UserDTO {
 
     Long id;
 
-    @OrderBy()
+    @OrderBy
     String name = "User";
 
     @OrderBy
     protected Integer orderCode;
 
-//    @Not
-    @In()
+    @GroupBy(having = true)
+    @In(not = true)
     String[] state = new String[]{"A", "B", "C"};
 
-    @Ignore
+//    @Ignore
     protected Boolean enable = true;
 
     @AND
     protected Boolean editable = true;
 
-    @Lt
+    @C(op = Op.Gt)
     @OR
     protected Date createTime = new Date();
 

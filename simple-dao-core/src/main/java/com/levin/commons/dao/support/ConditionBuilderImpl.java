@@ -714,7 +714,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 if (notOp != null) {
                     //@todo 对 Not 没有处理
                     //@Fix
-                   // varAnnotations[1] = notOp;
+                    // varAnnotations[1] = notOp;
                     throw new UnsupportedOperationException();
                 }
 
@@ -740,8 +740,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         //如果是包括忽略注解，则直接忽略
-        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null)
+        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
             return;
+        }
 
         //自动进行字段的转换
         //@todo
@@ -842,15 +843,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
-     * @param entityAttrName
-     * @param value
-     * @param varAnnotations
-     */
-    protected void processAttr(String entityAttrName, Object value, Annotation... varAnnotations) {
-        processAttr(null, null, varAnnotations, entityAttrName, null, value);
-    }
-
-    /**
      * 处理原子属性
      * 关键处理方法
      * <p/>
@@ -865,12 +857,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value) {
 
+
+        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
+            return;
+        }
+
         List<Annotation> daoAnnotations = findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations);
 
         //如果没有注解
         if (daoAnnotations.size() == 0) {
             //如果字段上没有需要处理的注解
-            processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, null);
+            //默认为 EQ
+            processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, QueryAnnotationUtil.getAnnotation(Eq.class));
         } else {
             for (Annotation opAnnotation : daoAnnotations) {
                 //如果是有效的节点和有效注解条件
@@ -905,6 +903,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //如果不是条件注解则忽略
         //但是允许空opAnnotation为 null，往下走
         //支持处理 where 条件的注解
+
+        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
+            return true;
+        }
 
         if (opAnnotation != null
                 && !opAnnotation.annotationType().getPackage().getName().equals(BASE_PACKAGE_NAME)) {
@@ -1388,31 +1390,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value, PrimitiveValue primitiveValue, Annotation opAnnotation) {
+    protected CB appendHaving(String expr, Object... paramValues) {
+        throw new UnsupportedOperationException("appendHaving [" + expr + "]");
+    }
 
+
+    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value,
+                                         PrimitiveValue primitiveValue, Annotation opAnnotation) {
 
         boolean isNullTag = (opAnnotation instanceof IsNull || opAnnotation instanceof IsNotNull);
 
-        if (isNullTag) {
-            //
-
-            //如果有notnull 或是null 那么值被忽略，会自动转换成sql表达式: is null 和is not null
-
-            append(processNullTag(bean, name, opAnnotation), Collections.EMPTY_LIST);
-
-
-        } else if (value != null) {
-
-            boolean enableEmptyString =
-                    (context != null && Boolean.TRUE.equals(context.get(DaoContext.ENABLE_EMPTY_STRING_QUERY)))
-                            || Boolean.TRUE.equals(DaoContext.getVar(DaoContext.ENABLE_EMPTY_STRING_QUERY, Boolean.FALSE));
-
-            if (!enableEmptyString
-                    && value instanceof CharSequence
-                    && ((CharSequence) value).length() < 1) {
-                //忽略空串
-                return;
-            }
+        if (isNullTag || value != null) {
 
             //如果是复杂对象，即对象或是对象数组（数组元素为非原子对象）
             boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
@@ -1427,7 +1415,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             String conditionExpr = genConditionExpr(complexType, name, holder, opAnnotation);
 
-            appendWhere(conditionExpr, holder.value);
+
+            Boolean having =  ClassUtils.getValue(opAnnotation, E_C.having, false);
+
+            if (Boolean.TRUE.equals(having)) {
+                appendHaving(conditionExpr, holder.value);
+            } else {
+                appendWhere(conditionExpr, holder.value);
+            }
+
 
         } else {
             //忽略空值的注解
@@ -1458,11 +1454,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         return value;
-    }
-
-
-    protected String processNullTag(Object rootBean, String name, Annotation opAnno) {
-        return genConditionExpr(false, opAnno, name, new ValueHolder(rootBean, null));
     }
 
 
@@ -1544,178 +1535,38 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     private String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
 
-        Map<String, Object> attributes = AnnotationUtils.getAnnotationAttributes(opAnno);
 
-        if (!attributes.containsKey(E_C.op)) {
-            attributes.put(E_C.op, Op.valueOf(opAnno.annotationType().getSimpleName()));
+        C c = null;
+
+        if (opAnno instanceof C) {
+            c = (C) opAnno;
         }
 
-        if (attributes.get(E_C.op) == null) {
-            throw new StatementBuildException(opAnno + " not define Op");
+
+        if (c == null) {
+
+            //把其它注解转换为 C 注解
+
+            Map<String, Object> attributes = AnnotationUtils.getAnnotationAttributes(opAnno);
+
+            if (!attributes.containsKey(E_C.op)) {
+                attributes.put(E_C.op, Op.valueOf(opAnno.annotationType().getSimpleName()));
+            }
+
+            if (attributes.get(E_C.op) == null) {
+                throw new StatementBuildException(opAnno + " not define Op");
+            }
+
+
+            c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
+
         }
 
-        C c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
 
         return ExprUtils.genExpr(c, aroundColumnPrefix(name), complexType, getExpectType(name), holder, getParamPlaceholder(),
                 this::buildSubQuery
                 , buildContextValues(holder.root, holder.value, name));
     }
-
-//    private String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
-//
-//
-//        if (opAnno == null)
-//            return "";
-//
-//        try {
-//
-//            String op = ClassUtils.getValue(opAnno, "op", false);
-//
-//            String prefix = ClassUtils.getValue(opAnno, "prefix", true);
-//            String suffix = ClassUtils.getValue(opAnno, "suffix", true);
-//
-//            Class<?> expectType = getExpectType(name);
-//
-//
-//            if (opAnno instanceof Not) {
-//                //忽略左操作数
-//                //示例：NOT (u.name  =   ? )
-//
-//                return op + getText(prefix, "(") + holder.value + getText(suffix, ")");
-//
-//            } else if (opAnno instanceof Like || opAnno instanceof NotLike
-//                    || opAnno instanceof Contains
-//                    || opAnno instanceof StartsWith || opAnno instanceof EndsWith) {
-//                //自动加上
-//                //转换为字符串
-//                holder.value = "" + prefix + holder.value + suffix;
-//
-//                return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder();
-//
-//            } else if (opAnno instanceof In || opAnno instanceof NotIn) {
-//
-//
-//                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
-//                //尝试自动解析成数组
-//                if (expectType != null
-//                        && !String.class.equals(expectType)
-//                        && holder.value instanceof CharSequence) {
-//                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
-//                }
-//
-//                //是否过滤空值
-//                //JPA QL 是默认支持 in 语法
-//                if ((opAnno instanceof In && ((In) opAnno).filterNullValue())
-//                        || (opAnno instanceof NotIn && ((NotIn) opAnno).filterNullValue())) {
-//                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
-//                }
-//
-//                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
-//                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
-//
-//                if (eleCount == 0) {
-//                    return "";
-//                }
-//
-//                String subQuery = getSubQuery(opAnno);
-//
-//                //最优先使用自定义的子查询
-//                if (hasText(subQuery)) {
-//                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, holder), suffix);
-//                }
-//
-//                //如果是复杂对象，默认为子查询
-//                if (complexType) {
-//                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
-//                }
-//
-//                return aroundColumnPrefix(name) + " " + op + " " + prefix + genParamExpr(",", getParamPlaceholder(), eleCount) + suffix;
-//
-//            } else if (opAnno instanceof Exists || opAnno instanceof NotExists) {
-//
-//                String subQuery = getSubQuery(opAnno);
-//
-//                //最优先使用自定义的子查询
-//                if (hasText(subQuery)) {
-//                    return " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, holder), suffix);
-//                }
-//
-//                if (!complexType) {
-//                    throw new StatementBuildException(name + "注解使用有误,Exists或NotExists 注解必须指定'subQuery'值，或是应用于查询对象上");
-//                }
-//
-//                return " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
-//
-//            } else if (opAnno instanceof IsNotNull || opAnno instanceof IsNull) {
-//                //忽略参数值
-//                holder.value = Collections.EMPTY_LIST;
-//                return getText(prefix, "") + aroundColumnPrefix(name) + getText(suffix, "") + " " + op + " ";
-//            } else if (opAnno instanceof Between) {
-//                //是否过滤空值
-//                //JPA QL 是默认支持 in 语法
-//
-//                if (complexType)
-//                    throw new StatementBuildException(name + "注解使用有误,Between 注解只允许使用在原子类型数组上");
-//
-//                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
-//                //尝试自动解析成数组
-//                if (expectType != null
-//                        && !String.class.equals(expectType)
-//                        && holder.value instanceof CharSequence) {
-//                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
-//                }
-//
-//                Between between = (Between) opAnno;
-//
-//                if ((between.filterNullValue())) {
-//                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
-//                }
-//
-//                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
-//                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
-//
-//                if (eleCount < 1) {
-//                    return "";
-//                }
-//
-//                if (eleCount > 1) {
-//                    return prefix + aroundColumnPrefix(name) + " Between " + genParamExpr(" " + between.op() + " ", getParamPlaceholder(), eleCount) + suffix;
-//                } else {
-//                    return prefix + aroundColumnPrefix(name) + " >= " + getParamPlaceholder() + suffix;
-//                }
-//
-//            } else {
-//
-//                String subQuery = getSubQuery(opAnno);
-//
-//                String expr = "";
-//
-//                //最优先使用自定义的子查询
-//                if (hasText(subQuery)) {
-//
-//                    expr = autoAroundParentheses("", doReplace(subQuery, holder), "");
-//
-//                } else if (complexType) {
-//
-//                    expr = autoAroundParentheses("", buildSubQuery(holder), "");
-//
-//                } else {
-//
-//                    //尝试根据数据库字段类型转换值
-//                    holder.value = tryToConvertValue(name, holder.value);
-//
-//                    expr = getParamPlaceholder();
-//                }
-//
-//                return aroundColumnPrefix(name) + " " + op + " " + prefix + " " + expr + " " + suffix;
-//            }
-//        } catch (Exception e) {
-//            if (e instanceof StatementBuildException)
-//                throw (StatementBuildException) e;
-//            else
-//                throw new StatementBuildException(name + " " + opAnno + " 构建语句失败", e);
-//        }
-//    }
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////
