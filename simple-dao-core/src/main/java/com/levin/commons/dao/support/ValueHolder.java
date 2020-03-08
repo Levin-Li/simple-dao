@@ -8,6 +8,8 @@ public class ValueHolder<T> implements Serializable {
 
     public T value;
 
+    public boolean needValue = true;
+
     public ValueHolder(Object root, T value) {
         this.root = root;
         this.value = value;

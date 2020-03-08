@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 环境上下文
+ * DAO环境上下文
  * <p/>
  * 有全局上下文和线程级别上下文
  *

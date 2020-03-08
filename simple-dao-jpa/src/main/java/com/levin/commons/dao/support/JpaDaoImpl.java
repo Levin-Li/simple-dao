@@ -596,13 +596,20 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
+
+        String oldStatement = statement;
+
         if (!paramValueList.isEmpty()) {
             statement = replacePlaceholder(isNative, statement);
         }
 
         if (logger.isDebugEnabled()) {
+
+            logger.debug("Old Statement:" + oldStatement);
+
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
+
         }
 
 
@@ -738,35 +745,37 @@ public class JpaDaoImpl
 
     private int setParams(int pIndex, Query query, List paramValueList) {
 
-        Set<Parameter<?>> parameters = query.getParameters();
+        Map<String, Parameter> parameterMap = new LinkedHashMap<>();
 
-        Map<Object, Parameter> parameterMap = new HashMap<>();
+        query.getParameters().stream()
+                .filter(p -> p.getName() != null)
+                .forEach(p -> {
+                    parameterMap.put(p.getName(), p);
+                });
 
-        for (Parameter<?> parameter : parameters) {
-            parameterMap.put(parameter.getName() != null ? parameter.getName() : parameter.getPosition(), parameter);
-        }
 
         for (Object paramValue : paramValueList) {
             if (paramValue instanceof Map) {
                 //如果是Map，就设置命名参数
-                for (Map.Entry entry : (Set<Map.Entry>) ((Map) paramValue).entrySet()) {
-                    String paramName = entry.getKey().toString();
+                for (Map.Entry<String, Parameter> entry : parameterMap.entrySet()) {
+                    try {
 
-                    if (parameterMap.containsKey(paramName)) {
-                        query.setParameter(paramName, tryAutoConvertParamValue(parameterMap, paramName, entry.getValue()));
+                        //没有属性会抛出异常
+                        Object value = ObjectUtil.getIndexValue(paramValue, entry.getKey(), true);
+
+                        query.setParameter(entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
+
+                    } catch (Exception e) {
+
                     }
+
                 }
+
             } else {
 
                 paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
 
                 query.setParameter(pIndex, paramValue);
-
-//                try {
-//                    query.setParameter(pIndex, paramValue);
-//                } catch (Exception e) {
-//                    query.setParameter("" + pIndex, paramValue);
-//                }
 
                 //关键步骤
                 pIndex++;
@@ -776,7 +785,7 @@ public class JpaDaoImpl
         return pIndex;
     }
 
-    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+    private Object tryAutoConvertParamValue(Map<String, Parameter> parameterMap, Object paramKey, Object paramValue) {
         //自动转换数据类型
         //@todo 观察，需要关注性能问题
         //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
@@ -823,6 +832,9 @@ public class JpaDaoImpl
             return valueHolder;
         }
 
+        //扁平化 Map
+        Map<String, Object> namedParams = new LinkedHashMap<>();
+
         for (Object paramValue : paramValues) {
             if (paramValue instanceof Collection) {
                 for (Object pv : ((Collection) paramValue)) {
@@ -834,12 +846,15 @@ public class JpaDaoImpl
                     flattenParams(valueHolder, Array.get(paramValue, i));
                 }
             } else if (paramValue instanceof Map) {
-                if (!((Map) paramValue).isEmpty()) {
-                    valueHolder.add(paramValue);
-                }
+                //扁平化 Map，所有的都合并到同一个 Map
+                namedParams.putAll(Map.class.cast(paramValue));
             } else {
                 valueHolder.add(paramValue);
             }
+        }
+
+        if (namedParams.size() > 0) {
+            valueHolder.add(namedParams);
         }
 
         return valueHolder;

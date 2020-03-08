@@ -191,6 +191,39 @@ public abstract class ObjectUtil {
     }
 
 
+    public static <T> T getIndexValue(Object source, String propertyName) {
+        return getIndexValue(source, propertyName, true);
+    }
+
+    /**
+     * 查找值
+     *
+     * @param key
+     * @param contexts
+     * @return
+     */
+    public static <T> T findValue(String key, boolean isThrowExWhenKeyNotFound, List<Map<String, ? extends Object>> contexts) {
+
+
+        for (Map<String, ? extends Object> map : contexts) {
+
+            if (map == null || map.isEmpty()) {
+                continue;
+            }
+
+            try {
+                return ObjectUtil.getIndexValue(map, key, true);
+            } catch (Exception e) {
+            }
+        }
+
+        if (isThrowExWhenKeyNotFound) {
+            throw new IllegalArgumentException("key " + key + " not found on context");
+        }
+
+        return null;
+    }
+
     /**
      * 获取对象的多级属性直
      * <p>
@@ -202,20 +235,34 @@ public abstract class ObjectUtil {
      * @return
      * @throws Exception
      */
-    public static <T> T getIndexValue(Object source, String propertyName) throws Exception {
+    public static <T> T getIndexValue(Object source, String propertyName, boolean isThrowExWhenPropertyNotFound) {
 
         String[] names = propertyName.split("\\.");
 
         Object result = null;
 
+        String key = null;
+
         for (String name : names) {
-            if (StringUtils.hasText(name) && source != null) {
-                source = result = getValue(source, name.trim());
+            if (!StringUtils.hasText(name)) {
+                continue;
+            }
+            key = name;
+
+            if (source != null) {
+                source = result = getValue(source, name.trim(), isThrowExWhenPropertyNotFound);
+                key = null;
             }
         }
 
+        //如果属性没有取完整
+//        if (key != null && isThrowExWhenPropertyNotFound) {
+////            throw new IllegalArgumentException("propertyName " + propertyName);
+////        }
+
         return (T) result;
     }
+
 
     /**
      * 获取对象的一级属性值
@@ -226,32 +273,43 @@ public abstract class ObjectUtil {
      * @return
      * @throws Exception
      */
-    public static <T> T getValue(Object source, String propertyName) throws Exception {
+    public static <T> T getValue(Object source, String propertyName, boolean isThrowExWhenPropertyNotFound) {
 
         if (source instanceof Map) {
-            return (T) ((Map) source).get(propertyName);
+
+            Map map = Map.class.cast(source);
+
+            if (isThrowExWhenPropertyNotFound && !map.containsKey(propertyName)) {
+                throw new IllegalArgumentException("key [" + propertyName + "] not found in map");
+            }
+
+            return (T) map.get(propertyName);
         }
 
         PropertyDescriptor pd = null;
 
-        Exception ex = null;
-
         try {
             pd = BeanUtils.getPropertyDescriptor(source.getClass(), propertyName);
         } catch (Exception e) {
-            ex = e;
+
         }
 
         //1、首先使用方法读取
         if (pd != null && pd.getReadMethod() != null) {
+
             Method readMethod = pd.getReadMethod();
+
+            readMethod.setAccessible(true);
+
             try {
-                readMethod.setAccessible(true);
                 return (T) readMethod.invoke(source);
             } catch (Exception e) {
+
+                //如果是 hibernate 延迟加载错误
                 if (ExceptionUtils.getCauseByStartsWith(e, "org.hibernate.") != null)
                     return null;
-                ex = e;
+
+                ReflectionUtils.rethrowRuntimeException(e);
             }
         }
 
@@ -259,13 +317,16 @@ public abstract class ObjectUtil {
 
         if (field != null) {
             field.setAccessible(true);
-            return (T) field.get(source);
-        } else if (ex != null) {
-            throw ex;
+            try {
+                return (T) field.get(source);
+            } catch (IllegalAccessException e) {
+                ReflectionUtils.rethrowRuntimeException(e);
+            }
+        } else if (isThrowExWhenPropertyNotFound) {
+            throw new IllegalArgumentException(source.getClass() + " can't find property:" + propertyName);
         }
 
-        throw new WarnException(source.getClass() + " can't find property:" + propertyName);
-
+        return null;
     }
 
 
@@ -457,7 +518,7 @@ public abstract class ObjectUtil {
             }
 
             //直接按原类型实例化
-            return BeanUtils.instantiate(targetType);
+            return BeanUtils.instantiateClass(targetType);
 
         } else {
             throw new UnsupportedOperationException(targetType.getName() + " is not a map type");
@@ -776,11 +837,9 @@ public abstract class ObjectUtil {
 
         final List<Field> fieldList = new ArrayList<>(15);
 
-        ReflectionUtils.doWithFields(targetType, new ReflectionUtils.FieldCallback() {
-            @Override
-            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
-                if (!Modifier.isStatic(field.getModifiers()))
-                    fieldList.add(field);
+        ReflectionUtils.doWithFields(targetType, field -> {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                fieldList.add(field);
             }
         });
 
@@ -904,7 +963,6 @@ public abstract class ObjectUtil {
 
         Object refObj;
 
-
         public ObjectHolder(Object refObj) {
             this.refObj = refObj;
         }
@@ -922,22 +980,5 @@ public abstract class ObjectUtil {
         return StringUtils.hasText(path) ? (path + "." + propertyName) : propertyName;
     }
 
-
-    public static void main(String[] args) {
-
-//        Long convert = conversionService.convert("123456", long.class);
-//
-//        long[] values = conversionService.convert("123456,2345678,56789", long[].class);
-//
-//        String txtValue = conversionService.convert(123456789L, String.class);
-
-
-        //    boolean id = ObjectUtil.isIgnore(targetType, null, "id", invokeDeep, "org.id.adf");
-
-
-        //     System.out.println(id);
-
-
-    }
 
 }

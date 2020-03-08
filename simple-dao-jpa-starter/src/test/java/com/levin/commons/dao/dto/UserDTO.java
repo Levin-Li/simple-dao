@@ -24,12 +24,13 @@ public class UserDTO {
 
     Long id;
 
-    @OrderBy
+    @OrderBy()
     String name = "User";
 
     @OrderBy
     protected Integer orderCode;
 
+//    @Not
     @In()
     String[] state = new String[]{"A", "B", "C"};
 
@@ -39,8 +40,8 @@ public class UserDTO {
     @AND
     protected Boolean editable = true;
 
-    @Lt()
-    @OR(condition = "#_val!=null")
+    @Lt
+    @OR
     protected Date createTime = new Date();
 
     @Between("score")

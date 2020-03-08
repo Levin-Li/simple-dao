@@ -31,7 +31,7 @@ import java.util.*;
 @ActiveProfiles("dev")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class})
-//@Transactional
+@Transactional
 public class JpaDaoImplTest {
 
     @Autowired
@@ -561,7 +561,7 @@ public class JpaDaoImplTest {
         List entities = selectDao
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
-                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224)))
+                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224,"groupName","'group'")))
                 //  .appendWhereEquals("", "")
                 .find();
 

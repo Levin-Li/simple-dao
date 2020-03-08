@@ -47,6 +47,16 @@
             </plugins>
         </build>-->
 
+
+    <dependencies>
+        <dependency>
+            <groupId>com.levin.commons.maven</groupId>
+            <artifactId>service-support</artifactId>
+            <version>1.1.8-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <modules>
         <module>simple-dao-annotations</module>
         <module>simple-dao-core</module>

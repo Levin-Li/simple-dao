@@ -167,7 +167,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @param <T>
 //     * @return
 //     */
-//    <T> SelectDao<T> selectFrom(boolean nativeQL, @NotNull String fromStatement);
+//    <T> SelectDao<T> selectFrom(boolean nativeQL, @IsNotNull String fromStatement);
 //
 //    /**
 //     * 原生查询
@@ -177,7 +177,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @param <T>
 //     * @return
 //     */
-//    <T> SelectDao<T> selectFrom(@NotNull String tableName, String... alias);
+//    <T> SelectDao<T> selectFrom(@IsNotNull String tableName, String... alias);
 //
 //    /**
 //     * 创建一个指定类型的查询对象dao
@@ -188,7 +188,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @return
 //     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
 //     */
-//    <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
+//    <T> SelectDao<T> selectFrom(@IsNotNull Class<T> clazz, String... alias);
 //
 //
 //    /**
@@ -200,7 +200,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @return
 //     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
 //     */
-//    <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+//    <T> UpdateDao<T> updateTo(@IsNotNull Class<T> clazz, String... alias);
 //
 //    /**
 //     * 创建一个指定类型的删除dao
@@ -211,7 +211,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @return
 //     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
 //     */
-//    <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+//    <T> DeleteDao<T> deleteFrom(@IsNotNull Class<T> clazz, String... alias);
 //
 //    ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -225,7 +225,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @return
 //     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
 //     */
-//    <T> UpdateDao<T> updateTo(@NotNull String tableName, String... alias);
+//    <T> UpdateDao<T> updateTo(@IsNotNull String tableName, String... alias);
 //
 //    /**
 //     * 使用表名创建一个删除的dao
@@ -237,7 +237,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 //     * @param <T>
 //     * @return
 //     */
-//    <T> DeleteDao<T> deleteFrom(@NotNull String tableName, String... alias);
+//    <T> DeleteDao<T> deleteFrom(@IsNotNull String tableName, String... alias);
 
     ////////////////////////////////////////////////////////////////////////////////////////////
 

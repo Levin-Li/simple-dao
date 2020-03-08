@@ -10,14 +10,12 @@ import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.StatementBuildException;
-import com.levin.commons.dao.annotation.Not;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
-import com.levin.commons.dao.annotation.stat.Having;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
@@ -417,30 +415,9 @@ public class SelectDaoImpl<T>
     @Override
     public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        //如果包含Having注解，则把条件做为Having条件
-        //如果是having子句
-        Having having = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Having.class);
 
-        //如果包括Having注解
-        if (having != null) {
+        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
-            Not notAnno = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Not.class);
-
-            boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
-
-            if (!complexType) {
-                // value = tryToConvertValue(name, value);
-            }
-
-            ValueHolder holder = new ValueHolder(bean, value);
-
-            String conditionExpr = genConditionExpr(complexType, name, holder, opAnnotation);
-
-            appendHaving(processNotTag(bean, notAnno, conditionExpr), holder.value);
-
-        } else {
-            super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-        }
 
         //处理SelectColumn注解
         processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
@@ -516,60 +493,18 @@ public class SelectDaoImpl<T>
 
         SelectColumn anno = (SelectColumn) opAnnotation;
 
-        //如果忽略空值
-        if (anno.useVarValue()
-                && anno.ignoreNullValue()
-                && value == null)
-            return;
-
-        String expr = "";
-
-        boolean isSubQuery = false;
 
         boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
 
-
         ValueHolder holder = new ValueHolder(bean, value);
 
-        //子查询
-        if (StringUtils.hasText(anno.subQuery())) {
-
-            isSubQuery = true;
-
-            expr = anno.subQuery();
-
-            expr = doReplace(expr, anno.useVarValue(), holder);
-
-            value = holder.value;
+        String expr = genConditionExpr(complexType, name, holder, anno);
 
 
-        } else if (complexType) {
-            //子查询
-            isSubQuery = true;
-
-            expr = buildSubQuery(holder);
-            value = holder.value;
-        } else {
-
-            expr = anno.isAppendAliasPrefix() ? aroundColumnPrefix(name) : name;
-
-            value = anno.useVarValue() ? value : new Object[0];
-        }
-
-        //如果是子查询加上 as
-        if (isSubQuery) {
-            expr = autoAroundParentheses(anno.prefix(), expr, anno.suffix()) + " AS " + name;
-        } else {
-            expr = anno.prefix() + expr + anno.suffix();
-        }
-
-        expr = " " + anno.op() + " " + expr;
-
-
-        appendSelectColumns(expr, value);
+        appendSelectColumns(expr, holder.value);
 
         //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-        appendColumnMap(expr, (StringUtils.hasText(anno.outputColumnName()) ? anno.outputColumnName() : fieldOrMethod), name);
+        appendColumnMap(expr, fieldOrMethod, name);
 
     }
 
@@ -595,15 +530,11 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        AnnotationModel model = AnnotationModel.copy(opAnnotation);
+        boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
 
-        String column = model.getOp() + model.getPrefix() + aroundColumnPrefix(name) + model.getSuffix();
+        ValueHolder holder = new ValueHolder(bean, value);
 
-
-        //@todo 增加别名
-//        if (fieldOrMethod instanceof Field) {
-//            column += " AS " +
-//        }
+        String column = genConditionExpr(complexType, name, holder, opAnnotation);
 
         //增加选择字段
         appendSelectColumns(column);
@@ -617,9 +548,10 @@ public class SelectDaoImpl<T>
             appendGroupBy(column);
         }
 
-        if (StringUtils.hasText(model.getHavingOp())) {
-            appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(), value);
-        }
+//        if (StringUtils.hasText(model.getHavingOp())) {
+//            appendHaving(column + " " + model.getHavingOp() + " " + getParamPlaceholder(), value);
+//        }
+
     }
 
     /**

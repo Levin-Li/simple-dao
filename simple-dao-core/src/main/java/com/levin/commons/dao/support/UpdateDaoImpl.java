@@ -252,53 +252,21 @@ public class UpdateDaoImpl<T>
 
         UpdateColumn anno = (UpdateColumn) opAnnotation;
 
-        //如果忽略空值
-        if (anno.useVarValue()
-                && anno.ignoreNullValue()
-                && value == null) {
-            return;
-        }
+//        //如果忽略空值
+//        if (anno.useVarValue()
+//                && anno.ignoreNullValue()
+//                && value == null) {
+//            return;
+//        }
 
-        String expr = "";
-
-        boolean isSubQuery = false;
 
         boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
 
         ValueHolder holder = new ValueHolder(bean, value);
 
-        //子查询的方式
-        if (StringUtils.hasText(anno.subQuery())) {
+        String expr =  genConditionExpr(complexType,name,holder,anno);
 
-            isSubQuery = true;
-            expr = anno.subQuery();
-
-            expr = doReplace(expr, anno.useVarValue(), holder);
-
-            value = holder.value;
-
-        } else if (complexType) {
-            isSubQuery = true;
-            //复杂对象子查询的方式
-            expr = buildSubQuery(holder);
-            value = holder.value;
-        } else {
-            expr = (anno.useVarValue() ? getParamPlaceholder() : "");
-            value = anno.useVarValue() ? value : new Object[0];
-        }
-
-        //如果是子查询加上 as
-        if (isSubQuery) {
-            expr = autoAroundParentheses(anno.prefix(), expr, anno.suffix());
-        } else {
-            expr = anno.prefix() + expr + anno.suffix();
-        }
-
-        //必须是原子类型的字段或是空值
-        //语句的组成: value = op + prefix + ? + suffix
-        expr = aroundColumnPrefix(name) + " = " + anno.op() + expr;
-
-        appendColumns(expr, value);
+        appendColumns(expr, holder.value);
 
     }
 

@@ -9,27 +9,23 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.annotation.stat.Having;
 import com.levin.commons.dao.annotation.update.Immutable;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.utils.ClassUtils;
+import com.levin.commons.utils.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
-import org.springframework.util.StringUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -39,10 +35,10 @@ import static org.springframework.util.StringUtils.hasText;
  * 本类是一个非线程安全类，不要重复使用，应该重新创建使用。
  *
  * @param <T>
- * @param <C>
+ * @param <CB>
  */
-public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
-        implements ConditionBuilder<C> {
+public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
+        implements ConditionBuilder<CB> {
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -70,9 +66,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     protected ParameterNameDiscoverer parameterNameDiscoverer;
 
     protected final List<TargetOption> targetOptionAnnoList = new ArrayList<>(5);
-
-
-    private static final Object[] EMPTY_PARAM_VALUES = {};
 
 
     public static final String BASE_PACKAGE_NAME = Eq.class.getPackage().getName();
@@ -133,18 +126,18 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         return parameterNameDiscoverer;
     }
 
-    public C setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
+    public CB setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
         this.parameterNameDiscoverer = parameterNameDiscoverer;
-        return (C) this;
+        return (CB) this;
     }
 
     public javax.validation.Validator getValidator() {
         return validator;
     }
 
-    public C setValidator(javax.validation.Validator validator) {
+    public CB setValidator(javax.validation.Validator validator) {
         this.validator = validator;
-        return (C) this;
+        return (CB) this;
     }
 
 
@@ -183,44 +176,73 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
 
     @Override
-    public C setContext(Map<String, Object> context) {
+    public CB setContext(Map<String, Object> context) {
         this.context = context;
-        return (C) this;
+        return (CB) this;
     }
 
-
-    public Map<String, Object> getDaoContextValues() {
-
-        return QueryAnnotationUtil.copyMap(true, null,
+    public List<Map<String, ? extends Object>> getDaoContextValues() {
+        return Arrays.asList(
                 DaoContext.getGlobalContext(),
                 DaoContext.getThreadContext(),
-                this.context);
+                this.context).stream()
+                .filter(map -> map != null && !map.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+
+    public List<Map<String, ? extends Object>> buildContextValues(Object root, Object value, String fieldName) {
+
+        List<Map<String, ? extends Object>> contextValues = new ArrayList<>();
+
+        contextValues.addAll(getDaoContextValues());
+
+
+        if (root instanceof Map) {
+            contextValues.add(Map.class.cast(root));
+        }
+
+        if (value instanceof Map) {
+            contextValues.add(Map.class.cast(value));
+        }
+
+
+        contextValues.add(MapUtils
+                .put("_val", value)
+                .put("_this", root)
+                .put("_FIELD_NAME", fieldName)
+                .put("_isSelect", (this instanceof SelectDao))
+                .put("_isUpdate", (this instanceof UpdateDao))
+                .put("_isDelete", (this instanceof DeleteDao))
+                .build());
+
+        return contextValues;
     }
 
 
     @Override
-    public C and() {
+    public CB and() {
         beginLogic(AND.class.getSimpleName(), true);
-        return (C) this;
+        return (CB) this;
     }
 
     @Override
-    public C or() {
+    public CB or() {
         beginLogic(OR.class.getSimpleName(), true);
-        return (C) this;
+        return (CB) this;
     }
 
     @Override
-    public C end() {
+    public CB end() {
         endLogic();
-        return (C) this;
+        return (CB) this;
     }
 
     @Override
-    public C limit(int rowStartPosition, int rowCount) {
+    public CB limit(int rowStartPosition, int rowCount) {
         this.rowStart = rowStartPosition;
         this.rowCount = rowCount;
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -229,37 +251,37 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      * @todo 目前只对查询有效，对于更新和删除语句无效(待优化)
      */
-    public C range(int rowStartPosition, int rowCount) {
+    public CB range(int rowStartPosition, int rowCount) {
         return limit(rowStartPosition, rowCount);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
-    public C where(String whereStatement, Object... paramValues) {
+    public CB where(String whereStatement, Object... paramValues) {
 
         this.whereExprRootNode.clear();
         this.whereParamValues.clear();
 
         this.appendWhere(whereStatement, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     @Override
-    public C appendWhere(String conditionExpr, Object... paramValues) {
+    public CB appendWhere(String conditionExpr, Object... paramValues) {
 
         append(conditionExpr, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     @Override
-    public C appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues) {
+    public CB appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend))
             append(conditionExpr, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
@@ -272,25 +294,25 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @see com.levin.commons.dao.annotation
      */
     @Override
-    public C appendWhereByQueryObj(Object... queryObjs) {
+    public CB appendWhereByQueryObj(Object... queryObjs) {
         return appendByQueryObj(queryObjs);
     }
 
     @Override
-    public C appendByQueryObj(Object... queryObjs) {
+    public CB appendByQueryObj(Object... queryObjs) {
 
         walkObject(queryObjs);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
     @Override
-    public C appendByMethodParams(Object bean, Method method, Object... args) {
+    public CB appendByMethodParams(Object bean, Method method, Object... args) {
 
         walkMethod(bean, method, args);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -328,22 +350,22 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendByEL(String paramPrefix, Map<String, Object>... queryParams) {
+    public CB appendByEL(String paramPrefix, Map<String, Object>... queryParams) {
 
         walkMap(paramPrefix, queryParams);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
     @Override
-    public C appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
+    public CB appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
 
         if (Boolean.TRUE.equals(isAppend)) {
             processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);
         }
 
-        return (C) this;
+        return (CB) this;
     }
 
 
@@ -364,15 +386,15 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
-    protected C setTargetOption(Object hostObj, TargetOption targetOption) {
+    protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
 
         if (targetOption == null)
-            return (C) this;
+            return (CB) this;
 
         //重复的不再处理
         if (targetOptionAnnoList.contains(targetOption))
-            return (C) this;
+            return (CB) this;
 
         targetOptionAnnoList.add(targetOption);
 
@@ -394,9 +416,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             this.alias = targetOption.alias();
         }
 
-        ValueHolder holder = new ValueHolder(hostObj, null);
-
-        this.appendWhere(this.doReplace(targetOption.fixedCondition(), false, holder), holder.hasValue() ? holder.value : EMPTY_PARAM_VALUES);
+        this.appendWhere(targetOption.fixedCondition());
 
         //设置limit，如果原来没有设置
         if (rowStart <= 0 && targetOption.startIndex() > 0) {
@@ -408,7 +428,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
 
 
-        return (C) this;
+        return (CB) this;
     }
 
 
@@ -625,7 +645,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
         Map<String, Annotation> annotationMap = QueryAnnotationUtil.getAllAnnotations();
 
-        final String notPrefix = Not.class.getSimpleName() + "_";
+        final String notPrefix = Op.Not.name() + "_";
 
         for (Map<String, Object> queryParam : queryParams) {
 
@@ -642,11 +662,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                     name = name.substring(paramPrefix.length());
                 }
 
-                Not notOp = null;
+                Op notOp = null;
 
                 //是否包括非的操作
                 if (name.startsWith(notPrefix)) {
-                    notOp = (Not) annotationMap.get(Not.class.getSimpleName());
+                    notOp = Op.Not;
                     //去除Not操作前缀
                     name = name.substring((notPrefix).length());
                 }
@@ -692,8 +712,12 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                 varAnnotations[0] = opAnno;
 
                 if (notOp != null) {
-                    varAnnotations[1] = notOp;
+                    //@todo 对 Not 没有处理
+                    //@Fix
+                   // varAnnotations[1] = notOp;
+                    throw new UnsupportedOperationException();
                 }
+
 
                 processAttr(queryParam, null, name, varAnnotations,
                         paramValue != null ? paramValue.getClass() : null, paramValue);
@@ -766,20 +790,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
 
-        if (logicAnnotation == null) {
-            return false;
-        }
+        return Optional.ofNullable(logicAnnotation)
+                .map(a -> (boolean) ClassUtils.getValue(logicAnnotation, "autoClose", true))
+                .orElse(false);
 
-        try {
-            return (boolean) logicAnnotation.getClass().getDeclaredMethod("autoClose").invoke(logicAnnotation);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-        }
-
-        return false;
     }
 
     /**
@@ -803,12 +817,12 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             for (Annotation annotation : varAnnotations) {
 
                 if (annotation == null
-                        || annotation instanceof Not
+//                        || annotation instanceof Not
                         || annotation instanceof PrimitiveValue
                         || annotation instanceof OrderBy
                         || annotation instanceof Immutable
                         || annotation instanceof Validator
-                        || annotation instanceof Having
+//                        || annotation instanceof Having
                         || annotation instanceof Ignore)
                     continue;
 
@@ -867,8 +881,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
                     boolean isContinue = processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
                     //***重要逻辑***  是继续处理这个字段上的其它注解
-                    if (!isContinue)
+                    if (!isContinue) {
                         break;
+                    }
                 }
             }
         }
@@ -896,21 +911,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             return true;
         }
 
-
-        //如果非操作符
-        if (opAnnotation instanceof Not)
-            return true;
-
-        Not notAnnotation = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Not.class);
-
-
         verifyGroupValidation(bean, name, value, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Validator.class));
 
 
         PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
 
         //处理where条件
-        processWhereCondition(bean, varType, name, value, primitiveValue, notAnnotation, opAnnotation);
+        processWhereCondition(bean, varType, name, value, primitiveValue, opAnnotation);
 
         return true;
     }
@@ -928,7 +935,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         if (validator != null
                 && hasContent(validator.expr())) {
 
-            boolean ok = evalExpr(bean, value, validator.expr());
+            boolean ok = evalExpr(bean, value, name, validator.expr());
 
             if (!ok) {
                 throw new StatementBuildException(bean.getClass() + " group valid fail: " + validator.promptInfo() + " on field " + name, validator.promptInfo());
@@ -972,11 +979,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereByEL(String paramPrefix, Map<String, Object>... queryParams) {
+    public CB appendWhereByEL(String paramPrefix, Map<String, Object>... queryParams) {
 
         walkMap(paramPrefix, queryParams);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -989,22 +996,22 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      */
 
     @Override
-    public C appendWhereEquals(String entityAttrName, Object paramValue) {
+    public CB appendWhereEquals(String entityAttrName, Object paramValue) {
 
         add(Eq.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
     @Override
-    public C appendBetween(String entityAttrName, Object... paramValues) {
+    public CB appendBetween(String entityAttrName, Object... paramValues) {
 
         // processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(Between.class));
 
         add(Between.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1015,13 +1022,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereIn(String entityAttrName, Object... paramValues) {
+    public CB appendWhereIn(String entityAttrName, Object... paramValues) {
 
         // processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(In.class));
 
         add(In.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1032,12 +1039,12 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereNotIn(String entityAttrName, Object... paramValues) {
+    public CB appendWhereNotIn(String entityAttrName, Object... paramValues) {
         //processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(NotIn.class));
 
         add(NotIn.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1048,13 +1055,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereContains(String entityAttrName, String keyword) {
+    public CB appendWhereContains(String entityAttrName, String keyword) {
 
         //     processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(Contains.class));
 
         add(Contains.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1065,13 +1072,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereStartsWith(String entityAttrName, String keyword) {
+    public CB appendWhereStartsWith(String entityAttrName, String keyword) {
         //    processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(StartsWith.class));
 
 
         add(StartsWith.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1082,12 +1089,12 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C appendWhereEndsWith(String entityAttrName, String keyword) {
+    public CB appendWhereEndsWith(String entityAttrName, String keyword) {
         //  processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(EndsWith.class));
 
         add(EndsWith.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1097,11 +1104,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C isNull(String entityAttrName) {
+    public CB isNull(String entityAttrName) {
 
-        add(Null.class, entityAttrName, null);
+        add(IsNull.class, entityAttrName, null);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1111,20 +1118,20 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C isNotNull(String entityAttrName) {
+    public CB isNotNull(String entityAttrName) {
 
-        add(NotNull.class, entityAttrName, null);
+        add(IsNotNull.class, entityAttrName, null);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
     @Override
-    public C isNullOrEq(String entityAttrName, Object paramValue) {
+    public CB isNullOrEq(String entityAttrName, Object paramValue) {
 
-        appendByAnnotations(true, entityAttrName, paramValue, OR.class, Null.class, Eq.class, END.class);
+        appendByAnnotations(true, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1136,11 +1143,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C eq(String entityAttrName, Object paramValue) {
+    public CB eq(String entityAttrName, Object paramValue) {
 
         add(Eq.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1151,11 +1158,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C notEq(String entityAttrName, Object paramValue) {
+    public CB notEq(String entityAttrName, Object paramValue) {
 
         add(NotEq.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1166,11 +1173,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C gt(String entityAttrName, Object paramValue) {
+    public CB gt(String entityAttrName, Object paramValue) {
 
         add(Gt.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1181,11 +1188,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C lt(String entityAttrName, Object paramValue) {
+    public CB lt(String entityAttrName, Object paramValue) {
 
         add(Lt.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1196,11 +1203,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C gte(String entityAttrName, Object paramValue) {
+    public CB gte(String entityAttrName, Object paramValue) {
 
         add(Gte.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1211,11 +1218,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C lte(String entityAttrName, Object paramValue) {
+    public CB lte(String entityAttrName, Object paramValue) {
 
         add(Lte.class, entityAttrName, paramValue);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1228,11 +1235,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C between(String entityAttrName, Object... paramValues) {
+    public CB between(String entityAttrName, Object... paramValues) {
 
         add(Between.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1243,11 +1250,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C in(String entityAttrName, Object... paramValues) {
+    public CB in(String entityAttrName, Object... paramValues) {
 
         add(In.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1258,11 +1265,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C notIn(String entityAttrName, Object... paramValues) {
+    public CB notIn(String entityAttrName, Object... paramValues) {
 
         add(NotIn.class, entityAttrName, paramValues);
 
-        return (C) this;
+        return (CB) this;
     }
 
 
@@ -1273,10 +1280,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C exists(Object... queryObjs) {
+    public CB exists(Object... queryObjs) {
 
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1286,9 +1293,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C notExists(Object... queryObjs) {
+    public CB notExists(Object... queryObjs) {
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1299,11 +1306,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C contains(String entityAttrName, String keyword) {
+    public CB contains(String entityAttrName, String keyword) {
 
         add(Contains.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1314,11 +1321,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C startsWith(String entityAttrName, String keyword) {
+    public CB startsWith(String entityAttrName, String keyword) {
 
         add(StartsWith.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     /**
@@ -1329,11 +1336,11 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      * @return
      */
     @Override
-    public C endsWith(String entityAttrName, String keyword) {
+    public CB endsWith(String entityAttrName, String keyword) {
 
         add(EndsWith.class, entityAttrName, keyword);
 
-        return (C) this;
+        return (CB) this;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1350,19 +1357,9 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     protected void add(Class annotationType, String name, Object value) {
-        processWhereCondition(null, null, name, value, null, null
-                , QueryAnnotationUtil.getAnnotation(annotationType));
+        processWhereCondition(null, null, name, value, null, QueryAnnotationUtil.getAnnotation(annotationType));
     }
 
-
-    protected void addNot(Class annotationType, String name, Object value) {
-        processWhereCondition(null, null, name, value, null, (Not) QueryAnnotationUtil.getAnnotation(Not.class)
-                , QueryAnnotationUtil.getAnnotation(annotationType));
-    }
-
-    protected void processWhereCondition(String name, Object value, Not notAnnotation, Annotation opAnnotation) {
-        processWhereCondition(null, null, name, value, null, notAnnotation, opAnnotation);
-    }
 
     /**
      * 关键方法
@@ -1391,22 +1388,18 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     }
 
 
-    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value, PrimitiveValue primitiveValue, Not notAnnotation, Annotation opAnnotation) {
+    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value, PrimitiveValue primitiveValue, Annotation opAnnotation) {
 
 
-        boolean isNullTag = (opAnnotation instanceof Null || opAnnotation instanceof NotNull);
+        boolean isNullTag = (opAnnotation instanceof IsNull || opAnnotation instanceof IsNotNull);
 
         if (isNullTag) {
+            //
 
             //如果有notnull 或是null 那么值被忽略，会自动转换成sql表达式: is null 和is not null
 
-//            if (notAnnotation != null) {
-//                throw new StatementBuildException("Null or NotNull can't together with Not");
-//            }
+            append(processNullTag(bean, name, opAnnotation), Collections.EMPTY_LIST);
 
-            append(processNotTag(bean, notAnnotation, processNullTag(bean, name, opAnnotation)), new Object[]{});
-
-            // processNullTag(name, opAnnotation);
 
         } else if (value != null) {
 
@@ -1434,7 +1427,7 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
             String conditionExpr = genConditionExpr(complexType, name, holder, opAnnotation);
 
-            appendWhere(processNotTag(bean, notAnnotation, conditionExpr), holder.value);
+            appendWhere(conditionExpr, holder.value);
 
         } else {
             //忽略空值的注解
@@ -1465,14 +1458,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
 
         return value;
-    }
-
-
-    String processNotTag(Object rootBean, Not notAnnotation, String expr) {
-        //如果有非操作，则把已经生成的语句用非语句包围起来
-        if (hasText(expr) && notAnnotation != null)
-            expr = genConditionExpr(false, notAnnotation, "", new ValueHolder(rootBean, expr));
-        return expr;
     }
 
 
@@ -1515,7 +1500,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
             }
         }
 
-
         return expr;
     }
 
@@ -1533,77 +1517,21 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
         }
     }
 
-    /**
-     * 尝试自动加上小括号，并自动处理重复小括号的问题
-     *
-     * @param expr
-     * @return
-     */
-    protected String autoAroundParentheses(String prefix, String expr, String suffix) {
-
-        expr = StringUtils.trimWhitespace(expr);
-
-        if (expr.length() > 0) {
-
-            prefix = StringUtils.trimAllWhitespace(prefix);
-            suffix = StringUtils.trimAllWhitespace(suffix);
-
-            //如果
-            if (!prefix.endsWith("(")
-                    && !suffix.startsWith(")")
-                    && !expr.startsWith("(")
-                    && !expr.endsWith(")")) {
-
-                expr = "( " + expr + " )";
-
-            }
-
-            expr = prefix + " " + expr + " " + suffix;
-        }
-
-        return expr;
-    }
 
     /**
      * @param holder
      * @return
      */
     protected String buildSubQuery(ValueHolder holder) {
-
-        SelectDaoImpl selectDao = new SelectDaoImpl(getDao(), this.isNative());
-
-        // selectDao.localParamPlaceholder = this.localParamPlaceholder;
-
-        Object queryObj = holder.value;
-
-        if (queryObj != null) {
-            if (queryObj.getClass().isArray())
-                selectDao.appendByQueryObj((Object[]) queryObj);
-            else
-                selectDao.appendByQueryObj(queryObj);
-        }
-
-        String subStatement = selectDao.genFinalStatement();
-
-        if (hasText(subStatement)) {
-            holder.value = selectDao.genFinalParamList();
-        } else {
-            holder.value = new Object[0];
-        }
-
-        return subStatement;
+        return ExprUtils.buildSubQuery(holder, getDao(), isNative(), this.context);
     }
 
 
-    private String getSubQuery(Annotation opAnno) {
-
-        try {
-            return (String) opAnno.getClass().getDeclaredMethod("subQuery").invoke(opAnno);
-        } catch (Exception e) {
-        }
-
-        return "";
-    }
+//    private String getSubQuery(Annotation opAnno) {
+//        return Optional.ofNullable(opAnno)
+//                .map(a -> (String) ClassUtils.getValue(a, "subQuery", false))
+//                .orElse("");
+//    }
 
     /**
      * 关键方法，根据注解生成SQL语句
@@ -1616,251 +1544,179 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
      */
     private String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
 
-        if (opAnno == null)
-            return "";
+        Map<String, Object> attributes = AnnotationUtils.getAnnotationAttributes(opAnno);
 
-        try {
-
-            String op = (String) opAnno.getClass().getDeclaredMethod("op").invoke(opAnno);
-            String prefix = (String) opAnno.getClass().getDeclaredMethod("prefix").invoke(opAnno);
-            String suffix = (String) opAnno.getClass().getDeclaredMethod("suffix").invoke(opAnno);
-
-            Class<?> expectType = getExpectType(name);
-
-
-            if (opAnno instanceof Not) {
-                //忽略左操作数
-                //示例：NOT (u.name  =   ? )
-
-                return op + getText(prefix, "(") + holder.value + getText(suffix, ")");
-
-            } else if (opAnno instanceof Like || opAnno instanceof NotLike
-                    || opAnno instanceof Contains
-                    || opAnno instanceof StartsWith || opAnno instanceof EndsWith) {
-                //自动加上
-                //转换为字符串
-                holder.value = "" + prefix + holder.value + suffix;
-
-                return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder();
-
-            } else if (opAnno instanceof In || opAnno instanceof NotIn) {
-
-
-                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
-                //尝试自动解析成数组
-                if (expectType != null
-                        && !String.class.equals(expectType)
-                        && holder.value instanceof CharSequence) {
-                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
-                }
-
-                //是否过滤空值
-                //JPA QL 是默认支持 in 语法
-                if ((opAnno instanceof In && ((In) opAnno).filterNullValue())
-                        || (opAnno instanceof NotIn && ((NotIn) opAnno).filterNullValue())) {
-                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
-                }
-
-                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
-                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
-
-                if (eleCount == 0) {
-                    return "";
-                }
-
-                String subQuery = getSubQuery(opAnno);
-
-                //最优先使用自定义的子查询
-                if (hasText(subQuery)) {
-                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, false, holder), suffix);
-                }
-
-                //如果是复杂对象，默认为子查询
-                if (complexType) {
-                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
-                }
-
-                return aroundColumnPrefix(name) + " " + op + " " + prefix + genParamExpr(",", getParamPlaceholder(), eleCount) + suffix;
-
-            } else if (opAnno instanceof Exists || opAnno instanceof NotExists) {
-
-                String subQuery = getSubQuery(opAnno);
-
-                //最优先使用自定义的子查询
-                if (hasText(subQuery)) {
-                    return " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, false, holder), suffix);
-                }
-
-                if (!complexType) {
-                    throw new StatementBuildException(name + "注解使用有误,Exists或NotExists 注解必须指定'subQuery'值，或是应用于查询对象上");
-                }
-
-                return " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
-
-            } else if (opAnno instanceof NotNull || opAnno instanceof Null) {
-                //忽略参数值
-                holder.value = EMPTY_PARAM_VALUES;
-                return getText(prefix, "") + aroundColumnPrefix(name) + getText(suffix, "") + " " + op + " ";
-            } else if (opAnno instanceof Between) {
-                //是否过滤空值
-                //JPA QL 是默认支持 in 语法
-
-                if (complexType)
-                    throw new StatementBuildException(name + "注解使用有误,Between 注解只允许使用在原子类型数组上");
-
-                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
-                //尝试自动解析成数组
-                if (expectType != null
-                        && !String.class.equals(expectType)
-                        && holder.value instanceof CharSequence) {
-                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
-                }
-
-                Between between = (Between) opAnno;
-
-                if ((between.filterNullValue())) {
-                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
-                }
-
-                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
-                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
-
-                if (eleCount < 1) {
-                    return "";
-                }
-
-                if (eleCount > 1) {
-                    return prefix + aroundColumnPrefix(name) + " Between " + genParamExpr(" " + between.op() + " ", getParamPlaceholder(), eleCount) + suffix;
-                } else {
-                    return prefix + aroundColumnPrefix(name) + " >= " + getParamPlaceholder() + suffix;
-                }
-
-            } else if (opAnno instanceof Where) {
-
-                Where whereAnno = (Where) opAnno;
-
-
-                String expr = doReplace(op + " " + autoAroundParentheses(prefix, whereAnno.statement(), suffix), whereAnno.useVarValue(), holder);
-
-
-                return expr;
-
-            } else {
-
-                String subQuery = getSubQuery(opAnno);
-
-                String expr = "";
-
-                //最优先使用自定义的子查询
-                if (hasText(subQuery)) {
-
-                    expr = autoAroundParentheses("", doReplace(subQuery, false, holder), "");
-
-                } else if (complexType) {
-
-                    expr = autoAroundParentheses("", buildSubQuery(holder), "");
-
-                } else {
-
-                    //尝试根据数据库字段类型转换值
-                    holder.value = tryToConvertValue(name, holder.value);
-
-                    expr = getParamPlaceholder();
-                }
-
-                return aroundColumnPrefix(name) + " " + op + " " + prefix + " " + expr + " " + suffix;
-            }
-        } catch (Exception e) {
-            if (e instanceof StatementBuildException)
-                throw (StatementBuildException) e;
-            else
-                throw new StatementBuildException(name + " " + opAnno + " 构建语句失败", e);
+        if (!attributes.containsKey(E_C.op)) {
+            attributes.put(E_C.op, Op.valueOf(opAnno.annotationType().getSimpleName()));
         }
+
+        if (attributes.get(E_C.op) == null) {
+            throw new StatementBuildException(opAnno + " not define Op");
+        }
+
+        C c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
+
+        return ExprUtils.genExpr(c, aroundColumnPrefix(name), complexType, getExpectType(name), holder, getParamPlaceholder(),
+                this::buildSubQuery
+                , buildContextValues(holder.root, holder.value, name));
     }
 
-    //匹配样式：${:paramName}
-    private static final Pattern namedParamPattern = Pattern.compile("(\\$\\{\\s*:\\s*([\\w._]+)\\s*\\})");
+//    private String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
+//
+//
+//        if (opAnno == null)
+//            return "";
+//
+//        try {
+//
+//            String op = ClassUtils.getValue(opAnno, "op", false);
+//
+//            String prefix = ClassUtils.getValue(opAnno, "prefix", true);
+//            String suffix = ClassUtils.getValue(opAnno, "suffix", true);
+//
+//            Class<?> expectType = getExpectType(name);
+//
+//
+//            if (opAnno instanceof Not) {
+//                //忽略左操作数
+//                //示例：NOT (u.name  =   ? )
+//
+//                return op + getText(prefix, "(") + holder.value + getText(suffix, ")");
+//
+//            } else if (opAnno instanceof Like || opAnno instanceof NotLike
+//                    || opAnno instanceof Contains
+//                    || opAnno instanceof StartsWith || opAnno instanceof EndsWith) {
+//                //自动加上
+//                //转换为字符串
+//                holder.value = "" + prefix + holder.value + suffix;
+//
+//                return aroundColumnPrefix(name) + " " + op + " " + getParamPlaceholder();
+//
+//            } else if (opAnno instanceof In || opAnno instanceof NotIn) {
+//
+//
+//                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
+//                //尝试自动解析成数组
+//                if (expectType != null
+//                        && !String.class.equals(expectType)
+//                        && holder.value instanceof CharSequence) {
+//                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
+//                }
+//
+//                //是否过滤空值
+//                //JPA QL 是默认支持 in 语法
+//                if ((opAnno instanceof In && ((In) opAnno).filterNullValue())
+//                        || (opAnno instanceof NotIn && ((NotIn) opAnno).filterNullValue())) {
+//                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
+//                }
+//
+//                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
+//                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
+//
+//                if (eleCount == 0) {
+//                    return "";
+//                }
+//
+//                String subQuery = getSubQuery(opAnno);
+//
+//                //最优先使用自定义的子查询
+//                if (hasText(subQuery)) {
+//                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, holder), suffix);
+//                }
+//
+//                //如果是复杂对象，默认为子查询
+//                if (complexType) {
+//                    return aroundColumnPrefix(name) + " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
+//                }
+//
+//                return aroundColumnPrefix(name) + " " + op + " " + prefix + genParamExpr(",", getParamPlaceholder(), eleCount) + suffix;
+//
+//            } else if (opAnno instanceof Exists || opAnno instanceof NotExists) {
+//
+//                String subQuery = getSubQuery(opAnno);
+//
+//                //最优先使用自定义的子查询
+//                if (hasText(subQuery)) {
+//                    return " " + op + " " + autoAroundParentheses(prefix, doReplace(subQuery, holder), suffix);
+//                }
+//
+//                if (!complexType) {
+//                    throw new StatementBuildException(name + "注解使用有误,Exists或NotExists 注解必须指定'subQuery'值，或是应用于查询对象上");
+//                }
+//
+//                return " " + op + " " + autoAroundParentheses(prefix, buildSubQuery(holder), suffix);
+//
+//            } else if (opAnno instanceof IsNotNull || opAnno instanceof IsNull) {
+//                //忽略参数值
+//                holder.value = Collections.EMPTY_LIST;
+//                return getText(prefix, "") + aroundColumnPrefix(name) + getText(suffix, "") + " " + op + " ";
+//            } else if (opAnno instanceof Between) {
+//                //是否过滤空值
+//                //JPA QL 是默认支持 in 语法
+//
+//                if (complexType)
+//                    throw new StatementBuildException(name + "注解使用有误,Between 注解只允许使用在原子类型数组上");
+//
+//                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
+//                //尝试自动解析成数组
+//                if (expectType != null
+//                        && !String.class.equals(expectType)
+//                        && holder.value instanceof CharSequence) {
+//                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
+//                }
+//
+//                Between between = (Between) opAnno;
+//
+//                if ((between.filterNullValue())) {
+//                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
+//                }
+//
+//                //JPA QL 是默认支持 in 语法，为了兼容SQL，拆成多个问号
+//                int eleCount = QueryAnnotationUtil.eleCount(holder.value);
+//
+//                if (eleCount < 1) {
+//                    return "";
+//                }
+//
+//                if (eleCount > 1) {
+//                    return prefix + aroundColumnPrefix(name) + " Between " + genParamExpr(" " + between.op() + " ", getParamPlaceholder(), eleCount) + suffix;
+//                } else {
+//                    return prefix + aroundColumnPrefix(name) + " >= " + getParamPlaceholder() + suffix;
+//                }
+//
+//            } else {
+//
+//                String subQuery = getSubQuery(opAnno);
+//
+//                String expr = "";
+//
+//                //最优先使用自定义的子查询
+//                if (hasText(subQuery)) {
+//
+//                    expr = autoAroundParentheses("", doReplace(subQuery, holder), "");
+//
+//                } else if (complexType) {
+//
+//                    expr = autoAroundParentheses("", buildSubQuery(holder), "");
+//
+//                } else {
+//
+//                    //尝试根据数据库字段类型转换值
+//                    holder.value = tryToConvertValue(name, holder.value);
+//
+//                    expr = getParamPlaceholder();
+//                }
+//
+//                return aroundColumnPrefix(name) + " " + op + " " + prefix + " " + expr + " " + suffix;
+//            }
+//        } catch (Exception e) {
+//            if (e instanceof StatementBuildException)
+//                throw (StatementBuildException) e;
+//            else
+//                throw new StatementBuildException(name + " " + opAnno + " 构建语句失败", e);
+//        }
+//    }
 
-
-    /**
-     * 替换所有的变量
-     *
-     * @param ql
-     * @param useVarValue
-     * @param holder
-     * @return
-     */
-    public String doReplace(String ql, boolean useVarValue, ValueHolder holder) {
-
-        if (!hasText(ql)) {
-            return ql;
-        }
-
-        Matcher matcher = namedParamPattern.matcher(ql);
-
-
-        Map<String, Object> params = QueryAnnotationUtil.copyMap(true, null,
-                getDaoContextValues(),
-                ObjectUtil.copyField2Map(holder.root, null),
-                ObjectUtil.copyField2Map(holder.value, null));
-
-
-        List paramValues = new ArrayList(7);
-
-        while (matcher.find()) {
-
-            String paramName = matcher.group(2);
-
-            if (!params.containsKey(paramName))
-                throw new StatementBuildException("[" + ql + "] param [" + paramName + "] no exist in current env context:" + params);
-
-            try {
-                paramValues.add(ObjectUtil.getIndexValue(params, paramName));
-            } catch (Exception e) {
-                throw new StatementBuildException("<<<" + ql + ">> can't ge param " + paramName, e);
-            }
-
-        }
-
-        //替换成 ？ 号参数
-        ql = matcher.replaceAll(getParamPlaceholder());
-
-        //
-        if (paramValues.size() > 0) {
-            holder.value = paramValues;
-        } else if (!useVarValue) {
-            //如果没有发现参数，然后又要求不使用变量值
-            //忽略参数值
-            holder.value = EMPTY_PARAM_VALUES;
-        }
-
-        return ql;
-
-    }
-
-
-    /**
-     * 根据参数个数生成问号
-     *
-     * @param n
-     * @return
-     */
-    static String genParamExpr(String delimiter, String txt, int n) {
-
-        if (n < 1) return "";
-
-        StringBuilder buf = new StringBuilder();
-
-        for (int i = 0; i < n; i++) {
-
-            if (i > 0)
-                buf.append(delimiter);
-
-            buf.append(txt);
-        }
-
-        return buf.toString();
-    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1877,7 +1733,6 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     }
 
     protected String genWhereStatement() {
-
         return getText(whereExprRootNode.toString(), " Where ", " ", " ");
 
     }
@@ -1908,6 +1763,10 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
 
     protected String aroundColumnPrefix(String column) {
 
+        if (!hasText(column)) {
+            return "";
+        }
+
         //如果包含占位符，则直接返回
         //@fix bug 20200227
         if (column.contains(getParamPlaceholder().trim()) || column.contains(".")) {
@@ -1937,35 +1796,22 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     protected boolean isValid(Annotation anno, Object root, String name, Object value) {
 
         //如果没有注解
-        if (anno == null)
+        if (anno == null) {
             return true;
-
-        boolean require = false;
-
-        try {
-            require = (boolean) anno.annotationType().getDeclaredMethod("require").invoke(anno);
-        } catch (NoSuchMethodException e) {
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
 
+        boolean require = ClassUtils.getValue(anno, "require", false);
 
-        String conditionExpr = null;
 
-        try {
-            conditionExpr = (String) anno.annotationType().getDeclaredMethod("condition").invoke(anno);
-        } catch (NoSuchMethodException e) {
-            return true;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String conditionExpr = ClassUtils.getValue(anno, "condition", false);
+
 
         //如果没有内容默认为true
         if (!hasText(conditionExpr)) {
             return true;
         }
 
-        boolean isOK = evalExpr(root, value, conditionExpr);
+        boolean isOK = evalExpr(root, value, name, conditionExpr);
 
         //如果是必须的，但条件又不成立，则抛出异常
         if (require && !isOK) {
@@ -1977,20 +1823,13 @@ public abstract class ConditionBuilderImpl<T, C extends ConditionBuilder>
     }
 
 
-    protected <T> T evalExpr(Object root, Object value, String expr) {
+    protected <T> T evalExpr(Object root, Object value, String name, String expr) {
 
-        Map<String, Object> ctx = new HashMap<>();
+        List<Map<String, ? extends Object>> maps = buildContextValues(root, value, name);
 
-//        ctx.put("_this", root);
-        ctx.put("_val", value);
-
-        ctx.put("_isSelect", (this instanceof SelectDao));
-        ctx.put("_isUpdate", (this instanceof UpdateDao));
-        ctx.put("_isDelete", (this instanceof DeleteDao));
-
-
-        return QueryAnnotationUtil.evalSpEL(root, expr, DaoContext.getGlobalContext(), DaoContext.getThreadContext(), this.context, ctx);
+        return ExprUtils.evalSpEL(root, expr, maps);
     }
+
 
     /**
      * 开始逻辑分组

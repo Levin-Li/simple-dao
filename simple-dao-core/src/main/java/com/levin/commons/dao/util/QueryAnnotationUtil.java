@@ -35,6 +35,11 @@ import java.util.*;
 public abstract class QueryAnnotationUtil {
 
     private final static Logger logger = LoggerFactory.getLogger(QueryAnnotationUtil.class);
+
+
+    public static final String ANNOTITION_VALUE = "value";
+
+
     @Eq
     @Gt
     @Gte
@@ -47,17 +52,15 @@ public abstract class QueryAnnotationUtil {
     @Lt
     @Lte
 /////////////////////////////////
-    @Not
     @NotEq
     @NotIn
     @NotLike
-    @NotNull
-    @Null
+    @IsNotNull
+    @IsNull
 
     @Exists
     @NotExists
 
-    @Where
 
     @Ignore
 
@@ -122,34 +125,7 @@ public abstract class QueryAnnotationUtil {
         return annotation != null && annotation.annotationType().getPackage().getName().equals(type.getPackage().getName());
     }
 
-    /**
-     * spring el 求值
-     *
-     * @param rootObject
-     * @param expression
-     * @param contexts
-     * @param <T>
-     * @return
-     */
-    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, Object>... contexts) {
 
-        EvaluationContext ctx = new StandardEvaluationContext(rootObject);
-
-        if (contexts != null) {
-            for (Map<String, Object> context : contexts) {
-                if (context != null) {
-                    for (Map.Entry<String, Object> entry : context.entrySet()) {
-                        ctx.setVariable(entry.getKey(), entry.getValue());
-                    }
-                }
-            }
-        }
-
-        ExpressionParser parser = new SpelExpressionParser();
-
-        return (T) parser.parseExpression(expression).getValue(ctx);
-
-    }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -320,7 +296,7 @@ public abstract class QueryAnnotationUtil {
         String newKey = null;
 
         try {
-            newKey = (String) opAnno.annotationType().getDeclaredMethod("value").invoke(opAnno);
+            newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -456,6 +432,32 @@ public abstract class QueryAnnotationUtil {
     }
 
     /**
+     * 关键方法
+     * <p>
+     * 如果是数组，必须要求不存在原子元素，并且不为空数组，并且元素不都是Null
+     *
+     * @param varType
+     * @param value
+     * @return
+     */
+    public static boolean isComplexType(Class<?> varType, Object value) {
+
+        if (varType == null && value != null) {
+
+            // 是数组并且有原子元素
+            if (QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)) {
+                return false;
+            }
+
+            varType = value.getClass();
+        }
+
+        return varType != null
+                && varType.getAnnotation(PrimitiveValue.class) == null
+                && !QueryAnnotationUtil.isPrimitive(varType);
+    }
+
+    /**
      * 如果value是集合，则移除集合中的null对象，并返回新的集合对象
      *
      * @param value
@@ -494,6 +496,7 @@ public abstract class QueryAnnotationUtil {
 
         return value;
     }
+
 
     private static boolean isNull(Object value, boolean isFilterEmptyString) {
         return value == null || (isFilterEmptyString && value instanceof CharSequence && !StringUtils.hasText((CharSequence) value));

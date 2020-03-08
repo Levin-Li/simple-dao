@@ -4,7 +4,7 @@
  * Not注解和Having注解可以和其它标签一起组合使用
  * <p/>
  * <p/>
- * 默认格式：value + op + prefix + expr + suffix
+ * 默认格式：value + operator + prefix + expr + suffix
  * <p/>
  * <p/>
  * <p/>

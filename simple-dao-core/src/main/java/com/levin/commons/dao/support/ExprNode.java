@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * 树形表达式节点
  */
+
 public class ExprNode<OP extends Serializable, E extends Serializable>
         implements Serializable {
 
@@ -134,9 +135,12 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
     @Override
     public String toString() {
         //操作符之间增加空格
+        //如果不需要小刮号
+        boolean noNeedParentheses = parentNode == null || this.op.equals(parentNode.op) || subNodes.size() < 2;
+
         return CollectionHelper.toString((valid ? subNodes : new Object[]{}), null, " " + op + " "
                 , false, true, true
-                , (parentNode == null ? null : prefix), (parentNode == null ? null : suffix)).toString();
+                , (noNeedParentheses ? null : prefix), (noNeedParentheses ? null : suffix)).toString();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

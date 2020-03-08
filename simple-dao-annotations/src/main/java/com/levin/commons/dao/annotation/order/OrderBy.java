@@ -33,6 +33,9 @@ public @interface OrderBy {
     String value() default "";
 
     /**
+     *
+     * 是否是必须的
+     *
      * @return
      */
     boolean require() default false;

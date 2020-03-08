@@ -155,7 +155,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * <p>
      * 例如： table.xx is null or table.xx = aValue
      * <p>
-     * 可以通过调用这个方法实现（true,"xx",aValue,OR.class,Null.class,Eq.class,END.class）
+     * 可以通过调用这个方法实现（true,"xx",aValue,OR.class,IsNull.class,Eq.class,END.class）
      *
      * @param isAppend  是否增加，方便链式调用
      * @param attrName  不能为空

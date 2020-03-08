@@ -1,38 +1,20 @@
-package com.levin.commons.dao.annotation.stat;
-
-import com.levin.commons.dao.annotation.C;
-import com.levin.commons.dao.annotation.Func;
+package com.levin.commons.dao.annotation;
 
 import java.lang.annotation.*;
 
+/**
+ * <p>IsNull class.</p>
+ *
+ * @author llw
+ * @version 2.0.0
+ */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 
-/**
- *
- *分组统计注解
- *
- * 注意：目前所有的Having条件之间只支持逻辑与的关系
- *
- * 只有标量注解和GroupBy注解才支持Having操作
- *
- *一个字段可以有多个标量注解
- *
- * @author llw
- * @version 2.0.0
- */
-public @interface GroupBy {
-
-    /**
-     * 优先级
-     * <p/>
-     * 按数值从小到大排序
-     *
-     * @return
-     */
-    int order() default 0;
+//当有具体值时，采用相等
+public @interface IsNull {
 
     /**
      *
