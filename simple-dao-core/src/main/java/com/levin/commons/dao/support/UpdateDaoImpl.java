@@ -196,13 +196,11 @@ public class UpdateDaoImpl<T>
                 .append(whereStatement);
 
         //安全模式
-        if (this.isSafeMode() && whereStatement.trim().length() == 0) {
+        if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + ql + "]");
         }
 
-
         return ql.toString();
-
     }
 
     /**
@@ -232,7 +230,7 @@ public class UpdateDaoImpl<T>
 
 
     @Override
-    public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
+    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
                                    Class<?> varType, Object value, Annotation opAnnotation) {
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
@@ -247,7 +245,7 @@ public class UpdateDaoImpl<T>
 
         //允许 Update 注解和其它注解同时存在
 
-        return super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+          super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
 
     }

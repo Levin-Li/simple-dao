@@ -1,8 +1,10 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
-import com.levin.commons.dao.domain.*;
-import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
+import com.levin.commons.dao.domain.E_Group;
+import com.levin.commons.dao.domain.E_User;
+import com.levin.commons.dao.domain.Group;
+import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
@@ -82,7 +84,29 @@ public class JpaDaoImplTest {
     @Before
     public void initTestEntity() throws Exception {
 
-        List<TestEntity> e = jpaDao.selectFrom(TestEntity.class, "e").find(TestEntity.class);
+        jpaDao.deleteFrom(TestEntity.class)
+                .disableSafeMode()
+                .delete();
+
+
+        int n = 100;
+
+        String[] categories = {"C1", "C2", "C3", "C4"};
+        String[] states = {"S1", "S2", "S3", "S4"};
+
+        while (n-- > 0) {
+
+            jpaDao.create(new TestEntity()
+                    .setCategory(categories[n % categories.length])
+                    .setState(states[n % states.length])
+                    .setName("test" + n)
+                    .setRemark("system-" + n)
+                    .setEditable(n % 2 == 0)
+                    .setEnable(n % 10 == 0)
+                    .setOrderCode(n)
+            );
+
+        }
 
 
 
@@ -93,7 +117,7 @@ public class JpaDaoImplTest {
     @Before
     public void initTestData() throws Exception {
 
-        groupDao.update(1L,"name-1");
+        groupDao.update(1L, "name-1");
 
         long cnt = jpaDao.selectFrom(User.class).count();
 
@@ -272,18 +296,6 @@ public class JpaDaoImplTest {
     //@Transactional
     public void testManyToOne() {
 
-        B b = (B) jpaDao.save(new B());
-        B b1 = (B) jpaDao.save(new B());
-        B b2 = (B) jpaDao.save(new B());
-
-        jpaDao.save(new A().setBid(b.getId()));
-        jpaDao.save(new A().setBid(b1.getId()));
-        jpaDao.save(new A().setBid(b2.getId()));
-
-
-        List r = jpaDao.selectFrom(B.class).find();
-
-        System.out.println(r);
 
     }
 
@@ -512,6 +524,17 @@ public class JpaDaoImplTest {
 
         org.junit.Assert.assertNotNull(objects);
 
+
+    }
+
+    @org.junit.Test
+    public void testCListAnno() throws Exception {
+
+
+        List<TestEntity> objects = jpaDao.findByQueryObj(TestEntity.class, new NewAnnoDto());
+
+        Assert.notNull(objects, "");
+
     }
 
 
@@ -571,7 +594,7 @@ public class JpaDaoImplTest {
         List entities = selectDao
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
-                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224,"groupName","'group'")))
+                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224, "groupName", "'group'")))
                 //  .appendWhereEquals("", "")
                 .find();
 

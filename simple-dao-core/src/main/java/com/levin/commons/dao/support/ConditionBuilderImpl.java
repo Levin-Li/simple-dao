@@ -147,8 +147,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 在安全模式下，不允许无条件的更新或是删除
      */
     @Override
-    public void disableSafeMode() {
+    public CB disableSafeMode() {
         safeMode = false;
+        return (CB) this;
     }
 
 
@@ -1173,7 +1174,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //@todo 缓存字段
 
-        List<Annotation> result = new ArrayList<>(3);
+        List<Annotation> result = new ArrayList<>(5);
 
         if (varAnnotations != null) {
             for (Annotation annotation : varAnnotations) {
@@ -1218,15 +1219,25 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value) {
 
-
         if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
             return;
         }
 
-        List<Annotation> daoAnnotations = findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations);
+        List<Annotation> daoAnnotations = new ArrayList<>(5);
+
+        for (Annotation annotation : findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations)) {
+
+            if (annotation instanceof CList) {
+                daoAnnotations.addAll(Arrays.asList(((CList) annotation).value()));
+            } else {
+                daoAnnotations.add(annotation);
+            }
+        }
+
 
         //如果没有注解
         if (daoAnnotations.size() == 0) {
+
             //如果字段上没有需要处理的注解
             //默认为 EQ
             PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
@@ -1239,23 +1250,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
         } else {
-            for (Annotation opAnnotation : daoAnnotations) {
-
-                //如果是有效的节点和有效注解条件
-                //检查条件
-                if (isValid(opAnnotation, bean, name, value)) {
-                    //转换名称
-                    name = QueryAnnotationUtil.getPropertyName(opAnnotation, name);
-
-                    boolean isContinue = processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-
-                    //***重要逻辑***  是继续处理这个字段上的其它注解
-                    if (!isContinue) {
-                        break;
-                    }
-                }
-            }
+            daoAnnotations.stream()
+                    .filter(annotation -> isValid(annotation, bean, name, value))
+                    .forEach(annotation -> {
+                        processAttrAnno(bean, fieldOrMethod, varAnnotations,
+                                QueryAnnotationUtil.getPropertyName(annotation, name),
+                                varType, value, annotation);
+                    });
         }
+
     }
 
     protected boolean isPackageStartsWith(String packageName, Annotation opAnnotation) {
@@ -1277,7 +1280,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param opAnnotation
      * @return 是否继续处理，true继续.false则停止
      */
-    public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         //如果不是条件注解则忽略
         //但是允许空opAnnotation为 null，往下走
@@ -1285,7 +1288,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
         if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
-            return true;
+            return;
         }
 
         if (QueryAnnotationUtil.isSamePackage(opAnnotation, Eq.class)) {
@@ -1298,7 +1301,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             processWhereCondition(bean, varType, name, value, primitiveValue, opAnnotation);
         }
 
-        return true;
     }
 
     /**

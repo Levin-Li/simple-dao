@@ -298,7 +298,7 @@ public abstract class QueryAnnotationUtil {
         try {
             newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ReflectionUtils.rethrowRuntimeException(e);
         }
 
         return (StringUtils.hasText(newKey)) ? newKey : name;

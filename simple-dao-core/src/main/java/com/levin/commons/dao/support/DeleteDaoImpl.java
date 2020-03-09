@@ -6,6 +6,7 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class DeleteDaoImpl<T>
         String ql = "Delete " + genFromStatement() + whereStatement;
 
 
-        if (this.isSafeMode() && whereStatement.trim().length() == 0) {
+        if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + ql + "]");
         }
 

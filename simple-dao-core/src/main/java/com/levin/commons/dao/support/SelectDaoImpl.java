@@ -10,13 +10,13 @@ import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.annotation.E_C;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
-import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.util.ObjectUtil;
@@ -419,7 +419,7 @@ public class SelectDaoImpl<T>
 
 
     @Override
-    public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
 
         //处理SelectColumn注解
@@ -434,7 +434,7 @@ public class SelectDaoImpl<T>
         //处理抓取
         processFetchSetByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
-        return super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
     }
 
@@ -484,11 +484,19 @@ public class SelectDaoImpl<T>
 
         Op op = ClassUtils.getValue(opAnnotation, "havingOp", false);
 
+        Boolean not = ClassUtils.getValue(opAnnotation, E_C.not, false);
+
         if (op == null || Op.None.name().equals(op.name())) {
             return;
         }
 
-        appendHaving(op.gen(expr, getParamPlaceholder()), holder.value, opParamValue);
+        expr = op.gen(expr, getParamPlaceholder());
+
+        if (Boolean.TRUE.equals(not)) {
+            expr = " NOT(" + expr + ") ";
+        }
+
+        appendHaving(expr, holder.value, opParamValue);
 
     }
 
@@ -510,7 +518,7 @@ public class SelectDaoImpl<T>
 
             genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
-                tryAppendHaving(opAnnotation, expr, holder,value);
+                tryAppendHaving(opAnnotation, expr, holder, value);
 
                 appendColumns(expr, holder.value);
 
@@ -537,24 +545,18 @@ public class SelectDaoImpl<T>
             return;
         }
 
-        //平均数的参数要求是 double 型
-        if (opAnnotation instanceof Avg) {
-
-        }
-
         hasStatColumns = true;
 
         PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
 
         genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
-
             appendColumns(expr);
 
             //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
             appendColumnMap(expr, fieldOrMethod, name);
 
-            tryAppendHaving(opAnnotation, expr, holder,value);
+            tryAppendHaving(opAnnotation, expr, holder, value);
 
             if (opAnnotation instanceof GroupBy) {
                 //增加GroupBy字段
@@ -664,7 +666,7 @@ public class SelectDaoImpl<T>
         }
 
 
-        if (this.isSafeMode() && whereStatement.trim().length() == 0) {
+        if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + builder + "]");
         }
 

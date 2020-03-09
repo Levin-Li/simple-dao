@@ -8,12 +8,12 @@ package com.levin.commons.dao;
  * @date 2019.04.25
  * @since 2.0.0
  */
-public interface SafeController {
+public interface SafeController<T extends SafeController> {
 
     /**
      * 禁止安全模式
      */
-    void disableSafeMode();
+    T disableSafeMode();
 
     /**
      * 安全模式

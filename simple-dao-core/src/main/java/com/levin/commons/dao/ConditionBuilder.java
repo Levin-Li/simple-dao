@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface ConditionBuilder<T extends ConditionBuilder>
         extends
-        SafeController,
+        SafeController<T>,
         LogicOP<T>,
         SimpleConditionBuilder<T>,
         SimpleConditionBuilder2<T>,

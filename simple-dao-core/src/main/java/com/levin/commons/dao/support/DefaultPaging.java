@@ -36,6 +36,7 @@ public class DefaultPaging
         return pageCount;
     }
 
+    @Override
     public DefaultPaging setPageCount(int pageCount) {
         this.pageCount = pageCount;
         return this;
