@@ -596,22 +596,17 @@ public class JpaDaoImpl
 
     }
 
-    /**
-     * 尝试使用代理的DAO类
-     * <p/>
-     * 解决
-     *
-     * @return
-     */
-    protected JpaDao getDao() {
+    private transient JpaDao proxyDao = null;
 
-        if (applicationContext != null) {
+  //  @Override
+    public JpaDao getDao() {
 
-            JpaDao proxyDao = applicationContext.getBean(JpaDao.class);
+        if (applicationContext != null && proxyDao == null) {
+            proxyDao = applicationContext.getBean(JpaDao.class);
+        }
 
-            if (proxyDao != null) {
-                return proxyDao;
-            }
+        if (proxyDao != null) {
+            return proxyDao;
         }
 
         return this;
