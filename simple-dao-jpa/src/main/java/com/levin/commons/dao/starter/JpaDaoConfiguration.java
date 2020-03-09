@@ -33,16 +33,11 @@ import org.springframework.context.annotation.Configuration;
 //@EnableAspectJAutoProxy
 public class JpaDaoConfiguration implements ApplicationContextAware {
 
-    @Bean
+    @Bean("com.levin.commons.dao.JpaDao")
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {Eq.class, MiniDao.class, JpaDao.class, JpaDaoImpl.class}),
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JpaDao.class),
     })
-//    JpaDao newJpaDao() {
-//        return new JpaDaoImpl();
-//    }
-
-
     FactoryBean newJpaDao() {
 
         //务必要返回代理对象，否则事务扫描，不会生效
@@ -53,7 +48,12 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
        // proxyFactoryBean.setProxyTargetClass(true);
 
-        context.getAutowireCapableBeanFactory().autowireBean(target);
+//        context.getAutowireCapableBeanFactory().autowireBean(target);
+//        target.setApplicationContext(context);
+
+        context.getAutowireCapableBeanFactory()
+                .configureBean(target,JpaDao.class.getName());
+
 
         proxyFactoryBean.setTarget(target);
         proxyFactoryBean.setSingleton(true);

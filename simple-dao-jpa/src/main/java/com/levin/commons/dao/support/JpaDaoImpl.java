@@ -666,16 +666,18 @@ public class JpaDaoImpl
      *
      * @return
      */
+
+    private transient JpaDao proxyDao = null;
+
     @Override
     public JpaDao getDao() {
 
-        if (applicationContext != null) {
+        if (applicationContext != null && proxyDao == null) {
+            proxyDao = applicationContext.getBean(JpaDao.class);
+        }
 
-            JpaDao proxyDao = applicationContext.getBean(JpaDao.class);
-
-            if (proxyDao != null) {
-                return proxyDao;
-            }
+        if (proxyDao != null) {
+            return proxyDao;
         }
 
         return this;

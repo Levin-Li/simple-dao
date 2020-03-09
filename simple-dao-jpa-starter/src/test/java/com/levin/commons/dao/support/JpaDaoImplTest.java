@@ -33,7 +33,7 @@ import java.util.*;
 @ActiveProfiles("dev")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class})
-@Transactional
+//@Transactional
 public class JpaDaoImplTest {
 
     @Autowired
