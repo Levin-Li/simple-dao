@@ -1351,7 +1351,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 || annotationType == IsNull.class
                 || !isNullOrEmptyTxt(value)) {
 
-            //
             processWhereCondition(null, null, name, value, null, QueryAnnotationUtil.getAnnotation(annotationType));
 
         }
@@ -1364,7 +1363,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     private boolean isNullOrEmptyTxt(Object value) {
         return value == null
-                || (value instanceof CharSequence && hasText((CharSequence) value));
+                || (value instanceof CharSequence && !hasText((CharSequence) value));
     }
 
 

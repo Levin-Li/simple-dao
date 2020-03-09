@@ -86,6 +86,7 @@ public class JpaDaoImplTest {
 
 
 
+
     }
 
 
@@ -594,7 +595,8 @@ public class JpaDaoImplTest {
         int n = jpaDao.updateTo(Group.class)
                 .appendColumn(E_Group.lastUpdateTime, new Date())
 //                .appendColumn(E_Group.description, "" + System.currentTimeMillis())
-                .contains(E_Group.name, "2").update();
+                .contains(E_Group.name, "2")
+                .update();
 
         System.out.println("Group update:" + n);
 
