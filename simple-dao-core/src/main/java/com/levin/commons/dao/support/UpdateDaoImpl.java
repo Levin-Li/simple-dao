@@ -4,7 +4,8 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.dao.annotation.misc.PrimitiveValue;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,6 +29,10 @@ public class UpdateDaoImpl<T>
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
 
     final List updateParamValues = new ArrayList(7);
+
+
+    static final String UPDATE_PACKAGE_NAME = Update.class.getPackage().getName();
+
 
     public UpdateDaoImpl() {
         this(true, null);
@@ -200,7 +205,6 @@ public class UpdateDaoImpl<T>
 
     }
 
-
     /**
      * 是否有要更新的列
      * <p>
@@ -228,46 +232,25 @@ public class UpdateDaoImpl<T>
 
 
     @Override
-    public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
+                                   Class<?> varType, Object value, Annotation opAnnotation) {
 
-        processUpdateAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-        return super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-    }
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
 
-    /**
-     * @param bean
-     * @param fieldOrMethod
-     * @param varAnnotations
-     * @param name
-     * @param varType
-     * @param value
-     * @param opAnnotation
-     */
-    protected void processUpdateAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+            genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
+                appendColumns(expr, holder.value);
+            });
 
-        if (!(opAnnotation instanceof UpdateColumn)) {
-            return;
         }
 
-        UpdateColumn anno = (UpdateColumn) opAnnotation;
+        //允许 Update 注解和其它注解同时存在
 
-//        //如果忽略空值
-//        if (anno.useVarValue()
-//                && anno.ignoreNullValue()
-//                && value == null) {
-//            return;
-//        }
+        return super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
-
-        boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
-
-        ValueHolder holder = new ValueHolder(bean, value);
-
-        String expr =  genConditionExpr(complexType,name,holder,anno);
-
-        appendColumns(expr, holder.value);
 
     }
+
 
 }

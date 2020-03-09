@@ -1,4 +1,5 @@
-package com.levin.commons.dao.annotation.stat;
+package com.levin.commons.dao.annotation.select;
+
 
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
@@ -13,27 +14,23 @@ import java.lang.annotation.*;
 
 /**
  *
- *分组统计注解
+ * 选择字段注解
  *
- * 注意：目前所有的Having条件之间只支持逻辑与的关系
  *
- * 只有标量注解和GroupBy注解才支持Having操作
+ * 语句的组成:   op + prefix + value + suffix
+ * 如：  to_date('yyyy',fieldName)
  *
- *一个字段可以有多个标量注解
+ * op 可以是函数，如to_date
+ * prefix 可以是 (
+ * suffix 可以是 )
+ *
+ * 默认情况下，注解不会使用字段值，需要指定 useVarValue = true
  *
  * @author llw
  * @version 2.0.0
  */
-public @interface GroupBy {
+public @interface Select {
 
-    /**
-     * 优先级
-     * <p/>
-     * 按数值从小到大排序
-     *
-     * @return
-     */
-    int order() default 0;
 
     /**
      *
@@ -47,7 +44,7 @@ public @interface GroupBy {
      *
      * @return
      */
-//    Op op() default Op.Eq;
+//    Op op() default Op.Select;
 
     /**
      * 查询字段名称，默认为字段的属性名称

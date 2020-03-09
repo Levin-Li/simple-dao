@@ -32,5 +32,4 @@ public @interface Immutable {
      */
     String remark();
 
-
 }

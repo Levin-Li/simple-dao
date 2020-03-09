@@ -1,8 +1,7 @@
-package com.levin.commons.dao.annotation.stat;
+package com.levin.commons.dao.annotation.update;
 
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
-import com.levin.commons.dao.annotation.Op;
 
 import java.lang.annotation.*;
 
@@ -13,27 +12,20 @@ import java.lang.annotation.*;
 
 /**
  *
- *分组统计注解
+ * 更新字段注解
  *
- * 注意：目前所有的Having条件之间只支持逻辑与的关系
  *
- * 只有标量注解和GroupBy注解才支持Having操作
- *
- *一个字段可以有多个标量注解
+ * 语句的组成: value = op + prefix + ? + suffix
+ * 如： name = to_date('',?)
+ * op 可以是函数
+ * prefix 可以是 (
+ * suffix 可以是 )
  *
  * @author llw
  * @version 2.0.0
  */
-public @interface GroupBy {
+public @interface Update {
 
-    /**
-     * 优先级
-     * <p/>
-     * 按数值从小到大排序
-     *
-     * @return
-     */
-    int order() default 0;
 
     /**
      *
@@ -47,7 +39,7 @@ public @interface GroupBy {
      *
      * @return
      */
-//    Op op() default Op.Eq;
+    // Op op() default Op.Update;
 
     /**
      * 查询字段名称，默认为字段的属性名称
@@ -60,20 +52,21 @@ public @interface GroupBy {
 
 
     /**
-     * aving 操作
+     * 是否是having 操作
      * <p>
+     * 只针对查询有效
      *
      * @return
      */
-    Op havingOp() default Op.None;
+//    boolean having() default false;
 
 
     /**
-     * where 条件 是否用 NOT () 包围
+     * 是否用 NOT () 包围
      *
      * @return
      */
-    boolean not() default false;
+//    boolean not() default false;
 
 
     /**
@@ -99,7 +92,7 @@ public @interface GroupBy {
      *
      * @return
      */
-    String condition() default "";
+    String condition() default C.NOT_NULL;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值

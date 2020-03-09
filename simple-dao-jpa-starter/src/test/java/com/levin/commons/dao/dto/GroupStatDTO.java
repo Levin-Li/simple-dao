@@ -26,7 +26,7 @@ public class GroupStatDTO {
     @Count(value = "id")
     Integer cnt = 1;
 
-    @Avg(value = "score", surroundSuffix = " + 5 )")
+    @Avg(surroundPrefix = "(",value = "score", surroundSuffix = " + 5 )")
     Double avgScore;
 
     @Sum("score")

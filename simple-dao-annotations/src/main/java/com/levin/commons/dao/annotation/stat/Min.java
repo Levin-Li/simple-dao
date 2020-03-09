@@ -2,6 +2,7 @@ package com.levin.commons.dao.annotation.stat;
 
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
+import com.levin.commons.dao.annotation.Op;
 
 import java.lang.annotation.*;
 
@@ -43,17 +44,16 @@ public @interface Min {
 
 
     /**
-     * 是否是having 操作
+     * aving 操作
      * <p>
-     * 只针对查询有效
      *
      * @return
      */
-    boolean having() default false;
+    Op havingOp() default Op.None;
 
 
     /**
-     * 是否用 NOT () 包围
+     * where 条件 是否用 NOT () 包围
      *
      * @return
      */
@@ -83,7 +83,7 @@ public @interface Min {
      *
      * @return
      */
-    String condition() default C.NOT_NULL;
+    String condition() default "";
 
     /**
      * 是否过滤数组参数或是列表参数中的空值

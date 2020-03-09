@@ -25,6 +25,7 @@ import java.lang.annotation.*;
  * @author llw
  * @version 2.0.0
  */
+@Deprecated
 public @interface UpdateColumn {
 
 
@@ -59,7 +60,7 @@ public @interface UpdateColumn {
      *
      * @return
      */
-    boolean having() default false;
+//    boolean having() default false;
 
 
     /**
@@ -67,7 +68,7 @@ public @interface UpdateColumn {
      *
      * @return
      */
-    boolean not() default false;
+//    boolean not() default false;
 
 
     /**

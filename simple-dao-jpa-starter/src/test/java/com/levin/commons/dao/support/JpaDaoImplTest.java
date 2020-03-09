@@ -379,6 +379,15 @@ public class JpaDaoImplTest {
         System.out.println(selectDao.genFinalStatement() + "  -->   params:" + selectDao.genFinalParamList());
     }
 
+
+    @org.junit.Test
+    public void testStatDTO2() throws Exception {
+
+        List<UserStatDTO> byQueryObj = jpaDao.findByQueryObj(UserStatDTO.class, new UserStatDTO());
+
+        System.out.println(byQueryObj);
+    }
+
     @org.junit.Test
     public void testQueryFrom() throws Exception {
 

@@ -9,6 +9,7 @@ import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.GroupBy;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.DefaultPaging;
@@ -16,7 +17,7 @@ import com.levin.commons.dao.support.DefaultPaging;
 import java.util.Date;
 
 
-@TargetOption(entityClass = User.class, alias = "u", maxResults = 100)
+@TargetOption(entityClass = User.class, alias = "u", maxResults = 100,fromStatement = "jpa_dao_test_User")
 public class UserDTO {
 
 
@@ -31,8 +32,8 @@ public class UserDTO {
     @OrderBy
     protected Integer orderCode;
 
-    @GroupBy(having = true)
-    @In(not = true)
+    @GroupBy
+    @In(not = true,having = true)
     String[] state = new String[]{"A", "B", "C"};
 
 //    @Ignore
@@ -54,7 +55,7 @@ public class UserDTO {
     protected String remark = "desc";
 
 
-    @UpdateColumn
+    @Update
     protected Date lastUpdateTime = new Date();
 
 }

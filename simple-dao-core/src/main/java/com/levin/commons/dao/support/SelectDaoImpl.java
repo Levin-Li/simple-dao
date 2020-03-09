@@ -10,16 +10,19 @@ import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
+import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.annotation.select.SelectColumn;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -43,6 +46,8 @@ public class SelectDaoImpl<T>
         implements SelectDao<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(SelectDaoImpl.class);
+
+    private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
 
     transient MiniDao dao;
 
@@ -123,6 +128,7 @@ public class SelectDaoImpl<T>
 
     @Override
     protected void setFromStatement(String fromStatement) {
+        //没有内容
         if (!StringUtils.hasText(this.fromStatement)
                 && entityClass == null
                 && !StringUtils.hasText(this.tableName)) {
@@ -416,9 +422,6 @@ public class SelectDaoImpl<T>
     public boolean processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
 
-        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-
-
         //处理SelectColumn注解
         processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
@@ -428,10 +431,11 @@ public class SelectDaoImpl<T>
         //处理排序注解
         processOrderByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
-        //处理排
+        //处理抓取
         processFetchSetByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
-        return true;
+        return super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+
     }
 
     /**
@@ -476,6 +480,17 @@ public class SelectDaoImpl<T>
 
     }
 
+    protected void tryAppendHaving(Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
+
+        Op op = ClassUtils.getValue(opAnnotation, "havingOp", false);
+
+        if (op == null || Op.None.name().equals(op.name())) {
+            return;
+        }
+
+        appendHaving(op.gen(expr, getParamPlaceholder()), holder.value, opParamValue);
+
+    }
 
     /**
      * @param bean
@@ -488,24 +503,22 @@ public class SelectDaoImpl<T>
      */
     protected void processSelectAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        if (!(opAnnotation instanceof SelectColumn))
-            return;
 
-        SelectColumn anno = (SelectColumn) opAnnotation;
+        if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
 
-        boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
+            genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
-        ValueHolder holder = new ValueHolder(bean, value);
+                tryAppendHaving(opAnnotation, expr, holder,value);
 
-        String expr = genConditionExpr(complexType, name, holder, anno);
+                appendColumns(expr, holder.value);
 
+                //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
+                appendColumnMap(expr, fieldOrMethod, name);
+            });
 
-        appendSelectColumns(expr, holder.value);
-
-        //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-        appendColumnMap(expr, fieldOrMethod, name);
-
+        }
     }
 
     /**
@@ -520,8 +533,9 @@ public class SelectDaoImpl<T>
     protected void processStatAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         //如果不是同个包，或是 opAnnotation 为 null
-        if (!QueryAnnotationUtil.isSamePackage(opAnnotation, GroupBy.class))
+        if (!QueryAnnotationUtil.isSamePackage(opAnnotation, GroupBy.class)) {
             return;
+        }
 
         //平均数的参数要求是 double 型
         if (opAnnotation instanceof Avg) {
@@ -530,23 +544,24 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        boolean complexType = !hasPrimitiveAnno(varAnnotations) && isComplexType(varType, value);
+        PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
 
-        ValueHolder holder = new ValueHolder(bean, value);
+        genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
-        String column = genConditionExpr(complexType, name, holder, opAnnotation);
 
-        //增加选择字段
-        appendSelectColumns(column);
+            appendColumns(expr);
 
-        //字段映射
-        appendColumnMap(column, fieldOrMethod, name);
+            //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
+            appendColumnMap(expr, fieldOrMethod, name);
 
-        if (opAnnotation instanceof GroupBy) {
-            //增加GroupBy字段
+            tryAppendHaving(opAnnotation, expr, holder,value);
 
-            appendGroupBy(column);
-        }
+            if (opAnnotation instanceof GroupBy) {
+                //增加GroupBy字段
+                appendGroupBy(expr);
+            }
+
+        });
 
     }
 
