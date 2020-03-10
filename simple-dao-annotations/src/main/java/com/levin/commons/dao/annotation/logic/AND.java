@@ -23,13 +23,6 @@ import java.lang.annotation.*;
 public @interface AND {
 
     /**
-     * 暂元作用
-     *
-     * @return
-     */
-    String value() default "";
-
-    /**
      * 在统一个字段上是否自动闭合逻辑组
      *
      * @return
@@ -37,6 +30,9 @@ public @interface AND {
     boolean autoClose() default false;
 
     /**
+     *
+     * 是否是必须
+     *
      * @return
      */
     boolean require() default false;
@@ -50,26 +46,6 @@ public @interface AND {
      */
     String condition() default "";
 
-    /**
-     * 操作符
-     *
-     * @return
-     */
-    String op() default " AND ";
-
-    /**
-     * 对右操作数的包围前缀
-     *
-     * @return
-     */
-    String prefix() default " ( ";
-
-    /**
-     * 对右操作数的包围后缀
-     *
-     * @return
-     */
-    String suffix() default " ) ";
 
     /**
      * 描述信息

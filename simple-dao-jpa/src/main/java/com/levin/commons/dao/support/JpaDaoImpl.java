@@ -14,7 +14,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ClassUtils;
@@ -240,10 +239,8 @@ public class JpaDaoImpl
             defaultEntityManager = entityManagerFactory.createEntityManager();
         }
 
-        if (transactionManager == null
-                || defaultEntityManager == null
-                || entityManagerFactory == null) {
-            throw new IllegalStateException("transactionManager or entityManagerFactory must be set");
+        if (defaultEntityManager == null || entityManagerFactory == null) {
+            throw new IllegalStateException("entityManager or entityManagerFactory must be set");
         }
 
     }

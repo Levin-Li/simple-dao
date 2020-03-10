@@ -15,14 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -284,14 +281,17 @@ public abstract class QueryAnnotationUtil {
     }
 
     /**
+     *
+     * 获取属性名称
      * @param opAnno
      * @param name
      * @return
      */
-    public static String getPropertyName(Annotation opAnno, String name) {
+    public static String tryGetJpaEntityFieldName(Annotation opAnno, Class entityClass, @NotNull String name) {
 
-        if (opAnno == null)
+        if (opAnno == null) {
             return name;
+        }
 
         String newKey = null;
 
@@ -299,6 +299,26 @@ public abstract class QueryAnnotationUtil {
             newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
             ReflectionUtils.rethrowRuntimeException(e);
+        }
+
+        if (!StringUtils.hasText(newKey)
+                && entityClass != null
+                && ReflectionUtils.findField(entityClass, name) == null) {
+
+
+            // 以下逻辑是自动去除查找，去除注解名称以后的属性
+            int len = opAnno.annotationType().getSimpleName().length();
+
+            if (name.length() > len) {
+
+                newKey = Character.toLowerCase(name.charAt(len)) + name.substring(len + 1);
+
+                if (ReflectionUtils.findField(entityClass, newKey) == null) {
+                    newKey = null;
+                }
+
+            }
+
         }
 
         return (StringUtils.hasText(newKey)) ? newKey : name;

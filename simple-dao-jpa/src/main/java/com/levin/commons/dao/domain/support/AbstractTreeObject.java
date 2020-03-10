@@ -4,10 +4,15 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.Identifiable;
 import com.levin.commons.dao.domain.TreeObject;
 import com.levin.commons.service.domain.Desc;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
+
+@Data
+@Accessors(chain = true)
 
 @MappedSuperclass
 public abstract class AbstractTreeObject<ID extends Serializable, T extends Identifiable<ID>>
@@ -54,20 +59,6 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
         this.type = type;
     }
 
-    @Override
-    public ID getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(ID parentId) {
-        this.parentId = parentId;
-    }
-
-    @Override
-    public T getParent() {
-        return parent;
-    }
-
     public void setParent(T parent) {
         if (parent == null) {
             this.parent = null;
@@ -82,13 +73,5 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
         }
     }
 
-    public void setChildren(Set<T> children) {
-        this.children = children;
-    }
-
-    @Override
-    public Set<T> getChildren() {
-        return children;
-    }
 
 }

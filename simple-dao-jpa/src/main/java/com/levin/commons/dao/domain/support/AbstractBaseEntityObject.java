@@ -13,7 +13,6 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 public abstract class AbstractBaseEntityObject<ID extends Serializable>
-//        extends AbstractEntityObject<ID>
         implements BaseEntityObject<ID> {
 
     private static final long serialVersionUID = -123456789L;

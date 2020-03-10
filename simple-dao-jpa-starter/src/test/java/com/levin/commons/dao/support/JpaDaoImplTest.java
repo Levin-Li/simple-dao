@@ -58,6 +58,7 @@ public class JpaDaoImplTest {
         Android, Ios, Weixin, Web, H5
     }
 
+    Random random = new Random(this.hashCode());
 
     /**
      * 注意测试时，使用的是h2的内存数据库，所以没有使用事务
@@ -97,6 +98,7 @@ public class JpaDaoImplTest {
         while (n++ < 100) {
 
             jpaDao.create(new TestEntity()
+                    .setScore(random.nextInt(750))
                     .setCategory(categories[n % categories.length])
                     .setState(states[n % states.length])
                     .setName("test" + n)
@@ -171,7 +173,6 @@ public class JpaDaoImplTest {
 
         String[] categories = {"临时", "常设", "月度", "年度"};
 
-        Random random = new Random(this.hashCode());
 
         Object one = jpaDao.selectFrom(Group.class).appendSelectColumns("max(id)").findOne();
 
@@ -283,11 +284,21 @@ public class JpaDaoImplTest {
 
     }
 
+    @Test
+    public void testTestEntityStatDto() {
+
+        List<TestEntityStatDto> dtoList = jpaDao.findByQueryObj(TestEntityStatDto.class, new TestEntityStatDto());
+
+        Assert.isTrue(dtoList.size() > 0,"TestEntity统计结果错误");
+
+    }
 
     @Test
     public void testNullOrEq() {
 
-        Object lily = jpaDao.selectFrom(User.class).isNullOrEq(E_User.name, "lily").findOne();
+        Object lily = jpaDao.selectFrom(User.class)
+                .isNullOrEq(E_User.name, "lily")
+                .findOne();
 
     }
 
@@ -680,6 +691,9 @@ public class JpaDaoImplTest {
                 .contains(E_Group.name, "2").find();
 
         System.out.println(list);
+
+
+        jpaDao.selectFrom("table").and().or().and().end().end().end();
 
     }
 

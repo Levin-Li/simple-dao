@@ -8,7 +8,7 @@ package com.levin.commons.dao;
  * @date 2019.04.25
  * @since 2.0.0
  */
-public interface SafeController<T extends SafeController> {
+public interface SafeController<T> {
 
     /**
      * 禁止安全模式
@@ -18,11 +18,10 @@ public interface SafeController<T extends SafeController> {
     /**
      * 安全模式
      * <p>
-     * 在安全模式下，不允许无条件的更新或是删除
+     * 在安全模式下，不允许无条件的查询、更新和删除
      *
      * @return
      */
     boolean isSafeMode();
-
 
 }

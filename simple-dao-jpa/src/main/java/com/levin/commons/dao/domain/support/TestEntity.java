@@ -3,6 +3,7 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import javax.persistence.Entity;
@@ -23,19 +24,10 @@ public class TestEntity
     @Desc("状态")
     String state;
 
-    @Desc("分数")
-    Integer score;
-
     @Desc("类别")
     String category;
 
-    @Override
-    public Long getId() {
-        return id;
-    }
+    @Desc("分数")
+    Integer score;
 
-    @Override
-    public String getState() {
-        return state;
-    }
 }

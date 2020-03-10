@@ -22,15 +22,6 @@ import java.lang.annotation.*;
 public @interface OR {
 
     /**
-     * 查询字段名称，默认为字段的属性名称
-     * 暂元作用
-     *
-     * @return
-     */
-    String value() default "";
-
-
-    /**
      * 在统一个字段上是否自动闭合逻辑组
      *
      * @return
@@ -38,10 +29,11 @@ public @interface OR {
     boolean autoClose() default false;
 
     /**
+     * 是否是必须
+     *
      * @return
      */
     boolean require() default false;
-
 
     /**
      * 表达式，考虑支持Groovy和SpEL
@@ -52,26 +44,6 @@ public @interface OR {
      */
     String condition() default "";
 
-    /**
-     * 操作符
-     *
-     * @return
-     */
-    String op() default " OR ";
-
-    /**
-     * 对右操作数的包围前缀
-     *
-     * @return
-     */
-    String prefix() default " ( ";
-
-    /**
-     * 对右操作数的包围后缀
-     *
-     * @return
-     */
-    String suffix() default " ) ";
 
     /**
      * 描述信息

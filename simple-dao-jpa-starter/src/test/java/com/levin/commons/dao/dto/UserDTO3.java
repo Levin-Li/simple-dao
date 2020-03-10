@@ -31,7 +31,7 @@ public class UserDTO3 {
 
     @SelectColumn("score")
     @Gt
-    Integer scoreGt = 0;
+    Integer gtScore = 0;
 
 
 }

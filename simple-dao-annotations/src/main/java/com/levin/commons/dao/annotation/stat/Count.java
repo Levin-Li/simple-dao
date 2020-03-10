@@ -39,7 +39,7 @@ public @interface Count {
      *
      * @return
      */
-    String value() default "";
+    String value() default "1";
 
 
     /**

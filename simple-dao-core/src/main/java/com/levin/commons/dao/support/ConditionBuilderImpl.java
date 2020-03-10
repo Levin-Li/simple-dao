@@ -1246,7 +1246,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(annotation -> isValid(annotation, bean, name, value))
                     .forEach(annotation -> {
                         processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                QueryAnnotationUtil.getPropertyName(annotation, name),
+                                QueryAnnotationUtil.tryGetJpaEntityFieldName(annotation, this.entityClass, name),
                                 varType, value, annotation);
                     });
         }
@@ -1277,7 +1277,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //如果不是条件注解则忽略
         //但是允许空opAnnotation为 null，往下走
         //支持处理 where 条件的注解
-
 
         if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
             return;
@@ -1436,32 +1435,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-
-    Object tryAutoConvert(String name, PrimitiveValue primitiveValue, Class<?> varType, Object value) {
-
-        boolean enableEmptyString =
-                (context != null && Boolean.TRUE.equals(context.get(DaoContext.ENABLE_EMPTY_STRING_QUERY)))
-                        || Boolean.TRUE.equals(DaoContext.getVar(DaoContext.ENABLE_EMPTY_STRING_QUERY, Boolean.FALSE));
-
-        if (!enableEmptyString
-                && value instanceof CharSequence
-                && ((CharSequence) value).length() < 1) {
-            //忽略空串
-            return value;
-        }
-
-        //如果是复杂对象，即对象或是对象数组（数组元素为非原子对象）
-        boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
-
-        //尝试转换值
-        //@modify by llw,20170829，修复 Null和NotNull注解时，并不使用属性值，所以无需进行值转换
-        if (!complexType) {
-            value = tryToConvertValue(name, value);
-        }
-
-        return value;
-    }
-
     /**
      * 生成条件语句
      *
@@ -1553,7 +1526,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             if (!attributes.containsKey(E_C.not)) {
-                attributes.put(E_C.having, false);
+                attributes.put(E_C.not, false);
             }
 
             if (attributes.get(E_C.op) == null) {

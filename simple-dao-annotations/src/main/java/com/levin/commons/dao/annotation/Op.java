@@ -150,14 +150,15 @@ public enum Op
 
     void init() {
 
-        if (this.name().toLowerCase().contains("in")
-                || this.name().toLowerCase().contains("between")) {
+        if (this.name().equals("In")
+                || this.name().equals("NotIn")
+                || this.name().equals("Between")) {
+
             this.expandParamValue = true;
 
-            if (this.name().toLowerCase().contains("between")) {
+            if (this.name().equals("Between")) {
                 paramDelimiter = "AND";
             }
-
         }
 
     }
