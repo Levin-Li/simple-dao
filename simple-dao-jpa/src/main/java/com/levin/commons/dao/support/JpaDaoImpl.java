@@ -129,7 +129,7 @@ public class JpaDaoImpl
     @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-    @Autowired
+    @PersistenceUnit
     private EntityManager defaultEntityManager;
 
     @Autowired
@@ -233,16 +233,10 @@ public class JpaDaoImpl
             parameterNameDiscoverer = new MethodParameterNameDiscoverer();
         }
 
-//        if (entityManagerFactory == null
-//                && defaultEntityManager != null) {
-//            entityManagerFactory = defaultEntityManager.getEntityManagerFactory();
-//        }
-
-
-//        if (transactionManager == null
-//                && entityManagerFactory != null) {
-//            transactionManager = new JpaTransactionManager(entityManagerFactory);
-//        }
+        if (defaultEntityManager == null
+                && entityManagerFactory != null) {
+            defaultEntityManager = entityManagerFactory.createEntityManager();
+        }
 
         if (transactionManager == null
                 || defaultEntityManager == null
