@@ -32,7 +32,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     protected Set<T> children;
 
     @Desc("类型")
-    @Column(name = "action")
+    @Column(name = "type")
     protected String type;
 
 

@@ -1,9 +1,7 @@
 package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.C;
-import com.levin.commons.dao.annotation.CList;
-import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.domain.support.TestEntity;
 import lombok.Data;
@@ -19,5 +17,12 @@ public class NewAnnoDto {
     @OR
     @CList({@C(op = Op.StartsWith),@C(op = Op.IsNull)})
     String name="test";
+
+
+    @Like(paramFuncs = @Func( prefix = "'%#' || ",suffix = " || '#%'"))
+    @Contains(paramFuncs = @Func( prefix = "'#' || ",suffix = " || '%'"))
+     String type="T1";
+
+
 
 }
