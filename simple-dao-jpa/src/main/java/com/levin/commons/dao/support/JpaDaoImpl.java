@@ -118,7 +118,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 //@ConditionalOnBean({EntityManagerFactory.class})
-@Repository
+//@Repository
 //@Transactional
 public class JpaDaoImpl
         extends AbstractDaoFactory
