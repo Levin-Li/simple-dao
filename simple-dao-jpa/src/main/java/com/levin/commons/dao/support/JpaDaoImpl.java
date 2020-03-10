@@ -126,10 +126,12 @@ public class JpaDaoImpl
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
 
-    @Autowired
+    //    @Autowired
+    @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
-    @PersistenceUnit
+    //    @Autowired
+    @PersistenceContext
     private EntityManager defaultEntityManager;
 
     @Autowired
