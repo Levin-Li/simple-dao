@@ -95,8 +95,6 @@ public abstract class ExprUtils {
             }
 
 
-
-
             // 替换成 参数占位符
             // 只有这部分是
 
@@ -206,10 +204,11 @@ public abstract class ExprUtils {
     }
 
 
-    public static String funcExpr(String fieldName, Func... funcs) {
+    public static String funcExpr(String name, Func... funcs) {
+        //允许没有名称
         return Arrays.stream(funcs)
                 //  .filter(func -> StringUtils.hasText(func.value()))
-                .reduce(fieldName, (expr, func) -> func.value() + func.prefix() + expr + func.suffix(), (r1, r2) -> r1 + r2);
+                .reduce(name, (expr, func) -> func.value() + func.prefix() + expr + func.suffix(), (r1, r2) -> r1 + r2);
     }
 
     /**
