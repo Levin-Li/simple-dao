@@ -26,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -394,7 +393,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB appendBetween(String entityAttrName, Object... paramValues) {
 
-        // processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(Between.class));
 
         add(Between.class, entityAttrName, paramValues);
 
@@ -411,7 +409,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB appendWhereIn(String entityAttrName, Object... paramValues) {
 
-        // processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(In.class));
 
         add(In.class, entityAttrName, paramValues);
 
@@ -427,7 +424,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB appendWhereNotIn(String entityAttrName, Object... paramValues) {
-        //processWhereCondition(entityAttrName, paramValues, null, QueryAnnotationUtil.getAnnotation(NotIn.class));
 
         add(NotIn.class, entityAttrName, paramValues);
 
@@ -444,8 +440,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB appendWhereContains(String entityAttrName, String keyword) {
 
-        //     processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(Contains.class));
-
         add(Contains.class, entityAttrName, keyword);
 
         return (CB) this;
@@ -460,7 +454,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB appendWhereStartsWith(String entityAttrName, String keyword) {
-        //    processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(StartsWith.class));
 
 
         add(StartsWith.class, entityAttrName, keyword);
@@ -477,7 +470,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB appendWhereEndsWith(String entityAttrName, String keyword) {
-        //  processWhereCondition(entityAttrName, keyword, null, QueryAnnotationUtil.getAnnotation(EndsWith.class));
 
         add(EndsWith.class, entityAttrName, keyword);
 
@@ -1686,9 +1678,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected <T> T evalExpr(Object root, Object value, String name, String expr) {
 
-        List<Map<String, ? extends Object>> maps = buildContextValues(root, value, name);
-
-        return ExprUtils.evalSpEL(root, expr, maps);
+        return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
     }
 
 
@@ -1770,12 +1760,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     public List<Map<String, ? extends Object>> getDaoContextValues() {
+
         return Arrays.asList(
                 DaoContext.getGlobalContext(),
                 DaoContext.getThreadContext(),
-                this.context).stream()
-                .filter(map -> map != null && !map.isEmpty())
-                .collect(Collectors.toList());
+                (this.context != null) ? this.context : Collections.EMPTY_MAP);
+
     }
 
 

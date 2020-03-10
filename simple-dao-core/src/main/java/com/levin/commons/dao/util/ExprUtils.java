@@ -31,6 +31,17 @@ public abstract class ExprUtils {
     //匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
+    /**
+     * @param c
+     * @param fieldExpr
+     * @param complexType
+     * @param expectType
+     * @param holder
+     * @param paramPlaceholder
+     * @param subQueryBuilder
+     * @param contexts         注意，越后面，优先级越高
+     * @return
+     */
     public static String genExpr(C c, String fieldExpr, boolean complexType, Class<?> expectType
             , ValueHolder holder, String paramPlaceholder, Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
@@ -142,7 +153,7 @@ public abstract class ExprUtils {
                 paramValues.add(holder.value);
                 return oldParamExpr;
             } else {
-                paramValues.add(ObjectUtil.findValue(key, true, ctxs));
+                paramValues.add(ObjectUtil.findValue(key, true, true, ctxs));
                 return paramPlaceholder;
             }
 
@@ -276,22 +287,6 @@ public abstract class ExprUtils {
      * @param contexts
      * @return
      */
-    public static String processParamPlaceholder(String qlSection, String paramPlaceholder,
-                                                 List<? extends Object> paramValues, List<Map<String, ? extends Object>> contexts) {
-
-        return processParamPlaceholder(qlSection, (paramName, ctxs) -> {
-            paramValues.add(ObjectUtil.findValue(paramName, true, ctxs));
-            return paramPlaceholder;
-        }, contexts);
-    }
-
-    /**
-     * 参数替换辅助类
-     *
-     * @param qlSection
-     * @param contexts
-     * @return
-     */
     public static String processParamPlaceholder(String qlSection, BiFunction<String, List<Map<String, ? extends Object>>, String> biFunction,
                                                  List<Map<String, ? extends Object>> contexts) {
 
@@ -318,7 +313,7 @@ public abstract class ExprUtils {
 
         return replace(groovyVarStylePattern, txt, key -> {
 
-            Object v = ObjectUtil.findValue(key, isThrowExWhenKeyNotFound, contexts);
+            Object v = ObjectUtil.findValue(key, true, isThrowExWhenKeyNotFound, contexts);
 
             if (v == null) {
                 throw new StatementBuildException(String.format("[{%s}] var {%s} not found on context", txt, key));

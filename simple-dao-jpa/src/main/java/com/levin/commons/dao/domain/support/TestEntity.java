@@ -23,6 +23,9 @@ public class TestEntity
     @Desc("状态")
     String state;
 
+    @Desc("分数")
+    Integer score;
+
     @Desc("类别")
     String category;
 

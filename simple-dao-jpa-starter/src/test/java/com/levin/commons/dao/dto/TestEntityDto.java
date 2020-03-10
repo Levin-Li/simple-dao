@@ -8,8 +8,7 @@ import lombok.Data;
 
 @Data
 @TargetOption(entityClass = TestEntity.class)
-public class NewAnnoDto {
-
+public class TestEntityDto {
 
     @C(op = Op.In)
     String[] state = {"A", "B", "C"};
@@ -22,7 +21,5 @@ public class NewAnnoDto {
     @Like(paramFuncs = @Func( prefix = "'%#' || ",suffix = " || '#%'"))
     @Contains(paramFuncs = @Func( prefix = "'#' || ",suffix = " || '%'"))
      String type="T1";
-
-
 
 }

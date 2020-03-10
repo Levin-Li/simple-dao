@@ -26,16 +26,16 @@
 #### 1.1 引入依赖
         <dependency>
             <groupId>com.levin.commons.maven</groupId>
-            <artifactId>simple-dao</artifactId>
-            <version>x.x.x-SNAPSHOT</version>
+            <artifactId>simple-dao-jpa-starter</artifactId>
+            <version>2.x.x-SNAPSHOT</version>
         </dependency>
 ##### 1.2 定义DTO及注解
 
      /**
       * 数据传输对象(兼查询对象，通过注解产生SQL语句)
       */
-     @TargetEntity(tableName = "t_users", alias = "u"
-             , fixedCondition = "u.enable = true", defaultOrderBy = "u.area")
+     @TargetEntity(tableName = "t_users", alias = "u")
+     @Data        
      public class UserStatDTO {
 
        @GroupBy
@@ -54,19 +54,10 @@
 
 ##### 1.3 执行查询
 
-     文件：UserServiceImpl.java
-
-     public List<StatInfo> statUser(UserStatDTO userStatDTO){
-
-        SelectDao selectDao = new SelectDaoImpl();
-        selectDao.appendByQueryObj(userStatDTO);
-
-        List result = selectDao.find();
-
-        ...转换结果
-
-        return result;
-     }
+      @Autowired
+      JpaDao jpaDao;
+      
+      jpaDao.findByQueryObj(UserStatDTO.class,new UserStatDTO());
 
    以上代码将生成并执行以下SQL：
 

@@ -18,13 +18,15 @@ public @interface UpdateRequest {
     /**
      * 静态的更新的字段
      * 可用于时间更新等
+     *  如： name = ''
+     *
      *
      * @return
      */
     String updateStatement() default "";
 
     /**
-     * 固定条件
+     * 固定where条件
      * 如 enable = true
      *
      * @return

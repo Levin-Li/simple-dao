@@ -202,8 +202,12 @@ public abstract class ObjectUtil {
      * @param contexts
      * @return
      */
-    public static <T> T findValue(String key, boolean isThrowExWhenKeyNotFound, List<Map<String, ? extends Object>> contexts) {
+    public static <T> T findValue(String key, boolean findLast, boolean isThrowExWhenKeyNotFound, List<Map<String, ? extends Object>> contexts) {
 
+        if (findLast) {
+            contexts = new ArrayList<>(contexts);
+            Collections.reverse(contexts);
+        }
 
         for (Map<String, ? extends Object> map : contexts) {
 
@@ -216,6 +220,7 @@ public abstract class ObjectUtil {
             } catch (Exception e) {
             }
         }
+
 
         if (isThrowExWhenKeyNotFound) {
             throw new IllegalArgumentException("key " + key + " not found on context");
@@ -917,12 +922,12 @@ public abstract class ObjectUtil {
                 if (copyErrors != null) {
                     copyErrors.put(field, e);
                 } else {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, e);
+                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, e) + " , " + ExceptionUtils.getAllCauseInfo(e, "->");
 
                     if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
                         logger.warn(errInfo);
                     } else {
-                        logger.error(errInfo, e);
+                        logger.error(errInfo);
                     }
                 }
             } catch (StackOverflowError error) {

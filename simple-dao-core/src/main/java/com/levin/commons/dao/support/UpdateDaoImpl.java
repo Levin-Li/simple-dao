@@ -6,6 +6,7 @@ import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -185,9 +186,7 @@ public class UpdateDaoImpl<T>
             throw new StatementBuildException("no columns to update");
         }
 
-
         String whereStatement = genWhereStatement();
-
 
         ql.append(" Update ")
                 .append(genEntityStatement())
@@ -200,7 +199,7 @@ public class UpdateDaoImpl<T>
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + ql + "]");
         }
 
-        return ql.toString();
+        return ExprUtils.replace(ql.toString(), getDaoContextValues());
     }
 
     /**
@@ -231,7 +230,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
-                                   Class<?> varType, Object value, Annotation opAnnotation) {
+                                Class<?> varType, Object value, Annotation opAnnotation) {
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
@@ -245,7 +244,7 @@ public class UpdateDaoImpl<T>
 
         //允许 Update 注解和其它注解同时存在
 
-          super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
 
     }

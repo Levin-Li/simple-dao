@@ -19,6 +19,7 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
@@ -609,7 +610,7 @@ public class SelectDaoImpl<T>
      * @param isCountQueryResult 是否用于统计总数
      * @return
      */
-    StringBuilder genQL(boolean isCountQueryResult) {
+    String  genQL(boolean isCountQueryResult) {
 
         StringBuilder builder = new StringBuilder();
 
@@ -619,7 +620,6 @@ public class SelectDaoImpl<T>
         } else if (isNative()) {
             builder.insert(0, "Select * ");
         }
-
 
         String genFromStatement = genFromStatement();
 
@@ -644,34 +644,33 @@ public class SelectDaoImpl<T>
 
             String havingStatement = havingExprRootNode.toString();
 
-            if (havingStatement.length() > 0)
+            if (havingStatement.length() > 0) {
                 builder.append(" Having  " + havingStatement);
+            }
 
         } else if (havingExprRootNode.toString().length() > 0) {
             throw new StatementBuildException("found 'having' statement but not found 'group by' statement");
         }
 
-        //如果只是统计总数，则不把排序语句加入
-        if (isCountQueryResult)
-            return builder;
+        //如果只是统计总数，则不把排序语句加入，可以提升速度
+        if (!isCountQueryResult) {
 
-        //以下代理是处理排序语句
-        if (orderByColumns.length() > 0) {
-            //排序
-            Collections.sort(orderByColumns.getList());
-            builder.append(" Order By  " + orderByColumns);
-        } else if (defaultOrderByStatement.length() > 0) {
-            //加入默认排序语句
-            builder.append(" Order By  " + defaultOrderByStatement);
+            //以下代理是处理排序语句
+            if (orderByColumns.length() > 0) {
+                //排序
+                Collections.sort(orderByColumns.getList());
+                builder.append(" Order By  " + orderByColumns);
+            } else if (defaultOrderByStatement.length() > 0) {
+                //加入默认排序语句
+                builder.append(" Order By  " + defaultOrderByStatement);
+            }
         }
-
 
         if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + builder + "]");
         }
 
-
-        return builder;
+        return ExprUtils.replace(builder.toString(),getDaoContextValues());
     }
 
     @Override
@@ -699,17 +698,18 @@ public class SelectDaoImpl<T>
     @Override
     public long count() {
 
-        String column = "*";
+        if (isNative()) {
+            return count("Select Count(*) From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
+        }
+
+        String column = "1";
 
         //如果有指定的查询字段
         if (selectColumns.length() > 0) {
             //@todo 待修复一个已知bug-201709262350，返回类型为 Long ，注意 count(*) 语法在 hibernate 中可用，但在 toplink 其它产品中并不可用
 
-            //把整个查询做为子查询
-            if (isNative())
-                return count("Select Count('*') From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
-
-            column = foundColumn(column, selectColumns.toString());
+            // column = foundColumn(column, selectColumns.toString());
+            column = "1";
 
         } else if (StringUtils.hasText(alias)) {
             //如果没有具体的查询字段，则可以用别名进行统计
@@ -717,6 +717,8 @@ public class SelectDaoImpl<T>
         }
 
         return count("Select Count(" + column + ") " + genQL(true), getDaoContextValues(), whereParamValues, havingParamValues);
+
+
     }
 
     public static String foundColumn(String defaultResult, String selectColumns) {
@@ -743,33 +745,6 @@ public class SelectDaoImpl<T>
     }
 
 
-    public static List<String> splitQL(String... selectColumns) {
-
-        List<String> result = new ArrayList<>(7);
-
-        try {
-            SQLStatementParser parser = new SQLStatementParser("Select " + selectColumns + " From Test");
-
-            SQLSelectQuery query = parser.createSQLSelectParser().query();
-
-            if (query instanceof SQLSelectQueryBlock) {
-
-                for (SQLSelectItem item : ((SQLSelectQueryBlock) query).getSelectList()) {
-
-                    System.out.println(item.toString() + ":" + item.getAlias() + "," + item.getExpr() + "," + item.getExpr().getClass());
-
-                    result.add(item.toString());
-
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("SQL选择字段语句解析异常:" + selectColumns);
-        }
-
-        return result;
-    }
-
-
     /**
      * 如果没有记录，或是记录为null值，都表示为0
      *
@@ -790,7 +765,7 @@ public class SelectDaoImpl<T>
 
     @Override
     public String genFinalStatement() {
-        return genQL(false).toString();
+        return genQL(false) ;
     }
 
     @Override
@@ -819,7 +794,7 @@ public class SelectDaoImpl<T>
      */
 //    @Override
     public <E> List<E> findForResultClass(Class<E> resultClass) {
-        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genQL(false).toString(), genFinalParamList());
+        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,8 @@ import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.stat.Sum;
+import com.levin.commons.dao.domain.User;
+import lombok.Data;
 
 //import com.levin.commons.dao.annotation.Not;
 //import com.levin.commons.dao.annotation.stat.Having;
@@ -16,29 +18,18 @@ import com.levin.commons.dao.annotation.stat.Sum;
 /**
  * 数据传输对象(兼查询对象，通过注解产生SQL语句)
  */
-@TargetOption(alias = "u", fromStatement = "jpa_dao_test_User u")
+@TargetOption(entityClass = User.class,alias = "u")
+@Data
 public class UserStatDTO {
 
-    @GroupBy(havingOp = Op.Eq)
+    @GroupBy
     @OrderBy
     String state;
 
     @Avg(havingOp = Op.Gt)
-    @Sum(fieldFuncs = {@Func("ABS")}, havingOp = Op.Lt)
-    @Gt
     Integer score = 500;
 
-
-    //    @Having
-    @Ignore
-    Boolean enable = true;
-
-    //    @Not
-//    @Having
-    @StartsWith
-    @EndsWith
-    @Eq
-    @Select(havingOp = Op.Like)
+    @Contains
     String name = "Echo";
 
 }

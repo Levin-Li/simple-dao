@@ -5,6 +5,7 @@ import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
+import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
@@ -89,12 +89,12 @@ public class JpaDaoImplTest {
                 .delete();
 
 
-        int n = 100;
+        int n = 0;
 
         String[] categories = {"C1", "C2", "C3", "C4"};
         String[] states = {"S1", "S2", "S3", "S4"};
 
-        while (n-- > 0) {
+        while (n++ < 100) {
 
             jpaDao.create(new TestEntity()
                     .setCategory(categories[n % categories.length])
@@ -108,8 +108,46 @@ public class JpaDaoImplTest {
 
         }
 
+        n = 100;
 
 
+        long count = jpaDao.selectFrom(TestEntity.class, "e")
+                .select(E_TestEntity.name)
+                .contains(E_TestEntity.name, "test")
+                .count();
+
+
+        Assert.isTrue(count == n, "查询数量错误1");
+
+
+        count = jpaDao.selectFrom(TestEntity.class, "e")
+                .startsWith(E_TestEntity.name, "test")
+                .count();
+
+        Assert.isTrue(count == n, "查询数量错误2");
+
+
+        n = n - jpaDao.updateTo(TestEntity.class, "e")
+                .set(E_TestEntity.name, "updateName")
+                .in(E_TestEntity.state, "S2,S4")
+                .notIn(E_TestEntity.category, "C1", "C4")
+                .eq(E_TestEntity.editable, true)
+                .update();
+
+
+        count = jpaDao.selectFrom("jpa_dao_test_entity")
+                .startsWith(E_TestEntity.name, "test")
+                .count();
+
+        Assert.isTrue(count == n, "查询数量错误3");
+
+
+        count = jpaDao.selectFrom("jpa_dao_test_entity", "e")
+                .select(E_TestEntity.name)
+                .startsWith(E_TestEntity.name, "test")
+                .count();
+
+        Assert.isTrue(count == n, "查询数量错误3");
 
     }
 
@@ -531,7 +569,7 @@ public class JpaDaoImplTest {
     public void testCListAnno() throws Exception {
 
 
-        List<TestEntity> objects = jpaDao.findByQueryObj(TestEntity.class, new NewAnnoDto());
+        List<TestEntity> objects = jpaDao.findByQueryObj(TestEntity.class, new TestEntityDto());
 
         Assert.notNull(objects, "");
 
