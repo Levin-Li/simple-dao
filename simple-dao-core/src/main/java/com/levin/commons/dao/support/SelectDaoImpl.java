@@ -450,7 +450,7 @@ public class SelectDaoImpl<T>
      */
     protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        OrderBy orderBy = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, OrderBy.class);
+        OrderBy orderBy = QueryAnnotationUtil.findFirstMatched(varAnnotations, OrderBy.class);
 
         if (orderBy != null) {
             orderByColumns.add(new OrderByObj(orderBy.order(), orderBy.isAppendAliasPrefix() ? aroundColumnPrefix(name) : name, orderBy.type()));
@@ -515,7 +515,7 @@ public class SelectDaoImpl<T>
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
             genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
@@ -548,7 +548,7 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
+        PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
         genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 

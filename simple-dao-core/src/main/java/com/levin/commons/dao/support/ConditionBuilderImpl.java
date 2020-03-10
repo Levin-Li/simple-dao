@@ -862,7 +862,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         beforeWalkMethod(bean, method, args);
 
-
         for (int i = 0; i < parameterTypes.length; i++) {
 
             String pName = parameterNames[i];
@@ -1102,7 +1101,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         //如果是包括忽略注解，则直接忽略
-        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
+        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
             return;
         }
 
@@ -1136,7 +1135,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(this::isLogicGroupAutoClose)
                     .forEach(logicAnnotation -> end());
 
-            endLogicGroup(bean, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, END.class), value);
+            endLogicGroup(bean, QueryAnnotationUtil.findFirstMatched(varAnnotations, END.class), value);
 
         }
 
@@ -1211,7 +1210,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value) {
 
-        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
+        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
             return;
         }
 
@@ -1232,14 +1231,25 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             //如果字段上没有需要处理的注解
             //默认为 EQ
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
             boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
 
-            if (!complexType && !isNullOrEmptyTxt(value)) {
+
+            if ((!complexType) && !isNullOrEmptyTxt(value)) {
                 //如果没有注解，不是复杂类型，则默认为等于查询
                 processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, QueryAnnotationUtil.getAnnotation(Eq.class));
+            } else {
+
+                //如果不是
+                boolean isIterable = value instanceof Iterable || value instanceof Map;
+
+                //如果是注解的复杂对象
+                if (complexType && !isNullOrEmptyTxt(value) && !isIterable) {
+                    reAppendByQueryObj(value);
+                }
             }
+
 
         } else {
             daoAnnotations.stream()
@@ -1278,15 +1288,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //但是允许空opAnnotation为 null，往下走
         //支持处理 where 条件的注解
 
-        if (QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Ignore.class) != null) {
+        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
             return;
         }
 
         if (QueryAnnotationUtil.isSamePackage(opAnnotation, Eq.class)) {
 
-            verifyGroupValidation(bean, name, value, QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, Validator.class));
+            verifyGroupValidation(bean, name, value, QueryAnnotationUtil.findFirstMatched(varAnnotations, Validator.class));
 
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
             //处理where条件
             processWhereCondition(bean, varType, name, value, primitiveValue, opAnnotation);
@@ -1429,44 +1439,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         ValueHolder<Object> holder = new ValueHolder<>(bean, name, value);
 
-        String expr = genConditionExpr(complexType, name, holder, opAnnotation);
+        String expr = genConditionExpr(complexType, opAnnotation, name, holder);
 
         consumer.accept(expr, holder);
 
     }
 
-    /**
-     * 生成条件语句
-     *
-     * @param holder
-     * @param name
-     * @param op
-     * @return
-     */
-    protected String genConditionExpr(boolean complexType, String name, ValueHolder holder, Annotation op) {
-
-        String expr = "";
-
-        if (op != null) {
-            expr = genConditionExpr(complexType, op, name, holder);
-        } else {
-            //如果没有条件，默认就是相等
-            //如果是复杂对象，则递归处理
-            if (complexType) {
-
-                reAppendByQueryObj(holder.value);
-
-            } else if (QueryAnnotationUtil.isNotEmptyArray(holder.value)) {
-                throw new StatementBuildException(name + "属性错误：基本类型的数组必须声明注解");
-            } else {
-                //默认是相等操作
-                expr = aroundColumnPrefix(name) + " = " + getParamPlaceholder();
-//                expr = genConditionExpr(complexType, op, name, holder);
-            }
-        }
-
-        return expr;
-    }
 
     /**
      * 递归处理

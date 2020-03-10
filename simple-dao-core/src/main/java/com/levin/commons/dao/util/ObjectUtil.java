@@ -922,7 +922,8 @@ public abstract class ObjectUtil {
                 if (copyErrors != null) {
                     copyErrors.put(field, e);
                 } else {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, e) + " , " + ExceptionUtils.getAllCauseInfo(e, "->");
+                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field
+                            , ExceptionUtils.getAllCauseInfo(e, "->"));
 
                     if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
                         logger.warn(errInfo);
@@ -931,7 +932,8 @@ public abstract class ObjectUtil {
                     }
                 }
             } catch (StackOverflowError error) {
-                String errInfo = String.format("StackOverflowError Can't copy [%s] from %s , error:%s", propertyPath, field, error);
+                String errInfo = String.format("StackOverflowError Can't copy [%s] from %s , error:%s"
+                        , propertyPath, field, ExceptionUtils.getAllCauseInfo(error, "->"));
                 logger.error(errInfo, error);
             }
         }

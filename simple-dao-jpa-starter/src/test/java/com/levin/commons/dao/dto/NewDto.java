@@ -18,5 +18,7 @@ public class NewDto {
     String detail;
 
 
+    //不加任何注解
+    CommDto commDto = new CommDto();
 
 }

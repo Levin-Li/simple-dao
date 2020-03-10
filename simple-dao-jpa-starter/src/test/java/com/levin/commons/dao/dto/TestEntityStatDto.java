@@ -7,6 +7,9 @@ import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.support.TestEntity;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @TargetOption(entityClass = TestEntity.class)
 public class TestEntityStatDto {
@@ -29,5 +32,11 @@ public class TestEntityStatDto {
 
     @Contains
     String name = "test";
+
+    //不加任何注解
+    CommDto commDto = new CommDto();
+
+
+    List<String>  categories = new ArrayList<>();
 
 }

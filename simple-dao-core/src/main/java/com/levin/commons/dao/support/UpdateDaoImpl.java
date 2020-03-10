@@ -234,7 +234,7 @@ public class UpdateDaoImpl<T>
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.getFirstMatchedAnnotation(varAnnotations, PrimitiveValue.class);
+            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
             genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
                 appendColumns(expr, holder.value);

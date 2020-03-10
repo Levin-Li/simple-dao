@@ -237,6 +237,9 @@ public abstract class QueryAnnotationUtil {
 
         String[] names = propertyName.split("\\.");
 
+
+        ResolvableType owner = null;
+
         for (int i = 0; i < names.length; i++) {
 
             Field field = ReflectionUtils.findField(type, names[i]);
@@ -245,7 +248,9 @@ public abstract class QueryAnnotationUtil {
                 return null;
             }
 
-            type = ResolvableType.forField(field).resolve(field.getType());
+            owner = ResolvableType.forField(field, owner);
+
+            type = owner.resolve(field.getType());
         }
 
         return type;
@@ -281,8 +286,8 @@ public abstract class QueryAnnotationUtil {
     }
 
     /**
-     *
      * 获取属性名称
+     *
      * @param opAnno
      * @param name
      * @return
@@ -333,7 +338,7 @@ public abstract class QueryAnnotationUtil {
      * @param <A>
      * @return
      */
-    public static <A extends Annotation> A getFirstMatchedAnnotation(Annotation[] annotations, Class<? extends Annotation>... types) {
+    public static <A extends Annotation> A findFirstMatched(Annotation[] annotations, Class<? extends Annotation>... types) {
 
         if (annotations == null || types == null)
             return null;
@@ -543,6 +548,20 @@ public abstract class QueryAnnotationUtil {
                 && (Object.class == type || Object.class.getName().equals(((Class) type).getName()));
     }
 
+    public static boolean isPrimitiveCollection(Class value) {
+
+
+        ResolvableType resolvableType = ResolvableType.forClass(value.getClass());
+
+        Class<?> rawClass = resolvableType.resolveGeneric(0);
+
+        boolean b = resolvableType.hasGenerics();
+
+
+        System.out.println(b);
+
+        return false;
+    }
 
     /**
      * 是数组并且有原子元素
