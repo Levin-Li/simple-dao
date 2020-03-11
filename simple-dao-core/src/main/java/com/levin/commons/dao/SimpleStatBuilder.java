@@ -28,6 +28,6 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
- //   T groupByAsAnno(String expr, Map<String, Object>... paramValues);
+    T groupByAsAnno(String expr, Map<String, Object>... paramValues);
 
 }

@@ -11,8 +11,12 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.E_C;
+import com.levin.commons.dao.annotation.Eq;
+import com.levin.commons.dao.annotation.IsNull;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
+import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -1122,9 +1126,14 @@ public class SelectDaoImpl<T>
         return processStat(2, expr, paramValues);
     }
 
-  //  @Override
+    @Override
     public SelectDao<T> groupByAsAnno(String expr, Map<String, Object>... paramValues) {
-        return processStat(2, expr, paramValues);
+
+        Annotation annotation = QueryAnnotationUtil.getAnnotation(GroupBy.class);
+
+        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation);
+
+        return this;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

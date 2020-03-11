@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -532,7 +531,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     @Override
     public CB isNullOrEq(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+        appendByAnnotations(true, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
+        return (CB) this;
     }
 
     /**
