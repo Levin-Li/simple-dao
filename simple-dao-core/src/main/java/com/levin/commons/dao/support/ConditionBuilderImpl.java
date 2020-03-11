@@ -1569,10 +1569,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected String genEntityStatement() {
 
-        if (hasText(this.tableName))
+        if (hasText(this.tableName)) {
             return tableName + " " + getText(alias, " ");
-        else if (entityClass != null)
+        } else if (entityClass != null) {
             return entityClass.getName() + " " + getText(alias, " ");
+        }
 
         throw new IllegalArgumentException("entityClass or tableName is null");
     }
@@ -1585,7 +1586,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //如果包含占位符，则直接返回
         //@fix bug 20200227
-        if (column.contains(getParamPlaceholder().trim()) || column.contains(".")) {
+        if (column.contains(getParamPlaceholder().trim())
+                || !Character.isLetter(column.charAt(0))
+                || column.contains(".")) {
             return column;
         }
 

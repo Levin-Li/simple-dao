@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * 查询接口
  */
-public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>> {
+public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStatBuilder<SelectDao<T>> {
 
 
     /**

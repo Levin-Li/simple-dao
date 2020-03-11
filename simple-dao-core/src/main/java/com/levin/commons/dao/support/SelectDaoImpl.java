@@ -610,7 +610,7 @@ public class SelectDaoImpl<T>
      * @param isCountQueryResult 是否用于统计总数
      * @return
      */
-    String  genQL(boolean isCountQueryResult) {
+    String genQL(boolean isCountQueryResult) {
 
         StringBuilder builder = new StringBuilder();
 
@@ -670,7 +670,7 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + builder + "]");
         }
 
-        return ExprUtils.replace(builder.toString(),getDaoContextValues());
+        return ExprUtils.replace(builder.toString(), getDaoContextValues());
     }
 
     @Override
@@ -765,7 +765,7 @@ public class SelectDaoImpl<T>
 
     @Override
     public String genFinalStatement() {
-        return genQL(false) ;
+        return genQL(false);
     }
 
     @Override
@@ -1074,7 +1074,58 @@ public class SelectDaoImpl<T>
 
 
     }
+//////////////////////////////////////////////
 
+    private SelectDao<T> processStat(int callMethodDeep, String expr, Object... paramValues) {
+
+        if (!StringUtils.hasText(expr)) {
+            throw new IllegalArgumentException("expr has no content");
+        }
+
+        String name = new Exception().getStackTrace()[callMethodDeep].getMethodName();
+
+        name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+
+        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(name);
+
+        if (annotation == null) {
+            throw new IllegalArgumentException("Annotation " + name + " not found");
+        }
+
+        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation);
+
+        return this;
+    }
+
+    @Override
+    public SelectDao<T> count(String expr) {
+        return processStat(2, expr);
+    }
+
+    @Override
+    public SelectDao<T> avg(String expr, Map<String, Object>... paramValues) {
+        return processStat(2, expr, paramValues);
+    }
+
+    @Override
+    public SelectDao<T> sum(String expr, Map<String, Object>... paramValues) {
+        return processStat(2, expr, paramValues);
+    }
+
+    @Override
+    public SelectDao<T> max(String expr, Map<String, Object>... paramValues) {
+        return processStat(2, expr, paramValues);
+    }
+
+    @Override
+    public SelectDao<T> min(String expr, Map<String, Object>... paramValues) {
+        return processStat(2, expr, paramValues);
+    }
+
+    @Override
+    public SelectDao<T> groupByAsAnno(String expr, Map<String, Object>... paramValues) {
+        return processStat(2, expr, paramValues);
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
     static class OrderByObj

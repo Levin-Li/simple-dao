@@ -1,10 +1,7 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
-import com.levin.commons.dao.domain.E_Group;
-import com.levin.commons.dao.domain.E_User;
-import com.levin.commons.dao.domain.Group;
-import com.levin.commons.dao.domain.User;
+import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
@@ -157,15 +154,26 @@ public class JpaDaoImplTest {
     @Before
     public void initTestData() throws Exception {
 
-        groupDao.update(1L, "name-1");
 
-        long cnt = jpaDao.selectFrom(User.class).count();
-
-        if (cnt > 0) {
+        if (jpaDao.selectFrom(User.class).count() > 0) {
             return;
         }
 
-        int count = 15;
+
+        //先删除旧数据
+        jpaDao.deleteFrom(Task.class)
+                .disableSafeMode()
+                .delete();
+
+        jpaDao.deleteFrom(User.class)
+                .disableSafeMode()
+                .delete();
+
+        jpaDao.deleteFrom(Group.class)
+                .disableSafeMode()
+                .delete();
+
+        int gCount = 15;
 
         String[] states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
 
@@ -173,15 +181,17 @@ public class JpaDaoImplTest {
 
         String[] categories = {"临时", "常设", "月度", "年度"};
 
+        String[] areas = {"福州", "厦门", "深圳", "上海"};
 
-        Object one = jpaDao.selectFrom(Group.class).appendSelectColumns("max(id)").findOne();
+
+        Object one = jpaDao.selectFrom(Group.class).appendColumns("max(id)").findOne();
 
         long n = (one == null) ? 1 : (long) one;
 
         Long parentId = null;
 
 
-        while (count-- > 0) {
+        while (gCount-- > 0) {
 
             //  n++;
 
@@ -191,30 +201,77 @@ public class JpaDaoImplTest {
 
             group.setState(states[Math.abs(random.nextInt()) % states.length]);
             group.setCategory(categories[Math.abs(random.nextInt()) % categories.length]);
-//            group.setType(types[Math.abs(random.nextInt()) % types.length]);
+            group.setType(types[Math.abs(random.nextInt()) % categories.length]);
 
-            group.setScore(Math.abs(random.nextInt()));
+            group.setScore(Math.abs(random.nextInt(100)));
 
             jpaDao.create(group);
 
-            long uCount = 3 * count;
+            long uCount = 3 * gCount;
+
 
             while (uCount-- > 0) {
+
                 User user = new User();
                 user.setName("User-" + group.getId() + "-" + uCount);
 
 //                  user.setId((long) uCount);
 
                 user.setState(states[Math.abs(random.nextInt()) % states.length]);
-                user.setScore(Math.abs(random.nextInt()));
-                user.setGroup(group);
+                user.setScore(Math.abs(random.nextInt(100)));
+                user.setGroup(group)
+                        .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
                 jpaDao.create(user);
+
+
+                long taskCount = 3 * uCount;
+
+                //创建任务
+
+                while (taskCount-- > 0) {
+
+                    Task task = new Task();
+                    task.setName("Task-" + taskCount);
+
+                    jpaDao.create(task
+                            .setScore(random.nextInt(100))
+                            .setUser(user)
+                            .setState(states[Math.abs(random.nextInt()) % states.length])
+                            .setArea(areas[Math.abs(random.nextInt()) % areas.length])
+                    );
+
+                }
+
             }
 
-            parentId = group.getId();
+            if (parentId == null || (gCount % 5) == 0) {
+                parentId = group.getId();
+            }
+
+
         }
 
 
+        testJoinAndStat();
+
+    }
+
+    @Test
+    public void testJoinAndStat() {
+
+        List<Object> g = jpaDao.selectFrom(Group.class, "g")
+                .appendJoin("left join " + User.class.getName() + " u on g.id = u.group.id")
+                .appendJoin("left join " + Task.class.getName() + " t on u.id = t.user.id")
+                .count("1")
+                .avg("t.score")
+                .avg("u.score")
+                .avg("g.score")
+                .sum("t.score")
+                .groupByAsAnno(E_Group.name)
+                .find();
+
+
+        Assert.isTrue(g.size() > 0);
     }
 
     @Test
@@ -390,7 +447,9 @@ public class JpaDaoImplTest {
 
     @org.junit.Test
     public void testDelete() throws Exception {
-        jpaDao.delete(jpaDao.selectFrom(User.class).findOne());
+
+        jpaDao.delete(jpaDao.selectFrom(Task.class).findOne());
+
     }
 
     @org.junit.Test
@@ -402,7 +461,7 @@ public class JpaDaoImplTest {
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())
                 .stream()
-                .map(g -> (jpaDao.copyProperties(g, new Group(),2)))
+                .map(g -> (jpaDao.copyProperties(g, new Group(), 2)))
                 .forEach(System.out::println)
 //                .findFirst()
 //                .ifPresent(System.out::println)
@@ -425,14 +484,13 @@ public class JpaDaoImplTest {
     public void testEnv() throws Exception {
 
 
-        DaoContext.setGlobalVar("DATE_FORMAT","YYYY/MM/DD");
+        DaoContext.setGlobalVar("DATE_FORMAT", "YYYY/MM/DD");
 
 
-        DaoContext.setThreadVar("orgId",5L);
+        DaoContext.setThreadVar("orgId", 5L);
 
 
     }
-
 
 
     @org.junit.Test
@@ -455,8 +513,6 @@ public class JpaDaoImplTest {
 
         selectDao
                 .limit(1, 10)
-                .gt("area", AppType.Ios)
-//                .in("area", AppType.Ios, AppType.Android)
                 .appendByQueryObj(new UserStatDTO());
 
         System.out.println(selectDao.genFinalStatement() + "  -->   params:" + selectDao.genFinalParamList());

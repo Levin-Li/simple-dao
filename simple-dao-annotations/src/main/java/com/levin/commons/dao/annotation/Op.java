@@ -258,6 +258,24 @@ public enum Op
 
 
     /**
+     * 是否需要参数表达式
+     *
+     * @return
+     */
+    public boolean isNeedParamExpr() {
+        return leftOperandType == Param || rightOperandType == Param;
+    }
+
+    /**
+     * 是否需要字段表达式
+     *
+     * @return
+     */
+    public boolean isNeedFieldExpr() {
+        return leftOperandType == Field || rightOperandType == Field;
+    }
+
+    /**
      * 生成表达式
      * <p>
      * 生成规则：  左操作数(可空)  + " " + 操作符(可空) + " " + 前缀(可空) + " " + 右操作数(可空) + " " + 后缀(可空);

@@ -23,12 +23,15 @@ public class Group
     @GeneratedValue
     private Long id;
 
+//    String area;
+
     @Desc("状态")
     String state;
 
     @Desc("类别")
     String category;
 
+    @Desc("分数")
     Integer score;
 
 
@@ -47,44 +50,6 @@ public class Group
     public Group(String name) {
         super(name, null);
     }
-
-//    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    @Override
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-
-    public Integer getScore() {
-        return score;
-    }
-
-    public void setScore(Integer score) {
-        this.score = score;
-    }
-
 
 
     @Override

@@ -316,7 +316,19 @@
    
    意思注解将产生语句： select month , AVG(score) from XXX where month > 5 having AVG(score) > 10 
    
+   Dao 支持多表统计，如下例子：
    
+       
+       jpaDao.selectFrom(Group.class, "g")
+                       .appendJoin("left join " + User.class.getName() + " u on g.id = u.group.id")
+                       .appendJoin("left join " + Task.class.getName() + " t on u.id = t.user.id")
+                       .count("1")
+                       .avg("t.score")
+                       .avg("u.score")
+                       .avg("g.score")
+                       .sum("t.score")
+                       .groupByAsAnno(E_Group.name)
+                       .find();
       
 
 ### 6、指定字段的查询和数据更新
@@ -590,8 +602,7 @@
 
 #### 12.1 代码实例
 
-      
-       
+ 请参考测试用例：com.levin.commons.dao.support.JpaDaoImplTest
      
      
 #### 12.2 注解字段说明

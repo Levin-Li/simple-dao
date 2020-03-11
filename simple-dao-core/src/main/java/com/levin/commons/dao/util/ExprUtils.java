@@ -21,6 +21,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
 import static org.springframework.util.StringUtils.hasText;
 
 public abstract class ExprUtils {
@@ -32,6 +33,8 @@ public abstract class ExprUtils {
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
     /**
+     * 核心方法 生成语句，并返回参数
+     *
      * @param c
      * @param fieldExpr
      * @param complexType
@@ -39,7 +42,7 @@ public abstract class ExprUtils {
      * @param holder
      * @param paramPlaceholder
      * @param subQueryBuilder
-     * @param contexts         注意，越后面，优先级越高
+     * @param contexts         注意，越后面，优先级越高，要可以修改的 List 对象
      * @return
      */
     public static String genExpr(C c, String fieldExpr, boolean complexType, Class<?> expectType
@@ -54,90 +57,108 @@ public abstract class ExprUtils {
 
         boolean isNotOp = Op.Not.name().equals(op.name());
 
-        if (op.isAllowFieldFunc()) {
+        //自动
+        if (op.isNeedFieldExpr() && op.isAllowFieldFunc()) {
             fieldExpr = funcExpr(fieldExpr, c.fieldFuncs());
         }
 
         String paramExpr = "";
 
-        boolean hasDynamicExpr = true;
+        boolean hasDynamicExpr = op.isNeedParamExpr();
 
-        //优先使用子查询
-        if (hasText(c.subQuery())) {
-
-            paramExpr = c.subQuery();
-
-            hasDynamicExpr = false;
-
-        } else if (complexType) {
-
-            paramExpr = subQueryBuilder.apply(holder);
-
-        } else if (!isNotOp) {
-
-            int eleCount = 1;
-
-            //是否可以展开参数
-            if (op.isExpandParamValue()) {
-
-                //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
-                //尝试自动解析成数组
-                if (expectType != null
-//                        && !String.class.equals(expectType)  // 关键点
-                        && holder.value instanceof CharSequence) {
-                    holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
-                }
-
-
-                if (c.filterNullValue()) {
-                    holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
-                }
-
-                eleCount = QueryAnnotationUtil.eleCount(holder.value);
-
-                if (eleCount <= 0) {
-                    return "";
-                }
-
-            } else {
-                try {
-                    holder.value = ObjectUtil.convert(holder.value, expectType);
-                } catch (Exception e) {
-                }
-            }
-
-
-            // 替换成 参数占位符
-            // 只有这部分是
-
-            paramExpr = genParamExpr(op.getParamDelimiter(), paramPlaceholder, eleCount);
-
-            hasDynamicExpr = true;
-
-        }
+        //如果是 Not 操作
 
         if (isNotOp) {
+
             hasDynamicExpr = false;
+
             paramExpr = (String) holder.value;
+
+        } else if (op.isNeedParamExpr()) {  //判读该操作是否需要参数表达式
+
+            //优先使用子查询
+            if (hasText(c.subQuery())) {
+
+                paramExpr = c.subQuery();
+
+                hasDynamicExpr = false;
+
+            } else if (complexType) {
+
+                paramExpr = subQueryBuilder.apply(holder);
+
+                hasDynamicExpr = true;
+
+            } else {
+
+                int eleCount = 1;
+
+                //是否可以展开参数
+                if (op.isExpandParamValue()) {
+
+                    //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
+                    //尝试自动解析成数组
+                    if (expectType != null
+//                        && !String.class.equals(expectType)  // 关键点
+                            && holder.value instanceof CharSequence) {
+                        holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
+                    }
+
+
+                    if (c.filterNullValue()) {
+                        holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
+                    }
+
+                    eleCount = QueryAnnotationUtil.eleCount(holder.value);
+
+
+                } else {
+                    try {
+                        holder.value = ObjectUtil.convert(holder.value, expectType);
+                    } catch (Exception e) {
+                    }
+                }
+
+                // 替换成 参数占位符
+                // 只有这部分是
+
+                paramExpr = genParamExpr(op.getParamDelimiter(), paramPlaceholder, eleCount);
+
+                hasDynamicExpr = true;
+
+            }
+
+            //自动加大挂号
+            if ((hasText(c.subQuery()) || complexType)
+                    && !op.name().toLowerCase().contains("exists")) {
+                //尝试自动加挂号
+                paramExpr = autoAroundParentheses("", paramExpr, "");
+            }
+
         }
 
-        if ((hasText(c.subQuery()) || complexType)
-                && !op.name().toLowerCase().contains("exists")) {
-            //尝试自动加挂号
-            paramExpr = autoAroundParentheses("", paramExpr, "");
-        }
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
 
         final String oldParamExpr = paramExpr;
 
-        if (hasDynamicExpr) {
+        if (op.isNeedParamExpr() && hasDynamicExpr) {
             //动态参数
             paramExpr = "${:" + paramKey + "}";
         }
 
         //
-        paramExpr = funcExpr(paramExpr, c.paramFuncs());
+        if (op.isNeedParamExpr()) {
+            paramExpr = funcExpr(paramExpr, c.paramFuncs());
+        }
+
+
+        //把参数值转换为 Map
+        if (!op.isNeedParamExpr()) {
+            flattenParams(null, holder.value).stream()
+                    .filter(v -> v instanceof Map)
+                    .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
+        }
 
 
         final List<Object> paramValues = new ArrayList(7);
@@ -145,6 +166,7 @@ public abstract class ExprUtils {
         /// Function<String, String> genExpr = ql -> processParamPlaceholder(ql, paramPlaceholder, paramValues, contexts);
 
         //    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([subQuery or fieldValue])) +  surroundSuffix ";
+
 
         String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
 
@@ -161,7 +183,6 @@ public abstract class ExprUtils {
             }
 
         }, contexts).trim();
-
 
 
         if (paramValues.isEmpty()) {
