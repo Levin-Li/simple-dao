@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -478,6 +479,34 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+
+    private CB processAnno(int callMethodDeep, String expr, Object value) {
+
+//        if (!StringUtils.hasText(expr)) {
+//            throw new IllegalArgumentException("expr has no content");
+//        }
+
+        String methodName = new Exception().getStackTrace()[callMethodDeep].getMethodName();
+
+        methodName = Character.toUpperCase(methodName.charAt(0)) + methodName.substring(1);
+
+        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(methodName);
+
+        if (annotation == null) {
+            throw new IllegalArgumentException("Annotation " + methodName + " not found");
+        }
+
+        if (annotation instanceof IsNotNull
+                || annotation instanceof IsNull
+                || !isNullOrEmptyTxt(value)) {
+
+            processWhereCondition(null, null, expr, value, null, annotation);
+
+        }
+
+        return (CB) this;
+    }
+
     /**
      * is null
      *
@@ -486,10 +515,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB isNull(String entityAttrName) {
-
-        add(IsNull.class, entityAttrName, null);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, null);
     }
 
     /**
@@ -500,19 +526,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB isNotNull(String entityAttrName) {
-
-        add(IsNotNull.class, entityAttrName, null);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, null);
     }
 
 
     @Override
     public CB isNullOrEq(String entityAttrName, Object paramValue) {
-
-        appendByAnnotations(true, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -525,10 +545,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB eq(String entityAttrName, Object paramValue) {
-
-        add(Eq.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -540,10 +557,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB notEq(String entityAttrName, Object paramValue) {
-
-        add(NotEq.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -555,10 +569,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB gt(String entityAttrName, Object paramValue) {
-
-        add(Gt.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -570,10 +581,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB lt(String entityAttrName, Object paramValue) {
-
-        add(Lt.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -585,10 +593,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB gte(String entityAttrName, Object paramValue) {
-
-        add(Gte.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -600,10 +605,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB lte(String entityAttrName, Object paramValue) {
-
-        add(Lte.class, entityAttrName, paramValue);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValue);
     }
 
     /**
@@ -617,10 +619,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB between(String entityAttrName, Object... paramValues) {
-
-        add(Between.class, entityAttrName, paramValues);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValues);
     }
 
     /**
@@ -632,10 +631,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB in(String entityAttrName, Object... paramValues) {
-
-        add(In.class, entityAttrName, paramValues);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValues);
     }
 
     /**
@@ -647,36 +643,31 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB notIn(String entityAttrName, Object... paramValues) {
-
-        add(NotIn.class, entityAttrName, paramValues);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, paramValues);
     }
 
 
     /**
      * exist (sub query)
      *
-     * @param queryObjs
+     * @param exprOrQueryObj
      * @return
      */
     @Override
-    public CB exists(Object... queryObjs) {
-
-
-        return (CB) this;
+    public CB exists(Object exprOrQueryObj) {
+        return processAnno(2, "", exprOrQueryObj);
     }
 
     /**
      * not exist (sub query)
+     * <p>
+     * * @param exprOrQueryObj
      *
-     * @param queryObjs
      * @return
      */
     @Override
-    public CB notExists(Object... queryObjs) {
-
-        return (CB) this;
+    public CB notExists(Object exprOrQueryObj) {
+        return processAnno(2, "", exprOrQueryObj);
     }
 
     /**
@@ -688,10 +679,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB contains(String entityAttrName, String keyword) {
-
-        add(Contains.class, entityAttrName, keyword);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, keyword);
     }
 
     /**
@@ -703,10 +691,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB startsWith(String entityAttrName, String keyword) {
-
-        add(StartsWith.class, entityAttrName, keyword);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, keyword);
     }
 
     /**
@@ -718,10 +703,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB endsWith(String entityAttrName, String keyword) {
-
-        add(EndsWith.class, entityAttrName, keyword);
-
-        return (CB) this;
+        return processAnno(2, entityAttrName, keyword);
     }
 
 
@@ -1371,6 +1353,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
     }
+
 
     /**
      * @param value

@@ -121,19 +121,21 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * exist (sub query)
+     *
+     * 查询对象或是字符串表达式
      *
      * @return
      */
-    T exists(Object... queryObjs);
+    T exists( Object exprOrQueryObj);
 
 
     /**
-     * not exist (sub query)
+     *
+     *  查询对象或是字符串表达式
      *
      * @return
      */
-    T notExists(Object... queryObjs);
+    T notExists(Object exprOrQueryObj);
 
 
     /**

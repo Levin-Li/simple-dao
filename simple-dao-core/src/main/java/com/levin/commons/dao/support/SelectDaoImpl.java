@@ -1122,7 +1122,7 @@ public class SelectDaoImpl<T>
         return processStat(2, expr, paramValues);
     }
 
-    @Override
+  //  @Override
     public SelectDao<T> groupByAsAnno(String expr, Map<String, Object>... paramValues) {
         return processStat(2, expr, paramValues);
     }

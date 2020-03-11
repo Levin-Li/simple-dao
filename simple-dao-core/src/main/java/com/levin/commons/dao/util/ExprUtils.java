@@ -55,6 +55,8 @@ public abstract class ExprUtils {
             op = Op.Eq;
         }
 
+        boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
+
         boolean isNotOp = Op.Not.name().equals(op.name());
 
         //自动
@@ -76,6 +78,7 @@ public abstract class ExprUtils {
 
         } else if (op.isNeedParamExpr()) {  //判读该操作是否需要参数表达式
 
+
             //优先使用子查询
             if (hasText(c.subQuery())) {
 
@@ -89,6 +92,14 @@ public abstract class ExprUtils {
 
                 hasDynamicExpr = true;
 
+            } else if (isExistsOp
+                    && !hasConfig(c, op)
+                    && holder.value instanceof CharSequence) {
+
+                //如果是 Exist 操作，并且没有配置
+
+                paramExpr = holder.value.toString();
+                hasDynamicExpr = false;
             } else {
 
                 int eleCount = 1;
@@ -124,19 +135,20 @@ public abstract class ExprUtils {
 
                 paramExpr = genParamExpr(op.getParamDelimiter(), paramPlaceholder, eleCount);
 
-                hasDynamicExpr = true;
+                //@todo 对 Exist 的特别优化处理
+                //
 
+                hasDynamicExpr = true;
             }
 
             //自动加大挂号
             if ((hasText(c.subQuery()) || complexType)
-                    && !op.name().toLowerCase().contains("exists")) {
+                    && !isExistsOp) {
                 //尝试自动加挂号
                 paramExpr = autoAroundParentheses("", paramExpr, "");
             }
 
         }
-
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
 
@@ -200,6 +212,18 @@ public abstract class ExprUtils {
     public static String surroundNotExpr(C c, String expr) {
 
         return c.not() && hasText(expr) ? autoAroundParentheses(" NOT(", expr, ") ") : expr;
+
+    }
+
+
+    public static boolean hasConfig(C c, Op op) {
+
+        String paramExpr = op.isNeedParamExpr() ? funcExpr("", c.paramFuncs()) : "";
+        String fieldExpr = op.isNeedFieldExpr() ? funcExpr("", c.fieldFuncs()) : "";
+
+        String ql = c.surroundPrefix() + fieldExpr + paramExpr + c.surroundSuffix();
+
+        return hasText(ql);
 
     }
 

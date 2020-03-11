@@ -267,7 +267,7 @@ public class JpaDaoImplTest {
                 .avg("u.score")
                 .avg("g.score")
                 .sum("t.score")
-                .groupByAsAnno(E_Group.name)
+                .groupBy("g.name")
                 .find();
 
 
@@ -279,6 +279,16 @@ public class JpaDaoImplTest {
 
         System.out.printf(userApi.getEMF());
 
+    }
+
+
+    @Test
+    public void testExists() {
+
+        jpaDao.selectFrom(User.class)
+                .setContext(MapUtils.put("tab",(Object) User.class.getName()).build())
+                .exists("select 1 from dual ")
+                .count();
 
     }
 
