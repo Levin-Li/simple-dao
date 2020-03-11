@@ -265,9 +265,9 @@
        7）StatementBuilder 
  
 
-### 4、简单查询
-
-#### 4.1 查询
+### 4、DTO 查询注解
+    
+   查询注解 主要再 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
 
    DTO类字段定义示例：
 
@@ -295,7 +295,29 @@
 
 ### 5、统计查询
 
-   请参考快速上手
+   统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
+   
+        @Avg
+        @Max
+        @Min
+        @Sum
+        @Count
+        @GroupBy
+        
+   
+   统计注解 有一个 havingOp 属性，用来表示 Having 查询字句，如：
+     
+         @Avg(havingOp = Op.Gt)
+         Long avgScore = 10L;
+         
+         @GroupBy
+         @Gt 
+         int month = 5;
+   
+   意思注解将产生语句： select month , AVG(score) from XXX where month > 5 having AVG(score) > 10 
+   
+   
+      
 
 ### 6、指定字段的查询和数据更新
 
@@ -565,8 +587,14 @@
             
 ### 12、附录
 
+
+#### 12.1 代码实例
+
+      
+       
      
-#### 12.1 注解字段说明
+     
+#### 12.2 注解字段说明
     
         /**
          * 不是 NUll 对象 ，也不是空字符串

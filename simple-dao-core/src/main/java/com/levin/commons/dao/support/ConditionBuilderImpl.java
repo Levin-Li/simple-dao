@@ -233,16 +233,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB appendWhere(String conditionExpr, Object... paramValues) {
 
-        appendToWhere(conditionExpr, paramValues);
+        return appendWhere(true, conditionExpr, paramValues);
 
-        return (CB) this;
     }
 
     @Override
     public CB appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues) {
 
-        if (Boolean.TRUE.equals(isAppend))
+        if (Boolean.TRUE.equals(isAppend)) {
+
+
             appendToWhere(conditionExpr, paramValues);
+        }
 
         return (CB) this;
     }
@@ -1007,6 +1009,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             for (Map.Entry<String, Object> entry : queryParam.entrySet()) {
 
                 String name = entry.getKey();
+
+                final String oldExpr = name;
+
                 Object paramValue = entry.getValue();
 
                 if (hasPrefix) {
@@ -1032,7 +1037,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 int idx = name.indexOf("_");
 
                 if (idx != -1) {
+
                     opAnno = annotationMap.get(name.substring(0, idx));
+
                 }
 
                 if (opAnno != null) {
@@ -1058,21 +1065,21 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     continue;
                 }
 
-//                processWhereCondition(name, paramValue, notOp, opAnno);
-
-
-                Annotation[] varAnnotations = new Annotation[notOp != null ? 2 : 1];
-
-
-                varAnnotations[0] = opAnno;
-
-                if (notOp != null) {
+                if (notOp != null && opAnno != null) {
                     //@todo 对 Not 没有处理
                     //@Fix
                     // varAnnotations[1] = notOp;
-                    throw new UnsupportedOperationException();
+
+                    Map<String, Object> attributes = AnnotationUtils.getAnnotationAttributes(opAnno);
+
+                    attributes.put(E_C.not, true);
+
+                    opAnno = AnnotationUtils.synthesizeAnnotation(attributes, opAnno.annotationType(), null);
+
+                    // throw new UnsupportedOperationException(oldExpr);
                 }
 
+                Annotation[] varAnnotations = {opAnno};
 
                 processAttr(queryParam, null, name, varAnnotations,
                         paramValue != null ? paramValue.getClass() : null, paramValue);
@@ -1104,7 +1111,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
             return;
         }
-
 
         //支持多个注解
         List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
@@ -1180,14 +1186,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         || annotation instanceof Ignore)
                     continue;
 
-                //如果注解的类是在这"com.levin.commons.dao.annotation" 包下，并且不是逻辑操作注解
-                //特别关键的判断条件
 
                 String clsName = annotation.annotationType().getName();
 
+                //如果注解的类是在这"com.levin.commons.dao.annotation" 包下，并且不是逻辑操作注解
+                //特别关键的判断条件
+
                 if (clsName.startsWith(BASE_PACKAGE_NAME)
-                        && !clsName.startsWith(LOGIC_PACKAGE_NAME))
+                        && !clsName.startsWith(LOGIC_PACKAGE_NAME)) {
                     result.add(annotation);
+                }
             }
         }
 
@@ -1249,7 +1257,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //如果是注解的复杂对象
                 if (complexType && !isNullOrEmptyTxt(value) && !isIterable) {
                     reAppendByQueryObj(value);
-                } else if(complexType){
+                } else if (complexType) {
                     logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
                 }
             }

@@ -151,7 +151,9 @@ public abstract class ExprUtils {
         ql = processParamPlaceholder(ql, (key, ctxs) -> {
 
             if (key.equals(paramKey)) {
+
                 paramValues.add(holder.value);
+
                 return oldParamExpr;
             } else {
                 paramValues.add(ObjectUtil.findValue(key, true, true, ctxs));
@@ -159,6 +161,7 @@ public abstract class ExprUtils {
             }
 
         }, contexts).trim();
+
 
 
         if (paramValues.isEmpty()) {
@@ -175,7 +178,7 @@ public abstract class ExprUtils {
 
     public static String surroundNotExpr(C c, String expr) {
 
-        return c.not() && hasText(expr) ? autoAroundParentheses(" NOT", expr, "") : expr;
+        return c.not() && hasText(expr) ? autoAroundParentheses(" NOT(", expr, ") ") : expr;
 
     }
 
@@ -352,9 +355,11 @@ public abstract class ExprUtils {
     }
 
     /**
+     * 把占位符，替换掉
+     *
      * @param pattern
      * @param txt
-     * @param function
+     * @param function 替换回调
      * @return
      */
     private static String replace(Pattern pattern, String txt, Function<String, String> function) {
@@ -375,6 +380,7 @@ public abstract class ExprUtils {
 
             String key = matcher.group(2);
 
+//            把占位符，替换掉
             matcher.appendReplacement(sb, function.apply(key));
         }
 

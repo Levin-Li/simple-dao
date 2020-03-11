@@ -4,6 +4,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.IsNull;
 import com.levin.commons.dao.annotation.NotIn;
+import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -22,8 +23,8 @@ public class TestEntityStatDto {
     @Max
     Long maxScore;
 
-    @Avg
-    Long avgScore;
+    @Avg(havingOp = Op.Gt)
+    Long avgScore = 10L;
 
     @Count
     Long countScore;

@@ -8,8 +8,10 @@ import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +65,6 @@ public abstract class QueryAnnotationUtil {
 
     @PrimitiveValue
 
-
     //逻辑注解
     @AND
     @OR
@@ -79,7 +80,11 @@ public abstract class QueryAnnotationUtil {
     //////////////////////////////////
 
     @OrderBy
+
     /////////////////////////////////
+    @Select
+    @Update
+
     @SelectColumn
     @UpdateColumn
 
@@ -344,9 +349,20 @@ public abstract class QueryAnnotationUtil {
             return null;
 
         for (Annotation annotation : annotations) {
+
+            if (annotation == null) {
+                continue;
+            }
+
             for (Class type : types) {
-                if (annotation.annotationType() == type)
+
+                if (type == null) {
+                    continue;
+                }
+
+                if (annotation.annotationType() == type) {
                     return (A) annotation;
+                }
             }
         }
 

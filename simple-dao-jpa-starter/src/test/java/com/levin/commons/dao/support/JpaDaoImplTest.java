@@ -421,6 +421,19 @@ public class JpaDaoImplTest {
 
     }
 
+    @org.junit.Test
+    public void testEnv() throws Exception {
+
+
+        DaoContext.setGlobalVar("DATE_FORMAT","YYYY/MM/DD");
+
+
+        DaoContext.setThreadVar("orgId",5L);
+
+
+    }
+
+
 
     @org.junit.Test
     public void testUpdateDTO() throws Exception {

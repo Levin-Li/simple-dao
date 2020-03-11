@@ -28,9 +28,11 @@ public class User
     String area;
 
     @ManyToOne
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "group_id")
     Group group;
 
+    @Column
+    String job;
 
     Integer score;
 
