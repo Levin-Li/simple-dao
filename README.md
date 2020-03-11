@@ -4,7 +4,7 @@
 
    SimpleDao的目标
 
-   1、基本不再编写查询语句（SQL或JPQL）。
+   1、减少直接编写查询语句（SQL或JPQL），提升开发效率，减少代码量，降低编码能力要求。
 
    2、简化DAO层，或是直接放弃具体的Domain对象DAO层，使用支持泛型通用的Dao。
 
@@ -19,10 +19,12 @@
    SimpleDao优化后的过程：
 
    client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
-
-
+   
+   
 ### 1 快速上手
-
+   
+  要求 Spring boot 2.0.5 以上的环境。
+   
 #### 1.1 引入依赖
         <dependency>
             <groupId>com.levin.commons.maven</groupId>
@@ -37,11 +39,10 @@
     @Data
     @TargetOption(entityClass = TestEntity.class)
     public class TestEntityStatDto {
-    
-        
+           
         @Min
-        Long minScore;
-    
+        Long minScore; //当minScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 minScore -> score
+        
         @Max
         Long maxScore;
     
@@ -53,14 +54,10 @@
     
         @GroupBy
         @NotIn
-        String[] state = {"A", "B", "C"};
-        
-        //数组等价的表达方式，集成 Spring 的类型转换器，数据类型自动转换
-        //String   state = "A,B,C";
+        String[] state = {"A", "B", "C"}; 
     
         @Contains
-        String name = "test";
-    
+        String name = "test"; 
     }
    
 
@@ -420,9 +417,10 @@
 
 ### 10、使用注意事项
 
-#### 10.1 无注解的情况
+#### 10.1  DTO 查询对象字段无注解的情况
 
 
+##### 10.1.1 基本类型字段无注解
   基本类型无注解示例：
 
        Long id;
@@ -435,7 +433,8 @@
   注意以上id字段并没有生产条件，默认情况下，字段值为null将忽略这个字段。  null值或是空字符串，字段都将被忽略。
 
 
-##### 10.1.2 复杂类型字段
+
+##### 10.1.2 复杂类型字段无注解
 
    复杂类型的定义为：
 
@@ -448,7 +447,8 @@
       //无注解
       DTO queryDTO = new DTO();
 
-   以上字段将会被递归解析，所有生产的语句将会被加入当前语句中。
+   以上字段将会被递归解析，所产生的语句将会被加入当前语句中。
+   
 
 #### 10.2 强制忽略
 
@@ -473,7 +473,7 @@
 
 #### 10.4 变量上下文
 
-   SPEL 中可以使用，任意的查询语句中也都可以使用
+  SPEL 中可以使用，任意的查询语句中也都可以使用
    
 
   可用默认变量：
@@ -501,9 +501,7 @@
       
       参数上下文
       
-      
-      
-
+            
 #### 10.4 有效的注解
 
    如果注解标注在 Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT 三种字段上将被忽略。

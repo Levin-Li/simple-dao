@@ -1244,9 +1244,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //如果不是
                 boolean isIterable = value instanceof Iterable || value instanceof Map;
 
+                //@todo 数据类型的支持
+
                 //如果是注解的复杂对象
                 if (complexType && !isNullOrEmptyTxt(value) && !isIterable) {
                     reAppendByQueryObj(value);
+                } else if(complexType){
+                    logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
                 }
             }
 

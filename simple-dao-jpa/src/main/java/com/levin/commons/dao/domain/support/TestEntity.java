@@ -1,5 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
+import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
@@ -29,5 +30,8 @@ public class TestEntity
 
     @Desc("分数")
     Integer score;
+
+    @Desc("操作")
+    Op op;
 
 }

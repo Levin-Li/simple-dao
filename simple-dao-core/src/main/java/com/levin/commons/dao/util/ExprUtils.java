@@ -83,10 +83,11 @@ public abstract class ExprUtils {
                 //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
                 //尝试自动解析成数组
                 if (expectType != null
-                        && !String.class.equals(expectType)
+//                        && !String.class.equals(expectType)  // 关键点
                         && holder.value instanceof CharSequence) {
                     holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
                 }
+
 
                 if (c.filterNullValue()) {
                     holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);

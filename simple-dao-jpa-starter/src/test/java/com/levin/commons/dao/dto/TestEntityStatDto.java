@@ -3,11 +3,13 @@ package com.levin.commons.dao.dto;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.NotIn;
+import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.support.TestEntity;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Data
@@ -30,6 +32,9 @@ public class TestEntityStatDto {
     @NotIn
     String[] state = {"A", "B", "C"};
 
+    @NotIn
+    String op = "Eq,Lt,Gt,"; // Arrays.stream(Op.values()).reduce("", (op1, op2) -> op1 + "," + op2, null);
+
     @Contains
     String name = "test";
 
@@ -37,6 +42,6 @@ public class TestEntityStatDto {
     CommDto commDto = new CommDto();
 
 
-    List<String>  categories = new ArrayList<>();
+    List<String> categories = new ArrayList<>();
 
 }

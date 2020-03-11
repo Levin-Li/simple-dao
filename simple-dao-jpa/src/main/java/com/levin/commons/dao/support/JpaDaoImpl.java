@@ -598,7 +598,7 @@ public class JpaDaoImpl
 
         if (logger.isDebugEnabled()) {
 
-            logger.debug("Old Statement:" + oldStatement);
+           // logger.debug("Old Statement:" + oldStatement);
 
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
@@ -641,6 +641,7 @@ public class JpaDaoImpl
 
 
     public int getParamStartIndex(boolean isNative) {
+
         //   return (isNative && paramStartIndex < 1) ? (paramStartIndex + 1) : paramStartIndex;
 
         boolean isJdbcParamPlaceholder = MiniDao.DEFAULT_JDBC_PARAM_PLACEHOLDER.trim().equals(this.getParamPlaceholder(isNative).trim());
