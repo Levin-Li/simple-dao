@@ -289,7 +289,7 @@ public class JpaDaoImplTest {
 
         List<TestEntityStatDto> dtoList = jpaDao.findByQueryObj(TestEntityStatDto.class, new TestEntityStatDto());
 
-        Assert.isTrue(dtoList.size() > 0,"TestEntity统计结果错误");
+        Assert.isTrue(dtoList.size() > 0, "TestEntity统计结果错误");
 
     }
 
@@ -364,17 +364,21 @@ public class JpaDaoImplTest {
 
 
         List<Group> groups = jpaDao
-                .selectFrom("jpa_dao_test_Group", "t")
+                .selectFrom(Group.class, "t")
                 //   .select("*")
-                .select("id")
+                //  .select("id")
                 //    .appendWhere("count(distinct o)")
 
                 .eq(E_Group.T_category, "adfsdafas")
                 .eq(E_Group.T_name, "adfsdafas")
-                .findOne();
-
+                .find(e -> {
+                    // jpaDao.getEntityManager().detach(e);
+                    return (Group) e;
+                });
 
         System.out.println(r);
+
+        System.out.println(groups);
 
     }
 
@@ -394,11 +398,15 @@ public class JpaDaoImplTest {
 
         jpaDao.selectFrom(User.class, "u")
                 .appendJoinFetchSet(true, E_User.group)
-                .gt(E_User.id, "5")
+                .gt(E_User.id, "100")
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())
                 .stream()
-                .forEach(g -> System.out.println(g));
+                .map(g -> (jpaDao.copyProperties(g, new Group(),2)))
+                .forEach(System.out::println)
+//                .findFirst()
+//                .ifPresent(System.out::println)
+        ;
 
     }
 
@@ -643,7 +651,8 @@ public class JpaDaoImplTest {
         List entities = selectDao
                 .limit(1, 10)
                 //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
-                .appendByQueryObj(new UserSelectDTO().setNamedParams(MapUtils.asMap("minScore", 224, "groupName", "'group'")))
+                .appendByQueryObj(new UserSelectDTO()
+                        .setNamedParams(MapUtils.asMap("minScore", 224, "groupName", "'group'")))
                 //  .appendWhereEquals("", "")
                 .find();
 

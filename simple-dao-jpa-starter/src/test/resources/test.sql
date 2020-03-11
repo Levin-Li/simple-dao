@@ -1,11 +1,1 @@
-Select
-Min( score ) ,
-Max( score ) ,
-Avg( score ) ,
-Count( 1 ) ,
-state
-From com.levin.commons.dao.domain.support.TestEntity
-Where
-state NOT IN (  ?1 , ?2 , ?3  )
-AND name LIKE '%'||  ?4  ||'%'
-Group By  state
+Select u.state , group.name  From com.levin.commons.dao.domain.User u   Where u.name =   ?1  AND u.enable =   ?2  AND u.editable =   ?3  AND (u.createTime >   ?4  OR u.score Between   ?5 AND ?6 ) AND u.remark LIKE   ?7  AND group.name LIKE   ?8  AND NOT EXISTS ( select 'namedParams', from com.levin.commons.dao.domain.User t where u.id = t.id and t.score >  ?9  and t.name like 'group' ) AND NOT EXISTS (   From com.levin.commons.dao.domain.User     Where name =   ?10  AND state IN (  ?11 , ?12 , ?13  ) AND editable =   ?14  AND (createTime <   ?15  OR score Between   ?16 AND ?17 )  Order By  name Desc ) AND u.name IN (  ( From com.levin.commons.dao.domain.User     Where name =   ?18  AND state IN (  ?19 , ?20 , ?21  ) AND editable =   ?22  AND (createTime <   ?23  OR score Between   ?24 AND ?25 )  Order By  name Desc )  ) AND u.score >   ( From com.levin.commons.dao.domain.User     Where name =   ?26  AND state IN (  ?27 , ?28 , ?29  ) AND editable =   ?30  AND (createTime <   ?31  OR score Between   ?32 AND ?33 )  Order By  name Desc )  Group By  u.state Having  NOT u.state IN (  ?34 , ?35 , ?36  )  Order By  u.name Desc

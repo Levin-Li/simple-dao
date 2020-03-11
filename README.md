@@ -261,6 +261,8 @@
        5) SimpleDao
        
        6) JpaDao
+       
+       7）StatementBuilder 
  
 
 ### 4、简单查询

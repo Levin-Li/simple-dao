@@ -256,6 +256,14 @@ public abstract class ObjectUtil {
 
             if (source != null) {
                 source = result = getValue(source, name.trim(), isThrowExWhenPropertyNotFound);
+
+                //防止代理对象
+                if (source instanceof Collection) {
+
+                } else if (source instanceof Map) {
+
+                }
+
                 key = null;
             }
         }
@@ -896,6 +904,10 @@ public abstract class ObjectUtil {
 
                 if (isIgnore(fieldPropertyPath, source, target, field, fieldType, ignoreProperties)) {
                     continue;
+                }
+
+                if (invokeDeep > 5) {
+                    logger.warn("*** 递归拷贝调用层次过多 "+field + " " + fieldPropertyPath + " " + invokeDeep);
                 }
 
                 Object value = getIndexValue(source, propertyName);

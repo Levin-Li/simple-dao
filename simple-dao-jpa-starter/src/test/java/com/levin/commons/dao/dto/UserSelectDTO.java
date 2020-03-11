@@ -14,7 +14,7 @@ import java.util.Map;
 @Accessors(chain = true)
 public class UserSelectDTO extends UserDTO {
 
-    @SelectColumn
+    @SelectColumn("group.name")
     @Like("group.name")
     String groupName = "Group";
 
@@ -33,7 +33,7 @@ public class UserSelectDTO extends UserDTO {
     Map param = new HashMap();
 
     //子查询，并使用命名参数，命名参数从Map变量中取
-    @NotExists(subQuery = "select name from xxx.tab t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
+    @NotExists(subQuery = "select '${_FIELD_NAME}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
 //            int minScore =5;
     Map<String, Object> namedParams = new HashMap<>();
 

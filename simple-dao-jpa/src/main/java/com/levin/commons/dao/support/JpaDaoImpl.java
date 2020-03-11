@@ -261,11 +261,14 @@ public class JpaDaoImpl
      */
     @Override
     public <T> T copyProperties(Object source, T target, String... ignoreProperties) {
-
         return (T) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
 
     }
 
+    @Override
+    public <T> T copyProperties(Object source, Object target, int deep, String... ignoreProperties) {
+        return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
+    }
 
     @Override
     public JpaDao setParamPlaceholder(String paramPlaceholder) {
@@ -598,7 +601,7 @@ public class JpaDaoImpl
 
         if (logger.isDebugEnabled()) {
 
-           // logger.debug("Old Statement:" + oldStatement);
+            // logger.debug("Old Statement:" + oldStatement);
 
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
