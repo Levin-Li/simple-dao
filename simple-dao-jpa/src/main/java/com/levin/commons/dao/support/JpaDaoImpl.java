@@ -746,7 +746,9 @@ public class JpaDaoImpl
 
         Map<String, Parameter> parameterMap = new LinkedHashMap<>();
 
-        query.getParameters().stream()
+        Set<Parameter<?>> parameters = query.getParameters();
+
+        parameters.stream()
                 .filter(p -> p.getName() != null)
                 .forEach(p -> {
                     parameterMap.put(p.getName(), p);

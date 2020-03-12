@@ -99,7 +99,9 @@ public abstract class ExprUtils {
                 //如果是 Exist 操作，并且没有配置
 
                 paramExpr = holder.value.toString();
+
                 hasDynamicExpr = false;
+
             } else {
 
                 int eleCount = 1;
