@@ -758,7 +758,6 @@ public class JpaDaoImpl
                 //如果是Map，就设置命名参数
                 for (Map.Entry<String, Parameter> entry : parameterMap.entrySet()) {
                     try {
-
                         //没有属性会抛出异常
                         Object value = ObjectUtil.getIndexValue(paramValue, entry.getKey(), true);
 
@@ -767,7 +766,6 @@ public class JpaDaoImpl
                     } catch (Exception e) {
 
                     }
-
                 }
 
             } else {

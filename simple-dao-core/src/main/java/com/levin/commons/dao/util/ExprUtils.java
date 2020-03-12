@@ -216,12 +216,23 @@ public abstract class ExprUtils {
     }
 
 
+    /**
+     * 测试一个注解是否是空注解
+     *
+     * @param c
+     * @param op
+     * @return
+     */
     public static boolean hasConfig(C c, Op op) {
+
+        if (op == null) {
+            op = c.op();
+        }
 
         String paramExpr = op.isNeedParamExpr() ? funcExpr("", c.paramFuncs()) : "";
         String fieldExpr = op.isNeedFieldExpr() ? funcExpr("", c.fieldFuncs()) : "";
 
-        String ql = c.surroundPrefix() + fieldExpr + paramExpr + c.surroundSuffix();
+        String ql = c.surroundPrefix() + c.value() + c.subQuery() + fieldExpr + paramExpr + c.surroundSuffix();
 
         return hasText(ql);
 
