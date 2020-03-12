@@ -284,10 +284,44 @@ public class JpaDaoImplTest {
 
 
     @Test
+    public void testAnno() {
+
+
+        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new AnnoTest());
+
+//        System.out.println(byQueryObj);
+
+        Object aa = jpaDao.find("  From com.levin.commons.dao.domain.User e   Where e.id =   ?1  AND e.state =   ?2   Order By  e.id DESC",1,"ss");
+
+        System.out.println(aa);
+
+    }
+
+
+    @Test
+    public void testAnno2() {
+
+
+        Object one = jpaDao.selectFrom(User.class,"u").eq(E_User.id,1).findOne();
+
+        System.out.println(one);
+
+        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
+
+        System.out.println(one);
+
+
+        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ?0  order by u.id desc",1).findOne();
+
+        System.out.println(one);
+
+    }
+
+    @Test
     public void testExists() {
 
         jpaDao.selectFrom(User.class)
-                .setContext(MapUtils.put("tab",(Object) User.class.getName()).build())
+                .setContext(MapUtils.put("tab", (Object) User.class.getName()).build())
                 .exists("select count(1) from ${tab} ")
                 .count();
 
@@ -726,6 +760,8 @@ public class JpaDaoImplTest {
     @org.junit.Test
     public void testSelectFrom() throws Exception {
 
+        long millis = System.currentTimeMillis();
+
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class, "u");
 
         List entities = selectDao
@@ -736,7 +772,75 @@ public class JpaDaoImplTest {
                 //  .appendWhereEquals("", "")
                 .find();
 
+
+        millis = System.currentTimeMillis() - millis;
+
         System.out.println("testSelectFrom:" + entities);
+
+    }
+
+    @org.junit.Test
+    public void testSelectTime() throws Exception {
+
+        long millis = System.currentTimeMillis();
+
+        SelectDao<User> selectDao = jpaDao.selectFrom(User.class, "u");
+
+
+        jpaDao.selectFrom(User.class,"u")
+                .appendByQueryObj(new GroupStatDTO())
+                .genFinalStatement();
+
+
+
+        millis = System.currentTimeMillis() - millis;
+
+        System.out.println("1 testSelectTime:" + millis);
+
+
+        millis = System.currentTimeMillis();
+
+        jpaDao.selectFrom(User.class,"u")
+                .appendByQueryObj(new TestEntityStatDto())
+                .genFinalStatement();
+
+
+        millis = System.currentTimeMillis() - millis;
+
+        System.out.println("2 testSelectTime:" + millis);
+
+
+
+        millis = System.currentTimeMillis();
+
+        jpaDao.selectFrom(User.class,"u")
+                .appendByQueryObj(new SubQueryDTO())
+                .genFinalStatement();
+
+
+        millis = System.currentTimeMillis() - millis;
+
+        System.out.println("3 testSelectTime:" + millis);
+
+
+        millis = System.currentTimeMillis();
+
+
+
+        selectDao
+                .limit(1, 10)
+                //.where(" 3=?2 and 1 = :test and 2 = ?1 AND e.name like :likeName", map)
+                .appendByQueryObj(new UserSelectDTO()
+                        .setNamedParams(MapUtils.asMap("minScore", 224, "groupName", "'group'")))
+                //  .appendWhereEquals("", "")
+                .genFinalStatement();
+
+        selectDao.genFinalParamList();
+
+
+        millis = System.currentTimeMillis() - millis;
+
+        System.out.println("4 testSelectTime:" + millis);
 
     }
 

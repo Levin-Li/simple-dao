@@ -174,7 +174,11 @@ public class JpaDaoImpl
                     .getDeclaredMethod("getVersionString")
                     .invoke(null);
 
+            //
+            logger.info("*** org.hibernate ***  Version:" + version);
+
             return Integer.parseInt(version.substring(0, version.indexOf(".")));
+
         } catch (IllegalAccessException e) {
             logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
         } catch (InvocationTargetException e) {
@@ -754,7 +758,6 @@ public class JpaDaoImpl
                 .forEach(p -> {
                     parameterMap.put(p.getName(), p);
                 });
-
 
         for (Object paramValue : paramValueList) {
             if (paramValue instanceof Map) {
