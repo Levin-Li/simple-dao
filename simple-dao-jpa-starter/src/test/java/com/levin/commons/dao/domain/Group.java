@@ -54,6 +54,6 @@ public class Group
 
     @Override
     public String toString() {
-        return   super.toString() + " " + state;
+        return   name + "[" + state+"]";
     }
 }

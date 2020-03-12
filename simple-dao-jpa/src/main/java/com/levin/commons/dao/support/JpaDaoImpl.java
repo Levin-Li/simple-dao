@@ -759,6 +759,8 @@ public class JpaDaoImpl
                     parameterMap.put(p.getName(), p);
                 });
 
+
+
         for (Object paramValue : paramValueList) {
             if (paramValue instanceof Map) {
                 //如果是Map，就设置命名参数

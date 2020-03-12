@@ -2,6 +2,7 @@ package com.levin.commons.dao.util;
 
 
 import com.levin.commons.dao.DeepCopy;
+import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.service.domain.Desc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -292,7 +293,7 @@ public abstract class ObjectUtil {
         if (source == null) {
 
             if (isThrowExWhenPropertyNotFound) {
-                throw new IllegalArgumentException("key [" + propertyName + "] not found on null object");
+                throw new PropertyNotFoundException("key [" + propertyName + "] not found on null object");
             }
 
             return null;
@@ -304,7 +305,7 @@ public abstract class ObjectUtil {
             Map map = Map.class.cast(source);
 
             if (isThrowExWhenPropertyNotFound && !map.containsKey(propertyName)) {
-                throw new IllegalArgumentException("key [" + propertyName + "] not found in map");
+                throw new PropertyNotFoundException("key [" + propertyName + "] not found in map");
             }
 
             return (T) map.get(propertyName);
@@ -330,10 +331,11 @@ public abstract class ObjectUtil {
             } catch (Exception e) {
 
                 //如果是 hibernate 延迟加载错误
-                if (ExceptionUtils.getCauseByStartsWith(e, "org.hibernate.") != null)
-                    return null;
+                Throwable cause = ExceptionUtils.getCauseByStartsWith(e, "org.hibernate.");
 
-                ReflectionUtils.rethrowRuntimeException(e);
+                if (cause == null) {
+                    ReflectionUtils.rethrowRuntimeException(e);
+                }
             }
         }
 
@@ -347,7 +349,7 @@ public abstract class ObjectUtil {
                 ReflectionUtils.rethrowRuntimeException(e);
             }
         } else if (isThrowExWhenPropertyNotFound) {
-            throw new IllegalArgumentException(source.getClass() + " can't find property:" + propertyName);
+            throw new PropertyNotFoundException(source.getClass() + " can't find property:" + propertyName);
         }
 
         return null;
@@ -708,8 +710,8 @@ public abstract class ObjectUtil {
         if (maxCopyDeep > 0
                 && invokeDeep > maxCopyDeep) {
             //如果超出拷贝层数，买家返回Null
-            // return null;
-            throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
+             return null;
+         //   throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
         }
 ///////////////////////////////////////////////////////////////
 
@@ -906,8 +908,8 @@ public abstract class ObjectUtil {
                     continue;
                 }
 
-                if (invokeDeep > 5) {
-                    logger.warn("*** 递归拷贝调用层次过多 "+field + " " + fieldPropertyPath + " " + invokeDeep);
+                if (invokeDeep > 5 && invokeDeep % 3 == 0) {
+                    logger.warn("*** 递归拷贝调用层次过多 " + field + " " + fieldPropertyPath + " " + invokeDeep);
                 }
 
                 Object value = getIndexValue(source, propertyName);
@@ -930,12 +932,16 @@ public abstract class ObjectUtil {
                             ignoreProperties));
                 }
 
+            } catch (PropertyNotFoundException | WarnException ex) {
+                if (logger.isDebugEnabled()) {
+                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
+                    logger.debug(errInfo);
+                }
             } catch (Exception e) {
                 if (copyErrors != null) {
                     copyErrors.put(field, e);
                 } else {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field
-                            , ExceptionUtils.getAllCauseInfo(e, "->"));
+                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->"));
 
                     if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
                         logger.warn(errInfo);

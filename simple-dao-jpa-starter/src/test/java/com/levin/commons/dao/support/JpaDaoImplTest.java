@@ -306,12 +306,12 @@ public class JpaDaoImplTest {
 
         System.out.println(one);
 
-        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
+  //      one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
 
         System.out.println(one);
 
 
-        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ?0  order by u.id desc",1).findOne();
+        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ?1  order by u.id desc",1).findOne();
 
         System.out.println(one);
 
@@ -461,7 +461,7 @@ public class JpaDaoImplTest {
         jpaDao.save(entity);
 
         List r = jpaDao.find(true, Group.class, 1, 100
-                , "select * from jpa_dao_test_Group where 1= ? and 2=? and '3'=:name"
+                , "select * from jpa_dao_test_Group where 1 = ? and 2 = ? and '3'=:name"
                 , 1, 2, MapUtils.asMap("name", "3"));
 
 
@@ -478,7 +478,7 @@ public class JpaDaoImplTest {
                     return (Group) e;
                 });
 
-        System.out.println(r);
+     //   System.out.println(r);
 
         System.out.println(groups);
 

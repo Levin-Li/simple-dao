@@ -133,19 +133,15 @@ public abstract class ExprUtils {
                 }
 
                 // 替换成 参数占位符
-                // 只有这部分是
 
                 paramExpr = genParamExpr(op.getParamDelimiter(), paramPlaceholder, eleCount);
 
-                //@todo 对 Exist 的特别优化处理
-                //
 
                 hasDynamicExpr = true;
             }
 
             //自动加大挂号
-            if ((hasText(c.subQuery()) || complexType)
-                    && !isExistsOp) {
+            if ((hasText(c.subQuery()) || complexType) && !isExistsOp) {
                 //尝试自动加挂号
                 paramExpr = autoAroundParentheses("", paramExpr, "");
             }

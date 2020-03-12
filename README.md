@@ -31,6 +31,7 @@
             <artifactId>simple-dao-jpa-starter</artifactId>
             <version>2.x.x-SNAPSHOT</version>
         </dependency>
+        
 ##### 1.2 定义DTO及注解
 
      /**
@@ -61,8 +62,15 @@
     }
    
 
-##### 1.3 执行查询
+##### 1.3 配置JPA实体扫描 & 执行查询
 
+  1、在boot启动类上配置实体扫描注解
+   
+      @EntityScan({"com.levin.commons.dao","com.xxx.xxx.entities"})
+  
+        
+  2、执行查询
+  
       @Autowired
       JpaDao jpaDao;
       

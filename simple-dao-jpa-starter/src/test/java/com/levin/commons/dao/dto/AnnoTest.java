@@ -25,13 +25,29 @@ public class AnnoTest {
     @Lt
     @Lte
     @Gt
-    @Gte
-
+    @Gte(not = true)
     String state ="S1";
 
 
 
     @IsNotNull(value = "name",condition = "#_val != null and #_val")
     Boolean onStore = true;
+
+
+
+    @Eq
+    @NotEq
+    @Like
+    @NotLike(not = true)
+    @Contains
+    @StartsWith
+    @EndsWith
+    @In
+    @NotIn(not = true)
+    @Lt
+    @Lte
+    @Gt
+    @Gte(not = true)
+    String name ="S1";
 
 }
