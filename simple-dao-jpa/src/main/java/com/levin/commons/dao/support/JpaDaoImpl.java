@@ -652,7 +652,7 @@ public class JpaDaoImpl
 
         //如果是？占位符 并且不是原生查询才返回0
 
-        return isJdbcParamPlaceholder && !isNative ? 0 : 1;
+        return (isJdbcParamPlaceholder && !isNative) ? 0 : 1;
 
     }
 
@@ -748,6 +748,7 @@ public class JpaDaoImpl
 
         Set<Parameter<?>> parameters = query.getParameters();
 
+        //分离出命名参数
         parameters.stream()
                 .filter(p -> p.getName() != null)
                 .forEach(p -> {
@@ -774,7 +775,12 @@ public class JpaDaoImpl
 
                 paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
 
-                query.setParameter(pIndex, paramValue);
+                //尝试使用命名参数
+                if (parameterMap.containsKey("" + pIndex)) {
+                    query.setParameter("" + pIndex, paramValue);
+                } else {
+                    query.setParameter(pIndex, paramValue);
+                }
 
                 //关键步骤
                 pIndex++;
