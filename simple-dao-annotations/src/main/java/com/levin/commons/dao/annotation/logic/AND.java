@@ -30,7 +30,6 @@ public @interface AND {
     boolean autoClose() default false;
 
     /**
-     *
      * 是否是必须
      *
      * @return

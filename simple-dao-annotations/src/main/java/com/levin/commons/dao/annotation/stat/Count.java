@@ -1,6 +1,5 @@
 package com.levin.commons.dao.annotation.stat;
 
-import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
 
@@ -143,7 +142,7 @@ public @interface Count {
      *
      * @return
      */
-    String subQuery() default "";
+    String paramExpr() default "";
 
 
     /**
@@ -158,6 +157,6 @@ public @interface Count {
      *
      * @return
      */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([subQuery or fieldValue])) +  surroundSuffix ";
+    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
 }

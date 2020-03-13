@@ -2,6 +2,7 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -14,26 +15,26 @@ import java.util.Map;
 @Accessors(chain = true)
 public class UserSelectDTO extends UserDTO {
 
-    @SelectColumn("group.name")
+    @Select("group.name")
     @Like("group.name")
     String groupName = "Group";
 
     @Ignore
-    @SelectColumn
+    @Select
     String name;
 
     
 
     @Ignore
-    @SelectColumn("score")
+    @Select("score")
     UserStatDTO selectSubQueryDTO = new UserStatDTO();
 
     @Ignore
-    @SelectColumn(value = "score", subQuery = "select 3000 from xxx.tab t where u.id = ${:name1}")
+    @Select(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = ${:name1}")
     Map param = new HashMap();
 
     //子查询，并使用命名参数，命名参数从Map变量中取
-    @NotExists(subQuery = "select '${_FIELD_NAME}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
+    @NotExists(paramExpr = "select '${_name}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
 //            int minScore =5;
     Map<String, Object> namedParams = new HashMap<>();
 

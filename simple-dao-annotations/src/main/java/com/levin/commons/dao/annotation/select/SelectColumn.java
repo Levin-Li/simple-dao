@@ -1,7 +1,6 @@
 package com.levin.commons.dao.annotation.select;
 
 
-import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
 
@@ -157,7 +156,7 @@ public @interface SelectColumn {
      *
      * @return
      */
-    String subQuery() default "";
+    String paramExpr() default "";
 
 
     /**
@@ -172,6 +171,6 @@ public @interface SelectColumn {
      *
      * @return
      */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([subQuery or fieldValue])) +  surroundSuffix ";
+    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
 }

@@ -33,19 +33,12 @@ public @interface OrderBy {
     String value() default "";
 
     /**
-     *
      * 是否是必须的
      *
      * @return
      */
     boolean require() default false;
 
-    /**
-     * 是否增加别名前缀
-     *
-     * @return
-     */
-    boolean isAppendAliasPrefix() default true;
 
     /**
      * 表达式，考虑支持Groovy和SpEL

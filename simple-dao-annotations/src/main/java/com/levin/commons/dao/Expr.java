@@ -12,5 +12,4 @@ public interface Expr<L, R> {
     String gen(L l, R r);
 
 
-
 }

@@ -417,6 +417,15 @@ public class JpaDaoImpl
         return update(isNative, -1, -1, statement, paramValues);
     }
 
+    @Override
+    public int updateByQueryObj(Object... queryObjs) {
+        return newDao(UpdateDao.class, queryObjs).update();
+    }
+
+    @Override
+    public int deleteByQueryObj(Object... queryObjs) {
+        return newDao(DeleteDao.class, queryObjs).delete();
+    }
 
     /**
      * 替换默认的占位符
@@ -758,7 +767,6 @@ public class JpaDaoImpl
                 .forEach(p -> {
                     parameterMap.put(p.getName(), p);
                 });
-
 
 
         for (Object paramValue : paramValueList) {

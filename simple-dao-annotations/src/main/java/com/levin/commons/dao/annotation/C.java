@@ -18,7 +18,7 @@ import java.lang.annotation.*;
  * <p>
  * <p>
  * 被注解的字段值变量名称：_val
- * 字段名或是注解的Value值，变量名称：_FIELD_NAME
+ * 字段名或是注解的Value值，变量名称：_name
  * <p>
  * 语句替换规则
  * <p>
@@ -29,7 +29,7 @@ import java.lang.annotation.*;
  * <p>
  * 3、字符串替换：${paramName}
  * <p>
- * 4、整个语句产生后最后再进行字符串内容的替换，字符串内容替换使用表达为 ${}，比如${_FIELD_NAME} --> 会被替换成字段名
+ * 4、整个语句产生后最后再进行字符串内容的替换，字符串内容替换使用表达为 ${}，比如${_name} --> 会被替换成字段名
  * <p>
  * <p>
  * 例子：
@@ -161,18 +161,12 @@ public @interface C {
     String surroundPrefix() default "";
 
     /**
-     * 子查询表达式
-     * <p>
-     * <p/>
-     * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
-     * <p>
-     * <p>
-     * 被注解的字段，
-     * 如果是是数组，列表，如果
+     * 子查询或是表达式
      *
      * @return
      */
-    String subQuery() default "";
+
+    String paramExpr() default "";
 
 
     /**
@@ -182,12 +176,13 @@ public @interface C {
      */
     String surroundSuffix() default "";
 
+
     /**
      * 描述信息
      *
      * @return
      */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([subQuery or fieldValue])) +  surroundSuffix ";
+    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix ";
 
 
 }

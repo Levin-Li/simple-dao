@@ -254,7 +254,7 @@
      @EnableProxyBean(registerTypes = EntityRepository.class)                
 
 
-### 3 组件核心接口
+### 3 组件接口及注解
 
 #### 3.1 Dao接口
 
@@ -272,6 +272,14 @@
        
        7）StatementBuilder 
  
+ 
+#### 3.2 注解的语句生成规则
+
+  操作枚举类：com.levin.commons.dao.annotation.Op，定义了常见的 sql 表达式。
+  
+
+  语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
+
 
 ### 4、DTO 查询注解
     
@@ -405,18 +413,18 @@
 ### 8、子查询
  
 
-#### 8.1 手动指定子查询语句(subQuery属性)
+#### 8.1 手动指定子查询语句(_name属性)
 
           @Ignore
           @SelectColumn("score")
           UserStatDTO selectSubQueryDTO = new UserStatDTO();
 
           @Ignore
-          @SelectColumn(value = "score", subQuery = "select 3000 from xxx.tab t where u.id = t.id")
+          @SelectColumn(value = "score", _name = "select 3000 from xxx.tab t where u.id = t.id")
           Map param = new HashMap();
 
           //子查询，并使用命名参数，命名参数从Map变量中取
-          @NotExists(subQuery = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
+          @NotExists(_name = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
           Map<String, Object> namedParams = new HashMap<>();
 
 
@@ -526,7 +534,7 @@
     
        #_this 表示DTO对象
     
-       #_FIELD_NAME 当前注解所在的字段名
+       #_name 当前注解所在的字段名
     
        #_isSelect 表示当前是否是SelectDao
     
@@ -733,7 +741,7 @@
          *
          * @return
          */
-        String subQuery() default "";
+        String _name() default "";
     
     
         /**
@@ -748,7 +756,7 @@
          *
          * @return
          */
-        String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([subQuery or fieldValue])) +  surroundSuffix ";
+        String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([_name or fieldValue])) +  surroundSuffix ";
     
     ß
   

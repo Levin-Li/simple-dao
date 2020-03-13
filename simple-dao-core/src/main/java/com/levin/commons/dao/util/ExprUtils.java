@@ -55,6 +55,11 @@ public abstract class ExprUtils {
             op = Op.Eq;
         }
 
+        if (op == Op.None) {
+            holder.value = Collections.EMPTY_LIST;
+            return "";
+        }
+
         boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
         boolean isNotOp = Op.Not.name().equals(op.name());
@@ -79,10 +84,10 @@ public abstract class ExprUtils {
         } else if (op.isNeedParamExpr()) {  //判读该操作是否需要参数表达式
 
 
-            //优先使用子查询
-            if (hasText(c.subQuery())) {
+            //优先使用表达式
+            if (hasText(c.paramExpr())) {
 
-                paramExpr = c.subQuery();
+                paramExpr = c.paramExpr();
 
                 hasDynamicExpr = false;
 
@@ -141,7 +146,7 @@ public abstract class ExprUtils {
             }
 
             //自动加大挂号
-            if ((hasText(c.subQuery()) || complexType) && !isExistsOp) {
+            if ((hasText(c.paramExpr()) || complexType) && !isExistsOp) {
                 //尝试自动加挂号
                 paramExpr = autoAroundParentheses("", paramExpr, "");
             }
@@ -175,7 +180,7 @@ public abstract class ExprUtils {
 
         /// Function<String, String> genExpr = ql -> processParamPlaceholder(ql, paramPlaceholder, paramValues, contexts);
 
-        //    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([subQuery or fieldValue])) +  surroundSuffix ";
+        //    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
 
         String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
@@ -230,7 +235,7 @@ public abstract class ExprUtils {
         String paramExpr = op.isNeedParamExpr() ? funcExpr("", c.paramFuncs()) : "";
         String fieldExpr = op.isNeedFieldExpr() ? funcExpr("", c.fieldFuncs()) : "";
 
-        String ql = c.surroundPrefix() + c.value() + c.subQuery() + fieldExpr + paramExpr + c.surroundSuffix();
+        String ql = c.surroundPrefix() + c.value() + c.paramExpr() + fieldExpr + paramExpr + c.surroundSuffix();
 
         return hasText(ql);
 

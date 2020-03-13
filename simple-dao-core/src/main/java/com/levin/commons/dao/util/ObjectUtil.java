@@ -3,6 +3,7 @@ package com.levin.commons.dao.util;
 
 import com.levin.commons.dao.DeepCopy;
 import com.levin.commons.dao.PropertyNotFoundException;
+import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -710,8 +711,8 @@ public abstract class ObjectUtil {
         if (maxCopyDeep > 0
                 && invokeDeep > maxCopyDeep) {
             //如果超出拷贝层数，买家返回Null
-             return null;
-         //   throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
+            return null;
+            //   throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
         }
 ///////////////////////////////////////////////////////////////
 
@@ -877,6 +878,8 @@ public abstract class ObjectUtil {
 
                 String propertyName = field.getName();
 
+
+                //拷贝属性的转换
                 Desc desc = field.getAnnotation(Desc.class);
 
                 if (desc != null && StringUtils.hasText(desc.code())) {
@@ -884,10 +887,21 @@ public abstract class ObjectUtil {
                 }
 
 
+                int fieldMaxCopyDeep = maxCopyDeep;
+                String[] fieldIgnoreProperties = ignoreProperties;
+
                 DeepCopy deepCopy = field.getAnnotation(DeepCopy.class);
 
                 if (deepCopy != null && StringUtils.hasText(deepCopy.value())) {
                     propertyName = deepCopy.value();
+                    fieldMaxCopyDeep = deepCopy.maxCopyDeep();
+                    fieldIgnoreProperties = deepCopy.ignoreProperties();
+                }
+
+                Fetch fetch = field.getAnnotation(Fetch.class);
+
+                if (fetch != null && StringUtils.hasText(fetch.value())) {
+                    propertyName = fetch.value();
                 }
 
 
@@ -928,14 +942,14 @@ public abstract class ObjectUtil {
                     field.set(target, copy(value, field.get(target), fieldType
                             , getType(fieldResolvableType)
                             , copyErrors, fieldPropertyPath,
-                            objectStack, invokeDeep + 1, maxCopyDeep,
-                            ignoreProperties));
+                            objectStack, invokeDeep + 1, fieldMaxCopyDeep,
+                            fieldIgnoreProperties));
                 }
 
-            } catch (PropertyNotFoundException | WarnException ex) {
-                if (logger.isDebugEnabled()) {
+            } catch (PropertyNotFoundException ex) {
+                if (logger.isTraceEnabled()) {
                     String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
-                    logger.debug(errInfo);
+                    logger.trace(errInfo);
                 }
             } catch (Exception e) {
                 if (copyErrors != null) {

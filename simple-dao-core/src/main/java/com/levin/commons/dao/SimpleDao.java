@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
-
     /**
      * 更新或是删除
      *
@@ -56,6 +55,22 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     int update(boolean isNative, String statement, Object... paramValues);
+
+    /**
+     * 通过查询对象更新
+     *
+     * @return
+     */
+    @Transactional
+    int updateByQueryObj(Object... queryObjs);
+
+    /**
+     * 通过查询对象删除
+     *
+     * @return
+     */
+    @Transactional
+    int deleteByQueryObj(Object... queryObjs);
 
     ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +143,8 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
 
 
+    /////////////////////////////////////////////////////////////////
+
     /**
      * @param queryObjs
      * @param <E>
@@ -158,88 +175,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <E> E findOneByQueryObj(Class<E> resultType, Object... queryObjs);
-
-////////////////////////////////////////////////////////////////////////////////////
-//
-//    /**
-//     * 原生查询
-//     *
-//     * @param <T>
-//     * @return
-//     */
-//    <T> SelectDao<T> selectFrom(boolean nativeQL, @IsNotNull String fromStatement);
-//
-//    /**
-//     * 原生查询
-//     *
-//     * @param tableName 表名
-//     * @param alias     表别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     */
-//    <T> SelectDao<T> selectFrom(@IsNotNull String tableName, String... alias);
-//
-//    /**
-//     * 创建一个指定类型的查询对象dao
-//     *
-//     * @param clazz 实体类，不允许为null
-//     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-//     */
-//    <T> SelectDao<T> selectFrom(@IsNotNull Class<T> clazz, String... alias);
-//
-//
-//    /**
-//     * 创建一个指定类型的更新dao
-//     *
-//     * @param clazz 实体类，不允许为null
-//     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-//     */
-//    <T> UpdateDao<T> updateTo(@IsNotNull Class<T> clazz, String... alias);
-//
-//    /**
-//     * 创建一个指定类型的删除dao
-//     *
-//     * @param clazz 实体类，不允许为null
-//     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-//     */
-//    <T> DeleteDao<T> deleteFrom(@IsNotNull Class<T> clazz, String... alias);
-//
-//    ///////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//    /**
-//     * 使用表名创建一个更新的dao
-//     *
-//     * @param tableName 表名，不允许为null
-//     * @param alias     别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-//     */
-//    <T> UpdateDao<T> updateTo(@IsNotNull String tableName, String... alias);
-//
-//    /**
-//     * 使用表名创建一个删除的dao
-//     * <p/>
-//     * alias别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-//     *
-//     * @param tableName 表名，不允许为null
-//     * @param alias     为了接口使用更方便，使用可变参，但只获取第一个别名
-//     * @param <T>
-//     * @return
-//     */
-//    <T> DeleteDao<T> deleteFrom(@IsNotNull String tableName, String... alias);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////
 
 
     /**

@@ -209,6 +209,39 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     /**
+     * 设置查询的分页
+     *
+     * @param pageIndex 第几页，从1开始
+     * @param pageSize  分页大小
+     * @return
+     */
+    @Override
+    public CB page(int pageIndex, int pageSize) {
+
+
+        if (pageIndex < 1) {
+            pageIndex = 1;
+        }
+
+        this.rowStart = (pageIndex - 1) * pageSize;
+
+
+        this.rowCount = pageSize;
+
+        return (CB) this;
+    }
+
+    @Override
+    public CB page(Paging paging) {
+
+        if (paging != null) {
+            page(paging.getPageIndex(), paging.getPageSize());
+        }
+
+        return (CB) this;
+    }
+
+    /**
      * @param rowStartPosition
      * @param rowCount
      * @return
@@ -757,12 +790,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.appendWhere(targetOption.fixedCondition());
 
         //设置limit，如果原来没有设置
-        if (rowStart <= 0 && targetOption.startIndex() > 0) {
-            rowStart = targetOption.startIndex();
-        }
 
-        if (rowCount <= 0 && targetOption.maxResults() > 0) {
-            rowCount = targetOption.maxResults();
+        if (this.rowCount < 1
+                && targetOption.maxResults() > 0) {
+            this.rowCount = targetOption.maxResults();
         }
 
 
@@ -775,17 +806,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //如果不是分页对象
         if ((queryObj instanceof Paging)) {
 
-            Paging paging = (Paging) queryObj;
+            page(Paging.class.cast(queryObj));
 
-            //页面数大于0才有效
-            if (paging.getPageSize() > 0) {
-
-                rowCount = paging.getPageSize();
-
-                if (paging.getPageIndex() > 0) {
-                    rowStart = (paging.getPageIndex() - 1) * paging.getPageSize();
-                }
-            }
         }
 
         return (CB) this;
@@ -877,7 +899,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      *
      * @param queryObjs
      */
-    public void walkObject(AttrCallback callback, Object... queryObjs) {
+    public void walkObject(AttrCallback attrCallback, Object... queryObjs) {
 
         if (queryObjs == null)
             return;
@@ -900,7 +922,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             //没有回调时，表示本地调用
-            if (callback == null) {
+            if (attrCallback == null) {
                 //尝试设置分页
                 setPaging(queryValueObj);
 
@@ -934,9 +956,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 field.setAccessible(true);
 
                 try {
-                    if (callback != null) {
+                    if (attrCallback != null) {
 
-                        boolean isContinue = callback.onAction(queryValueObj
+                        boolean isContinue = attrCallback.onAction(queryValueObj
                                 , field, field.getName(), field.getAnnotations()
                                 , fieldRealType,
                                 field.get(queryValueObj));
@@ -1737,7 +1759,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         contextValues.add(MapUtils
                 .put("_val", value)
                 .put("_this", root)
-                .put("_FIELD_NAME", fieldName)
+                .put("_name", fieldName)
                 .put("_isSelect", (this instanceof SelectDao))
                 .put("_isUpdate", (this instanceof UpdateDao))
                 .put("_isDelete", (this instanceof DeleteDao))

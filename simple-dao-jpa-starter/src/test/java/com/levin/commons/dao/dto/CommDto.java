@@ -3,11 +3,13 @@ package com.levin.commons.dao.dto;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 
 import java.util.Date;
 
 @Data
+@Accessors(chain = true)
 public class CommDto {
 
     @Desc("是否允许")

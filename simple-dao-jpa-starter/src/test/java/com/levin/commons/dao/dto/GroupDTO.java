@@ -11,10 +11,13 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.support.DefaultPaging;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.Date;
 
-
+@Data
+@Accessors(chain = true)
 @TargetOption(entityClass = Group.class,   maxResults = 100)
 public class GroupDTO {
 

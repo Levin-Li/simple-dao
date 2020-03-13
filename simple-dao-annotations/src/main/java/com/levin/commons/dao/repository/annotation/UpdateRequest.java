@@ -18,8 +18,7 @@ public @interface UpdateRequest {
     /**
      * 静态的更新的字段
      * 可用于时间更新等
-     *  如： name = ''
-     *
+     * 如： name = ''
      *
      * @return
      */

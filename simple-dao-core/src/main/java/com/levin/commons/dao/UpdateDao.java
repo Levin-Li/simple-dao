@@ -115,6 +115,15 @@ public interface UpdateDao<T>
      */
     boolean hasColumnsForUpdate();
 
+
+    /**
+     * 禁止抛出异常，但没有要更新的列时
+     *
+     * @return
+     */
+    UpdateDao<T> disableThrowExWhenNoColumnForUpdate();
+
+
     /**
      * 执行更新动作，并返回受影响的记录数
      *

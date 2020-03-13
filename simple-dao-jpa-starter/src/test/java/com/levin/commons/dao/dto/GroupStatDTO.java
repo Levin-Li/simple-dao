@@ -9,8 +9,11 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.service.domain.Desc;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
-
+@Data
+@Accessors(chain = true)
 @TargetOption(entityClass = Group.class, maxResults = 100)
 public class GroupStatDTO {
 

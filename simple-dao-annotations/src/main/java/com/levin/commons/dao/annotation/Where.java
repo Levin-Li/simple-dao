@@ -1,38 +1,18 @@
-package com.levin.commons.dao.annotation.stat;
-
-import com.levin.commons.dao.annotation.Func;
-import com.levin.commons.dao.annotation.Op;
+package com.levin.commons.dao.annotation;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Inherited
-
 /**
- *
- *分组统计注解
- *
- * 注意：目前所有的Having条件之间只支持逻辑与的关系
- *
- * 只有标量注解和GroupBy注解才支持Having操作
- *
- *一个字段可以有多个标量注解
+ * <p>StartsWith class.</p>
  *
  * @author llw
  * @version 2.0.0
  */
-public @interface GroupBy {
-
-    /**
-     * 优先级
-     * <p/>
-     * 按数值从小到大排序
-     *
-     * @return
-     */
-    int order() default 0;
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+public @interface Where {
 
     /**
      *
@@ -46,7 +26,7 @@ public @interface GroupBy {
      *
      * @return
      */
-//    Op op() default Op.Eq;
+    Op op() default Op.Expr;
 
     /**
      * 查询字段名称，默认为字段的属性名称
@@ -59,16 +39,17 @@ public @interface GroupBy {
 
 
     /**
-     * aving 操作
+     * 是否是having 操作
      * <p>
+     * 只针对查询有效
      *
      * @return
      */
-    Op havingOp() default Op.None;
+    boolean having() default false;
 
 
     /**
-     * where 条件 是否用 NOT () 包围
+     * 是否用 NOT () 包围
      *
      * @return
      */
@@ -98,7 +79,7 @@ public @interface GroupBy {
      *
      * @return
      */
-    String condition() default "";
+    String condition() default C.NOT_NULL;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值
@@ -175,5 +156,6 @@ public @interface GroupBy {
      * @return
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([paramExpr or fieldValue])) +  surroundSuffix ";
+
 
 }

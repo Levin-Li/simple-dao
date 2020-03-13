@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 
-@Target({ElementType.FIELD, ElementType.TYPE})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -30,7 +30,7 @@ public @interface DeepCopy {
      *
      * @return
      */
-    int deep() default -1;
+    int maxCopyDeep() default 3;
 
     /**
      * 忽略的属性
@@ -43,11 +43,5 @@ public @interface DeepCopy {
      */
     String[] ignoreProperties() default {};
 
-    /**
-     * 拷贝额表达式
-     *
-     * @return
-     */
-    String expr() default "";
 
 }

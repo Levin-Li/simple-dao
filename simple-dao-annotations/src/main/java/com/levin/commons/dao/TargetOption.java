@@ -28,6 +28,15 @@ public @interface TargetOption {
      */
     Class entityClass() default Void.class;
 
+
+    /**
+     * 查询期望的查询结果类
+     * 只针对查询有效
+     *
+     * @return
+     */
+//    Class ResultClass() default Void.class;
+
     /**
      * 表名
      *
@@ -55,17 +64,7 @@ public @interface TargetOption {
 
 
     /**
-     * 有效记录的开始位置
-     * <p/>
-     * 主要用于分页
-     *
-     * @return
-     */
-    int startIndex() default -1;
-
-
-    /**
-     * 最大结果数
+     * 查询的最大结果集记录数
      *
      * @return
      */
@@ -74,7 +73,6 @@ public @interface TargetOption {
 
     /**
      * 固定条件
-     * 如 enable = true
      *
      * @return
      */

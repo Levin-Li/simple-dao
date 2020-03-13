@@ -9,7 +9,6 @@ import java.util.List;
  */
 public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStatBuilder<SelectDao<T>> {
 
-
     /**
      * 是否有统计的列
      *
@@ -43,14 +42,15 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 
     /**
-     * 设置查询的分页
+     * 设置的分页
      *
      * @param pageIndex 第几页，从1开始
      * @param pageSize  分页大小
      * @return
      * @see #limit(int, int)
      */
-    SelectDao<T> page(int pageIndex, int pageSize);
+
+//    SelectDao<T> page(int pageIndex, int pageSize);
     ////////////////////////////////////////////////////////////////////////////
 
     /**

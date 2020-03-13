@@ -6,6 +6,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.DefaultPaging;
@@ -19,17 +20,17 @@ public class UserDTO3 {
 
     Paging paging = new DefaultPaging(1, 20);
 
-    @SelectColumn
+    @Select
     @Gt
     Long id = 0L;
 
     @OrderBy
-    @SelectColumn
+    @Select
     @Like
     String name = "User";
 
 
-    @SelectColumn("score")
+    @Select("score")
     @Gt
     Integer gtScore = 0;
 

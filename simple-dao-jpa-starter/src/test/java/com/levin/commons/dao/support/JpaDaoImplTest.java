@@ -6,14 +6,15 @@ import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
+import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
 import com.levin.commons.dao.repository.SimpleDao;
 import com.levin.commons.dao.repository.UserDao;
 import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
+import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.utils.MapUtils;
-import com.levin.commons.dao.repository.Group2Dao;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -303,10 +304,19 @@ public class JpaDaoImplTest {
     public void testUserService() {
 
 
-        List<UserInfo> userInfo = userService.findUserInfo(new QueryUserEvt().setState("正常"));
+        List<UserInfo> userInfoList = userService.findUserInfo(new QueryUserEvt().setState("正常"));
+
+        Assert.isTrue(userInfoList.size() > 0);
+
+        UserInfo userInfo2 = jpaDao.findOneByQueryObj(UserInfo.class, new QueryUserEvt().setId(userInfoList.get(0).getId()));
 
 
-        Assert.isTrue(userInfo.size()>0);
+        Assert.isTrue(userService.addUserScore(new UserUpdateEvt().setId(userInfo2.getId()).setAddScore(5)));
+
+        UserInfo userInfo3 = jpaDao.findOneByQueryObj(UserInfo.class, new QueryUserEvt().setId(userInfo2.getId()));
+
+        Assert.isTrue(userInfo3.getScore() == userInfo2.getScore() + 5);
+
 
     }
 
@@ -421,6 +431,7 @@ public class JpaDaoImplTest {
     public void testUserDao() {
 
         DefaultPaging paging = new DefaultPaging();
+
         paging.setPageSize(10);
 
         List<User> users = userDao.find(null, "User", 5, paging);

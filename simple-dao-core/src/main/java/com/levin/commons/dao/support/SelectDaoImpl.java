@@ -11,12 +11,8 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.E_C;
-import com.levin.commons.dao.annotation.Eq;
-import com.levin.commons.dao.annotation.IsNull;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
-import com.levin.commons.dao.annotation.logic.END;
-import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -30,7 +26,9 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.core.ResolvableType;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -39,6 +37,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 查询Dao实现类
@@ -107,7 +107,7 @@ public class SelectDaoImpl<T>
 
         this.fromStatement = fromStatement;
 
-        if (!StringUtils.hasText(fromStatement))
+        if (!hasText(fromStatement))
             throw new IllegalArgumentException("fromStatement is null");
     }
 
@@ -134,9 +134,9 @@ public class SelectDaoImpl<T>
     @Override
     protected void setFromStatement(String fromStatement) {
         //没有内容
-        if (!StringUtils.hasText(this.fromStatement)
+        if (!hasText(this.fromStatement)
                 && entityClass == null
-                && !StringUtils.hasText(this.tableName)) {
+                && !hasText(this.tableName)) {
             this.fromStatement = fromStatement;
         }
     }
@@ -183,8 +183,8 @@ public class SelectDaoImpl<T>
         if (queryRequest == null)
             return this;
 
-        if (!StringUtils.hasText(this.fromStatement)
-                && StringUtils.hasText(queryRequest.fromStatement()))
+        if (!hasText(this.fromStatement)
+                && hasText(queryRequest.fromStatement()))
             this.fromStatement = queryRequest.fromStatement();
 
         //增加选择字段
@@ -227,7 +227,7 @@ public class SelectDaoImpl<T>
 
         if (joinStatements != null) {
             for (String statement : joinStatements) {
-                if (StringUtils.hasText(statement))
+                if (hasText(statement))
                     this.joinStatement.append(" ").append(statement).append(" ");
             }
         }
@@ -256,13 +256,13 @@ public class SelectDaoImpl<T>
 
         for (String setAttr : setAttrs) {
 
-            if (!StringUtils.hasText(setAttr))
+            if (!hasText(setAttr))
                 continue;
 
             //如果没有使用别名，尝试使用别名
             if (!setAttr.contains(".")) {
 
-                if (!StringUtils.hasText(this.alias)) {
+                if (!hasText(this.alias)) {
                     throw new StatementBuildException("join fetch  attr [" + setAttr + "] must be set alias");
                 }
 
@@ -323,7 +323,7 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> appendHaving(String havingStatement, Object... paramValues) {
 
-        if (StringUtils.hasText(havingStatement)
+        if (hasText(havingStatement)
                 && this.havingExprRootNode.addToCurrentNode(havingStatement)) {
             this.havingParamValues.add(paramValues);
         }
@@ -408,21 +408,6 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    /**
-     * 设置查询的分页
-     *
-     * @param pageIndex 第几页，从1开始
-     * @param pageSize  分页大小
-     * @return
-     */
-    @Override
-    public SelectDao<T> page(int pageIndex, int pageSize) {
-        this.rowStart = (pageIndex - 1) * pageSize;
-        this.rowCount = pageSize;
-        return this;
-    }
-
-
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
@@ -457,7 +442,7 @@ public class SelectDaoImpl<T>
         OrderBy orderBy = QueryAnnotationUtil.findFirstMatched(varAnnotations, OrderBy.class);
 
         if (orderBy != null) {
-            orderByColumns.add(new OrderByObj(orderBy.order(), orderBy.isAppendAliasPrefix() ? aroundColumnPrefix(name) : name, orderBy.type()));
+            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(name), orderBy.type()));
         }
 
     }
@@ -599,7 +584,7 @@ public class SelectDaoImpl<T>
     @Override
     protected String genFromStatement() {
 
-        if (StringUtils.hasText(fromStatement)) {
+        if (hasText(fromStatement)) {
             String from = getText(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
             return (hasKey ? " " + fromStatement : " From " + fromStatement) + getText(joinStatement.toString(), " ");
@@ -670,7 +655,7 @@ public class SelectDaoImpl<T>
             }
         }
 
-        if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
+        if (this.isSafeMode() && !hasText(whereStatement)) {
             throw new StatementBuildException("safe mode not allow no where statement SQL[" + builder + "]");
         }
 
@@ -715,7 +700,7 @@ public class SelectDaoImpl<T>
             // column = foundColumn(column, selectColumns.toString());
             column = "1";
 
-        } else if (StringUtils.hasText(alias)) {
+        } else if (hasText(alias)) {
             //如果没有具体的查询字段，则可以用别名进行统计
             column = alias;
         }
@@ -859,6 +844,9 @@ public class SelectDaoImpl<T>
         if (targetType == null)
             throw new IllegalArgumentException("targetType is null");
 
+
+        autoSetFetch(targetType);
+
         // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
 
         // boolean isEntity = dao.isEntityType(targetType) || !dao.isJpa();
@@ -918,15 +906,114 @@ public class SelectDaoImpl<T>
     @Override
     public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
 
+        autoSetFetch(targetType);
+
         //尝试自动转换
         Object data = tryConvert2Map(findOne(), null);
 
-        if (data == null || targetType.isInstance(data))
+        if (data == null || targetType.isInstance(data)) {
             return (E) data;
+        }
 
         return ObjectUtil.copy(data, targetType, maxCopyDeep, ignoreProperties);
 
     }
+
+
+    /**
+     * 目的是防止 N + 1 查询
+     *
+     * @param targetType
+     */
+    public void autoSetFetch(Class targetType) {
+
+        //如果不是 jpa 或是 没有指定实体类
+        if (!getDao().isJpa() || targetType == null) {
+            return;
+        }
+
+        ReflectionUtils.doWithFields(targetType, field -> {
+
+                    Fetch fetch = field.getAnnotation(Fetch.class);
+
+                    String property = fetch.value();
+
+                    if (!hasText(property)) {
+                        property = field.getName();
+                    }
+
+                    property = getFetchProperty(entityClass, property);
+
+                    if (hasText(getAlias())) {
+                        property = getAlias() + "." + property;
+                    }
+
+                    appendJoinFetchSet(fetch.isLeftJoin(), property);
+
+                }, field -> field.getAnnotation(Fetch.class) != null
+        );
+
+
+    }
+
+    private String getFetchProperty(Class type, String property) {
+
+        if (type == null) {
+            return property;
+        }
+
+        String prefix = getText(getAlias(), "") + ".";
+
+        if (property.startsWith(prefix)) {
+            property = property.substring(prefix.length());
+        }
+
+        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
+
+        StringBuilder sb = new StringBuilder();
+
+        String[] names = property.split("\\.");
+
+        for (String name : names) {
+
+            Field field = ReflectionUtils.findField(type, name);
+
+            if (field == null) {
+                break;
+            }
+
+            parentTypeHolder = ResolvableType.forField(field, parentTypeHolder);
+
+            type = parentTypeHolder.resolve();
+
+            //如果解析不到类型
+            if (type == null) {
+                break;
+            }
+
+
+            //如果是简单属性
+            if (BeanUtils.isSimpleValueType(type)) {
+                break;
+            }
+
+            if (sb.length() > 0) {
+                sb.append(".");
+            }
+
+            sb.append(name);
+
+            //如果集合
+            if (Collection.class.isAssignableFrom(type)) {
+                break;
+            }
+
+        }
+
+
+        return sb.toString();
+    }
+
 
     @Override
     public <I, E> E findOne(Converter<I, E> converter) {
@@ -1057,7 +1144,7 @@ public class SelectDaoImpl<T>
                         key = removeAlias((String) fieldOrMethod);
                     }
 
-                } else if (StringUtils.hasText(entityAttrName)) {
+                } else if (hasText(entityAttrName)) {
                     key = entityAttrName;
                 }
 
@@ -1082,7 +1169,7 @@ public class SelectDaoImpl<T>
 
     private SelectDao<T> processStat(int callMethodDeep, String expr, Object... paramValues) {
 
-        if (!StringUtils.hasText(expr)) {
+        if (!hasText(expr)) {
             throw new IllegalArgumentException("expr has no content");
         }
 

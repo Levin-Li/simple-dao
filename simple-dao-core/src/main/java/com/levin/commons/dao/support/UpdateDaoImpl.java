@@ -34,6 +34,7 @@ public class UpdateDaoImpl<T>
 
     static final String UPDATE_PACKAGE_NAME = Update.class.getPackage().getName();
 
+    boolean throwExWhenNoColumnForUpdate = true;
 
     public UpdateDaoImpl() {
         this(true, null);
@@ -178,11 +179,20 @@ public class UpdateDaoImpl<T>
     }
 
     @Override
+    public UpdateDao<T> disableThrowExWhenNoColumnForUpdate() {
+
+        throwExWhenNoColumnForUpdate = false;
+
+        return this;
+    }
+
+    @Override
     public String genFinalStatement() {
 
         StringBuilder ql = new StringBuilder();
 
-        if (updateColumns.length() == 0) {
+        //没有需要更新的字段
+        if (updateColumns.length() == 0 && throwExWhenNoColumnForUpdate) {
             throw new StatementBuildException("no columns to update");
         }
 
@@ -220,10 +230,17 @@ public class UpdateDaoImpl<T>
         return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues);
     }
 
-
     @Transactional
     @Override
     public int update() {
+
+        if (!hasColumnsForUpdate() && !throwExWhenNoColumnForUpdate) {
+
+            logger.warn("忽略没有要更新列的更新语句[" + genFinalStatement() + "]");
+
+            return -1;
+        }
+
         return dao.update(isNative(), rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 

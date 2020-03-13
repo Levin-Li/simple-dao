@@ -20,7 +20,7 @@ public class DefaultPaging
     int pageIndex;
 
     @Ignore
-    int pageSize;
+    int pageSize = 20;
 
 
     public DefaultPaging() {

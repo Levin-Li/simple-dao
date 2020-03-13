@@ -4,9 +4,12 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.domain.User;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 @TargetOption(entityClass = User.class
-)
+)@Data
+@Accessors(chain = true)
 public class AnnoTest {
 
 
