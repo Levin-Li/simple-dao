@@ -38,9 +38,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableProxyBean(registerTypes = API.class)
 @EntityScan({"com.levin.commons.dao"})
 
-
+@ComponentScan("com.levin.commons.dao")
 public class TestConfiguration {
-
 
 
 }

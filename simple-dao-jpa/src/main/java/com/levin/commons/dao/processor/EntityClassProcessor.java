@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
         "com.levin.commons.annotation.GenFieldNameConstant",
         "com.levin.commons.annotation.GenAnnotationMethodNameConstant"})
 //@SupportedSourceVersion(SourceVersion.RELEASE_6)
-//@com.google.auto.service.AutoService(Processor.class)
+//@com.google.auto.repository.AutoService(Processor.class)
 public class EntityClassProcessor extends AbstractProcessor {
 
 
@@ -55,13 +55,13 @@ public class EntityClassProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
 
-        File file = new File("service-support-processor.utf8.properties");
+        File file = new File("repository-support-processor.utf8.properties");
 
         if (!file.exists()) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, file.getAbsolutePath() + " 配置文件不存在");
 
             try {
-                properties.store(new OutputStreamWriter(new FileOutputStream(file, false), "utf-8"), "service-support processor config\n\ngen_desc_field_name=false\ngen_table_column_name=false\n\n");
+                properties.store(new OutputStreamWriter(new FileOutputStream(file, false), "utf-8"), "repository-support processor config\n\ngen_desc_field_name=false\ngen_table_column_name=false\n\n");
             } catch (Exception e) {
                 e.printStackTrace();
             }

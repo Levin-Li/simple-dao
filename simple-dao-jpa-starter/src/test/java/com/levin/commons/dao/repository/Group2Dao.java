@@ -1,4 +1,4 @@
-package org.dao.test.repository;
+package com.levin.commons.dao.repository;
 
 
 import com.levin.commons.dao.JpaDao;
@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@EntityRepository()
+@EntityRepository
 @TargetOption(entityClass = Group.class )
 public abstract class Group2Dao {
 

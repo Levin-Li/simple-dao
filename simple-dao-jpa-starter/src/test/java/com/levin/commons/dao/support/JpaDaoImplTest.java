@@ -6,11 +6,14 @@ import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
+import com.levin.commons.dao.repository.GroupDao;
 import com.levin.commons.dao.repository.SimpleDao;
-import com.levin.commons.dao.service.GroupDao;
-import com.levin.commons.dao.service.UserDao;
+import com.levin.commons.dao.repository.UserDao;
+import com.levin.commons.dao.service.UserService;
+import com.levin.commons.dao.service.dto.QueryUserEvt;
+import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.utils.MapUtils;
-import org.dao.test.repository.Group2Dao;
+import com.levin.commons.dao.repository.Group2Dao;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,9 +54,8 @@ public class JpaDaoImplTest {
     @Autowired
     UserApi userApi;
 
-    public enum AppType {
-        Android, Ios, Weixin, Web, H5
-    }
+    @Autowired
+    UserService userService;
 
     Random random = new Random(this.hashCode());
 
@@ -291,9 +293,20 @@ public class JpaDaoImplTest {
 
 //        System.out.println(byQueryObj);
 
-        Object aa = jpaDao.find("  From com.levin.commons.dao.domain.User e   Where e.id =   ?1  AND e.state =   ?2   Order By  e.id DESC",1,"ss");
+        Object aa = jpaDao.find("  From com.levin.commons.dao.domain.User e   Where e.id =   ?1  AND e.state =   ?2   Order By  e.id DESC", 1, "ss");
 
         System.out.println(aa);
+
+    }
+
+    @Test
+    public void testUserService() {
+
+
+        List<UserInfo> userInfo = userService.findUserInfo(new QueryUserEvt().setState("正常"));
+
+
+        Assert.isTrue(userInfo.size()>0);
 
     }
 
@@ -302,16 +315,16 @@ public class JpaDaoImplTest {
     public void testAnno2() {
 
 
-        Object one = jpaDao.selectFrom(User.class,"u").eq(E_User.id,1).findOne();
+        Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, 1).findOne();
 
         System.out.println(one);
 
-  //      one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
+        //      one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
 
         System.out.println(one);
 
 
-        one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ?1  order by u.id desc",1).findOne();
+        one = jpaDao.selectFrom(User.class, "u").appendWhere("u.id = ?1  order by u.id desc", 1).findOne();
 
         System.out.println(one);
 
@@ -478,7 +491,7 @@ public class JpaDaoImplTest {
                     return (Group) e;
                 });
 
-     //   System.out.println(r);
+        //   System.out.println(r);
 
         System.out.println(groups);
 
@@ -787,10 +800,9 @@ public class JpaDaoImplTest {
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class, "u");
 
 
-        jpaDao.selectFrom(User.class,"u")
+        jpaDao.selectFrom(User.class, "u")
                 .appendByQueryObj(new GroupStatDTO())
                 .genFinalStatement();
-
 
 
         millis = System.currentTimeMillis() - millis;
@@ -800,7 +812,7 @@ public class JpaDaoImplTest {
 
         millis = System.currentTimeMillis();
 
-        jpaDao.selectFrom(User.class,"u")
+        jpaDao.selectFrom(User.class, "u")
                 .appendByQueryObj(new TestEntityStatDto())
                 .genFinalStatement();
 
@@ -810,10 +822,9 @@ public class JpaDaoImplTest {
         System.out.println("2 testSelectTime:" + millis);
 
 
-
         millis = System.currentTimeMillis();
 
-        jpaDao.selectFrom(User.class,"u")
+        jpaDao.selectFrom(User.class, "u")
                 .appendByQueryObj(new SubQueryDTO())
                 .genFinalStatement();
 
@@ -824,7 +835,6 @@ public class JpaDaoImplTest {
 
 
         millis = System.currentTimeMillis();
-
 
 
         selectDao
