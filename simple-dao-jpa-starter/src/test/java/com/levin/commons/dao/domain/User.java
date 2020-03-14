@@ -27,7 +27,7 @@ public class User
     @Column
     String area;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     Group group;
 

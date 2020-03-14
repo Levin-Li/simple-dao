@@ -1,6 +1,7 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
+import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -525,7 +526,7 @@ public class JpaDaoImplTest {
     public void testFindAndConvert() throws Exception {
 
         jpaDao.selectFrom(User.class, "u")
-                .appendJoinFetchSet(true, E_User.group)
+                .appendJoinFetchSet(E_User.group)
                 .gt(E_User.id, "100")
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())

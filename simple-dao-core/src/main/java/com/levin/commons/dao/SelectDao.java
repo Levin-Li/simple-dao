@@ -151,24 +151,33 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param setAttrs 如 customers orders
      * @return
      */
-    @Deprecated
-    SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs);
+//    @Deprecated
+//    SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs);
 
     /**
      * @param isLeftJoin
      * @param setAttrs
      * @return
      */
-    @Deprecated
-    SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs);
+//    @Deprecated
+//    SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs);
 
 
     /**
+     * 增加要抓取的集合
+     *
+     * @param setAttrs
+     * @return
+     */
+    SelectDao<T> appendJoinFetchSet(String... setAttrs);
+
+    /**
+     * 增加要抓取的集合
+     *
      * @param joinType
      * @param setAttrs
      * @return
      */
-
     SelectDao<T> appendJoinFetchSet(Fetch.JoinType joinType, String... setAttrs);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

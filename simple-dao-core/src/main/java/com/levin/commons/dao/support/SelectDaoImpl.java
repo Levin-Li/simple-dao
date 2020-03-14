@@ -184,8 +184,9 @@ public class SelectDaoImpl<T>
             return this;
 
         if (!hasText(this.fromStatement)
-                && hasText(queryRequest.fromStatement()))
+                && hasText(queryRequest.fromStatement())) {
             this.fromStatement = queryRequest.fromStatement();
+        }
 
         //增加选择字段
         appendSelectColumns(queryRequest.selectStatement());
@@ -194,7 +195,7 @@ public class SelectDaoImpl<T>
         appendJoin(queryRequest.joinStatement());
 
         //增加抓取的子集合
-        appendJoinFetchSet(true, queryRequest.joinFetchSetAttrs());
+        appendJoinFetchSet(Fetch.JoinType.Default, queryRequest.joinFetchSetAttrs());
 
         //设置默认的排序语句
         setDefaultOrderByStatement(queryRequest.defaultOrderBy());
@@ -227,29 +228,36 @@ public class SelectDaoImpl<T>
 
         if (joinStatements != null) {
             for (String statement : joinStatements) {
-                if (hasText(statement))
+                if (hasText(statement)) {
                     this.joinStatement.append(" ").append(statement).append(" ");
+                }
             }
         }
 
         return this;
     }
 
+//    @Override
+//    public SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs) {
+//
+//        fetchStatement.setLength(0);
+//
+//        appendJoinFetchSet(isLeftJoin, setAttrs);
+//
+//        return this;
+//    }
+//
+//    @Override
+//    public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
+//
+//
+//        return appendJoinFetchSet(isLeftJoin ? Fetch.JoinType.Left : Fetch.JoinType.Inner);
+//    }
+
+
     @Override
-    public SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs) {
-
-        fetchStatement.setLength(0);
-
-        appendJoinFetchSet(isLeftJoin, setAttrs);
-
-        return this;
-    }
-
-    @Override
-    public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
-
-
-        return appendJoinFetchSet(isLeftJoin ? Fetch.JoinType.Left : Fetch.JoinType.Inner);
+    public SelectDao<T> appendJoinFetchSet(String... setAttrs) {
+        return appendJoinFetchSet(Fetch.JoinType.Default, alias);
     }
 
     @Override
@@ -280,7 +288,7 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            fetchStatement.append(" ").append((joinType == Fetch.JoinType.None ? "" : joinType.name()) + " Join Fetch " + setAttr).append(" ");
+            fetchStatement.append(" ").append((joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr).append(" ");
 
         }
 

@@ -579,13 +579,56 @@
 
    以上字符串字段将被会自动转换成对应的类型。
 
-#### 10.7 集合属性的自动抓取(仅对JPA有效)
+#### 10.7 避免 N + 1 查询，关联属性的自动抓取(仅对JPA有效)
 
-   集合属性的自动抓取
-
-        @FetchSet(attrs="users")
-        int unusedField;
+   1、一对多，多对一模型定义
+  
+    @Entity    
+    class User{
+            ...
+           @ManyToOne(fetch = FetchType.LAZY) 
+           @JoinColumn(name = "group_id")
+           Group group;
+    }     
+    
+    
+     class Group {
+              ...
+            
+             @ManyToOne(fetch = FetchType.LAZY) 
+             protected T parent; 
+             
+             @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE) 
+             protected Set<T> children;
+     }   
+     
+  2、通过代码抓取    
         
+     //查询 User 实，直接通过连接获取所有的孩子节点，避免 N+1 查询   
+     jpa.selectFrom(User.class,"u")
+        .appendJoinFetchSet("group.children")
+        .find()   
+        
+  
+  3、通过注解抓取
+    
+    @Data
+    @Accessors(chain = true)
+    public class UserInfo {
+  
+        @Fetch
+        Group group;
+    
+        @Fetch(value = "group.name")
+        String groupName;
+    
+        @Fetch(value = "group.children" )
+        Collection<Group> parentChildren;
+    
+    }      
+    
+    //避免 N+1 查询
+    List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
         
 ### 11、安全模式
 
