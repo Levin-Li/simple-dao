@@ -241,16 +241,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
-    /**
-     * @param rowStartPosition
-     * @param rowCount
-     * @return
-     * @todo 目前只对查询有效，对于更新和删除语句无效(待优化)
-     */
-    public CB range(int rowStartPosition, int rowCount) {
-        return limit(rowStartPosition, rowCount);
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public CB where(String whereStatement, Object... paramValues) {
