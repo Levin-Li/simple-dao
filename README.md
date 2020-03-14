@@ -583,59 +583,70 @@
 
    1、一对多，多对一模型定义
   
-    @Entity    
-    class User{
-            ...
-           @ManyToOne(fetch = FetchType.LAZY) 
-           @JoinColumn(name = "group_id")
-           Group group;
-    }     
-    
-    
-     class Group {
-              ...
-            
-             @ManyToOne(fetch = FetchType.LAZY) 
-             protected T parent; 
-             
-             @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE) 
-             protected Set<T> children;
-     }   
+        @Entity    
+        class User{
+                ...
+               @ManyToOne(fetch = FetchType.LAZY) 
+               @JoinColumn(name = "group_id")
+               Group group;
+        }     
+        
+        @Entity   
+         class Group {
+                  ...
+                
+                 @ManyToOne(fetch = FetchType.LAZY) 
+                 protected T parent; 
+                 
+                 @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE) 
+                 protected Set<T> children;
+         }   
      
   2、通过代码抓取    
         
-     //查询 User 实，直接通过连接获取所有的孩子节点，避免 N+1 查询   
-     jpa.selectFrom(User.class,"u")
-        .appendJoinFetchSet("group.children")
-        .find()   
+         //查询 User 实，直接通过连接获取所有的孩子节点，避免 N+1 查询   
+         jpa.selectFrom(User.class,"u")
+            .appendJoinFetchSet("group.children") //设置立刻抓取 避免 N+1 查询 
+            .find()   
         
   
   3、通过注解抓取
-    
-    @Data
-    @Accessors(chain = true)
-    public class UserInfo {
   
-        @Fetch
-        Group group;
+  查询对象和结果对象都可以增加抓取注解
     
-        @Fetch(value = "group.name")
-        String groupName;
-    
-        @Fetch(value = "group.children" )
-        Collection<Group> parentChildren;
-    
-    }      
-    
-    //避免 N+1 查询
-    List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
+        @Data
+        @Accessors(chain = true)
+        public class UserInfo {
+      
+            @Fetch //设置立刻抓取 避免 N+1 查询 
+            Group group;
+        
+            @Fetch(value = "group.name") //设置立刻抓取 避免 N+1 查询 
+            String groupName;
+        
+            @Fetch(value = "group.children" ) //设置立刻抓取 避免 N+1 查询 
+            Collection<Group> parentChildren;
+        
+        }      
+        
+        //避免 N+1 查询
+        List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
         
 ### 11、安全模式
 
-   数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽问题导致的数据安全问题。
+   数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
 
    在安全模式下，必须指定部分条件，不允许无条件的更新、删除、查询。
+    
+  默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
+    
+    jpaDao.deleteFrom(User.class)
+                   .disableSafeMode()
+                   .delete();
    
+   
+   
+  安全控制接口定义
    
        public interface SafeController<T> {
        
