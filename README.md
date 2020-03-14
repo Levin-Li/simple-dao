@@ -1,5 +1,6 @@
 ### 简介
    SimpleDao是一个使用注解生成SQL语句和参数的小组件，目前组件依赖Spring并结合JPA，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
+   
    在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
 
    SimpleDao的目标
@@ -413,18 +414,18 @@
 ### 8、子查询
  
 
-#### 8.1 手动指定子查询语句(_name属性)
+#### 8.1 手动指定子查询语句(paramExpr属性)
 
           @Ignore
           @SelectColumn("score")
           UserStatDTO selectSubQueryDTO = new UserStatDTO();
 
           @Ignore
-          @SelectColumn(value = "score", _name = "select 3000 from xxx.tab t where u.id = t.id")
+          @SelectColumn(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = t.id")
           Map param = new HashMap();
 
           //子查询，并使用命名参数，命名参数从Map变量中取
-          @NotExists(_name = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
+          @NotExists(paramExpr = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
           Map<String, Object> namedParams = new HashMap<>();
 
 
@@ -676,143 +677,120 @@
      
      
 #### 12.2 注解字段说明
+            /**
+             * 不是 NUll 对象 ，也不是空字符串
+             */
+            String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
     
-        /**
-         * 不是 NUll 对象 ，也不是空字符串
-         */
-        String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
-    
-    
-        /**
-         * 查询字段名称，默认为字段的属性名称
-         * <p>
-         * 对应数据库的字段名或是 Jpa 实体类的字段名
-         *
-         * @return
-         */
-        String value() default "";
-    
-    
-        /**
-         * 是否是having 操作
-         * <p>
-         * 只针对查询有效
-         *
-         * @return
-         */
-        boolean having() default false;
-    
-    
-        /**
-         * 是否用 NOT () 包围
-         *
-         * @return
-         */
-        boolean not() default false;
-    
-    
-        /**
-         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
-         *
-         * @return
-         */
-        boolean require() default false;
-    
-    
-        /**
-         * 表达式，默认为SPEL
-         * <p>
-         * <p>
-         * 如果用 groovy:  做为前缀则是 groovy脚本
-         * <p>
-         *
-         *
-         * <p>
-         * <p>
-         * <p/>
-         * 当条件成立时，整个条件才会被加入
-         *
-         * @return
-         */
-        String condition() default NOT_NULL;
-    
-        /**
-         * 是否过滤数组参数或是列表参数中的空值
-         * <p>
-         * 主要针对 In NotIn Between
-         *
-         * @return
-         */
-        boolean filterNullValue() default true;
-    
-    
-        /**
-         * 针对字段函数列表
-         * 后面的函数嵌套前面的函数
-         * <p>
-         * func3(func2(func1(t.field)
-         *
-         * <p>
-         * <p>
-         * 如果是更新字段则忽略
-         *
-         * @return
-         */
-        Func[] fieldFuncs() default {};
-    
-    
-        /**
-         * 针对参数的函数列表
-         * <p>
-         * 后面的函数嵌套前面的函数
-         * <p>
-         * 参数是指字段值或是子查询语句
-         * <p>
-         * 例如 func(:?)  把参数用函数包围
-         * func(select name from user where id = :userId) 把子查询用函数包围
-         *
-         * @return
-         */
-        Func[] paramFuncs() default {};
-    
-    
-        /**
-         * 对整个表达式的包围前缀
-         *
-         * @return
-         */
-        String surroundPrefix() default "";
-    
-        /**
-         * 子查询表达式
-         * <p>
-         * <p/>
-         * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
-         * <p>
-         * <p>
-         * 被注解的字段，
-         * 如果是是数组，列表，如果
-         *
-         * @return
-         */
-        String _name() default "";
-    
-    
-        /**
-         * 对整个表达式的包围后缀
-         *
-         * @return
-         */
-        String surroundSuffix() default "";
-    
-        /**
-         * 描述信息
-         *
-         * @return
-         */
-        String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([_name or fieldValue])) +  surroundSuffix ";
-    
-    ß
+           /**
+            * 查询字段名称，默认为字段的属性名称
+            * <p>
+            * 对应数据库的字段名或是 Jpa 实体类的字段名
+            *
+            * @return
+            */
+           String value() default "";
+        
+       
+           /**
+            * 是否过滤数组参数或是列表参数中的空值
+            * <p>
+            * 主要针对 In NotIn Between
+            *
+            * @return
+            */
+           boolean filterNullValue() default true;
+       
+           /**
+            * 针对字段函数列表
+            * 后面的函数嵌套前面的函数
+            * <p>
+            * func3(func2(func1(t.field)
+            *
+            * <p>
+            * <p>
+            * 如果是更新字段则忽略
+            *
+            * @return
+            */
+           Func[] fieldFuncs() default {};
+       
+       
+           /**
+            * 针对参数的函数列表
+            * <p>
+            * 后面的函数嵌套前面的函数
+            * <p>
+            * 参数是指字段值或是子查询语句
+            * <p>
+            * 例如 func(:?)  把参数用函数包围
+            * func(select name from user where id = :userId) 把子查询用函数包围
+            *
+            * @return
+            */
+           Func[] paramFuncs() default {};
+       
+           /**
+            * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+            *
+            * @return
+            */
+           boolean require() default false;
+       
+           /**
+            * 表达式，默认为SPEL
+            * <p>
+            * <p>
+            * 如果用 groovy:  做为前缀则是 groovy脚本
+            * <p>
+            *
+            *
+            * <p>
+            * <p>
+            * <p/>
+            * 当条件成立时，整个条件才会被加入
+            *
+            * @return
+            */
+           String condition() default C.NOT_NULL;
+       
+       
+           /**
+            * 对整个表达式的包围前缀
+            *
+            * @return
+            */
+           String surroundPrefix() default "";
+       
+           /**
+            * 子查询表达式
+            * <p>
+            * <p/>
+            * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
+            * <p>
+            * <p>
+            * 被注解的字段，
+            * 如果是是数组，列表，如果
+            *
+            * @return
+            */
+           String paramExpr() default "";
+       
+       
+           /**
+            * 对整个表达式的包围后缀
+            *
+            * @return
+            */
+           String surroundSuffix() default "";
+       
+           /**
+            * 描述信息
+            *
+            * @return
+            */
+           String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([paramExpr or fieldValue])) +  surroundSuffix ";
+
   
 
 #### 12.2 联系作者

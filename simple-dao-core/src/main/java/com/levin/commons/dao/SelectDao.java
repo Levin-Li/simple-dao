@@ -28,21 +28,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     boolean hasSelectColumns();
 
     /**
-     * 设置查询结果集的的范围
-     *
-     * @param rowStartPosition ，从0开始， -1表示不设置限制
-     * @param rowCount         ,受影响的记录数，-1表示不设置限制
-     * @return
-     * @Deprecated 建议使用limit代替
-     * <p/>
-     * 目前只对查询有效，对于更新和删除语句无效
-     * @see #limit(int, int)
-     */
-    @Deprecated
-    SelectDao<T> range(int rowStartPosition, int rowCount);
-
-
-    /**
      * 设置的分页
      *
      * @param pageIndex 第几页，从1开始
@@ -50,9 +35,17 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @return
      * @see #limit(int, int)
      */
+    T page(int pageIndex, int pageSize);
 
-//    @Override
-//    SelectDao<T> page(int pageIndex, int pageSize);
+
+    /**
+     * 设置的分页
+     *
+     * @return
+     * @see #limit(int, int)
+     */
+    T page(Paging paging);
+
     ////////////////////////////////////////////////////////////////////////////
 
     /**
