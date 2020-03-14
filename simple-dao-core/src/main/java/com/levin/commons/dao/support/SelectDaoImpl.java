@@ -475,8 +475,8 @@ public class SelectDaoImpl<T>
         Fetch fetch = (Fetch) opAnnotation;
 
         //增加集合抓取
-        appendJoinFetchSet(fetch.isLeftJoin(), fetch.value());
-        appendJoinFetchSet(fetch.isLeftJoin(), fetch.attrs());
+        appendJoinFetchSet(fetch.joinType(), fetch.value());
+        appendJoinFetchSet(fetch.joinType(), fetch.attrs());
 
     }
 

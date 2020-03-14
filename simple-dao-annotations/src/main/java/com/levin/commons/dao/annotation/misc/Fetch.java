@@ -52,14 +52,6 @@ public @interface Fetch {
     String[] attrs() default {};
 
     /**
-     * 是否使用左连接抓取
-     *
-     * @return
-     */
-    @Deprecated
-    boolean isLeftJoin() default true;
-
-    /**
      * 连接类型
      *
      * @return
