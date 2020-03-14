@@ -37,6 +37,25 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T limit(int rowStartPosition, int rowCount);
 
+    /**
+     * 设置的分页
+     *
+     * @param pageIndex 第几页，从1开始
+     * @param pageSize  分页大小
+     * @return
+     * @see #limit(int, int)
+     */
+    T page(int pageIndex, int pageSize);
+
+
+    /**
+     * 设置的分页
+     *
+     * @return
+     * @see #limit(int, int)
+     */
+    T page(Paging paging);
+
 
     /**
      * 设置where 条件，将清除之前设置的条件，但不包括range条件

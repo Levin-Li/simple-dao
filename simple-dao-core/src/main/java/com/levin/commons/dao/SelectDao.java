@@ -27,25 +27,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     boolean hasSelectColumns();
 
-    /**
-     * 设置的分页
-     *
-     * @param pageIndex 第几页，从1开始
-     * @param pageSize  分页大小
-     * @return
-     * @see #limit(int, int)
-     */
-    T page(int pageIndex, int pageSize);
-
-
-    /**
-     * 设置的分页
-     *
-     * @return
-     * @see #limit(int, int)
-     */
-    T page(Paging paging);
-
     ////////////////////////////////////////////////////////////////////////////
 
     /**
