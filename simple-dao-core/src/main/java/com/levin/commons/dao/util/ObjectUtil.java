@@ -872,7 +872,7 @@ public abstract class ObjectUtil {
 
         //按字段复制
         for (Field field : fieldList) {
-
+            String fieldPropertyPath = "";
             try {
                 field.setAccessible(true);
 
@@ -911,19 +911,19 @@ public abstract class ObjectUtil {
                     throw new IllegalStateException(field + " found unresolvable generics");
                 }
 
-                Class fieldType = fieldResolvableType.resolve(field.getType());
+                final Class fieldType = fieldResolvableType.resolve(field.getType());
 
                 //如果是忽略的属性
                 //isIgnore(String path, Object source, Object target, Field field, Class fieldType, String... ignoreProperties)
 
-                final String fieldPropertyPath = buildDeepPath(propertyPath, field.getName());
+                fieldPropertyPath = buildDeepPath(propertyPath, field.getName());
 
                 if (isIgnore(fieldPropertyPath, source, target, field, fieldType, ignoreProperties)) {
                     continue;
                 }
 
                 if (invokeDeep > 5 && invokeDeep % 3 == 0) {
-                    logger.warn("*** 递归拷贝调用层次过多 " + field + " " + fieldPropertyPath + " " + invokeDeep);
+                    logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
                 Object value = getIndexValue(source, propertyName);
@@ -948,24 +948,26 @@ public abstract class ObjectUtil {
 
             } catch (PropertyNotFoundException ex) {
                 if (logger.isTraceEnabled()) {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
+                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
                     logger.trace(errInfo);
                 }
             } catch (Exception e) {
                 if (copyErrors != null) {
                     copyErrors.put(field, e);
                 } else {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", propertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->"));
 
                     if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
-                        logger.warn(errInfo);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
+                        }
                     } else {
-                        logger.error(errInfo);
+                        logger.error(String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
                     }
                 }
             } catch (StackOverflowError error) {
                 String errInfo = String.format("StackOverflowError Can't copy [%s] from %s , error:%s"
-                        , propertyPath, field, ExceptionUtils.getAllCauseInfo(error, "->"));
+                        , fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(error, "->"));
+
                 logger.error(errInfo, error);
             }
         }

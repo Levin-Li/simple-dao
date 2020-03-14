@@ -1683,42 +1683,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return entityClass != null ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
     }
 
-    /**
-     * 尝试转换值
-     *
-     * @param name
-     * @param value
-     * @return
-     */
-    protected Object tryToConvertValue(String name, Object value) {
-
-        if (value == null || entityClass == null) {
-            return value;
-        }
-
-        //期望的类型
-        Class<?> expectType = QueryAnnotationUtil.getFieldType(entityClass, name);
-
-        //如果类型为null
-        if (expectType == null || expectType.isInstance(value)) {
-            return value;
-        }
-
-        //尝试转换
-        //如果是数组，将不尝试转换
-        if (!value.getClass().isArray() && !(value instanceof Iterable)) {
-            try {
-                value = ObjectUtil.convert(value, expectType);
-            } catch (Exception e) {
-                logger.warn("convert attr " + name + " error", e);
-            }
-        }
-
-        //@todo 尝试转换数组或是集合
-
-        return value;
-    }
-
 
     public List<Map<String, ? extends Object>> getDaoContextValues() {
 

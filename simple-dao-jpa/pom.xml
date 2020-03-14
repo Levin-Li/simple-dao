@@ -15,7 +15,6 @@
 
     <properties>
         <proguard.obfuscate.skip>false</proguard.obfuscate.skip>
-        <cglib-version>3.2.5</cglib-version>
     </properties>
 
     <dependencies>
@@ -26,12 +25,6 @@
             <artifactId>simple-dao-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>${cglib-version}</version>
-            <!--不要使用更高版本-需要1.8以上的JDK-->
-        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -52,16 +45,17 @@
         </dependency>
 
 
+
+        <!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>6.0.11.Final</version>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
         </dependency>
+
 
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>RELEASE</version>
         </dependency>
 
         <dependency>

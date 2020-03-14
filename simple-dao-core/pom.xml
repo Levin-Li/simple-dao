@@ -43,13 +43,6 @@
 
 
         <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>RELEASE</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.1-api</artifactId>
             <scope>provided</scope>
@@ -61,6 +54,7 @@
             <version>RELEASE</version>
             <scope>provided</scope>
         </dependency>
+
 
         <dependency>
             <groupId>com.levin.commons.maven</groupId>

@@ -1,11 +1,6 @@
 package com.levin.commons.dao.support;
 
 
-import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.SelectDao;
@@ -26,8 +21,6 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
-import org.springframework.core.ResolvableType;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -38,6 +31,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.levin.commons.dao.util.ExprUtils.getExprForJpaJoinFetch;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -120,11 +114,7 @@ public class SelectDaoImpl<T>
         super(entityClass, alias);
         this.dao = dao;
     }
-//
-//    @Override
-//    protected String getParamPlaceholder() {
-//        return dao.getParamPlaceholder(isNative());
-//    }
+
 
     @Override
     protected MiniDao getDao() {
@@ -237,27 +227,9 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-//    @Override
-//    public SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs) {
-//
-//        fetchStatement.setLength(0);
-//
-//        appendJoinFetchSet(isLeftJoin, setAttrs);
-//
-//        return this;
-//    }
-//
-//    @Override
-//    public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
-//
-//
-//        return appendJoinFetchSet(isLeftJoin ? Fetch.JoinType.Left : Fetch.JoinType.Inner);
-//    }
-
-
     @Override
     public SelectDao<T> appendJoinFetchSet(String... setAttrs) {
-        return appendJoinFetchSet(Fetch.JoinType.Default, alias);
+        return appendJoinFetchSet(Fetch.JoinType.Default, setAttrs);
     }
 
     @Override
@@ -692,15 +664,6 @@ public class SelectDaoImpl<T>
     }
 
 
-    /**
-     * 是否有查询的列
-     *
-     * @return
-     */
-    //@Override
-    public boolean hasColumnsToQuery() {
-        return selectColumns.length() > 0;
-    }
 
     @Override
     public long count() {
@@ -727,30 +690,6 @@ public class SelectDaoImpl<T>
 
 
     }
-
-    public static String foundColumn(String defaultResult, String selectColumns) {
-
-        try {
-            SQLStatementParser parser = new SQLStatementParser("Select " + selectColumns + " From Test");
-
-            SQLSelectQuery query = parser.createSQLSelectParser().query();
-
-            if (query instanceof SQLSelectQueryBlock) {
-                for (SQLSelectItem item : ((SQLSelectQueryBlock) query).getSelectList()) {
-                    // System.out.println(":" + item.getAlias() + "," + item.getExpr() + "," + item.getExpr().getClass());
-                    if (item.getExpr() instanceof SQLPropertyExpr) {
-                        return item.getExpr().toString();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("SQL选择字段语句解析异常:" + selectColumns);
-        }
-
-        return defaultResult;
-
-    }
-
 
     /**
      * 如果没有记录，或是记录为null值，都表示为0
@@ -960,7 +899,7 @@ public class SelectDaoImpl<T>
                         property = field.getName();
                     }
 
-                    property = getFetchProperty(entityClass, property);
+                    property = getExprForJpaJoinFetch(entityClass,getAlias(), property);
 
                     if (hasText(getAlias())) {
                         property = getAlias() + "." + property;
@@ -974,70 +913,13 @@ public class SelectDaoImpl<T>
 
     }
 
-    private String getFetchProperty(Class type, String property) {
-
-        if (type == null) {
-            return property;
-        }
-
-        String prefix = getText(getAlias(), "") + ".";
-
-        if (property.startsWith(prefix)) {
-            property = property.substring(prefix.length());
-        }
-
-        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
-
-        StringBuilder sb = new StringBuilder();
-
-        String[] names = property.split("\\.");
-
-        for (String name : names) {
-
-            Field field = ReflectionUtils.findField(type, name);
-
-            if (field == null) {
-                break;
-            }
-
-            parentTypeHolder = ResolvableType.forField(field, parentTypeHolder);
-
-            type = parentTypeHolder.resolve();
-
-            //如果解析不到类型
-            if (type == null) {
-                break;
-            }
-
-
-            //如果是简单属性
-            if (BeanUtils.isSimpleValueType(type)) {
-                break;
-            }
-
-            if (sb.length() > 0) {
-                sb.append(".");
-            }
-
-            sb.append(name);
-
-            //如果集合
-            if (Collection.class.isAssignableFrom(type)) {
-                break;
-            }
-
-        }
-
-
-        return sb.toString();
-    }
-
 
     @Override
     public <I, E> E findOne(Converter<I, E> converter) {
 
-        if (converter == null)
+        if (converter == null) {
             throw new IllegalArgumentException("converter is null");
+        }
 
         Object data = findOne();
 

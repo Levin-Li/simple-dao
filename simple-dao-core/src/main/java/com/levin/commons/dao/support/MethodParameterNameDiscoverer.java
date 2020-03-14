@@ -1,6 +1,5 @@
 package com.levin.commons.dao.support;
 
-import com.levin.commons.dao.util.AsmUtils;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.StringUtils;
@@ -32,8 +31,6 @@ public class MethodParameterNameDiscoverer
             return parameterNames;
 
         if (isValid(parameterNames = super.getParameterNames(method))) {
-            methodParamNameCache.put(method, parameterNames);
-        } else if (isValid(parameterNames = AsmUtils.getMethodParamNames(method))) {
             methodParamNameCache.put(method, parameterNames);
         } else {
             return null;

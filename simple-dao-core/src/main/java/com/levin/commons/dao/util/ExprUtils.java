@@ -8,13 +8,17 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.utils.MapUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.core.ResolvableType;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -450,6 +454,82 @@ public abstract class ExprUtils {
 
         return found ? sb.toString() : txt;
 
+    }
+
+    static String nullSafe(String txt) {
+        return txt != null ? txt : "";
+    }
+
+    /**
+     * 获取要抓取的属性的jpa 抓取表达式
+     * <p>
+     * 如， parent.parent.parent.name  将返回 parent.parent.parent
+     *
+     * @param type
+     * @param alias
+     * @param propertyExpr
+     * @return
+     */
+    public static String getExprForJpaJoinFetch(Class type, String alias, String propertyExpr) {
+
+        if (type == null) {
+            return propertyExpr;
+        }
+
+        String prefix = nullSafe(alias) + ".";
+
+        if (propertyExpr.startsWith(prefix)) {
+            propertyExpr = propertyExpr.substring(prefix.length());
+        }
+
+        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
+
+        StringBuilder sb = new StringBuilder();
+
+        String[] names = propertyExpr.split("\\.");
+
+        for (String name : names) {
+
+            if (!hasText(name)) {
+                continue;
+            }
+
+            Field field = ReflectionUtils.findField(type, name);
+
+            if (field == null) {
+                break;
+            }
+
+            parentTypeHolder = ResolvableType.forField(field, parentTypeHolder);
+
+            type = parentTypeHolder.resolve();
+
+            //如果解析不到类型
+            if (type == null) {
+                break;
+            }
+
+
+            //如果是简单属性
+            if (BeanUtils.isSimpleValueType(type)) {
+                break;
+            }
+
+            if (sb.length() > 0) {
+                sb.append(".");
+            }
+
+            sb.append(name);
+
+            //如果集合
+            if (Collection.class.isAssignableFrom(type)) {
+                break;
+            }
+
+        }
+
+
+        return sb.toString();
     }
 
 
