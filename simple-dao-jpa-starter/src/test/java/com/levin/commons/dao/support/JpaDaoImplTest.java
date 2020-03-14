@@ -282,7 +282,9 @@ public class JpaDaoImplTest {
     @Test
     public void testProxyBean() {
 
-        System.out.printf(userApi.getEMF());
+        String emf = userApi.getEMF();
+
+        System.out.printf(emf);
 
     }
 

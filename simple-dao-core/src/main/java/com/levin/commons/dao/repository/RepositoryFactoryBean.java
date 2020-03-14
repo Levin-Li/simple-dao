@@ -13,10 +13,10 @@ import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.UpdateDaoImpl;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.proxy.ProxyFactoryBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
@@ -28,16 +28,22 @@ import java.util.List;
 /**
  * FactoryBean
  */
+
+@Slf4j
 public class RepositoryFactoryBean<T>
         extends ProxyFactoryBean<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepositoryFactoryBean.class);
 
-    private static String PROMPT = "无操作注解，非接口类需要在方法上显式声明注解，如：@QueryRequest";
+    //private static String PROMPT = "无操作注解，非接口类需要在方法上显式声明注解，如：@QueryRequest";
 
 
     @Autowired
     private MiniDao jpaDao;
+
+
+    public RepositoryFactoryBean(Class<T> actualType) {
+        super(actualType);
+    }
 
 
     @PostConstruct
@@ -81,28 +87,26 @@ public class RepositoryFactoryBean<T>
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-
-        if(method.getDeclaringClass() == Object.class){
-            ;
+        if (ReflectionUtils.isObjectMethod(method)) {
+            return method.invoke(proxy, args);
         }
 
         //获取方法上面的注解
         Annotation opAnnotation = findOpAnnotation(method, method.getAnnotations());
 
-        boolean isInterface = method.getDeclaringClass().isInterface();
+//        boolean isInterface = method.getDeclaringClass().isInterface();
 
         //如果代理的不是接口，方法次是抽象，且没有注解，则忽略这个方法的执行，直接返回noop
-        if (!isInterface
-                && !Modifier.isAbstract(method.getModifiers())
-                && opAnnotation == null) {
-            return new NOOP(proxy, method, args, PROMPT);
-        }
+//        if (!isInterface
+//                && !Modifier.isAbstract(method.getModifiers())
+//                && opAnnotation == null) {
+//            return new NOOP(proxy, method, args, PROMPT);
+//        }
 
         //如果方法上没有注解，则获以类上面的注解
         if (opAnnotation == null)
             opAnnotation = findOpAnnotation(method.getDeclaringClass(), method.getDeclaringClass().getAnnotations());
 
-        // DaoContext.setThreadVar("p",);
 
         if (opAnnotation instanceof QueryRequest || opAnnotation == null) {
 
@@ -184,7 +188,14 @@ public class RepositoryFactoryBean<T>
                     .delete();
 
         } else {
-            throw new RuntimeException("unknown operation annotation : " + opAnnotation);
+
+            //throw new RuntimeException("unknown operation annotation : " + opAnnotation);
+
+            if (Modifier.isAbstract(method.getModifiers())) {
+                throw new AbstractMethodError(method.getName());
+            }
+
+            return method.invoke(proxy, args);
         }
 
     }

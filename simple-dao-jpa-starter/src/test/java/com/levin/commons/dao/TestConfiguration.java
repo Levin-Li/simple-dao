@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
                 , basePackages = {"com. levin. commons . dao.."}),
 
-        @ProxyBeanScan(scanType = API.class, factoryBeanClass = APIFactoryBean.class
+        @ProxyBeanScan(scanType = API.class, invocationHandlerClass = APIFactoryBean.class
                 , basePackages = {"com. levin."}),
 })
 
