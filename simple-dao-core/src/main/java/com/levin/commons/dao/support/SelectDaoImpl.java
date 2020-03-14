@@ -248,11 +248,22 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs) {
 
+
+        return appendJoinFetchSet(isLeftJoin ? Fetch.JoinType.Left : Fetch.JoinType.Inner);
+    }
+
+    @Override
+    public SelectDao<T> appendJoinFetchSet(Fetch.JoinType joinType, String... setAttrs) {
+
+
         //仅对 JPA dao 有效
         if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
             return this;
         }
 
+        if (joinType == null) {
+            joinType = Fetch.JoinType.Inner;
+        }
 
         for (String setAttr : setAttrs) {
 
@@ -269,10 +280,9 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            fetchStatement.append(" ").append((isLeftJoin ? "left" : "inner") + " join fetch " + setAttr).append(" ");
+            fetchStatement.append(" ").append((joinType == Fetch.JoinType.None ? "" : joinType.name()) + " Join Fetch " + setAttr).append(" ");
 
         }
-
 
         return this;
     }
@@ -948,7 +958,7 @@ public class SelectDaoImpl<T>
                         property = getAlias() + "." + property;
                     }
 
-                    appendJoinFetchSet(fetch.isLeftJoin(), property);
+                    appendJoinFetchSet(fetch.joinType(), property);
 
                 }, field -> field.getAnnotation(Fetch.class) != null
         );

@@ -1,5 +1,6 @@
 package com.levin.commons.dao;
 
+import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.util.List;
@@ -150,6 +151,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param setAttrs 如 customers orders
      * @return
      */
+    @Deprecated
     SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs);
 
     /**
@@ -157,7 +159,17 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param setAttrs
      * @return
      */
+    @Deprecated
     SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs);
+
+
+    /**
+     * @param joinType
+     * @param setAttrs
+     * @return
+     */
+
+    SelectDao<T> appendJoinFetchSet(Fetch.JoinType joinType, String... setAttrs);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**

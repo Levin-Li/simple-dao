@@ -18,6 +18,16 @@ import java.lang.annotation.*;
  */
 public @interface Fetch {
 
+
+    enum JoinType {
+        Left,
+        Right,
+        Inner,
+        Natural,
+        Full,
+        None,
+    }
+
     /**
      * 默认属性
      *
@@ -46,7 +56,16 @@ public @interface Fetch {
      *
      * @return
      */
+    @Deprecated
     boolean isLeftJoin() default true;
+
+    /**
+     * 连接类型
+     *
+     * @return
+     */
+    JoinType joinType() default JoinType.None;
+
 
     /**
      * 表达式，考虑支持Groovy和SpEL
