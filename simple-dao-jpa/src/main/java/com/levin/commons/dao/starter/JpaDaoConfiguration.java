@@ -10,6 +10,7 @@ import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.JpaDaoImpl;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.Role;
 
 @EnableProxyBean(registerTypes = EntityRepository.class)
 
+@Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {
 
     /**
@@ -62,6 +64,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
 //        context.getAutowireCapableBeanFactory().autowireBean(target);
 //        target.setApplicationContext(context);
+
+
 
         context.getAutowireCapableBeanFactory()
                 .configureBean(target, JpaDao.class.getName());

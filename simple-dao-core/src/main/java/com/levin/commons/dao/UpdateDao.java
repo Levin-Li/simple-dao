@@ -14,6 +14,7 @@ public interface UpdateDao<T>
      *                    是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return
      */
+    @Deprecated
     UpdateDao<T> setColumns(String columns, Object... paramValues);
 
     /**
@@ -44,28 +45,10 @@ public interface UpdateDao<T>
      * @param entityAttrName 需要更新的属性名
      * @param paramValue     属性值
      * @return
+     * @see #set
      */
 
-    UpdateDao<T> set(String entityAttrName, Object paramValue);
-
-    /**
-     * 增加单个需要更新的属性
-     *
-     * @param isAppend       为了保持链式调用，增加参数支持
-     * @param entityAttrName
-     * @param paramValue
-     * @return
-     */
-    UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue);
-
-    /**
-     * 增加单个需要更新的属性
-     *
-     * @param entityAttrName 需要更新的属性名
-     * @param paramValue     属性值
-     * @return
-     */
-
+    @Deprecated
     UpdateDao<T> appendColumn(String entityAttrName, Object paramValue);
 
 
@@ -76,7 +59,9 @@ public interface UpdateDao<T>
      * @param entityAttrName
      * @param paramValue
      * @return
+     * @see #set
      */
+    @Deprecated
     UpdateDao<T> appendColumn(Boolean isAppend, String entityAttrName, Object paramValue);
 
     /**
@@ -107,6 +92,26 @@ public interface UpdateDao<T>
 
 
     /**
+     * 增加单个需要更新的属性
+     *
+     * @param entityAttrName 需要更新的属性名
+     * @param paramValue     属性值
+     * @return
+     */
+
+    UpdateDao<T> set(String entityAttrName, Object paramValue);
+
+    /**
+     * 增加单个需要更新的属性
+     *
+     * @param isAppend       为了保持链式调用，增加参数支持
+     * @param entityAttrName
+     * @param paramValue
+     * @return
+     */
+    UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue);
+
+    /**
      * 是否有要更新的列
      * <p>
      * 2018.3.30 增加
@@ -117,7 +122,7 @@ public interface UpdateDao<T>
 
 
     /**
-     * 禁止抛出异常，但没有要更新的列时
+     * 禁止抛出异常当没有要更新的列时
      *
      * @return
      */
@@ -126,8 +131,14 @@ public interface UpdateDao<T>
 
     /**
      * 执行更新动作，并返回受影响的记录数
+     * <p>
+     * <p>
+     * <p>
+     * 如果没有要更新的列该方法默认抛出异常，可以通过调用 {@link #disableThrowExWhenNoColumnForUpdate}
+     * 禁止抛出异常，那将放弃执行语句返回 -1
      *
-     * @return
+     * @return 如果语句正常执行返回更新的记录数，如果语句没有执行返回 -1
+     * @see #disableThrowExWhenNoColumnForUpdate
      */
     @Transactional
     int update();
