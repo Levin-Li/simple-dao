@@ -4,6 +4,7 @@ package com.levin.commons.dao.repository;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.logic.OR;
@@ -24,7 +25,7 @@ public abstract class GroupDao {
     private JpaDao jpaDao;
 
     @QueryRequest
-    public Group findOne(@OR @Eq Long id, @Like String name,
+    public Group findOne(@OR @Eq Long id, @Contains String name,
                          @Eq String category, Paging paging) {
 
         Group result = RepositoryFactoryBean.getProxyInvokeResult();
@@ -35,7 +36,7 @@ public abstract class GroupDao {
     }
 
     @QueryRequest
-    public List<Group> find(@OR @Eq Long id, @Like String name,
+    public List<Group> find(@OR @Eq Long id, @Contains String name,
                             @Eq String category, Paging paging) {
 
         List<Group> groups = RepositoryFactoryBean.getProxyInvokeResult();
@@ -47,7 +48,7 @@ public abstract class GroupDao {
 
     @UpdateRequest
 //    @Transactional
-    public int update(@Eq Long id, @UpdateColumn String name) {
+    public int update(@Eq(require = true) Long id, @UpdateColumn String name) {
 
         Integer r = RepositoryFactoryBean.getProxyInvokeResult();
 
@@ -63,14 +64,14 @@ public abstract class GroupDao {
     }
 
     @QueryRequest
-    public Group findOneAndRepeatGetResult(@OR @Eq Long id, @Like String name,
+    public Group findOneAndRepeatGetResult(@OR @Eq Long id, @Contains String name,
                                            @Eq String category, Paging paging) {
 
         Object result = RepositoryFactoryBean.getProxyInvokeResult();
 
         System.out.println(result);
 
-        RepositoryFactoryBean.getProxyInvokeResult();
+        result = RepositoryFactoryBean.getProxyInvokeResult();
 
         return (Group) result;
     }

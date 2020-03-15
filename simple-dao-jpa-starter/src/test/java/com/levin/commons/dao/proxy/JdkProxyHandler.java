@@ -8,7 +8,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 @Slf4j
-public class APIFactoryBean implements InvocationHandler {
+public class JdkProxyHandler implements InvocationHandler {
 
 
     @Autowired
@@ -17,7 +17,7 @@ public class APIFactoryBean implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        return " test " + jpaDao;
+        return " JdkProxyHandler " + jpaDao;
 
     }
 

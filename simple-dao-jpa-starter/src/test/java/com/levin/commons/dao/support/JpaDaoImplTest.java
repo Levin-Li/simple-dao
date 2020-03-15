@@ -7,6 +7,8 @@ import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
+import com.levin.commons.dao.proxy.UserApi2;
+import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
 import com.levin.commons.dao.repository.SimpleDao;
@@ -55,6 +57,12 @@ public class JpaDaoImplTest {
 
     @Autowired
     UserApi userApi;
+
+    @Autowired
+    UserApi2 userApi2;
+
+    @Autowired
+    UserApi3 userApi3;
 
     @Autowired
     UserService userService;
@@ -284,7 +292,16 @@ public class JpaDaoImplTest {
 
         String emf = userApi.getEMF();
 
-        System.out.printf(emf);
+        System.out.println(emf);
+
+          emf = userApi2.getEMF();
+
+        System.out.println(emf);
+
+
+          emf = userApi3.getEMF();
+
+        System.out.println(emf);
 
     }
 
@@ -356,6 +373,12 @@ public class JpaDaoImplTest {
     @Test
     public void testGroupDao() {
 
+
+        System.out.println(userDao);
+        System.out.println(groupDao.hashCode());
+        System.out.println(group2Dao.toString());
+
+
         Group group = groupDao.findOne(null, "Group", null, null);
 
         System.out.println(group);
@@ -377,6 +400,8 @@ public class JpaDaoImplTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
 
     }
 

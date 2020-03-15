@@ -16,10 +16,10 @@ import com.levin.commons.service.proxy.ProxyFactoryBean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
-import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
@@ -33,9 +33,7 @@ import java.util.List;
 public class RepositoryFactoryBean<T>
         extends ProxyFactoryBean<T> {
 
-
-    //private static String PROMPT = "无操作注解，非接口类需要在方法上显式声明注解，如：@QueryRequest";
-
+    private static String PROMPT = "需要在方法上显式声明注解，如：@QueryRequest";
 
     @Autowired
     private MiniDao jpaDao;
@@ -43,6 +41,14 @@ public class RepositoryFactoryBean<T>
 
     public RepositoryFactoryBean(Class<T> actualType) {
         super(actualType);
+
+        this.invocationHandler = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                return interceptRepositoryMethod(proxy, method, args);
+            }
+        };
+
     }
 
 
@@ -74,34 +80,30 @@ public class RepositoryFactoryBean<T>
 
     static Converter findFirstConverter(Object[] args) {
 
-        if (args != null)
+        if (args != null) {
             for (Object arg : args) {
-                if (arg instanceof Converter)
+                if (arg instanceof Converter) {
                     return (Converter) arg;
+                }
             }
+        }
 
         return null;
     }
 
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-        if (ReflectionUtils.isObjectMethod(method)) {
-            return method.invoke(proxy, args);
-        }
+    public Object interceptRepositoryMethod(Object proxyObj, Method method, Object[] args) throws Throwable {
 
         //获取方法上面的注解
         Annotation opAnnotation = findOpAnnotation(method, method.getAnnotations());
 
-//        boolean isInterface = method.getDeclaringClass().isInterface();
+        boolean isInterface = method.getDeclaringClass().isInterface();
 
-        //如果代理的不是接口，方法次是抽象，且没有注解，则忽略这个方法的执行，直接返回noop
-//        if (!isInterface
-//                && !Modifier.isAbstract(method.getModifiers())
-//                && opAnnotation == null) {
-//            return new NOOP(proxy, method, args, PROMPT);
-//        }
+//        如果代理的不是接口，方法不是抽象，且没有注解，则忽略这个方法的执行，直接返回noop
+        if (!isInterface
+                && !Modifier.isAbstract(method.getModifiers())
+                && opAnnotation == null) {
+            return new NOOP(proxyObj, method, args, PROMPT);
+        }
 
         //如果方法上没有注解，则获以类上面的注解
         if (opAnnotation == null)
@@ -122,13 +124,13 @@ public class RepositoryFactoryBean<T>
                 selectDao.appendWhere(queryRequest.fixedCondition());
             }
 
-            selectDao.appendByMethodParams(proxy, method, args);
+            selectDao.appendByMethodParams(proxyObj, method, args);
 
             if (queryRequest != null) {
                 selectDao.setQueryRequest(queryRequest);
             }
 
-            ResolvableType resolvableType = ResolvableType.forType(method.getGenericReturnType(), ResolvableType.forType(getActualType()));
+            ResolvableType resolvableType = ResolvableType.forType(method.getGenericReturnType(), ResolvableType.forType(getProxyTargetClass()));
 
             Class<?> returnType = resolvableType.resolve(method.getReturnType());
 
@@ -174,7 +176,7 @@ public class RepositoryFactoryBean<T>
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
                     .appendWhere(((UpdateRequest) opAnnotation).fixedCondition())
                     .appendColumns(((UpdateRequest) opAnnotation).updateStatement())
-                    .appendByMethodParams(proxy, method, args)
+                    .appendByMethodParams(proxyObj, method, args)
                     .update();
 
         } else if (opAnnotation instanceof DeleteRequest) {
@@ -184,18 +186,16 @@ public class RepositoryFactoryBean<T>
             return deleteDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
                     .appendWhere(((DeleteRequest) opAnnotation).fixedCondition())
-                    .appendByMethodParams(proxy, method, args)
+                    .appendByMethodParams(proxyObj, method, args)
                     .delete();
 
         } else {
-
-            //throw new RuntimeException("unknown operation annotation : " + opAnnotation);
 
             if (Modifier.isAbstract(method.getModifiers())) {
                 throw new AbstractMethodError(method.getName());
             }
 
-            return method.invoke(proxy, args);
+            throw new IllegalAccessException("unknown operation annotation : " + opAnnotation);
         }
 
     }

@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManagerFactory;
 
-@API
-public abstract class UserApi {
+@API2
+public abstract class UserApi2 {
 
     @Autowired
     EntityManagerFactory entityManagerFactory;
@@ -23,7 +23,7 @@ public abstract class UserApi {
 
 
     public String getEMF() {
-        return ProxyFactoryBean.getProxyInvokeResult() + "  " + getClass().getName();
+        return ProxyFactoryBean.getProxyInvokeResult() + " " + getClass().getName();
     }
 
     public abstract String getId();
