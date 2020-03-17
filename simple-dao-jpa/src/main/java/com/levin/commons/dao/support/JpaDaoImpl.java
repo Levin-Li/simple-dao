@@ -720,6 +720,11 @@ public class JpaDaoImpl
 
 
     @Override
+    public long countByQueryObj(Object... queryObjs) {
+        return newDao(SelectDao.class, queryObjs).count();
+    }
+
+    @Override
     public <E> List<E> findByQueryObj(Object... queryObjs) {
         return newDao(SelectDao.class, queryObjs).find();
     }

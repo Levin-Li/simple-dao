@@ -146,6 +146,14 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     /////////////////////////////////////////////////////////////////
 
     /**
+     * 统计数量
+     *
+     * @param queryObjs 统计语句
+     * @return
+     */
+    long countByQueryObj(Object... queryObjs);
+
+    /**
      * @param queryObjs
      * @param <E>
      * @return

@@ -11,9 +11,7 @@ import com.levin.commons.dao.support.JpaDaoImpl;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -24,6 +22,7 @@ import org.springframework.context.annotation.Role;
 @Configuration
 
 @Role(BeanDefinition.ROLE_SUPPORT)
+
 
 @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
         , basePackages = {"com.levin.commons.dao.repository"})
@@ -47,12 +46,14 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {Eq.class, MiniDao.class, JpaDao.class, JpaDaoImpl.class}),
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JpaDao.class),
     })
+    JpaDao newJpaDao() {
+        return new JpaDaoImpl();
+    }
 
-//    JpaDao newJpaDao(){
-//        return new JpaDaoImpl();
-//    }
+/*
+    FactoryBean<JpaDao> newJpaDao() {
 
-    FactoryBean newJpaDao() {
+        //一定要返回 FactoryBean<JpaDao>
 
         //务必要返回代理对象，否则事务扫描，不会生效
 
@@ -66,15 +67,19 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 //        target.setApplicationContext(context);
 
 
-
         context.getAutowireCapableBeanFactory()
                 .configureBean(target, JpaDao.class.getName());
+
+        try {
+            proxyFactoryBean.setProxyInterfaces(new Class[]{JpaDao.class});
+        } catch (ClassNotFoundException e) {
+        }
 
         proxyFactoryBean.setTarget(target);
         proxyFactoryBean.setSingleton(true);
 
-        return proxyFactoryBean;
-    }
+        return (FactoryBean) proxyFactoryBean;
+    }*/
 
 
     ApplicationContext context;

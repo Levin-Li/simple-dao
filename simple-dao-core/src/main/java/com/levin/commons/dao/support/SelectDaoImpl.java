@@ -403,16 +403,17 @@ public class SelectDaoImpl<T>
 
 
         //处理SelectColumn注解
-        processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
 
         //同时处理GroupBy和Having子句
-        processStatAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        processStatAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
 
         //处理排序注解
         processOrderByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
         //处理抓取
         processFetchSetByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+
 
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
@@ -489,16 +490,20 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processSelectAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    protected void processSelectAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation, String alias) {
 
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
+
 
             PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
             genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
+
                 tryAppendHaving(opAnnotation, expr, holder, value);
+
+                expr = tryAppendAlias(expr, opAnnotation, alias);
 
                 appendColumns(expr, holder.value);
 
@@ -518,7 +523,7 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processStatAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    protected void processStatAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation, String alias) {
 
         //如果不是同个包，或是 opAnnotation 为 null
         if (!QueryAnnotationUtil.isSamePackage(opAnnotation, GroupBy.class)) {
@@ -531,20 +536,31 @@ public class SelectDaoImpl<T>
 
         genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
 
-            appendColumns(expr);
-
-            //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-            appendColumnMap(expr, fieldOrMethod, name);
-
             tryAppendHaving(opAnnotation, expr, holder, value);
-
             if (opAnnotation instanceof GroupBy) {
                 //增加GroupBy字段
                 appendGroupBy(expr);
             }
 
+            expr = tryAppendAlias(expr, opAnnotation, alias);
+
+            appendColumns(expr);
+
+            //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
+            appendColumnMap(expr, fieldOrMethod, name);
+
+
         });
 
+    }
+
+    private String tryAppendAlias(String expr, Annotation opAnnotation, String alias) {
+
+        if (!hasText(alias)) {
+            alias = ClassUtils.getValue(opAnnotation, "alias", false);
+        }
+
+        return hasText(alias) ? expr + " AS " + alias + " " : expr;
     }
 
     /**
@@ -664,13 +680,19 @@ public class SelectDaoImpl<T>
     }
 
 
-
     @Override
     public long count() {
 
         if (isNative()) {
             return count("Select Count(*) From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
         }
+
+
+        //JPA 暂时不支持对统计查询进行二次统计
+        if (hasStatColumns()) {
+            throw new StatementBuildException("JPA暂时不支持对统计查询进行二次统计，请使用原生查询");
+        }
+
 
         String column = "1";
 
@@ -686,8 +708,8 @@ public class SelectDaoImpl<T>
             column = alias;
         }
 
-        return count("Select Count(" + column + ") " + genQL(true), getDaoContextValues(), whereParamValues, havingParamValues);
 
+        return count("Select Count(" + column + ") " + genQL(true), getDaoContextValues(), whereParamValues, havingParamValues);
 
     }
 
@@ -740,6 +762,8 @@ public class SelectDaoImpl<T>
      */
 //    @Override
     public <E> List<E> findForResultClass(Class<E> resultClass) {
+
+
         return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
@@ -806,7 +830,9 @@ public class SelectDaoImpl<T>
 
         // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
 
-        // boolean isEntity = dao.isEntityType(targetType) || !dao.isJpa();
+        if (selectColumnsMap.size() == 0) {
+
+        }
 
         List<E> queryResultList = this.findForResultClass(null);
 
@@ -819,7 +845,7 @@ public class SelectDaoImpl<T>
 
         List<E> returnList = new ArrayList<>(queryResultList.size());
 
-        ValueHolder<String[]> valueHolder = new ValueHolder<>(null);
+        ValueHolder<List<List<String>>> valueHolder = new ValueHolder<>(null);
 
         for (Object data : queryResultList) {
 
@@ -899,7 +925,7 @@ public class SelectDaoImpl<T>
                         property = field.getName();
                     }
 
-                    property = getExprForJpaJoinFetch(entityClass,getAlias(), property);
+                    property = getExprForJpaJoinFetch(entityClass, getAlias(), property);
 
                     if (hasText(getAlias())) {
                         property = getAlias() + "." + property;
@@ -971,7 +997,7 @@ public class SelectDaoImpl<T>
      * @return
      * @todo 优化性能，直接转换成对象
      */
-    public Object tryConvert2Map(Object data, ValueHolder<String[]> valueHolder) {
+    public Object tryConvert2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
 
         if (data == null || !data.getClass().isArray()) {
             return data;
@@ -979,15 +1005,21 @@ public class SelectDaoImpl<T>
 
         final int arrayLen = Array.getLength(data);
 
+        //缓存 Keys
         if (valueHolder != null
                 && valueHolder.value != null
-                && valueHolder.value.length == arrayLen) {
+                && valueHolder.value.size() >= arrayLen) {
 
             //如果已经缓存字段对应关系，优化性能
             Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
 
             for (int i = 0; i < arrayLen; i++) {
-                dataMap.put(valueHolder.value[i], Array.get(data, i));
+
+                Object value = Array.get(data, i);
+
+                for (String key : valueHolder.value.get(i)) {
+                    dataMap.put(key, value);
+                }
             }
 
             return dataMap;
@@ -1006,54 +1038,46 @@ public class SelectDaoImpl<T>
         //转化成 Map
         int idx = 0;
 
-        String[] columnNames = new String[arrayLen];
+        List<List<String>> columnNames = new ArrayList<>(arrayLen);
+
 
         for (String[] selectColumn : selectColumns) {
 
-            String key = selectColumn[selectColumn.length - 1];
-
-            if (key == null) {
-                key = selectColumn[0];
-            }
-
-            Object[] keys = selectColumnsMap.get(key);
-
-            key = removeAlias(key);
-
-            //
-            if (keys != null && keys.length > 0) {
-
-                //1、优先使用字段名
-                Object fieldOrMethod = keys[1];
-
-                //2、其次使用实体属性名
-                String entityAttrName = (String) keys[0];
-
-                if (fieldOrMethod != null) {
-
-                    if (fieldOrMethod instanceof Field) {
-                        key = ((Field) fieldOrMethod).getName();
-                    } else if (fieldOrMethod instanceof Method) {
-                        key = ((Method) fieldOrMethod).getName();
-
-                        //去除 get
-                        if (key.startsWith("get")) {
-                            key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
-                        }
-                    } else if (fieldOrMethod instanceof String) {
-                        key = removeAlias((String) fieldOrMethod);
-                    }
-
-                } else if (hasText(entityAttrName)) {
-                    key = entityAttrName;
-                }
-
-            }
+            List<String> alias = new ArrayList<>(selectColumn.length);
 
             //列明对应关系
-            columnNames[idx] = key;
+            columnNames.add(alias);
 
-            dataMap.put(key, Array.get(data, idx++));
+            Object value = Array.get(data, idx);
+
+            for (final String column : selectColumn) {
+
+                String key = column;
+
+                if (hasText(key)) {
+
+                    Object[] keys = selectColumnsMap.get(key);
+
+                    key = removeAlias(key);
+
+                    key = getPropertyName(key, keys);
+
+                    if (!hasText(key)) {
+                        continue;
+                    }
+                }
+
+
+                if (!isNameExists(key, columnNames)) {
+                    alias.add(key);
+
+                    dataMap.put(key, value);
+                }
+            }
+
+
+            idx++;
+
         }
 
 
@@ -1063,11 +1087,59 @@ public class SelectDaoImpl<T>
 
         return dataMap;
 
+    }
+
+
+    private boolean isNameExists(String name, List<List<String>> names) {
+
+        for (List<String> list : names) {
+            if (list.contains(name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String getPropertyName(String key, Object[] keys) {
+
+        if (!hasText(key)) {
+            return key;
+        }
+
+        if (keys == null) {
+            return key;
+        }
+
+        //1、优先使用字段名
+        Object fieldOrMethod = keys[1];
+
+        //2、其次使用实体属性名
+        String entityAttrName = (String) keys[0];
+
+        if (fieldOrMethod != null) {
+            if (fieldOrMethod instanceof Field) {
+                key = ((Field) fieldOrMethod).getName();
+            } else if (fieldOrMethod instanceof Method) {
+                key = ((Method) fieldOrMethod).getName();
+                //去除 get
+                if (key.startsWith("get")) {
+                    key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
+                }
+            } else if (fieldOrMethod instanceof String) {
+                key = removeAlias((String) fieldOrMethod);
+            }
+
+        } else if (hasText(entityAttrName)) {
+            key = entityAttrName;
+        }
+
+        return key;
 
     }
 //////////////////////////////////////////////
 
-    private SelectDao<T> processStat(int callMethodDeep, String expr, Object... paramValues) {
+    private SelectDao<T> processStat(int callMethodDeep, String expr, String alias, Object... paramValues) {
 
         if (!hasText(expr)) {
             throw new IllegalArgumentException("expr has no content");
@@ -1083,42 +1155,42 @@ public class SelectDaoImpl<T>
             throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
-        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation);
+        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation, alias);
 
         return this;
     }
 
     @Override
-    public SelectDao<T> count(String expr) {
-        return processStat(2, expr);
+    public SelectDao<T> count(String expr, String alias) {
+        return processStat(2, expr, alias);
     }
 
     @Override
-    public SelectDao<T> avg(String expr, Map<String, Object>... paramValues) {
-        return processStat(2, expr, paramValues);
+    public SelectDao<T> avg(String expr, String alias, Map<String, Object>... paramValues) {
+        return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> sum(String expr, Map<String, Object>... paramValues) {
-        return processStat(2, expr, paramValues);
+    public SelectDao<T> sum(String expr, String alias, Map<String, Object>... paramValues) {
+        return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> max(String expr, Map<String, Object>... paramValues) {
-        return processStat(2, expr, paramValues);
+    public SelectDao<T> max(String expr, String alias, Map<String, Object>... paramValues) {
+        return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> min(String expr, Map<String, Object>... paramValues) {
-        return processStat(2, expr, paramValues);
+    public SelectDao<T> min(String expr, String alias, Map<String, Object>... paramValues) {
+        return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> groupByAsAnno(String expr, Map<String, Object>... paramValues) {
+    public SelectDao<T> groupByAsAnno(String expr, String alias, Map<String, Object>... paramValues) {
 
         Annotation annotation = QueryAnnotationUtil.getAnnotation(GroupBy.class);
 
-        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation);
+        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation, alias);
 
         return this;
     }

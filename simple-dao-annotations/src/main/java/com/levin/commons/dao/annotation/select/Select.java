@@ -166,6 +166,15 @@ public @interface Select {
      */
     String surroundSuffix() default "";
 
+
+    /**
+     * 别名
+     * 整个表达后的别名
+     *
+     * @return
+     */
+    String alias() default "";
+
     /**
      * 描述信息
      *

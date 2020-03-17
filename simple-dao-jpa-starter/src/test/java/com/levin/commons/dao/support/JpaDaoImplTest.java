@@ -1,7 +1,6 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
-import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -251,18 +250,14 @@ public class JpaDaoImplTest {
                             .setState(states[Math.abs(random.nextInt()) % states.length])
                             .setArea(areas[Math.abs(random.nextInt()) % areas.length])
                     );
-
                 }
-
             }
 
             if (parentId == null || (gCount % 5) == 0) {
                 parentId = group.getId();
             }
 
-
         }
-
 
         testJoinAndStat();
 
@@ -271,17 +266,17 @@ public class JpaDaoImplTest {
     @Test
     public void testJoinAndStat() {
 
-        List<Object> g = jpaDao.selectFrom(Group.class, "g")
+        List<Map> g = jpaDao.selectFrom(Group.class, "g")
                 .appendJoin("left join " + User.class.getName() + " u on g.id = u.group.id")
                 .appendJoin("left join " + Task.class.getName() + " t on u.id = t.user.id")
-                .count("1")
-                .avg("t.score")
-                .avg("u.score")
-                .avg("g.score")
-                .sum("t.score")
-                .groupByAsAnno(E_Group.name)
+                .count("1", "cnt")
+                .avg("t.score", "ts")
+                .avg("u.score", "us")
+                .avg("g.score", "gs")
+                .sum("t.score", "ts2")
+                .groupByAsAnno(E_Group.name, "")
 //                .groupBy("g.name")
-                .find();
+                .find(Map.class);
 
 
         Assert.isTrue(g.size() > 0);
@@ -294,12 +289,12 @@ public class JpaDaoImplTest {
 
         System.out.println(emf);
 
-          emf = userApi2.getEMF();
+        emf = userApi2.getEMF();
 
         System.out.println(emf);
 
 
-          emf = userApi3.getEMF();
+        emf = userApi3.getEMF();
 
         System.out.println(emf);
 
@@ -309,14 +304,19 @@ public class JpaDaoImplTest {
     @Test
     public void testAnno() {
 
+//
+//        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new AnnoTest());
+//
+////        System.out.println(byQueryObj);
+//
+//        Object aa = jpaDao.find("  From com.levin.commons.dao.domain.User e   Where e.id =   ?1  AND e.state =   ?2   Order By  e.id DESC", 1, "ss");
+//
+//        System.out.println(aa);
 
-        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new AnnoTest());
+        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
 
-//        System.out.println(byQueryObj);
+        System.out.println(objects);
 
-        Object aa = jpaDao.find("  From com.levin.commons.dao.domain.User e   Where e.id =   ?1  AND e.state =   ?2   Order By  e.id DESC", 1, "ss");
-
-        System.out.println(aa);
 
     }
 
@@ -400,7 +400,6 @@ public class JpaDaoImplTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
 
 
     }
@@ -733,7 +732,6 @@ public class JpaDaoImplTest {
 
     @org.junit.Test
     public void testDeleteById() throws Exception {
-
 
         jpaDao.deleteById(TestEntity.class, 1L);
 

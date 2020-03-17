@@ -67,6 +67,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param paramValues
      * @return
      * @Deprecated 建议使用 appendColumns 代替
+     * @see #appendColumns
      */
     @Deprecated
     SelectDao<T> appendSelectColumns(String columns, Object... paramValues);

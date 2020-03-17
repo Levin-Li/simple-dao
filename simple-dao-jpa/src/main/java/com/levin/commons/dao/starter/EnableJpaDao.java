@@ -5,10 +5,18 @@ import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
-@Import({JpaDaoConfiguration.class})
+
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Import(JpaDaoConfiguration.class)
 public @interface EnableJpaDao {
+
+    /**
+     * bean 的名字
+     *
+     * @return
+     */
+//    String value() default "";
 
 }

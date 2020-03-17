@@ -11,23 +11,25 @@ import java.util.Map;
  */
 public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
 
-    T count(String expr);
+    T count(String expr, String alias);
 
-    T avg(String expr, Map<String, Object>... paramValues);
+    T avg(String expr, String alias, Map<String, Object>... paramValues);
 
-    T sum(String expr, Map<String, Object>... paramValues);
+    T sum(String expr, String alias, Map<String, Object>... paramValues);
 
-    T max(String expr, Map<String, Object>... paramValues);
+    T max(String expr, String alias, Map<String, Object>... paramValues);
 
-    T min(String expr, Map<String, Object>... paramValues);
+    T min(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * 因为方法名称冲突，只好取 groupByAsAnno 的名字
+     * <p>
+     * 通过模拟 GroupBy 注解的方式增加 groupBy 语句
      *
      * @param expr
      * @param paramValues
      * @return
      */
-    T groupByAsAnno(String expr, Map<String, Object>... paramValues);
+    T groupByAsAnno(String expr, String alias, Map<String, Object>... paramValues);
 
 }
