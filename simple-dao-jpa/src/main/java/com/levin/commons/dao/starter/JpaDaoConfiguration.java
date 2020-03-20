@@ -36,13 +36,13 @@ import org.springframework.format.support.FormattingConversionServiceFactoryBean
 public class JpaDaoConfiguration implements ApplicationContextAware {
 
 
-    @Bean
+/*    @Bean
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = FormattingConversionService.class),
     })
     FormattingConversionServiceFactoryBean formattingConversionServiceFactoryBean() {
         return new FormattingConversionServiceFactoryBean();
-    }
+    }*/
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
@@ -61,9 +61,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     JpaDao newJpaDao() {
 
         //加入默认的时间格式
-        DaoContext.setGlobalVar("dateFormat", "YYYYMMDD");
-        DaoContext.setGlobalVar("DF_YEAR", "YYYY");
-        DaoContext.setGlobalVar("DF_YYYYMMDD", "YYYYMMDD");
+//        DaoContext.setGlobalVar("dateFormat", "YYYYMMDD");
+//        DaoContext.setGlobalVar("DF_YEAR", "YYYY");
+//        DaoContext.setGlobalVar("DF_YYYYMMDD", "YYYYMMDD");
 
         return new JpaDaoImpl();
     }

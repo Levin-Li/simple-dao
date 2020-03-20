@@ -145,7 +145,7 @@ public class JpaDaoImpl
 
     private ApplicationContext applicationContext;
 
-    @Autowired
+    @Autowired(required = false)
     FormattingConversionService formattingConversionService;
 
 
