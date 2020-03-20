@@ -34,9 +34,10 @@ public @interface Ignore {
 
     enum Action {
         ALL,
-        SELECT,
-        UPDATE,
-        DELETE
+        // 2.0 还不支持选择性忽略
+//        SELECT,
+//        UPDATE,
+//        DELETE
     }
 
 }

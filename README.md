@@ -570,15 +570,22 @@
 
       Long id;
 
-      Date startTime;
+      Date createTime;
 
    DTO类字段定义 ：
 
       String id;
-
-      String startTime;
+ 
+      @GroupBy
+      @DateTimeFormat(pattern = "yyyy-MM-dd")  
+      String createTime;
 
    以上字符串字段将被会自动转换成对应的类型。
+   
+   
+   日期类型转换使用 Spring 的注解 DateTimeFormat
+   
+   数值类型转换使用 Spring 的注解 NumberFormat
 
 #### 10.7 避免 N + 1 查询，关联属性的自动抓取(仅对JPA有效)
 

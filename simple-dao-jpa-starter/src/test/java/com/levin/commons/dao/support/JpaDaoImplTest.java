@@ -315,7 +315,7 @@ public class JpaDaoImplTest {
 
 //        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
 
-        System.out.println(byQueryObj);
+ //       System.out.println(byQueryObj);
 
 
     }

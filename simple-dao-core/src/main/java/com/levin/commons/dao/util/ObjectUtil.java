@@ -15,12 +15,11 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.format.AnnotationFormatterFactory;
-import org.springframework.format.Parser;
 import org.springframework.format.Printer;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.NumberFormat;
 import org.springframework.format.datetime.DateTimeFormatAnnotationFormatterFactory;
-import org.springframework.format.datetime.standard.Jsr310DateTimeFormatAnnotationFormatterFactory;
+import org.springframework.format.number.NumberFormatAnnotationFormatterFactory;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -43,7 +42,9 @@ public abstract class ObjectUtil {
 
     public static final GenericConversionService conversionService = new DefaultFormattingConversionService();
 
-    private static final AnnotationFormatterFactory<DateTimeFormat> formatterFactory = new DateTimeFormatAnnotationFormatterFactory();
+    private static final AnnotationFormatterFactory<DateTimeFormat> dateFormatterFactory = new DateTimeFormatAnnotationFormatterFactory();
+    private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
+
 
     /**
      * 属性拷贝器
@@ -935,29 +936,12 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
-                DateTimeFormat dateTimeFormat = field.getAnnotation(DateTimeFormat.class);
-                NumberFormat numberFormat = field.getAnnotation(NumberFormat.class);
 
                 Object value = getIndexValue(source, propertyName);
 
-                //如果数据类型不同
-                if (value != null && dateTimeFormat != null
-                        && !fieldType.isAssignableFrom(value.getClass())) {
+                value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);
 
-                    if (value instanceof CharSequence) {
-
-                        Parser<?> parser = formatterFactory.getParser(dateTimeFormat, fieldType);
-
-                        value = parser.parse(value.toString(), Locale.getDefault());
-
-                    } else if(fieldType.isAssignableFrom(String.class)) {
-
-                        Printer<Object> printer = (Printer<Object>) formatterFactory.getPrinter(dateTimeFormat, fieldType);
-
-                        value = printer.print(value, Locale.getDefault());
-                    }
-
-                }
+                value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
 
 
                 boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);
@@ -1009,6 +993,46 @@ public abstract class ObjectUtil {
         }
 
         return target;
+    }
+
+    private static Object convertNumber(Class fieldType, NumberFormat numberFormat, Object value) throws java.text.ParseException {
+
+        if (value != null && numberFormat != null
+                && !fieldType.isAssignableFrom(value.getClass())) {
+
+            if (value instanceof CharSequence) {
+
+                value = numberFormatterFactory.getParser(numberFormat, fieldType).parse(value.toString(), Locale.getDefault());
+
+            } else if (fieldType.isAssignableFrom(String.class)) {
+
+                Printer<Object> printer = (Printer<Object>) numberFormatterFactory.getPrinter(numberFormat, fieldType);
+
+                value = printer.print(value, Locale.getDefault());
+            }
+        }
+        return value;
+    }
+
+    private static Object convertDate(Class fieldType, DateTimeFormat dateTimeFormat, Object value) throws java.text.ParseException {
+
+        //如果数据类型不同
+        if (value != null && dateTimeFormat != null
+                && !fieldType.isAssignableFrom(value.getClass())) {
+
+            if (value instanceof CharSequence) {
+
+                value = dateFormatterFactory.getParser(dateTimeFormat, fieldType).parse(value.toString(), Locale.getDefault());
+
+            } else if (fieldType.isAssignableFrom(String.class)) {
+
+                Printer<Object> printer = (Printer<Object>) dateFormatterFactory.getPrinter(dateTimeFormat, fieldType);
+
+                value = printer.print(value, Locale.getDefault());
+            }
+        }
+
+        return value;
     }
 
     /**

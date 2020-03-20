@@ -2,6 +2,7 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.select.Select;
+import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -33,7 +34,7 @@ public class CommDto {
     @Desc("备注")
     protected String remark;
 
-    @Select(alias = "createTime222")
+    @GroupBy
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     String createTime;
 
