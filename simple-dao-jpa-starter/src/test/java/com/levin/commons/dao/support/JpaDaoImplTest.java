@@ -305,7 +305,7 @@ public class JpaDaoImplTest {
     public void testAnno() {
 
 //
-//        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new AnnoTest());
+        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new AnnoTest());
 //
 ////        System.out.println(byQueryObj);
 //
@@ -313,9 +313,9 @@ public class JpaDaoImplTest {
 //
 //        System.out.println(aa);
 
-        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
+//        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
 
-        System.out.println(objects);
+        System.out.println(byQueryObj);
 
 
     }
@@ -722,6 +722,7 @@ public class JpaDaoImplTest {
     @org.junit.Test
     public void testStat() throws Exception {
 
+        Object groupSelectDao = jpaDao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
 
         List<GroupStatDTO> objects = jpaDao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());
 
@@ -863,7 +864,7 @@ public class JpaDaoImplTest {
 
         millis = System.currentTimeMillis();
 
-        jpaDao.selectFrom(User.class, "u")
+        String ql = jpaDao.selectFrom(User.class, "u")
                 .appendByQueryObj(new SubQueryDTO())
                 .genFinalStatement();
 

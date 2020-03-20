@@ -2,6 +2,7 @@ package com.levin.commons.dao.starter;
 
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Eq;
@@ -18,6 +19,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
+import org.springframework.format.support.FormattingConversionService;
+import org.springframework.format.support.FormattingConversionServiceFactoryBean;
 
 @Configuration
 
@@ -31,6 +34,15 @@ import org.springframework.context.annotation.Role;
 
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {
+
+
+    @Bean
+    @ConditionalOnList({
+            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = FormattingConversionService.class),
+    })
+    FormattingConversionServiceFactoryBean formattingConversionServiceFactoryBean() {
+        return new FormattingConversionServiceFactoryBean();
+    }
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
@@ -47,6 +59,12 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JpaDao.class),
     })
     JpaDao newJpaDao() {
+
+        //加入默认的时间格式
+        DaoContext.setGlobalVar("dateFormat", "YYYYMMDD");
+        DaoContext.setGlobalVar("DF_YEAR", "YYYY");
+        DaoContext.setGlobalVar("DF_YYYYMMDD", "YYYYMMDD");
+
         return new JpaDaoImpl();
     }
 

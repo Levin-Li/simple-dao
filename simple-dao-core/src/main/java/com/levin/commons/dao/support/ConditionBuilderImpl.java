@@ -1700,15 +1700,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         contextValues.addAll(getDaoContextValues());
 
-
         if (root instanceof Map) {
             contextValues.add(Map.class.cast(root));
+        } else if (root != null) {
+            //把对象
+            contextValues.add(ObjectUtil.copyField2Map(root, null));
         }
 
         if (value instanceof Map) {
             contextValues.add(Map.class.cast(value));
         }
-
 
         contextValues.add(MapUtils
                 .put("_val", value)
@@ -1720,7 +1721,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 .build());
 
         return contextValues;
-    }
 
+    }
 
 }

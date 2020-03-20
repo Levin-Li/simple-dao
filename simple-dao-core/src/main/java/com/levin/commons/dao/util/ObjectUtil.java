@@ -9,12 +9,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.format.AnnotationFormatterFactory;
+import org.springframework.format.Parser;
+import org.springframework.format.Printer;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.NumberFormat;
+import org.springframework.format.datetime.DateTimeFormatAnnotationFormatterFactory;
+import org.springframework.format.datetime.standard.Jsr310DateTimeFormatAnnotationFormatterFactory;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -34,8 +41,9 @@ public abstract class ObjectUtil {
     private static final Logger logger = LoggerFactory.getLogger(ObjectUtil.class);
 
 
-    public static final GenericConversionService conversionService = new DefaultConversionService();
+    public static final GenericConversionService conversionService = new DefaultFormattingConversionService();
 
+    private static final AnnotationFormatterFactory<DateTimeFormat> formatterFactory = new DateTimeFormatAnnotationFormatterFactory();
 
     /**
      * 属性拷贝器
@@ -103,11 +111,11 @@ public abstract class ObjectUtil {
 
         //对枚举类型进行转换
         if (targetType.isEnum()) {
-            if (source == null)
+            if (source == null) {
                 return null;
-            else if (source instanceof Number)
+            } else if (source instanceof Number) {
                 return targetType.getEnumConstants()[((Number) source).intValue()];
-            else if (source instanceof CharSequence) {
+            } else if (source instanceof CharSequence) {
                 Class enumType = targetType;
                 return (T) Enum.valueOf(enumType, "" + source);
             }
@@ -142,6 +150,7 @@ public abstract class ObjectUtil {
 
             return map;
         }
+
 
         List<Field> fields = QueryAnnotationUtil.getCacheFields(bean.getClass());
 
@@ -926,7 +935,30 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
+                DateTimeFormat dateTimeFormat = field.getAnnotation(DateTimeFormat.class);
+                NumberFormat numberFormat = field.getAnnotation(NumberFormat.class);
+
                 Object value = getIndexValue(source, propertyName);
+
+                //如果数据类型不同
+                if (value != null && dateTimeFormat != null
+                        && !fieldType.isAssignableFrom(value.getClass())) {
+
+                    if (value instanceof CharSequence) {
+
+                        Parser<?> parser = formatterFactory.getParser(dateTimeFormat, fieldType);
+
+                        value = parser.parse(value.toString(), Locale.getDefault());
+
+                    } else if(fieldType.isAssignableFrom(String.class)) {
+
+                        Printer<Object> printer = (Printer<Object>) formatterFactory.getPrinter(dateTimeFormat, fieldType);
+
+                        value = printer.print(value, Locale.getDefault());
+                    }
+
+                }
+
 
                 boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);
 

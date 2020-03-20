@@ -161,7 +161,7 @@ public enum Op
             this.expandParamValue = true;
 
             if (this.name().equals("Between")) {
-                paramDelimiter = "AND";
+                paramDelimiter = " AND ";
             }
         }
 

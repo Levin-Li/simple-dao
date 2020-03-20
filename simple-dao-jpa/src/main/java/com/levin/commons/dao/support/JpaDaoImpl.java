@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,6 +144,9 @@ public class JpaDaoImpl
     Validator validator;
 
     private ApplicationContext applicationContext;
+
+    @Autowired
+    FormattingConversionService formattingConversionService;
 
 
     private final Integer hibernateVersion;

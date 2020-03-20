@@ -15,6 +15,13 @@ import java.lang.annotation.*;
 public @interface Func {
 
     /**
+     *
+     * 默认参数占位符
+     *
+     */
+    String DEFAULT_PARAM = "$$";
+
+    /**
      * 函数名称
      *
      * @return
@@ -30,6 +37,16 @@ public @interface Func {
      * @return
      */
     String prefix() default "(";
+
+
+    /**
+     * 函数的参数
+     * <p>
+     * 例如日期函数  'yyyyMM' , $$
+     *
+     * @return
+     */
+    String[] params() default {DEFAULT_PARAM};
 
 
     /**
@@ -51,6 +68,6 @@ public @interface Func {
      *
      * @return
      */
-    String desc() default "单参数函数表达式生成规则：value + prefix + 参数 + suffix";
+    String desc() default "单参数函数表达式生成规则：value + prefix + 被包围对象 + suffix";
 
 }

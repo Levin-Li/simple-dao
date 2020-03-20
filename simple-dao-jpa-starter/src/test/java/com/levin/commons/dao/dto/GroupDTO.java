@@ -3,11 +3,9 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.Gt;
-import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.Like;
-import com.levin.commons.dao.annotation.Lt;
+import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.support.DefaultPaging;
@@ -45,13 +43,16 @@ public class GroupDTO {
 
     protected Boolean editable = true;
 
-    @Lt
+    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {"$$","${:format}"}))
     protected Date createTime = new Date();
 
-    @UpdateColumn
+    @Update
     protected Date lastUpdateTime = new Date();
 
     @Like
     protected String description = " info ";
+
+    @Ignore
+    String format ="YYYY-MM-DD";
 
 }

@@ -849,6 +849,12 @@ public class SelectDaoImpl<T>
 
         for (Object data : queryResultList) {
 
+            if (this.selectColumnsMap.size() > 0
+                    && data != null
+                    && !data.getClass().isArray()) {
+                data = new Object[]{data};
+            }
+
             //尝试自动转换成 Map
             data = tryConvert2Map(data, valueHolder);
 
@@ -1005,88 +1011,102 @@ public class SelectDaoImpl<T>
 
         final int arrayLen = Array.getLength(data);
 
-        //缓存 Keys
-        if (valueHolder != null
-                && valueHolder.value != null
-                && valueHolder.value.size() >= arrayLen) {
 
-            //如果已经缓存字段对应关系，优化性能
-            Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
-
-            for (int i = 0; i < arrayLen; i++) {
-
-                Object value = Array.get(data, i);
-
-                for (String key : valueHolder.value.get(i)) {
-                    dataMap.put(key, value);
-                }
-            }
-
-            return dataMap;
+        if (valueHolder == null) {
+            valueHolder = new ValueHolder<>(null);
         }
 
+
+        if (valueHolder.value == null) {
+            valueHolder.value = getAliases(arrayLen);
+        }
+
+
+        //如果已经缓存字段对应关系，优化性能
+        Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
+
+        for (int i = 0; i < arrayLen; i++) {
+
+            Object value = Array.get(data, i);
+
+            for (String key : valueHolder.value.get(i)) {
+                dataMap.put(key, value);
+            }
+
+        }
+
+        return dataMap;
+
+    }
+
+    private List<List<String>> getAliases(int arrayLen) {
 
         List<String[]> selectColumns = QLUtils.parseSelectColumns(null, this.selectColumns.toString());
 
         //如果数组长度
         if (arrayLen != selectColumns.size()) {
-            return data;
+            return Collections.emptyList();
         }
-
-        Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
-
-        //转化成 Map
-        int idx = 0;
 
         List<List<String>> columnNames = new ArrayList<>(arrayLen);
 
-
         for (String[] selectColumn : selectColumns) {
 
-            List<String> alias = new ArrayList<>(selectColumn.length);
+            List<String> aliases = new ArrayList<>(selectColumn.length);
 
             //列明对应关系
-            columnNames.add(alias);
+            columnNames.add(aliases);
 
-            Object value = Array.get(data, idx);
 
-            for (final String column : selectColumn) {
+            String expr = selectColumn[0];
 
-                String key = column;
+            String alias = selectColumn[1];
+
+            Object[] keys = selectColumnsMap.get(expr);
+
+
+            String fieldName = (keys != null) ? (String) keys[0] : null;
+
+            Object fieldOrMethod = (keys != null) ? keys[1] : null;
+
+            if (fieldOrMethod != null) {
+
+                String key = null;
+
+                if (fieldOrMethod instanceof Field) {
+                    key = ((Field) fieldOrMethod).getName();
+                } else if (fieldOrMethod instanceof Method) {
+                    key = ((Method) fieldOrMethod).getName();
+                    //去除 get
+                    if (key.startsWith("get")) {
+                        key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
+                    }
+                } else if (fieldOrMethod instanceof String) {
+                    key = removeAlias((String) fieldOrMethod);
+                }
+
 
                 if (hasText(key)) {
-
-                    Object[] keys = selectColumnsMap.get(key);
-
-                    key = removeAlias(key);
-
-                    key = getPropertyName(key, keys);
-
-                    if (!hasText(key)) {
-                        continue;
-                    }
+                    aliases.add(key);
                 }
 
-
-                if (!isNameExists(key, columnNames)) {
-                    alias.add(key);
-
-                    dataMap.put(key, value);
+                if (hasText(alias)) {
+                    aliases.add(alias);
                 }
+
+            } else if (hasText(alias)) {
+                aliases.add(alias);
+            } else if (hasText(fieldName)) {
+                aliases.add(fieldName);
+            } else {
+                aliases.add(expr);
             }
 
 
-            idx++;
-
         }
 
 
-        if (valueHolder != null) {
-            valueHolder.value = columnNames;
-        }
-
-        return dataMap;
-
+        return columnNames;
     }
 
 

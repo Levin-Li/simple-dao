@@ -133,6 +133,8 @@ public abstract class ExprUtils {
 
                     eleCount = QueryAnnotationUtil.eleCount(holder.value);
 
+                    //如果没有参数
+
 
                 } else {
                     try {
@@ -162,13 +164,19 @@ public abstract class ExprUtils {
         final String oldParamExpr = paramExpr;
 
         if (op.isNeedParamExpr() && hasDynamicExpr) {
-            //动态参数
+            //动态参数，后面替换
             paramExpr = "${:" + paramKey + "}";
         }
 
-        //
+        //如果需要参数的操作
         if (op.isNeedParamExpr()) {
             paramExpr = funcExpr(paramExpr, c.paramFuncs());
+        }
+
+
+        //如果需要展开参数，没有参数内容
+        if (op.isExpandParamValue() && op.isNeedParamExpr() && !hasText(oldParamExpr)) {
+            return "";
         }
 
 
@@ -195,6 +203,7 @@ public abstract class ExprUtils {
 
                 paramValues.add(holder.value);
 
+                //替换参数表达式
                 return oldParamExpr;
             } else {
                 paramValues.add(ObjectUtil.findValue(key, true, true, ctxs));
@@ -284,9 +293,35 @@ public abstract class ExprUtils {
 
     public static String funcExpr(String name, Func... funcs) {
         //允许没有名称
+
         return Arrays.stream(funcs)
                 //  .filter(func -> StringUtils.hasText(func.value()))
-                .reduce(name, (expr, func) -> func.value() + func.prefix() + expr + func.suffix(), (r1, r2) -> r1 + r2);
+                .reduce(name,
+                        (expr, func) -> {
+
+                            StringBuilder sb = new StringBuilder();
+
+                            for (String param : func.params()) {
+
+                                if (StringUtils.isEmpty(param)) {
+                                    continue;
+                                }
+
+                                if (sb.length() > 0) {
+                                    sb.append(" , ");
+                                }
+
+                                sb.append(Func.DEFAULT_PARAM.equals(param) ? expr : param);
+                            }
+
+                            //如果有参数值
+                            if (sb.length() > 0) {
+                                expr = sb.toString();
+                            }
+
+                            return func.value() + func.prefix() + expr + func.suffix();
+                        },
+                        (r1, r2) -> r1 + r2);
     }
 
     /**
@@ -338,8 +373,9 @@ public abstract class ExprUtils {
 
         for (int i = 0; i < n; i++) {
 
-            if (i > 0)
-                buf.append(delimiter);
+            if (i > 0) {
+                buf.append(delimiter).append(" ");
+            }
 
             buf.append(txt);
         }
