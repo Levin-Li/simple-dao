@@ -18,8 +18,6 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -57,6 +55,7 @@ public class SelectDaoImpl<T>
     //GroupBy 自动忽略重复字符
     final SimpleList<String> groupByColumns = new SimpleList<>(false, new ArrayList(5), DELIMITER);
 
+    final List groupByParamValues = new ArrayList(5);
 
     private ExprNode havingExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
@@ -291,6 +290,22 @@ public class SelectDaoImpl<T>
             for (String column : columns) {
                 groupByColumns.add(column);
             }
+        }
+
+        return this;
+    }
+
+    /**
+     * 设置group by
+     *
+     * @return
+     */
+    @Override
+    public SelectDao<T> appendGroupBy(String expr, Object... paramValues) {
+
+        if (hasText(expr)) {
+            groupByColumns.add(expr);
+            groupByParamValues.add(paramValues);
         }
 
         return this;
@@ -533,12 +548,12 @@ public class SelectDaoImpl<T>
 
             if (opAnnotation instanceof GroupBy) {
                 //增加GroupBy字段
-                appendGroupBy(expr);
+                appendGroupBy(expr, holder.value);
             }
 
             expr = tryAppendAlias(expr, opAnnotation, alias);
 
-            appendColumns(expr);
+            appendColumns(expr, holder.value);
 
             //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
             appendColumnMap(expr, fieldOrMethod, name);
@@ -736,6 +751,7 @@ public class SelectDaoImpl<T>
                 , getDaoContextValues()
                 , selectParamValues
                 , whereParamValues
+                , groupByParamValues
                 , havingParamValues);
     }
 

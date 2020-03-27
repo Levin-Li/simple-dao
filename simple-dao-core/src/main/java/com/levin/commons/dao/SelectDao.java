@@ -196,6 +196,14 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     SelectDao<T> appendGroupBy(String... columns);
 
+
+    /**
+     * @param expr
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> appendGroupBy(String expr, Object... paramValues);
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
