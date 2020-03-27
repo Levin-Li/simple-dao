@@ -446,6 +446,16 @@ public class JpaDaoImplTest {
     }
 
     @Test
+    public void testOrderBy() {
+
+        String sql = jpaDao.selectFrom(User.class).appendByQueryObj(new OrderByExam()).genFinalStatement();
+
+
+        System.out.println(sql);
+    }
+
+
+    @Test
     public void testNullOrEq() {
 
         Object lily = jpaDao.selectFrom(User.class)

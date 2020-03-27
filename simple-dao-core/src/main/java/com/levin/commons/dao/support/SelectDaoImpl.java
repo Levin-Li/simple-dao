@@ -9,7 +9,6 @@ import com.levin.commons.dao.annotation.E_C;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
-import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.GroupBy;
@@ -44,8 +43,6 @@ public class SelectDaoImpl<T>
         extends ConditionBuilderImpl<T, SelectDao<T>>
         implements SelectDao<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SelectDaoImpl.class);
-
     private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
 
     transient MiniDao dao;
@@ -57,15 +54,15 @@ public class SelectDaoImpl<T>
 
     final List selectParamValues = new ArrayList(7);
 
-
     //GroupBy 自动忽略重复字符
     final SimpleList<String> groupByColumns = new SimpleList<>(false, new ArrayList(5), DELIMITER);
+
 
     private ExprNode havingExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
     final List havingParamValues = new ArrayList(5);
 
-    final SimpleList<OrderByObj> orderByColumns = new SimpleList<>(false, new ArrayList<OrderByObj>(5), " , ");
+    final SimpleList<OrderByObj> orderByColumns = new SimpleList<>(false, new ArrayList<OrderByObj>(5), DELIMITER);
 
     final StringBuilder joinStatement = new StringBuilder();
 
@@ -430,9 +427,8 @@ public class SelectDaoImpl<T>
      */
     protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        OrderBy orderBy = QueryAnnotationUtil.findFirstMatched(varAnnotations, OrderBy.class);
-
-        if (orderBy != null) {
+        if ((opAnnotation instanceof OrderBy)) {
+            OrderBy orderBy = (OrderBy) opAnnotation;
             orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(name), orderBy.type()));
         }
 
@@ -450,14 +446,15 @@ public class SelectDaoImpl<T>
      */
     protected void processFetchSetByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        if (!(opAnnotation instanceof Fetch))
-            return;
+        if ((opAnnotation instanceof Fetch)) {
 
-        Fetch fetch = (Fetch) opAnnotation;
+            Fetch fetch = (Fetch) opAnnotation;
 
-        //增加集合抓取
-        appendJoinFetchSet(fetch.joinType(), fetch.value());
-        appendJoinFetchSet(fetch.joinType(), fetch.attrs());
+            //增加集合抓取
+            appendJoinFetchSet(fetch.joinType(), fetch.value());
+            appendJoinFetchSet(fetch.joinType(), fetch.attrs());
+
+        }
 
     }
 
@@ -495,10 +492,7 @@ public class SelectDaoImpl<T>
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
-
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
-
-            genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
+            genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
 
                 tryAppendHaving(opAnnotation, expr, holder, value);
@@ -532,11 +526,11 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
-        genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
+        genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
             tryAppendHaving(opAnnotation, expr, holder, value);
+
             if (opAnnotation instanceof GroupBy) {
                 //增加GroupBy字段
                 appendGroupBy(expr);
@@ -1216,6 +1210,8 @@ public class SelectDaoImpl<T>
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     static class OrderByObj
             implements Comparable<OrderByObj> {
 

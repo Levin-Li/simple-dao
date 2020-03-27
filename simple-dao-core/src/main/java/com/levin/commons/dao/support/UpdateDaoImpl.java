@@ -249,11 +249,13 @@ public class UpdateDaoImpl<T>
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
                                 Class<?> varType, Object value, Annotation opAnnotation) {
 
+//        if (isIgnore(varAnnotations)) {
+//            return;
+//        }
+
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
-
-            genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
+            genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
                 appendColumns(expr, holder.value);
             });
 
@@ -262,7 +264,6 @@ public class UpdateDaoImpl<T>
         //允许 Update 注解和其它注解同时存在
 
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-
 
     }
 

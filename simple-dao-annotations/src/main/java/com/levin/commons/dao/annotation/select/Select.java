@@ -71,7 +71,6 @@ public @interface Select {
      */
     boolean not() default false;
 
-
     /**
      * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
      *

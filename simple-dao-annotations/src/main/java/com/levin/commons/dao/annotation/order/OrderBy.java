@@ -2,7 +2,7 @@ package com.levin.commons.dao.annotation.order;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -52,7 +52,7 @@ public @interface OrderBy {
     /**
      * 排序优先级
      * <p/>
-     * 按数值从小到大排序
+     * 按数值从大到小排序
      * <p/>
      *
      * @return

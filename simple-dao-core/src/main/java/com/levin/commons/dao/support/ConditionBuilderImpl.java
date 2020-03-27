@@ -8,7 +8,7 @@ import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
-import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.order.OrderByList;
 import com.levin.commons.dao.annotation.update.Immutable;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
@@ -27,6 +27,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 
+import static com.levin.commons.dao.util.QueryAnnotationUtil.findFirstMatched;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.tryGetJpaEntityFieldName;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -1086,6 +1088,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     /**
      * 处理单个属性或是方法参数的注解
      * <p>
+     * <p>
      * 单个属性，多个注解的处理入口
      * <p>
      * 对象，方法，Map 的 walk 都是这个入口
@@ -1102,9 +1105,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         //如果是包括忽略注解，则直接忽略
-        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
+        if (isIgnore(varAnnotations)) {
             return;
         }
+
+        //校验数据
+        verifyGroupValidation(bean, name, value, findFirstMatched(varAnnotations, Validator.class));
+
 
         //支持多个注解
         List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
@@ -1135,7 +1142,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(this::isLogicGroupAutoClose)
                     .forEach(logicAnnotation -> end());
 
-            endLogicGroup(bean, QueryAnnotationUtil.findFirstMatched(varAnnotations, END.class), value);
+            endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
 
         }
 
@@ -1171,12 +1178,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             for (Annotation annotation : varAnnotations) {
 
                 if (annotation == null
-//                        || annotation instanceof Not
                         || annotation instanceof PrimitiveValue
-                        || annotation instanceof OrderBy
-                        || annotation instanceof Immutable
                         || annotation instanceof Validator
-//                        || annotation instanceof Having
+                        || annotation instanceof Immutable
                         || annotation instanceof Ignore)
                     continue;
 
@@ -1212,19 +1216,30 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value) {
 
-        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
-            return;
-        }
+//        if (isIgnore(varAnnotations)) {
+//            return;
+//        }
 
         List<Annotation> daoAnnotations = new ArrayList<>(5);
 
         for (Annotation annotation : findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations)) {
 
             if (annotation instanceof CList) {
-                daoAnnotations.addAll(Arrays.asList(((CList) annotation).value()));
+
+                if (isValid(annotation, bean, name, value)) {
+                    daoAnnotations.addAll(Arrays.asList(((CList) annotation).value()));
+                }
+
+            } else if (annotation instanceof OrderByList) {
+
+                if (isValid(annotation, bean, name, value)) {
+                    daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
+                }
+
             } else {
                 daoAnnotations.add(annotation);
             }
+
         }
 
 
@@ -1233,9 +1248,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             //如果字段上没有需要处理的注解
             //默认为 EQ
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
 
-            boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
+            boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
 
             if ((!complexType) && !isNullOrEmptyTxt(value)) {
@@ -1262,7 +1276,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(annotation -> isValid(annotation, bean, name, value))
                     .forEach(annotation -> {
                         processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                QueryAnnotationUtil.tryGetJpaEntityFieldName(annotation, this.entityClass, name),
+                                tryGetJpaEntityFieldName(annotation, this.entityClass, name),
                                 varType, value, annotation);
                     });
         }
@@ -1294,21 +1308,26 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //但是允许空opAnnotation为 null，往下走
         //支持处理 where 条件的注解
 
-        if (QueryAnnotationUtil.findFirstMatched(varAnnotations, Ignore.class) != null) {
-            return;
-        }
+//        if (isIgnore(varAnnotations)) {
+//            return;
+//        }
 
         if (QueryAnnotationUtil.isSamePackage(opAnnotation, Eq.class)) {
-
-            verifyGroupValidation(bean, name, value, QueryAnnotationUtil.findFirstMatched(varAnnotations, Validator.class));
-
-            PrimitiveValue primitiveValue = QueryAnnotationUtil.findFirstMatched(varAnnotations, PrimitiveValue.class);
-
             //处理where条件
-            processWhereCondition(bean, varType, name, value, primitiveValue, opAnnotation);
+            processWhereCondition(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation);
         }
 
     }
+
+
+    protected PrimitiveValue findPrimitiveValue(Annotation... varAnnotations) {
+        return findFirstMatched(varAnnotations, PrimitiveValue.class);
+    }
+
+    public boolean isIgnore(Annotation[] varAnnotations) {
+        return findFirstMatched(varAnnotations, Ignore.class) != null;
+    }
+
 
     /**
      * 验证查询对象是否满足要求
@@ -1614,11 +1633,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return true;
         }
 
-        boolean require = ClassUtils.getValue(anno, "require", false);
-
-
         String conditionExpr = ClassUtils.getValue(anno, "condition", false);
-
 
         //如果没有内容默认为true
         if (!hasText(conditionExpr)) {
@@ -1627,8 +1642,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         boolean isOK = evalExpr(root, value, name, conditionExpr);
 
+
+        Boolean require = ClassUtils.getValue(anno, "require", false);
+
         //如果是必须的，但条件又不成立，则抛出异常
-        if (require && !isOK) {
+        if (Boolean.TRUE.equals(require) && !isOK) {
             throw new IllegalArgumentException(String.format("field [%s] is require, annotation [%s] condition[%s] must be true"
                     , name, anno.annotationType().getSimpleName(), conditionExpr));
         }

@@ -1,23 +1,29 @@
-package com.levin.commons.dao.annotation;
+package com.levin.commons.dao.annotation.order;
 
 import java.lang.annotation.*;
 
-/**
- * 语句注解集合
- *
- * @author llw
- * @@since 2.1.0
- */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface CList {
+
+/**
+ *
+ * OrderBy注解
+ *
+ * 强制排序
+ *
+ * @author llw
+ * @version 2.0.0
+ */
+public @interface OrderByList {
 
     /**
+     * Order By List
+     *
      * @return
      */
-    C[] value() default {};
+    OrderBy[] value() default {};
 
 
     /**

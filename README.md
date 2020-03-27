@@ -580,7 +580,7 @@
       @DateTimeFormat(pattern = "yyyy-MM-dd")  
       String createTime;
 
-   以上字符串字段将被会自动转换成对应的类型。
+   以上字段将被会自动转换成对应的类型。
    
    
    日期类型转换使用 Spring 的注解 DateTimeFormat
