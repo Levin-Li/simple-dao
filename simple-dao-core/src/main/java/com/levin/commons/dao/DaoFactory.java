@@ -21,7 +21,8 @@ public interface DaoFactory {
      * @param <DAO>
      * @return 返回 SelectDao or UpdateDao or DeleteDao
      */
-    <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
+//    <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
+//
 
     /**
      * 从查询对象构造SelectDao
@@ -29,11 +30,30 @@ public interface DaoFactory {
      * @param <T>
      * @return
      */
-    <T> SelectDao<T> selectFrom(Object... queryObjs);
+    <T> SelectDao<T> forSelect(Object... queryObjs);
+
+    /**
+     * 从查询对象构造UpdateDao
+     *
+     * @param <T>
+     * @return
+     */
+    <T> UpdateDao<T> forUpdate(Object... queryObjs);
+
+    /**
+     * 从查询对象构造UpdateDao
+     *
+     * @param <T>
+     * @return
+     */
+    <T> UpdateDao<T> forDelete(Object... queryObjs);
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * 原生查询
      *
+     * @param nativeQL
+     * @param fromStatement
      * @param <T>
      * @return
      */

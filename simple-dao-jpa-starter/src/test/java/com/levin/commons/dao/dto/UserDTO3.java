@@ -7,7 +7,6 @@ import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
-import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.DefaultPaging;
 import lombok.Data;

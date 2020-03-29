@@ -4,7 +4,6 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import javax.persistence.Entity;

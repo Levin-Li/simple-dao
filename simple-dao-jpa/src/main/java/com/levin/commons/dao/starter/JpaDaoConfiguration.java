@@ -2,7 +2,6 @@ package com.levin.commons.dao.starter;
 
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
-import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Eq;
@@ -19,8 +18,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
-import org.springframework.format.support.FormattingConversionService;
-import org.springframework.format.support.FormattingConversionServiceFactoryBean;
 
 @Configuration
 

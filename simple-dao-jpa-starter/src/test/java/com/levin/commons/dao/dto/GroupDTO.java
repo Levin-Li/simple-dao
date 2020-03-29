@@ -6,7 +6,6 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.support.DefaultPaging;
 import lombok.Data;

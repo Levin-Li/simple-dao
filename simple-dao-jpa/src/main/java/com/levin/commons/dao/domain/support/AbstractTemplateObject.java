@@ -4,8 +4,6 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.EntityObject;
 import com.levin.commons.dao.domain.TemplateObject;
 import com.levin.commons.service.domain.Desc;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;

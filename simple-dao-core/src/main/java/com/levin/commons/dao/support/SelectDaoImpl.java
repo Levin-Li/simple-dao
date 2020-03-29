@@ -100,6 +100,7 @@ public class SelectDaoImpl<T>
         if (!hasText(fromStatement)) {
             throw new IllegalArgumentException("fromStatement is null");
         }
+
     }
 
     public SelectDaoImpl(MiniDao dao, String tableName, String alias) {
@@ -128,6 +129,7 @@ public class SelectDaoImpl<T>
         }
     }
 
+
     @Override
     public SelectDao<T> select(String expr, Object... paramValues) {
 
@@ -145,6 +147,19 @@ public class SelectDaoImpl<T>
         return this;
     }
 
+    @Override
+    public SelectDao<T> select(String... columnNames) {
+
+        if (columnNames != null) {
+            for (String columnName : columnNames) {
+                if (hasText(columnName)) {
+                    selectColumns.add(aroundColumnPrefix(columnName));
+                }
+            }
+        }
+
+        return this;
+    }
 
     @Override
     public String getAlias() {
@@ -275,7 +290,7 @@ public class SelectDaoImpl<T>
 
         if (columns != null) {
             for (String column : columns) {
-                if(hasText(column)) {
+                if (hasText(column)) {
                     groupByColumns.add(aroundColumnPrefix(column));
                 }
             }

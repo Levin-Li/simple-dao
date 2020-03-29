@@ -10,7 +10,6 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.DefaultPaging;
 

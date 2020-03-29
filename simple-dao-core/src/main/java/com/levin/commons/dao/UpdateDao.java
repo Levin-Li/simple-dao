@@ -13,23 +13,23 @@ public interface UpdateDao<T>
      *                    是Map时，会当成命名参数进行处理。
      * @return
      */
-    UpdateDao<T> appendColumns(String expr, Object... paramValues);
+    UpdateDao<T> setColumns(String expr, Object... paramValues);
 
 
     /**
      * 增加更新的列
      *
-     * @param isAppend
+     * @param isAppend    是否增加，方便保持链式调用
      * @param expr        表达式
      * @param paramValues 参数值，参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理，是Map时，会当成命名参数进行处理
      * @return
      */
-    UpdateDao<T> appendColumns(Boolean isAppend, String expr, Object... paramValues);
+    UpdateDao<T> setColumns(Boolean isAppend, String expr, Object... paramValues);
 
     /**
      * 增加单个需要更新的属性
      *
-     * @param entityAttrName 需要更新的属性名
+     * @param entityAttrName 需要更新的属性名，会自动尝试加上别名
      * @param paramValue     属性值
      * @return
      */
@@ -39,9 +39,9 @@ public interface UpdateDao<T>
     /**
      * 增加单个需要更新的属性
      *
-     * @param isAppend       为了保持链式调用，增加参数支持
-     * @param entityAttrName
-     * @param paramValue
+     * @param isAppend       是否增加，方便保持链式调用
+     * @param entityAttrName 需要更新的属性名，会自动尝试加上别名
+     * @param paramValue     属性值
      * @return
      */
     UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue);

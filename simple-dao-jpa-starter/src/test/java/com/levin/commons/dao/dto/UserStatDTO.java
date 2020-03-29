@@ -2,12 +2,11 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
-import com.levin.commons.dao.annotation.stat.Sum;
 import com.levin.commons.dao.domain.User;
 import lombok.Data;
 

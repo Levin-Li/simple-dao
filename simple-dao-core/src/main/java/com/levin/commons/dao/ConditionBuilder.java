@@ -60,8 +60,8 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * 增加where条件及参数
      *
      * @param expr
-     * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
-     *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
+     * @param paramValues 参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
+     *                    是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return
      */
     T where(String expr, Object... paramValues);
@@ -70,10 +70,10 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     /**
      * 增加where条件及参数
      *
-     * @param isAppend      是否加入条件，条件当isAppend为true时，才会把条件和参数加入where
-     * @param expr 如 name = ?，或name = :pName
-     * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
-     *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
+     * @param isAppend    方便保持链式调用，是否加入条件，条件当isAppend为true时，才会把条件和参数加入where
+     * @param expr        如 name = ?，或name = :pName
+     * @param paramValues 参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
+     *                    是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return this
      */
     T where(Boolean isAppend, String expr, Object... paramValues);
@@ -145,7 +145,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * <p>
      * 可以通过调用这个方法实现（true,"xx",aValue,OR.class,IsNull.class,Eq.class,END.class）
      *
-     * @param isAppend  是否增加，方便链式调用
+     * @param isAppend  是否增加，方便保持链式调用
      * @param attrName  不能为空
      * @param attrValue
      * @param annoTypes

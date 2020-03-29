@@ -62,13 +62,13 @@ public class UpdateDaoImpl<T>
 
 
     @Override
-    public UpdateDao<T> appendColumns(String columns, Object... paramValues) {
+    public UpdateDao<T> setColumns(String columns, Object... paramValues) {
 
-        return appendColumns(true, columns, paramValues);
+        return setColumns(true, columns, paramValues);
     }
 
     @Override
-    public UpdateDao<T> appendColumns(Boolean isAppend, String columns, Object... paramValues) {
+    public UpdateDao<T> setColumns(Boolean isAppend, String columns, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
                 && StringUtils.hasText(columns)) {
@@ -179,7 +179,7 @@ public class UpdateDaoImpl<T>
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
-                appendColumns(expr, holder.value);
+                setColumns(expr, holder.value);
             });
 
         }

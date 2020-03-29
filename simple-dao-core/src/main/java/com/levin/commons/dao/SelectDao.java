@@ -53,7 +53,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     ////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 增加select 列，列可以设置参数
+     * 增加select 列表达式，列可以设置参数
      *
      * @param expr
      * @param paramValues
@@ -63,14 +63,23 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> select(String expr, Object... paramValues);
 
     /**
-     * 增加要选择的列
+     * 增加要选择的列表达式
      *
-     * @param isAppend
+     * @param isAppend    是否增加，主要用于方便链式调用
      * @param expr        eg  " a.name , b.name "
      * @param paramValues 参数列表
      * @return
      */
     SelectDao<T> select(Boolean isAppend, String expr, Object... paramValues);
+
+
+    /**
+     * 增加要选择的列，会自动尝试加上别名
+     *
+     * @param columnNames 单个列名，eg. name , age
+     * @return
+     */
+    SelectDao<T> select(String... columnNames);
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**

@@ -97,8 +97,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.tableName = null;
         this.alias = (alias != null && entityClass != null) ? alias.trim() : null;
 
-        if (entityClass == null)
+        if (entityClass == null) {
             throw new IllegalArgumentException("entityClass is null");
+        }
 
 //        if (!entityClass.isAnnotationPresent(Entity.class)) {
 //            throw new IllegalArgumentException("entityClass is not a jpa Entity class");

@@ -175,7 +175,7 @@ public class RepositoryFactoryBean<T>
             return updateDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
                     .where(((UpdateRequest) opAnnotation).fixedCondition())
-                    .appendColumns(((UpdateRequest) opAnnotation).updateStatement())
+                    .setColumns(((UpdateRequest) opAnnotation).updateStatement())
                     .appendByMethodParams(proxyObj, method, args)
                     .update();
 

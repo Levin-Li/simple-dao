@@ -3,7 +3,6 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.select.Select;
-import com.levin.commons.dao.annotation.select.SelectColumn;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

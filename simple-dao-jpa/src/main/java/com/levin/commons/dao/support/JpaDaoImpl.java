@@ -467,11 +467,6 @@ public class JpaDaoImpl
     }
 
     @Override
-    public <T> SelectDao<T> selectFrom(Object... queryObjs) {
-        return newDao(SelectDao.class,queryObjs);
-    }
-
-    @Override
     public <T> T find(Class<T> entityClass, Object id) {
 
         return getEntityManager().find(entityClass, id);

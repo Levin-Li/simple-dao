@@ -4,6 +4,8 @@ import com.levin.commons.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterNameDiscoverer;
 
+import static org.springframework.util.StringUtils.hasText;
+
 //@Component
 //@ConditionalOnMissingBean(DaoFactory.class)
 //@ConditionalOnBean(MiniDao.class)
@@ -28,7 +30,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
         this.parameterNameDiscoverer = parameterNameDiscoverer;
     }
 
-    @Override
+    // @Override
     public <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs) {
 
 
@@ -36,9 +38,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
             throw new IllegalArgumentException("daoClass is null");
         }
 
-
         if (SelectDao.class.isAssignableFrom(daoClass)) {
-
             return (DAO) new SelectDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
 
         } else if (UpdateDao.class.isAssignableFrom(daoClass)) {
@@ -53,8 +53,18 @@ public abstract class AbstractDaoFactory implements DaoFactory {
     }
 
     @Override
-    public <T> SelectDao<T> selectFrom(Object... queryObjs) {
+    public <T> SelectDao<T> forSelect(Object... queryObjs) {
         return newDao(SelectDao.class, queryObjs);
+    }
+
+    @Override
+    public <T> UpdateDao<T> forUpdate(Object... queryObjs) {
+        return newDao(UpdateDao.class, queryObjs);
+    }
+
+    @Override
+    public <T> UpdateDao<T> forDelete(Object... queryObjs) {
+        return newDao(UpdateDao.class, queryObjs);
     }
 
     /**
@@ -137,7 +147,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
 
     private String checkTableName(String tableName) {
 
-        if (tableName == null) {
+        if (!hasText(tableName)) {
             throw new IllegalArgumentException("tableName is null");
         }
 
