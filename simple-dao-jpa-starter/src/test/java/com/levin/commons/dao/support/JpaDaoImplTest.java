@@ -271,7 +271,7 @@ public class JpaDaoImplTest {
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAnno(E_Group.name,"")
+                .groupByAsAnno(E_Group.name, "")
 //                .groupBy("g.name")
                 .find(Map.class);
 
@@ -315,7 +315,7 @@ public class JpaDaoImplTest {
 
 //        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
 
- //       System.out.println(byQueryObj);
+        //       System.out.println(byQueryObj);
 
 
     }
@@ -345,29 +345,37 @@ public class JpaDaoImplTest {
     public void testAnno2() {
 
 
-        Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, 1).findOne();
+        User user =jpaDao.selectFrom(User.class).gt(E_User.id,20).findOne();
 
-        System.out.println(one);
-
-        //      one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
-
-        System.out.println(one);
+        Long uid = user.getId();
 
 
-        one = jpaDao.selectFrom(User.class, "u").where("u.id = ?1  order by u.id desc", 1).findOne();
 
-        System.out.println(one);
+        Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, uid).findOne();
+
+
+        Assert.notNull(one);
+
+
+        one = jpaDao.selectFrom(User.class, "u")
+                .where("u.id = ?1  order by u.id desc", uid)
+                .findOne();
+
+
+        Assert.notNull(one);
+
 
     }
 
     @Test
     public void testExists() {
 
-        jpaDao.selectFrom(User.class)
+        long cnt = jpaDao.selectFrom(User.class)
                 .setContext(MapUtils.put("tab", (Object) User.class.getName()).build())
                 .exists("select count(1) from ${tab} ")
                 .count();
 
+        Assert.isTrue(cnt > 0);
     }
 
     @Test
@@ -451,6 +459,9 @@ public class JpaDaoImplTest {
         String sql = jpaDao.selectFrom(User.class).appendByQueryObj(new OrderByExam()).genFinalStatement();
 
 
+        Assert.isTrue(sql.contains(E_User.createTime));
+        Assert.isTrue(sql.contains(E_User.area));
+
         System.out.println(sql);
     }
 
@@ -458,9 +469,22 @@ public class JpaDaoImplTest {
     @Test
     public void testNullOrEq() {
 
-        Object lily = jpaDao.selectFrom(User.class)
-                .isNullOrEq(E_User.name, "lily")
-                .findOne();
+        Date paramValue = new Date();
+
+        long cnt = jpaDao.updateTo(User.class).set(E_User.lastUpdateTime, paramValue)
+                .disableSafeMode()
+                .update();
+
+        long nullCnt = jpaDao.updateTo(User.class).set(E_User.lastUpdateTime, null)
+                .gt(E_User.id, 20)
+                .update();
+
+
+        long tn = jpaDao.selectFrom(User.class)
+                .isNullOrEq(E_User.lastUpdateTime, paramValue)
+                .count();
+
+        Assert.isTrue(tn == cnt);
 
     }
 
@@ -495,11 +519,13 @@ public class JpaDaoImplTest {
 
         String attrName = jpaDao.getEntityIdAttrName(User.class);
 
-        Assert.isTrue("id".equals(attrName));
+        Assert.isTrue(E_User.id.equals(attrName));
 
-        Object entityId = jpaDao.getEntityId(new Group(1234567L, "test"));
+        Long id = 1234567L;
 
-        Assert.isTrue(entityId != null);
+        Object entityId = jpaDao.getEntityId(new Group(id, "test"));
+
+        Assert.isTrue(entityId.equals(id));
 
     }
 
@@ -549,12 +575,38 @@ public class JpaDaoImplTest {
     @org.junit.Test
     public void testSave() throws Exception {
 
+
+        User user =jpaDao.selectFrom(User.class).findOne();
+
+        Long uid = user.getId();
+
+          user = jpaDao.find(User.class, uid);
+
+        String description = "Update_" + new Date();
+
+        user.setDescription(description);
+
+        jpaDao.save(user);
+
+
+        user = jpaDao.find(User.class, uid);
+
+
+        Assert.isTrue(user.getDescription().equals(description));
+
     }
 
     @org.junit.Test
     public void testDelete() throws Exception {
 
-        jpaDao.delete(jpaDao.selectFrom(Task.class).findOne());
+        Task one = jpaDao.selectFrom(Task.class).findOne();
+
+        jpaDao.delete(one);
+
+
+        one = jpaDao.find(Task.class,one.getId());
+
+        Assert.isNull(one);
 
     }
 
@@ -594,7 +646,6 @@ public class JpaDaoImplTest {
 
         DaoContext.setGlobalVar("DATE_FORMAT", "YYYY/MM/DD");
 
-
         DaoContext.setThreadVar("orgId", 5L);
 
 
@@ -605,7 +656,6 @@ public class JpaDaoImplTest {
     public void testUpdateDTO() throws Exception {
 
         UpdateDao<User> userUpdateDao = jpaDao.updateTo(User.class);
-
 
         userUpdateDao
                 .set(E_User.name, "name1")

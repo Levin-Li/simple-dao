@@ -23,7 +23,7 @@ public class OrderByExam {
 
     @OrderByList(
             {
-                    @OrderBy(E_User.T_createTime),
+                    @OrderBy(E_User.createTime),
                     @OrderBy(value = E_User.area, order = 5,type = OrderBy.Type.Asc),
                     @OrderBy(condition = C.NOT_NULL)
             }
