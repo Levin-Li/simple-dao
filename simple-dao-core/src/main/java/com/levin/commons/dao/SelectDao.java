@@ -174,7 +174,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     /**
      * 增加 group by 字段列表
      *
-     * @param columnNames
+     * @param columnNames 字段列表，会尝试自动增加别名
      * @return
      */
     SelectDao<T> groupBy(String... columnNames);

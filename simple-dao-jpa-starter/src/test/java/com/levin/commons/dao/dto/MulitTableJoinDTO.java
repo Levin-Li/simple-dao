@@ -17,17 +17,14 @@ public class MulitTableJoinDTO {
 
 
     @Select("u.id")
-    @C(op = Op.Expr, paramExpr = "u.id = g.id", condition = "")
+    @C(op = Op.Expr, paramExpr = "u.group.id = g.id", condition = "")
     Long uid;
 
 
     @Select("g.id")
     @Gt("g.id")
-    @Where(paramExpr = " g.id = u.id")
+    @Where(paramExpr = " g.id = u.group.id ")
     Long gid = 2L;
-
-
-
 
 
 }

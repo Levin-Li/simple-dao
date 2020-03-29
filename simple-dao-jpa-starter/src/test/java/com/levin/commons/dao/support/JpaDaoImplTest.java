@@ -258,9 +258,6 @@ public class JpaDaoImplTest {
             }
 
         }
-
-        testJoinAndStat();
-
     }
 
     @Test
@@ -274,12 +271,15 @@ public class JpaDaoImplTest {
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupBy(E_Group.name)
+                .groupByAsAnno(E_Group.name,"")
 //                .groupBy("g.name")
                 .find(Map.class);
 
 
         Assert.isTrue(g.size() > 0);
+
+        Assert.isTrue(g.get(0).containsKey("cnt"));
+        Assert.isTrue(g.get(0).containsKey(E_Group.name));
     }
 
     @Test
