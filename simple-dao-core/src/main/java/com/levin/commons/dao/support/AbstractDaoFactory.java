@@ -28,6 +28,35 @@ public abstract class AbstractDaoFactory implements DaoFactory {
         this.parameterNameDiscoverer = parameterNameDiscoverer;
     }
 
+    @Override
+    public <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs) {
+
+
+        if (daoClass == null) {
+            throw new IllegalArgumentException("daoClass is null");
+        }
+
+
+        if (SelectDao.class.isAssignableFrom(daoClass)) {
+
+            return (DAO) new SelectDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
+
+        } else if (UpdateDao.class.isAssignableFrom(daoClass)) {
+            return (DAO) new UpdateDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
+
+        } else if (DeleteDao.class.isAssignableFrom(daoClass)) {
+            return (DAO) new DeleteDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
+        } else {
+            throw new IllegalArgumentException("action  " + daoClass.getName() + " is not support");
+        }
+
+    }
+
+    @Override
+    public <T> SelectDao<T> selectFrom(Object... queryObjs) {
+        return newDao(SelectDao.class, queryObjs);
+    }
+
     /**
      * 返回值类型
      *

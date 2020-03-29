@@ -195,7 +195,7 @@ public class JpaDaoImplTest {
         String[] areas = {"福州", "厦门", "深圳", "上海"};
 
 
-        Object one = jpaDao.selectFrom(Group.class).appendColumns("max(id)").findOne();
+        Object one = jpaDao.selectFrom(Group.class).select("max(id)").findOne();
 
         long n = (one == null) ? 1 : (long) one;
 
@@ -267,14 +267,14 @@ public class JpaDaoImplTest {
     public void testJoinAndStat() {
 
         List<Map> g = jpaDao.selectFrom(Group.class, "g")
-                .appendJoin("left join " + User.class.getName() + " u on g.id = u.group.id")
-                .appendJoin("left join " + Task.class.getName() + " t on u.id = t.user.id")
+                .join("left join " + User.class.getName() + " u on g.id = u.group.id")
+                .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
                 .count("1", "cnt")
                 .avg("t.score", "ts")
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAnno(E_Group.name, "")
+                .groupBy(E_Group.name)
 //                .groupBy("g.name")
                 .find(Map.class);
 
@@ -354,7 +354,7 @@ public class JpaDaoImplTest {
         System.out.println(one);
 
 
-        one = jpaDao.selectFrom(User.class, "u").appendWhere("u.id = ?1  order by u.id desc", 1).findOne();
+        one = jpaDao.selectFrom(User.class, "u").where("u.id = ?1  order by u.id desc", 1).findOne();
 
         System.out.println(one);
 
@@ -562,7 +562,7 @@ public class JpaDaoImplTest {
     public void testFindAndConvert() throws Exception {
 
         jpaDao.selectFrom(User.class, "u")
-                .appendJoinFetchSet(E_User.group)
+                .joinFetch(E_User.group)
                 .gt(E_User.id, "100")
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())
@@ -608,7 +608,7 @@ public class JpaDaoImplTest {
 
 
         userUpdateDao
-                .appendColumn(E_User.name, "name1")
+                .set(E_User.name, "name1")
                 .eq(E_User.enable, false)
                 .update();
     }
@@ -644,7 +644,7 @@ public class JpaDaoImplTest {
                 .limit(1, 10)
                 .appendByQueryObj(new UserDTO())
                 // .and().or().end()
-                .appendWhere("222 != :orderCode")
+                .where("222 != :orderCode")
 //                .appendWhere("3333 < :lastUpdateTime")
                 .find();
 
@@ -699,7 +699,7 @@ public class JpaDaoImplTest {
 //               .appendSelectColumns("id , ( name || 'ddddd' ) AS name ")
 //               .appendSelectColumns(" score AS scoreGt")
                 .appendByQueryObj(new UserDTO3())
-                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500L).build())
+                .where("score > :maxScore", MapUtils.put("maxScore", 500L).build())
                 .gt(E_User.T_score, 300)
                 .find(UserDTO3.class);
 
@@ -720,7 +720,7 @@ public class JpaDaoImplTest {
 //               .appendSelectColumns("id , ( name || 'ddddd' ) AS name ")
 //               .appendSelectColumns(" score AS scoreGt")
                 .appendByQueryObj(new UserDTO3())
-                .appendWhere("score > :maxScore", MapUtils.put("maxScore", 500).build())
+                .where("score > :maxScore", MapUtils.put("maxScore", 500).build())
                 .gt(E_User.T_score, 300)
                 .find(UserDTO3.class);
 
@@ -780,7 +780,7 @@ public class JpaDaoImplTest {
                 .join("left join jpa_dao_test_Group g on u.group.id = g.id")
                 .appendByQueryObj(new MulitTableJoinDTO())
 
-                .appendWhere("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
+                .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
 
                 .gt("u.id", "1")
                 .find(MulitTableJoinDTO.class);
@@ -813,7 +813,7 @@ public class JpaDaoImplTest {
 
         List<MulitTableJoinDTO> objects = jpaDao.selectFrom(false, "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
                 .appendByQueryObj(new MulitTableJoinDTO())
-                .appendWhere("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
+                .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
                 .find(MulitTableJoinDTO.class);
 
 
@@ -918,7 +918,7 @@ public class JpaDaoImplTest {
 
 
         int n = jpaDao.updateTo(Group.class)
-                .appendColumn(E_Group.lastUpdateTime, new Date())
+                .set(E_Group.lastUpdateTime, new Date())
 //                .appendColumn(E_Group.description, "" + System.currentTimeMillis())
                 .contains(E_Group.name, "2")
                 .update();
@@ -927,7 +927,7 @@ public class JpaDaoImplTest {
 
 
         n = jpaDao.updateTo(User.class)
-                .appendColumn(E_User.lastUpdateTime, new Date())
+                .set(E_User.lastUpdateTime, new Date())
 //                .appendColumn(E_User.description, "" + System.currentTimeMillis())
                 .contains(E_User.name, "2")
                 .update();
@@ -938,10 +938,12 @@ public class JpaDaoImplTest {
 
 
     @org.junit.Test
-    public void testQeuryFrom() throws Exception {
+    public void testQueryFrom2() throws Exception {
 
-        List<Object> list = jpaDao.selectFrom(Group.class)
-                .contains(E_Group.name, "2").find();
+        List<Object> list = jpaDao
+                .selectFrom(Group.class)
+                .contains(E_Group.name, "2")
+                .find();
 
         System.out.println(list);
 

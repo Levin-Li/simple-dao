@@ -259,20 +259,6 @@ public class JpaDaoImpl
         return validator;
     }
 
-
-    /**
-     * 属性拷贝
-     *
-     * @param source
-     * @param target
-     * @return
-     */
-    @Override
-    public <T> T copyProperties(Object source, T target, String... ignoreProperties) {
-        return (T) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
-
-    }
-
     @Override
     public <T> T copyProperties(Object source, Object target, int deep, String... ignoreProperties) {
         return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
@@ -478,6 +464,11 @@ public class JpaDaoImpl
         setRange(query, start, count);
 
         return query.executeUpdate();
+    }
+
+    @Override
+    public <T> SelectDao<T> selectFrom(Object... queryObjs) {
+        return newDao(SelectDao.class,queryObjs);
     }
 
     @Override
@@ -695,31 +686,6 @@ public class JpaDaoImpl
         }
 
         return this;
-    }
-
-
-    @Override
-    public <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs) {
-
-
-        if (daoClass == null) {
-            throw new IllegalArgumentException("daoClass is null");
-        }
-
-
-        if (SelectDao.class.isAssignableFrom(daoClass)) {
-
-            return (DAO) new SelectDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
-
-        } else if (UpdateDao.class.isAssignableFrom(daoClass)) {
-            return (DAO) new UpdateDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
-
-        } else if (DeleteDao.class.isAssignableFrom(daoClass)) {
-            return (DAO) new DeleteDaoImpl(false, getDao()).appendByQueryObj(queryObjs);
-        } else {
-            throw new IllegalArgumentException("action  " + daoClass.getName() + " is not support");
-        }
-
     }
 
 

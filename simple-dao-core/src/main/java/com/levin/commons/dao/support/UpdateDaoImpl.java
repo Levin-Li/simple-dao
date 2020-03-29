@@ -4,7 +4,6 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
-import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
@@ -55,60 +54,25 @@ public class UpdateDaoImpl<T>
         this.dao = dao;
     }
 
-//    @Override
-//    protected String getParamPlaceholder() {
-//        return dao.getParamPlaceholder(isNative());
-//    }
 
     @Override
     protected MiniDao getDao() {
         return dao;
     }
 
-    @Override
-    public UpdateDao<T> setColumns(String columns, Object... paramValues) {
-
-        this.updateColumns.clear();
-        this.updateParamValues.clear();
-
-        return appendColumns(columns, paramValues);
-    }
 
     @Override
     public UpdateDao<T> appendColumns(String columns, Object... paramValues) {
 
-        if (StringUtils.hasText(columns)) {
-            append(columns, paramValues);
-        }
-
-        return this;
+        return appendColumns(true, columns, paramValues);
     }
 
     @Override
     public UpdateDao<T> appendColumns(Boolean isAppend, String columns, Object... paramValues) {
 
-        if (Boolean.TRUE.equals(isAppend)) {
-            return appendColumns(columns, paramValues);
-        }
-
-        return this;
-    }
-
-    @Override
-    public UpdateDao<T> appendColumn(String entityAttrName, Object paramValue) {
-
-        if (StringUtils.hasText(entityAttrName)) {
-            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
-        }
-
-        return this;
-    }
-
-    @Override
-    public UpdateDao<T> appendColumn(Boolean isAppend, String entityAttrName, Object paramValue) {
-
-        if (Boolean.TRUE.equals(isAppend)) {
-            return appendColumn(entityAttrName, paramValue);
+        if (Boolean.TRUE.equals(isAppend)
+                && StringUtils.hasText(columns)) {
+            append(columns, paramValues);
         }
 
         return this;
@@ -117,13 +81,17 @@ public class UpdateDaoImpl<T>
 
     @Override
     public UpdateDao<T> set(String entityAttrName, Object paramValue) {
-        return appendColumn(entityAttrName, paramValue);
+        return set(true, entityAttrName, paramValue);
     }
 
 
     @Override
     public UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {
-        return appendColumn(isAppend, entityAttrName, paramValue);
+        if (Boolean.TRUE.equals(isAppend)
+                && StringUtils.hasText(entityAttrName)) {
+            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
+        }
+        return this;
     }
 
     private void append(String expr, Object... values) {
@@ -132,51 +100,6 @@ public class UpdateDaoImpl<T>
         }
     }
 
-    @Override
-    public UpdateDao<T> appendColumnByDTO(Object dto, String... ignoreAttrs) {
-        return appendColumnByDTO(true, dto, ignoreAttrs);
-    }
-
-    @Override
-    public UpdateDao<T> appendColumnByDTO(final boolean ignoreNullValueColumn, Object dto, final String... ignoreAttrs) {
-
-        walkObject(new AttrCallback() {
-            @Override
-            public boolean onAction(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
-
-                if (!StringUtils.hasText(name)) {
-                    return true;
-                }
-
-                if (ignoreAttrs != null) {
-                    for (String ignoreAttr : ignoreAttrs) {
-                        if (name.equals(ignoreAttr)) {
-                            return true;
-                        }
-                    }
-                }
-
-                //如果忽略空值，且值为空
-                if (value == null) {
-                    if (ignoreNullValueColumn) {
-                        return true;
-                    }
-                } else if (isComplexType(null, value)) {
-                    //如果不是原子类型
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(bean.getClass() + "[" + bean + "]" + " attr [" + name + "] value is not a primitive,it will be ignore.");
-                    }
-                    return true;
-                }
-
-                appendColumn(name, value);
-
-                return true;
-            }
-        }, dto);
-
-        return this;
-    }
 
     @Override
     public UpdateDao<T> disableThrowExWhenNoColumnForUpdate() {

@@ -55,32 +55,22 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     /**
      * 增加select 列，列可以设置参数
      *
-     * @param columns
+     * @param expr
      * @param paramValues
      * @return
      */
 
-    SelectDao<T> select(String columns, Object... paramValues);
-
-    /**
-     * @param columns
-     * @param paramValues
-     * @return
-     * @Deprecated 建议使用 appendColumns 代替
-     * @see #appendColumns
-     */
-    @Deprecated
-    SelectDao<T> appendSelectColumns(String columns, Object... paramValues);
-
+    SelectDao<T> select(String expr, Object... paramValues);
 
     /**
      * 增加要选择的列
      *
-     * @param columns
-     * @param paramValues
+     * @param isAppend
+     * @param expr        eg  " a.name , b.name "
+     * @param paramValues 参数列表
      * @return
      */
-    SelectDao<T> appendColumns(String columns, Object... paramValues);
+    SelectDao<T> select(Boolean isAppend, String expr, Object... paramValues);
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -128,47 +118,38 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * 为了避免 N+1 的性能问题，我们可以利用 join fetch 一次过用一条 SQL 语句把 Order 的所有信息查询出来
      * select o from Order o inner join fetch o.orderItems where o.ower.age=26 order by o.orderid
      *
-     * @param joinStatement inner join 和left join 表达式
+     * @param joinStatements inner join 和left join 表达式
      */
-    SelectDao<T> join(String joinStatement);
-
+    SelectDao<T> join(String... joinStatements);
 
     /**
-     * 增加join语句
+     * 增加连接语句
      *
+     * @param isAppend
      * @param joinStatements
      * @return
      */
-    SelectDao<T> appendJoin(String... joinStatements);
+    SelectDao<T> join(Boolean isAppend, String... joinStatements);
 
-    /**
-     * 增加抓取的集合属性
-     * 针对JPA有效
-     * <p>
-     * JPA 必须设置别名
-     *
-     * @param setAttrs 如 customers orders
-     * @return
-     */
-//    @Deprecated
-//    SelectDao<T> appendJoinFetchSet(boolean isLeftJoin, String... setAttrs);
 
-    /**
-     * @param isLeftJoin
-     * @param setAttrs
-     * @return
-     */
-//    @Deprecated
-//    SelectDao<T> joinFetchSet(boolean isLeftJoin, String... setAttrs);
-
+    ////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * 增加要抓取的集合
+     * <p>
+     * 连接抓取
      *
      * @param setAttrs
      * @return
      */
-    SelectDao<T> appendJoinFetchSet(String... setAttrs);
+    SelectDao<T> joinFetch(String... setAttrs);
+
+    /**
+     * @param isAppend
+     * @param setAttrs
+     * @return
+     */
+    SelectDao<T> joinFetch(Boolean isAppend, String... setAttrs);
 
     /**
      * 增加要抓取的集合
@@ -177,32 +158,31 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param setAttrs
      * @return
      */
-    SelectDao<T> appendJoinFetchSet(Fetch.JoinType joinType, String... setAttrs);
+    SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs);
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 清除原来的group by ，并设置新的group by
+     * 增加 group by 字段列表
      *
-     * @param columns
+     * @param columnNames
      * @return
      */
-    SelectDao<T> groupBy(String... columns);
-
-    /**
-     * 增加group by字段
-     *
-     * @param columns
-     * @return
-     */
-    SelectDao<T> appendGroupBy(String... columns);
-
+    SelectDao<T> groupBy(String... columnNames);
 
     /**
      * @param expr
      * @param paramValues
      * @return
      */
-    SelectDao<T> appendGroupBy(String expr, Object... paramValues);
+    SelectDao<T> groupBy(String expr, Object... paramValues);
+
+    /**
+     * @param expr
+     * @param paramValues
+     * @return
+     */
+    SelectDao<T> groupBy(Boolean isAppend, String expr, Object... paramValues);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -229,17 +209,18 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> having(String havingStatement, Object... paramValues);
 
     /**
-     * 增加
+     * 增加 having 字句
      *
+     * @param isAppend
      * @param havingStatement
      * @param paramValues
      * @return
      */
-    SelectDao<T> appendHaving(String havingStatement, Object... paramValues);
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    SelectDao<T> having(Boolean isAppend, String havingStatement, Object... paramValues);
+    /////////////////////////////////////// 排序支持 ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * 设置排序字段，这个动作会清除原来排序字段
+     * 增加排序字段
      *
      * @param columnNames 例：  "name desc" , "createTime desc"
      * @return
@@ -247,30 +228,22 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> orderBy(String... columnNames);
 
     /**
-     * 增加排序对象
+     * 增加排序字段
      *
+     * @param isAppend
      * @param columnNames 例：  "name desc" , "createTime desc"
      * @return
      */
-    SelectDao<T> appendOrderBy(String... columnNames);
+    SelectDao<T> orderBy(Boolean isAppend, String... columnNames);
 
     /**
-     * 增加排序对象
+     * 增加排序字段
      *
-     * @param columnNames 例：  "name  " , "createTime  "
+     * @param type        如果不填写，默认为 Desc
+     * @param columnNames 例：  "name" , "createTime"
      * @return
      */
-    SelectDao<T> appendOrderBy(OrderBy.Type type, String... columnNames);
-
-    /**
-     * 设置默认的排序语句，注意不能包括含Order By 关键字
-     * <p/>
-     * 在没有其它排序语句的情况下，这个默认语句将会生效
-     *
-     * @param orderByStatement 注意不能包括含Order By 关键字
-     * @return
-     */
-    SelectDao<T> setDefaultOrderByStatement(String orderByStatement);
+    SelectDao<T> orderBy(OrderBy.Type type, String... columnNames);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -320,15 +293,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 
     /**
-     * 获取结果集，并转换成指定的对对象
-     *
-     * @param
-     * @return
-     */
-
-//    <E> List<E> find(Function<? super Object, E> converter);
-
-    /**
      * 获取结果集
      *
      * @param <E>
@@ -371,14 +335,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
     <I, E> E findOne(Converter<I, E> converter);
 
-
-    /**
-     * 获取结果集，并转换成指定的对对象
-     *
-     * @param
-     * @return
-     */
-//    <I, E> E findOneAndConvert(Function<I, E> converter);
 
     /**
      * 获取一个结果

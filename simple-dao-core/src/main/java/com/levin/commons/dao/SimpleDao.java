@@ -129,19 +129,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     String getEntityIdAttrName(Object entity);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    /**
-     * 通过查询对象创建 DAO
-     *
-     * @param daoClass
-     * @param queryObjs
-     * @param <DAO>
-     * @return 返回 SelectDao or UpdateDao or DeleteDao
-     */
-    <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
-
 
     /////////////////////////////////////////////////////////////////
 
@@ -184,19 +171,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     <E> E findOneByQueryObj(Class<E> resultType, Object... queryObjs);
 
-
-    /**
-     * 智能属性拷贝，使用Spring转换器
-     *
-     * @param source
-     * @param target
-     * @param ignoreProperties a.b.c.name* *号表示忽略以什么开头的属性
-     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
-     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
-     * @return
-     */
-    @Deprecated
-    <T> T copyProperties(Object source, T target, String... ignoreProperties);
 
     /**
      * 智能属性拷贝，使用Spring转换器

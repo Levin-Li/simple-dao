@@ -97,8 +97,9 @@ public class SelectDaoImpl<T>
 
         this.fromStatement = fromStatement;
 
-        if (!hasText(fromStatement))
+        if (!hasText(fromStatement)) {
             throw new IllegalArgumentException("fromStatement is null");
+        }
     }
 
     public SelectDaoImpl(MiniDao dao, String tableName, String alias) {
@@ -128,33 +129,20 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> select(String columns, Object... paramValues) {
+    public SelectDao<T> select(String expr, Object... paramValues) {
 
-        selectColumns.clear();
-        selectParamValues.clear();
-        selectColumnsMap.clear();
-
-        hasStatColumns = false;
-
-        appendColumns(columns, paramValues);
-
-        return this;
+        return select(true, expr, paramValues);
     }
 
     @Override
-    public SelectDao<T> appendColumns(String columns, Object... paramValues) {
+    public SelectDao<T> select(Boolean isAppend, String expr, Object... paramValues) {
 
-        if (selectColumns.add(columns)) {
+        if (Boolean.TRUE.equals(isAppend)
+                && selectColumns.add(expr)) {
             selectParamValues.add(paramValues);
         }
 
         return this;
-    }
-
-    @Override
-    public SelectDao<T> appendSelectColumns(String columns, Object... paramValues) {
-
-        return appendColumns(columns, paramValues);
     }
 
 
@@ -175,16 +163,18 @@ public class SelectDaoImpl<T>
         }
 
         //增加选择字段
-        appendSelectColumns(queryRequest.selectStatement());
+        select(queryRequest.selectStatement());
 
         //增加连接语句
-        appendJoin(queryRequest.joinStatement());
+        join(queryRequest.joinStatement());
 
         //增加抓取的子集合
-        appendJoinFetchSet(Fetch.JoinType.Default, queryRequest.joinFetchSetAttrs());
+        joinFetch(Fetch.JoinType.Default, queryRequest.joinFetchSetAttrs());
 
         //设置默认的排序语句
-        setDefaultOrderByStatement(queryRequest.defaultOrderBy());
+        if (hasText(queryRequest.defaultOrderBy())) {
+            defaultOrderByStatement.append(queryRequest.defaultOrderBy());
+        }
 
         return this;
     }
@@ -200,17 +190,8 @@ public class SelectDaoImpl<T>
         return this.selectColumns.size() > 0;
     }
 
-
     @Override
-    public SelectDao<T> join(String joinExpr) {
-
-        joinStatement.setLength(0);
-
-        return appendJoin(joinExpr);
-    }
-
-    @Override
-    public SelectDao<T> appendJoin(String... joinStatements) {
+    public SelectDao<T> join(String... joinStatements) {
 
         if (joinStatements != null) {
             for (String statement : joinStatements) {
@@ -224,12 +205,32 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> appendJoinFetchSet(String... setAttrs) {
-        return appendJoinFetchSet(Fetch.JoinType.Default, setAttrs);
+    public SelectDao<T> join(Boolean isAppend, String... joinStatements) {
+
+        if (Boolean.TRUE.equals(isAppend)) {
+            join(joinStatements);
+        }
+
+        return this;
     }
 
     @Override
-    public SelectDao<T> appendJoinFetchSet(Fetch.JoinType joinType, String... setAttrs) {
+    public SelectDao<T> joinFetch(String... setAttrs) {
+        return joinFetch(Fetch.JoinType.Default, setAttrs);
+    }
+
+    @Override
+    public SelectDao<T> joinFetch(Boolean isAppend, String... setAttrs) {
+
+        if (Boolean.TRUE.equals(isAppend)) {
+            joinFetch(setAttrs);
+        }
+
+        return this;
+    }
+
+    @Override
+    public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
 
 
         //仅对 JPA dao 有效
@@ -272,38 +273,27 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> groupBy(String... columns) {
 
-        groupByColumns.clear();
-
-        return appendGroupBy(columns);
-    }
-
-    /**
-     * 设置group by
-     *
-     * @param columns
-     * @return
-     */
-    @Override
-    public SelectDao<T> appendGroupBy(String... columns) {
-
         if (columns != null) {
             for (String column : columns) {
-                groupByColumns.add(column);
+                if(hasText(column)) {
+                    groupByColumns.add(aroundColumnPrefix(column));
+                }
             }
         }
 
         return this;
     }
 
-    /**
-     * 设置group by
-     *
-     * @return
-     */
     @Override
-    public SelectDao<T> appendGroupBy(String expr, Object... paramValues) {
+    public SelectDao<T> groupBy(String expr, Object... paramValues) {
+        return groupBy(true, expr, paramValues);
+    }
 
-        if (hasText(expr)) {
+    @Override
+    public SelectDao<T> groupBy(Boolean isAppend, String expr, Object... paramValues) {
+
+        if (Boolean.TRUE.equals(isAppend)
+                && hasText(expr)) {
             groupByColumns.add(expr);
             groupByParamValues.add(paramValues);
         }
@@ -314,18 +304,14 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> having(String havingStatement, Object... paramValues) {
 
-        //清除
-        this.havingExprRootNode.clear();
-        this.havingParamValues.clear();
-
-        return appendHaving(havingStatement, paramValues);
-
+        return having(true, havingStatement, paramValues);
     }
 
     @Override
-    public SelectDao<T> appendHaving(String havingStatement, Object... paramValues) {
+    public SelectDao<T> having(Boolean isAppend, String havingStatement, Object... paramValues) {
 
-        if (hasText(havingStatement)
+        if (Boolean.TRUE.equals(isAppend)
+                && hasText(havingStatement)
                 && this.havingExprRootNode.addToCurrentNode(havingStatement)) {
             this.havingParamValues.add(paramValues);
         }
@@ -350,62 +336,58 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> orderBy(String... columns) {
-
-        //清除条件
-        orderByColumns.clear();
-
-        appendOrderBy(columns);
-
-        return this;
+    public SelectDao<T> orderBy(String... columnNames) {
+        return orderBy(true, columnNames);
     }
 
-    /**
-     * 增加排序对象
-     *
-     * @param columns 例：  "name desc" , "createTime desc"
-     * @return
-     */
     @Override
-    public SelectDao<T> appendOrderBy(String... columns) {
+    public SelectDao<T> orderBy(Boolean isAppend, String... columnNames) {
 
-        if (columns == null)
-            return this;
-
-        for (String column : columns) {
-            orderByColumns.add(new OrderByObj(column));
+        if (Boolean.TRUE.equals(isAppend)
+                && columnNames != null) {
+            for (String column : columnNames) {
+                if (hasText(column)) {
+                    orderByColumns.add(new OrderByObj(column));
+                }
+            }
         }
 
         return this;
     }
 
-
     /**
-     * 增加排序对象
+     * 增加排序字段
      *
-     * @param type
-     * @param columnNames 例：  "name desc" , "createTime desc"
+     * @param type        如果不填写，默认为 Desc
+     * @param columnNames 例：  "name" , "createTime"
      * @return
      */
     @Override
-    public SelectDao<T> appendOrderBy(OrderBy.Type type, String... columnNames) {
+    public SelectDao<T> orderBy(OrderBy.Type type, String... columnNames) {
 
-        if (columnNames == null || columnNames.length == 0)
+        if (columnNames == null || columnNames.length == 0) {
             return this;
+        }
 
         //自动增加别名
         for (int i = 0; i < columnNames.length; i++) {
             columnNames[i] = aroundColumnPrefix(columnNames[i]);
         }
 
-        if (type != null) {
-            //加上排序方式
-            for (int i = 0; i < columnNames.length; i++) {
-                columnNames[i] = columnNames[i] + " " + type.name();
-            }
+        if (type == null) {
+            type = OrderBy.Type.Desc;
         }
 
-        appendOrderBy(columnNames);
+        //加上排序方式
+        for (int i = 0; i < columnNames.length; i++) {
+
+            if (hasText(columnNames[i])) {
+                columnNames[i] = columnNames[i] + " " + type.name();
+            }
+
+        }
+
+        orderBy(columnNames);
 
         return this;
     }
@@ -466,8 +448,8 @@ public class SelectDaoImpl<T>
             Fetch fetch = (Fetch) opAnnotation;
 
             //增加集合抓取
-            appendJoinFetchSet(fetch.joinType(), fetch.value());
-            appendJoinFetchSet(fetch.joinType(), fetch.attrs());
+            joinFetch(fetch.joinType(), fetch.value());
+            joinFetch(fetch.joinType(), fetch.attrs());
 
         }
 
@@ -489,7 +471,7 @@ public class SelectDaoImpl<T>
             expr = " NOT(" + expr + ") ";
         }
 
-        appendHaving(expr, holder.value, opParamValue);
+        having(expr, holder.value, opParamValue);
 
     }
 
@@ -514,7 +496,7 @@ public class SelectDaoImpl<T>
 
                 expr = tryAppendAlias(expr, opAnnotation, alias);
 
-                appendColumns(expr, holder.value);
+                select(expr, holder.value);
 
                 //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
                 appendColumnMap(expr, fieldOrMethod, name);
@@ -548,12 +530,12 @@ public class SelectDaoImpl<T>
 
             if (opAnnotation instanceof GroupBy) {
                 //增加GroupBy字段
-                appendGroupBy(expr, holder.value);
+                groupBy(expr, holder.value);
             }
 
             expr = tryAppendAlias(expr, opAnnotation, alias);
 
-            appendColumns(expr, holder.value);
+            select(expr, holder.value);
 
             //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
             appendColumnMap(expr, fieldOrMethod, name);
@@ -603,8 +585,9 @@ public class SelectDaoImpl<T>
             String from = getText(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
             return (hasKey ? " " + fromStatement : " From " + fromStatement) + getText(joinStatement.toString(), " ");
-        } else
+        } else {
             return super.genFromStatement() + getText(joinStatement.toString(), " ");
+        }
 
     }
 
@@ -627,8 +610,9 @@ public class SelectDaoImpl<T>
 
         String genFromStatement = genFromStatement();
 
-        if (!hasContent(genFromStatement))
+        if (!hasContent(genFromStatement)) {
             throw new IllegalArgumentException("from statement not set");
+        }
 
         builder.append(" ").append(genFromStatement);
 
@@ -658,7 +642,6 @@ public class SelectDaoImpl<T>
 
         //如果只是统计总数，则不把排序语句加入，可以提升速度
         if (!isCountQueryResult) {
-
             //以下代理是处理排序语句
             if (orderByColumns.length() > 0) {
                 //排序
@@ -676,18 +659,6 @@ public class SelectDaoImpl<T>
 
         return ExprUtils.replace(builder.toString(), getDaoContextValues());
     }
-
-    @Override
-    public SelectDao<T> setDefaultOrderByStatement(String orderByStatement) {
-
-        this.defaultOrderByStatement.setLength(0);
-
-        if (orderByStatement != null && orderByStatement.trim().length() > 0)
-            defaultOrderByStatement.append(orderByStatement);
-
-        return this;
-    }
-
 
     @Override
     public long count() {
@@ -733,8 +704,9 @@ public class SelectDaoImpl<T>
 
         List<Number> list = dao.find(isNative(), null, -1, -1, ql, paramValues);
 
-        if (list.isEmpty() || list.get(0) == null)
+        if (list.isEmpty() || list.get(0) == null) {
             return 0;
+        }
 
         return list.get(0).longValue();
     }
@@ -947,7 +919,7 @@ public class SelectDaoImpl<T>
                         property = getAlias() + "." + property;
                     }
 
-                    appendJoinFetchSet(fetch.joinType(), property);
+                    joinFetch(fetch.joinType(), property);
 
                 }, field -> field.getAnnotation(Fetch.class) != null
         );
@@ -972,8 +944,9 @@ public class SelectDaoImpl<T>
     //    @Override
     public <E> E findOne(Function<? super Object, E> converter) {
 
-        if (converter == null)
+        if (converter == null) {
             throw new IllegalArgumentException("converter is null");
+        }
 
         Object data = findOne();
 
@@ -1254,8 +1227,9 @@ public class SelectDaoImpl<T>
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == this)
+            if (obj == this) {
                 return true;
+            }
 
             if (obj instanceof OrderByObj) {
                 return orderByStatement.equals(((OrderByObj) obj).orderByStatement);

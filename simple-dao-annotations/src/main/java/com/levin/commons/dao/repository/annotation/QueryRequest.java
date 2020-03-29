@@ -15,6 +15,7 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 public @interface QueryRequest {
+
     /**
      * 查找的字段
      * <p/>

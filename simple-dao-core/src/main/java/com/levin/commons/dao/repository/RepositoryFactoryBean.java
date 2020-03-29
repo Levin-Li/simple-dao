@@ -121,7 +121,7 @@ public class RepositoryFactoryBean<T>
             selectDao.setParameterNameDiscoverer(getParameterNameDiscoverer());
 
             if (queryRequest != null) {
-                selectDao.appendWhere(queryRequest.fixedCondition());
+                selectDao.where(queryRequest.fixedCondition());
             }
 
             selectDao.appendByMethodParams(proxyObj, method, args);
@@ -174,7 +174,7 @@ public class RepositoryFactoryBean<T>
 
             return updateDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
-                    .appendWhere(((UpdateRequest) opAnnotation).fixedCondition())
+                    .where(((UpdateRequest) opAnnotation).fixedCondition())
                     .appendColumns(((UpdateRequest) opAnnotation).updateStatement())
                     .appendByMethodParams(proxyObj, method, args)
                     .update();
@@ -185,7 +185,7 @@ public class RepositoryFactoryBean<T>
 
             return deleteDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
-                    .appendWhere(((DeleteRequest) opAnnotation).fixedCondition())
+                    .where(((DeleteRequest) opAnnotation).fixedCondition())
                     .appendByMethodParams(proxyObj, method, args)
                     .delete();
 

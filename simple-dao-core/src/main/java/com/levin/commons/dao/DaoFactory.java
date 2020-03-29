@@ -14,6 +14,24 @@ public interface DaoFactory {
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * 通过查询对象创建 DAO
+     *
+     * @param daoClass
+     * @param queryObjs
+     * @param <DAO>
+     * @return 返回 SelectDao or UpdateDao or DeleteDao
+     */
+    <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
+
+    /**
+     * 从查询对象构造SelectDao
+     *
+     * @param <T>
+     * @return
+     */
+    <T> SelectDao<T> selectFrom(Object... queryObjs);
+
+    /**
      * 原生查询
      *
      * @param <T>

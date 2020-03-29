@@ -11,7 +11,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
         SafeController<T>,
         LogicOP<T>,
         SimpleConditionBuilder<T>,
-        SimpleConditionBuilder2<T>,
         StatementBuilder {
 
     /**
@@ -58,56 +57,26 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
 
     /**
-     * 设置where 条件，将清除之前设置的条件，但不包括range条件
-     *
-     * @param conditionExpr
-     * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
-     *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
-     * @return
-     */
-    T where(String conditionExpr, Object... paramValues);
-
-
-    /**
      * 增加where条件及参数
      *
-     * @param conditionExpr 条件表达式，如；u.name = ? and u.state = enable
+     * @param expr
      * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
      *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return
      */
-    T appendWhere(String conditionExpr, Object... paramValues);
+    T where(String expr, Object... paramValues);
+
 
     /**
      * 增加where条件及参数
      *
      * @param isAppend      是否加入条件，条件当isAppend为true时，才会把条件和参数加入where
-     * @param conditionExpr 如 name = ?，或name = :pName
+     * @param expr 如 name = ?，或name = :pName
      * @param paramValues   参数可以是数组,或是Map，或是List，或是具体的参数值，当是数组或是List时会对参数进行递归处理
      *                      是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return this
      */
-    T appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues);
-
-
-    /**
-     * 自动把对象的所有属性枚举出来
-     * <p/>
-     * <p/>
-     * 支持使用条件Map做为查询条件
-     * Map支持EL表达式，可参考appendWhereByEL方法
-     *
-     * @param queryObjs 可以值对象要求打上com.levin.commons.dao.annotation注解
-     * @return
-     * @see com.levin.commons.dao.annotation
-     * @see #appendByQueryObj
-     */
-    @Deprecated
-    T appendWhereByQueryObj(Object... queryObjs);
-
-
-    @Deprecated
-    T appendWhereByEL(String paramPrefix, Map<String, Object>... queryParams);
+    T where(Boolean isAppend, String expr, Object... paramValues);
 
 
     /**

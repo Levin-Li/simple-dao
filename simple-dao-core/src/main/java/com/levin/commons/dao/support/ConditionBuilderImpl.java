@@ -247,45 +247,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB where(String whereStatement, Object... paramValues) {
 
-        this.whereExprRootNode.clear();
-        this.whereParamValues.clear();
-
-        this.appendWhere(whereStatement, paramValues);
-
-        return (CB) this;
-    }
-
-    @Override
-    public CB appendWhere(String conditionExpr, Object... paramValues) {
-
-        return appendWhere(true, conditionExpr, paramValues);
+        return this.where(true, whereStatement, paramValues);
 
     }
 
     @Override
-    public CB appendWhere(Boolean isAppend, String conditionExpr, Object... paramValues) {
+    public CB where(Boolean isAppend, String conditionExpr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-
-
             appendToWhere(conditionExpr, paramValues);
         }
 
         return (CB) this;
-    }
-
-
-    /**
-     * 建议使用 appendByQueryObj替代
-     *
-     * @param queryObjs 可以值对象要求打上com.levin.commons.dao.annotation注解
-     * @return
-     * @see #appendByQueryObj
-     * @see com.levin.commons.dao.annotation
-     */
-    @Override
-    public CB appendWhereByQueryObj(Object... queryObjs) {
-        return appendByQueryObj(queryObjs);
     }
 
     @Override
@@ -354,151 +327,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (Boolean.TRUE.equals(isAppend)) {
             processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);
         }
-
-        return (CB) this;
-    }
-
-
-    /**
-     * 参数的属性名称中带有查询注释说明
-     * <p/>
-     * 如：属性名Q_Not_Like_name  值 llw，表f示会生成查询条件 name not like '%llw%'
-     * <p/>
-     * param.put("Q_name", "llw");
-     * param.put("nickName", "llw");
-     * param.put("Q_Like_name", "llw");
-     * param.put("Q_Gt_date1", new Date());
-     * param.put("Q_Lt_date2", new Date());
-     * param.put("Q_Gte_date3", new Date());
-     * param.put("Q_Lte_date4", new Date());
-     * param.put("Q_Not_gt_date5", new Date());
-     * param.put("Q_NotLike_date6", new Date());
-     * param.put("Q_NotEq_date7", new Date());
-     * <p/>
-     * param.put("Q_NotNull_date8", new Date());
-     * param.put("Q_NotLike_date9", new Date());
-     * <p/>
-     * <p/>
-     * param.put("Q_NotLike_", "llw");
-     * param.put("Q_name1", "llw");
-     * param.put("Q_Not_Contains_name2", "llw");
-     * param.put("Q_StartsWith_name3", "llw");
-     * <p/>
-     * param.put("Q_Not_EndsWith_name5", "llw");
-     * param.put("name6", "llw");
-     *
-     * @param paramPrefix
-     * @param queryParams
-     * @return
-     */
-    @Override
-    public CB appendWhereByEL(String paramPrefix, Map<String, Object>... queryParams) {
-
-        walkMap(paramPrefix, queryParams);
-
-        return (CB) this;
-    }
-
-    /**
-     * 增加单个参数
-     * eg：appendWhereEquals("name","echo") 表示 and name = 'echo'
-     *
-     * @param entityAttrName 如 name
-     * @param paramValue     如果值为null ，将不加入条件
-     * @return
-     */
-
-    @Override
-    public CB appendWhereEquals(String entityAttrName, Object paramValue) {
-
-        add(Eq.class, entityAttrName, paramValue);
-
-        return (CB) this;
-    }
-
-
-    @Override
-    public CB appendBetween(String entityAttrName, Object... paramValues) {
-
-
-        add(Between.class, entityAttrName, paramValues);
-
-        return (CB) this;
-    }
-
-    /**
-     * field in (?...)
-     *
-     * @param entityAttrName
-     * @param paramValues
-     * @return
-     */
-    @Override
-    public CB appendWhereIn(String entityAttrName, Object... paramValues) {
-
-
-        add(In.class, entityAttrName, paramValues);
-
-        return (CB) this;
-    }
-
-    /**
-     * field in (?...)
-     *
-     * @param entityAttrName
-     * @param paramValues
-     * @return
-     */
-    @Override
-    public CB appendWhereNotIn(String entityAttrName, Object... paramValues) {
-
-        add(NotIn.class, entityAttrName, paramValues);
-
-        return (CB) this;
-    }
-
-    /**
-     * like %keyword%
-     *
-     * @param entityAttrName
-     * @param keyword
-     * @return
-     */
-    @Override
-    public CB appendWhereContains(String entityAttrName, String keyword) {
-
-        add(Contains.class, entityAttrName, keyword);
-
-        return (CB) this;
-    }
-
-    /**
-     * like %keyword%
-     *
-     * @param entityAttrName
-     * @param keyword
-     * @return
-     */
-    @Override
-    public CB appendWhereStartsWith(String entityAttrName, String keyword) {
-
-
-        add(StartsWith.class, entityAttrName, keyword);
-
-        return (CB) this;
-    }
-
-    /**
-     * like %keyword%
-     *
-     * @param entityAttrName
-     * @param keyword
-     * @return
-     */
-    @Override
-    public CB appendWhereEndsWith(String entityAttrName, String keyword) {
-
-        add(EndsWith.class, entityAttrName, keyword);
 
         return (CB) this;
     }
@@ -779,7 +607,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             this.alias = targetOption.alias();
         }
 
-        this.appendWhere(targetOption.fixedCondition());
+        this.where(targetOption.fixedCondition());
 
         //设置limit，如果原来没有设置
 
@@ -1423,7 +1251,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected CB appendHaving(String expr, Object... paramValues) {
+    protected CB having(String expr, Object... paramValues) {
         throw new UnsupportedOperationException("appendHaving [" + expr + "]");
     }
 
@@ -1447,9 +1275,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             //变成 having 字句，只针对 SelectDao 有效
             if (Boolean.TRUE.equals(having) && this instanceof SelectDao) {
-                appendHaving(expr, holder.value);
+                having(expr, holder.value);
             } else {
-                appendWhere(expr, holder.value);
+                where(expr, holder.value);
             }
 
         });

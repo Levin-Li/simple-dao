@@ -22,11 +22,13 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T min(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
-     * 因为方法名称冲突，只好取 groupByAsAnno 的名字
+     *
      * <p>
      * 通过模拟 GroupBy 注解的方式增加 groupBy 语句
      *
+     *
      * @param expr
+     * @param alias
      * @param paramValues
      * @return
      */
