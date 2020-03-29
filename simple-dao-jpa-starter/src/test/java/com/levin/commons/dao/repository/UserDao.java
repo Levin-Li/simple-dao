@@ -7,7 +7,7 @@ import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.logic.OR;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.repository.annotation.DeleteRequest;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
@@ -30,7 +30,7 @@ public interface UserDao {
                  @Eq String category, Paging paging);
 
     @UpdateRequest
-    int update(@Eq Long id, @UpdateColumn String name);
+    int update(@Eq Long id, @Update String name);
 
     @DeleteRequest
     int delete(@OR @Eq Long id, String name);

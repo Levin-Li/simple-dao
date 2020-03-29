@@ -7,7 +7,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.logic.OR;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
@@ -46,7 +46,7 @@ public abstract class Group2Dao {
     }
 
     @UpdateRequest
-    public int update(@Eq Long id, @UpdateColumn String name) {
+    public int update(@Eq Long id, @Update String name) {
 
         Integer r = RepositoryFactoryBean.getProxyInvokeResult();
 
@@ -54,7 +54,7 @@ public abstract class Group2Dao {
     }
 
     //没有注解方法将无效，如果调用RepositoryFactoryBean.getProxyInvokeResult(); 将会生产异常
-    public Object noAnnoMethod(@Eq Long id, @UpdateColumn String name) {
+    public Object noAnnoMethod(@Eq Long id, @Update String name) {
 
         Object r = RepositoryFactoryBean.getProxyInvokeResult();
 

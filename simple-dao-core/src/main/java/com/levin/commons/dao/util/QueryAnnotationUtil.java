@@ -12,6 +12,7 @@ import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,11 +84,10 @@ public abstract class QueryAnnotationUtil {
 
     /////////////////////////////////
     @Select
-    @Update
-
     @SelectColumn
-    @UpdateColumn
 
+    @Update
+    @UpdateColumn
 
     private static final Map<String, Annotation> allInstanceMap = new HashMap<>();
 
