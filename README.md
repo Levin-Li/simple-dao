@@ -453,19 +453,23 @@
 
    排序使用OrderBy注解，OrderBy支持字段和参数。
 
-    @OrderBy(order = 3) //按数值从小到大排序
-    String name = "lile";
+    @Contains
+    @OrderBy
+    String name = "test";
 
-    @Gt
-    @OrderBy(order = 1)
-    int scope = 10;
 
-    @OrderBy(order = 2)
-    protected Integer orderCode;
+    @OrderByList(
+            {
+                    @OrderBy(E_User.createTime),
+                    @OrderBy(value = E_User.area, order = 5,type = OrderBy.Type.Asc),
+                    @OrderBy(condition = C.NOT_NULL)
+            }
+    )
+    String orderCode ="1111";
 
    以上将生成OrderBy将生成如下语句：
 
-    Order by scope , orderCode, name
+    Order By  area Asc , name Desc , createTime Desc , orderCode Desc
 
 
 ### 10、使用注意事项
@@ -614,7 +618,7 @@
         
          //查询 User 实，直接通过连接获取所有的孩子节点，避免 N+1 查询   
          jpa.selectFrom(User.class,"u")
-            .appendJoinFetchSet("group.children") //设置立刻抓取 避免 N+1 查询 
+            .joinFetch("group.children") //设置立刻抓取 避免 N+1 查询 
             .find()   
         
   
