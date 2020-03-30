@@ -29,9 +29,11 @@ public class JdbcMiniDao implements MiniDao {
     DataSource dataSource;
 
 
+    @Autowired(required = false)
     JdbcOperations jdbcOperations;
-    SimpleJdbcInsertOperations insertOperations;
 
+    @Autowired(required = false)
+    SimpleJdbcInsertOperations insertOperations;
 
     @PostConstruct
     public void init() {
@@ -74,6 +76,7 @@ public class JdbcMiniDao implements MiniDao {
     }
 
     private String addLimit(int start, int count, String statement) {
+
         if (count > 0) {
             if (start < 0) {
                 start = 0;

@@ -1,4 +1,5 @@
 ### 简介
+   
    SimpleDao是一个使用注解生成SQL语句和参数的小组件，目前组件依赖Spring并结合JPA，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    
    在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
@@ -21,6 +22,7 @@
 
    client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
    
+    
    
 ### 1 快速上手
    
@@ -61,6 +63,11 @@
         @Contains
         String name = "test"; 
     }
+   
+  
+  测试用例类 [TestEntityStatDto](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
+  
+  其它测试用例参考：[Dto注解](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/dto) 
    
 
 ##### 1.3 配置JPA实体扫描 & 执行查询
@@ -259,24 +266,20 @@
 
 #### 3.1 Dao接口
 
-       1) SelectDao
+*    [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
-       2) UpdateDao
+*    [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
-       3) DeleteDao
+*    [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
 
-       4) MiniDao
+*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
        
-       5) SimpleDao
+*    [JpaDao](./simple-dao-jpa/src/main/java/com/levin/commons/dao/JpaDao.java)
        
-       6) JpaDao
-       
-       7）StatementBuilder 
- 
- 
+
 #### 3.2 注解的语句生成规则
 
-  操作枚举类：com.levin.commons.dao.annotation.Op，定义了常见的 sql 表达式。
+  操作枚举类：[com.levin.commons.dao.annotation.Op](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/Op.java)，定义了常见的 sql 表达式。
   
 
   语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
@@ -337,8 +340,8 @@
    
        
        jpaDao.selectFrom(Group.class, "g")
-                       .appendJoin("left join " + User.class.getName() + " u on g.id = u.group.id")
-                       .appendJoin("left join " + Task.class.getName() + " t on u.id = t.user.id")
+                       .join("left join " + User.class.getName() + " u on g.id = u.group.id")
+                       .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
                        .count("1")
                        .avg("t.score")
                        .avg("u.score")
@@ -682,9 +685,9 @@
 ### 12、附录
 
 
-#### 12.1 代码实例
+#### 12.1 测试用例
 
- 请参考测试用例：com.levin.commons.dao.support.JpaDaoImplTest
+ 请参考测试用例：[com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java) 
      
      
 #### 12.2 注解字段说明
@@ -820,7 +823,7 @@
 
   
 
-#### 12.2 联系作者
+#### 12.3 联系作者
 
  邮箱：99668980@qq.com
 
