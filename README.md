@@ -687,7 +687,7 @@
 
 #### 12.1 测试用例
 
- 请参考测试用例：[com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java) 
+ 请参考测试用例： [com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java) 
      
      
 #### 12.2 注解字段说明
