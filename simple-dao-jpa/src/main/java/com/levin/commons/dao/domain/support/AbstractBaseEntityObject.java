@@ -46,7 +46,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
 
 
     @PrePersist
-    public void init() {
+    public void prePersist() {
 
         if (createTime == null) {
             createTime = new Date();
@@ -58,6 +58,12 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
 
     }
 
+    @PreUpdate
+    public void preUpdate() {
+        if (lastUpdateTime == null) {
+            lastUpdateTime = new Date();
+        }
+    }
 
     @Override
     @Transient
