@@ -623,7 +623,7 @@ public class SelectDaoImpl<T>
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
             builder.insert(0, "Select * ");
-        } else if (fetchStatement.length() > 0) {
+        } else if (!isCountQueryResult && fetchStatement.length() > 0) {
             builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
         }
 
