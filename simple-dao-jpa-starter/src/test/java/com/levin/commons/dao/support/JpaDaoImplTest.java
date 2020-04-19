@@ -261,6 +261,19 @@ public class JpaDaoImplTest {
     }
 
     @Test
+    public void testJoinFetch() {
+
+
+        Group one = jpaDao.selectFrom(Group.class).findOne();
+
+        Object byQueryObj = jpaDao.findByQueryObj(GroupInfo.class, new GroupInfo().setId("" + one.getId()));
+
+        Assert.notNull(byQueryObj);
+
+    }
+
+
+    @Test
     public void testJoinAndStat() {
 
         List<Map> g = jpaDao.selectFrom(Group.class, "g")
@@ -345,10 +358,9 @@ public class JpaDaoImplTest {
     public void testAnno2() {
 
 
-        User user =jpaDao.selectFrom(User.class).gt(E_User.id,20).findOne();
+        User user = jpaDao.selectFrom(User.class).gt(E_User.id, 20).findOne();
 
         Long uid = user.getId();
-
 
 
         Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, uid).findOne();
@@ -576,11 +588,11 @@ public class JpaDaoImplTest {
     public void testSave() throws Exception {
 
 
-        User user =jpaDao.selectFrom(User.class).findOne();
+        User user = jpaDao.selectFrom(User.class).findOne();
 
         Long uid = user.getId();
 
-          user = jpaDao.find(User.class, uid);
+        user = jpaDao.find(User.class, uid);
 
         String description = "Update_" + new Date();
 
@@ -604,7 +616,7 @@ public class JpaDaoImplTest {
         jpaDao.delete(one);
 
 
-        one = jpaDao.find(Task.class,one.getId());
+        one = jpaDao.find(Task.class, one.getId());
 
         Assert.isNull(one);
 

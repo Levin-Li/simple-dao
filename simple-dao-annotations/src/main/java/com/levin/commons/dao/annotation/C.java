@@ -113,6 +113,7 @@ public @interface C {
      */
     String condition() default NOT_NULL;
 
+
     /**
      * 是否过滤数组参数或是列表参数中的空值
      * <p>
@@ -175,9 +176,6 @@ public @interface C {
      * @return
      */
     String surroundSuffix() default "";
-
-
-
 
 
 

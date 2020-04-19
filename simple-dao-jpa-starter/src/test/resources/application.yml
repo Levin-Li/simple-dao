@@ -1,7 +1,8 @@
-server:
-  port: 8081
 
 spring:
+  application:
+    name: test-server
+
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid: #单独使用druid时的配置

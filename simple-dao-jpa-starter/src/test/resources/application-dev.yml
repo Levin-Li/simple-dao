@@ -7,4 +7,11 @@ spring:
     password: dev
 
 
-
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+      naming:
+         # 1. 表名及字段全小写下划线分隔命名策略(默认)
+         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy

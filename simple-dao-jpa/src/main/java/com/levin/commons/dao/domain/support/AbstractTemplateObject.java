@@ -4,13 +4,15 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.EntityObject;
 import com.levin.commons.dao.domain.TemplateObject;
 import com.levin.commons.service.domain.Desc;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @MappedSuperclass
-//@Data
-//@Accessors(chain = true)
+@Data
+@Accessors(chain = true)
 @Desc("模板对象")
 public abstract class AbstractTemplateObject<ID extends Serializable, TEMPLATE extends EntityObject<ID>>
         extends AbstractNamedEntityObject<ID>

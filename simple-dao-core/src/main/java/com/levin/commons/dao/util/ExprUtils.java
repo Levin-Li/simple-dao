@@ -134,8 +134,7 @@ public abstract class ExprUtils {
                     eleCount = QueryAnnotationUtil.eleCount(holder.value);
 
                     //如果没有参数
-
-
+                    
                 } else {
                     try {
                         holder.value = ObjectUtil.convert(holder.value, expectType);

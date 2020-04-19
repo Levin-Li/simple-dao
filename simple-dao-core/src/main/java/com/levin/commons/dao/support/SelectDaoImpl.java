@@ -621,6 +621,8 @@ public class SelectDaoImpl<T>
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
             builder.insert(0, "Select * ");
+        } else if (fetchStatement.length() > 0) {
+            builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
         }
 
         String genFromStatement = genFromStatement();
@@ -630,6 +632,7 @@ public class SelectDaoImpl<T>
         }
 
         builder.append(" ").append(genFromStatement);
+
 
         //如果不是统计语句，则允许集合抓取语句
         if (!isCountQueryResult && fetchStatement.length() > 0) {
@@ -681,7 +684,6 @@ public class SelectDaoImpl<T>
         if (isNative()) {
             return count("Select Count(*) From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
         }
-
 
         //JPA 暂时不支持对统计查询进行二次统计
         if (hasStatColumns()) {
