@@ -266,8 +266,13 @@ public class JpaDaoImplTest {
 
         Group one = jpaDao.selectFrom(Group.class).findOne();
 
-        Object byQueryObj = jpaDao.findByQueryObj(GroupInfo.class, new GroupInfo().setId("" + one.getId()));
-        Object ss = jpaDao.countByQueryObj( new GroupInfo().setId("" + one.getId()));
+        GroupInfo queryDto = new GroupInfo().setId("" + one.getId());
+
+        Object byQueryObj = jpaDao.findByQueryObj(GroupInfo.class, queryDto);
+
+        long count = jpaDao.forSelect(queryDto).joinFetch(E_Group.children).count();
+
+        Object ss = jpaDao.countByQueryObj(queryDto);
 
         Assert.notNull(byQueryObj);
 
