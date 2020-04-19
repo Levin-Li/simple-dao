@@ -267,6 +267,7 @@ public class JpaDaoImplTest {
         Group one = jpaDao.selectFrom(Group.class).findOne();
 
         Object byQueryObj = jpaDao.findByQueryObj(GroupInfo.class, new GroupInfo().setId("" + one.getId()));
+        Object ss = jpaDao.countByQueryObj( new GroupInfo().setId("" + one.getId()));
 
         Assert.notNull(byQueryObj);
 
