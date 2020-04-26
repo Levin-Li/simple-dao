@@ -76,6 +76,9 @@ public class SelectDaoImpl<T>
     boolean hasStatColumns = false;
 
 
+    Class resultType;
+
+
     {
         disableSafeMode();
     }
@@ -919,6 +922,11 @@ public class SelectDaoImpl<T>
         if (!getDao().isJpa() || targetType == null) {
             return;
         }
+
+        this.resultType = targetType;
+
+        //清除连接抓取，以结果对象为准
+        this. fetchStatement.setLength(0);
 
         ReflectionUtils.doWithFields(targetType, field -> {
 

@@ -264,7 +264,7 @@ public class JpaDaoImplTest {
     public void testJoinFetch() {
 
 
-        Group one = jpaDao.selectFrom(Group.class).findOne();
+        Group one = jpaDao.selectFrom(Group.class).gt(E_Group.id,5L).findOne();
 
         GroupInfo queryDto = new GroupInfo().setId("" + one.getId());
 

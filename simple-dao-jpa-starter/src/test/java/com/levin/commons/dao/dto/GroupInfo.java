@@ -24,8 +24,13 @@ public class GroupInfo implements Serializable {
 
     String id;
 
+
+//    @Ignore
+    @Fetch(value = "parent.name",joinType = Fetch.JoinType.Left)
+    String parentName;
+
+
     @Fetch(joinType = Fetch.JoinType.Left)
-    @Ignore
     List<GroupInfo> children;
 
 }
