@@ -933,6 +933,11 @@ public class SelectDaoImpl<T>
             return;
         }
 
+        // this.resultType = targetType;
+
+        //清除连接抓取，以结果对象为准
+        this.fetchStatement.setLength(0);
+
         ReflectionUtils.doWithFields(targetType, field -> {
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
