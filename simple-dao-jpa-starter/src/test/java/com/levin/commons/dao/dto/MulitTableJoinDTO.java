@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 public class MulitTableJoinDTO {
 
 
-    @Select("u.id")
+    @Select(value = "u.id",isDistinct = true)
     @C(op = Op.Expr, paramExpr = "u.group.id = g.id", condition = "")
     Long uid;
 

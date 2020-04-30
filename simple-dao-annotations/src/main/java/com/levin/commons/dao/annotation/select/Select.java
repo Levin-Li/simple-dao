@@ -96,6 +96,12 @@ public @interface Select {
      */
     String condition() default "";
 
+
+    /**
+     * 是否是唯一值 DISTINCT
+     */
+    boolean isDistinct() default false;
+
     /**
      * 是否过滤数组参数或是列表参数中的空值
      * <p>

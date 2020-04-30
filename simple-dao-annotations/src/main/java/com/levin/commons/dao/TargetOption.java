@@ -64,6 +64,16 @@ public @interface TargetOption {
 
 
     /**
+     * 是否是安全模式
+     * <p>
+     * 安全模式时，不允许无条件的更新
+     *
+     * @return
+     */
+    boolean isSafeMode() default true;
+
+
+    /**
      * 查询的最大结果集记录数
      *
      * @return

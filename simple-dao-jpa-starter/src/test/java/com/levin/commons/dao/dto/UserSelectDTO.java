@@ -19,7 +19,7 @@ public class UserSelectDTO extends UserDTO {
     String groupName = "Group";
 
     @Ignore
-    @Select
+
     String name;
 
     
