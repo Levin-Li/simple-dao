@@ -55,11 +55,13 @@ public class RepositoryFactoryBean<T>
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
 
-        if (jpaDao == null)
+        if (jpaDao == null) {
             throw new IllegalStateException("jpaDao is null");
+        }
 
-        if (parameterNameDiscoverer == null)
+        if (parameterNameDiscoverer == null) {
             parameterNameDiscoverer = new MethodParameterNameDiscoverer();
+        }
 
     }
 
@@ -68,11 +70,13 @@ public class RepositoryFactoryBean<T>
         List<Annotation> annotationsList = QueryAnnotationUtil.getAnnotationsByPackage(QueryRequest.class.getPackage().getName()
                 , annotations, EntityRepository.class, TargetOption.class);
 
-        if (annotationsList.size() > 1)
+        if (annotationsList.size() > 1) {
             throw new IllegalStateException(methodOrClass + ",在同一个方法或类上不能同时定义多个操作的注解:" + annotations);
+        }
 
-        if (annotationsList.size() > 0)
+        if (annotationsList.size() > 0) {
             return annotationsList.get(0);
+        }
 
         return null;
     }
@@ -106,8 +110,9 @@ public class RepositoryFactoryBean<T>
         }
 
         //如果方法上没有注解，则获以类上面的注解
-        if (opAnnotation == null)
+        if (opAnnotation == null) {
             opAnnotation = findOpAnnotation(method.getDeclaringClass(), method.getDeclaringClass().getAnnotations());
+        }
 
 
         if (opAnnotation instanceof QueryRequest || opAnnotation == null) {
@@ -141,8 +146,9 @@ public class RepositoryFactoryBean<T>
             //如果是集合对象
             boolean isCollection = Collection.class.isAssignableFrom(returnType);
 
-            if (isCollection)
+            if (isCollection) {
                 returnType = resolvableType.resolveGeneric(0);
+            }
 
             //以注解的优先
             if (queryRequest != null) {
