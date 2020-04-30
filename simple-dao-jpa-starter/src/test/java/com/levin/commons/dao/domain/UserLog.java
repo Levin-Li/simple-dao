@@ -33,4 +33,7 @@ public class UserLog
     Date occurTime;
 
     String state;
+
+
+    String testInfo;
 }
