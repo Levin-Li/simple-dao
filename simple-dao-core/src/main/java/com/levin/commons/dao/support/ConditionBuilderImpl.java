@@ -770,6 +770,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             this.tableName = targetOption.tableName();
         }
 
+        //如果是第一个
+        if (targetOptionAnnoList.isEmpty()) {
+            safeMode = targetOption.isSafeMode();
+        }
 
         if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());
