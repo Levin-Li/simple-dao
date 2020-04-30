@@ -11,25 +11,29 @@
     <version>2.2.0-SNAPSHOT</version>
 
 
-    <properties>
-        <maven-source-plugin.attach>true</maven-source-plugin.attach>
-    </properties>
-
     <parent>
-        <groupId>com.levin.commons.maven</groupId>
-        <artifactId>starter-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <!--<version>RELEASE</version>-->
+        <version>2.0.5.RELEASE</version>
+
+
     </parent>
 
+    <properties>
+        <maven-source-plugin.attach>true</maven-source-plugin.attach>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.levin.commons.maven</groupId>
-            <artifactId>service-support</artifactId>
-            <version>1.1.8-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+
+        <maven.test.skip>false</maven.test.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.source.skip>true</maven.source.skip>
+        <!--<maven-source-plugin.attach>false</maven-source-plugin.attach>-->
+
+        <spring-boot-maven-plugin.skip>true</spring-boot-maven-plugin.skip>
+
+        <addMavenDescriptor>false</addMavenDescriptor>
+
+    </properties>
 
     <modules>
         <module>simple-dao-annotations</module>
@@ -38,8 +42,166 @@
         <module>simple-dao-jpa-starter</module>
     </modules>
 
+
+    <distributionManagement>
+
+        <!--具体变量来自 Setting 文件-->
+        <repository>
+            <id>${dist-repo}</id>
+            <url>${dist-repo.releases.url}</url>
+        </repository>
+
+
+        <snapshotRepository>
+            <id>${dist-repo}</id>
+            <url>${dist-repo.snapshots.url}</url>
+        </snapshotRepository>
+
+    </distributionManagement>
+
+
+    <dependencyManagement>
+        <dependencies>
+
+
+            <!--            <dependency>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-dependencies</artifactId>
+                            <type>pom</type>
+                            <scope>import</scope>
+                            <version>RELEASE</version>
+                        </dependency>-->
+
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.levin.commons.maven</groupId>
+            <artifactId>service-support</artifactId>
+            <version>1.1.8-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <!--<version>RELEASE</version>-->
+        </dependency>
+
+        <!--        <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter</artifactId>
+                </dependency>-->
+
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
+
+    </dependencies>
+
+
+    <profiles>
+
+
+        <profile>
+
+            <id>00-使用阿里云maven库（推荐）</id>
+            <!--
+
+                        <activation>
+                            <activeByDefault>true</activeByDefault>
+                        </activation>
+            -->
+
+            <repositories>
+
+                <repository>
+                    <id>ali-maven</id>
+                    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>fail</checksumPolicy>
+                    </snapshots>
+                </repository>
+
+            </repositories>
+
+        </profile>
+
+
+        <!--        <profile>
+                    <id>编译时保留方法参数名称</id>
+
+                    <activation>
+                        <jdk>1.8</jdk>
+                    </activation>
+
+                    <properties>
+                        &lt;!&ndash;1.8编译参数-保留方法名称&ndash;&gt;
+                        <compilerArgument>-parameters</compilerArgument>
+                    </properties>
+
+                </profile>-->
+
+        <profile>
+            <id>01-跳过测试</id>
+            <!--
+                        <activation>
+                            <activeByDefault>true</activeByDefault>
+                        </activation>-->
+
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+
+        </profile>
+
+
+        <profile>
+            <id>02-上传源代码到 Maven</id>
+
+            <properties>
+                <maven.source.skip>false</maven.source.skip>
+            </properties>
+
+        </profile>
+
+
+        <profile>
+            <id>03-上传JavaDoc到 Maven</id>
+
+            <properties>
+                <maven.javadoc.skip>false</maven.javadoc.skip>
+            </properties>
+
+        </profile>
+
+
+    </profiles>
+
+
     <build>
+
         <plugins>
+
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>true</inherited>
@@ -48,7 +210,192 @@
                     <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>${addMavenDescriptor}</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>${addMavenDescriptor}</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <executions>
+
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+
+                </executions>
+
+                <configuration>
+                    <jvmTarget>${maven.compiler.target}</jvmTarget>
+                </configuration>
+
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.5</version>
+
+                <inherited>true</inherited>
+
+                <configuration>
+                    <providerSelection>${maven.compiler.target}</providerSelection>
+                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
+                    <!-- 用maven编译时需要加encoding：mvn -Dfile.encoding=UTF-8 compile  -->
+                    <source/>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generateStubs</goal>
+                            <goal>compile</goal>
+                            <goal>generateTestStubs</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <configuration>
+                    <delimiters>
+                        <delimiter>${*}</delimiter>
+                        <delimiter>@{*}</delimiter>
+                    </delimiters>
+                </configuration>
+            </plugin>
+
+            <!--            <plugin>
+                            <artifactId>maven-compiler-plugin</artifactId>
+                        </plugin>-->
+
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <executions>
+                    <execution>
+
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+
+                        <configuration>
+                            <attach>true</attach>
+                            <skip>${maven.javadoc.skip}</skip>
+                        </configuration>
+
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <docencoding>UTF-8</docencoding>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                    <skip>${maven.javadoc.skip}</skip>
+                </configuration>
+
+            </plugin>
+
+
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <configuration>
+
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+
+                        <configuration>
+                            <!--默认不上传到maven库-->
+                            <attach>true</attach>
+                            <skipSource>${maven.source.skip}</skipSource>
+                        </configuration>
+
+                    </execution>
+                </executions>
+
+            </plugin>
+
+
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+
+
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <configuration>
+                    <uniqueVersion>true</uniqueVersion>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <inherited>true</inherited>
+
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                    <skip>${spring-boot-maven-plugin.skip}</skip>
+                    <fork>false</fork>
+                </configuration>
+
+            </plugin>
+
+
         </plugins>
+
     </build>
+
 
 </project>
