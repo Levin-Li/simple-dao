@@ -6,5 +6,7 @@ spring:
     username: dev
     password: dev
 
-
-
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy

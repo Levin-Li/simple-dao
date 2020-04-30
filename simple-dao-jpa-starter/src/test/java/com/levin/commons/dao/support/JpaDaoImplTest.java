@@ -508,6 +508,18 @@ public class JpaDaoImplTest {
     //@Transactional
     public void testManyToOne() {
 
+        UserLog userLog = new UserLog().setState("sss").setIpAddr("ip").setOccurTime(new Date());
+
+
+        userLog.setName("asdfsdfas");
+
+        jpaDao.create(userLog);
+
+
+        Object one = jpaDao.selectFrom(UserLog.class).findOne();
+
+
+        System.out.println(userLog);
 
     }
 
