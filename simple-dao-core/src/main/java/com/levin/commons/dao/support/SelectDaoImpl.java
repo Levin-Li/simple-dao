@@ -514,13 +514,21 @@ public class SelectDaoImpl<T>
 
                 expr = tryAppendAlias(expr, opAnnotation, alias);
 
-                appendColumns(expr, holder.value);
+                select(tryAppendDistinct(expr, opAnnotation), holder.value);
 
                 //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
                 appendColumnMap(expr, fieldOrMethod, name);
             });
 
         }
+    }
+
+
+    String tryAppendDistinct(String expr, Annotation opAnnotation) {
+
+        Boolean isDistinct = ClassUtils.getValue(opAnnotation, "isDistinct", false);
+
+        return Boolean.TRUE.equals(isDistinct) ? (" DISTINCT(" + expr + ") ") : expr;
     }
 
     /**
