@@ -24,6 +24,14 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
 
     /**
+     * 是否有限制
+     *
+     * @return
+     */
+    boolean hasLimit();
+
+
+    /**
      * 设置查询结果集的的范围
      * <p/>
      * <p/>

@@ -210,6 +210,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+
+    @Override
+    public boolean hasLimit() {
+        return rowCount > 0;
+    }
+
     /**
      * 设置查询的分页
      *
