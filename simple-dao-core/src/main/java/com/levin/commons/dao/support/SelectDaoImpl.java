@@ -682,8 +682,8 @@ public class SelectDaoImpl<T>
             }
         }
 
-        if (this.isSafeMode() && !hasText(whereStatement)) {
-            throw new StatementBuildException("safe mode not allow no where statement SQL[" + builder + "]");
+        if (this.isSafeMode() && !hasText(whereStatement) && !hasLimit()) {
+            throw new StatementBuildException("safe mode not allow no where statement or not limit SQL[" + builder + "]");
         }
 
         return ExprUtils.replace(builder.toString(), getDaoContextValues());

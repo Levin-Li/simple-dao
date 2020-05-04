@@ -57,6 +57,13 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
 
     /**
+     * 是否有限制影响记录数
+     *
+     * @return
+     */
+    boolean hasLimit();
+
+    /**
      * 增加where条件及参数
      *
      * @param expr

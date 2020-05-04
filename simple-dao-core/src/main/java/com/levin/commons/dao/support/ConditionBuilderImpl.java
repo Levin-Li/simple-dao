@@ -244,6 +244,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    @Override
+    public boolean hasLimit() {
+        return rowCount > 0;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public CB where(String whereStatement, Object... paramValues) {
