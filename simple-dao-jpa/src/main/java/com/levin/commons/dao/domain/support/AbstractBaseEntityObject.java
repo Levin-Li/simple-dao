@@ -33,7 +33,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Desc("创建时间")
     @Column(name = "create_time")
     @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date createTime = new Date();
+    protected Date createTime;
 
     @Desc("更新时间")
     @Column(name = "last_update_time")
@@ -43,6 +43,26 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Desc("备注")
     @Column(name = "remark", length = 1000)
     protected String remark;
+
+    @PrePersist
+    public void prePersist() {
+
+        if (createTime == null) {
+            createTime = new Date();
+        }
+
+        if (lastUpdateTime == null) {
+            lastUpdateTime = new Date();
+        }
+
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        if (lastUpdateTime == null) {
+            lastUpdateTime = new Date();
+        }
+    }
 
     @Override
     @Transient
