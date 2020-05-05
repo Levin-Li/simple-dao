@@ -8,6 +8,8 @@ package com.levin.commons.dao.domain;
  */
 public interface Identifiable<ID> {
 
+    String ID = "id";
+
     /**
      * 获取对象标识
      *
