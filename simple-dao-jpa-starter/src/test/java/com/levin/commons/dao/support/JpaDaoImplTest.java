@@ -17,17 +17,26 @@ import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.utils.MapUtils;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 /**
  * Created by echo on 2015/11/17.
@@ -37,6 +46,7 @@ import java.util.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class})
 //@Transactional
+@Slf4j
 public class JpaDaoImplTest {
 
     @Autowired
@@ -87,6 +97,127 @@ public class JpaDaoImplTest {
     public void testGetEntityManager() throws Exception {
         EntityManager entityManager = jpaDao.getEntityManager();
         Assert.notNull(entityManager);
+    }
+
+
+    @Autowired
+    private ThreadPoolTaskScheduler taskScheduler;
+
+    @Data
+    @EqualsAndHashCode(of = "task")
+    @Accessors(chain = true)
+    static class InnerTask {
+
+        Task task;
+
+        long batchNum;
+
+        Future<?> future;
+
+        CronTrigger cronTrigger;
+
+    }
+
+
+    /**
+     * 单个任务
+     *
+     * @param innerTask
+     */
+    Future<?> scheduleTask(InnerTask innerTask, long batchNum) {
+
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                execTask(innerTask.task);
+            }
+        };
+
+        if (StringUtils.hasText(innerTask.task.getCron())) {
+
+            innerTask.cronTrigger = new CronTrigger(innerTask.task.getCron());
+
+            log.info("添加任务到调度器" + innerTask.task);
+
+            //调度任务，可以自动重复
+            return taskScheduler.schedule(runnable, innerTask.cronTrigger);
+
+        } else {
+
+            //立刻安排执行任务
+            return taskScheduler.submit(runnable);
+
+        }
+
+    }
+
+    private void stopTask(InnerTask removeTask) {
+
+        if (removeTask != null
+                && removeTask.future != null) {
+
+            log.info("尝试停止任务：" + removeTask.task);
+
+            try {
+                removeTask.future.cancel(false);
+            } catch (Exception e) {
+                log.error("停止单个任务时发生错误，" + removeTask.task, e);
+            }
+
+        }
+    }
+
+    /**
+     * @param taskC
+     */
+    void execTask(Task taskC) {
+
+        log.info(Thread.currentThread() + " 调度下发任务" + taskC);
+
+    }
+
+
+    @Test
+    public void schedule() throws InterruptedException {
+
+        Random random = new Random();
+
+        long batchTime = System.currentTimeMillis();
+
+        long id = 1;
+
+        Map<Long, InnerTask> taskMap = new ConcurrentHashMap<>();
+
+        while (id < 1000) {
+
+            String cron = ((System.nanoTime() * 100) % 60) + " * * * * ?";
+
+            InnerTask innerTask = new InnerTask().setTask(new Task().setId(id++).setCron(cron));
+
+            Future<?> future = scheduleTask(innerTask, batchTime);
+
+            innerTask.setFuture(future);
+
+            taskMap.put(innerTask.task.getId(), innerTask);
+
+        }
+
+        while (true) {
+
+
+            Thread.sleep(System.nanoTime()% 10 * 1000L);
+
+
+            long tid = random.nextInt(100) * 123 % 1000;
+
+
+            InnerTask innerTask = taskMap.get(tid);
+
+
+            stopTask(innerTask);
+
+        }
+
     }
 
 
@@ -315,7 +446,7 @@ public class JpaDaoImplTest {
 
 //        List<Object> objects = jpaDao.find(" select count(*) from  Group g");
 
- //       System.out.println(byQueryObj);
+        //       System.out.println(byQueryObj);
 
 
     }
@@ -853,6 +984,25 @@ public class JpaDaoImplTest {
         System.out.println("testSelectFrom:" + entities);
 
     }
+
+    @Test
+    public void statAndPage(){
+
+        SelectDao<Group> g = jpaDao.selectFrom(Group.class, "g")
+                .appendByQueryObj(new GroupStatDTO()).page(1, 20);
+
+
+        List<GroupStatDTO> u = g
+                .find(GroupStatDTO.class);
+
+        System.out.println(u);
+
+        long count = g.count();
+
+        System.out.println(count);
+
+    }
+
 
     @org.junit.Test
     public void testSelectTime() throws Exception {

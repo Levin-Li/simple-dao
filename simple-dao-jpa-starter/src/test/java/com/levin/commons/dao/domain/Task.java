@@ -35,6 +35,8 @@ public class Task
     Integer score;
 
 
+    String cron;
+
     String description;
 
 }

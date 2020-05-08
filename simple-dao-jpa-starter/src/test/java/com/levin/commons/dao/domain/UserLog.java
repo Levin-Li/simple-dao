@@ -28,7 +28,7 @@ public class UserLog
     @Column
     String opDesc;
 
-//    @Column
+    @Column(nullable = true)
     @Temporal(TemporalType.TIMESTAMP)
     Date occurTime;
 

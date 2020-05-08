@@ -6,10 +6,14 @@ import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.service.proxy.ProxyBeanScans;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 
 @SpringBootConfiguration
@@ -42,7 +46,22 @@ import org.springframework.context.annotation.ComponentScan;
 @EntityScan({"com.levin.commons.dao"})
 
 @ComponentScan("com.levin.commons.dao")
+@Slf4j
 public class TestConfiguration {
 
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+
+        //最大500个并发
+        scheduler.setPoolSize(500);
+
+        log.info("创建调度的线程池");
+
+        return scheduler;
+    }
 
 }

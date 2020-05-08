@@ -4,6 +4,7 @@ server:
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
+
     druid: #单独使用druid时的配置
       initial-size: 50
       max-active: 500
@@ -24,6 +25,7 @@ spring:
         enabled: true
         url-pattern: /druid/*
         allow: " "
+
 
   jpa:
       show-sql: true
