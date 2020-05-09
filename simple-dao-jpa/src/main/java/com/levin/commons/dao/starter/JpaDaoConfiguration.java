@@ -2,7 +2,6 @@ package com.levin.commons.dao.starter;
 
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
-import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Eq;
@@ -13,14 +12,18 @@ import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
-import org.springframework.format.support.FormattingConversionService;
-import org.springframework.format.support.FormattingConversionServiceFactoryBean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.jdbc.core.simple.SimpleJdbcCallOperations;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
 
 @Configuration
 
@@ -43,6 +46,25 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     FormattingConversionServiceFactoryBean formattingConversionServiceFactoryBean() {
         return new FormattingConversionServiceFactoryBean();
     }*/
+
+
+    @Bean
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
+    JdbcTemplate jdbcOperations() {
+        return new JdbcTemplate();
+    }
+
+    @Bean
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsertOperations.class)
+    SimpleJdbcInsertOperations simpleJdbcInsertOperations(@Autowired JdbcTemplate jdbcTemplate) {
+        return new SimpleJdbcInsert(jdbcTemplate);
+    }
+
+    @Bean
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCallOperations.class)
+    SimpleJdbcCallOperations simpleJdbcCallOperations(@Autowired JdbcTemplate jdbcTemplate) {
+        return new SimpleJdbcCall(jdbcTemplate);
+    }
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
@@ -67,6 +89,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
         return new JpaDaoImpl();
     }
+
 
 /*
     FactoryBean<JpaDao> newJpaDao() {

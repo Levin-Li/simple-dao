@@ -177,7 +177,7 @@ public class JpaDaoImplTest {
     }
 
 
-    @Test
+//    @Test
     public void schedule() throws InterruptedException {
 
         Random random = new Random();
