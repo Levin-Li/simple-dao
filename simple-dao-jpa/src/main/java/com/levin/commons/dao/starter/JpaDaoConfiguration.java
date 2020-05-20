@@ -50,20 +50,20 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
-    JdbcTemplate jdbcOperations() {
+    JdbcTemplate jdbcTemplate() {
         return new JdbcTemplate();
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsertOperations.class)
-    SimpleJdbcInsertOperations simpleJdbcInsertOperations(@Autowired JdbcTemplate jdbcTemplate) {
-        return new SimpleJdbcInsert(jdbcTemplate);
+    SimpleJdbcInsertOperations simpleJdbcInsertOperations( ) {
+        return new SimpleJdbcInsert(jdbcTemplate());
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCallOperations.class)
-    SimpleJdbcCallOperations simpleJdbcCallOperations(@Autowired JdbcTemplate jdbcTemplate) {
-        return new SimpleJdbcCall(jdbcTemplate);
+    SimpleJdbcCallOperations simpleJdbcCallOperations( ) {
+        return new SimpleJdbcCall(jdbcTemplate());
     }
 
     /**

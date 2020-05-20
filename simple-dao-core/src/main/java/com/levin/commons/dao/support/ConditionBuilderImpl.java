@@ -1666,7 +1666,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     protected <T> T evalExpr(Object root, Object value, String name, String expr) {
-
         return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
     }
 

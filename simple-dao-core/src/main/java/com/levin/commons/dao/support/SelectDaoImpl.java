@@ -19,6 +19,7 @@ import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -65,7 +66,7 @@ public class SelectDaoImpl<T>
 
     final StringBuilder joinStatement = new StringBuilder();
 
-    final StringBuilder fetchStatement = new StringBuilder();
+    final Map<String, String> fetchAttrs = new LinkedHashMap<>();
 
     //默认的排序
     final StringBuilder defaultOrderByStatement = new StringBuilder();
@@ -97,8 +98,9 @@ public class SelectDaoImpl<T>
 
         this.fromStatement = fromStatement;
 
-        if (!hasText(fromStatement))
+        if (!hasText(fromStatement)) {
             throw new IllegalArgumentException("fromStatement is null");
+        }
     }
 
     public SelectDaoImpl(MiniDao dao, String tableName, String alias) {
@@ -243,8 +245,9 @@ public class SelectDaoImpl<T>
 
         for (String setAttr : setAttrs) {
 
-            if (!hasText(setAttr))
+            if (!hasText(setAttr)) {
                 continue;
+            }
 
             //如果没有使用别名，尝试使用别名
             if (!setAttr.contains(".")) {
@@ -256,7 +259,10 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            fetchStatement.append(" ").append((joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr).append(" ");
+            //如果原来不存在这个属性
+            // if (!fetchAttrs.containsKey(setAttr)) {
+            fetchAttrs.put(setAttr, (joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr);
+            //  }
 
         }
 
@@ -631,7 +637,7 @@ public class SelectDaoImpl<T>
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
             builder.insert(0, "Select * ");
-        } else if (!isCountQueryResult && fetchStatement.length() > 0) {
+        } else if (!isCountQueryResult && fetchAttrs.size() > 0) {
             builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
         }
 
@@ -643,8 +649,8 @@ public class SelectDaoImpl<T>
         builder.append(" ").append(genFromStatement);
 
         //如果不是统计语句，则允许集合抓取语句
-        if (!isCountQueryResult && fetchStatement.length() > 0) {
-            builder.append(" ").append(fetchStatement);
+        if (!isCountQueryResult && fetchAttrs.size() > 0) {
+            fetchAttrs.values().forEach(v -> builder.append(" ").append(v).append(" "));
         }
 
         String whereStatement = genWhereStatement();
@@ -693,8 +699,9 @@ public class SelectDaoImpl<T>
 
         this.defaultOrderByStatement.setLength(0);
 
-        if (orderByStatement != null && orderByStatement.trim().length() > 0)
+        if (orderByStatement != null && orderByStatement.trim().length() > 0) {
             defaultOrderByStatement.append(orderByStatement);
+        }
 
         return this;
     }
@@ -744,8 +751,9 @@ public class SelectDaoImpl<T>
 
         List<Number> list = dao.find(isNative(), null, -1, -1, ql, paramValues);
 
-        if (list.isEmpty() || list.get(0) == null)
+        if (list.isEmpty() || list.get(0) == null) {
             return 0;
+        }
 
         return list.get(0).longValue();
     }
@@ -944,12 +952,15 @@ public class SelectDaoImpl<T>
 
         // this.resultType = targetType;
 
-        //清除连接抓取，以结果对象为准
-        this.fetchStatement.setLength(0);
-
         ReflectionUtils.doWithFields(targetType, field -> {
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
+
+                    //如果有条件，并且条件不成功
+                    if (StringUtils.hasText(fetch.condition())
+                            && !Boolean.TRUE.equals(evalExpr(null, null, null, fetch.condition()))) {
+                        return;
+                    }
 
                     String property = fetch.value();
 
@@ -1270,8 +1281,9 @@ public class SelectDaoImpl<T>
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == this)
+            if (obj == this) {
                 return true;
+            }
 
             if (obj instanceof OrderByObj) {
                 return orderByStatement.equals(((OrderByObj) obj).orderByStatement);
