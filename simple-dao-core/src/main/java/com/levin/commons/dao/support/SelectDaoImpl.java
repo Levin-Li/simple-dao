@@ -972,9 +972,6 @@ public class SelectDaoImpl<T>
 
                     property = getExprForJpaJoinFetch(entityClass, getAlias(), property);
 
-                    if (hasText(getAlias())) {
-                        property = getAlias() + "." + property;
-                    }
 
                     appendJoinFetchSet(fetch.joinType(), property);
 

@@ -492,9 +492,6 @@ public abstract class ExprUtils {
 
     }
 
-    static String nullSafe(String txt) {
-        return txt != null ? txt : "";
-    }
 
     /**
      * 获取要抓取的属性的jpa 抓取表达式
@@ -512,15 +509,23 @@ public abstract class ExprUtils {
             return propertyExpr;
         }
 
-        String prefix = nullSafe(alias) + ".";
+        StringBuilder sb = new StringBuilder();
 
-        if (propertyExpr.startsWith(prefix)) {
-            propertyExpr = propertyExpr.substring(prefix.length());
+        //如果有别名
+        if (hasText(alias)) {
+
+            String prefix = alias.trim() + ".";
+
+            if (propertyExpr.startsWith(prefix)) {
+                propertyExpr = propertyExpr.substring(prefix.length());
+            }
+
+            sb.append(prefix);
+
         }
 
-        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
 
-        StringBuilder sb = new StringBuilder();
+        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
 
         String[] names = propertyExpr.split("\\.");
 
