@@ -267,6 +267,8 @@ public class SelectDaoImpl<T>
                 continue;
             }
 
+            setAttr = getExprForJpaJoinFetch(entityClass, getAlias(), setAttr);
+
             //如果没有使用别名，尝试使用别名
             if (!setAttr.contains(".")) {
 
@@ -277,10 +279,7 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            //如果原来不存在这个属性
-            // if (!fetchAttrs.containsKey(setAttr)) {
             fetchAttrs.put(setAttr, (joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr);
-            //  }
 
         }
 
@@ -638,7 +637,7 @@ public class SelectDaoImpl<T>
         } else if (isNative()) {
             builder.insert(0, "Select * ");
         } else if (!isCountQueryResult && fetchAttrs.size() > 0) {
-            builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
+            //builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
         }
 
         String genFromStatement = genFromStatement();
@@ -954,12 +953,6 @@ public class SelectDaoImpl<T>
 
                     if (!hasText(property)) {
                         property = field.getName();
-                    }
-
-                    property = getExprForJpaJoinFetch(entityClass, getAlias(), property);
-
-                    if (hasText(getAlias())) {
-                        property = getAlias() + "." + property;
                     }
 
                     joinFetch(fetch.joinType(), property);

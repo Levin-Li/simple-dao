@@ -511,15 +511,23 @@ public abstract class ExprUtils {
             return propertyExpr;
         }
 
-        String prefix = nullSafe(alias) + ".";
+        StringBuilder sb = new StringBuilder();
 
-        if (propertyExpr.startsWith(prefix)) {
-            propertyExpr = propertyExpr.substring(prefix.length());
+        //如果有别名
+        if (hasText(alias)) {
+
+            String prefix = alias.trim() + ".";
+
+            if (propertyExpr.startsWith(prefix)) {
+                propertyExpr = propertyExpr.substring(prefix.length());
+            }
+
+            sb.append(alias.trim());
+
         }
 
-        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
 
-        StringBuilder sb = new StringBuilder();
+        ResolvableType parentTypeHolder = ResolvableType.forClass(type);
 
         String[] names = propertyExpr.split("\\.");
 
