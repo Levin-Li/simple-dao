@@ -638,7 +638,9 @@ public class SelectDaoImpl<T>
         } else if (isNative()) {
             builder.insert(0, "Select * ");
         } else if (!isCountQueryResult && fetchAttrs.size() > 0) {
-            builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
+
+            //builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
+
         }
 
         String genFromStatement = genFromStatement();
