@@ -249,6 +249,8 @@ public class SelectDaoImpl<T>
                 continue;
             }
 
+            setAttr = getExprForJpaJoinFetch(entityClass, getAlias(), setAttr);
+
             //如果没有使用别名，尝试使用别名
             if (!setAttr.contains(".")) {
 
@@ -259,10 +261,7 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            //如果原来不存在这个属性
-            // if (!fetchAttrs.containsKey(setAttr)) {
             fetchAttrs.put(setAttr, (joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr);
-            //  }
 
         }
 
@@ -969,9 +968,6 @@ public class SelectDaoImpl<T>
                     if (!hasText(property)) {
                         property = field.getName();
                     }
-
-                    property = getExprForJpaJoinFetch(entityClass, getAlias(), property);
-
 
                     appendJoinFetchSet(fetch.joinType(), property);
 

@@ -520,7 +520,7 @@ public abstract class ExprUtils {
                 propertyExpr = propertyExpr.substring(prefix.length());
             }
 
-            sb.append(prefix);
+            sb.append(alias.trim());
 
         }
 
