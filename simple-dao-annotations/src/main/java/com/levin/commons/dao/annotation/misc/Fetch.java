@@ -25,7 +25,6 @@ public @interface Fetch {
         Inner,
         Natural,
         Full,
-        Default,
     }
 
     /**
@@ -56,7 +55,7 @@ public @interface Fetch {
      *
      * @return
      */
-    JoinType joinType() default JoinType.Default;
+    JoinType joinType() default JoinType.Left;
 
 
     /**

@@ -183,7 +183,7 @@ public class SelectDaoImpl<T>
         appendJoin(queryRequest.joinStatement());
 
         //增加抓取的子集合
-        appendJoinFetchSet(Fetch.JoinType.Default, queryRequest.joinFetchSetAttrs());
+        appendJoinFetchSet(Fetch.JoinType.Left, queryRequest.joinFetchSetAttrs());
 
         //设置默认的排序语句
         setDefaultOrderByStatement(queryRequest.defaultOrderBy());
@@ -227,7 +227,7 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> appendJoinFetchSet(String... setAttrs) {
-        return appendJoinFetchSet(Fetch.JoinType.Default, setAttrs);
+        return appendJoinFetchSet(Fetch.JoinType.Left, setAttrs);
     }
 
     @Override
@@ -261,7 +261,7 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            fetchAttrs.put(setAttr, (joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr);
+            fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
 
         }
 
