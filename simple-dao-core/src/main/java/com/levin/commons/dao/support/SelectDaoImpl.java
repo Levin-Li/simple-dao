@@ -188,7 +188,7 @@ public class SelectDaoImpl<T>
         join(queryRequest.joinStatement());
 
         //增加抓取的子集合
-        joinFetch(Fetch.JoinType.Default, queryRequest.joinFetchSetAttrs());
+        joinFetch(Fetch.JoinType.Left, queryRequest.joinFetchSetAttrs());
 
         //设置默认的排序语句
         if (hasText(queryRequest.defaultOrderBy())) {
@@ -235,7 +235,7 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> joinFetch(String... setAttrs) {
-        return joinFetch(Fetch.JoinType.Default, setAttrs);
+        return joinFetch(Fetch.JoinType.Left, setAttrs);
     }
 
     @Override
@@ -279,7 +279,7 @@ public class SelectDaoImpl<T>
                 setAttr = aroundColumnPrefix(setAttr);
             }
 
-            fetchAttrs.put(setAttr, (joinType == Fetch.JoinType.Default ? "" : joinType.name()) + " Join Fetch " + setAttr);
+            fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
 
         }
 
@@ -637,7 +637,7 @@ public class SelectDaoImpl<T>
         } else if (isNative()) {
             builder.insert(0, "Select * ");
         } else if (!isCountQueryResult && fetchAttrs.size() > 0) {
-            //builder.insert(0, "Select DISTINCT " + getText(getAlias(), ""));
+           // builder.insert(0, "Select DISTINCT(" + getText(getAlias(), "")+")");
         }
 
         String genFromStatement = genFromStatement();
