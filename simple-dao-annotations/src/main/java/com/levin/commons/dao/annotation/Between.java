@@ -107,6 +107,11 @@ public @interface Between {
      */
     String condition() default C.NOT_NULL;
 
+    /**
+     * 注解应用条件      * <p>      * 当列出的字段不 null 时      * 如果是字符串字段，还不能为空字符串      *      * @return
+     */
+    String[] conditionOnNotNullFields() default {};
+
 
     /**
      * 对整个表达式的包围前缀

@@ -15,9 +15,7 @@ import java.lang.annotation.*;
 public @interface Func {
 
     /**
-     *
      * 默认参数占位符
-     *
      */
     String DEFAULT_PARAM = "$$";
 

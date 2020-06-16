@@ -84,6 +84,8 @@ public @interface IsNotNull {
      */
     String condition() default "";
 
+
+
     /**
      * 是否过滤数组参数或是列表参数中的空值
      * <p>
