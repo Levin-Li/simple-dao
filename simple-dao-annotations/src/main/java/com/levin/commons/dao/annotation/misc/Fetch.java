@@ -41,6 +41,15 @@ public @interface Fetch {
      */
     boolean require() default false;
 
+
+//    /**
+//     * 集合的别名
+//     * 主要用于集合过滤
+//     *
+//     * @return
+//     */
+//    String alias() default "";
+
     /**
      * 要抓取属性列表
      * <p>

@@ -529,10 +529,26 @@ public abstract class ExprUtils {
 
         String[] names = propertyExpr.split("\\.");
 
+        String tmpAlias = "";
+
         for (String name : names) {
 
             if (!hasText(name)) {
                 continue;
+            }
+
+            //尝试处理别名
+            int aliasIdx = name.indexOf(' ');
+
+            if (aliasIdx != -1) {
+
+                //只取第一个别名
+                if (!hasText(tmpAlias)) {
+                    tmpAlias = name.substring(aliasIdx);
+                }
+
+                name = name.substring(0, aliasIdx);
+
             }
 
             Field field = ReflectionUtils.findField(type, name);
@@ -549,7 +565,6 @@ public abstract class ExprUtils {
             if (type == null) {
                 break;
             }
-
 
             //如果是简单属性
             if (BeanUtils.isSimpleValueType(type)) {
@@ -569,6 +584,10 @@ public abstract class ExprUtils {
 
         }
 
+        if (hasText(tmpAlias)
+                && sb.length() > 0) {
+            sb.append(" ").append(tmpAlias);
+        }
 
         return sb.toString();
     }
