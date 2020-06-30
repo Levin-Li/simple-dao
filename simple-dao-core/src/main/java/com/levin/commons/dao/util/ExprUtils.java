@@ -521,7 +521,6 @@ public abstract class ExprUtils {
             }
 
             sb.append(alias.trim());
-
         }
 
 
@@ -529,7 +528,7 @@ public abstract class ExprUtils {
 
         String[] names = propertyExpr.split("\\.");
 
-        String tmpAlias = "";
+        String joinAlias = "";
 
         for (String name : names) {
 
@@ -543,8 +542,8 @@ public abstract class ExprUtils {
             if (aliasIdx != -1) {
 
                 //只取第一个别名
-                if (!hasText(tmpAlias)) {
-                    tmpAlias = name.substring(aliasIdx);
+                if (!hasText(joinAlias)) {
+                    joinAlias = name.substring(aliasIdx);
                 }
 
                 name = name.substring(0, aliasIdx);
@@ -584,9 +583,9 @@ public abstract class ExprUtils {
 
         }
 
-        if (hasText(tmpAlias)
+        if (hasText(joinAlias)
                 && sb.length() > 0) {
-            sb.append(" ").append(tmpAlias);
+            sb.append(" ").append(joinAlias);
         }
 
         return sb.toString();
