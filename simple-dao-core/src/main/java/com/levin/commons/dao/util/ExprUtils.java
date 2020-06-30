@@ -531,10 +531,26 @@ public abstract class ExprUtils {
 
         String[] names = propertyExpr.split("\\.");
 
+        String joinAlias = "";
+
         for (String name : names) {
 
             if (!hasText(name)) {
                 continue;
+            }
+
+            //尝试处理别名
+            int aliasIdx = name.indexOf(' ');
+
+            if (aliasIdx != -1) {
+
+                //只取第一个别名
+                if (!hasText(joinAlias)) {
+                    joinAlias = name.substring(aliasIdx);
+                }
+
+                name = name.substring(0, aliasIdx);
+
             }
 
             Field field = ReflectionUtils.findField(type, name);
@@ -571,6 +587,10 @@ public abstract class ExprUtils {
 
         }
 
+        if (hasText(joinAlias)
+                && sb.length() > 0) {
+            sb.append(" ").append(joinAlias);
+        }
 
         return sb.toString();
     }
