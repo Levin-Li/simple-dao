@@ -481,6 +481,11 @@ public class JpaDaoImpl
     }
 
     @Override
+    public void flush() {
+        getDefaultEntityManager().flush();
+    }
+
+    @Override
     public <T> T find(Class<T> entityClass, Object id) {
 
         return getEntityManager().find(entityClass, id);
@@ -641,6 +646,8 @@ public class JpaDaoImpl
         } else {
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
+
+        query.setFlushMode(FlushModeType.AUTO);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
