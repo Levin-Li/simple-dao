@@ -597,7 +597,7 @@ public class JpaDaoImpl
 
     @Override
     public <T> List<T> find(int start, int count, String statement, Object... paramValues) {
-        return find(false, null, start, count, statement, paramValues);
+        return find(false, true, null, start, count, statement, paramValues);
     }
 
     /**
@@ -610,7 +610,7 @@ public class JpaDaoImpl
      * @return
      */
     @Override
-    public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
+    public <T> List<T> find(boolean isNative, boolean useQueriesCache, Class resultClass, int start, int count, String statement, Object... paramValues) {
 
         List paramValueList = flattenParams(null, paramValues);
 
@@ -647,7 +647,11 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
-        query.setFlushMode(FlushModeType.AUTO);
+        query.setHint("javax.persistence.cache.retrieveMode", useQueriesCache ? CacheRetrieveMode.USE : CacheRetrieveMode.BYPASS);
+        //query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+
+
+        // query.setFlushMode(FlushModeType.AUTO);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 

@@ -92,7 +92,7 @@ public class JdbcMiniDao implements MiniDao {
     }
 
     @Override
-    public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
+    public <T> List<T> find(boolean isNative, boolean useQueriesCache, Class resultClass, int start, int count, String statement, Object... paramValues) {
 
         return jdbcOperations.queryForList(addLimit(start, count, statement), resultClass, paramValues);
 

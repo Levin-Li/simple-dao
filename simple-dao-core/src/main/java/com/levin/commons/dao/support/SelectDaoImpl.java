@@ -76,6 +76,10 @@ public class SelectDaoImpl<T>
 
     boolean hasStatColumns = false;
 
+    /**
+     * 默认使用查询缓存
+     */
+    boolean useQueriesCache = true;
 
     {
         disableSafeMode();
@@ -118,6 +122,15 @@ public class SelectDaoImpl<T>
     protected MiniDao getDao() {
         return dao;
     }
+
+
+    @Override
+    public SelectDao<T> setQueriesCache(boolean useQueriesCache) {
+
+        this.useQueriesCache = useQueriesCache;
+        return this;
+    }
+
 
     @Override
     protected void setFromStatement(String fromStatement) {
@@ -750,7 +763,7 @@ public class SelectDaoImpl<T>
      */
     private long count(String ql, Object... paramValues) {
 
-        List<Number> list = dao.find(isNative(), null, -1, -1, ql, paramValues);
+        List<Number> list = dao.find(isNative(), this.useQueriesCache, null, -1, -1, ql, paramValues);
 
         if (list.isEmpty() || list.get(0) == null) {
             return 0;
@@ -794,7 +807,7 @@ public class SelectDaoImpl<T>
     public <E> List<E> findForResultClass(Class<E> resultClass) {
 
 
-        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
+        return (List<E>) dao.find(isNative(), this.useQueriesCache, resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

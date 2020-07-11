@@ -31,7 +31,6 @@ public interface MiniDao {
         return DEFAULT_JDBC_PARAM_PLACEHOLDER;
     }
 
-
     /**
      * 创建对象
      * 如果对象有ID标识，将会抛出异常
@@ -70,5 +69,5 @@ public interface MiniDao {
      * @param <T>
      * @return
      */
-    <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues);
+    <T> List<T> find(boolean isNative, boolean useQueriesCache, Class resultClass, int start, int count, String statement, Object... paramValues);
 }

@@ -50,6 +50,13 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> page(Paging paging);
 
 
+    /**
+     * 设置查询缓存
+     *
+     * @param useQueriesCache
+     * @return
+     */
+    SelectDao<T> setQueriesCache(boolean useQueriesCache);
     ////////////////////////////////////////////////////////////////////////////
 
     /**
