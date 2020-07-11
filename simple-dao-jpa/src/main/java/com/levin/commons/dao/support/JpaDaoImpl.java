@@ -438,6 +438,8 @@ public class JpaDaoImpl
 
     }
 
+
+
     @Override
     @Transactional
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
@@ -464,6 +466,11 @@ public class JpaDaoImpl
         setRange(query, start, count);
 
         return query.executeUpdate();
+    }
+
+    @Override
+    public void flush() {
+        getDefaultEntityManager().flush();
     }
 
     @Override
@@ -627,6 +634,8 @@ public class JpaDaoImpl
         } else {
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
+
+        query.setFlushMode(FlushModeType.AUTO);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 

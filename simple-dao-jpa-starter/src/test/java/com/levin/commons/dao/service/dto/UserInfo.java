@@ -27,10 +27,10 @@ public class UserInfo {
     @Fetch
     Group group;
 
-    @Fetch(value = "group.parent.parent.name")
+    @Fetch(value = "group.parent.parent.name b")
     String groupName;
 
-    @Fetch(value = "group.children" )
+    @Fetch(value = "group.children c" )
     List<Group> parentChildren;
 
 }

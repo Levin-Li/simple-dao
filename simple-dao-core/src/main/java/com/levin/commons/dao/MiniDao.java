@@ -52,6 +52,14 @@ public interface MiniDao {
     @Transactional
     int update(boolean isNative, int start, int count, String statement, Object... paramValues);
 
+
+    /**
+     * 手动刷新事务，主要用于同个事务中先写后读的时候
+     */
+    default void flush() {
+    }
+
+
     /**
      * @param isNative    是否是原生查询
      * @param resultClass 可以为null(结果集将返回对象数组)，或是java.util.Map 或是具体的类

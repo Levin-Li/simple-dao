@@ -21,6 +21,6 @@ public class UserUpdateEvt {
     //更新为 set  score = score + ?
 
     @Update(value = "score",paramExpr = "${_name} + ${:_val}")
-    Integer addScore;
+    Integer addScore=2;
 
 }

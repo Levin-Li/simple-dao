@@ -75,6 +75,7 @@ public class JdbcMiniDao implements MiniDao {
         return jdbcOperations.update(statement, paramValues);
     }
 
+
     private String addLimit(int start, int count, String statement) {
 
         if (count > 0) {
