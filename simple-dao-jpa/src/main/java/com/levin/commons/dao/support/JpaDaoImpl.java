@@ -151,7 +151,7 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
-    private boolean disableSessionCache = false;
+    private boolean disableSessionCache = true;
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
