@@ -2,6 +2,8 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
+import com.levin.commons.dao.domain.support.E_AbstractBaseEntityObject;
+import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
@@ -30,6 +32,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -471,6 +474,57 @@ public class JpaDaoImplTest {
 
     }
 
+    @Test
+    @Transactional
+    public void testTransactional() {
+
+
+        User user = jpaDao.selectFrom(User.class).findOne();
+
+        Assert.notNull(user);
+
+
+        Integer orderCode = (Integer) user.getOrderCode();
+
+        if(orderCode==null){
+            orderCode = 1234;
+        }else {
+            orderCode = orderCode + 7;
+        }
+
+       int n = jpaDao.updateTo(User.class)
+                .set(E_AbstractNamedEntityObject.T_orderCode,orderCode)
+                .eq(Identifiable.ID,user.getId())
+                .update();
+
+       Assert.isTrue(n>0);
+
+        List<Object> objects = jpaDao.selectFrom(Group.class).find();
+
+        User user2 = jpaDao.find(User.class, user.getId());
+
+
+        System.out.println("user "+user.getOrderCode()+" user 2 "+user2.getOrderCode());
+        Assert.isTrue(!user2.getOrderCode().equals(user.getOrderCode()));
+        Assert.isTrue(user2.getOrderCode().equals(orderCode));
+
+        user2 = jpaDao.selectFrom(User.class)
+                .setQueriesCache(false)
+                .eq(Identifiable.ID,user.getId())
+                .findOne();
+
+
+
+        System.out.println("user "+user.getOrderCode()+" user 2 "+user2.getOrderCode());
+
+        Assert.isTrue(!user2.getOrderCode().equals(user.getOrderCode()));
+        Assert.isTrue(user2.getOrderCode().equals(orderCode));
+
+
+    }
+
+
+
 
     @Test
     public void testAnno2() {
@@ -664,7 +718,7 @@ public class JpaDaoImplTest {
 
         jpaDao.save(entity);
 
-        List r = jpaDao.find(true, Group.class, 1, 100
+        List r = jpaDao.find(true,true, Group.class, 1, 100
                 , "select * from jpa_dao_test_Group where 1 = ? and 2 = ? and '3'=:name"
                 , 1, 2, MapUtils.asMap("name", "3"));
 

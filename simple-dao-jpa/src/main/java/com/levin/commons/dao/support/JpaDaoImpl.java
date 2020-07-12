@@ -473,6 +473,9 @@ public class JpaDaoImpl
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
+        //更新缓存
+       // query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
@@ -488,7 +491,13 @@ public class JpaDaoImpl
     @Override
     public <T> T find(Class<T> entityClass, Object id) {
 
-        return getEntityManager().find(entityClass, id);
+        EntityManager em = getEntityManager();
+
+        //if (!useQueriesCache) {
+            em.clear();
+       // }
+
+        return em.find(entityClass, id);
     }
 
     @Override
@@ -647,9 +656,10 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
-        query.setHint("javax.persistence.cache.retrieveMode", useQueriesCache ? CacheRetrieveMode.USE : CacheRetrieveMode.BYPASS);
-        //query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
-
+        if (!useQueriesCache) {
+            query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.BYPASS);
+            query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+        }
 
         // query.setFlushMode(FlushModeType.AUTO);
 
@@ -657,8 +667,12 @@ public class JpaDaoImpl
 
         setRange(query, start, count);
 
-        return (List<T>) query.getResultList();
+        //临时解决方案
+        if (!useQueriesCache) {
+            em.clear();
+        }
 
+        return (List<T>) query.getResultList();
     }
 
 
