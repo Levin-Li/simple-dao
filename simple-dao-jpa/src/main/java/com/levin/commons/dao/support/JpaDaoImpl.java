@@ -151,6 +151,7 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
+    private boolean disableSessionCache = false;
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
@@ -282,6 +283,14 @@ public class JpaDaoImpl
     public JpaDao setParamPlaceholder(String paramPlaceholder) {
 
         this.paramPlaceholder = paramPlaceholder;
+
+        return this;
+    }
+
+    @Override
+    public JpaDao disableSessionCache() {
+
+        this.disableSessionCache = true;
 
         return this;
     }
@@ -474,7 +483,7 @@ public class JpaDaoImpl
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
         //更新缓存
-       // query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+        // query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
@@ -494,8 +503,10 @@ public class JpaDaoImpl
         EntityManager em = getEntityManager();
 
         //if (!useQueriesCache) {
+        if (disableSessionCache) {
             em.clear();
-       // }
+        }
+        // }
 
         return em.find(entityClass, id);
     }
@@ -668,7 +679,7 @@ public class JpaDaoImpl
         setRange(query, start, count);
 
         //临时解决方案
-        if (!useQueriesCache) {
+        if (!useQueriesCache || disableSessionCache) {
             em.clear();
         }
 

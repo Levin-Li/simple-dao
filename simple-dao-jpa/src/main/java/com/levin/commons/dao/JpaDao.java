@@ -225,6 +225,14 @@ public interface JpaDao extends SimpleDao {
 
 
     /**
+     * 全局禁用 JPA 会话缓存
+     *
+     * @return
+     */
+    JpaDao disableSessionCache();
+
+
+    /**
      * 获取jpa实体管理器
      *
      * @return
