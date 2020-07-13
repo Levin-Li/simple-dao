@@ -180,7 +180,7 @@ public class JpaDaoImplTest {
     }
 
 
-//    @Test
+    //    @Test
     public void schedule() throws InterruptedException {
 
         Random random = new Random();
@@ -208,7 +208,7 @@ public class JpaDaoImplTest {
         while (true) {
 
 
-            Thread.sleep(System.nanoTime()% 10 * 1000L);
+            Thread.sleep(System.nanoTime() % 10 * 1000L);
 
 
             long tid = random.nextInt(100) * 123 % 1000;
@@ -393,7 +393,7 @@ public class JpaDaoImplTest {
 
         }
 
-        testJoinAndStat();
+      //  testJoinAndStat();
 
     }
 
@@ -478,52 +478,56 @@ public class JpaDaoImplTest {
     @Transactional
     public void testTransactional() {
 
+        TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
+                .setScore(random.nextInt(750))
+                .setName("test" + 11)
+                .setRemark("system-" + 11)
+                .setOrderCode(11)
+        );
 
         User user = jpaDao.selectFrom(User.class).findOne();
 
         Assert.notNull(user);
 
+        TestEntity entity1 = jpaDao.find(TestEntity.class, entity.getId());
+
 
         Integer orderCode = (Integer) user.getOrderCode();
 
-        if(orderCode==null){
+        if (orderCode == null) {
             orderCode = 1234;
-        }else {
+        } else {
             orderCode = orderCode + 7;
         }
 
-       int n = jpaDao.updateTo(User.class)
-                .set(E_AbstractNamedEntityObject.T_orderCode,orderCode)
-                .eq(Identifiable.ID,user.getId())
+        int n = jpaDao.updateTo(User.class)
+                .set(E_AbstractNamedEntityObject.T_orderCode, orderCode)
+                .eq(Identifiable.ID, user.getId())
                 .update();
 
-       Assert.isTrue(n>0);
+        Assert.isTrue(n > 0);
 
         List<Object> objects = jpaDao.selectFrom(Group.class).find();
 
         User user2 = jpaDao.find(User.class, user.getId());
 
 
-        System.out.println("user "+user.getOrderCode()+" user 2 "+user2.getOrderCode());
+        System.out.println("user " + user.getOrderCode() + " user 2 " + user2.getOrderCode());
         Assert.isTrue(!user2.getOrderCode().equals(user.getOrderCode()));
         Assert.isTrue(user2.getOrderCode().equals(orderCode));
 
         user2 = jpaDao.selectFrom(User.class)
                 .setQueriesCache(false)
-                .eq(Identifiable.ID,user.getId())
+                .eq(Identifiable.ID, user.getId())
                 .findOne();
 
 
-
-        System.out.println("user "+user.getOrderCode()+" user 2 "+user2.getOrderCode());
+        System.out.println("user " + user.getOrderCode() + " user 2 " + user2.getOrderCode());
 
         Assert.isTrue(!user2.getOrderCode().equals(user.getOrderCode()));
         Assert.isTrue(user2.getOrderCode().equals(orderCode));
 
-
     }
-
-
 
 
     @Test
@@ -718,7 +722,7 @@ public class JpaDaoImplTest {
 
         jpaDao.save(entity);
 
-        List r = jpaDao.find(true,true, Group.class, 1, 100
+        List r = jpaDao.find(true, true, Group.class, 1, 100
                 , "select * from jpa_dao_test_Group where 1 = ? and 2 = ? and '3'=:name"
                 , 1, 2, MapUtils.asMap("name", "3"));
 
@@ -1040,7 +1044,7 @@ public class JpaDaoImplTest {
     }
 
     @Test
-    public void statAndPage(){
+    public void statAndPage() {
 
         SelectDao<Group> g = jpaDao.selectFrom(Group.class, "g")
                 .appendByQueryObj(new GroupStatDTO()).page(1, 20);

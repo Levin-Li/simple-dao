@@ -323,6 +323,9 @@ public class JpaDaoImpl
     public EntityManager getEntityManager() {
 
         if (defaultEntityManager != null) {
+
+            init(defaultEntityManager);
+
             return defaultEntityManager;
         }
 
@@ -336,12 +339,34 @@ public class JpaDaoImpl
                 em = entityManagerFactory.createEntityManager();
             }
 
+            init(em);
+
             return em;
         }
 
         throw new IllegalStateException("can't find entityManager instance");
 
     }
+
+
+    public EntityManager init(EntityManager entityManager) {
+
+        if (entityManager != null) {
+            FlushModeType flushMode = entityManager.getFlushMode();
+            if (flushMode == null) {
+                entityManager.setFlushMode(FlushModeType.AUTO);
+            }
+
+//            query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.BYPASS);
+//            query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+
+//            entityManager.setProperty();
+
+        }
+
+        return entityManager;
+    }
+
 
     @Override
     @Transactional
@@ -354,6 +379,11 @@ public class JpaDaoImpl
             em.persist(entity);
         } catch (EntityExistsException e) {
             return em.merge(entity);
+        } finally {
+            //flush 并且移除出缓存
+            //em.flush();
+            //移除出缓存
+           // em.detach(entity);
         }
 
         return entity;
@@ -368,7 +398,13 @@ public class JpaDaoImpl
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
             if (getEntityId(entity) != null) {
-                return em.merge(entity);
+
+                Object merge = em.merge(entity);
+
+                //从缓存中移除
+                //em.detach(merge);
+
+                return merge;
             }
 
         } catch (IllegalArgumentException e) {
@@ -379,6 +415,9 @@ public class JpaDaoImpl
 
         //removed 状态的实体，persist可以处理
         em.persist(entity);
+
+        //从缓存中移除
+        //em.detach(entity);
 
         return entity;
     }
@@ -403,7 +442,8 @@ public class JpaDaoImpl
     @Override
     @Transactional
     public boolean deleteById(Class entityClass, Object id) {
-        Query query = getEntityManager().createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
+        Query query = getEntityManager()
+                .createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
         query.setParameter("pkid", id);
         return query.executeUpdate() > 0;
         //说明
@@ -477,13 +517,12 @@ public class JpaDaoImpl
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
-
         EntityManager em = getEntityManager();
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
         //更新缓存
-        // query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+//        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
@@ -502,12 +541,16 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
+        //如果有事务查询前 flush
+        if (em.isJoinedToTransaction()) {
+            em.flush();
+        }
+
         //if (!useQueriesCache) {
         if (disableSessionCache) {
             em.clear();
         }
         // }
-
         return em.find(entityClass, id);
     }
 
@@ -634,7 +677,6 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-
         String oldStatement = statement;
 
         if (!paramValueList.isEmpty()) {
@@ -647,19 +689,21 @@ public class JpaDaoImpl
 
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
-
         }
-
 
         EntityManager em = getEntityManager();
 
+        if (em.isJoinedToTransaction()) {
+            em.flush();
+        }
+
         Query query = null;
+
 
 
         //@todo hibernate 5.2.17 对结果类的映射，不支持自定义的类型
         // setResultTransformer 实际使用时无法获取到字段名，也许是 hibernate bug
         // query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
-
 
         if (isNative) {
             query = (resultClass == null) ? em.createNativeQuery(statement) : em.createNativeQuery(statement, resultClass);
