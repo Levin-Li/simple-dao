@@ -10,3 +10,6 @@ spring:
     hibernate:
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    properties:
+        #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
+        hibernate.id.new_generator_mappings: false

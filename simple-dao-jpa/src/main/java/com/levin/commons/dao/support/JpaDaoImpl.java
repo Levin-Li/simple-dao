@@ -18,10 +18,13 @@ import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.*;
+import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -158,6 +161,8 @@ public class JpaDaoImpl
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
+    private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
+
     private static final DeepCopier deepCopier = new DeepCopier() {
         @Override
         public <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
@@ -220,7 +225,6 @@ public class JpaDaoImpl
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
-
 
     @Override
     public ParameterNameDiscoverer getParameterNameDiscoverer() {
@@ -313,11 +317,14 @@ public class JpaDaoImpl
             try {
                 getEntityManager().detach(object);
             } catch (IllegalArgumentException e) {
+                logger.debug("detach " + object.getClass() + "(" + getEntityId(object) + ")");
             }
         }
 
+
         return this;
     }
+
 
     @Override
     public EntityManager getEntityManager() {
@@ -354,7 +361,7 @@ public class JpaDaoImpl
         if (entityManager != null) {
             FlushModeType flushMode = entityManager.getFlushMode();
             if (flushMode == null) {
-                entityManager.setFlushMode(FlushModeType.AUTO);
+                // entityManager.setFlushMode(FlushModeType.AUTO);
             }
 
 //            query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.BYPASS);
@@ -383,7 +390,7 @@ public class JpaDaoImpl
             //flush 并且移除出缓存
             //em.flush();
             //移除出缓存
-           // em.detach(entity);
+            // em.detach(entity);
         }
 
         return entity;
@@ -423,6 +430,12 @@ public class JpaDaoImpl
     }
 
     @Override
+    public JpaDao refresh(Object object) {
+        getEntityManager().refresh(object);
+        return this;
+    }
+
+    @Override
     @Transactional
     public void delete(Object entity) {
 
@@ -442,7 +455,10 @@ public class JpaDaoImpl
     @Override
     @Transactional
     public boolean deleteById(Class entityClass, Object id) {
-        Query query = getEntityManager()
+
+        EntityManager em = getEntityManager();
+
+        Query query = em
                 .createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
         query.setParameter("pkid", id);
         return query.executeUpdate() > 0;
@@ -543,45 +559,71 @@ public class JpaDaoImpl
 
         //如果有事务查询前 flush
         if (em.isJoinedToTransaction()) {
-            em.flush();
+            // em.flush();
         }
 
         //if (!useQueriesCache) {
         if (disableSessionCache) {
-            em.clear();
+            //   em.clear();
         }
         // }
-        return em.find(entityClass, id);
+        T t = em.find(entityClass, id);
+
+        return t;
     }
+
 
     @Override
     public <ID> ID getEntityId(Object entity) {
 
         Class<?> entityClass = entity.getClass();
 
-        String idAttrName = getEntityIdAttrName(entityClass);
+        String idAttrName = getEntityIdAttrName(entity);
 
         if (!StringUtils.hasText(idAttrName)) {
             throw new IllegalArgumentException("class " + entityClass.getName() + " is not a jpa entity object");
         }
 
-        Exception ex = null;
+        final String key = entityClass.getName() + "." + idAttrName;
 
-        try {
-            return (ID) entityClass.getDeclaredField(idAttrName).get(entity);
-        } catch (Exception e) {
-            ex = e;
+        Object fieldOrMethod = idFields.get(key);
+
+        if (fieldOrMethod == null) {
+            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
+            if (fieldOrMethod != null) {
+                ((Field) fieldOrMethod).setAccessible(true);
+                idFields.put(key, fieldOrMethod);
+            }
         }
 
-        try {
-            return (ID) entityClass.getMethod("get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1)).invoke(entity);
-        } catch (Exception e) {
-            ex = e;
+        if (fieldOrMethod == null) {
+
+            String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
+            fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
+            if (fieldOrMethod != null) {
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        Exception ex = null;
+
+        if (fieldOrMethod instanceof Field) {
+            try {
+                return (ID) ((Field) fieldOrMethod).get(entity);
+            } catch (Exception e) {
+                ex = e;
+            }
+        } else if (fieldOrMethod instanceof Method) {
+            try {
+                return (ID) ((Method) fieldOrMethod).invoke(entity);
+            } catch (Exception e) {
+                ex = e;
+            }
         }
 
         throw new IllegalArgumentException("class " + entityClass.getName() + " can't get property '" + idAttrName + "' value", ex);
-
     }
+
 
     @Override
     /**
@@ -590,11 +632,27 @@ public class JpaDaoImpl
      */
     public String getEntityIdAttrName(Object entity) {
 
+        EntityType<?> entityType = getEntityManager().getMetamodel().entity(entity.getClass());
+
+        if (entityType == null) {
+            throw new IllegalArgumentException("class " + entity.getClass().getName() + " can't find  @" + Id.class.getName() + " method or field");
+        }
+
+        return entityType.getId(entityType.getIdType().getJavaType()).getName();
+    }
+
+    // @Override
+
+    /**
+     * @fix 修复实体类继承时无法
+     */
+    public String getEntityIdAttrName_OLD(Object entity) {
+
         final Class<?> entityClass = (entity instanceof Class) ? (Class<?>) entity : entity.getClass();
 
         String idAttrName = idAttrNames.get(entityClass.getName());
 
-        if (idAttrName != null) {
+        if (StringUtils.hasText(idAttrName)) {
             return idAttrName;
         }
 
@@ -615,9 +673,9 @@ public class JpaDaoImpl
         throw new IllegalArgumentException("class " + entityClass.getName() + " can't find  @" + Id.class.getName() + " method or field");
     }
 
-    private String getIdAttrName(Class<?> entityClass) {
+    private static String getIdAttrName(Class<?> entityClass) {
 
-        //获取声明的所有字段，包括私有属性
+        //获取声明的所有字段，包括私有属性，但不包含父类的
         for (Field field : entityClass.getDeclaredFields()) {
 
             Object annotation = field.getAnnotation(Id.class);
@@ -631,7 +689,7 @@ public class JpaDaoImpl
             }
         }
 
-        //获取声明的所有方法，包括私有方法
+        //获取声明的所有方法，包括私有方法，但不包含父类的
         for (Method method : entityClass.getDeclaredMethods()) {
 
             Object annotation = method.getAnnotation(Id.class);
@@ -694,11 +752,10 @@ public class JpaDaoImpl
         EntityManager em = getEntityManager();
 
         if (em.isJoinedToTransaction()) {
-            em.flush();
+            // em.flush();
         }
 
         Query query = null;
-
 
 
         //@todo hibernate 5.2.17 对结果类的映射，不支持自定义的类型
@@ -724,7 +781,7 @@ public class JpaDaoImpl
 
         //临时解决方案
         if (!useQueriesCache || disableSessionCache) {
-            em.clear();
+//            em.clear();
         }
 
         return (List<T>) query.getResultList();

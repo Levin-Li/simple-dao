@@ -37,6 +37,9 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -100,126 +103,9 @@ public class JpaDaoImplTest {
     public void testGetEntityManager() throws Exception {
         EntityManager entityManager = jpaDao.getEntityManager();
         Assert.notNull(entityManager);
-    }
 
+        EntityType<User> entityType = entityManager.getMetamodel().entity(User.class);
 
-    @Autowired
-    private ThreadPoolTaskScheduler taskScheduler;
-
-    @Data
-    @EqualsAndHashCode(of = "task")
-    @Accessors(chain = true)
-    static class InnerTask {
-
-        Task task;
-
-        long batchNum;
-
-        Future<?> future;
-
-        CronTrigger cronTrigger;
-
-    }
-
-
-    /**
-     * 单个任务
-     *
-     * @param innerTask
-     */
-    Future<?> scheduleTask(InnerTask innerTask, long batchNum) {
-
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                execTask(innerTask.task);
-            }
-        };
-
-        if (StringUtils.hasText(innerTask.task.getCron())) {
-
-            innerTask.cronTrigger = new CronTrigger(innerTask.task.getCron());
-
-            log.info("添加任务到调度器" + innerTask.task);
-
-            //调度任务，可以自动重复
-            return taskScheduler.schedule(runnable, innerTask.cronTrigger);
-
-        } else {
-
-            //立刻安排执行任务
-            return taskScheduler.submit(runnable);
-
-        }
-
-    }
-
-    private void stopTask(InnerTask removeTask) {
-
-        if (removeTask != null
-                && removeTask.future != null) {
-
-            log.info("尝试停止任务：" + removeTask.task);
-
-            try {
-                removeTask.future.cancel(false);
-            } catch (Exception e) {
-                log.error("停止单个任务时发生错误，" + removeTask.task, e);
-            }
-
-        }
-    }
-
-    /**
-     * @param taskC
-     */
-    void execTask(Task taskC) {
-
-        log.info(Thread.currentThread() + " 调度下发任务" + taskC);
-
-    }
-
-
-    //    @Test
-    public void schedule() throws InterruptedException {
-
-        Random random = new Random();
-
-        long batchTime = System.currentTimeMillis();
-
-        long id = 1;
-
-        Map<Long, InnerTask> taskMap = new ConcurrentHashMap<>();
-
-        while (id < 1000) {
-
-            String cron = ((System.nanoTime() * 100) % 60) + " * * * * ?";
-
-            InnerTask innerTask = new InnerTask().setTask(new Task().setId(id++).setCron(cron));
-
-            Future<?> future = scheduleTask(innerTask, batchTime);
-
-            innerTask.setFuture(future);
-
-            taskMap.put(innerTask.task.getId(), innerTask);
-
-        }
-
-        while (true) {
-
-
-            Thread.sleep(System.nanoTime() % 10 * 1000L);
-
-
-            long tid = random.nextInt(100) * 123 % 1000;
-
-
-            InnerTask innerTask = taskMap.get(tid);
-
-
-            stopTask(innerTask);
-
-        }
 
     }
 
@@ -487,6 +373,15 @@ public class JpaDaoImplTest {
 
         User user = jpaDao.selectFrom(User.class).findOne();
 
+        EntityType<User> entityType = jpaDao.getEntityManager().getMetamodel().entity(User.class);
+
+        SingularAttribute<? super User, ?> id = entityType.getId(entityType.getIdType().getJavaType());
+        String name = id.getName();
+
+        Object entityId = jpaDao.getEntityId(user);
+
+        String entityIdAttrName = jpaDao.getEntityIdAttrName(user);
+
         Assert.notNull(user);
 
         TestEntity entity1 = jpaDao.find(TestEntity.class, entity.getId());
@@ -511,6 +406,7 @@ public class JpaDaoImplTest {
 
         User user2 = jpaDao.find(User.class, user.getId());
 
+        jpaDao.getEntityManager().refresh(user2);
 
         System.out.println("user " + user.getOrderCode() + " user 2 " + user2.getOrderCode());
         Assert.isTrue(!user2.getOrderCode().equals(user.getOrderCode()));

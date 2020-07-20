@@ -37,8 +37,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
         @ProxyBeanScan(scanType = API3.class, invocationHandlerClass = AopProxyHandler.class
                 , basePackages = {"com. levin."}),
-
-
 })
 
 @EnableProxyBean(registerTypes = {API.class, API2.class, API3.class})

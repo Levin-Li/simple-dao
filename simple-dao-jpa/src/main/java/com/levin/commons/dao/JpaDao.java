@@ -241,6 +241,14 @@ public interface JpaDao extends SimpleDao {
 
 
     /**
+     * 刷新对象
+     *
+     * @param object
+     */
+    JpaDao refresh(Object object);
+
+
+    /**
      * 强制让对象脱管
      *
      * @param object

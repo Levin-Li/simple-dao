@@ -36,6 +36,7 @@
     <!-- 下面配置一些第三方包的日志过滤级别，用于避免刷屏 -->
     <logger name="org.hibernate" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.context.annotation" level="DEBUG"/>
     <logger name="org.apache" level="WARN"/>
     <logger name="com.levin" level="DEBUG"/>
 

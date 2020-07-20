@@ -28,6 +28,21 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/cc.aoeiuv020/adb-lib -->
+        <dependency>
+            <groupId>cc.aoeiuv020</groupId>
+            <artifactId>adb-lib</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/com.tananaev/adblib -->
+        <dependency>
+            <groupId>com.tananaev</groupId>
+            <artifactId>adblib</artifactId>
+            <version>1.2</version>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>

@@ -34,7 +34,7 @@ spring:
       open-in-view: false
 
 #      MYSQL 配置选项
-#      properties:
+      properties:
 #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
-#        hibernate.id.new_generator_mappings: false
+        hibernate.id.new_generator_mappings: false
 #        hibernate.dialect.storage_engine: innodb
