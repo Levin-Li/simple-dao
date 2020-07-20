@@ -385,12 +385,12 @@ public class JpaDaoImpl
         try {
             em.persist(entity);
         } catch (EntityExistsException e) {
-            return em.merge(entity);
-        } finally {
-            //flush 并且移除出缓存
-            //em.flush();
-            //移除出缓存
-            // em.detach(entity);
+            entity = em.merge(entity);
+        }
+
+        //默认先发送语句
+        if (DaoContext.isAutoFlush(true)) {
+            em.flush();
         }
 
         return entity;
@@ -402,37 +402,40 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
+        boolean needPersist = true;
+
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
             if (getEntityId(entity) != null) {
-
-                Object merge = em.merge(entity);
-
-                //从缓存中移除
-                //em.detach(merge);
-
-                return merge;
+                entity = em.merge(entity);
+                needPersist = false;
             }
-
         } catch (IllegalArgumentException e) {
+//            if instance is not an  entity or is a removed entity
             //不做异常处理尝试使用persist进行保存
+            needPersist = true;
         } catch (EntityNotFoundException e) {
             //不做异常处理尝试使用，persist进行保存
+            needPersist = true;
         }
 
-        //removed 状态的实体，persist可以处理
-        em.persist(entity);
+        if (needPersist) {
+            //removed 状态的实体，persist可以处理
+            em.persist(entity);
+        }
 
-        //从缓存中移除
-        //em.detach(entity);
+        //默认先发送语句
+        if (DaoContext.isAutoFlush(true)) {
+            em.flush();
+        }
 
         return entity;
     }
 
     @Override
-    public JpaDao refresh(Object object) {
+    public Object refresh(Object object) {
         getEntityManager().refresh(object);
-        return this;
+        return object;
     }
 
     @Override
@@ -443,11 +446,12 @@ public class JpaDaoImpl
 
         if (em.contains(entity)) {
             em.remove(entity);
-        } else {
-            Object mEntity = em.find(entity.getClass(), getEntityId(entity));
-            if (mEntity != null) {
-                em.remove(mEntity);
+            //默认先发送语句
+            if (DaoContext.isAutoFlush(true)) {
+                em.flush();
             }
+        } else {
+            deleteById(entity.getClass(), getEntityId(entity));
         }
 
     }
@@ -458,11 +462,22 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
-        Query query = em
-                .createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
-        query.setParameter("pkid", id);
-        return query.executeUpdate() > 0;
-        //说明
+//        Query query = em
+//                .createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
+//        query.setParameter("pkid", id);
+//        return query.executeUpdate() > 0;
+
+        Object mEntity = em.find(entityClass, id);
+
+        if (mEntity != null) {
+            em.remove(mEntity);
+            //默认先发送语句
+            if (DaoContext.isAutoFlush(true)) {
+                em.flush();
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -523,7 +538,6 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-
         if (!paramValueList.isEmpty()) {
             statement = replacePlaceholder(isNative, statement);
         }
@@ -538,13 +552,16 @@ public class JpaDaoImpl
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
         //更新缓存
-//        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
-        return query.executeUpdate();
+        int n = query.executeUpdate();
+
+
+        return n;
     }
 
     @Override

@@ -123,6 +123,8 @@ public class JpaDaoImplTest {
         String[] categories = {"C1", "C2", "C3", "C4"};
         String[] states = {"S1", "S2", "S3", "S4"};
 
+        DaoContext.setAutoFlush(false,true);
+
         while (n++ < 100) {
 
             jpaDao.create(new TestEntity()
@@ -137,6 +139,8 @@ public class JpaDaoImplTest {
             );
 
         }
+
+        DaoContext.setAutoFlush(false,false);
 
         n = 100;
 
@@ -185,11 +189,9 @@ public class JpaDaoImplTest {
     @Before
     public void initTestData() throws Exception {
 
-
         if (jpaDao.selectFrom(User.class).count() > 0) {
             return;
         }
-
 
         //先删除旧数据
         jpaDao.deleteFrom(Task.class)
@@ -203,6 +205,9 @@ public class JpaDaoImplTest {
         jpaDao.deleteFrom(Group.class)
                 .disableSafeMode()
                 .delete();
+
+
+        DaoContext.setAutoFlush(false,false);
 
         int gCount = 15;
 
@@ -254,8 +259,7 @@ public class JpaDaoImplTest {
                         .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
                 jpaDao.create(user);
 
-
-                long taskCount = 3 * uCount;
+                long taskCount =  5;//  1 * uCount;
 
                 //创建任务
 
@@ -278,6 +282,8 @@ public class JpaDaoImplTest {
             }
 
         }
+
+        DaoContext.setAutoFlush(false,true);
 
       //  testJoinAndStat();
 
@@ -357,6 +363,26 @@ public class JpaDaoImplTest {
 
         Assert.isTrue(userInfo3.getScore() == userInfo2.getScore() + 5);
 
+
+    }
+
+
+    @Test
+    @Transactional
+    public void testTransactional2() {
+
+        TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
+                .setScore(random.nextInt(750))
+                .setName("test" + random.nextInt(750))
+                .setRemark("system-" + random.nextInt(750))
+                .setOrderCode(random.nextInt(750))
+        );
+
+
+        List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e").find();
+
+
+        Assert.isTrue(objectList.contains(entity),"");
 
     }
 

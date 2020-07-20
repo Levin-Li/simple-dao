@@ -245,7 +245,7 @@ public interface JpaDao extends SimpleDao {
      *
      * @param object
      */
-    JpaDao refresh(Object object);
+    Object refresh(Object object);
 
 
     /**

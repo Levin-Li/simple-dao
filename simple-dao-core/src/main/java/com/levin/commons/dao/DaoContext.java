@@ -97,11 +97,10 @@ public abstract class DaoContext {
         _getThreadContext().clear();
     }
 
-
     //////////////////////////////////////////////////////////////////////////////////////
 
-    public static boolean isAutoFlush() {
-        return Boolean.TRUE.equals(getVar(UpdateDao.class.getName() + ".autoFlush", false));
+    public static boolean isAutoFlush(boolean defaultValue) {
+        return Boolean.TRUE.equals(getVar(UpdateDao.class.getName() + ".autoFlush", defaultValue));
     }
 
     public static boolean setAutoFlush(boolean isGlobalEffect, boolean isAutoFlush) {
@@ -110,7 +109,6 @@ public abstract class DaoContext {
 
         return Boolean.TRUE.equals(isGlobalEffect ? setGlobalVar(key, isAutoFlush) : setThreadVar(key, isAutoFlush));
     }
-
 
 
 }
