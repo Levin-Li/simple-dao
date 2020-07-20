@@ -379,6 +379,12 @@ public class JpaDaoImplTest {
         );
 
 
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode,12345)
+                .eq(E_TestEntity.id,entity.getId())
+                .update();
+
+
         List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e").find();
 
 
