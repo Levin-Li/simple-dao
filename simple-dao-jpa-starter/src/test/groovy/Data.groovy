@@ -83,20 +83,20 @@ fileMap.entrySet()
                                     def m = entry.key.toString()
 
                                     if (m.equals("1月")) {
-                                        rows[1] = rows[1].replace("201901", "201907")
+                                        rows[1] = rows[1].replace("201901", "201909")
                                         rows[3] = rows[3]
-                                                .replace("-01-", "-07-")
-                                        outFile = new File(outDir, "7月.txt")
-                                    } else if (m.equals("2月")) {
-                                        rows[1] = rows[1].replace("201902", "201909")
-                                        rows[3] = rows[3]
-                                                .replace("-02-", "-09-")
+                                                .replace("-01-", "-09-")
                                         outFile = new File(outDir, "9月.txt")
-                                    } else if (m.equals("3月")) {
-                                        rows[1] = rows[1].replace("201903", "201910")
+                                    } else if (m.equals("2月")) {
+                                        rows[1] = rows[1].replace("201902", "201910")
                                         rows[3] = rows[3]
-                                                .replace("-03-", "-10-")
+                                                .replace("-02-", "-10-")
                                         outFile = new File(outDir, "10月.txt")
+                                    } else if (m.equals("3月")) {
+                                        rows[1] = rows[1].replace("201903", "201911")
+                                        rows[3] = rows[3]
+                                                .replace("-03-", "-11-")
+                                        outFile = new File(outDir, "11月.txt")
                                     }
 
                                     total.addAndGet(amount.longValue())
