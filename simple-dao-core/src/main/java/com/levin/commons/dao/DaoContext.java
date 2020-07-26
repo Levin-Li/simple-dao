@@ -109,6 +109,5 @@ public abstract class DaoContext {
 
         return Boolean.TRUE.equals(isGlobalEffect ? setGlobalVar(key, isAutoFlush) : setThreadVar(key, isAutoFlush));
     }
-
-
+    
 }

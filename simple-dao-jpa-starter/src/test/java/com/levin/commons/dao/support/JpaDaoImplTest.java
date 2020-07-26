@@ -123,7 +123,7 @@ public class JpaDaoImplTest {
         String[] categories = {"C1", "C2", "C3", "C4"};
         String[] states = {"S1", "S2", "S3", "S4"};
 
-        DaoContext.setAutoFlush(false,true);
+        DaoContext.setAutoFlush(false, true);
 
         while (n++ < 100) {
 
@@ -140,7 +140,7 @@ public class JpaDaoImplTest {
 
         }
 
-        DaoContext.setAutoFlush(false,false);
+        DaoContext.setAutoFlush(false, false);
 
         n = 100;
 
@@ -207,7 +207,7 @@ public class JpaDaoImplTest {
                 .delete();
 
 
-        DaoContext.setAutoFlush(false,false);
+        DaoContext.setAutoFlush(false, false);
 
         int gCount = 15;
 
@@ -259,7 +259,7 @@ public class JpaDaoImplTest {
                         .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
                 jpaDao.create(user);
 
-                long taskCount =  5;//  1 * uCount;
+                long taskCount = 5;//  1 * uCount;
 
                 //创建任务
 
@@ -283,9 +283,9 @@ public class JpaDaoImplTest {
 
         }
 
-        DaoContext.setAutoFlush(false,true);
+        DaoContext.setAutoFlush(false, true);
 
-      //  testJoinAndStat();
+        //  testJoinAndStat();
 
     }
 
@@ -380,15 +380,15 @@ public class JpaDaoImplTest {
 
 
         jpaDao.updateTo(TestEntity.class)
-                .set(E_TestEntity.orderCode,12345)
-                .eq(E_TestEntity.id,entity.getId())
+                .set(E_TestEntity.orderCode, 12345)
+                .eq(E_TestEntity.id, entity.getId())
                 .update();
 
 
         List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e").find();
 
 
-        Assert.isTrue(objectList.contains(entity),"");
+        Assert.isTrue(objectList.contains(entity), "");
 
     }
 
@@ -461,15 +461,13 @@ public class JpaDaoImplTest {
     @Test
     public void testAnno2() {
 
-
         Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, 1).findOne();
 
         System.out.println(one);
 
-        //      one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
+        // one = jpaDao.selectFrom(User.class,"u").appendWhere("u.id = ? and u.name like ? order by u.id desc",1,"test").findOne();
 
         System.out.println(one);
-
 
         one = jpaDao.selectFrom(User.class, "u").appendWhere("u.id = ?1  order by u.id desc", 1).findOne();
 

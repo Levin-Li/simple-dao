@@ -723,6 +723,7 @@ public class JpaDaoImpl
 
                 return name;
             }
+
         }
 
         return null;
@@ -759,7 +760,6 @@ public class JpaDaoImpl
         }
 
         if (logger.isDebugEnabled()) {
-
             // logger.debug("Old Statement:" + oldStatement);
 
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)

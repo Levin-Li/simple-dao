@@ -50,7 +50,7 @@ public class TestConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+    public  ThreadPoolTaskScheduler threadPoolTaskScheduler() {
 
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 
