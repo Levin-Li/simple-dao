@@ -1,6 +1,6 @@
 import java.util.concurrent.atomic.AtomicLong
 
-def dir = new File("/Users/llw/Downloads/2019年订单")
+def dir = new File("/Users/llw/Downloads/2019年订单/2019交易清单")
 
 def outDir = new File(dir, "data")
 
@@ -41,6 +41,8 @@ final AtomicLong total = new AtomicLong()
 
 final AtomicLong totalRows = new AtomicLong()
 
+
+def months = [:]
 
 fileMap.entrySet()
         .parallelStream()
@@ -97,7 +99,10 @@ fileMap.entrySet()
                                         rows[3] = rows[3]
                                                 .replace("-03-", "-11-")
                                         outFile = new File(outDir, "11月.txt")
+                                    } else if (m.equals("7月")) {
+
                                     }
+
 
                                     total.addAndGet(amount.longValue())
 
@@ -113,7 +118,7 @@ fileMap.entrySet()
                                         line += it
                                     }
 
-                                    outFile.append(line + "\n", "utf-8")
+                                   // outFile.append(line + "\n", "utf-8")
                                 }
                         )
 
