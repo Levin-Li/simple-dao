@@ -3,6 +3,7 @@ package com.levin.commons.dao.repository;
 
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Like;
@@ -22,11 +23,11 @@ import java.util.List;
 public interface UserDao {
 
 
-    List<User> find(@Eq Long id, @Like String name,
+    List<User> find(@Eq Long id, @Contains String name,
                     @Gt Integer score, Paging paging);
 
     @QueryRequest(joinFetchSetAttrs = {"group"})
-    User findOne(@Eq Long id, @Like String name,
+    User findOne(@Eq Long id, @Contains String name ,
                  @Eq String category, Paging paging);
 
     @UpdateRequest

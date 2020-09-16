@@ -4,10 +4,8 @@ import com.levin.commons.annotation.GenAnnotationMethodNameConstant;
 import com.levin.commons.annotation.GenFieldNameConstant;
 import com.levin.commons.service.domain.Desc;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.*;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -28,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
         "com.levin.commons.annotation.GenFieldNameConstant",
         "com.levin.commons.annotation.GenAnnotationMethodNameConstant"})
 //@SupportedSourceVersion(SourceVersion.RELEASE_6)
-//@com.google.auto.repository.AutoService(Processor.class)
+//@com.google.auto.service.AutoService(Processor.class)
 public class EntityClassProcessor extends AbstractProcessor {
 
 
@@ -55,13 +53,16 @@ public class EntityClassProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
 
-        File file = new File("repository-support-processor.utf8.properties");
+        File file = new File("target/generated-sources", ".service-support-processor.utf8.properties");
 
         if (!file.exists()) {
+
+            file.getParentFile().mkdirs();
+
             processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, file.getAbsolutePath() + " 配置文件不存在");
 
             try {
-                properties.store(new OutputStreamWriter(new FileOutputStream(file, false), "utf-8"), "repository-support processor config\n\ngen_desc_field_name=false\ngen_table_column_name=false\n\n");
+                properties.store(new OutputStreamWriter(new FileOutputStream(file, false), "utf-8"), "service-support processor config\n\ngen_desc_field_name=false\ngen_table_column_name=false\n\n");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -93,18 +94,18 @@ public class EntityClassProcessor extends AbstractProcessor {
 
         for (String typeName : this.getSupportedAnnotationTypes()) {
 
-
             Class<? extends Annotation> annoType = null;
 
             try {
                 annoType = (Class<? extends Annotation>) Class.forName(typeName);
 
-                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor " + getClass().getSimpleName() + " start process class " + typeName);
+                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, getClass().getSimpleName() + " start process type [ " + typeName+" ]...");
 
                 process(roundEnv, roundEnv.getElementsAnnotatedWith(annoType));
 
             } catch (ClassNotFoundException e) {
-                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor " + getClass().getSimpleName() + "  can't found class " + typeName);
+
+                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, getClass().getSimpleName() + "  can't found class " + typeName);
             }
 
         }
@@ -163,8 +164,10 @@ public class EntityClassProcessor extends AbstractProcessor {
             GenFieldNameConstant genFieldNameConstant = typeElement.getAnnotation(GenFieldNameConstant.class);
 
 
-            if (genFieldNameConstant != null && genFieldNameConstant.ignore())
+            if (genFieldNameConstant != null
+                    && genFieldNameConstant.ignore()) {
                 continue;
+            }
 
 
             final String packageName = elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
@@ -279,7 +282,6 @@ public class EntityClassProcessor extends AbstractProcessor {
                 .forEach(e -> {
                     codeBlock.append("    String ").append(e.getSimpleName()).append(" = \"").append(e.getSimpleName()).append("\";\n\n");
 
-
                 });
 
     }
@@ -329,7 +331,7 @@ public class EntityClassProcessor extends AbstractProcessor {
 
             String fieldName = subEle.getSimpleName().toString();
 
-            this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, getClass().getSimpleName() + " Processing field " + fieldName);
+            // this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, getClass().getSimpleName() + " Processing field " + fieldName);
 
 
             Desc desc = subEle.getAnnotation(Desc.class);
@@ -372,8 +374,9 @@ public class EntityClassProcessor extends AbstractProcessor {
 
             if (subEle.getAnnotation(Column.class) != null) {
 
-                if (hasText(subEle.getAnnotation(Column.class).name()))
+                if (hasText(subEle.getAnnotation(Column.class).name())) {
                     tableColName = subEle.getAnnotation(Column.class).name();
+                }
 
             } else if (subEle.getAnnotation(JoinColumn.class) != null) {
 

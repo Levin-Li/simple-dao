@@ -515,16 +515,15 @@ public class JpaDaoImplTest {
 
         List<User> users = userDao.find(null, "User", 5, paging);
 
-        paging.setPageSize(1);
+    //    paging.setPageSize(1);
 
-        User user = userDao.findOne(null, "User", null, paging);
-
+        User user = userDao.findOne(null, null, null, paging);
 
         int update = userDao.delete(null, "SSSS");
 
         Assert.isTrue(update == 0, "更新条数错误");
 
-        update = userDao.update(12L, "User-12");
+        update = userDao.update(user.getId(), "User-12");
 
         Assert.isTrue(update == 1, "更新条数错误");
     }

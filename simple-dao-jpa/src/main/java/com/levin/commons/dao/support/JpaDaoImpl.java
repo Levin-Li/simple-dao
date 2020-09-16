@@ -508,7 +508,6 @@ public class JpaDaoImpl
         }
 
         if (fieldOrMethod == null) {
-
             String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
             fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
             if (fieldOrMethod != null) {
@@ -536,11 +535,12 @@ public class JpaDaoImpl
 
     }
 
-    @Override
+
     /**
      * @fix 修复实体类继承时无法
      *
      */
+    @Override
     public String getEntityIdAttrName(Object entityOrClass) {
 
         Class entityClass = null;
