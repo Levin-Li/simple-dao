@@ -124,10 +124,10 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     /**
      * 获取ID属性
      *
-     * @param entity
+     * @param entityOrClass
      * @return
      */
-    String getEntityIdAttrName(Object entity);
+    String getEntityIdAttrName(Object entityOrClass);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 

@@ -655,12 +655,20 @@ public class JpaDaoImpl
      * @fix 修复实体类继承时无法
      *
      */
-    public String getEntityIdAttrName(Object entity) {
+    public String getEntityIdAttrName(Object entityOrClass) {
 
-        EntityType<?> entityType = getEntityManager().getMetamodel().entity(entity.getClass());
+        Class entityClass = null;
+
+        if (entityOrClass instanceof Class) {
+            entityClass = (Class) entityOrClass;
+        } else {
+            entityClass = entityOrClass.getClass();
+        }
+
+        EntityType<?> entityType = getEntityManager().getMetamodel().entity(entityClass);
 
         if (entityType == null) {
-            throw new IllegalArgumentException("class " + entity.getClass().getName() + " can't find  @" + Id.class.getName() + " method or field");
+            throw new IllegalArgumentException("class " + entityClass.getName() + " can't find  @" + Id.class.getName() + " method or field");
         }
 
         return entityType.getId(entityType.getIdType().getJavaType()).getName();
