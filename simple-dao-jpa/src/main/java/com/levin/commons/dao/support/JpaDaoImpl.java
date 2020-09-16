@@ -321,7 +321,6 @@ public class JpaDaoImpl
             }
         }
 
-
         return this;
     }
 
@@ -388,9 +387,14 @@ public class JpaDaoImpl
             entity = em.merge(entity);
         }
 
-        //默认先发送语句
+        //是否自动发送语句，默认先发送语句
         if (DaoContext.isAutoFlush(true)) {
             em.flush();
+        }
+
+        //是否自动脱管
+        if (DaoContext.isAutoDetachWithContext(true)) {
+            em.detach(entity);
         }
 
         return entity;
@@ -427,6 +431,11 @@ public class JpaDaoImpl
         //默认先发送语句
         if (DaoContext.isAutoFlush(true)) {
             em.flush();
+        }
+
+        //是否自动脱管
+        if (DaoContext.isAutoDetachWithContext(true)) {
+            em.detach(entity);
         }
 
         return entity;
@@ -533,7 +542,7 @@ public class JpaDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PersistenceException.class)
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
 
         List paramValueList = flattenParams(null, paramValues);
@@ -560,7 +569,6 @@ public class JpaDaoImpl
 
         int n = query.executeUpdate();
 
-
         return n;
     }
 
@@ -583,7 +591,7 @@ public class JpaDaoImpl
         if (disableSessionCache) {
             //   em.clear();
         }
-        // }
+
         T t = em.find(entityClass, id);
 
         return t;

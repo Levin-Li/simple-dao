@@ -142,7 +142,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
 
-
     /////////////////////////////////////////////////////////////////
 
     /**

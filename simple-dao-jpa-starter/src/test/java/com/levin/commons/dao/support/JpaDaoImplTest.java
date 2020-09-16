@@ -2,10 +2,7 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.dao.domain.support.E_AbstractBaseEntityObject;
-import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
-import com.levin.commons.dao.domain.support.E_TestEntity;
-import com.levin.commons.dao.domain.support.TestEntity;
+import com.levin.commons.dao.domain.support.*;
 import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
@@ -19,6 +16,8 @@ import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.utils.MapUtils;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.JPQLQueryFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -82,6 +81,9 @@ public class JpaDaoImplTest {
     @Autowired
     UserService userService;
 
+    @Autowired
+    JPQLQueryFactory jpqlQueryFactory;
+
     Random random = new Random(this.hashCode());
 
     /**
@@ -96,6 +98,7 @@ public class JpaDaoImplTest {
         Assert.notNull(simpleDao, "simpleDao没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
+        Assert.notNull(jpqlQueryFactory, "query Dsl jpqlQueryFactory");
     }
 
 
@@ -106,12 +109,13 @@ public class JpaDaoImplTest {
 
         EntityType<User> entityType = entityManager.getMetamodel().entity(User.class);
 
-
     }
 
 
     @Before
     public void initTestEntity() throws Exception {
+
+
 
         jpaDao.deleteFrom(TestEntity.class)
                 .disableSafeMode()
@@ -328,6 +332,21 @@ public class JpaDaoImplTest {
 
 
     @Test
+    public void testQueryDsl(){
+
+        BooleanBuilder booleanBuilder  = new BooleanBuilder();
+
+        QTestEntity qTestEntity = QTestEntity.testEntity;
+        booleanBuilder.and(qTestEntity.name.contains("1")).or(qTestEntity.state.isNotNull());
+
+        List<TestEntity> testEntities = jpqlQueryFactory.selectFrom(qTestEntity)
+                .where(booleanBuilder)
+                .fetch();
+
+        System.out.println(testEntities);
+    }
+
+    @Test
     public void testAnno() {
 
 //
@@ -378,6 +397,7 @@ public class JpaDaoImplTest {
                 .setOrderCode(random.nextInt(750))
         );
 
+        jpaDao.detach(entity);
 
         jpaDao.updateTo(TestEntity.class)
                 .set(E_TestEntity.orderCode, 12345)

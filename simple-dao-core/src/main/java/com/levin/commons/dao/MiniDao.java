@@ -20,7 +20,6 @@ public interface MiniDao {
         return false;
     }
 
-
     /**
      * 获取参数的占位符
      *
@@ -42,6 +41,7 @@ public interface MiniDao {
     Object create(Object entity);
 
     /**
+     * @param isNative    是否是原生查询
      * @param start
      * @param count
      * @param statement   更新或是删除语句
@@ -51,7 +51,6 @@ public interface MiniDao {
     @Transactional
     int update(boolean isNative, int start, int count, String statement, Object... paramValues);
 
-
     /**
      * 手动刷新事务，主要用于同个事务中先写后读的时候
      */
@@ -60,12 +59,13 @@ public interface MiniDao {
 
 
     /**
-     * @param isNative    是否是原生查询
-     * @param resultClass 可以为null(结果集将返回对象数组)，或是java.util.Map 或是具体的类
-     * @param start       从0开始
+     * @param isNative        是否是原生查询
+     * @param useQueriesCache
+     * @param resultClass     可以为null(结果集将返回对象数组)，或是java.util.Map 或是具体的类
+     * @param start           从0开始
      * @param count
      * @param statement
-     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
+     * @param paramValues     数组中的元素可以是map，数组，或是list,或值对象
      * @param <T>
      * @return
      */

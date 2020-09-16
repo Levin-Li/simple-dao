@@ -10,6 +10,8 @@ import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.JpaDaoImpl;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
+import com.querydsl.jpa.JPQLQueryFactory;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,13 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCallOperations;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
 
+import javax.inject.Provider;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceUnit;
+import javax.sql.DataSource;
+
 @Configuration
 
 @Role(BeanDefinition.ROLE_SUPPORT)
@@ -38,7 +47,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {
 
-
 /*    @Bean
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = FormattingConversionService.class),
@@ -47,22 +55,32 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         return new FormattingConversionServiceFactoryBean();
     }*/
 
+    //    @Autowired
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
+
+    //    @Autowired
+    @PersistenceContext
+    private EntityManager defaultEntityManager;
+
+    @Autowired
+    DataSource dataSource;
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
     JdbcTemplate jdbcTemplate() {
-        return new JdbcTemplate();
+        return new JdbcTemplate(dataSource);
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsertOperations.class)
-    SimpleJdbcInsertOperations simpleJdbcInsertOperations( ) {
+    SimpleJdbcInsertOperations simpleJdbcInsertOperations() {
         return new SimpleJdbcInsert(jdbcTemplate());
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCallOperations.class)
-    SimpleJdbcCallOperations simpleJdbcCallOperations( ) {
+    SimpleJdbcCallOperations simpleJdbcCallOperations() {
         return new SimpleJdbcCall(jdbcTemplate());
     }
 
@@ -90,38 +108,20 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         return new JpaDaoImpl();
     }
 
-
-/*
-    FactoryBean<JpaDao> newJpaDao() {
-
-        //一定要返回 FactoryBean<JpaDao>
-
-        //务必要返回代理对象，否则事务扫描，不会生效
-
-        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
-
-        JpaDaoImpl target = new JpaDaoImpl();
-
-        // proxyFactoryBean.setProxyTargetClass(true);
-
-//        context.getAutowireCapableBeanFactory().autowireBean(target);
-//        target.setApplicationContext(context);
-
-
-        context.getAutowireCapableBeanFactory()
-                .configureBean(target, JpaDao.class.getName());
-
-        try {
-            proxyFactoryBean.setProxyInterfaces(new Class[]{JpaDao.class});
-        } catch (ClassNotFoundException e) {
+    @Bean
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JPQLQueryFactory.class)
+    JPQLQueryFactory newJPQLQueryFactory() {
+        if (defaultEntityManager != null) {
+            return new JPAQueryFactory(defaultEntityManager);
+        } else {
+            return new JPAQueryFactory(new Provider<EntityManager>() {
+                @Override
+                public EntityManager get() {
+                    return entityManagerFactory.createEntityManager();
+                }
+            });
         }
-
-        proxyFactoryBean.setTarget(target);
-        proxyFactoryBean.setSingleton(true);
-
-        return (FactoryBean) proxyFactoryBean;
-    }*/
-
+    }
 
     ApplicationContext context;
 

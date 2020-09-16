@@ -230,7 +230,7 @@ public class UpdateDaoImpl<T>
         return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int update() {
 
