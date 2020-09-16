@@ -36,6 +36,23 @@
             <artifactId>hibernate-jpamodelgen</artifactId>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-sql</artifactId>
+            <version>${querydsl.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
@@ -78,5 +95,32 @@
 
     </dependencies>
 
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.mysema.maven</groupId>
+                <artifactId>apt-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/generated-sources/querydsl</outputDirectory>
+                            <logOnlyOnError>true</logOnlyOnError>
+                            <processors>
+                                <processor>com.querydsl.apt.QuerydslAnnotationProcessor</processor>
+                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>
+                                <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
+                                <!--                                <processor>com.querydsl.apt.jdo.JDOAnnotationProcessor</processor>-->
+                                <!--                                <processor>com.querydsl.apt.roo.RooAnnotationProcessor</processor>-->
+                            </processors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
