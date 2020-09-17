@@ -36,7 +36,7 @@ public interface MiniDao {
      * 创建对象
      * 如果对象有ID标识，将会抛出异常
      *
-     * @param entity
+     * @param entity 返回的对象已经托管
      * @return
      */
     @Transactional

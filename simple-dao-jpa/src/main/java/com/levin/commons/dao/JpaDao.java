@@ -239,4 +239,10 @@ public interface JpaDao extends SimpleDao {
      */
     JpaDao detach(Object object);
 
+
+    /**
+     * 强制让对象脱管
+     */
+    JpaDao clearSessionCache();
+
 }

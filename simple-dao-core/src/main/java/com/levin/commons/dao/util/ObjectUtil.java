@@ -25,10 +25,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -200,6 +197,36 @@ public abstract class ObjectUtil {
         }
 
         return map;
+    }
+
+
+    /**
+     * @param entity
+     * @param fieldOrMethod
+     * @param value
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    public static Object setObjectValue(Object entity, Object fieldOrMethod, Object value) {
+
+        if (entity == null) {
+            return entity;
+        }
+
+        try {
+            if (fieldOrMethod instanceof Field) {
+                ((Field) fieldOrMethod).setAccessible(true);
+                ((Field) fieldOrMethod).set(entity, value);
+            } else if (fieldOrMethod instanceof Method) {
+                ((Method) fieldOrMethod).setAccessible(true);
+                ((Method) fieldOrMethod).invoke(entity, value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return entity;
     }
 
 
@@ -538,7 +565,7 @@ public abstract class ObjectUtil {
             if (sourceType != null
                     && targetType.isAssignableFrom(sourceType)
                     && sourceType.getName().startsWith("java.util.")
-                    ) {
+            ) {
                 try {
                     return (T) sourceType.newInstance();
                 } catch (Exception e) {

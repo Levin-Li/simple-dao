@@ -295,8 +295,17 @@ public class JpaDaoImpl
             try {
                 getEntityManager().detach(object);
             } catch (IllegalArgumentException e) {
+                logger.warn("detach entity object " + e.getLocalizedMessage());
             }
         }
+
+        return this;
+    }
+
+    @Override
+    public JpaDao clearSessionCache() {
+
+        getEntityManager().clear();
 
         return this;
     }
@@ -325,6 +334,43 @@ public class JpaDaoImpl
 
     }
 
+    /**
+     * 为了兼容 JPA 和 普通 SQL 方式混用问题, 在发生更新后，立刻发送语句
+     * <p>
+     * 会带来性能问题
+     *
+     * @param em
+     */
+    public void tryAutoFlushAndDetachAfterUpdate(EntityManager em, Object entity) {
+        //是否自动发送语句，默认先发送语句
+        if (DaoContext.isAutoFlush(true)) {
+            em.flush();
+
+            if (entity != null
+                    && em.contains(entity)) {
+                em.detach(entity);
+            }
+
+        }
+    }
+
+    /**
+     * 为了确保查询数据的正确性，在查询前自动清楚缓存
+     *
+     * @param em
+     */
+    public void autoClearSessionCacheBeforeQuery(EntityManager em) {
+
+        if (DaoContext.isAutoClearSessionCacheBeforeQuery(true)
+                && em.isJoinedToTransaction()) {
+
+            em.flush();
+
+            em.clear();
+        }
+
+    }
+
     @Override
     @Transactional
     public Object create(Object entity) {
@@ -335,11 +381,14 @@ public class JpaDaoImpl
         try {
             em.persist(entity);
         } catch (EntityExistsException e) {
-            return em.merge(entity);
+            entity = em.merge(entity);
         }
+
+        tryAutoFlushAndDetachAfterUpdate(em, entity);
 
         return entity;
     }
+
 
     @Override
     @Transactional
@@ -347,10 +396,13 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
+        boolean mergeOk = false;
+
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
             if (getEntityId(entity) != null) {
-                return em.merge(entity);
+                entity = em.merge(entity);
+                mergeOk = true;
             }
 
         } catch (IllegalArgumentException e) {
@@ -359,40 +411,40 @@ public class JpaDaoImpl
             //不做异常处理尝试使用，persist进行保存
         }
 
-        //removed 状态的实体，persist可以处理
-        em.persist(entity);
+        if (!mergeOk) {
+            //removed 状态的实体，persist可以处理
+            em.persist(entity);
+        }
+
+        tryAutoFlushAndDetachAfterUpdate(em, entity);
 
         return entity;
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PersistenceException.class)
     public void delete(Object entity) {
 
         EntityManager em = getEntityManager();
 
-        if (em.contains(entity)) {
+        if (entity != null && !em.contains(entity)) {
+            entity = em.find(entity.getClass(), getEntityId(entity));
+        }
+
+        if (entity != null) {
             em.remove(entity);
-        } else {
-            Object mEntity = em.find(entity.getClass(), getEntityId(entity));
-            if (mEntity != null) {
-                em.remove(mEntity);
-            }
+            tryAutoFlushAndDetachAfterUpdate(em, null);
         }
 
     }
 
     @Override
-    @Transactional
     public boolean deleteById(Class entityClass, Object id) {
-        Query query = getEntityManager().createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
-        query.setParameter("pkid", id);
-        return query.executeUpdate() > 0;
-        //说明
+        return update("delete from " + entityClass.getName()
+                + " where " + getEntityIdAttrName(entityClass) + " = " + getParamPlaceholder(false), id) > 0;
     }
 
     @Override
-    @Transactional
     public int update(String statement, Object... paramValues) {
         return update(false, statement, paramValues);
     }
@@ -407,7 +459,6 @@ public class JpaDaoImpl
      * @return
      */
     @Override
-    @Transactional
     public int update(boolean isNative, String statement, Object... paramValues) {
         return update(isNative, -1, -1, statement, paramValues);
     }
@@ -444,23 +495,20 @@ public class JpaDaoImpl
     }
 
 
-
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PersistenceException.class)
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
 
         List paramValueList = flattenParams(null, paramValues);
-
 
         if (!paramValueList.isEmpty()) {
             statement = replacePlaceholder(isNative, statement);
         }
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Update JPQL:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
+            logger.debug("Update Jpa Ql:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
-
 
         EntityManager em = getEntityManager();
 
@@ -470,7 +518,11 @@ public class JpaDaoImpl
 
         setRange(query, start, count);
 
-        return query.executeUpdate();
+        int n = query.executeUpdate();
+
+        tryAutoFlushAndDetachAfterUpdate(em, null);
+
+        return n;
     }
 
     @Override
@@ -481,8 +533,14 @@ public class JpaDaoImpl
     @Override
     public <T> T find(Class<T> entityClass, Object id) {
 
-        return getEntityManager().find(entityClass, id);
+        EntityManager em = getEntityManager();
+
+        //如果当前有事务，发送语句，在清除缓存，以保证数据正确加载
+        autoClearSessionCacheBeforeQuery(em);
+
+        return em.find(entityClass, id);
     }
+
 
     @Override
     public <ID> ID getEntityId(Object entity) {
@@ -495,25 +553,7 @@ public class JpaDaoImpl
             throw new IllegalArgumentException("class " + entityClass.getName() + " is not a jpa entity object");
         }
 
-        final String key = entityClass.getName() + "." + idAttrName;
-
-        Object fieldOrMethod = idFields.get(key);
-
-        if (fieldOrMethod == null) {
-            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
-            if (fieldOrMethod != null) {
-                ((Field) fieldOrMethod).setAccessible(true);
-                idFields.put(key, fieldOrMethod);
-            }
-        }
-
-        if (fieldOrMethod == null) {
-            String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
-            fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
-            if (fieldOrMethod != null) {
-                idFields.put(key, fieldOrMethod);
-            }
-        }
+        Object fieldOrMethod = getFieldOrMethodByName(entityClass, idAttrName);
 
         Exception ex = null;
 
@@ -535,10 +575,39 @@ public class JpaDaoImpl
 
     }
 
+    /**
+     * @param entityClass
+     * @param idAttrName
+     * @return
+     */
+    private static Object getFieldOrMethodByName(Class<?> entityClass, String idAttrName) {
+
+        final String key = entityClass.getName() + "." + idAttrName;
+
+        Object fieldOrMethod = idFields.get(key);
+
+        if (fieldOrMethod == null) {
+            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
+            if (fieldOrMethod != null) {
+                ((Field) fieldOrMethod).setAccessible(true);
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        if (fieldOrMethod == null) {
+            String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
+            fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
+            if (fieldOrMethod != null) {
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        return fieldOrMethod;
+    }
+
 
     /**
      * @fix 修复实体类继承时无法
-     *
      */
     @Override
     public String getEntityIdAttrName(Object entityOrClass) {
@@ -654,7 +723,6 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-
         String oldStatement = statement;
 
         if (!paramValueList.isEmpty()) {
@@ -662,12 +730,8 @@ public class JpaDaoImpl
         }
 
         if (logger.isDebugEnabled()) {
-
-            // logger.debug("Old Statement:" + oldStatement);
-
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
-
         }
 
 
@@ -687,11 +751,16 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
-        query.setFlushMode(FlushModeType.AUTO);
+//        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+//        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+//        query.setHint("org.hibernate.cacheMode", "REFRESH");
+
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
+
+        autoClearSessionCacheBeforeQuery(em);
 
         return (List<T>) query.getResultList();
 

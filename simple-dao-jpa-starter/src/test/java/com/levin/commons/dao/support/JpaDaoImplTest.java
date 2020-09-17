@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
@@ -161,10 +162,18 @@ public class JpaDaoImplTest {
 
     }
 
-
     @Before
     public void initTestData() throws Exception {
 
+        try {
+            DaoContext.setAutoFlush(false, false);
+            initTestData2();
+        } finally {
+            DaoContext.setAutoFlush(false, true);
+        }
+    }
+
+    public void initTestData2() throws Exception {
 
         if (jpaDao.selectFrom(User.class).count() > 0) {
             return;
@@ -264,7 +273,7 @@ public class JpaDaoImplTest {
     public void testJoinFetch() {
 
 
-        Group one = jpaDao.selectFrom(Group.class).gt(E_Group.id,5L).findOne();
+        Group one = jpaDao.selectFrom(Group.class).gt(E_Group.id, 5L).findOne();
 
         GroupInfo queryDto = new GroupInfo().setId("" + one.getId());
 
@@ -361,7 +370,81 @@ public class JpaDaoImplTest {
 
 
     @Test
-    public void testAnno2() {
+    @Transactional
+    public void testTransactional2() throws InterruptedException {
+
+        TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
+                .setScore(random.nextInt(750))
+                .setName("test" + random.nextInt(750))
+                .setRemark("system-" + random.nextInt(750))
+                .setOrderCode(random.nextInt(750))
+        );
+
+        System.out.println("1 ------------------------------");
+        Thread.sleep(1000);
+
+        List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e")
+                .gt(E_TestEntity.id, 20)
+                .find();
+
+        System.out.println("2 ------------------------------");
+        Thread.sleep(1000);
+
+        int orderCode = -1;
+
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode, orderCode)
+                .eq(E_TestEntity.id, 1)
+                .update();
+
+        System.out.println("3 ------------------------------");
+        Thread.sleep(1000);
+
+        orderCode = -1234567;
+
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode, orderCode)
+                .eq(E_TestEntity.id, entity.getId())
+                .update();
+
+        Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
+
+        orderCode = -67890;
+
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode, orderCode)
+                .gt(E_TestEntity.id, entity.getId() - 50)
+                .update();
+
+        System.out.println("4------------------------------");
+        Thread.sleep(1000);
+
+        Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
+
+
+        System.out.println("5------------------------------");
+        Thread.sleep(1000);
+
+        objectList = jpaDao.selectFrom(TestEntity.class, "e")
+                .find();
+
+        System.out.println("6------------------------------");
+        // Thread.sleep(1000);
+
+        Assert.isTrue(objectList.contains(entity), "");
+
+    }
+
+    @Test
+    @Transactional
+    public void testTransactional() {
+
+        TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
+                .setScore(random.nextInt(750))
+                .setName("test" + 11)
+                .setRemark("system-" + 11)
+                .setOrderCode(11)
+        );
 
 
         User user = jpaDao.selectFrom(User.class).gt(E_User.id, 20).findOne();
@@ -515,7 +598,7 @@ public class JpaDaoImplTest {
 
         List<User> users = userDao.find(null, "User", 5, paging);
 
-    //    paging.setPageSize(1);
+        //    paging.setPageSize(1);
 
         User user = userDao.findOne(null, null, null, paging);
 
