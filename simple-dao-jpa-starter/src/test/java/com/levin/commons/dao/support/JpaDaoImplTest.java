@@ -189,9 +189,18 @@ public class JpaDaoImplTest {
 
     }
 
-
     @Before
     public void initTestData() throws Exception {
+
+        try {
+            DaoContext.setAutoFlush(false, false);
+            initTestData2();
+        } finally {
+            DaoContext.setAutoFlush(false, true);
+        }
+    }
+
+    public void initTestData2() throws Exception {
 
         if (jpaDao.selectFrom(User.class).count() > 0) {
             return;
@@ -209,9 +218,6 @@ public class JpaDaoImplTest {
         jpaDao.deleteFrom(Group.class)
                 .disableSafeMode()
                 .delete();
-
-
-        DaoContext.setAutoFlush(false, false);
 
         int gCount = 15;
 
@@ -286,10 +292,6 @@ public class JpaDaoImplTest {
             }
 
         }
-
-        DaoContext.setAutoFlush(false, true);
-
-        //  testJoinAndStat();
 
     }
 
@@ -388,7 +390,7 @@ public class JpaDaoImplTest {
 
     @Test
     @Transactional
-    public void testTransactional2() {
+    public void testTransactional2() throws InterruptedException {
 
         TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
                 .setScore(random.nextInt(750))
@@ -397,20 +399,61 @@ public class JpaDaoImplTest {
                 .setOrderCode(random.nextInt(750))
         );
 
-        jpaDao.detach(entity);
+        System.out.println("1 ------------------------------");
+        Thread.sleep(1000);
+
+        List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e")
+                .gt(E_TestEntity.id, 20)
+                .find();
+
+        System.out.println("2 ------------------------------");
+        Thread.sleep(1000);
+
+        int orderCode = -1;
 
         jpaDao.updateTo(TestEntity.class)
-                .set(E_TestEntity.orderCode, 12345)
+                .set(E_TestEntity.orderCode, orderCode)
+                .eq(E_TestEntity.id, 1)
+                .update();
+
+        System.out.println("3 ------------------------------");
+        Thread.sleep(1000);
+
+        orderCode = -1234567;
+
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode, orderCode)
                 .eq(E_TestEntity.id, entity.getId())
                 .update();
 
+        Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
 
-        List<Object> objectList = jpaDao.selectFrom(TestEntity.class, "e").find();
+        orderCode = -67890;
 
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.orderCode, orderCode)
+                .gt(E_TestEntity.id, entity.getId() - 50)
+                .update();
+
+        System.out.println("4------------------------------");
+        Thread.sleep(1000);
+
+        Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
+
+
+        System.out.println("5------------------------------");
+        Thread.sleep(1000);
+
+        objectList = jpaDao.selectFrom(TestEntity.class, "e")
+                .find();
+
+        System.out.println("6------------------------------");
+        // Thread.sleep(1000);
 
         Assert.isTrue(objectList.contains(entity), "");
 
     }
+
 
     @Test
     @Transactional
@@ -617,7 +660,7 @@ public class JpaDaoImplTest {
 
         Assert.isTrue(update == 0, "更新条数错误");
 
-        update = userDao.update(12L, "User-12");
+        update = userDao.update(user.getId(), "User-12");
 
         Assert.isTrue(update == 1, "更新条数错误");
     }

@@ -154,7 +154,6 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
-    private boolean disableSessionCache = true;
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
@@ -291,13 +290,6 @@ public class JpaDaoImpl
         return this;
     }
 
-    @Override
-    public JpaDao disableSessionCache() {
-
-        this.disableSessionCache = true;
-
-        return this;
-    }
 
     @Override
     public DeepCopier getDeepCopier() {
@@ -324,6 +316,13 @@ public class JpaDaoImpl
         return this;
     }
 
+    @Override
+    public JpaDao clearSessionCache() {
+
+        getEntityManager().clear();
+
+        return this;
+    }
 
     @Override
     public EntityManager getEntityManager() {
@@ -355,6 +354,13 @@ public class JpaDaoImpl
     }
 
 
+
+
+
+
+
+
+
     public EntityManager init(EntityManager entityManager) {
 
         if (entityManager != null) {
@@ -372,7 +378,42 @@ public class JpaDaoImpl
 
         return entityManager;
     }
+    /**
+     * 为了兼容 JPA 和 普通 SQL 方式混用问题, 在发生更新后，立刻发送语句
+     * <p>
+     * 会带来性能问题
+     *
+     * @param em
+     */
+    public void tryAutoFlushAndDetachAfterUpdate(EntityManager em, Object entity) {
+        //是否自动发送语句，默认先发送语句
+        if (DaoContext.isAutoFlush(true)) {
+            em.flush();
 
+            if (entity != null
+                    && em.contains(entity)) {
+                em.detach(entity);
+            }
+
+        }
+    }
+
+    /**
+     * 为了确保查询数据的正确性，在查询前自动清楚缓存
+     *
+     * @param em
+     */
+    public void autoClearSessionCacheBeforeQuery(EntityManager em) {
+
+        if (DaoContext.isAutoClearSessionCacheBeforeQuery(true)
+                && em.isJoinedToTransaction()) {
+
+            em.flush();
+
+            em.clear();
+        }
+
+    }
 
     @Override
     @Transactional
@@ -387,15 +428,7 @@ public class JpaDaoImpl
             entity = em.merge(entity);
         }
 
-        //是否自动发送语句，默认先发送语句
-        if (DaoContext.isAutoFlush(true)) {
-            em.flush();
-        }
-
-        //是否自动脱管
-        if (DaoContext.isAutoDetachWithContext(true)) {
-            em.detach(entity);
-        }
+        tryAutoFlushAndDetachAfterUpdate(em, entity);
 
         return entity;
     }
@@ -406,91 +439,57 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
-        boolean needPersist = true;
+        boolean mergeOk = false;
 
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
             if (getEntityId(entity) != null) {
                 entity = em.merge(entity);
-                needPersist = false;
+                mergeOk = true;
             }
         } catch (IllegalArgumentException e) {
 //            if instance is not an  entity or is a removed entity
             //不做异常处理尝试使用persist进行保存
-            needPersist = true;
+
         } catch (EntityNotFoundException e) {
             //不做异常处理尝试使用，persist进行保存
-            needPersist = true;
+
         }
 
-        if (needPersist) {
+        if (!mergeOk) {
             //removed 状态的实体，persist可以处理
             em.persist(entity);
         }
 
-        //默认先发送语句
-        if (DaoContext.isAutoFlush(true)) {
-            em.flush();
-        }
-
-        //是否自动脱管
-        if (DaoContext.isAutoDetachWithContext(true)) {
-            em.detach(entity);
-        }
+        tryAutoFlushAndDetachAfterUpdate(em, entity);
 
         return entity;
     }
 
-    @Override
-    public Object refresh(Object object) {
-        getEntityManager().refresh(object);
-        return object;
-    }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PersistenceException.class)
     public void delete(Object entity) {
 
         EntityManager em = getEntityManager();
 
-        if (em.contains(entity)) {
+        if (entity != null && !em.contains(entity)) {
+            entity = em.find(entity.getClass(), getEntityId(entity));
+        }
+
+        if (entity != null) {
             em.remove(entity);
-            //默认先发送语句
-            if (DaoContext.isAutoFlush(true)) {
-                em.flush();
-            }
-        } else {
-            deleteById(entity.getClass(), getEntityId(entity));
+            tryAutoFlushAndDetachAfterUpdate(em, null);
         }
 
     }
-
     @Override
-    @Transactional
     public boolean deleteById(Class entityClass, Object id) {
-
-        EntityManager em = getEntityManager();
-
-//        Query query = em
-//                .createQuery("delete from " + entityClass.getName() + " where " + getEntityIdAttrName(entityClass) + " =:pkid");
-//        query.setParameter("pkid", id);
-//        return query.executeUpdate() > 0;
-
-        Object mEntity = em.find(entityClass, id);
-
-        if (mEntity != null) {
-            em.remove(mEntity);
-            //默认先发送语句
-            if (DaoContext.isAutoFlush(true)) {
-                em.flush();
-            }
-        }
-
-        return true;
+        return update("delete from " + entityClass.getName()
+                + " where " + getEntityIdAttrName(entityClass) + " = " + getParamPlaceholder(false), id) > 0;
     }
 
     @Override
-    @Transactional
     public int update(String statement, Object... paramValues) {
         return update(false, statement, paramValues);
     }
@@ -505,7 +504,6 @@ public class JpaDaoImpl
      * @return
      */
     @Override
-    @Transactional
     public int update(boolean isNative, String statement, Object... paramValues) {
         return update(isNative, -1, -1, statement, paramValues);
     }
@@ -560,14 +558,13 @@ public class JpaDaoImpl
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
-        //更新缓存
-        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
-
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
         int n = query.executeUpdate();
+
+        tryAutoFlushAndDetachAfterUpdate(em, null);
 
         return n;
     }
@@ -582,19 +579,10 @@ public class JpaDaoImpl
 
         EntityManager em = getEntityManager();
 
-        //如果有事务查询前 flush
-        if (em.isJoinedToTransaction()) {
-            // em.flush();
-        }
+        //如果当前有事务，发送语句，在清除缓存，以保证数据正确加载
+        autoClearSessionCacheBeforeQuery(em);
 
-        //if (!useQueriesCache) {
-        if (disableSessionCache) {
-            //   em.clear();
-        }
-
-        T t = em.find(entityClass, id);
-
-        return t;
+        return em.find(entityClass, id);
     }
 
 
@@ -603,32 +591,13 @@ public class JpaDaoImpl
 
         Class<?> entityClass = entity.getClass();
 
-        String idAttrName = getEntityIdAttrName(entity);
+        String idAttrName = getEntityIdAttrName(entityClass);
 
         if (!StringUtils.hasText(idAttrName)) {
             throw new IllegalArgumentException("class " + entityClass.getName() + " is not a jpa entity object");
         }
 
-        final String key = entityClass.getName() + "." + idAttrName;
-
-        Object fieldOrMethod = idFields.get(key);
-
-        if (fieldOrMethod == null) {
-            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
-            if (fieldOrMethod != null) {
-                ((Field) fieldOrMethod).setAccessible(true);
-                idFields.put(key, fieldOrMethod);
-            }
-        }
-
-        if (fieldOrMethod == null) {
-
-            String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
-            fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
-            if (fieldOrMethod != null) {
-                idFields.put(key, fieldOrMethod);
-            }
-        }
+        Object fieldOrMethod = getFieldOrMethodByName(entityClass, idAttrName);
 
         Exception ex = null;
 
@@ -647,14 +616,44 @@ public class JpaDaoImpl
         }
 
         throw new IllegalArgumentException("class " + entityClass.getName() + " can't get property '" + idAttrName + "' value", ex);
+
+    }
+
+    /**
+     * @param entityClass
+     * @param idAttrName
+     * @return
+     */
+    private static Object getFieldOrMethodByName(Class<?> entityClass, String idAttrName) {
+
+        final String key = entityClass.getName() + "." + idAttrName;
+
+        Object fieldOrMethod = idFields.get(key);
+
+        if (fieldOrMethod == null) {
+            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
+            if (fieldOrMethod != null) {
+                ((Field) fieldOrMethod).setAccessible(true);
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        if (fieldOrMethod == null) {
+            String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
+            fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
+            if (fieldOrMethod != null) {
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        return fieldOrMethod;
     }
 
 
-    @Override
     /**
      * @fix 修复实体类继承时无法
-     *
      */
+    @Override
     public String getEntityIdAttrName(Object entityOrClass) {
 
         Class entityClass = null;
@@ -673,8 +672,6 @@ public class JpaDaoImpl
 
         return entityType.getId(entityType.getIdType().getJavaType()).getName();
     }
-
-    // @Override
 
     /**
      * @fix 修复实体类继承时无法
@@ -801,21 +798,16 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
-        if (!useQueriesCache) {
-            query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.BYPASS);
-            query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
-        }
+//        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+//        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+//        query.setHint("org.hibernate.cacheMode", "REFRESH");
 
-        // query.setFlushMode(FlushModeType.AUTO);
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
-        //临时解决方案
-        if (!useQueriesCache || disableSessionCache) {
-//            em.clear();
-        }
+        autoClearSessionCacheBeforeQuery(em);
 
         return (List<T>) query.getResultList();
     }

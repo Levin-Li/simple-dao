@@ -73,16 +73,17 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     }
 
     @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsertOperations.class)
-    SimpleJdbcInsertOperations simpleJdbcInsertOperations() {
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsert.class)
+    SimpleJdbcInsert simpleJdbcInsertOperations() {
         return new SimpleJdbcInsert(jdbcTemplate());
     }
 
     @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCallOperations.class)
-    SimpleJdbcCallOperations simpleJdbcCallOperations() {
+    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCall.class)
+    SimpleJdbcCall simpleJdbcCallOperations() {
         return new SimpleJdbcCall(jdbcTemplate());
     }
+
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
@@ -122,6 +123,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             });
         }
     }
+
 
     ApplicationContext context;
 

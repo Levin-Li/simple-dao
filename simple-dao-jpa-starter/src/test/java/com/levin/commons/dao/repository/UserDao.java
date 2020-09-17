@@ -3,10 +3,12 @@ package com.levin.commons.dao.repository;
 
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.logic.OR;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.repository.annotation.DeleteRequest;
@@ -26,11 +28,11 @@ public interface UserDao {
                     @Gt Integer score, Paging paging);
 
     @QueryRequest(joinFetchSetAttrs = {"group"})
-    User findOne(@Eq Long id, @Like String name,
+    User findOne(@Eq Long id, @Contains String name,
                  @Eq String category, Paging paging);
 
     @UpdateRequest
-    int update(@Eq Long id, @UpdateColumn String name);
+    int update(@Eq Long id, @Update String name);
 
     @DeleteRequest
     int delete(@OR @Eq Long id, String name);

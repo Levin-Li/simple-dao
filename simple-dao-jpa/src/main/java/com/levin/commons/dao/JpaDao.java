@@ -225,14 +225,6 @@ public interface JpaDao extends SimpleDao {
 
 
     /**
-     * 全局禁用 JPA 会话缓存
-     *
-     * @return
-     */
-    JpaDao disableSessionCache();
-
-
-    /**
      * 获取jpa实体管理器
      *
      * @return
@@ -241,18 +233,16 @@ public interface JpaDao extends SimpleDao {
 
 
     /**
-     * 刷新对象
-     *
-     * @param object
-     */
-    Object refresh(Object object);
-
-
-    /**
      * 强制让对象脱管
      *
      * @param object
      */
     JpaDao detach(Object object);
+
+
+    /**
+     * 强制让对象脱管
+     */
+    JpaDao clearSessionCache();
 
 }

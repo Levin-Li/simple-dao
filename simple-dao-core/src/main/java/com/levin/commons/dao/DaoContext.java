@@ -21,8 +21,8 @@ public abstract class DaoContext {
 //
 //    public static final String DAO_SAFE_MODE = "dao_safe_mode";
 
-    public static final String AUTO_FLUSH = "auto_flush";
-    public static final String AUTO_DETACH = "auto_detach";
+    public static final String AUTO_FLUSH = "AUTO_FLUSH";
+    public static final String AUTO_CLEAR_SESSION_CACHE = "AUTO_CLEAR_SESSION_CACHE";
 
     private static final ThreadLocal<Map> threadContext = new ThreadLocal<>();
 
@@ -53,8 +53,8 @@ public abstract class DaoContext {
 
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////
 
+    //////////////////////////////////////////////////////////////////////////////////////
     public static Map<String, Object> getGlobalContext() {
         return Collections.unmodifiableMap(globalContext);
     }
@@ -75,8 +75,7 @@ public abstract class DaoContext {
         return (T) globalContext.put(key, object);
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public static <T> T getThreadVar(String key) {
         return (T) _getThreadContext().get(key);
     }
@@ -105,29 +104,6 @@ public abstract class DaoContext {
      * @param defaultValue
      * @return
      */
-    public static boolean isAutoDetachWithContext(boolean defaultValue) {
-        return Boolean.TRUE.equals(getVar(getKey(AUTO_DETACH), defaultValue));
-    }
-
-    /**
-     * 设置全局或是当前线程自动提交
-     *
-     * @param isGlobalEffect
-     * @param isAutoFlush
-     * @return
-     */
-    public static boolean setAutoDetachWithContext(boolean isGlobalEffect, boolean isAutoFlush) {
-        String key = getKey(AUTO_DETACH);
-        return Boolean.TRUE.equals(isGlobalEffect ? setGlobalVar(key, isAutoFlush) : setThreadVar(key, isAutoFlush));
-    }
-
-
-    /**
-     * 是否自动提交
-     *
-     * @param defaultValue
-     * @return
-     */
     public static boolean isAutoFlush(boolean defaultValue) {
         return Boolean.TRUE.equals(getVar(getKey(AUTO_FLUSH), defaultValue));
     }
@@ -143,6 +119,30 @@ public abstract class DaoContext {
         String key = getKey(AUTO_FLUSH);
         return Boolean.TRUE.equals(isGlobalEffect ? setGlobalVar(key, isAutoFlush) : setThreadVar(key, isAutoFlush));
     }
+
+
+    /**
+     * 是否自动清除
+     *
+     * @param defaultValue
+     * @return
+     */
+    public static boolean isAutoClearSessionCacheBeforeQuery(boolean defaultValue) {
+        return Boolean.TRUE.equals(getVar(getKey(AUTO_CLEAR_SESSION_CACHE), defaultValue));
+    }
+
+    /**
+     * 设置全局或是当前线程自动清除
+     *
+     * @param isGlobalEffect
+     * @param autoClear
+     * @return
+     */
+    public static boolean setAutoClearSessionCacheBeforeQuery(boolean isGlobalEffect, boolean autoClear) {
+        String key = getKey(AUTO_CLEAR_SESSION_CACHE);
+        return Boolean.TRUE.equals(isGlobalEffect ? setGlobalVar(key, autoClear) : setThreadVar(key, autoClear));
+    }
+
 
     private static String getKey(String key) {
         return DaoContext.class.getName() + "." + key;

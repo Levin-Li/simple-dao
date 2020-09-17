@@ -20,6 +20,7 @@ public interface MiniDao {
         return false;
     }
 
+
     /**
      * 获取参数的占位符
      *
@@ -30,11 +31,12 @@ public interface MiniDao {
         return DEFAULT_JDBC_PARAM_PLACEHOLDER;
     }
 
+
     /**
      * 创建对象
      * 如果对象有ID标识，将会抛出异常
      *
-     * @param entity
+     * @param entity 返回的对象已经托管
      * @return
      */
     @Transactional
