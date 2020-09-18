@@ -857,27 +857,23 @@ public class JpaDaoImpl
 
     private int setParams(int pIndex, Query query, List paramValueList) {
 
-        Map<String, Parameter> parameterMap = new LinkedHashMap<>();
+        Map<Object, Parameter> parameterMap = new LinkedHashMap<>();
 
         Set<Parameter<?>> parameters = query.getParameters();
 
-        //分离出命名参数
-        parameters.stream()
-                .filter(p -> p.getName() != null)
-                .forEach(p -> {
-                    parameterMap.put(p.getName(), p);
-                });
-
+        for (Parameter<?> p : parameters) {
+            parameterMap.put(StringUtils.hasText(p.getName())?p.getName():p.getPosition(), p);
+        }
 
         for (Object paramValue : paramValueList) {
             if (paramValue instanceof Map) {
                 //如果是Map，就设置命名参数
-                for (Map.Entry<String, Parameter> entry : parameterMap.entrySet()) {
+                for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
                     try {
                         //没有属性会抛出异常
-                        Object value = ObjectUtil.getIndexValue(paramValue, entry.getKey(), true);
+                        Object value = ObjectUtil.getIndexValue(paramValue,(String) entry.getKey(), true);
 
-                        query.setParameter(entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
+                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
 
                     } catch (Exception e) {
 
@@ -903,7 +899,7 @@ public class JpaDaoImpl
         return pIndex;
     }
 
-    private Object tryAutoConvertParamValue(Map<String, Parameter> parameterMap, Object paramKey, Object paramValue) {
+    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
         //自动转换数据类型
         //@todo 观察，需要关注性能问题
         //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue

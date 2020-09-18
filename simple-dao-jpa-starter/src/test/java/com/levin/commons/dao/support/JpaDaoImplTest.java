@@ -947,7 +947,7 @@ public class JpaDaoImplTest {
                 .join("left join jpa_dao_test_Group g on u.group.id = g.id")
                 .select("u.id AS uid ,g.id AS gid")
 
-                .where("g.id > " + jpaDao.getParamPlaceholder(false), 2)
+                .where("g.id > " + jpaDao.getParamPlaceholder(false), 2L)
 
                 .limit(-1, 100)
                 .find(MulitTableJoinDTO.class);
