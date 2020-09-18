@@ -8,19 +8,21 @@
     <artifactId>simple-dao-parent</artifactId>
     <packaging>pom</packaging>
 
-    <version>2.2.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <!--<version>RELEASE</version>-->
-        <version>2.0.5.RELEASE</version>
-
+        <version>2.3.1.RELEASE</version>
     </parent>
 
     <properties>
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
 
 
         <maven.test.skip>false</maven.test.skip>
@@ -62,19 +64,19 @@
     <dependencyManagement>
         <dependencies>
 
-
-            <!--            <dependency>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-dependencies</artifactId>
-                            <type>pom</type>
-                            <scope>import</scope>
-                            <version>RELEASE</version>
-                        </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>org.springframework.boot</groupId>-->
+            <!--                <artifactId>spring-boot-dependencies</artifactId>-->
+            <!--                <type>pom</type>-->
+            <!--                <scope>import</scope>-->
+            <!--                <version>2.2.8.RELEASE</version>-->
+            <!--            </dependency>-->
 
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+
 
         <dependency>
             <groupId>com.levin.commons.maven</groupId>
@@ -100,7 +102,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>RELEASE</version>
+            <version>1.18.12</version>
             <scope>provided</scope>
         </dependency>
 
@@ -139,7 +141,6 @@
             </repositories>
 
         </profile>
-
 
 
         <profile>
@@ -189,6 +190,7 @@
                 <configuration>
                     <!--需要在JDK1.8中编译，并增加编译参数：-parameters ，保留方法的参数名称。-->
                     <compilerArgument>-parameters</compilerArgument>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
 

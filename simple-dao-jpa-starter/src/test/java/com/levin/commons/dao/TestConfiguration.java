@@ -35,8 +35,8 @@ import org.springframework.context.annotation.ComponentScan;
                 , basePackages = {"com. levin."}),
 })
 
-//@EnableProxyBean(registerTypes = {API.class, API2.class, API3.class})
-@EnableProxyBean
+@EnableProxyBean(registerTypes = {API.class, API2.class, API3.class})
+//@EnableProxyBean
 
 @EntityScan({"com.levin.commons.dao"})
 
