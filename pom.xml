@@ -10,15 +10,17 @@
 
     <version>2.1.2-SNAPSHOT</version>
 
-    <properties>
-        <maven-source-plugin.attach>true</maven-source-plugin.attach>
-    </properties>
+
 
     <parent>
         <groupId>com.levin.commons.maven</groupId>
         <artifactId>starter-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
+
+    <properties>
+        <maven-source-plugin.attach>true</maven-source-plugin.attach>
+    </properties>
 
 
     <dependencies>

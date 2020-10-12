@@ -52,7 +52,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
-            <version>RELEASE</version>
+           <version>1.2.1</version>
             <scope>provided</scope>
         </dependency>
 
