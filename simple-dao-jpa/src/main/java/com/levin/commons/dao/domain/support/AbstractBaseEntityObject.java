@@ -25,11 +25,11 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     protected Integer orderCode;
 
     @Desc("是否允许")
-    @Column(name = "is_enable", nullable = false)
+    @Column(name = "is_enable")
     protected Boolean enable = true;
 
     @Desc("是否可编辑")
-    @Column(name = "is_editable", nullable = false)
+    @Column(name = "is_editable")
     protected Boolean editable = true;
 
     @Desc("创建时间")
