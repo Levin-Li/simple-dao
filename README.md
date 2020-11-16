@@ -29,10 +29,20 @@
   要求 Spring boot 2.0.5 以上的环境。
    
 #### 1.1 引入依赖
+
+           <repositories>
+       
+               <repository>
+                   <id>jitpack.io</id>
+                   <url>https://jitpack.io</url>
+               </repository>
+       
+           </repositories>
+
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.x.x-SNAPSHOT</version>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
