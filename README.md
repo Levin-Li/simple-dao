@@ -30,7 +30,7 @@
    
 #### 1.1 引入依赖
         <dependency>
-            <groupId>com.levin.commons.dao</groupId>
+             <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
             <version>2.x.x-SNAPSHOT</version>
         </dependency>
