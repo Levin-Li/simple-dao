@@ -13,4 +13,14 @@
 
     <artifactId>simple-dao-annotations</artifactId>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>com.github.Levin-Li</groupId>
+            <artifactId>ServiceSupport</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
 </project>
