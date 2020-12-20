@@ -603,7 +603,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (!hasOld) {
             //使用 join 语句的方式增加连接语句
             String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
-            join(true, joinStatement);
+            if(hasText(joinStatement)) {
+                join(true, joinStatement);
+            }
         }
 
 
@@ -660,10 +662,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     protected CB join(Boolean isAppend, String... joinStatements) {
-
-        throw new StatementBuildException("Only SelectDao support this operation");
-
-        //  return (CB) this;
+//        throw new StatementBuildException("Only SelectDao support this operation");
+          return (CB) this;
     }
 
 //////////////////////////////////////////////

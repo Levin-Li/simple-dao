@@ -669,9 +669,12 @@ public class JpaDaoImplTest {
 
     @Test
     //@Transactional
-    public void testManyToOne() {
+    public void testJoinFetch2() {
 
 
+        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new UserJoinFetchDTO());
+
+        System.out.println(byQueryObj);
     }
 
 
@@ -950,8 +953,6 @@ public class JpaDaoImplTest {
 
     @org.junit.Test
     public void testJoinDto2() throws Exception {
-
-
 
 
         List<TableJoinDTO> objects = jpaDao.findByQueryObj(TableJoinDTO.class, new TableJoinDTO());

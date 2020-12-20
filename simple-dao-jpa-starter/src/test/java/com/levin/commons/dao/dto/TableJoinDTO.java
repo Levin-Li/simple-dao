@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TargetOption(
         entityClass = User.class, alias = "u",
-//        fromStatement = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id",
+        //连接表
         joinOptions = {
                 @JoinOption(alias = "g", entityClass = Group.class)
         }
@@ -31,14 +31,10 @@ public class TableJoinDTO {
     @Gte("g.id")
     Long gid = 2L;
 
-    //@Select(domain = "u")
     @Select
     String name;
 
     @Select(domain = "g", value = E_Group.name)
     String groupName;
-
-
-
 
 }

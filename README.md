@@ -82,12 +82,12 @@
 
 ##### 1.3 配置JPA实体扫描 & 执行查询
 
-  1、在boot启动类上配置实体扫描注解
+  a) 在boot启动类上配置实体扫描注解
    
       @EntityScan({"com.levin.commons.dao","com.xxx.xxx.entities"})
   
         
-  2、执行查询
+  b) 执行查询
   
       @Autowired
       JpaDao jpaDao;
@@ -108,6 +108,45 @@
        AND name LIKE '%' ||  ?4  || '%'  
        Group By  state
   
+  
+  
+   c) 多表关联查询
+   
+      //查询对象，和结果对象
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(
+              entityClass = User.class, alias = "u",
+              //连接表
+              joinOptions = {
+                      @JoinOption(alias = "g", entityClass = Group.class)
+              }
+              , maxResults = 100)
+      public class TableJoinDTO {
+      
+          @Select(value = "u.id", isDistinct = true)
+          @Gt(value = E_User.id, domain = "u")
+          Long uid = 1L;
+      
+          @Select(value = E_Group.id, domain = "g")
+          @Gte("g.id")
+          Long gid = 2L;
+      
+          @Select
+          String name;
+      
+          @Select(domain = "g", value = E_Group.name)
+          String groupName;
+      
+      }
+       
+        //执行查询
+        List<TableJoinDTO> objects = jpaDao.findByQueryObj(TableJoinDTO.class, new TableJoinDTO());
+        
+        //生成的语句
+       Select  DISTINCT(u.id)  , g.id , u.name , g.name  
+       From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id
+       Where u.id >   ?1  AND g.id >=   ?2 
 
 ###  2、组件使用方式
 

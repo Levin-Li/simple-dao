@@ -3,6 +3,7 @@ package com.levin.commons.dao.domain;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -13,6 +14,7 @@ import javax.persistence.*;
 @Entity(name = "jpa_dao_test_User")
 @Data
 @Accessors(chain = true)
+@ToString(exclude = "group")
 public class User
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {

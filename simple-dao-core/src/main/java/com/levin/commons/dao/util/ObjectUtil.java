@@ -941,7 +941,6 @@ public abstract class ObjectUtil {
                     propertyName = fetch.value();
                 }
 
-
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 
                 if (fieldResolvableType.resolve() == null) {

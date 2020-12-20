@@ -250,6 +250,10 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
+        return joinFetch(null, joinType, setAttrs);
+    }
+
+    protected SelectDao<T> joinFetch(String domain, Fetch.JoinType joinType, String... setAttrs) {
 
         //仅对 JPA dao 有效
         if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
@@ -268,15 +272,18 @@ public class SelectDaoImpl<T>
 
             setAttr = getExprForJpaJoinFetch(entityClass, getAlias(), setAttr);
 
-            //如果没有使用别名，尝试使用别名
-            if (!setAttr.contains(".")) {
 
-                if (!hasText(this.alias)) {
-                    throw new StatementBuildException("join fetch  attr [" + setAttr + "] must be set alias");
-                }
+//            //如果没有使用别名，尝试使用别名
+//            if (!setAttr.contains(".")) {
+//
+//                if (!hasText(this.alias)) {
+//                    throw new StatementBuildException("join fetch  attr [" + setAttr + "] must be set alias");
+//                }
+//
+//                setAttr = aroundColumnPrefix(domain, setAttr);
+//            }
 
-                setAttr = aroundColumnPrefix(setAttr);
-            }
+            setAttr = aroundColumnPrefix(domain, setAttr);
 
             fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
 
@@ -447,7 +454,7 @@ public class SelectDaoImpl<T>
 
         if ((opAnnotation instanceof OrderBy)) {
             OrderBy orderBy = (OrderBy) opAnnotation;
-            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(orderBy.domain(),name), orderBy.type()));
+            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(orderBy.domain(), name), orderBy.type()));
         }
 
     }
@@ -469,8 +476,8 @@ public class SelectDaoImpl<T>
             Fetch fetch = (Fetch) opAnnotation;
 
             //增加集合抓取
-            joinFetch(fetch.joinType(), fetch.value());
-            joinFetch(fetch.joinType(), fetch.attrs());
+            joinFetch(fetch.domain(), fetch.joinType(), fetch.value());
+            joinFetch(fetch.domain(), fetch.joinType(), fetch.attrs());
 
         }
 
@@ -949,14 +956,13 @@ public class SelectDaoImpl<T>
                         return;
                     }
 
-
                     String property = fetch.value();
 
                     if (!hasText(property)) {
                         property = field.getName();
                     }
 
-                    joinFetch(fetch.joinType(), property);
+                    joinFetch(fetch.domain(), fetch.joinType(), property);
 
                 }, field -> field.getAnnotation(Fetch.class) != null
         );

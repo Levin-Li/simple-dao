@@ -42,7 +42,7 @@ public @interface Fetch {
      *
      * @return
      */
-//    String domain() default "";
+    String domain() default "";
 
     /**
      * 是否是必须的
