@@ -22,6 +22,16 @@ public interface MiniDao {
 
 
     /**
+     * 获取表或是实体的主键名称
+     *
+     * @param tableOrEntityClass
+     * @return
+     */
+    default String getPKName(Object tableOrEntityClass) {
+        return null;
+    }
+
+    /**
      * 获取参数的占位符
      *
      * @param isNative 是否是原生查询

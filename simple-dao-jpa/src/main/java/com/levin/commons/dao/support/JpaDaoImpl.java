@@ -766,6 +766,15 @@ public class JpaDaoImpl
 
     }
 
+    @Override
+    public String getPKName(Object tableOrEntityClass) {
+
+        if (tableOrEntityClass instanceof Class) {
+            return getEntityIdAttrName(tableOrEntityClass);
+        }
+
+        return null;
+    }
 
     @Override
     public String getParamPlaceholder(boolean isNative) {
@@ -862,7 +871,7 @@ public class JpaDaoImpl
         Set<Parameter<?>> parameters = query.getParameters();
 
         for (Parameter<?> p : parameters) {
-            parameterMap.put(StringUtils.hasText(p.getName())?p.getName():p.getPosition(), p);
+            parameterMap.put(StringUtils.hasText(p.getName()) ? p.getName() : p.getPosition(), p);
         }
 
         for (Object paramValue : paramValueList) {
@@ -871,7 +880,7 @@ public class JpaDaoImpl
                 for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
                     try {
                         //没有属性会抛出异常
-                        Object value = ObjectUtil.getIndexValue(paramValue,(String) entry.getKey(), true);
+                        Object value = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
                         query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
 

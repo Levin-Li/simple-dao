@@ -9,7 +9,7 @@ import org.springframework.cglib.proxy.MethodProxy;
 import java.lang.reflect.Method;
 
 @Slf4j
-public class CglibProxyHandler implements MethodInterceptor {
+public class CglibProxyHandler implements org.springframework.cglib.proxy.MethodInterceptor {
 
 
     @Autowired

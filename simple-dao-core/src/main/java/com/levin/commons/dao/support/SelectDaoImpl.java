@@ -705,7 +705,6 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("JPA暂时不支持对统计查询进行二次统计，请使用原生查询");
         }
 
-
         String column = "1";
 
         //如果有指定的查询字段

@@ -586,12 +586,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
 
-        if (targetOption == null)
+        if (targetOption == null) {
             return (CB) this;
+        }
 
         //重复的不再处理
-        if (targetOptionAnnoList.contains(targetOption))
+        if (targetOptionAnnoList.contains(targetOption)) {
             return (CB) this;
+        }
 
         targetOptionAnnoList.add(targetOption);
 
@@ -604,6 +606,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             this.tableName = targetOption.tableName();
         }
 
+        if (!hasText(this.alias)) {
+            this.alias = targetOption.alias();
+        }
+
+
         //如果是第一个
         if (targetOptionAnnoList.isEmpty()) {
             safeMode = targetOption.isSafeMode();
@@ -611,11 +618,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());
+        } else if (targetOption.joinOptions() != null
+                && targetOption.joinOptions().length > 0) {
+
+            //@todo 实现生成连接语句，然后设置 setFromStatement
+            //@todo 在所有的注解中,增加连接表的别名
+
+            String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
+
+            setFromStatement(joinStatement);
         }
 
-        if (!hasText(this.alias)) {
-            this.alias = targetOption.alias();
-        }
 
         this.where(targetOption.fixedCondition());
 
@@ -747,7 +760,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     || QueryAnnotationUtil.isArray(typeClass)
                     || QueryAnnotationUtil.isIgnore(typeClass)
                     || typeClass.isAnnotation()
-                    ) {
+            ) {
                 continue;
             }
 

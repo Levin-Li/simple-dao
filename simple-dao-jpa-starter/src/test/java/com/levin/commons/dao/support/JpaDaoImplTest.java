@@ -26,8 +26,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -88,7 +92,40 @@ public class JpaDaoImplTest {
     public void testGetEntityManager() throws Exception {
         EntityManager entityManager = jpaDao.getEntityManager();
         Assert.notNull(entityManager);
+
+
+        String url = "AccessKeyId=LTAI4GFkwq8zAmN4Kzkfxs8D&Action=PopUpQuery&Format=JSON&RegionId=cn-hangzhou&Signature=0XaUkGkU%2FsHWbfoLpSaRNqs7aMg%3D&SignatureMethod=HMAC-SHA1&SignatureNonce=6078739746fc27809d58532fc8649642&SignatureType=&SignatureVersion=1.0&Timestamp=2020-11-17T16%3A41%3A56Z&Version=2018-12-07";
+
+        url ="callbackUrl="+ URLEncoder.encode("https://mbd.baidu.com/newspage/data/landingsuper?context=%7B%22nid%22%3A%22news_10168626933373781162%22%7D&n_type=0&p_from=1","utf-8")
+                +"&ccid ="+ URLEncoder.encode("这个是中文");
+
+
+        Map<String, String> parse = parse(url);
+
+        System.out.println(parse);
+
+
     }
+
+
+    static Map<String, String> parse(String extra) throws UnsupportedEncodingException {
+
+        Map<String, String> result = new HashMap<String, String> ();
+
+        if (StringUtils.hasText(extra)) {
+            for (String param : extra.split("&")) {
+                String[] pk = param.split("=");
+                if (pk.length > 1) {
+                    result.put(pk[0].trim(), URLDecoder.decode(pk[1].trim(),"utf-8"));
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+
 
 
     @Before
@@ -907,7 +944,6 @@ public class JpaDaoImplTest {
 
 
         org.junit.Assert.assertNotNull(objects);
-
 
     }
 

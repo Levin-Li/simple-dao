@@ -7,14 +7,13 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
-public class AopProxyHandler implements MethodInterceptor {
+public class AopProxyHandler implements org.aopalliance.intercept.MethodInterceptor {
 
     @Autowired
     JpaDao jpaDao;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-
 
         return " AopProxyHandler " + getClass() + jpaDao;
 

@@ -57,11 +57,26 @@ public @interface TargetOption {
 
     /**
      * from 字句
+     * <p>
+     * 更新和删除操作，此属性无意义
+     * 建设使用joinOptions 替代
      *
      * @return
      */
+    @Deprecated
     String fromStatement() default "";
 
+
+    /**
+     * 连接选项
+     * <p>
+     * 改配置的优先级高于 fromStatement属性，会让fromStatement属性失效
+     * <p>
+     * 更新和删除操作，此属性无意义
+     *
+     * @return
+     */
+    JoinOption[] joinOptions() default {};
 
     /**
      * 是否是安全模式
@@ -72,14 +87,12 @@ public @interface TargetOption {
      */
     boolean isSafeMode() default true;
 
-
     /**
      * 查询的最大结果集记录数
      *
      * @return
      */
     int maxResults() default -1;
-
 
     /**
      * 固定条件

@@ -1,5 +1,6 @@
 package com.levin.commons.dao.util;
 
+import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.C;
@@ -134,7 +135,7 @@ public abstract class ExprUtils {
                     eleCount = QueryAnnotationUtil.eleCount(holder.value);
 
                     //如果没有参数
-                    
+
                 } else {
                     try {
                         holder.value = ObjectUtil.convert(holder.value, expectType);
@@ -593,6 +594,101 @@ public abstract class ExprUtils {
         }
 
         return sb.toString();
+    }
+
+
+    /**
+     * 自动生成连接语句
+     *
+     * @param entityClass
+     * @param tableOrStatement
+     * @param alias
+     * @param joinOptions
+     * @return
+     */
+    public static String genJoinStatement(MiniDao miniDao, Class entityClass, String tableOrStatement, String alias, JoinOption... joinOptions) {
+
+        if (joinOptions == null
+                || joinOptions.length < 1) {
+            return "";
+        }
+
+        if (!StringUtils.hasText(tableOrStatement) && entityClass == null) {
+            throw new StatementBuildException("多表关联时，entityClass 或 tableOrStatement 必须指定一个");
+        }
+
+        if (!StringUtils.hasText(alias)) {
+            throw new StatementBuildException("多表关联时，别名不允许为空");
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        for (JoinOption joinOption : joinOptions) {
+
+            String fromStatement = genFromStatement(joinOption);
+
+            if (!StringUtils.hasText(fromStatement)) {
+                throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
+            }
+
+            String targetAlias = joinOption.joinTargetAlias();
+
+            if (!StringUtils.hasText(targetAlias)) {
+                targetAlias = alias;
+            }
+
+            if (!StringUtils.hasText(targetAlias)) {
+                throw new StatementBuildException(joinOption + ": 无法确定关联的目标");
+            }
+
+            String targetColumn = joinOption.joinTargetColumn();
+            if (!StringUtils.hasText(targetColumn) && miniDao != null) {
+                targetColumn = miniDao.getPKName(entityClass);
+            }
+
+            if (!StringUtils.hasText(targetColumn)) {
+                throw new StatementBuildException(joinOption + ": 无法确定关联的目标列");
+            }
+
+            String joinColumn = joinOption.joinColumn();
+            if (!StringUtils.hasText(joinColumn) && miniDao != null) {
+                //@todo 实现获取表的主键名称
+                joinColumn = miniDao.getPKName(joinOption.entityClass());
+            }
+
+
+            if (!StringUtils.hasText(joinColumn)) {
+                throw new StatementBuildException(joinOption + ": 无法确定关联的列");
+            }
+
+            builder.append(" ").append(joinOption.type().name()).append(" join ")
+                    .append(fromStatement)
+                    .append(" on ").append(targetAlias).append(".").append(targetColumn)
+                    .append(" = ").append(joinOption.alias()).append(".").append(joinColumn).append(" ");
+
+        }
+
+        return builder.toString();
+    }
+
+    public static String genFromStatement(JoinOption joinOption) {
+        return genFromStatement(joinOption.entityClass(), joinOption.tableOrStatement(), joinOption.alias());
+    }
+
+    public static String genFromStatement(Class entityClass, String tableOrStatement, String alias) {
+
+        if (StringUtils.hasText(tableOrStatement)) {
+            //如果时表达式，不是表名，则加上挂号
+            if (tableOrStatement.trim().contains(" ")) {
+                tableOrStatement = "(" + tableOrStatement + ")";
+            }
+        } else if (entityClass != null) {
+            tableOrStatement = entityClass.getName();
+        } else {
+            return "";
+        }
+
+        return tableOrStatement + " " + nullSafe(alias);
     }
 
 

@@ -45,6 +45,8 @@ public @interface Fetch {
      * 要抓取属性列表
      * <p>
      * use value
+     * <p>
+     * 该属性只对查询对象有效，对结果对象（find(clazzType) 方法的参数类型对象）无效
      *
      * @return
      */
