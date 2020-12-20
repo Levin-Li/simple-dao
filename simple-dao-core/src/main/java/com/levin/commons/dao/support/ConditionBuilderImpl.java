@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -597,6 +598,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         targetOptionAnnoList.add(targetOption);
 
+        boolean hasOld = (entityClass != null && entityClass != Void.class) || hasText(tableName);
+
+        if (!hasOld) {
+            //使用 join 语句的方式增加连接语句
+            String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
+            join(true, joinStatement);
+        }
+
+
         if (this.entityClass == null
                 && targetOption.entityClass() != Void.class) {
             this.entityClass = targetOption.entityClass();
@@ -610,7 +620,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             this.alias = targetOption.alias();
         }
 
-
         //如果是第一个
         if (targetOptionAnnoList.isEmpty()) {
             safeMode = targetOption.isSafeMode();
@@ -618,17 +627,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());
-        } else if (targetOption.joinOptions() != null
-                && targetOption.joinOptions().length > 0) {
-
-            //@todo 实现生成连接语句，然后设置 setFromStatement
-            //@todo 在所有的注解中,增加连接表的别名
-
-            String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
-
-            setFromStatement(joinStatement);
         }
-
 
         this.where(targetOption.fixedCondition());
 
@@ -658,6 +657,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected void setFromStatement(String fromStatement) {
         //  throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
+    }
+
+    protected CB join(Boolean isAppend, String... joinStatements) {
+
+        throw new StatementBuildException("Only SelectDao support this operation");
+
+        //  return (CB) this;
     }
 
 //////////////////////////////////////////////
@@ -1392,8 +1398,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         }
 
-
-        return ExprUtils.genExpr(c, aroundColumnPrefix(name), complexType, getExpectType(name), holder, getParamPlaceholder(),
+        return ExprUtils.genExpr(c, aroundColumnPrefix(c.domain(), name), complexType, getExpectType(name), holder, getParamPlaceholder(),
                 this::buildSubQuery
                 , buildContextValues(holder.root, holder.value, name));
     }
@@ -1401,16 +1406,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
+    @Deprecated
     protected boolean hasContent(String text) {
-        return text != null && text.trim().length() > 0;
+        return hasText(text);
     }
 
     protected String getText(String text, String prefix, String suffix, String defaultV) {
-        return hasContent(text) ? prefix + text + suffix : defaultV;
+        return hasText(text) ? prefix + text + suffix : defaultV;
     }
 
     protected String getText(String text, String defaultV) {
-        return hasContent(text) ? text : defaultV;
+        return hasText(text) ? text : defaultV;
     }
 
     protected String genWhereStatement() {
@@ -1444,23 +1450,32 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     protected String aroundColumnPrefix(String column) {
+        return aroundColumnPrefix(null, column);
+    }
+
+    protected String aroundColumnPrefix(String domain, String column) {
 
         if (!hasText(column)) {
             return "";
         }
 
+        boolean hasDomain = hasText(domain);
+
         //如果包含占位符，则直接返回
         //@fix bug 20200227
         if (column.contains(getParamPlaceholder().trim())
                 || !Character.isLetter(column.charAt(0))
-                || column.contains(".")) {
+                || (!hasDomain && column.contains("."))) {
             return column;
+        }
+
+        if (!hasDomain) {
+            domain = alias;
         }
 
         // :?P
 
-
-        String prefix = getText(alias, "", ".", "");
+        String prefix = getText(domain, "", ".", "");
 
         return column.trim().startsWith(prefix) ? column : prefix + column;
     }

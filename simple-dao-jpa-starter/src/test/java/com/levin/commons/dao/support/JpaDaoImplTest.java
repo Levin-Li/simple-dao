@@ -947,6 +947,20 @@ public class JpaDaoImplTest {
 
     }
 
+
+    @org.junit.Test
+    public void testJoinDto2() throws Exception {
+
+
+
+
+        List<TableJoinDTO> objects = jpaDao.findByQueryObj(TableJoinDTO.class, new TableJoinDTO());
+
+
+        org.junit.Assert.assertNotNull(objects);
+
+    }
+
     @org.junit.Test
     public void testCListAnno() throws Exception {
 

@@ -39,7 +39,6 @@ public @interface JoinOption {
     /**
      * 表名或是语句表达式
      *
-     *
      * @return
      */
     String tableOrStatement() default "";
@@ -71,7 +70,7 @@ public @interface JoinOption {
     /**
      * 连接目标的列名或是字段名
      * <p>
-     * 默认是 @TargetOption注解中实体对象的 Id
+     * <p>
      * 如果是表，必须指定
      *
      * @return

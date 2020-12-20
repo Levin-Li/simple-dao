@@ -34,6 +34,16 @@ public @interface Fetch {
      */
     String value() default "";
 
+
+    /**
+     * 字段归属的域，通常是表的别名
+     *
+     * 暂时不支持
+     *
+     * @return
+     */
+//    String domain() default "";
+
     /**
      * 是否是必须的
      *

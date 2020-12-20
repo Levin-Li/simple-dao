@@ -23,7 +23,6 @@ public @interface OrderBy {
         Desc
     }
 
-
     /**
      * 查询字段名称，默认为字段的属性名称
      * 排序方式，可以用字段隔开
@@ -31,6 +30,13 @@ public @interface OrderBy {
      * @return
      */
     String value() default "";
+
+    /**
+     * 字段归属的域，通常是表的别名
+     *
+     * @return
+     */
+    String domain() default "";
 
     /**
      * 是否是必须的

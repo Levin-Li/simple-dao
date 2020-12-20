@@ -15,6 +15,8 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -36,6 +38,12 @@ public abstract class ExprUtils {
 
     //匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
+
+    /**
+     * 关联字段缓存
+     */
+    private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
+
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -608,6 +616,8 @@ public abstract class ExprUtils {
      */
     public static String genJoinStatement(MiniDao miniDao, Class entityClass, String tableOrStatement, String alias, JoinOption... joinOptions) {
 
+        StringBuilder builder = new StringBuilder();
+
         if (joinOptions == null
                 || joinOptions.length < 1) {
             return "";
@@ -621,9 +631,17 @@ public abstract class ExprUtils {
             throw new StatementBuildException("多表关联时，别名不允许为空");
         }
 
-        StringBuilder builder = new StringBuilder();
+        Map<String, Class> aliasMap = new HashMap<>(joinOptions.length + 1);
+
+        aliasMap.put(alias, entityClass);
 
         for (JoinOption joinOption : joinOptions) {
+
+            if (aliasMap.containsKey(joinOption.alias())) {
+                throw new StatementBuildException(joinOption + ": alias 重名");
+            } else {
+                aliasMap.put(joinOption.alias(), joinOption.entityClass());
+            }
 
             String fromStatement = genFromStatement(joinOption);
 
@@ -642,8 +660,13 @@ public abstract class ExprUtils {
             }
 
             String targetColumn = joinOption.joinTargetColumn();
-            if (!StringUtils.hasText(targetColumn) && miniDao != null) {
-                targetColumn = miniDao.getPKName(entityClass);
+
+            if (!StringUtils.hasText(targetColumn)) {
+                //尝试自动获取字段名
+                List<String> refFieldNames = getRefFieldNames(aliasMap.get(targetAlias), joinOption.entityClass());
+                if (refFieldNames.size() == 1) {
+                    targetColumn = refFieldNames.get(0);
+                }
             }
 
             if (!StringUtils.hasText(targetColumn)) {
@@ -655,7 +678,6 @@ public abstract class ExprUtils {
                 //@todo 实现获取表的主键名称
                 joinColumn = miniDao.getPKName(joinOption.entityClass());
             }
-
 
             if (!StringUtils.hasText(joinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
@@ -682,13 +704,61 @@ public abstract class ExprUtils {
             if (tableOrStatement.trim().contains(" ")) {
                 tableOrStatement = "(" + tableOrStatement + ")";
             }
-        } else if (entityClass != null) {
+        } else if (entityClass != null
+                && !Void.class.getName().equals(entityClass.getName())) {
             tableOrStatement = entityClass.getName();
         } else {
             return "";
         }
 
         return tableOrStatement + " " + nullSafe(alias);
+    }
+
+
+    /**
+     * 在 owner 中 查找字段为fieldClass的字段名称
+     *
+     * @param owner
+     * @param fieldClass
+     * @return
+     */
+    public static List<String> getRefFieldNames(Class owner, Class fieldClass) {
+
+        if (owner == null || fieldClass == null) {
+            return null;
+        }
+
+        String key = owner.getName() + "_" + fieldClass.getName();
+
+        List<String> value = refCache.get(key);
+
+        if (value == null) {
+
+            value = new ArrayList<>(2);
+
+            final List<String> ref = value;
+
+            //Field field = ReflectionUtils.findField(owner, null, fieldClass);
+
+            ResolvableType ownerType = ResolvableType.forClass(owner);
+
+            ReflectionUtils.doWithFields(owner, new ReflectionUtils.FieldCallback() {
+                @Override
+                public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+
+                    Class<?> resolve = ResolvableType.forField(field, ownerType).resolve(field.getType());
+
+                    if (fieldClass == resolve) {
+                        ref.add(field.getName());
+                    }
+
+                }
+            });
+
+            refCache.put(key, value);
+        }
+
+        return value;
     }
 
 

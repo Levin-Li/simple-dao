@@ -130,6 +130,14 @@ public @interface Lte {
      */
     String surroundPrefix() default "";
 
+
+    /**
+     * 字段归属的域，通常是表的别名
+     *
+     * @return
+     */
+    String domain() default "";
+
     /**
      * 子查询表达式
      * <p>

@@ -251,7 +251,6 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
 
-
         //仅对 JPA dao 有效
         if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
             return this;
@@ -448,7 +447,7 @@ public class SelectDaoImpl<T>
 
         if ((opAnnotation instanceof OrderBy)) {
             OrderBy orderBy = (OrderBy) opAnnotation;
-            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(name), orderBy.type()));
+            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(orderBy.domain(),name), orderBy.type()));
         }
 
     }
@@ -637,7 +636,7 @@ public class SelectDaoImpl<T>
         } else if (isNative()) {
             builder.insert(0, "Select * ");
         } else if (!isCountQueryResult && fetchAttrs.size() > 0) {
-           // builder.insert(0, "Select DISTINCT(" + getText(getAlias(), "")+")");
+            // builder.insert(0, "Select DISTINCT(" + getText(getAlias(), "")+")");
         }
 
         String genFromStatement = genFromStatement();
@@ -835,8 +834,9 @@ public class SelectDaoImpl<T>
     @Override
     public <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
 
-        if (targetType == null)
+        if (targetType == null) {
             throw new IllegalArgumentException("targetType is null");
+        }
 
 
         autoSetFetch(targetType);
@@ -849,12 +849,14 @@ public class SelectDaoImpl<T>
 
         List<E> queryResultList = this.findForResultClass(null);
 
-        if (queryResultList == null || queryResultList.isEmpty())
+        if (queryResultList == null || queryResultList.isEmpty()) {
             return Collections.EMPTY_LIST;
+        }
 
         //如果是已经需要的类型
-        if (targetType.isInstance(queryResultList.get(0)))
+        if (targetType.isInstance(queryResultList.get(0))) {
             return queryResultList;
+        }
 
         List<E> returnList = new ArrayList<>(queryResultList.size());
 
