@@ -21,8 +21,8 @@
 
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
-            <version>${project.version}</version>
             <artifactId>simple-dao-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
 

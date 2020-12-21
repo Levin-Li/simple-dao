@@ -18,8 +18,8 @@
 
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
-            <version>${project.version}</version>
             <artifactId>simple-dao-annotations</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
