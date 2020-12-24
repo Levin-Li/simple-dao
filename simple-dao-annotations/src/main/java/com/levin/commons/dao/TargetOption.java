@@ -35,7 +35,7 @@ public @interface TargetOption {
      *
      * @return
      */
-//    Class ResultClass() default Void.class;
+    Class resultClass() default Void.class;
 
     /**
      * 表名

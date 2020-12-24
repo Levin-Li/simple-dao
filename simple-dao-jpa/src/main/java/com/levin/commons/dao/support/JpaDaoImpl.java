@@ -822,6 +822,15 @@ public class JpaDaoImpl
         return this;
     }
 
+    private Class tryFindResultClass(Object... queryObjs) {
+        for (Object queryObj : queryObjs) {
+            TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
+            if (targetOption != null && targetOption.resultClass() != null && targetOption.resultClass() != Void.class) {
+                return targetOption.resultClass();
+            }
+        }
+        return null;
+    }
 
     @Override
     public long countByQueryObj(Object... queryObjs) {
@@ -830,12 +839,12 @@ public class JpaDaoImpl
 
     @Override
     public <E> List<E> findByQueryObj(Object... queryObjs) {
-        return newDao(SelectDao.class, queryObjs).find();
+        return newDao(SelectDao.class, queryObjs).find(tryFindResultClass(queryObjs));
     }
 
     @Override
     public <E> E findOneByQueryObj(Object... queryObjs) {
-        return (E) newDao(SelectDao.class, queryObjs).findOne();
+        return (E) newDao(SelectDao.class, queryObjs).findOne(tryFindResultClass(queryObjs));
     }
 
     @Override

@@ -828,6 +828,11 @@ public class SelectDaoImpl<T>
      */
     @Override
     public <E> List<E> find(Class<E> targetType) {
+
+        if (targetType == null) {
+            return find();
+        }
+
         return find(targetType, 2);
     }
 
@@ -842,9 +847,12 @@ public class SelectDaoImpl<T>
     public <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
 
         if (targetType == null) {
-            throw new IllegalArgumentException("targetType is null");
+            return find();
         }
 
+//        if (targetType == null) {
+//            throw new IllegalArgumentException("targetType is null");
+//        }
 
         autoSetFetch(targetType);
 
@@ -904,6 +912,11 @@ public class SelectDaoImpl<T>
 
     @Override
     public <E> E findOne(Class<E> targetType) {
+
+        if (targetType == null) {
+            return findOne();
+        }
+
         return findOne(targetType, 2);
     }
 
@@ -916,6 +929,10 @@ public class SelectDaoImpl<T>
      */
     @Override
     public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
+
+        if (targetType == null) {
+            return findOne();
+        }
 
         autoSetFetch(targetType);
 
