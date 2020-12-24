@@ -45,7 +45,7 @@
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.2-SNAPSHOT</version>
+            <version>2.2.3-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
