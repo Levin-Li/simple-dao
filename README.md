@@ -43,7 +43,7 @@
            </repositories>
 
         <dependency>
-             <groupId>com.github.Levin-Li</groupId>
+             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
             <version>2.2.3-SNAPSHOT</version>
         </dependency>
