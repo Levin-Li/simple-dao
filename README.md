@@ -22,14 +22,17 @@
 
    client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
    
-    
+   测试用例类 [com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java)  
+   
+   
    
 ### 1 快速上手
    
    
    
 #### 1.1 引入依赖
-
+   二进制文件发布在[https://jitpack.io](https://jitpack.io)
+   
            <repositories>
        
                <repository>
