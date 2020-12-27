@@ -825,11 +825,16 @@ public class JpaDaoImpl
     private Class tryFindResultClass(Object... queryObjs) {
         for (Object queryObj : queryObjs) {
             TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
-            if (targetOption != null && targetOption.resultClass() != null && targetOption.resultClass() != Void.class) {
-                return targetOption.resultClass();
+            if (targetOption != null) {
+                Class resultClazz = targetOption.entityClass();
+                return isValidClass(resultClazz) ? resultClazz : null;
             }
         }
         return null;
+    }
+
+    private boolean isValidClass(Class clazz) {
+        return clazz != null && clazz != Void.class;
     }
 
     @Override
