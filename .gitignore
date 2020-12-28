@@ -1,12 +1,16 @@
-# Created by .ignore support plugin (hsz.mobi)
-.idea
+# Created by .ignore support plugin
+
+#**/.idea
 .ssh
 .lock
 *.lock
 .awcache
-node_modules
+
+**/node_modules
+
 *.iml
 **/*.iml
+**/.DS_Store
 *.log
 **/target
 logs
