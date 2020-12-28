@@ -823,14 +823,29 @@ public class JpaDaoImpl
     }
 
     private Class tryFindResultClass(Object... queryObjs) {
+
+        Class resultClazz = null;
+
         for (Object queryObj : queryObjs) {
+
             TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
+
+            //注解优先
             if (targetOption != null) {
-                Class resultClazz = targetOption.entityClass();
-                return isValidClass(resultClazz) ? resultClazz : null;
+                resultClazz = targetOption.resultClass();
+                if (isValidClass(resultClazz)) {
+                    break;
+                }
+            }
+
+            if (queryObj instanceof QueryOption) {
+                resultClazz = ((QueryOption) queryObj).getResultClass();
+                if (isValidClass(resultClazz)) {
+                    break;
+                }
             }
         }
-        return null;
+        return resultClazz;
     }
 
     private boolean isValidClass(Class clazz) {

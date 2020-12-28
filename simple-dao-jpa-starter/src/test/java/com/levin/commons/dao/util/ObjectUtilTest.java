@@ -273,7 +273,7 @@ public class ObjectUtilTest {
     }
 
 
-    @Test
+//    @Test
     public void genQrCode() throws IOException {
 
 

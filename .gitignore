@@ -13,8 +13,11 @@
 *.iml
 **/*.iml
 **/.DS_Store
-*.log
+
 **/target
-logs
+
+**/log
+**/logs
+
 overlays
 out

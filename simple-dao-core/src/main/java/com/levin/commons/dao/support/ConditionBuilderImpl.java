@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -584,6 +583,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 是否有有效的查询实体
+     *
+     * @return
+     */
+    protected boolean hasValidQueryEntity() {
+        return (entityClass != null && entityClass != Void.class) || hasText(tableName);
+    }
+
     protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
 
@@ -598,34 +607,24 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         targetOptionAnnoList.add(targetOption);
 
-        boolean hasOld = (entityClass != null && entityClass != Void.class) || hasText(tableName);
-
-        if (!hasOld) {
-            //使用 join 语句的方式增加连接语句
-            String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
-            if(hasText(joinStatement)) {
-                join(true, joinStatement);
-            }
+        if (hasValidQueryEntity()) {
+            return (CB) this;
         }
 
-
-        if (this.entityClass == null
-                && targetOption.entityClass() != Void.class) {
-            this.entityClass = targetOption.entityClass();
+        //使用 join 语句的方式增加连接语句
+        String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
+        if (hasText(joinStatement)) {
+            join(true, joinStatement);
         }
 
-        if (!hasText(this.tableName)) {
-            this.tableName = targetOption.tableName();
-        }
+        this.entityClass = targetOption.entityClass();
 
-        if (!hasText(this.alias)) {
-            this.alias = targetOption.alias();
-        }
+        this.tableName = targetOption.tableName();
+
+        this.alias = targetOption.alias();
 
         //如果是第一个
-        if (targetOptionAnnoList.isEmpty()) {
-            safeMode = targetOption.isSafeMode();
-        }
+        safeMode = targetOption.isSafeMode();
 
         if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());
@@ -639,6 +638,45 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 && targetOption.maxResults() > 0) {
             this.rowCount = targetOption.maxResults();
         }
+
+        return (CB) this;
+
+    }
+
+
+    protected CB setQueryOption(Object... queryObjs) {
+
+        if (hasValidQueryEntity()) {
+            return (CB) this;
+        }
+
+        Optional.ofNullable(queryObjs).ifPresent((Object[] objs) -> {
+            Arrays.stream(queryObjs)
+                    .filter(o -> o instanceof QueryOption)
+                    .map(o -> (QueryOption) o).forEach(queryOption -> {
+
+                if (hasValidQueryEntity()) {
+                    return;
+                }
+
+                entityClass = queryOption.getEntityClass();
+                tableName = queryOption.getEntityName();
+                alias = queryOption.getAlias();
+
+                if (hasValidQueryEntity()) {
+                    String joinStatement = ExprUtils.genJoinStatement(getDao(), entityClass, tableName, alias, queryOption.getJoinOptions());
+                    if (hasText(joinStatement)) {
+                        join(true, joinStatement);
+                    }
+                }
+
+                if (queryOption.getPageIndex() != null
+                        && queryOption.getPageSize() != null) {
+                    page(queryOption.getPageIndex(), queryOption.getPageSize());
+                }
+
+            });
+        });
 
 
         return (CB) this;
@@ -663,12 +701,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected CB join(Boolean isAppend, String... joinStatements) {
 //        throw new StatementBuildException("Only SelectDao support this operation");
-          return (CB) this;
+        return (CB) this;
     }
 
 //////////////////////////////////////////////
 
     protected void beforeWalkMethod(Object bean, Method method, Object[] args) {
+
+        //优先
+        setQueryOption(args);
 
         //参数
         int i = 0;
@@ -689,6 +730,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         setTargetOption(null, method.getDeclaringClass().getAnnotation(TargetOption.class));
 
     }
+
 
     protected void afterWalkMethod(Object bean, Method method, Object[] args) {
 
@@ -752,6 +794,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (queryObjs == null)
             return;
+
+        setQueryOption(queryObjs);
 
         for (Object queryValueObj : queryObjs) {
 
