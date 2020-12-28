@@ -1,6 +1,6 @@
 # Created by .ignore support plugin
 
-#**/.idea
+**/.idea
 .ssh
 .lock
 *.lock
