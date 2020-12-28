@@ -8,6 +8,8 @@
 
 **/node_modules
 
+**/*-support-processor.properties
+
 *.iml
 **/*.iml
 **/.DS_Store
