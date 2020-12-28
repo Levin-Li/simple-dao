@@ -6,8 +6,9 @@
 .awcache
 node_modules
 *.iml
+**/*.iml
 *.log
-target
+**/target
 logs
 overlays
 out
