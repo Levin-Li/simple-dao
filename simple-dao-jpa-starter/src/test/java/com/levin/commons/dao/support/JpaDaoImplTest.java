@@ -519,11 +519,9 @@ public class JpaDaoImplTest {
     @Test
     public void testGroupDao() {
 
-
         System.out.println(userDao);
         System.out.println(groupDao.hashCode());
         System.out.println(group2Dao.toString());
-
 
         Group group = groupDao.findOne(null, "Group", null, null);
 
@@ -553,7 +551,6 @@ public class JpaDaoImplTest {
 
     @Test
     public void testSimpleDao() {
-
 
         try {
             User user = simpleDao.findOne(new UserDTO());

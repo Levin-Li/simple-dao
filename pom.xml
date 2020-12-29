@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-     <groupId>com.levin.commons.maven</groupId>
+    <groupId>com.levin.commons.maven</groupId>
     <artifactId>simple-dao-parent</artifactId>
     <packaging>pom</packaging>
 
@@ -200,6 +200,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>true</inherited>
                 <configuration>
+                    <!-- 编译时保留参数名称 -->
                     <parameters>true</parameters>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
@@ -207,7 +208,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <inherited>true</inherited>
                 <configuration>
@@ -218,63 +218,63 @@
             </plugin>
 
 
- <!--           <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <inherited>true</inherited>
+            <!--           <plugin>
+                           <groupId>org.jetbrains.kotlin</groupId>
+                           <artifactId>kotlin-maven-plugin</artifactId>
+                           <inherited>true</inherited>
 
-                <executions>
+                           <executions>
 
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
+                               <execution>
+                                   <id>compile</id>
+                                   <phase>compile</phase>
+                                   <goals>
+                                       <goal>compile</goal>
+                                   </goals>
+                               </execution>
 
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
+                               <execution>
+                                   <id>test-compile</id>
+                                   <phase>test-compile</phase>
+                                   <goals>
+                                       <goal>test-compile</goal>
+                                   </goals>
+                               </execution>
 
-                </executions>
+                           </executions>
 
-                <configuration>
-                    <jvmTarget>${maven.compiler.target}</jvmTarget>
-                </configuration>
+                           <configuration>
+                               <jvmTarget>${maven.compiler.target}</jvmTarget>
+                           </configuration>
 
-            </plugin>
+                       </plugin>
 
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5</version>
+                       <plugin>
+                           <groupId>org.codehaus.gmaven</groupId>
+                           <artifactId>gmaven-plugin</artifactId>
+                           <version>1.5</version>
 
-                <inherited>true</inherited>
+                           <inherited>true</inherited>
 
-                <configuration>
-                    <providerSelection>${maven.compiler.target}</providerSelection>
-                    <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-                    &lt;!&ndash; 用maven编译时需要加encoding：mvn -Dfile.encoding=UTF-8 compile  &ndash;&gt;
-                    <source/>
-                </configuration>
+                           <configuration>
+                               <providerSelection>${maven.compiler.target}</providerSelection>
+                               <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
+                               &lt;!&ndash; 用maven编译时需要加encoding：mvn -Dfile.encoding=UTF-8 compile  &ndash;&gt;
+                               <source/>
+                           </configuration>
 
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generateStubs</goal>
-                            <goal>compile</goal>
-                            <goal>generateTestStubs</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                           <executions>
+                               <execution>
+                                   <goals>
+                                       <goal>generateStubs</goal>
+                                       <goal>compile</goal>
+                                       <goal>generateTestStubs</goal>
+                                       <goal>testCompile</goal>
+                                   </goals>
+                               </execution>
+                           </executions>
 
-            </plugin>-->
+                       </plugin>-->
 
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
