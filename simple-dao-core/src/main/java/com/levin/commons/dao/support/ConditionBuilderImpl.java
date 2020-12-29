@@ -624,7 +624,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.alias = targetOption.alias();
 
         //如果是第一个
-        safeMode = targetOption.isSafeMode();
+        this.safeMode = targetOption.isSafeMode();
 
         if (hasText(targetOption.fromStatement())) {
             setFromStatement(targetOption.fromStatement());

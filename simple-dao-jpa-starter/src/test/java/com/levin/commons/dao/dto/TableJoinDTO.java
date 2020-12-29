@@ -15,26 +15,27 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(
-        entityClass = User.class, alias = "u",
+        entityClass = User.class, alias = E_User.ALIAS,
+        resultClass = TableJoinDTO.class,
+        isSafeMode = false,
         //连接表
         joinOptions = {
-                @JoinOption(alias = "g", entityClass = Group.class)
-        }
-        , maxResults = 100)
+                @JoinOption(alias = E_Group.ALIAS, entityClass = Group.class)
+        })
 public class TableJoinDTO {
 
     @Select(value = "u.id", isDistinct = true)
-    @Gt(value = E_User.id, domain = "u")
-    Long uid = 1L;
+    @Gt(value = E_User.id, domain = E_User.ALIAS)
+    Long uid;
 
-    @Select(value = E_Group.id, domain = "g")
+    @Select(value = E_Group.id, domain = E_Group.ALIAS)
     @Gte("g.id")
-    Long gid = 2L;
+    Long gid;
 
     @Select
     String name;
 
-    @Select(domain = "g", value = E_Group.name)
+    @Select(domain = E_Group.ALIAS, value = E_Group.name)
     String groupName;
 
 }

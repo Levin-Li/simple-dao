@@ -637,10 +637,12 @@ public abstract class ExprUtils {
 
         for (JoinOption joinOption : joinOptions) {
 
-            if (aliasMap.containsKey(joinOption.alias())) {
+            final String selfAlias = joinOption.alias();
+
+            if (aliasMap.containsKey(selfAlias)) {
                 throw new StatementBuildException(joinOption + ": alias 重名");
             } else {
-                aliasMap.put(joinOption.alias(), joinOption.entityClass());
+                aliasMap.put(selfAlias, joinOption.entityClass());
             }
 
             String fromStatement = genFromStatement(joinOption);
@@ -686,7 +688,7 @@ public abstract class ExprUtils {
             builder.append(" ").append(joinOption.type().name()).append(" join ")
                     .append(fromStatement)
                     .append(" on ").append(targetAlias).append(".").append(targetColumn)
-                    .append(" = ").append(joinOption.alias()).append(".").append(joinColumn).append(" ");
+                    .append(" = ").append(selfAlias).append(".").append(joinColumn).append(" ");
 
         }
 
