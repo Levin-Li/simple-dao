@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = User.class, alias = "u")
+@TargetOption(entityClass = User.class, alias = "u",maxResults = 100)
 public class UserJoinFetchDTO {
 
     //    @Fetch(domain = "u",value = "group",attrs = {"group.children"})

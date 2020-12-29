@@ -1,6 +1,7 @@
 package com.levin.commons.dao.annotation;
 
-import com.levin.commons.annotation.GenAnnotationMethodNameConstant;
+
+import com.levin.commons.annotation.GenNameConstant;
 
 import java.lang.annotation.*;
 
@@ -43,7 +44,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@GenAnnotationMethodNameConstant
+@GenNameConstant
 public @interface C {
 
     /**

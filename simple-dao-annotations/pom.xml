@@ -16,8 +16,8 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.github.Levin-Li</groupId>
-            <artifactId>service-support</artifactId>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 

@@ -40,7 +40,7 @@ public class TableJoinDTOByQueryOption implements QueryOption {
 
     @Override
     public String getAlias() {
-        return E_User.ALIAS;
+        return "u";
     }
 
     @Override
