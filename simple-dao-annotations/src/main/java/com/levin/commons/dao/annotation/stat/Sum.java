@@ -2,6 +2,7 @@ package com.levin.commons.dao.annotation.stat;
 
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -49,6 +50,14 @@ public @interface Sum {
      * @return
      */
     Op havingOp() default Op.None;
+
+
+    /**
+     * 统计字段的排序
+     *
+     * @return
+     */
+    OrderBy[] orderBy() default {};
 
 
     /**

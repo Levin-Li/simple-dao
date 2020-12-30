@@ -383,6 +383,10 @@ public class SelectDaoImpl<T>
         return this;
     }
 
+    protected void addOrderBy(String expr, int index, OrderBy.Type type) {
+        orderByColumns.add(new OrderByObj(index, expr, type));
+    }
+
     /**
      * 增加排序字段
      *
@@ -499,7 +503,11 @@ public class SelectDaoImpl<T>
             expr = " NOT(" + expr + ") ";
         }
 
-        having(expr, holder.value, opParamValue);
+        if (holder != null) {
+            having(expr, holder.value, opParamValue);
+        } else {
+            having(expr, opParamValue);
+        }
 
     }
 
@@ -562,24 +570,77 @@ public class SelectDaoImpl<T>
 
         genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
-            tryAppendHaving(opAnnotation, expr, holder, value);
+            boolean isGroupBy = opAnnotation instanceof GroupBy;
 
-            if (opAnnotation instanceof GroupBy) {
-                //增加GroupBy字段
-                groupBy(expr, holder.value);
+            final String oldExpr = expr;
+
+            String newAlias = hasText(alias) ? alias : ClassUtils.getValue(opAnnotation, "alias", false);
+
+            boolean hasAlias = hasText(newAlias);
+
+            if (!hasAlias) {
+                newAlias = expr;
+            } else {
+                expr = expr + " AS " + newAlias;
             }
 
-            expr = tryAppendAlias(expr, opAnnotation, alias);
+            if (isGroupBy) {
+                //增加GroupBy字段
+                if (hasAlias) {
+                    groupBy(true, newAlias);
+                } else {
+                    groupBy(oldExpr, holder.value);
+                }
+            }
+
+            //JPA having 字句 不支持别名
+            boolean useAlias = isNative() && hasAlias;
+
+            tryAppendHaving(opAnnotation, useAlias ? newAlias : oldExpr, useAlias ? null : holder, value);
+
+            //增加 Order By
+            tryAppendOrderBy(useAlias ? newAlias : oldExpr, opAnnotation);
 
             select(expr, holder.value);
 
             //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
             appendColumnMap(expr, fieldOrMethod, name);
 
-
         });
 
     }
+
+    private void tryAppendOrderBy(String expr, Annotation opAnnotation) {
+
+        OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
+
+        appendOrderBy(expr, orderByList);
+
+    }
+
+    protected SelectDao<T> appendOrderBy(String expr, OrderBy... orderByList) {
+
+        if (orderByList != null) {
+
+            for (int i = 0; i < orderByList.length; i++) {
+
+                OrderBy orderBy = orderByList[i];
+
+                if (orderBy == null) {
+                    continue;
+                }
+
+                expr = hasText(orderBy.value()) ? aroundColumnPrefix(orderBy.domain(), orderBy.value()) : expr;
+
+                if (hasText(expr)) {
+                    addOrderBy(expr, orderBy.order(), orderBy.type());
+                }
+            }
+        }
+
+        return this;
+    }
+
 
     private String tryAppendAlias(String expr, Annotation opAnnotation, String alias) {
 

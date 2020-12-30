@@ -22,7 +22,7 @@
 
    client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
    
-   测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
+   测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
    
    
    
@@ -45,7 +45,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.5-SNAPSHOT</version>
+            <version>2.2.6-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
@@ -119,37 +119,37 @@
       @Data
       @Accessors(chain = true)
       @TargetOption(
-              entityClass = User.class, alias = "u",
+              entityClass = User.class, //主表
+              alias = E_User.ALIAS, //主表别名
+              resultClass = TableJoinStatDTO.class, //结果类
+              isSafeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
               //连接表
               joinOptions = {
-                      @JoinOption(alias = "g", entityClass = Group.class)
-              }
-              , maxResults = 100)
-      public class TableJoinDTO {
+                      @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
+              })
+      public class TableJoinStatDTO {
       
-          @Select(value = "u.id", isDistinct = true)
-          @Gt(value = E_User.id, domain = "u")
-          Long uid = 1L;
+          //    统计部门人数
+          @Count(havingOp = Op.Gt, orderBy = @OrderBy)
+          Integer userCnt = 5;
       
-          @Select(value = E_Group.id, domain = "g")
-          @Gte("g.id")
-          Long gid = 2L;
+          //    统计部门总得分
+          @Sum
+          Long sumScore;
       
-          @Select
-          String name;
+          //    统计部门平均分
+          @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
+          Long avgScore = 20L;
       
-          @Select(domain = "g", value = E_Group.name)
+          //按部门分组统计，结果排序
+          @GroupBy(domain = E_Group.ALIAS, value = E_Group.name,orderBy = @OrderBy())
           String groupName;
       
       }
        
         //执行查询
-        List<TableJoinDTO> objects = jpaDao.findByQueryObj(TableJoinDTO.class, new TableJoinDTO());
-        
-        //生成的语句
-       Select  DISTINCT(u.id)  , g.id , u.name , g.name  
-       From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id
-       Where u.id >   ?1  AND g.id >=   ?2 
+       List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO());
+  
 
 ###  2、组件使用方式
 
@@ -388,7 +388,7 @@
    
    意思注解将产生语句： select month , AVG(score) from XXX where month > 5 having AVG(score) > 10 
    
-   Dao 支持多表统计，如下例子：
+   Dao 支持多表统计，编码实现，如下例子：
    
        
        jpaDao.selectFrom(Group.class, "g")
@@ -401,6 +401,37 @@
                        .sum("t.score")
                        .groupByAsAnno(E_Group.name)
                        .find();
+                       
+ 
+   Dao 支持多表统计，通过注解实现
+   
+       @Data
+       @Accessors(chain = true)
+       @TargetOption(
+               entityClass = User.class, alias = E_User.ALIAS,
+               resultClass = TableJoinDTO.class,
+               isSafeMode = false,
+               //连接表
+               joinOptions = {
+                       @JoinOption(alias = E_Group.ALIAS, entityClass = Group.class)
+               })
+       public class TableJoinDTO {
+       
+           @Select(value = "u.id", isDistinct = true)
+           @Gt(value = E_User.id, domain = E_User.ALIAS)
+           Long uid;
+       
+           @Select(value = E_Group.id, domain = E_Group.ALIAS)
+           @Gte("g.id")
+           Long gid;
+       
+           @Select
+           String name;
+       
+           @Select(domain = E_Group.ALIAS, value = E_Group.name)
+           String groupName;
+       
+       }                      
       
 
 ### 6、指定字段的查询和数据更新

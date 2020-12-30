@@ -2,6 +2,7 @@ package com.levin.commons.dao.annotation;
 
 
 import com.levin.commons.annotation.GenNameConstant;
+import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -59,6 +60,14 @@ public @interface C {
      * @return
      */
     Op op() default Op.Eq;
+
+
+    /**
+     * 字段的排序
+     *
+     * @return
+     */
+//    OrderBy[] orderBy() default {};
 
 
     /**
@@ -193,6 +202,5 @@ public @interface C {
      * @return
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix ";
-
 
 }

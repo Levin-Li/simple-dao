@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -1508,7 +1509,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //如果包含占位符，则直接返回
         //@fix bug 20200227
         if (column.contains(getParamPlaceholder().trim())
-                || !Character.isLetter(column.charAt(0))
+                || !Character.isLetter(column.trim().charAt(0))
+                || StringUtils.containsWhitespace(column.trim()) //包含白空格
                 || (!hasDomain && column.contains("."))) {
             return column;
         }
