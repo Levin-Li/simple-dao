@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+         <groupId>com.levin.commons.maven</groupId>
+        <artifactId>simple-dao-parent</artifactId>
+        <version>2.2.5-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <description>样例程序</description>
+    <artifactId>simple-dao-examples</artifactId>
+
+    <dependencies>
+
+        <dependency>
+             <groupId>${project.groupId}</groupId>
+            <artifactId>simple-dao-jpa</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.Levin-Li</groupId>
+            <artifactId>service-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <!--<dependency>-->
+            <!--<groupId>de.codecentric</groupId>-->
+            <!--<artifactId>spring-boot-admin-server</artifactId>-->
+            <!--<version>RELEASE</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.10.6</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+</project>
