@@ -22,7 +22,7 @@
 
    client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
    
-   测试用例类 [com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java)  
+   测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
    
    
    
@@ -45,7 +45,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.4-SNAPSHOT</version>
+            <version>2.2.5-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
@@ -78,9 +78,9 @@
     }
    
   
-  测试用例类 [TestEntityStatDto](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
+  测试用例类 [TestEntityStatDto](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
   
-  其它测试用例参考：[Dto注解](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/dto) 
+  其它测试用例参考：[Dto注解](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto) 
    
 
 ##### 1.3 配置JPA实体扫描 & 执行查询
@@ -739,7 +739,7 @@
 
 #### 12.1 测试用例
 
- 请参考测试用例： [com.levin.commons.dao.support.JpaDaoImplTest](./simple-dao-jpa-starter/src/test/java/com/levin/commons/dao/support/JpaDaoImplTest.java) 
+ 请参考测试用例： [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
      
      
 #### 12.2 注解字段说明
