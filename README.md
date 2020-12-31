@@ -16,7 +16,7 @@
 
    DAO层的在Web应用中的位置：
 
-   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> dao(手动编写查询语句) --> (JDBC,MyBatis,JPA)
+   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> dao(手动编写查询语句并映射参数) --> (JDBC,MyBatis,JPA,QueryDsl)
 
    SimpleDao优化后的过程：
 
@@ -45,7 +45,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.6-SNAPSHOT</version>
+            <version>2.2.7-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
@@ -129,7 +129,7 @@
               })
       public class TableJoinStatDTO {
       
-          //    统计部门人数
+          //    统计部门人数，并且排序
           @Count(havingOp = Op.Gt, orderBy = @OrderBy)
           Integer userCnt = 5;
       
@@ -137,7 +137,7 @@
           @Sum
           Long sumScore;
       
-          //    统计部门平均分
+          //    统计部门平均分，并且排序
           @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
           Long avgScore = 20L;
       
@@ -147,8 +147,17 @@
       
       }
        
-        //执行查询
+        //执行查询，并把查询结果放在TableJoinStatDTO对象中
        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO());
+       
+       //生成的语句
+       Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  
+       From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     
+       Group By  g.name 
+       Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  
+       Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
+       
+       
   
 
 ###  2、组件使用方式
@@ -181,7 +190,7 @@
     DeleteDao dao = jpaDao.deleteFrom(Group.class)
      dao.delete()
 
-#### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中使用JpaDao)
+#### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用JpaDao)
 
 #### 2.2.1 自定义DAO接口
 
@@ -225,7 +234,7 @@
       javac -parameters
 
 
-#### 2.2.2 自定义DAO类
+#### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
 
    DAO抽象类案例：
 

@@ -158,6 +158,9 @@ public class JpaDaoImpl
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
 
+    @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
+    private int safeModeMaxLimit = 2000;
+
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
     private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
@@ -205,6 +208,12 @@ public class JpaDaoImpl
     @Override
     public boolean isJpa() {
         return true;
+    }
+
+
+    @Override
+    public int safeModeMaxLimit() {
+        return safeModeMaxLimit;
     }
 
     public EntityManagerFactory getEntityManagerFactory() {

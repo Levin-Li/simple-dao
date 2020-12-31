@@ -12,6 +12,15 @@ public interface MiniDao {
     String DEFAULT_JDBC_PARAM_PLACEHOLDER = "?";
 
     /**
+     * 安全模式下，结果集的最大记录数
+     *
+     * @return
+     */
+    default int safeModeMaxLimit() {
+        return 2000;
+    }
+
+    /**
      * 是否 JPA Dao
      *
      * @return

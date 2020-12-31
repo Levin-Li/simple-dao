@@ -14,6 +14,8 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * 更新Dao实现类
  * 本类是一个非线程安全类，不要重复使用，应该重新创建使用。
@@ -128,8 +130,8 @@ public class UpdateDaoImpl<T>
                 .append(whereStatement);
 
         //安全模式
-        if (this.isSafeMode() && !StringUtils.hasText(whereStatement)) {
-            throw new StatementBuildException("safe mode not allow no where statement SQL[" + ql + "]");
+        if (this.isSafeMode() && !hasText(whereStatement) && !isSafeLimit()) {
+            throw new StatementBuildException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().safeModeMaxLimit() + "], SQL[" + ql + "]");
         }
 
         return ExprUtils.replace(ql.toString(), getDaoContextValues());

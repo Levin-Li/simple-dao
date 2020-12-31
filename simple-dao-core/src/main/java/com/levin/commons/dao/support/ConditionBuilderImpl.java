@@ -186,6 +186,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    protected boolean isSafeLimit() {
+        return rowCount > 0 && rowCount <= getDao().safeModeMaxLimit();
+    }
 
     @Override
     public CB and() {
@@ -246,8 +249,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     @Override
-    public boolean hasLimit() {
-        return rowCount > 0;
+    public boolean hasLimit(int maxLimit) {
+        return rowCount > 0 && rowCount < maxLimit;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////

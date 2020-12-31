@@ -59,9 +59,13 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     /**
      * 是否有限制影响记录数
      *
+     * 如果最大结果集大于maxLimit，将返回 false
+     *
+     *
+     *
      * @return
      */
-    boolean hasLimit();
+    boolean hasLimit(int maxLimit);
 
     /**
      * 增加where条件及参数

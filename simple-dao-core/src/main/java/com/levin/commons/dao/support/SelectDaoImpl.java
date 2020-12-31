@@ -753,8 +753,8 @@ public class SelectDaoImpl<T>
             }
         }
 
-        if (this.isSafeMode() && !hasText(whereStatement) && !hasLimit()) {
-            throw new StatementBuildException("safe mode not allow no where statement or not limit SQL[" + builder + "]");
+        if (this.isSafeMode() && !isCountQueryResult && !hasText(whereStatement) && !isSafeLimit()) {
+            throw new StatementBuildException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().safeModeMaxLimit() + "], SQL[" + builder + "]");
         }
 
         return ExprUtils.replace(builder.toString(), getDaoContextValues());

@@ -25,7 +25,7 @@ import lombok.experimental.Accessors;
         entityClass = User.class, //主表
         alias = E_User.ALIAS, //主表别名
         resultClass = TableJoinStatDTO.class, //结果类
-        isSafeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
+        isSafeMode = true, //是否安全模式，安全模式时无法执行无条件的查询
         //连接表
         joinOptions = {
                 @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名

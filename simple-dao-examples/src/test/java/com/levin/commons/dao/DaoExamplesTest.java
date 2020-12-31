@@ -962,7 +962,8 @@ public class DaoExamplesTest {
     public void testTableJoinStatDTO() throws Exception {
 
 
-        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO());
+        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO(),new DefaultPaging(1,10));
+//        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
 
         String aa ="Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     Group By  g.name Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  Order By  Count( 1 ) Desc , avg Desc , g.name Desc";
 
