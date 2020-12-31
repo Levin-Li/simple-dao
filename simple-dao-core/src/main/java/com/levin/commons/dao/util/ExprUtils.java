@@ -601,7 +601,9 @@ public abstract class ExprUtils {
             sb.append(" ").append(joinAlias);
         }
 
-        return sb.toString();
+        String result = sb.toString().trim();
+
+        return hasText(alias) && alias.trim().equals(result) ? "" : result;
     }
 
 

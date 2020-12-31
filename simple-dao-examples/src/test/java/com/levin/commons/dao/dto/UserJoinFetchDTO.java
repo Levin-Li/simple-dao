@@ -11,16 +11,21 @@ import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
+import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = User.class, alias = "u",maxResults = 100)
+@TargetOption(entityClass = User.class, alias = E_User.ALIAS, maxResults = 100)
 public class UserJoinFetchDTO {
 
-    //    @Fetch(domain = "u",value = "group",attrs = {"group.children"})
-    @Fetch(value = "group.name" )
-    String unused;
+    @Fetch(domain = E_User.ALIAS, value = "group.name")
+    String groupName;
+
+    @Fetch
+    String name;
 
 }

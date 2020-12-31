@@ -18,26 +18,37 @@ import java.lang.annotation.*;
  */
 public @interface Fetch {
 
-
     enum JoinType {
         Left,
         Right,
         Inner,
         Natural,
         Full,
+        None
     }
 
     /**
-     * 默认属性
+     * 字段关联的属性名称
+     * 当 被注解的 DTO 是结果对象时，才有效
      *
      * @return
      */
     String value() default "";
 
+    /**
+     * 需要连接抓取的属性列表
+     * <p>
+     * use value
+     * <p>
+     * 该属性只对查询对象有效，对结果对象（find(clazzType) 方法的参数类型对象）无效
+     *
+     * @return
+     */
+    String[] attrs() default {};
 
     /**
      * 字段归属的域，通常是表的别名
-     *
+     * <p>
      * 暂时不支持
      *
      * @return
@@ -51,16 +62,6 @@ public @interface Fetch {
      */
     boolean require() default false;
 
-    /**
-     * 要抓取属性列表
-     * <p>
-     * use value
-     * <p>
-     * 该属性只对查询对象有效，对结果对象（find(clazzType) 方法的参数类型对象）无效
-     *
-     * @return
-     */
-    String[] attrs() default {};
 
     /**
      * 连接类型

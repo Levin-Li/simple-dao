@@ -668,11 +668,35 @@ public class DaoExamplesTest {
     public void testJoinFetch2() {
 
 
-        List<User> byQueryObj = jpaDao.findByQueryObj(User.class, new UserJoinFetchDTO());
+ ;        List<UserJoinFetchDTO> byQueryObj = jpaDao.findByQueryObj(UserJoinFetchDTO.class, new UserJoinFetchDTO());
+
+        Object user = byQueryObj.get(0);
 
         System.out.println(byQueryObj);
     }
 
+    @Test
+    //@Transactional
+    public void testGroupJoinFetch() {
+
+
+        List<GroupJoinFetchDTO> byQueryObj = jpaDao.findByQueryObj(GroupJoinFetchDTO.class, new GroupJoinFetchDTO());
+
+        Object user = byQueryObj.get(0);
+
+        System.out.println(byQueryObj);
+    }
+
+    @Test
+    //@Transactional
+    public void testSelectGroupDto() {
+
+        List<GroupSelectDTO> byQueryObj = jpaDao.findByQueryObj(GroupSelectDTO.class, new GroupSelectDTO());
+
+        Object user = byQueryObj.get(0);
+
+        System.out.println(byQueryObj);
+    }
 
     @Test
     public void testNativeQuery() {

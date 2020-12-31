@@ -250,13 +250,17 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
-        return joinFetch(null, joinType, setAttrs);
+        return joinFetch(false, null, joinType, setAttrs);
     }
 
-    protected SelectDao<T> joinFetch(String domain, Fetch.JoinType joinType, String... setAttrs) {
+    protected SelectDao<T> joinFetch(boolean isAppendToSelect, String domain, Fetch.JoinType joinType, String... setAttrs) {
 
         //仅对 JPA dao 有效
         if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
+            return this;
+        }
+
+        if (joinType == Fetch.JoinType.None) {
             return this;
         }
 
@@ -272,7 +276,6 @@ public class SelectDaoImpl<T>
 
             setAttr = getExprForJpaJoinFetch(entityClass, getAlias(), setAttr);
 
-
 //            //如果没有使用别名，尝试使用别名
 //            if (!setAttr.contains(".")) {
 //
@@ -283,7 +286,14 @@ public class SelectDaoImpl<T>
 //                setAttr = aroundColumnPrefix(domain, setAttr);
 //            }
 
+            //如果不是对象的属性
+            if (!hasText(setAttr)) {
+                continue;
+            }
+
             setAttr = aroundColumnPrefix(domain, setAttr);
+
+         //   select(isAppendToSelect, setAttr);
 
             fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
 
@@ -480,8 +490,7 @@ public class SelectDaoImpl<T>
             Fetch fetch = (Fetch) opAnnotation;
 
             //增加集合抓取
-            joinFetch(fetch.domain(), fetch.joinType(), fetch.value());
-            joinFetch(fetch.domain(), fetch.joinType(), fetch.attrs());
+            joinFetch(false, fetch.domain(), fetch.joinType(), fetch.attrs());
 
         }
 
@@ -1028,6 +1037,10 @@ public class SelectDaoImpl<T>
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
 
+                    if (fetch.joinType() == Fetch.JoinType.None) {
+                        return;
+                    }
+
                     //如果有条件，并且条件不成功
                     if (StringUtils.hasText(fetch.condition())
                             && !Boolean.TRUE.equals(evalExpr(null, null, null, fetch.condition()))) {
@@ -1040,7 +1053,7 @@ public class SelectDaoImpl<T>
                         property = field.getName();
                     }
 
-                    joinFetch(fetch.domain(), fetch.joinType(), property);
+                    joinFetch(true, fetch.domain(), fetch.joinType(), property);
 
                 }, field -> field.getAnnotation(Fetch.class) != null
         );
