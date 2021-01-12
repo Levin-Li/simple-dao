@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.persistence.EntityManagerFactory;
 
 @API2
+/*@API
+@API3*/
 public abstract class UserApi2 {
 
     @Autowired

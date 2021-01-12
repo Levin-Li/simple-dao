@@ -1,5 +1,7 @@
 package com.levin.commons.dao;
 
+import lombok.experimental.FieldNameConstants;
+
 import java.lang.annotation.*;
 
 /**

@@ -38,11 +38,8 @@ import javax.sql.DataSource;
 
 @Role(BeanDefinition.ROLE_SUPPORT)
 
-
 @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
         , basePackages = {"com.levin.commons.dao.repository"})
-
-@EnableProxyBean(registerTypes = EntityRepository.class)
 
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {

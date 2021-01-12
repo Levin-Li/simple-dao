@@ -17,6 +17,7 @@ import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +73,10 @@ public class DaoExamplesTest {
     @Autowired
     UserService userService;
 
+
+    @Autowired
+    PluginManager pluginManager;
+
     Random random = new Random(this.hashCode());
 
     /**
@@ -86,6 +91,9 @@ public class DaoExamplesTest {
         Assert.notNull(simpleDao, "simpleDao没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
+
+
+        System.out.println("getInstalledPlugins:" + pluginManager.getInstalledPlugins());
     }
 
 
@@ -334,7 +342,7 @@ public class DaoExamplesTest {
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAnno(E_Group.name,  "")
+                .groupByAsAnno(E_Group.name, "")
                 .orderBy("ts2")
 //                .groupBy("g.name")
                 .find(Map.class);
@@ -668,7 +676,8 @@ public class DaoExamplesTest {
     public void testJoinFetch2() {
 
 
- ;        List<UserJoinFetchDTO> byQueryObj = jpaDao.findByQueryObj(UserJoinFetchDTO.class, new UserJoinFetchDTO());
+        ;
+        List<UserJoinFetchDTO> byQueryObj = jpaDao.findByQueryObj(UserJoinFetchDTO.class, new UserJoinFetchDTO());
 
         Object user = byQueryObj.get(0);
 
@@ -986,10 +995,10 @@ public class DaoExamplesTest {
     public void testTableJoinStatDTO() throws Exception {
 
 
-        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO(),new DefaultPaging(1,10));
+        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO(), new DefaultPaging(1, 10));
 //        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
 
-        String aa ="Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     Group By  g.name Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  Order By  Count( 1 ) Desc , avg Desc , g.name Desc";
+        String aa = "Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     Group By  g.name Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  Order By  Count( 1 ) Desc , avg Desc , g.name Desc";
 
         org.junit.Assert.assertNotNull(objects);
 
