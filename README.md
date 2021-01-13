@@ -232,12 +232,14 @@
    需要在JDK1.8中编译，并增加编译参数：-parameters ，保留方法的参数名称。
    在 pom.xml 文件中加入以下配置：
 
-                  <plugin>
-                      <artifactId>maven-compiler-plugin</artifactId>
-                      <configuration>
-                          <parameters>true</parameters>
-                      </configuration>
-                  </plugin>
+       <plugin>
+           <artifactId>maven-compiler-plugin</artifactId>
+           <inherited>true</inherited>
+           <configuration>
+               <!-- 在编译时表留方法的参数名称-->
+               <parameters>true</parameters>
+           </configuration>
+       </plugin>
 
 
 #### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
