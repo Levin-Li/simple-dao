@@ -61,8 +61,8 @@ public @interface TargetOption {
      * from 字句
      * <p>
      * 更新和删除操作，此属性无意义
-     * 建设使用joinOptions 替代
      *
+     * @deprecated 使用joinOptions 替代
      * @return
      */
     @Deprecated
