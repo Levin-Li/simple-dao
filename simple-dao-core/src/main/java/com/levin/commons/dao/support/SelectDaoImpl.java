@@ -10,6 +10,7 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
@@ -470,6 +471,16 @@ public class SelectDaoImpl<T>
         if ((opAnnotation instanceof OrderBy)) {
             OrderBy orderBy = (OrderBy) opAnnotation;
             orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(orderBy.domain(), name), orderBy.type()));
+        } else if ((opAnnotation instanceof SimpleOrderBy)) {
+//            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
+            if (value instanceof String) {
+                orderBy((String) value);
+            } else if (value instanceof String[]) {
+                orderBy((String[]) value);
+            } else {
+                throw new StatementBuildException("SimpleOrderBy注解必须注释在字符串或是字符串数组字段上");
+            }
+
         }
 
     }
@@ -872,8 +883,9 @@ public class SelectDaoImpl<T>
 
     public <E> List<E> findListAndConvert(Object converter) {
 
-        if (converter == null)
+        if (converter == null) {
             throw new IllegalArgumentException("converter is null");
+        }
 
         List<Object> queryResult = this.find();
 

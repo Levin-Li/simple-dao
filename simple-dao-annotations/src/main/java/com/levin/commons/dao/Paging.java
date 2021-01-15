@@ -8,19 +8,25 @@ package com.levin.commons.dao;
 public interface Paging {
 
     /**
-     * 如果为负数表示不限制
+     * 是否需要提取总记录数
      *
-     * @param pageCount
      * @return
      */
-    Paging setPageCount(int pageCount);
+//    boolean isRequireTotals();
+
+    /**
+     * 获取总记录数
+     *
+     * @return
+     */
+//    long getTotals();
 
     /**
      * 总页数
      *
      * @return
      */
-    int getPageCount();
+    //int getPageCount();
 
     /**
      * 如果为负数表示不限制

@@ -5,6 +5,8 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -171,6 +173,13 @@ public class JpaDaoImpl
             return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
         }
     };
+
+    @Data
+    @Accessors(chain = true)
+    private static class TRS<T> implements RS<T> {
+        long totals;
+        List<T> resultList;
+    }
 
     public JpaDaoImpl() {
         hibernateVersion = getHibernateVersion();
@@ -869,6 +878,16 @@ public class JpaDaoImpl
     @Override
     public <E> List<E> findByQueryObj(Object... queryObjs) {
         return newDao(SelectDao.class, queryObjs).find(tryFindResultClass(queryObjs));
+    }
+
+    @Override
+    public <E> RS<E> findAndCount(Object... queryObjs) {
+
+        SelectDao selectDao = newDao(SelectDao.class, queryObjs);
+
+        return new TRS<E>()
+                .setTotals(selectDao.count())
+                .setResultList((List<E>) selectDao.find(tryFindResultClass(queryObjs)));
     }
 
     @Override

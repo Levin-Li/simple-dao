@@ -43,5 +43,4 @@ public @interface DeepCopy {
      */
     String[] ignoreProperties() default {};
 
-
 }

@@ -6,6 +6,25 @@ import java.util.List;
 
 public interface MiniDao {
 
+
+    interface RS<T> {
+
+        /**
+         * 获取总记录数
+         *
+         * @return
+         */
+        long getTotals();
+
+        /**
+         * 获取分页结果
+         *
+         * @return
+         */
+        List<T> getResultList();
+
+    }
+
     /**
      * 默认的占位符,挂号里面不能有空格
      */

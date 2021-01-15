@@ -23,6 +23,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -674,11 +675,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     }
                 }
 
-                if (queryOption.getPageIndex() != null
-                        && queryOption.getPageSize() != null) {
-                    page(queryOption.getPageIndex(), queryOption.getPageSize());
-                }
-
             });
         });
 
@@ -691,9 +687,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //如果不是分页对象
         if ((queryObj instanceof Paging)) {
-
             page(Paging.class.cast(queryObj));
-
         }
 
         return (CB) this;
@@ -1570,6 +1564,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
+    /**
+     * @param root
+     * @param value
+     * @param name
+     * @param expr  如果 expr 为 null
+     * @return
+     */
     protected <T> T evalExpr(Object root, Object value, String name, String expr) {
 
         //优化性能
@@ -1577,23 +1578,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             if (value == null) {
                 return (T) Boolean.FALSE;
+            }else if (value instanceof CharSequence) {
+                return (T) (Boolean) (((CharSequence) value).toString().trim().length() > 0);
+            }else if (value.getClass().isArray()) {
+                return (T) (Boolean) (Array.getLength(value) > 0);
+            }else if (value instanceof Collection) {
+                return (T) (Boolean) (((Collection) value).size() > 0);
+            }else if (value instanceof Map) {
+                return (T) (Boolean) (((Map) value).size() > 0);
             }
 
-            if (value instanceof CharSequence && ((CharSequence) value).toString().trim().length() > 0) {
-                return (T) Boolean.FALSE;
-            }
-
-            if (QueryAnnotationUtil.isEmptyArray(value)) {
-                return (T) Boolean.FALSE;
-            }
-
-            if (value instanceof Collection && ((Collection) value).isEmpty()) {
-                return (T) Boolean.FALSE;
-            }
-
-            if (value instanceof Map && ((Map) value).isEmpty()) {
-                return (T) Boolean.FALSE;
-            }
+            return (T) Boolean.TRUE;
 
         }
 

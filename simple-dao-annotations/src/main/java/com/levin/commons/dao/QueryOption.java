@@ -9,6 +9,33 @@ package com.levin.commons.dao;
 public interface QueryOption {
 
     /**
+     * 查询返回类型
+     */
+    enum ReturnType {
+        /**
+         * 总数
+         */
+        Totals,
+        /**
+         * 结果集
+         */
+        ResultList,
+        /**
+         * 总数+结果集
+         */
+        Both
+    }
+
+    /**
+     * 获取查询返回的类型
+     *
+     * @return
+     */
+    default ReturnType getQueryReturnType() {
+        return ReturnType.ResultList;
+    }
+
+    /**
      * 获取查询的主体目标实体类
      *
      * @return
@@ -50,33 +77,12 @@ public interface QueryOption {
         return null;
     }
 
-
     /**
      * 获取查询结果类
      *
      * @return
      */
     default Class getResultClass() {
-        return null;
-    }
-
-    /**
-     * 获取分页索引
-     * <p>
-     * 分页从 1 开始
-     *
-     * @return
-     */
-    default Integer getPageIndex() {
-        return null;
-    }
-
-    /**
-     * 获取分页大小
-     *
-     * @return
-     */
-    default Integer getPageSize() {
         return null;
     }
 

@@ -30,7 +30,7 @@ public class GroupDTO {
     @OrderBy(order = 2)
     protected Integer orderCode;
 
-    Paging paging = new DefaultPaging(1, 20);
+    Paging paging = new DefaultPaging().setPageIndex(1).setPageSize( 20);
 
     String state = "A";
 

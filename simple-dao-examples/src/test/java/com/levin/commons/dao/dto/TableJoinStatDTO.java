@@ -7,6 +7,7 @@ import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Gte;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.Count;
@@ -41,11 +42,11 @@ public class TableJoinStatDTO {
     Long sumScore;
 
     //    统计部门平均分
-    @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
+    @Avg(havingOp = Op.Gt, orderBy = @OrderBy, alias = "avg")
     Long avgScore = 20L;
 
     //按部门分组统计，结果排序
-    @GroupBy(domain = E_Group.ALIAS, value = E_Group.name,orderBy = @OrderBy())
+    @GroupBy(domain = E_Group.ALIAS, value = E_Group.name, orderBy = @OrderBy())
     String groupName;
 
 }

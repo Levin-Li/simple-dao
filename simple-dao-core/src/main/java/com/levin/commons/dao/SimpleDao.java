@@ -142,13 +142,25 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 
     /**
      * 查询并返回结果
-     *
+     * <p>
      * 当有多个查询对象时，返回值以第一个@TargetOption的注解为准
+     *
      * @param queryObjs
      * @param <E>
      * @return
      */
     <E> List<E> findByQueryObj(Object... queryObjs);
+
+
+    /**
+     * 查询并统计行数
+     *
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    <E> RS<E> findAndCount(Object... queryObjs);
+
 
     /**
      * @param queryObjs

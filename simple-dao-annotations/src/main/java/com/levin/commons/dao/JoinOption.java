@@ -5,12 +5,8 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import java.lang.annotation.*;
 
 /**
- * <p/>
- * <p/>
- * <p/>
- * <p/>
- * <p/>
- * <p/>
+ *
+ * 连接注解
  *
  * @author llw
  * @version 2.0.0

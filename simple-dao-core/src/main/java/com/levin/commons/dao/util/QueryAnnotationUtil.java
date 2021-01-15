@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
@@ -80,7 +81,7 @@ public abstract class QueryAnnotationUtil {
     //////////////////////////////////
 
     @OrderBy
-
+    @SimpleOrderBy
     /////////////////////////////////
     @Select
     @SelectColumn
@@ -307,13 +308,12 @@ public abstract class QueryAnnotationUtil {
         try {
             newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
-            ReflectionUtils.rethrowRuntimeException(e);
+//            ReflectionUtils.rethrowRuntimeException(e);
         }
 
         if (!StringUtils.hasText(newKey)
                 && entityClass != null
                 && ReflectionUtils.findField(entityClass, name) == null) {
-
 
             // 以下逻辑是自动去除查找，去除注解名称以后的属性
             int len = opAnno.annotationType().getSimpleName().length();
@@ -327,7 +327,6 @@ public abstract class QueryAnnotationUtil {
                 }
 
             }
-
         }
 
         return (StringUtils.hasText(newKey)) ? newKey : name;
