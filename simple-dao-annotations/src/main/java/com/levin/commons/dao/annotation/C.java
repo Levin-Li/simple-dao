@@ -49,9 +49,12 @@ import java.lang.annotation.*;
 public @interface C {
 
     /**
-     * 不是 NUll 对象 ，也不是空字符串
+     * 首先不是 NUll 对象 ，也不是空字符串
+     * 如果是数组或是集合或是 Map 也不是空
+     *
      */
-    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+//    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+    String NOT_NULL = "NOT_EMPTY";
 
 
     /**

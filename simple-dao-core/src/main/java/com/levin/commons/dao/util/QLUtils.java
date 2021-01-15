@@ -48,7 +48,7 @@ public class QLUtils {
         }
 
         if (sb.length() < 1)
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
 
 
         String cols = sb.toString().trim();

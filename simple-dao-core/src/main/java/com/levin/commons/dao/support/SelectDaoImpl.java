@@ -878,7 +878,7 @@ public class SelectDaoImpl<T>
         List<Object> queryResult = this.find();
 
         if (queryResult == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         if (converter instanceof Converter) {
@@ -936,7 +936,7 @@ public class SelectDaoImpl<T>
         List<E> queryResultList = this.findForResultClass(null);
 
         if (queryResultList == null || queryResultList.isEmpty()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         //如果是已经需要的类型

@@ -25,7 +25,6 @@ public interface QueryOption {
      *
      * @return
      */
-    @Deprecated
     default String getEntityName() {
         return null;
     }

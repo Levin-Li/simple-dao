@@ -12,7 +12,7 @@ import java.util.List;
  * 通用DAO服务
  */
 @EntityRepository
-public abstract class SimpleDao {
+public abstract class SimpleDaoRepository {
 
     /**
      * 查询

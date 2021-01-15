@@ -29,8 +29,6 @@ import java.util.*;
 
 /**
  *
- *
- *
  */
 public abstract class QueryAnnotationUtil {
 
@@ -127,9 +125,6 @@ public abstract class QueryAnnotationUtil {
     public static boolean isSamePackage(Annotation annotation, Class<? extends Annotation> type) {
         return annotation != null && annotation.annotationType().getPackage().getName().equals(type.getPackage().getName());
     }
-
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -422,7 +417,7 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-        return new ArrayList<>(fields);
+        return fields.size() > 0 ? new ArrayList<>(fields) : Collections.emptyList();
     }
 
 

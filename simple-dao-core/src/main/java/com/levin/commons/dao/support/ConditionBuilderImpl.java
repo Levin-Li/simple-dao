@@ -1572,6 +1572,31 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected <T> T evalExpr(Object root, Object value, String name, String expr) {
 
+        //优化性能
+        if (C.NOT_NULL.equalsIgnoreCase(expr)) {
+
+            if (value == null) {
+                return (T) Boolean.FALSE;
+            }
+
+            if (value instanceof CharSequence && ((CharSequence) value).toString().trim().length() > 0) {
+                return (T) Boolean.FALSE;
+            }
+
+            if (QueryAnnotationUtil.isEmptyArray(value)) {
+                return (T) Boolean.FALSE;
+            }
+
+            if (value instanceof Collection && ((Collection) value).isEmpty()) {
+                return (T) Boolean.FALSE;
+            }
+
+            if (value instanceof Map && ((Map) value).isEmpty()) {
+                return (T) Boolean.FALSE;
+            }
+
+        }
+
         return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
     }
 

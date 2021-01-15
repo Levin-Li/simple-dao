@@ -1,6 +1,6 @@
 package com.levin.commons.dao.service;
 
-import com.levin.commons.dao.repository.SimpleDao;
+import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.plugin.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ import java.util.List;
 public class TestPlugin implements Plugin, PluginManagerAware {
 
     @Autowired
-    SimpleDao simpleDao;
+    SimpleDaoRepository simpleDaoRepository;
 
     final String pid = getClass().getSimpleName() + "-" + System.identityHashCode(this);
 

@@ -405,23 +405,7 @@ public abstract class ObjectUtil {
      * @return
      */
     public static <T> T evalSpEL(Object rootObject, String expression, Map<String, ? super Object>... contexts) {
-
-        EvaluationContext ctx = new StandardEvaluationContext(rootObject);
-
-        if (contexts != null) {
-            for (Map<String, Object> context : contexts) {
-                if (context != null) {
-                    for (Map.Entry<String, Object> entry : context.entrySet()) {
-                        ctx.setVariable(entry.getKey(), entry.getValue());
-                    }
-                }
-            }
-        }
-
-        ExpressionParser parser = new SpelExpressionParser();
-
-        return (T) parser.parseExpression(expression).getValue(ctx);
-
+        return ExprUtils.evalSpEL(rootObject, expression, contexts != null ? Arrays.asList(contexts) : Collections.emptyList());
     }
 
 

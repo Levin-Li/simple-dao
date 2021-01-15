@@ -69,7 +69,7 @@ public abstract class ExprUtils {
         }
 
         if (op == Op.None) {
-            holder.value = Collections.EMPTY_LIST;
+            holder.value = Collections.emptyList();
             return "";
         }
 
@@ -222,7 +222,7 @@ public abstract class ExprUtils {
 
 
         if (paramValues.isEmpty()) {
-            holder.value = Collections.EMPTY_LIST;
+            holder.value = Collections.emptyList();
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
         } else {
@@ -292,7 +292,7 @@ public abstract class ExprUtils {
         if (hasText(subStatement)) {
             holder.value = selectDao.genFinalParamList();
         } else {
-            holder.value = Collections.EMPTY_LIST;
+            holder.value = Collections.emptyList();
         }
 
         return subStatement;

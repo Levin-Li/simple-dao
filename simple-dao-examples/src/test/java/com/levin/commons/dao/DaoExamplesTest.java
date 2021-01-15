@@ -1,6 +1,5 @@
 package com.levin.commons.dao;
 
-import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -10,7 +9,7 @@ import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
-import com.levin.commons.dao.repository.SimpleDao;
+import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.dao.repository.UserDao;
 import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
@@ -33,7 +32,6 @@ import org.springframework.util.StringUtils;
 import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -50,7 +48,7 @@ public class DaoExamplesTest {
     JpaDao jpaDao;
 
     @Autowired(required = false)
-    SimpleDao simpleDao;
+    SimpleDaoRepository simpleDaoRepository;
 
     @Autowired
     UserDao userDao;
@@ -88,7 +86,7 @@ public class DaoExamplesTest {
     @Before
     public void injectCheck() throws Exception {
         Assert.notNull(jpaDao, "通用DAO没有注入");
-        Assert.notNull(simpleDao, "simpleDao没有注入");
+        Assert.notNull(simpleDaoRepository, "simpleDao没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
 
@@ -569,26 +567,26 @@ public class DaoExamplesTest {
     public void testSimpleDao() {
 
         try {
-            User user = simpleDao.findOne(new UserDTO());
+            User user = simpleDaoRepository.findOne(new UserDTO());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            List<User> users = simpleDao.find(new UserDTO());
+            List<User> users = simpleDaoRepository.find(new UserDTO());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
         try {
-            int update = simpleDao.update(new UserUpdateDTO());
+            int update = simpleDaoRepository.update(new UserUpdateDTO());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            int delete = simpleDao.delete(new UserDTO());
+            int delete = simpleDaoRepository.delete(new UserDTO());
         } catch (Exception e) {
             e.printStackTrace();
         }
