@@ -103,16 +103,6 @@ public class DaoExamplesTest {
         Assert.notNull(entityManager);
 
 
-        String url = "AccessKeyId=LTAI4GFkwq8zAmN4Kzkfxs8D&Action=PopUpQuery&Format=JSON&RegionId=cn-hangzhou&Signature=0XaUkGkU%2FsHWbfoLpSaRNqs7aMg%3D&SignatureMethod=HMAC-SHA1&SignatureNonce=6078739746fc27809d58532fc8649642&SignatureType=&SignatureVersion=1.0&Timestamp=2020-11-17T16%3A41%3A56Z&Version=2018-12-07";
-
-        url = "callbackUrl=" + URLEncoder.encode("https://mbd.baidu.com/newspage/data/landingsuper?context=%7B%22nid%22%3A%22news_10168626933373781162%22%7D&n_type=0&p_from=1", "utf-8")
-                + "&ccid =" + URLEncoder.encode("这个是中文");
-
-
-        Map<String, String> parse = parse(url);
-
-        System.out.println(parse);
-
 
     }
 
@@ -147,7 +137,7 @@ public class DaoExamplesTest {
         String[] categories = {"C1", "C2", "C3", "C4"};
         String[] states = {"S1", "S2", "S3", "S4"};
 
-        while (n++ < 100) {
+        while (n++ < 30) {
 
             jpaDao.create(new TestEntity()
                     .setScore(random.nextInt(750))
@@ -162,7 +152,7 @@ public class DaoExamplesTest {
 
         }
 
-        n = 100;
+        n = 30;
 
 
         long count = jpaDao.selectFrom(TestEntity.class, "e")
@@ -327,6 +317,25 @@ public class DaoExamplesTest {
         Object ss = jpaDao.countByQueryObj(queryDto);
 
         Assert.notNull(byQueryObj);
+
+    }
+
+    @Test
+    public void testFromStatementDTO() {
+
+        List<FromStatementDTO> byQueryObj = jpaDao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
+
+       // System.out.println(byQueryObj);
+
+        assert byQueryObj.size() > 0;
+
+
+        List<TableJoin3> byQueryObj1 = jpaDao.findByQueryObj(TableJoin3.class, new TableJoin3());
+
+
+       // System.out.println(byQueryObj1);
+
+        assert byQueryObj1.size() > 0;
 
     }
 

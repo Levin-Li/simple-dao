@@ -127,7 +127,7 @@ public class SelectDaoImpl<T>
     protected void setFromStatement(String fromStatement) {
         //没有内容
         if (!hasText(this.fromStatement)
-                && entityClass == null
+                && (entityClass == null || entityClass == Void.class)
                 && !hasText(this.tableName)) {
             this.fromStatement = fromStatement;
         }
@@ -173,8 +173,9 @@ public class SelectDaoImpl<T>
 
     public SelectDaoImpl<T> setQueryRequest(QueryRequest queryRequest) {
 
-        if (queryRequest == null)
+        if (queryRequest == null) {
             return this;
+        }
 
         if (!hasText(this.fromStatement)
                 && hasText(queryRequest.fromStatement())) {
@@ -293,7 +294,7 @@ public class SelectDaoImpl<T>
 
             setAttr = aroundColumnPrefix(domain, setAttr);
 
-         //   select(isAppendToSelect, setAttr);
+            //   select(isAppendToSelect, setAttr);
 
             fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
 

@@ -1,6 +1,8 @@
 ### 简介
    
-   SimpleDao是一个使用注解生成SQL语句和参数的小组件，目前组件依赖Spring并结合JPA，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
+   SimpleDao是一个使用注解生成SQL语句和参数的组件。
+   
+   目前组件基于JPA/Hibernate，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    
    在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询等。
 
@@ -10,7 +12,7 @@
 
    2、简化DAO层，或是直接放弃具体的Domain对象DAO层，使用支持泛型通用的Dao。
 
-   开发思路
+   设计思路
 
    通过在DTO对象中加入自定义注解自动生成查询语句。
 
@@ -45,7 +47,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.9-SNAPSHOT</version>
+            <version>2.2.10-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
@@ -77,10 +79,11 @@
         String name = "test"; 
     }
    
+  测试用例入口类 [DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
   
-  测试用例类 [TestEntityStatDto](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
+  DTO用例类 [TestEntityStatDto](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
   
-  其它测试用例参考：[Dto注解](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto) 
+  其它DTO用例参考：[Dto注解](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto) 
    
 
 ##### 1.3 配置JPA实体扫描 & 执行查询
@@ -111,9 +114,11 @@
        AND name LIKE '%' ||  ?4  || '%'  
        Group By  state
   
+##### 1.4 多表连接查询
   
-  
-   c) 多表关联查询
+###### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
+   
+   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
    
       //查询对象，和结果对象
       @Data
@@ -158,7 +163,90 @@
        Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
        
        
-  
+###### 1.4.2 多表关联查询-用 JoinOption 注解  [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
+
+   注解代码 @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
+                             alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
+        
+       
+       import com.levin.commons.dao.JoinOption;
+       import com.levin.commons.dao.TargetOption;
+       import com.levin.commons.dao.annotation.Gt;
+       import com.levin.commons.dao.annotation.Gte;
+       import com.levin.commons.dao.annotation.select.Select;
+       import com.levin.commons.dao.domain.E_Group;
+       import com.levin.commons.dao.domain.E_User;
+       import lombok.Data;
+       import lombok.experimental.Accessors;
+       
+       @Data
+       @Accessors(chain = true)
+       @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
+               joinOptions = {
+               @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
+                       alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
+       })
+       public class TableJoin3 {
+       
+           @Select(domain = E_User.ALIAS, value = E_User.id, isDistinct = true)
+           @Gt(value = E_User.id, domain = E_User.ALIAS)
+           Long uid = 1l;
+       
+           @Select(value = E_Group.id, domain = E_Group.ALIAS)
+           @Gte(domain = E_Group.ALIAS,value = E_Group.id)
+           Long gid;
+       
+           @Select
+           String name;
+       
+           @Select(domain = E_Group.ALIAS, value = E_Group.name)
+           String groupName;
+       
+       }
+          
+          
+          
+###### 1.4.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
+   
+   注解代码 @TargetOption(
+                       tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id"
+                       )
+                       
+       import com.levin.commons.dao.JoinOption;
+       import com.levin.commons.dao.TargetOption;
+       import com.levin.commons.dao.annotation.Gt;
+       import com.levin.commons.dao.annotation.Gte;
+       import com.levin.commons.dao.annotation.select.Select;
+       import com.levin.commons.dao.domain.E_Group;
+       import com.levin.commons.dao.domain.E_User;
+       import com.levin.commons.dao.domain.Group;
+       import com.levin.commons.dao.domain.User;
+       import lombok.Data;
+       import lombok.experimental.Accessors;
+       
+       @Data
+       @Accessors(chain = true)
+       @TargetOption(
+               tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" ,
+       //        fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
+               )
+       public class FromStatementDTO {
+       
+           @Select(value = "u.id", isDistinct = true)
+           @Gt(value = E_User.id, domain = "u")
+           Long uid = 1l;
+       
+           @Select(value = E_Group.id, domain = "g")
+           @Gte("g.id")
+           Long gid;
+       
+           @Select(domain = "u")
+           String name;
+       
+           @Select(domain = "g", value = E_Group.name)
+           String groupName;
+       
+       } 
 
 ###  2、组件使用方式
 
@@ -788,142 +876,9 @@
 #### 12.1 测试用例
 
  请参考测试用例： [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
-     
-     
-#### 12.2 注解字段说明
-
-    /**
-     * 不是 NUll 对象 ，也不是空字符串
-     */
-    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
- 
-    /**
-     * 查询字段名称，默认为字段的属性名称
-     * <p>
-     * 对应数据库的字段名或是 Jpa 实体类的字段名
-     *
-     * @return
-     */
-    String value() default "";
-
-
-    /**
-     * 是否是having 操作
-     * <p>
-     * 只针对查询有效
-     *
-     * @return
-     */
-    boolean having() default false;
-
-
-    /**
-     * 是否用 NOT () 包围
-     *
-     * @return
-     */
-    boolean not() default false;
-
-
-    /**
-     * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
-     *
-     * @return
-     */
-    boolean require() default false;
-
-
-    /**
-     * 表达式，默认为SPEL
-     * <p>
-     * <p>
-     * 如果用 groovy:  做为前缀则是 groovy脚本
-     * <p>
-     *
-     *
-     * <p>
-     * <p>
-     * <p/>
-     * 当条件成立时，整个条件才会被加入
-     *
-     * @return
-     */
-    String condition() default NOT_NULL;
-
-    /**
-     * 是否过滤数组参数或是列表参数中的空值
-     * <p>
-     * 主要针对 In NotIn Between
-     *
-     * @return
-     */
-    boolean filterNullValue() default true;
-
-
-    /**
-     * 针对字段函数列表
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * func3(func2(func1(t.field)
-     *
-     * <p>
-     * <p>
-     * 如果是更新字段则忽略
-     *
-     * @return
-     */
-    Func[] fieldFuncs() default {};
-
-
-    /**
-     * 针对参数的函数列表
-     * <p>
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * 参数是指字段值或是子查询语句
-     * <p>
-     * 例如 func(:?)  把参数用函数包围
-     * func(select name from user where id = :userId) 把子查询用函数包围
-     *
-     * @return
-     */
-    Func[] paramFuncs() default {};
-
-
-    /**
-     * 对整个表达式的包围前缀
-     *
-     * @return
-     */
-    String surroundPrefix() default "";
-
-    /**
-     * 子查询或是表达式
-     *
-     * @return
-     */
-
-    String paramExpr() default "";
-
-
-    /**
-     * 对整个表达式的包围后缀
-     *
-     * @return
-     */
-    String surroundSuffix() default "";
-
-
-    /**
-     * 描述信息
-     *
-     * @return
-     */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix ";
-
   
-
-#### 12.3 联系作者
+#### 12.2 联系作者
 
  邮箱：99668980@qq.com
+
 

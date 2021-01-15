@@ -4,6 +4,7 @@ import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 
@@ -13,6 +14,7 @@ import javax.persistence.*;
 @Entity(name = "jpa_dao_test_Task")
 @Data
 @Accessors(chain = true)
+@FieldNameConstants
 public class Task
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {

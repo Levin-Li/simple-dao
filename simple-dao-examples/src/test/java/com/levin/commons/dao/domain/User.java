@@ -5,6 +5,7 @@ import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 
@@ -15,6 +16,7 @@ import javax.persistence.*;
 @Data
 @Accessors(chain = true)
 @ToString(exclude = "group")
+@FieldNameConstants
 public class User
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {

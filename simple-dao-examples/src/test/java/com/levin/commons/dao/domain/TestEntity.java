@@ -5,6 +5,7 @@ import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -15,6 +16,7 @@ import java.io.Serializable;
 @Entity
 @Data
 @Accessors(chain = true)
+@FieldNameConstants
 public class TestEntity implements Serializable {
 
     @Id
