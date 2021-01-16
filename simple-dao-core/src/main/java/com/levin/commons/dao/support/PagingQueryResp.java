@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
+import java.beans.Transient;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 查询响应结果
@@ -17,19 +19,7 @@ import java.io.Serializable;
 @Accessors(chain = true)
 //@Builder
 @FieldNameConstants
-public class QueryResponse<T> implements Serializable {
-
-    @Ignore
-    @Desc("返回码，0 为正确，其它为异常情况")
-    int code;
-
-    @Ignore
-    @Desc("提示消息-通常用于展示给客户看")
-    String msg;
-
-    @Ignore
-    @Desc("详细信息-通常用于辅助调试")
-    String detailMsg;
+public class PagingQueryResp<T> implements Serializable {
 
     @Ignore
     @Desc("总记录数-用于支持分页查询")
@@ -37,10 +27,20 @@ public class QueryResponse<T> implements Serializable {
     long totals = -1;
 
     @Ignore
-    @Desc("数据")
+    @Desc("数据结果")
     @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-    T data;
+    List<T> records;
 
-    public QueryResponse() {
+    @Transient
+    public T getFirst() {
+        return isEmpty() ? null : records.get(0);
+    }
+
+    @Transient
+    public boolean isEmpty() {
+        return records == null || records.isEmpty();
+    }
+
+    public PagingQueryResp() {
     }
 }

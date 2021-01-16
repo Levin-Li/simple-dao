@@ -328,7 +328,7 @@
       }
 
 
-###  2、组件使用方式
+###  2组件使用方式
 
 #### 2.1 直接使用通用Dao（推荐）
 
@@ -523,7 +523,7 @@
   语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
 
 
-### 4、DTO 查询注解
+### 4DTO 查询注解
     
    查询注解 主要再 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
 
@@ -551,7 +551,7 @@
        private String classId;
 
 
-### 5、统计查询
+### 5统计查询
 
    统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
    
@@ -620,7 +620,7 @@
        }                      
       
 
-### 6、查询和数据更新
+### 6查询和数据更新
 
   选择查询注解：
 
@@ -643,7 +643,7 @@
 
 
 
-### 7、逻辑嵌套查询(用于实现复杂的查询条件)
+### 7逻辑嵌套查询(用于实现复杂的查询条件)
 
    逻辑注解支持
 
@@ -683,7 +683,7 @@
      //逻辑嵌套
      jpaDao.selectFrom("table").and().or().and().end().end().end();
 
-### 8、子查询
+### 8子查询
  
 
 #### 8.1 手动指定子查询语句(paramExpr属性)
@@ -721,7 +721,7 @@
         DTO subQueryDTO = new DTO();
 
 
-### 9、排序(OrderBy注解)
+### 9排序(OrderBy注解)
 
    排序使用OrderBy注解，OrderBy支持字段和参数。
 
@@ -753,7 +753,7 @@
          String orderBy2 = "score desc , category asc";  
 
 
-### 10、使用注意事项
+### 10使用注意事项
 
 #### 10.1  DTO 查询对象字段无注解的情况
 
@@ -945,7 +945,7 @@
         //避免 N+1 查询
         List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
         
-### 11、安全模式
+### 11 安全模式
 
    数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
 
