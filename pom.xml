@@ -19,7 +19,7 @@
 
     <properties>
 
-        <levin.simple-dao.version>2.2.10-SNAPSHOT</levin.simple-dao.version>
+        <levin.simple-dao.version>2.2.11-SNAPSHOT</levin.simple-dao.version>
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
 

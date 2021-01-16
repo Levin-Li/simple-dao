@@ -10,7 +10,7 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryReq;
 
 import java.util.Date;
 
@@ -18,7 +18,7 @@ import java.util.Date;
 @TargetOption(entityClass = User.class, maxResults = 100)
 public class SubQueryDTO {
 
-    Paging paging = new DefaultPaging(1, 20);
+    Paging paging = new PagingQueryReq(1, 20);
 
 
     Long id;
@@ -33,13 +33,14 @@ public class SubQueryDTO {
     @AND
     protected Boolean editable = true;
 
-    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {"$$", "${:_this.format}"}),paramExpr = "select createTime from "+E_User.CLASS_NAME+" ")
+    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {"$$", "${:_this.format}"}), paramExpr = "select createTime from " + E_User.CLASS_NAME + " ")
     @OR
     protected Date createTime = new Date();
 
     @Between("score")
     @END
-    protected Integer[] scores = new Integer[]{200, 100, null, null};
+//    protected Integer[] scores = new Integer[]{200, 100, null, null};
+    protected String scores = "123 , 456,056";
 
     @Like
     @END

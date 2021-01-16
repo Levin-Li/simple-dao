@@ -9,6 +9,7 @@ import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
+import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -22,7 +23,7 @@ import lombok.experimental.Accessors;
         joinOptions = {
                 @JoinOption(alias = E_Group.ALIAS, entityClass = Group.class)
         })
-public class TableJoinDTO {
+public class TableJoinDTO extends PagingQueryReq {
 
     @Select(value = "u.id", isDistinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)

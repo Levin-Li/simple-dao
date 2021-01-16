@@ -7,7 +7,7 @@ import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.Group;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -30,7 +30,7 @@ public class GroupDTO {
     @OrderBy(order = 2)
     protected Integer orderCode;
 
-    Paging paging = new DefaultPaging().setPageIndex(1).setPageSize( 20);
+    Paging paging = new PagingQueryReq().setPageIndex(1).setPageSize( 20);
 
     String state = "A";
 

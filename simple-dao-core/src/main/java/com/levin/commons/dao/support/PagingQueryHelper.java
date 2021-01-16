@@ -8,63 +8,58 @@ import com.levin.commons.dao.util.ObjectUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * 暂时不可用
  */
-public abstract class PageQueryHelper {
+public abstract class PagingQueryHelper {
 
     private static final Map<String, Map<PageOption.Type, Field>> classFieldCached = new ConcurrentReferenceHashMap<>();
 
-    private PageQueryHelper() {
+    private PagingQueryHelper() {
     }
 
     /**
-     * 通过分页注解，或是生成并返回结果对象
+     * 分页查询
+     * <p>
+     * 通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。
      *
-     * @param simpleDao
-     * @param pageClassOrInstance
-     * @param queryDto
-     * @param <T>
+     * @param simpleDao     dao
+     * @param queryResponse 查询结果，可以是对象实例，也是可以是 Class 对象
+     * @param queryDto      查询 DTO
+     * @param <T>           查询结果
      * @return
      */
-    private static <T> T find(SimpleDao simpleDao, T pageClassOrInstance, Object queryDto) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Object queryResponse, Object queryDto) {
 
-        if (pageClassOrInstance instanceof Class) {
-            pageClassOrInstance = BeanUtils.instantiateClass((Class<T>) pageClassOrInstance);
+        if (queryResponse instanceof Class) {
+            queryResponse = BeanUtils.instantiateClass((Class<T>) queryResponse);
         }
 
-        if (pageClassOrInstance == null) {
+        if (queryResponse == null) {
             return (T) simpleDao.findByQueryObj(queryDto);
         }
 
-        Map<PageOption.Type, Field> fields = getPageOptionFields(queryDto.getClass());
-
-        Field totalsField = fields.get(PageOption.Type.RecordTotals);
-        Field resultListField = fields.get(PageOption.Type.ResultList);
-
-        if (totalsField == null
-                && resultListField == null) {
-            throw new IllegalArgumentException("查询对象没有通过PageOption注解指定结果集的存放字段");
+        //需要总记录数
+        if (isRequireRecordTotals(queryDto)) {
+            setValueByPageOption(queryResponse,
+                    PageOption.Type.RequireTotals, (field) -> simpleDao.countByQueryObj(queryDto));
         }
 
-        boolean requireRecordTotals = totalsField != null && isEnable(queryDto, totalsField);
-        boolean requireResultList = resultListField != null && isEnable(queryDto, resultListField);
-
-        if (requireRecordTotals) {
-            ReflectionUtils.setField(totalsField, pageClassOrInstance,
-                    ObjectUtil.convert(simpleDao.countByQueryObj(queryDto), totalsField.getType()));
-        }
-
-        if (requireResultList) {
+        //需要结果集
+        if (isRequireResultList(queryDto)) {
 
             Object resultList = null;
 
-            Field indexField = fields.get(PageOption.Type.PageIndex);
-            Field sizeField = fields.get(PageOption.Type.PageSize);
+            Map<PageOption.Type, Field> pageOptionFields = getPageOptionFields(queryDto.getClass());
+
+            Field indexField = pageOptionFields.get(PageOption.Type.PageIndex);
+            Field sizeField = pageOptionFields.get(PageOption.Type.PageSize);
 
             if ((queryDto instanceof Paging)
                     || indexField == null
@@ -72,7 +67,6 @@ public abstract class PageQueryHelper {
                     || !isEnable(queryDto, indexField)
                     || !isEnable(queryDto, sizeField)
             ) {
-
                 resultList = simpleDao.findByQueryObj(queryDto);
 
             } else {
@@ -80,7 +74,7 @@ public abstract class PageQueryHelper {
                 Object index = ReflectionUtils.getField(indexField, queryDto);
                 Object size = ReflectionUtils.getField(sizeField, queryDto);
 
-                DefaultPaging paging = new DefaultPaging(-1, -1);
+                PagingQueryReq paging = new PagingQueryReq(-1, -1);
 
                 if (index != null) {
                     paging.setPageIndex(ObjectUtil.convert(index, Integer.class));
@@ -94,28 +88,66 @@ public abstract class PageQueryHelper {
             }
 
             //设置结果集
-            ReflectionUtils.setField(resultListField, pageClassOrInstance, resultList);
+            final Object resultListCopy = resultList;
+
+            setValueByPageOption(queryResponse, PageOption.Type.RequireResultList, field -> resultListCopy);
+
         }
 
-        return pageClassOrInstance;
+        return (T) queryResponse;
     }
 
-    private static boolean isEnable(Object queryDto, Field field) {
-        return Boolean.TRUE.equals(ExprUtils.evalSpEL(queryDto, field.getAnnotation(PageOption.class).condition(), null));
+
+    private static void setValueByPageOption(Object target, Object key, Function<Field, Object> fun) {
+
+        Field field = getPageOptionFields(target.getClass()).get(key);
+
+        if (field == null) {
+            throw new IllegalArgumentException(" 对象[" + target.getClass().getName() + "] 没有 " + key.getClass().getName() + "注解");
+        }
+
+        field.setAccessible(true);
+
+        ReflectionUtils.setField(field, target, ObjectUtil.convert(fun.apply(field), field.getType()));
     }
+
+    private static boolean isRequireRecordTotals(Object dto) {
+        Field field = getPageOptionFields(dto.getClass()).get(PageOption.Type.RequireTotals);
+        return field != null && isEnable(dto, field);
+    }
+
+    private static boolean isRequireResultList(Object dto) {
+        Field field = getPageOptionFields(dto.getClass()).get(PageOption.Type.RequireResultList);
+        return field == null || isEnable(dto, field);
+    }
+
 
     /**
-     * 通过注解设置值
+     * 注解是否允许
      *
-     * @param pageObj
-     * @param totals
-     * @param resultList
-     * @param <T>
+     * @param queryDto
+     * @param field
      * @return
      */
-    public static <T> T setResult(T pageObj, long totals, List resultList) {
+    private static boolean isEnable(Object queryDto, Field field) {
 
-        return pageObj;
+        String expr = field.getAnnotation(PageOption.class).condition();
+
+        if (!StringUtils.hasText(expr)) {
+
+            field.setAccessible(true);
+
+            Object value = ReflectionUtils.getField(field, queryDto);
+            if (value instanceof Boolean) {
+                return (Boolean) value;
+            } else {
+                return value != null;
+            }
+
+        }
+
+        return Boolean.TRUE.equals(ExprUtils.evalSpEL(queryDto, expr, null));
+
     }
 
     private static Map<PageOption.Type, Field> getPageOptionFields(Object... dtos) {
@@ -144,7 +176,7 @@ public abstract class PageQueryHelper {
      */
     private static Map<PageOption.Type, Field> getPageOptionFields(Class type) {
 
-        synchronized (type) {
+        synchronized (getSyncLock(type)) {
 
             Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
 
@@ -168,6 +200,10 @@ public abstract class PageQueryHelper {
 
     }
 
+    private static Object getSyncLock(Class type) {
+        return PagingQueryHelper.class.getName() + "_" + type.getName();
+    }
+
 
     /**
      * 通过注解提取
@@ -186,7 +222,6 @@ public abstract class PageQueryHelper {
                 return (Paging) dto;
             }
         }
-
 
         return null;
     }

@@ -9,6 +9,8 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.utils.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.expression.EvaluationContext;
@@ -22,11 +24,13 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
 import static org.springframework.util.StringUtils.hasText;
@@ -44,6 +48,8 @@ public abstract class ExprUtils {
      */
     private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
 
+
+    private static final Logger log = LoggerFactory.getLogger(ExprUtils.class);
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -72,6 +78,9 @@ public abstract class ExprUtils {
             holder.value = Collections.emptyList();
             return "";
         }
+
+        //如果只有一个元素的数组
+        holder.value = tryGetFirstElement(holder.value);
 
         boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
@@ -127,36 +136,44 @@ public abstract class ExprUtils {
                 //是否可以展开参数
                 if (op.isExpandParamValue()) {
 
+                    //参数之间的分隔符，仅对参数是字符串时有效
+                    if (holder.value instanceof CharSequence) {
+                        if (hasText(c.paramDelimiter())) {
+                            holder.value = holder.value.toString().split(c.paramDelimiter());
+                        } else if (expectType != null && !CharSequence.class.isAssignableFrom(expectType)) {
+                            //关键逻辑，如果时可以展开参数的操作，并且期望的类型不是字符串，则用逗号分割数据
+                            holder.value = holder.value.toString().split(",");
+                        } else {
+                            //
+                        }
+                    }
+
                     //如果数据库的目标字段类型检测到，并且不是字符串类型，并且参数值是字符串
                     //尝试自动解析成数组
                     if (expectType != null
 //                        && !String.class.equals(expectType)  // 关键点
-                            && holder.value instanceof CharSequence) {
-                        holder.value = ObjectUtil.convert(holder.value, Array.newInstance(expectType, 0).getClass());
+                            && (holder.value instanceof CharSequence
+                            || holder.value instanceof String[])) {
+
+                        holder.value = convertValue(expectType, holder.value, c, op);
                     }
 
-
                     if (c.filterNullValue()) {
+                        //@todo 优化性能
                         holder.value = QueryAnnotationUtil.filterNullValue(holder.value, true);
                     }
 
                     eleCount = QueryAnnotationUtil.eleCount(holder.value);
 
-                    //如果没有参数
-
                 } else {
-                    try {
-                        holder.value = ObjectUtil.convert(holder.value, expectType);
-                    } catch (Exception e) {
-                    }
+                    holder.value = convertValue(expectType, holder.value, c, op);
                 }
 
                 // 替换成 参数占位符
-
                 paramExpr = genParamExpr(op.getParamDelimiter(), paramPlaceholder, eleCount);
 
-
                 hasDynamicExpr = true;
+
             }
 
             //自动加大挂号
@@ -233,6 +250,105 @@ public abstract class ExprUtils {
     }
 
 
+    /**
+     * @param arrayOrSet
+     * @return
+     */
+    private static Object tryGetFirstElement(Object arrayOrSet) {
+
+        if (arrayOrSet == null) {
+            return arrayOrSet;
+        }
+
+        if (arrayOrSet.getClass().isArray()) {
+            return Array.getLength(arrayOrSet) == 1 ? Array.get(arrayOrSet, 0) : arrayOrSet;
+        } else if (arrayOrSet instanceof Collection) {
+            Collection set = (Collection) arrayOrSet;
+            return set.size() == 1 ? set.toArray()[0] : set;
+        }
+
+        return arrayOrSet;
+    }
+
+    /**
+     * @param eleType
+     * @param value
+     * @param c
+     * @param op
+     * @return
+     */
+    private static Object convertValue(Class eleType, Object value, C c, Op op) {
+
+        if (eleType == null || value == null) {
+            return value;
+        }
+
+        Class<?> valueClass = value.getClass();
+
+        if (eleType.isAssignableFrom(valueClass)) {
+            return value;
+        }
+
+        //只针对日期类型转换
+        if (Date.class.isAssignableFrom(eleType)
+                && c.patterns().length > 0) {
+
+            if (valueClass.isArray()) {
+
+                int idx = Array.getLength(value);
+
+                Object newArray = eleType.isAssignableFrom(valueClass.getComponentType()) ? value : Array.newInstance(eleType, idx);
+
+                while (idx-- > 0) {
+                    Array.set(newArray, idx, tryConvertToDate(Array.get(value, idx), c.patterns()));
+                }
+
+                return newArray;
+
+            } else if (value instanceof Collection) {
+                return ((Collection) value).stream().map(ele ->
+                        tryConvertToDate(ele, c.patterns()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        //尝试类型转换
+        if (valueClass.isArray()
+                || value instanceof Collection) {
+            eleType = Array.newInstance(eleType, 0).getClass();
+        }
+
+        try {
+            return ObjectUtil.convert(value, eleType);
+        } catch (Exception e) {
+            return value;
+        }
+
+    }
+
+    /**
+     * 尝试转成 Date 类型
+     *
+     * @param data
+     * @param patterns
+     * @return
+     */
+    private static Object tryConvertToDate(Object data, String... patterns) {
+
+        if (data instanceof CharSequence && !(data instanceof Date)) {
+
+            for (String pattern : patterns) {
+                try {
+                    return new SimpleDateFormat(pattern).parse(data.toString());
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        return data;
+    }
+
+
     public static String surroundNotExpr(C c, String expr) {
 
         return c.not() && hasText(expr) ? autoAroundParentheses(" NOT(", expr, ") ") : expr;
@@ -299,6 +415,13 @@ public abstract class ExprUtils {
     }
 
 
+    /**
+     * 函数调用叠加
+     *
+     * @param name
+     * @param funcs
+     * @return
+     */
     public static String funcExpr(String name, Func... funcs) {
         //允许没有名称
 
@@ -371,11 +494,13 @@ public abstract class ExprUtils {
      */
     static String genParamExpr(String delimiter, String txt, int n) {
 
-        if (n < 1)
+        if (n < 1) {
             return "";
+        }
 
-        if (n == 1)
+        if (n == 1) {
             return txt;
+        }
 
         StringBuilder buf = new StringBuilder();
 
@@ -674,7 +799,7 @@ public abstract class ExprUtils {
             }
 
             if (!StringUtils.hasText(targetColumn)) {
-                throw new StatementBuildException(joinOption + ": 无法确定关联的目标列");
+                throw new StatementBuildException(joinOption + ": 无法确定关联的目标列，没有或是存在多个关联字段");
             }
 
             String joinColumn = joinOption.joinColumn();

@@ -24,11 +24,11 @@ public @interface PageOption {
         /**
          * 总记录总数
          */
-        RecordTotals,
+        RequireTotals,
         /**
          * //查询结果集
          */
-        ResultList,
+        RequireResultList,
 
         /**
          * 页面大小

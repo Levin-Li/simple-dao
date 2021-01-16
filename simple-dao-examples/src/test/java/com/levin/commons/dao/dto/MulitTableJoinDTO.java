@@ -33,8 +33,4 @@ public class MulitTableJoinDTO {
     @Gt("g.id")
     @Where(paramExpr = " g.id = u.group.id ")
     Long gid = 2L;
-
-
-
-
 }

@@ -2,9 +2,11 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.JoinOption;
+import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Gt;
 import com.levin.commons.dao.annotation.Gte;
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
@@ -14,6 +16,9 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
+
+        resultClass = TableJoin3.class,
+
         joinOptions = {
         @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
                 alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
@@ -33,5 +38,17 @@ public class TableJoin3 {
 
     @Select(domain = E_Group.ALIAS, value = E_Group.name)
     String groupName;
+
+    @Ignore
+    @PageOption(PageOption.Type.PageIndex)
+    int pageIndex = 2;
+
+    @Ignore
+    @PageOption(PageOption.Type.PageSize)
+    int pageSize = 50;
+
+    @Ignore
+    @PageOption(PageOption.Type.RequireTotals)
+    boolean requireTotals;
 
 }

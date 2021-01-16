@@ -2,31 +2,10 @@ package com.levin.commons.dao;
 
 
 /**
- * 分页对象
+ * 分页接口
  */
 
 public interface Paging {
-
-    /**
-     * 是否需要提取总记录数
-     *
-     * @return
-     */
-//    boolean isRequireTotals();
-
-    /**
-     * 获取总记录数
-     *
-     * @return
-     */
-//    long getTotals();
-
-    /**
-     * 总页数
-     *
-     * @return
-     */
-    //int getPageCount();
 
     /**
      * 如果为负数表示不限制
@@ -46,27 +25,5 @@ public interface Paging {
      * @return
      */
     int getPageIndex();
-
-    /**
-     * 获取下一页
-     *
-     * @return
-     */
-    // Paging next();
-
-    /**
-     * 获取上一页
-     *
-     * @return
-     */
-    //  Paging prev();
-
-    /**
-     * 跳到指定的页
-     *
-     * @param pageIndex
-     * @return
-     */
-    //  Paging go(int pageIndex);
 
 }

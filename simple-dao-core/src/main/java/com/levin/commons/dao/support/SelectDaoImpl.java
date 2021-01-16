@@ -912,7 +912,7 @@ public class SelectDaoImpl<T>
     @Override
     public <E> List<E> find(Class<E> targetType) {
 
-        if (targetType == null) {
+        if (targetType == null || targetType == Void.class) {
             return find();
         }
 
@@ -929,7 +929,7 @@ public class SelectDaoImpl<T>
     @Override
     public <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
 
-        if (targetType == null) {
+        if (targetType == null || targetType == Void.class) {
             return find();
         }
 
@@ -996,7 +996,7 @@ public class SelectDaoImpl<T>
     @Override
     public <E> E findOne(Class<E> targetType) {
 
-        if (targetType == null) {
+        if (targetType == null || targetType == Void.class) {
             return findOne();
         }
 
@@ -1013,7 +1013,7 @@ public class SelectDaoImpl<T>
     @Override
     public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
 
-        if (targetType == null) {
+        if (targetType == null || targetType == Void.class) {
             return findOne();
         }
 
@@ -1039,7 +1039,7 @@ public class SelectDaoImpl<T>
     public void autoSetFetch(Class targetType) {
 
         //如果不是 jpa 或是 没有指定实体类
-        if (!getDao().isJpa() || targetType == null) {
+        if (!getDao().isJpa() || targetType == null || targetType == Void.class) {
             return;
         }
 

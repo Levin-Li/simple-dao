@@ -20,14 +20,12 @@ import java.lang.annotation.*;
  */
 public @interface Between {
 
-
     /**
      *
      * 具体的变量替换，请参考 C 注解
      *
      *
      */
-
 
     /**
      * 查询字段名称，默认为字段的属性名称
@@ -136,6 +134,25 @@ public @interface Between {
      * @return
      */
     String paramExpr() default "";
+
+
+    /**
+     * 数据类型转换模板
+     * 通常是date类型转换
+     *
+     * @return
+     */
+    String[] patterns() default {};
+
+
+    /**
+     * Between 参数之间的分隔符，仅对参数是字符串时有效
+     * <p>
+     * 通常用于时间，如： 2020-01-01|2020-03-01
+     *
+     * @return
+     */
+    String paramDelimiter() default "";
 
 
     /**

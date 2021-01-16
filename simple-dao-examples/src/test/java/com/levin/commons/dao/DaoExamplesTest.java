@@ -15,7 +15,9 @@ import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryHelper;
+import com.levin.commons.dao.support.PagingQueryReq;
+import com.levin.commons.dao.support.QueryResponse;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import org.junit.Before;
@@ -101,7 +103,6 @@ public class DaoExamplesTest {
         Assert.notNull(entityManager);
 
 
-
     }
 
 
@@ -171,7 +172,7 @@ public class DaoExamplesTest {
 
         n = n - jpaDao.updateTo(TestEntity.class, "e")
                 .set(E_TestEntity.name, "updateName")
-                .in(E_TestEntity.state, "S2,S4")
+                .in(E_TestEntity.state, "S2","S4")
                 .notIn(E_TestEntity.category, "C1", "C4")
                 .eq(E_TestEntity.editable, true)
                 .update();
@@ -323,7 +324,7 @@ public class DaoExamplesTest {
 
         List<FromStatementDTO> byQueryObj = jpaDao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
 
-       // System.out.println(byQueryObj);
+        // System.out.println(byQueryObj);
 
         assert byQueryObj.size() > 0;
 
@@ -331,7 +332,7 @@ public class DaoExamplesTest {
         List<TableJoin3> byQueryObj1 = jpaDao.findByQueryObj(TableJoin3.class, new TableJoin3());
 
 
-       // System.out.println(byQueryObj1);
+        // System.out.println(byQueryObj1);
 
         assert byQueryObj1.size() > 0;
 
@@ -553,12 +554,26 @@ public class DaoExamplesTest {
         }
 
         try {
-            groupDao.findOneAndRepeatGetResult(null, "Group", null, new DefaultPaging(1, 10));
+            groupDao.findOneAndRepeatGetResult(null, "Group", null, new PagingQueryReq(1, 10));
             throw new RuntimeException("重复获取结果方法没有抛出异常");
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+
+    }
+
+    @Test
+    public void testObjectArrayType() {
+
+        assert new String[0] instanceof Object[];
+
+        assert new Integer[0] instanceof Object[];
+        assert new User[0] instanceof Object[];
+
+        Object obj = new int[0];
+
+        assert !(obj instanceof Object[]);
 
     }
 
@@ -640,7 +655,7 @@ public class DaoExamplesTest {
     @Test
     public void testUserDao() {
 
-        DefaultPaging paging = new DefaultPaging();
+        PagingQueryReq paging = new PagingQueryReq();
 
         paging.setPageSize(10);
 
@@ -854,6 +869,34 @@ public class DaoExamplesTest {
 
 
     @org.junit.Test
+    public void testPagingQueryHelper() throws Exception {
+
+        int n = 0;
+        while (n++ < 20) {
+
+            long st = System.currentTimeMillis();
+
+            QueryResponse<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao,
+                    new QueryResponse<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
+
+
+            System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
+
+        }
+
+    }
+
+    @org.junit.Test
+    public void testPagingQueryHelper2() throws Exception {
+
+        QueryResponse<TableJoin3> resp = PagingQueryHelper.findByPageOption(jpaDao,
+                QueryResponse.class, new TableJoin3().setRequireTotals(true));
+
+        System.out.println(resp.getTotals());
+    }
+
+
+    @org.junit.Test
     public void testStatDTO2() throws Exception {
 
         List<UserStatDTO> byQueryObj = jpaDao.findByQueryObj(UserStatDTO.class, new UserStatDTO());
@@ -1002,7 +1045,7 @@ public class DaoExamplesTest {
     public void testTableJoinStatDTO() throws Exception {
 
 
-        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO(), new DefaultPaging(1, 10));
+        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO(), new PagingQueryReq(1, 10));
 //        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
 
         String aa = "Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     Group By  g.name Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  Order By  Count( 1 ) Desc , avg Desc , g.name Desc";
@@ -1226,8 +1269,8 @@ public class DaoExamplesTest {
 
         Map elMap = new LinkedHashMap();
 
-        elMap.put("Q_Between_id", "12,34");
-        elMap.put("Q_Not_In_id", "12,34,534,546,456");
+        elMap.put("Q_Between_id", " 12 , 34");
+        elMap.put("Q_Not_In_id", " 12,34, 534,546, 456");
         elMap.put("Q_NotIn_name", "12,34,534,546,456");
         elMap.put("Q_Gt_createTime", "2012/01/30 23:59:00");
         elMap.put("Q_Not_parentId", 90);

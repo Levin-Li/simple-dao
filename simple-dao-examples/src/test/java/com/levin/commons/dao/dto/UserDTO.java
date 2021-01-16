@@ -10,17 +10,19 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryReq;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
 
-@TargetOption(entityClass = User.class, alias = "u", maxResults = 100,fromStatement = "jpa_dao_test_User")
+@TargetOption(entityClass = User.class, alias = "u", maxResults = 100, fromStatement = "jpa_dao_test_User")
 public class UserDTO {
 
 
-    Paging paging = new DefaultPaging(1, 20);
+    Paging paging = new PagingQueryReq(1, 20);
 
 
     Long id;
@@ -32,10 +34,13 @@ public class UserDTO {
     protected Integer orderCode;
 
     @GroupBy
-    @In(not = true,having = true)
+    @In(not = true, having = true)
     String[] state = new String[]{"A", "B", "C"};
 
-//    @Ignore
+    @NotIn(paramDelimiter = ",")
+    String notInName = "A,B,C";
+
+    //    @Ignore
     protected Boolean enable = true;
 
     @AND
@@ -53,6 +58,8 @@ public class UserDTO {
     @END
     protected String remark = "desc";
 
+    @Between(paramDelimiter = "-", patterns = "yyyyMMDD")
+    String betweenCreateTime = "20190101-20220201";
 
     @Update
     protected Date lastUpdateTime = new Date();

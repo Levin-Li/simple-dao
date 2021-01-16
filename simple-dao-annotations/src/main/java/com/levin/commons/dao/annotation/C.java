@@ -51,7 +51,6 @@ public @interface C {
     /**
      * 首先不是 NUll 对象 ，也不是空字符串
      * 如果是数组或是集合或是 Map 也不是空
-     *
      */
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
     String NOT_NULL = "NOT_EMPTY";
@@ -189,6 +188,26 @@ public @interface C {
      */
 
     String paramExpr() default "";
+
+
+    /**
+     * 数据类型转换模板
+     * 通常是date类型转换
+     *
+     * @return
+     */
+    String[] patterns() default {};
+
+
+    /**
+     * 参数之间的分隔符，仅对参数是字符串时有效
+     * 如
+     * <p>
+     * 通常用于时间，如： 2020-01-01|2020-03-01
+     *
+     * @return
+     */
+    String paramDelimiter() default "";
 
 
     /**

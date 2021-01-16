@@ -103,10 +103,16 @@ public abstract class ObjectUtil {
     /**
      * @param source
      * @param targetType
+     * @param patterns   转换表达式，如 yyyyMMdd
      * @param <T>
      * @return
      */
-    public static <T> T convert(Object source, Class<T> targetType) {
+    public static <T> T convert(Object source, Class<T> targetType, String... patterns) {
+
+
+        if (targetType == null || targetType == Void.class) {
+            return (T) source;
+        }
 
         //对枚举类型进行转换
         if (targetType.isEnum()) {
@@ -115,8 +121,7 @@ public abstract class ObjectUtil {
             } else if (source instanceof Number) {
                 return targetType.getEnumConstants()[((Number) source).intValue()];
             } else if (source instanceof CharSequence) {
-                Class enumType = targetType;
-                return (T) Enum.valueOf(enumType, "" + source);
+                return (T) Enum.valueOf((Class<Enum>) targetType, source.toString());
             }
         }
 

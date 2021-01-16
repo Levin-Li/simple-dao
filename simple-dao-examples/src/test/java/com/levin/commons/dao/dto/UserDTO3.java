@@ -8,7 +8,7 @@ import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 
 
@@ -17,7 +17,7 @@ import lombok.Data;
 public class UserDTO3 {
 
 
-    Paging paging = new DefaultPaging(1, 20);
+    Paging paging = new PagingQueryReq(1, 20);
 
     @Select
     @Gt

@@ -504,31 +504,35 @@ public abstract class QueryAnnotationUtil {
      */
     public static Object filterNullValue(Object value, boolean isFilterEmptyString) {
 
-        if (isNull(value, isFilterEmptyString))
+        ////@todo 优化性能
+
+        if (isNull(value, isFilterEmptyString)) {
             return null;
+        }
 
         if (value.getClass().isArray()) {
 
-            ArrayList list = new ArrayList(7);
-
             int length = Array.getLength(value);
+
+            ArrayList list = new ArrayList(length);
 
             for (int i = 0; i < length; i++) {
                 Object v = Array.get(value, i);
-                if (!isNull(v, isFilterEmptyString))
+                if (!isNull(v, isFilterEmptyString)) {
                     list.add(v);
+                }
             }
 
             return list;
-        }
 
-        if (value instanceof Collection) {
+        } else if (value instanceof Collection) {
 
-            ArrayList list = new ArrayList(7);
+            ArrayList list = new ArrayList(((Collection) value).size());
 
             for (Object v : (Collection) value) {
-                if (!isNull(v, isFilterEmptyString))
+                if (!isNull(v, isFilterEmptyString)) {
                     list.add(v);
+                }
             }
             return list;
         }

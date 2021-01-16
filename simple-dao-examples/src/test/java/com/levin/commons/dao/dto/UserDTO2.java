@@ -10,7 +10,7 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.support.DefaultPaging;
+import com.levin.commons.dao.support.PagingQueryReq;
 
 import java.util.Date;
 
@@ -19,7 +19,7 @@ import java.util.Date;
 public class UserDTO2 {
 
 
-    Paging paging = new DefaultPaging(1, 20);
+    Paging paging = new PagingQueryReq(1, 20);
 
 
     Long id;

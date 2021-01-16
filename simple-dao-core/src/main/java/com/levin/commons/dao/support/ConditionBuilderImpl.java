@@ -1413,7 +1413,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             c = (C) opAnno;
         }
 
-
         if (c == null) {
 
             //把其它注解转换为 C 注解
@@ -1578,13 +1577,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             if (value == null) {
                 return (T) Boolean.FALSE;
-            }else if (value instanceof CharSequence) {
+            } else if (value instanceof CharSequence) {
                 return (T) (Boolean) (((CharSequence) value).toString().trim().length() > 0);
-            }else if (value.getClass().isArray()) {
+            } else if (value.getClass().isArray()) {
                 return (T) (Boolean) (Array.getLength(value) > 0);
-            }else if (value instanceof Collection) {
+            } else if (value instanceof Collection) {
                 return (T) (Boolean) (((Collection) value).size() > 0);
-            }else if (value instanceof Map) {
+            } else if (value instanceof Map) {
                 return (T) (Boolean) (((Map) value).size() > 0);
             }
 

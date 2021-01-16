@@ -155,6 +155,15 @@ public @interface NotEq {
 
 
     /**
+     * 数据类型转换模板
+     * 通常是date类型转换
+     *
+     * @return
+     */
+    String[] patterns() default {};
+
+
+    /**
      * 对整个表达式的包围后缀
      *
      * @return

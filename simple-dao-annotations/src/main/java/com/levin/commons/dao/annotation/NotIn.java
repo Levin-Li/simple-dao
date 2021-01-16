@@ -155,6 +155,23 @@ public @interface NotIn {
 
 
     /**
+     * 数据类型转换模板
+     * 通常是date类型转换
+     *
+     * @return
+     */
+    String[] patterns() default {};
+
+
+    /**
+     * 参数之间的分隔符，仅对参数是字符串时有效
+     *
+     * @return
+     */
+    String paramDelimiter() default "";
+
+
+    /**
      * 对整个表达式的包围后缀
      *
      * @return

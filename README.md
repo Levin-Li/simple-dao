@@ -47,7 +47,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.10-SNAPSHOT</version>
+            <version>2.2.11-SNAPSHOT</version>
         </dependency>
         
 ##### 1.2 定义DTO及注解
@@ -247,6 +247,86 @@
            String groupName;
        
        } 
+
+
+##### 1.5 分页查询支持
+   
+   查询辅助类 [PagingQueryHelper](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingQueryHelper.java) 
+   通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。             
+   
+     //使用示例
+     QueryResponse<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao, 
+                             new QueryResponse<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
+   
+   
+       
+   Dao 方法查询结果和总记录数
+       
+       dao.findAndCount(Object... queryObjs);
+   
+   
+   查询 DTO 对象分页通过注解设置
+   
+     @Data
+     @Accessors(chain = true)
+     //@Builder
+     @FieldNameConstants
+     public class TestQueryReq
+             implements Serializable {
+             
+             @Ignore
+             @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
+             boolean isRequireTotals = false;
+         
+             @Ignore
+             @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
+             boolean isRequireResultList = true;
+         
+             @Ignore
+             @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
+             int pageIndex = 1;
+         
+             @Ignore
+             @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
+             int pageSize = 20;
+          
+     }
+   
+       
+   查询结果响应类 [QueryResponse](./simple-dao-core/src/main/java/com/levin/commons/dao/support/QueryResponse.java) 
+   
+      @Data
+      @Accessors(chain = true)
+      //@Builder
+      @FieldNameConstants
+      public class QueryResponse<T> implements Serializable {
+      
+          @Ignore
+          @Desc("返回码，0 为正确，其它为异常情况")
+          int code;
+      
+          @Ignore
+          @Desc("提示消息-通常用于展示给客户看")
+          String msg;
+      
+          @Ignore
+          @Desc("详细信息-通常用于辅助调试")
+          String detailMsg;
+          
+           @Ignore
+           @Desc("总记录数-用于支持分页查询")
+           @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
+           long totals = -1;
+          
+           @Ignore
+           @Desc("数据")
+           @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
+           T data;
+           
+          public QueryResponse() {
+          }
+      }
+
 
 ###  2、组件使用方式
 
@@ -661,6 +741,15 @@
    以上将生成OrderBy将生成如下语句：
 
     Order By  area Asc , name Desc , createTime Desc , orderCode Desc
+    
+    
+   简单排序注解 SimpleOrderBy 
+   
+         @SimpleOrderBy(condition = "state.length > 0")
+         String[] orderBy = {"state desc", "name asc"};
+     
+         @SimpleOrderBy(condition = "name != null")
+         String orderBy2 = "score desc , category asc";  
 
 
 ### 10、使用注意事项
@@ -778,9 +867,29 @@
    以上字段将被会自动转换成对应的类型。
    
    
-   日期类型转换使用 Spring 的注解 DateTimeFormat
-   
+   日期类型转换使用 Spring 的注解 DateTimeFormat 
    数值类型转换使用 Spring 的注解 NumberFormat
+   
+   日期字段转换说明
+   
+          @Between(paramDelimiter = "-", patterns = "yyyyMMdd")
+      //    @Between(value = E_User.createTime, paramDelimiter = "-",patterns = "yyyyMMdd")
+          String betweenCreateTime = "20190101-20220201";
+          
+          //生成语句 createTime between ? AND ?
+          
+   其它特性
+   
+      @NotIn(paramDelimiter = ",")
+      String notInName = "A,B,C";  
+      //生成语句 name not in (:?,:?,:?)
+      
+       @In(not = true, having = true)
+       String[] state = new String[]{"A", "B", "C"}; 
+       
+       //生成语句 Not(state in (:?,:?,:?)) 
+       
+          
 
 #### 10.7 避免 N + 1 查询，关联属性的自动抓取(仅对JPA有效)
 
@@ -868,6 +977,7 @@
            boolean isSafeMode();
            
        }
+   
    
             
 ### 12、附录
