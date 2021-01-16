@@ -29,9 +29,7 @@
    
    
 ### 1 快速上手
-   
-   
-   
+
 #### 1.1 引入依赖
    二进制文件发布在[https://jitpack.io](https://jitpack.io)
    
@@ -50,7 +48,7 @@
             <version>2.2.11-SNAPSHOT</version>
         </dependency>
         
-##### 1.2 定义DTO及注解
+#### 1.2 定义DTO及注解
 
      /**
       * 数据传输对象(兼查询对象，通过注解产生SQL语句)
@@ -86,7 +84,7 @@
   其它DTO用例参考：[Dto注解](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto) 
    
 
-##### 1.3 配置JPA实体扫描 & 执行查询
+#### 1.3 配置JPA实体扫描 & 执行查询
 
   a) 在boot启动类上配置实体扫描注解
    
@@ -114,11 +112,11 @@
        AND name LIKE '%' ||  ?4  || '%'  
        Group By  state
   
-##### 1.4 多表连接查询
+#### 1.4 多表连接查询
   
-###### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
+##### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
-   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
+   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)
    
       //查询对象，和结果对象
       @Data
@@ -163,10 +161,12 @@
        Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
        
        
-###### 1.4.2 多表关联查询-用 JoinOption 注解  [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
-
+##### 1.4.2 多表关联查询-用 JoinOption 注解  [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
    注解代码 @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
-                             alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
+                             alias = E_Group.ALIAS
+                             ,joinColumn = E_Group.id
+                             ,joinTargetAlias = E_User.ALIAS
+                             ,joinTargetColumn = E_User.group)
         
        
        import com.levin.commons.dao.JoinOption;
@@ -206,7 +206,7 @@
           
           
           
-###### 1.4.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
+##### 1.4.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
    
    注解代码 @TargetOption(
                        tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id"
@@ -249,7 +249,7 @@
        } 
 
 
-##### 1.5 分页查询支持
+#### 1.5 分页查询支持
    
    查询辅助类 [PagingQueryHelper](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingQueryHelper.java) 
    通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。             
@@ -265,7 +265,7 @@
        dao.findAndCount(Object... queryObjs);
    
    
-   查询 DTO 对象分页通过注解设置
+   查询 DTO 对象分页通过PageOption注解设置
    
      @Data
      @Accessors(chain = true)
@@ -313,15 +313,15 @@
           @Desc("详细信息-通常用于辅助调试")
           String detailMsg;
           
-           @Ignore
-           @Desc("总记录数-用于支持分页查询")
-           @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
-           long totals = -1;
+          @Ignore
+          @Desc("总记录数-用于支持分页查询")
+          @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
+          long totals = -1;
           
-           @Ignore
-           @Desc("数据")
-           @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-           T data;
+          @Ignore
+          @Desc("数据")
+          @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
+          T data;
            
           public QueryResponse() {
           }
@@ -333,6 +333,7 @@
 #### 2.1 直接使用通用Dao（推荐）
 
 ##### 2.1.1 使用JpaDao
+
    在服务层代码中通过Spring注入JpaDao实例，通过JpaDao动态创建。
 
    使用示例：
@@ -619,7 +620,7 @@
        }                      
       
 
-### 6、指定字段的查询和数据更新
+### 6、查询和数据更新
 
   选择查询注解：
 
