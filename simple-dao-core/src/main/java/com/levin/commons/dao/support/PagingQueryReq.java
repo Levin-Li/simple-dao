@@ -3,12 +3,13 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.annotation.Ignore;
+import com.levin.commons.service.domain.ServiceRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import java.io.Serializable;
+
 
 /**
  * @author llw
@@ -19,7 +20,7 @@ import java.io.Serializable;
 //@Builder
 @FieldNameConstants
 public class PagingQueryReq
-        implements Paging, Serializable {
+        implements Paging, ServiceRequest {
 
     @Ignore
     @Schema(description = "是否查询总记录数")
@@ -40,6 +41,10 @@ public class PagingQueryReq
     @Schema(description = "页面大小")
     @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
     int pageSize = 20;
+
+    @Schema(description = "是否使用缓存")
+    @Ignore
+    Boolean fromCache;
 
     public PagingQueryReq() {
     }
