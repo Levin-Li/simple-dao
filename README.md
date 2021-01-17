@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
+
 ### 简介
    
    SimpleDao是一个使用注解生成SQL语句和参数的组件。
@@ -45,7 +47,7 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.11-SNAPSHOT</version>
+            <version>2.2.12-SNAPSHOT</version>
         </dependency>
         
 #### 1.2 定义DTO及注解
