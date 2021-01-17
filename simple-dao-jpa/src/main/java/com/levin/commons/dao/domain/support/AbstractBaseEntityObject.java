@@ -3,9 +3,9 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.BaseEntityObject;
 import com.levin.commons.dao.domain.Identifiable;
 import com.levin.commons.service.domain.Desc;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
+import lombok.*;
+import lombok.experimental.*;
+
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -15,6 +15,7 @@ import java.util.Objects;
 @MappedSuperclass
 @Data
 @Accessors(chain = true)
+@FieldNameConstants
 public abstract class AbstractBaseEntityObject<ID extends Serializable>
         implements BaseEntityObject<ID> {
 

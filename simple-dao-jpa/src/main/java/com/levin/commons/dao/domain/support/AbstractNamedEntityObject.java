@@ -4,6 +4,7 @@ import com.levin.commons.dao.domain.NamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -13,6 +14,7 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 @Desc("命名对象")
+@FieldNameConstants
 public abstract class AbstractNamedEntityObject<ID extends Serializable>
         extends AbstractBaseEntityObject<ID>
         implements NamedEntityObject<ID> {

@@ -6,6 +6,7 @@ import com.levin.commons.dao.domain.TreeObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 @Data
 @Accessors(chain = true)
-
+@FieldNameConstants
 @MappedSuperclass
 public abstract class AbstractTreeObject<ID extends Serializable, T extends Identifiable<ID>>
         extends AbstractNamedEntityObject<ID>
