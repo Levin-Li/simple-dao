@@ -17,7 +17,7 @@ import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
-import com.levin.commons.dao.support.PagingQueryResp;
+import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import org.junit.Before;
@@ -876,8 +876,8 @@ public class DaoExamplesTest {
 
             long st = System.currentTimeMillis();
 
-            PagingQueryResp<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao,
-                    new PagingQueryResp<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
+            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao,
+                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
 
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
@@ -889,8 +889,8 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testPagingQueryHelper2() throws Exception {
 
-        PagingQueryResp<TableJoin3> resp = PagingQueryHelper.findByPageOption(jpaDao,
-                PagingQueryResp.class, new TableJoin3().setRequireTotals(true));
+        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(jpaDao,
+                PagingData.class, new TableJoin3().setRequireTotals(true));
 
         System.out.println(resp.getTotals());
     }

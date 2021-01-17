@@ -3,8 +3,6 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.service.domain.Desc;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;

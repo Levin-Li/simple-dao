@@ -12,19 +12,27 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 查询响应结果
+ * 分页数据持有
  */
 
 @Data
 @Accessors(chain = true)
 //@Builder
 @FieldNameConstants
-public class PagingQueryResp<T> implements Serializable {
+public class PagingData<T> implements Serializable {
 
     @Ignore
     @Desc("总记录数-用于支持分页查询")
     @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
     long totals = -1;
+
+    @Ignore
+    @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
+    int pageIndex = -1;
+
+    @Ignore
+    @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
+    int pageSize = -1;
 
     @Ignore
     @Desc("数据结果")
@@ -41,6 +49,7 @@ public class PagingQueryResp<T> implements Serializable {
         return records == null || records.isEmpty();
     }
 
-    public PagingQueryResp() {
+    public PagingData() {
     }
+
 }

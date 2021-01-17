@@ -1241,10 +1241,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (validator != null
                 && hasContent(validator.expr())) {
 
-            boolean ok = evalExpr(bean, value, name, validator.expr());
-
-            if (!ok) {
-                throw new StatementBuildException(bean.getClass() + " group valid fail: " + validator.promptInfo() + " on field " + name, validator.promptInfo());
+            //如果验证识别
+            if (!Boolean.TRUE.equals(evalExpr(bean, value, name, validator.expr()))) {
+                throw new StatementBuildException(bean.getClass() + " group valid fail: "
+                        + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
 
         }

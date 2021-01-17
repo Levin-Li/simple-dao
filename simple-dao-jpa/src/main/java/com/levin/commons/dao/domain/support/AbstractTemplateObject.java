@@ -6,6 +6,7 @@ import com.levin.commons.dao.domain.TemplateObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,6 +15,7 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 @Desc("模板对象")
+@FieldNameConstants
 public abstract class AbstractTemplateObject<ID extends Serializable, TEMPLATE extends EntityObject<ID>>
         extends AbstractNamedEntityObject<ID>
         implements TemplateObject<TEMPLATE, String> {

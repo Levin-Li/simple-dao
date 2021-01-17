@@ -389,9 +389,24 @@ public class JpaDaoImpl
 
     }
 
+    /**
+     * 检查访问级别
+     * 暂不实现
+     *
+     * @param entity
+     */
+//    void checkAccessLevel(Object entity, EntityOption.AccessLevel accessLevel) {
+//        EntityOption entityOption = entity.getClass().getAnnotation(EntityOption.class);
+//
+//        if (entityOption != null) {
+//
+//        }
+//    }
     @Override
     @Transactional
     public Object create(Object entity) {
+
+//        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
 
         //如果有ID对象，将会抛出异常
         EntityManager em = getEntityManager();
@@ -419,6 +434,7 @@ public class JpaDaoImpl
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
             if (getEntityId(entity) != null) {
+//                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
                 entity = em.merge(entity);
                 mergeOk = true;
             }
@@ -431,6 +447,7 @@ public class JpaDaoImpl
 
         if (!mergeOk) {
             //removed 状态的实体，persist可以处理
+//            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
             em.persist(entity);
         }
 
@@ -450,6 +467,7 @@ public class JpaDaoImpl
         }
 
         if (entity != null) {
+//            checkAccessLevel(entity, EntityOption.AccessLevel.Deletable);
             em.remove(entity);
             tryAutoFlushAndDetachAfterUpdate(em, null);
         }
@@ -458,6 +476,11 @@ public class JpaDaoImpl
 
     @Override
     public boolean deleteById(Class entityClass, Object id) {
+
+//        if (id != null) {
+//            checkAccessLevel(entityClass, EntityOption.AccessLevel.Deletable);
+//        }
+
         return update("delete from " + entityClass.getName()
                 + " where " + getEntityIdAttrName(entityClass) + " = " + getParamPlaceholder(false), id) > 0;
     }
@@ -509,7 +532,6 @@ public class JpaDaoImpl
         }
 
         return QLUtils.replaceParamPlaceholder(sql, placeholder, getParamStartIndex(isNative), "?", null);
-
     }
 
 
@@ -622,7 +644,6 @@ public class JpaDaoImpl
 
         return fieldOrMethod;
     }
-
 
     /**
      * @fix 修复实体类继承时无法

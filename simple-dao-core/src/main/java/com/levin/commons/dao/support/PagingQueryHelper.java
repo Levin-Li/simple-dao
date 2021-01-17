@@ -29,26 +29,26 @@ public abstract class PagingQueryHelper {
      * <p>
      * 通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。
      *
-     * @param simpleDao     dao
-     * @param queryResponse 查询结果，可以是对象实例，也是可以是 Class 对象
-     * @param queryDto      查询 DTO
-     * @param <T>           查询结果
+     * @param simpleDao  dao
+     * @param pagingData 查询结果，可以是对象实例，也是可以是 Class 对象
+     * @param queryDto   查询 DTO
+     * @param <T>        查询结果
      * @return
      */
-    public static <T> T findByPageOption(SimpleDao simpleDao, Object queryResponse, Object queryDto) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto) {
 
-        if (queryResponse instanceof Class) {
-            queryResponse = BeanUtils.instantiateClass((Class<T>) queryResponse);
+        if (pagingData instanceof Class) {
+            pagingData = BeanUtils.instantiateClass((Class<T>) pagingData);
         }
 
-        if (queryResponse == null) {
+        if (pagingData == null) {
             return (T) simpleDao.findByQueryObj(queryDto);
         }
 
         //需要总记录数
         if (isRequireRecordTotals(queryDto)) {
-            setValueByPageOption(queryResponse,
-                    PageOption.Type.RequireTotals, (field) -> simpleDao.countByQueryObj(queryDto));
+            setValueByPageOption(pagingData,
+                    PageOption.Type.RequireTotals, false, (field) -> simpleDao.countByQueryObj(queryDto));
         }
 
         //需要结果集
@@ -85,22 +85,32 @@ public abstract class PagingQueryHelper {
                 }
 
                 resultList = simpleDao.findByQueryObj(queryDto, paging);
+
+                setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
+
+                setValueByPageOption(pagingData, PageOption.Type.PageSize, true, field -> size);
+
             }
 
             //设置结果集
             final Object resultListCopy = resultList;
 
-            setValueByPageOption(queryResponse, PageOption.Type.RequireResultList, field -> resultListCopy);
+            setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultListCopy);
 
         }
 
-        return (T) queryResponse;
+        return (T) pagingData;
     }
 
 
-    private static void setValueByPageOption(Object target, Object key, Function<Field, Object> fun) {
+    private static void setValueByPageOption(Object target, Object key, boolean allowFieldNotExist, Function<Field, Object> fun) {
 
         Field field = getPageOptionFields(target.getClass()).get(key);
+
+        if (field == null
+                && allowFieldNotExist) {
+            return;
+        }
 
         if (field == null) {
             throw new IllegalArgumentException(" 对象[" + target.getClass().getName() + "] 没有 " + key.getClass().getName() + "注解");

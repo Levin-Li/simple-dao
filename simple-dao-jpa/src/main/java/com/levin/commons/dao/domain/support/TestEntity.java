@@ -5,6 +5,7 @@ import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,6 +14,7 @@ import javax.persistence.Id;
 @Entity(name = "jpa_dao_test_entity")
 @Data
 @Accessors(chain = true)
+@FieldNameConstants
 public class TestEntity
         extends AbstractTreeObject<Long, TestEntity>
         implements StatefulObject<String> {
