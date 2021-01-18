@@ -31,10 +31,10 @@
         </dependency>
 
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
-        </dependency>
+        </dependency>-->
 
 
         <dependency>

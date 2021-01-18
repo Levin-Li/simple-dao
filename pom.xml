@@ -366,6 +366,27 @@
 
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>构建classpath</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <regenerateFile>true</regenerateFile>
+                            <outputFile>${project.build.directory}/classpath.txt</outputFile>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>冲突分销</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>analyze-duplicate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
 
@@ -395,6 +416,9 @@
                         <goals>
                             <goal>flatten</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
                     </execution>
 
                     <execution>
