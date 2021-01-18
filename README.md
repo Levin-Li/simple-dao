@@ -1,6 +1,6 @@
-[![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
 
-### 简介
+
+### 简介  [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
    
    SimpleDao是一个使用注解生成SQL语句和参数的组件。
    
