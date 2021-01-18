@@ -34,8 +34,10 @@
 ### 1 快速上手
 
 #### 1.1 引入依赖
+
+   [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
    
-   二进制文件发布在[https://jitpack.io/#Levin-Li/simple-dao](https://jitpack.io/#Levin-Li/simple-dao) [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
+   二进制文件发布在[jitpack.io](https://jitpack.io/#Levin-Li/simple-dao)
    
            <repositories>
        
