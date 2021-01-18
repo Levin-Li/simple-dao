@@ -899,6 +899,8 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testStatDTO2() throws Exception {
 
+        jpaDao.selectFrom(User.class).setContext();
+
         List<UserStatDTO> byQueryObj = jpaDao.findByQueryObj(UserStatDTO.class, new UserStatDTO());
 
         System.out.println(byQueryObj);

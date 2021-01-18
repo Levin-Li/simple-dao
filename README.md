@@ -1,6 +1,9 @@
+
+
 [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
 
-### 简介
+
+### 简介 
    
    SimpleDao是一个使用注解生成SQL语句和参数的组件。
    
@@ -335,7 +338,7 @@
       }
 
 
-###  2组件使用方式
+### 2 组件使用方式
 
 #### 2.1 直接使用通用Dao（推荐）
 
@@ -368,7 +371,7 @@
 
 #### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用JpaDao)
 
-#### 2.2.1 自定义DAO接口
+##### 2.2.1 自定义DAO接口
 
    接口DAO案例：
 
@@ -418,7 +421,7 @@
        </plugin>
 
 
-#### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
+##### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
 
    DAO抽象类案例：
 
@@ -497,7 +500,7 @@
     //使用Dao
      groupDao.find() ...
            
-#### 2.2.2 设置扫描包名 & 启用扫描  
+##### 2.2.3 设置扫描包名 & 启用扫描  
 
      //设置 EntityRepository 注解的扫描范围        
      @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
@@ -530,35 +533,37 @@
   语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
 
 
-### 4DTO 查询注解
+### 4 简单查询
     
    查询注解 主要再 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
+   
+   注意若果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
 
    DTO类字段定义示例：
 
        @Desc("店铺id")
-       private Long storeId;
+        Long storeId;
 
        @Desc("店铺名称")
        @Eq
-       private String storeName;
+        String storeName;
 
        @Desc("店铺所在区域")
-       private String storeArea;
+        String storeArea;
 
        @Desc("店铺状态")
-       private StoreStatus storeStatus;
+        StoreStatus storeStatus;
 
        @Desc("店铺库存预警")
-       @Ignore
-       private Boolean storageAlarm;
+       @Ignore // 生成的语句忽略该字段
+        Boolean storageAlarm;
 
        @Desc("商品分类id")
-       @Like
-       private String classId;
+       @Contains
+       String classId;
 
 
-### 5统计查询
+### 5 统计查询(含Having字句)
 
    统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
    
@@ -627,7 +632,7 @@
        }                      
       
 
-### 6查询和数据更新
+### 6 列选择和列更新
 
   选择查询注解：
 
@@ -650,7 +655,7 @@
 
 
 
-### 7逻辑嵌套查询(用于实现复杂的查询条件)
+### 7 复杂查询(逻辑嵌套)
 
    逻辑注解支持
 
@@ -690,7 +695,7 @@
      //逻辑嵌套
      jpaDao.selectFrom("table").and().or().and().end().end().end();
 
-### 8子查询
+### 8 子查询
  
 
 #### 8.1 手动指定子查询语句(paramExpr属性)
@@ -728,7 +733,7 @@
         DTO subQueryDTO = new DTO();
 
 
-### 9排序(OrderBy注解)
+### 9 排序(OrderBy注解)
 
    排序使用OrderBy注解，OrderBy支持字段和参数。
 
@@ -760,9 +765,9 @@
          String orderBy2 = "score desc , category asc";  
 
 
-### 10使用注意事项
+### 10 关于注解
 
-#### 10.1  DTO 查询对象字段无注解的情况
+#### 10.1  查询对象字段无注解
 
 
 ##### 10.1.1 基本类型字段无注解
@@ -775,7 +780,7 @@
 
       name = ?
 
-  注意以上id字段并没有生产条件，默认情况下，字段值为null将忽略这个字段。  null值或是空字符串，字段都将被忽略。
+  注意以上id字段并没有生产条件，默认情况下，字段值为null值或是空字符串，字段都将被忽略。
 
 
 
@@ -797,7 +802,9 @@
 
 #### 10.2 强制忽略
 
-   可以通过Ignore注解强制忽略指定的字段或是类
+   可以通过 Ignore 注解强制忽略指定的字段或是类。
+   如果注解标注在 Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT 三种字段上也将被忽略。
+
 
      //忽略字段
      @Ignore
@@ -811,7 +818,7 @@
 
 #### 10.3 有条件忽略(SPEL表达式)
 
-   大部分的注解都有condition属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解有效，如：
+   大部分的注解都有 condition 属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解有效，如：
 
       @Eq(condition="#_val != null")
       String name = "Echo";
@@ -838,75 +845,73 @@
    
    上下文列表（越后面优先级越高）：
    
-      DaoContext.getGlobalContext()
+      DaoContext.getGlobalContext(); //全局上下文
       
-      DaoContext.getThreadContext()
+      DaoContext.getThreadContext(); //线程上下文
       
-      dao 上下文
+      jpaDao.selectFrom(User.class).setContext(); //dao 实例上下文
       
-      参数上下文
-      
-            
-#### 10.4 有效的注解
+      //参数上下文
+ 
+#### 10.5 字段值自动转换
 
-   如果注解标注在 Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT 三种字段上将被忽略。
-
-
-#### 10.6 自动值转换
-
+##### 10.5.1 查询结果对象值转换  
+ 
    组件集成Spring的值转换功能，如果可以把字符串转换成数组，把字符串转换成日期、数值等。
+   日期类型转换使用 Spring 的注解 DateTimeFormat 
+   数值类型转换使用 Spring 的注解 NumberFormat
 
    如下例子：
-   
-   JPA实体类字段定义：
-
-      Long id;
-
+    
+    //实体对象
+     class Entity{
+      Long id; 
       Date createTime;
-
-   DTO类字段定义 ：
-
-      String id;
- 
+      }
+    
+     //查询结果对象
+     class ResultDto {
+     
+       //自动转换为字符串
+       String id; 
+      
       @GroupBy
       @DateTimeFormat(pattern = "yyyy-MM-dd")  
       String createTime;
-
-   以上字段将被会自动转换成对应的类型。
+      
+      }
+      
+##### 10.5.2 查询对象值转换   
    
+   把 DTO 对象的值转换成数据库查询需要的值类型
+    
+   日期字段转换
    
-   日期类型转换使用 Spring 的注解 DateTimeFormat 
-   数值类型转换使用 Spring 的注解 NumberFormat
-   
-   日期字段转换说明
-   
-          @Between(paramDelimiter = "-", patterns = "yyyyMMdd")
-      //    @Between(value = E_User.createTime, paramDelimiter = "-",patterns = "yyyyMMdd")
-          String betweenCreateTime = "20190101-20220201";
+      @Between(paramDelimiter = "-", patterns = "yyyyMMdd")  // 参数将用 - 号分隔
+      String betweenCreateTime = "20190101-20220201"; //生成语句 createTime between ? AND ?
           
-          //生成语句 createTime between ? AND ?
-          
-   其它特性
+       
+   In ,NotIn ,Between 等注解自动切割字符串为多个参数，如果数据库字段定义是字符串，则不自动用逗号分割，也可以强制指定分隔符 paramDelimiter。
    
       @NotIn(paramDelimiter = ",")
-      String notInName = "A,B,C";  
-      //生成语句 name not in (:?,:?,:?)
+      String notInName = "A,B,C";  //生成语句 name not in (:?,:?,:?)
+      
       
        @In(not = true, having = true)
-       String[] state = new String[]{"A", "B", "C"}; 
+       String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
        
-       //生成语句 Not(state in (:?,:?,:?)) 
-       
-          
+      
+    
+### 11  避免 N + 1 查询         
 
-#### 10.7 避免 N + 1 查询，关联属性的自动抓取(仅对JPA有效)
+#### 11.1 通过实体配置立刻抓取
 
-   1、一对多，多对一模型定义
+   一对多，多对一模型定义 fetch = FetchType.EAGER
   
         @Entity    
         class User{
                 ...
-               @ManyToOne(fetch = FetchType.LAZY) 
+               @ManyToOne(fetch = FetchType.EAGER) 
                @JoinColumn(name = "group_id")
                Group group;
         }     
@@ -915,14 +920,14 @@
          class Group {
                   ...
                 
-                 @ManyToOne(fetch = FetchType.LAZY) 
+                 @ManyToOne(fetch = FetchType.EAGER) 
                  protected T parent; 
                  
                  @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE) 
                  protected Set<T> children;
          }   
      
-  2、通过代码抓取    
+#### 11.2 通过代码抓取    
         
          //查询 User 实，直接通过连接获取所有的孩子节点，避免 N+1 查询   
          jpa.selectFrom(User.class,"u")
@@ -930,7 +935,7 @@
             .find()   
         
   
-  3、通过注解抓取
+#### 11.3 通过注解抓取
   
   查询对象和结果对象都可以增加抓取注解
     
@@ -952,7 +957,7 @@
         //避免 N+1 查询
         List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
         
-### 11 安全模式
+### 12 安全模式
 
    数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
 
@@ -963,7 +968,6 @@
     jpaDao.deleteFrom(User.class)
                    .disableSafeMode()
                    .delete();
-   
    
    
   安全控制接口定义
@@ -986,16 +990,13 @@
            
        }
    
-   
-            
-### 12、附录
+### 13 附录
 
-
-#### 12.1 测试用例
+#### 13.1 测试用例
 
  请参考测试用例： [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
   
-#### 12.2 联系作者
+#### 13.2 联系作者
 
  邮箱：99668980@qq.com
 
