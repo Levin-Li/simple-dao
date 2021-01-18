@@ -561,7 +561,7 @@
        String classId;
 
 
-### 5 统计查询(含Having字句)
+### 5 统计查询
 
    统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
    
