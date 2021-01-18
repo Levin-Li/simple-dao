@@ -14,7 +14,7 @@ import java.util.List;
 public class QLUtils {
 
 
-    private static ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
+    private static final ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
 
     /**
      * @param column
@@ -47,8 +47,9 @@ public class QLUtils {
             sb.append(column);
         }
 
-        if (sb.length() < 1)
+        if (sb.length() < 1) {
             return Collections.emptyList();
+        }
 
 
         String cols = sb.toString().trim();

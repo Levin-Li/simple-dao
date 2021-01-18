@@ -1,10 +1,6 @@
 package com.levin.commons.dao.util;
 
-import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import com.alibaba.druid.sql.parser.SQLStatementParser;
+
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.service.domain.Desc;
@@ -251,26 +247,6 @@ public class ObjectUtilTest {
         return r;
     }
 
-    private static String foundColumn2(String defaultResult, String selectColumns) {
-
-        SQLStatementParser parser = new SQLStatementParser("Select " + selectColumns + " From Test");
-
-        SQLSelectQuery query = parser.createSQLSelectParser().query();
-
-        if (query instanceof SQLSelectQueryBlock) {
-            for (SQLSelectItem item : ((SQLSelectQueryBlock) query).getSelectList()) {
-                // System.out.println(":" + item.getAlias() + "," + item.getExpr() + "," + item.getExpr().getClass());
-
-                if (item.getExpr() instanceof SQLPropertyExpr) {
-                    return item.getExpr().toString();
-                }
-            }
-        }
-
-        return defaultResult;
-
-
-    }
 
 
 //    @Test
@@ -363,7 +339,7 @@ public class ObjectUtilTest {
     public void testConvert() throws Exception {
 
 
-        System.out.println(foundColumn2("no data", " max ( D.dd , E.cc ) ,f.A.B as aa,f.B bb,Count ( * ) cc"));
+        //System.out.println(foundColumn2("no data", " max ( D.dd , E.cc ) ,f.A.B as aa,f.B bb,Count ( * ) cc"));
     }
 
 

@@ -1128,7 +1128,7 @@ public class SelectDaoImpl<T>
     /**
      * 单查询返回值是数组时，尝试自动转换成 Map
      *
-     * @param data
+     * @param data 数组对象
      * @param valueHolder 数据缓存
      * @return
      * @todo 优化性能，直接转换成对象
