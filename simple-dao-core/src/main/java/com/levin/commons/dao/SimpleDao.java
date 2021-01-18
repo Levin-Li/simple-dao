@@ -159,7 +159,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @param <E>
      * @return
      */
-    <E> RS<E> findAndCount(Object... queryObjs);
+    <E> RS<E> findTotalsAndResultList(Object... queryObjs);
 
 
     /**

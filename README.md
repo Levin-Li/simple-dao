@@ -237,76 +237,101 @@
    通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。             
    
      //使用示例
-     QueryResponse<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao, 
-                             new QueryResponse<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
+     PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao, 
+                             new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
    
    
        
    Dao 方法查询结果和总记录数
        
-       dao.findAndCount(Object... queryObjs);
+       dao.findTotalsAndResultList(Object... queryObjs);
    
    
-   查询 DTO 对象分页通过PageOption注解设置
+   分页查询请求，分页查询参数通过PageOption注解获取
    
      @Data
      @Accessors(chain = true)
      //@Builder
      @FieldNameConstants
-     public class TestQueryReq
-             implements Serializable {
-             
-             @Ignore
-             @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
-             boolean isRequireTotals = false;
-         
-             @Ignore
-             @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
-             boolean isRequireResultList = true;
-         
-             @Ignore
-             @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
-             int pageIndex = 1;
-         
-             @Ignore
-             @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
-             int pageSize = 20;
-          
+     public class PagingQueryReq
+             implements Paging, ServiceRequest {
+     
+         @Ignore
+         @Schema(description = "是否查询总记录数")
+         @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
+         boolean isRequireTotals = false;
+     
+         @Ignore
+         @Schema(description = "是否查询结果集")
+         @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
+         boolean isRequireResultList = true;
+     
+         @Ignore
+         @Schema(description = "页面索引")
+         @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置页面索引")
+         int pageIndex = 1;
+     
+         @Ignore
+         @Schema(description = "页面大小")
+         @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
+         int pageSize = 20;
+     
+         @Schema(description = "是否使用缓存")
+         @Ignore
+         Boolean fromCache;
+     
+         public PagingQueryReq() {
+         }
+     
+         public PagingQueryReq(int pageIndex, int pageSize) {
+             this.pageIndex = pageIndex;
+             this.pageSize = pageSize;
+         }
+     
      }
    
        
-   查询结果响应类 [QueryResponse](./simple-dao-core/src/main/java/com/levin/commons/dao/support/QueryResponse.java) 
+   查询结果响应类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
    
       @Data
       @Accessors(chain = true)
       //@Builder
       @FieldNameConstants
-      public class QueryResponse<T> implements Serializable {
+      public class PagingData<T> implements Serializable {
       
           @Ignore
-          @Desc("返回码，0 为正确，其它为异常情况")
-          int code;
-      
-          @Ignore
-          @Desc("提示消息-通常用于展示给客户看")
-          String msg;
-      
-          @Ignore
-          @Desc("详细信息-通常用于辅助调试")
-          String detailMsg;
-          
-          @Ignore
-          @Desc("总记录数-用于支持分页查询")
+          @Schema(description = "总记录数")
           @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
           long totals = -1;
-          
+      
           @Ignore
-          @Desc("数据")
+          @Schema(description = "页面编号")
+          @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
+          int pageIndex = -1;
+      
+          @Ignore
+          @Schema(description = "分页大小")
+          @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
+          int pageSize = -1;
+      
+          @Ignore
+          @Schema(description = "数据集")
           @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-          T data;
-           
-          public QueryResponse() {
+          List<T> records;
+      
+          @Transient
+          public T getFirst() {
+              return isEmpty() ? null : records.get(0);
           }
+      
+          @Transient
+          public boolean isEmpty() {
+              return records == null || records.isEmpty();
+          }
+      
+          public PagingData() {
+          }
+      
       }
 
 

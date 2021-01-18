@@ -902,7 +902,7 @@ public class JpaDaoImpl
     }
 
     @Override
-    public <E> RS<E> findAndCount(Object... queryObjs) {
+    public <E> RS<E> findTotalsAndResultList(Object... queryObjs) {
 
         SelectDao selectDao = newDao(SelectDao.class, queryObjs);
 
