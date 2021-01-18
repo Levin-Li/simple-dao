@@ -47,13 +47,13 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.12-SNAPSHOT</version>
+            <version>2.2.13-SNAPSHOT</version>
         </dependency>
         
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao</artifactId>
-            <version>2.2.12-SNAPSHOT</version>
+            <version>2.2.13-SNAPSHOT</version>
         </dependency>
         
 #### 1.2 定义DTO及注解
@@ -122,9 +122,10 @@
   
 #### 1.4 多表连接查询
   
-##### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
+##### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
-   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)
+   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)，会自动找实体对象之间的关联字段。
+   对象 User 中有 Group类型的字段，但有多个Group类型的字段时，需要手动指定关联的字段
    
       //查询对象，和结果对象
       @Data
@@ -140,15 +141,15 @@
               })
       public class TableJoinStatDTO {
       
-          //    统计部门人数，并且排序
+          //统计部门人数，并且排序
           @Count(havingOp = Op.Gt, orderBy = @OrderBy)
           Integer userCnt = 5;
       
-          //    统计部门总得分
+          //统计部门总得分
           @Sum
           Long sumScore;
       
-          //    统计部门平均分，并且排序
+          //统计部门平均分，并且排序
           @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
           Long avgScore = 20L;
       
@@ -169,24 +170,10 @@
        Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
        
        
-##### 1.4.2 多表关联查询-用 JoinOption 注解  [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
-   注解代码 @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
-                             alias = E_Group.ALIAS
-                             ,joinColumn = E_Group.id
-                             ,joinTargetAlias = E_User.ALIAS
-                             ,joinTargetColumn = E_User.group)
+##### 1.4.2 多表关联查询-用 JoinOption 注解  [TableJoin3](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
+       
+   以下 @TargetOption 注解部分，手动指定关联的别名和关联的字段，joinTargetAlias = E_User.ALIAS , joinTargetColumn = E_User.group。
         
-       
-       import com.levin.commons.dao.JoinOption;
-       import com.levin.commons.dao.TargetOption;
-       import com.levin.commons.dao.annotation.Gt;
-       import com.levin.commons.dao.annotation.Gte;
-       import com.levin.commons.dao.annotation.select.Select;
-       import com.levin.commons.dao.domain.E_Group;
-       import com.levin.commons.dao.domain.E_User;
-       import lombok.Data;
-       import lombok.experimental.Accessors;
-       
        @Data
        @Accessors(chain = true)
        @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
@@ -216,21 +203,8 @@
           
 ##### 1.4.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
    
-   注解代码 @TargetOption(
-                       tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id"
-                       )
-                       
-       import com.levin.commons.dao.JoinOption;
-       import com.levin.commons.dao.TargetOption;
-       import com.levin.commons.dao.annotation.Gt;
-       import com.levin.commons.dao.annotation.Gte;
-       import com.levin.commons.dao.annotation.select.Select;
-       import com.levin.commons.dao.domain.E_Group;
-       import com.levin.commons.dao.domain.E_User;
-       import com.levin.commons.dao.domain.Group;
-       import com.levin.commons.dao.domain.User;
-       import lombok.Data;
-       import lombok.experimental.Accessors;
+   注解代码 @TargetOption( tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" )
+      
        
        @Data
        @Accessors(chain = true)

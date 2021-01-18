@@ -11,12 +11,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
+/**
+ *
+ * SQL 解析工具类
+ *
+ * https://github.com/alibaba/druid/wiki/Druid_SQL_AST
+ *
+ */
 public class QLUtils {
 
 
     private static final ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
 
     /**
+     *
+     *
+     * 只解析 select
+     *
+     *
      * @param column
      * @return
      */
