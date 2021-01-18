@@ -51,6 +51,41 @@
     </modules>
 
 
+    <profiles>
+
+        <profile>
+            <id>01-跳过测试</id>
+            <!--
+                        <activation>
+                            <activeByDefault>true</activeByDefault>
+                        </activation>-->
+
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+
+        </profile>
+
+
+        <profile>
+            <id>02-上传源代码到 Maven</id>
+            <properties>
+                <maven.source.skip>false</maven.source.skip>
+            </properties>
+        </profile>
+
+
+        <profile>
+            <id>03-上传JavaDoc到 Maven</id>
+            <properties>
+                <maven.javadoc.skip>false</maven.javadoc.skip>
+            </properties>
+        </profile>
+
+
+    </profiles>
+
+
     <distributionManagement>
 
         <!--具体变量来自 Setting 文件-->
@@ -72,6 +107,12 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+            <!-- 仓库首页 https://maven.aliyun.com/ -->
+            <id>aliyun-central仓和jcenter仓的聚合仓</id>
+            <url>https://maven.aliyun.com/repository/public</url>
         </repository>
 
     </repositories>
@@ -139,77 +180,6 @@
         </dependency>
 
     </dependencies>
-
-
-    <profiles>
-
-
-        <profile>
-
-            <id>00-使用阿里云maven库（推荐）</id>
-            <!--
-
-                        <activation>
-                            <activeByDefault>true</activeByDefault>
-                        </activation>
-            -->
-
-            <repositories>
-
-                <repository>
-                    <id>ali-maven</id>
-                    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                        <updatePolicy>always</updatePolicy>
-                        <checksumPolicy>fail</checksumPolicy>
-                    </snapshots>
-                </repository>
-
-            </repositories>
-
-        </profile>
-
-
-        <profile>
-            <id>01-跳过测试</id>
-            <!--
-                        <activation>
-                            <activeByDefault>true</activeByDefault>
-                        </activation>-->
-
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-
-        </profile>
-
-
-        <profile>
-            <id>02-上传源代码到 Maven</id>
-
-            <properties>
-                <maven.source.skip>false</maven.source.skip>
-            </properties>
-
-        </profile>
-
-
-        <profile>
-            <id>03-上传JavaDoc到 Maven</id>
-
-            <properties>
-                <maven.javadoc.skip>false</maven.javadoc.skip>
-            </properties>
-
-        </profile>
-
-
-    </profiles>
-
 
     <build>
 
