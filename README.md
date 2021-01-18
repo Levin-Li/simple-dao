@@ -258,22 +258,22 @@
      
          @Ignore
          @Schema(description = "是否查询总记录数")
-         @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
+         @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解获取是否查询总记录数，被标注字段值为 true 或是非空对象")
          boolean isRequireTotals = false;
      
          @Ignore
          @Schema(description = "是否查询结果集")
-         @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
+         @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解获取是否返回结果集列表，被标注字段值为 true 或是非空对象")
          boolean isRequireResultList = true;
      
          @Ignore
          @Schema(description = "页面索引")
-         @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置页面索引")
+         @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解获取页面索引")
          int pageIndex = 1;
      
          @Ignore
          @Schema(description = "页面大小")
-         @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
+         @PageOption(value = PageOption.Type.PageSize, remark = "通过注解获取分页大小")
          int pageSize = 20;
      
          @Schema(description = "是否使用缓存")
@@ -291,7 +291,7 @@
      }
    
        
-   查询结果响应类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
+   分页查询结果类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
    
       @Data
       @Accessors(chain = true)
