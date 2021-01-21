@@ -12,15 +12,15 @@
         <version>2.3.1.RELEASE</version>
     </parent>
 
-    <groupId>com.levin.commons.maven</groupId>
+    <groupId>com.levin.commons</groupId>
     <artifactId>simple-dao-parent</artifactId>
     <version>${levin.simple-dao.version}</version>
     <packaging>pom</packaging>
 
     <properties>
 
-        <levin.simple-dao.version>2.2.13-SNAPSHOT</levin.simple-dao.version>
-        <levin.service-support.version>1.1.17-SNAPSHOT</levin.service-support.version>
+        <levin.simple-dao.version>2.2.12-SNAPSHOT</levin.simple-dao.version>
+        <levin.service-support.version>1.1.18-SNAPSHOT</levin.service-support.version>
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
 
@@ -48,6 +48,7 @@
         <module>simple-dao-jpa</module>
         <module>simple-dao-jpa-starter</module>
         <module>simple-dao-examples</module>
+        <module>simple-dao-code-gen</module>
     </modules>
 
 
@@ -129,7 +130,7 @@
             <!--            </dependency>-->
 
             <dependency>
-                <groupId>com.github.Levin-Li</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>service-support</artifactId>
                 <version>${levin.service-support.version}</version>
                 <scope>provided</scope>
@@ -139,20 +140,23 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>2.1.2</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
                 <version>1.1.24</version>
-                <scope>provided</scope>
             </dependency>
 
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>service-support</artifactId>
+        </dependency>
 
 
         <dependency>
@@ -170,12 +174,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.Levin-Li</groupId>
-            <artifactId>service-support</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -378,6 +376,7 @@
                         </goals>
                     </execution>
                 </executions>
+
             </plugin>
 
         </plugins>

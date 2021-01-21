@@ -3,12 +3,11 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.service.domain.ServiceRequest;
+import com.levin.commons.service.domain.ServiceReq;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-
 
 
 /**
@@ -20,7 +19,7 @@ import lombok.experimental.FieldNameConstants;
 //@Builder
 @FieldNameConstants
 public class PagingQueryReq
-        implements Paging, ServiceRequest {
+        implements Paging, ServiceReq {
 
     @Ignore
     @Schema(description = "是否查询总记录数")
