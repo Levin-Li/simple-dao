@@ -1,6 +1,6 @@
 package ${packageName};
 
-import com.oak.api.model.ApiBaseQueryReq;
+<#--import com.oak.api.model.ApiBaseQueryReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.dao.*;
@@ -12,6 +12,7 @@ import com.levin.commons.dao.annotation.order.*;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
+import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
 import javax.validation.constraints.*;
@@ -21,8 +22,6 @@ import lombok.experimental.*;
 import java.util.*;
 
 import ${entityClassName};
-import ${packageName}.req.*;
-import ${packageName}.info.${entityName}Info;
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
@@ -39,12 +38,14 @@ import ${imp};
  */
 @Schema(description = "查询${desc}")
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Builder
+<#--@EqualsAndHashCode(callSuper = true)-->
+@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
-public class ${className} extends PagingQueryReq implements ApiSignatureRequest {
+public class ${className} extends PagingQueryReq {
 
 <#list fields as field>
     <#if field.type=='Date'>

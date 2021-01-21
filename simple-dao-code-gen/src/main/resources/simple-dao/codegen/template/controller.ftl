@@ -1,17 +1,16 @@
 package ${packageName};
 
-import com.wuxp.api.ApiResp;
-import com.wuxp.api.log.ApiLog;
-import com.wuxp.api.model.Pagination;
-import com.wuxp.api.restful.RestfulApiRespFactory;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
-import ${servicePackageName};
+import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
@@ -37,9 +36,8 @@ public class ${className} {
     @GetMapping("/query")
     @Operation(summary = "查询${entityName}", description = "${desc}")
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req) {
-        return RestfulApiRespFactory.ok(${serviceName?uncap_first}.query(req));
+        return ApiResp.ok(${serviceName?uncap_first}.query(req));
     }
-
 
 
 
@@ -66,7 +64,7 @@ public class ${className} {
     @GetMapping("/{id}")
     @Operation(summary = "详情${entityName}", description = "${desc}")
     public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.type} ${pkField.name}) {
-        return RestfulApiRespFactory.ok(${serviceName?uncap_first}.findById(${pkField.name}));
+        return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 
 

@@ -1,10 +1,10 @@
 package ${packageName};
 
-import com.wuxp.api.ApiResp;
-import com.wuxp.api.model.Pagination;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.dao.support.*;
+import com.levin.commons.service.domain.*;
 
 import ${packageName}.req.*;
 import ${packageName}.info.*;
@@ -17,23 +17,19 @@ import ${packageName}.info.*;
  */
 public interface ${className} {
 
-    @Schema(description = "创建${entityName}")
+    @Schema(description = "创建${desc}")
     ApiResp<${pkField.type}> create(Create${entityName}Req req);
 
-    @Schema(description = "编辑${entityName}")
+    @Schema(description = "编辑${desc}")
     ApiResp<Void> edit(Edit${entityName}Req req);
 
-    @Schema(description = "删除${entityName}")
+    @Schema(description = "删除${desc}")
     ApiResp<Void> delete(Delete${entityName}Req req);
 
-    @Schema(description = "通过ID查找${entityName}")
+    @Schema(description = "通过ID查找${desc}")
     ${entityName}Info findById(${pkField.type} ${pkField.name});
 
-<#--    @Deprecated-->
-<#--    @Schema(description = "分页查找${entityName}")-->
-<#--    Pagination<${entityName}Info> query(Query${entityName}Req req);-->
-
-    @Schema(description = "分页查找${entityName}")
+    @Schema(description = "分页查找${desc}")
     PagingData<${entityName}Info> query(Query${entityName}Req req);
 
 }

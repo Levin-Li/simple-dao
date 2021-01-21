@@ -1,8 +1,8 @@
 package ${packageName};
 
-import com.oak.api.model.ApiBaseReq;
+<#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.update.*;
@@ -30,15 +30,18 @@ import ${imp};
 
 
 /**
- *  创建${entityName}
+ *  创建${desc}
  *  ${.now}
  */
-@Schema(description = "创建${className}的请求")
+@Schema(description = "创建${desc}")
 @Data
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = true)
+@ToString
+<#--@EqualsAndHashCode(callSuper = true)-->
 @FieldNameConstants
-public class ${className} extends ApiBaseReq {
+@AllArgsConstructor
+@Builder
+public class ${className} implements ServiceReq {
 
 <#list fields as field>
     <#if (!field.notUpdate && !field.hasDefValue && !field.complex) || (field.identity?? && !field.identity)>

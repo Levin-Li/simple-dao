@@ -3,7 +3,7 @@ package com.levin.commons.dao.codegen;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.service.domain.Desc;
-import com.levin.commons.service.domain.InjectDomain;
+import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.Secured;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -112,7 +112,7 @@ public final class ServiceModelCodeGenerator {
                 .stream().filter(File::isFile)
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
-                        .replace(File.pathSeparatorChar, '.'))
+                        .replace(File.separatorChar, '.'))
                 .map(fn -> fn.substring(0, fn.length() - suffixLen))
                 .map(n -> {
                     try {
@@ -183,9 +183,12 @@ public final class ServiceModelCodeGenerator {
     private static void genCode(Class entityClass, String template, List<FieldModel> fields, String srcDir, String pkgName
             , String className, Consumer<Map<String, Object>>... callbacks) throws Exception {
 
-        pkgName = getModPkgName(entityClass) + "." + pkgName.toLowerCase().replace("..", ".");
+        String modPkgName = getModPkgName(entityClass) + ".";
 
-        Map<String, Object> params = getBaseInfo(entityClass, fields, className, pkgName);
+        pkgName = (pkgName.startsWith(modPkgName) ? "" : modPkgName)
+                + pkgName.toLowerCase().replace("..", ".");
+
+        Map<String, Object> params = getBaseInfo(entityClass, fields, pkgName, className);
 
         if (callbacks != null) {
             for (Consumer<Map<String, Object>> callback : callbacks) {
@@ -193,9 +196,9 @@ public final class ServiceModelCodeGenerator {
             }
         }
 
-        String genFilePath = srcDir + File.pathSeparator
-                + pkgName.replace('.', File.separatorChar)
-                + File.pathSeparator + className + ".java";
+        String genFilePath = srcDir + File.separator
+                + pkgName.replace(".", File.separator)
+                + File.separator + className + ".java";
 
         genFileByTemplate(template, params, genFilePath);
     }
@@ -276,7 +279,7 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, entityClass.getSimpleName() + "ServiceImpl"
                 , params -> {
-                    params.put("servicePackageName", getModPkgName(entityClass) + "." + entityClass.getSimpleName() + ".service");
+                    params.put("servicePackageName", getModPkgName(entityClass) + ".services." + entityClass.getSimpleName().toLowerCase());
                     params.put("serviceName", serviceName);
                 });
 
@@ -292,8 +295,7 @@ public final class ServiceModelCodeGenerator {
         final String pkgName = "controller";
 
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
-
-            params.put("servicePackageName", getModPkgName(entityClass) + "." + entityClass.getSimpleName() + ".service");
+            params.put("servicePackageName", getModPkgName(entityClass) + ".services." + entityClass.getSimpleName().toLowerCase());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
 
         };
@@ -481,9 +483,9 @@ public final class ServiceModelCodeGenerator {
             }
 
             //
-            if (field.isAnnotationPresent(InjectDomain.class)) {
-                annotations.add("@" + InjectDomain.class.getSimpleName() + "");
-                fieldModel.getImports().add(InjectDomain.class.getName());
+            if (field.isAnnotationPresent(InjectVar.class)) {
+                annotations.add("@" + InjectVar.class.getSimpleName() + "");
+                fieldModel.getImports().add(InjectVar.class.getName());
             }
 
             if (field.isAnnotationPresent(Secured.class)) {

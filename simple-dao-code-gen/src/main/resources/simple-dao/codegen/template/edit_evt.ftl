@@ -1,7 +1,9 @@
 package ${packageName};
 
-import com.oak.api.model.ApiBaseReq;
+<#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.levin.commons.service.domain.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -19,8 +21,7 @@ import lombok.experimental.*;
 import java.util.*;
 
 import ${entityClassName};
-import ${packageName}.req.*;
-import ${packageName}.info.${entityName}Info;
+
 
 
 <#list fields as field>
@@ -39,12 +40,14 @@ import ${imp};
  */
 @Schema(description = "编辑${desc}")
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Builder
+<#--@EqualsAndHashCode(callSuper = true)-->
+@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
-public class ${className} extends ApiBaseReq {
+public class ${className} implements ServiceReq {
 
     @Schema(description = "${pkField.desc}")
     @NotNull

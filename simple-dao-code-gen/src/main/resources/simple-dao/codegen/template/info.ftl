@@ -3,7 +3,18 @@ package ${packageName};
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.*;
-import com.levin.commons.service.domain.Desc;
+
+import com.levin.commons.dao.*;
+import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.update.*;
+import com.levin.commons.dao.annotation.select.*;
+import com.levin.commons.dao.annotation.stat.*;
+import com.levin.commons.dao.annotation.order.*;
+import com.levin.commons.dao.annotation.logic.*;
+import com.levin.commons.dao.annotation.misc.*;
+
+import javax.validation.constraints.*;
+
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
@@ -37,7 +48,9 @@ public class ${className} implements Serializable {
 
 <#list fields as field>
   <#if field.complex>
-   <#if (field.lazy)??>  @Schema(description = "${field.name}")</#if>
+   <#if (field.lazy)??>
+       @Fetch(attrs = "${field.name}")
+   </#if>
    @Schema(description = "${field.desc}")
    private ${field.excessReturnType} ${field.name}${field.excessSuffix};
  

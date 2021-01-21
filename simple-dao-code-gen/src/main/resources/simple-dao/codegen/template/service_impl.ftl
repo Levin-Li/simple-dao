@@ -4,16 +4,14 @@ import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.support.*;
 
-import com.oak.api.helper.SimpleCommonDaoHelper;
 import org.springframework.beans.BeanUtils;
-import com.wuxp.api.ApiResp;
-import com.wuxp.api.model.Pagination;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.wuxp.api.restful.RestfulApiRespFactory;
 
-import ${servicePackageName};
+import com.levin.commons.service.domain.*;
+import ${entityClassName};
+<#--import ${servicePackageName}.*;-->
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
@@ -29,7 +27,7 @@ import ${field.infoClassName};
 
 
 /**
- *  ${desc}服务
+ *  ${desc}服务实现
  *  ${.now}
  *@author auto gen by oaknt
  *
@@ -43,8 +41,7 @@ public class ${className} implements ${serviceName} {
     private JpaDao jpaDao;
 
     @Override
-    public ApiResp<${pkField.type}> create(Create${entityName}Req req) {
-
+    public  ApiResp<${pkField.type}> create(Create${entityName}Req req) {
 
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
@@ -52,7 +49,7 @@ public class ${className} implements ${serviceName} {
                 .eq("${field.name}", req.get${field.name?cap_first}())
                 .count();
         if (${field.name}C > 0) {
-            return RestfulApiRespFactory.error("${field.desc}已被使用");
+            return ApiResp.error("${field.desc}已被使用");
         }
 
         </#if>
@@ -81,12 +78,11 @@ public class ${className} implements ${serviceName} {
 
         jpaDao.create(entity);
 
-        return RestfulApiRespFactory.ok(entity.get${pkField.name?cap_first}());
+        return  ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
 
     @Override
     public ApiResp<Void> edit(Edit${entityName}Req req) {
-
 
 <#list fields as field>
     <#if !field.notUpdate && field.uk>
@@ -96,7 +92,7 @@ public class ${className} implements ${serviceName} {
                     .where("${pkField.name} != :?", req.get${pkField.name?cap_first}())
                     .count();
             if (${field.name}C > 0) {
-                return  RestfulApiRespFactory.error("${field.desc}已被使用");
+                return  ApiResp.error("${field.desc}已被使用");
             }
         }
 
@@ -104,7 +100,7 @@ public class ${className} implements ${serviceName} {
 </#list>
         ${entityName} entity = jpaDao.find(${entityName}.class, req.get${pkField.name?cap_first}());
         if (entity == null) {
-            return  RestfulApiRespFactory.error("${desc}数据不存在");
+            return  ApiResp.error("${desc}数据不存在");
         }
 
         UpdateDao<${entityName}> updateDao = jpaDao.updateTo(${entityName}.class).appendByQueryObj(req);
@@ -115,7 +111,7 @@ public class ${className} implements ${serviceName} {
     </#if>
 </#list>
 
-        return updateDao.update() > 0 ? RestfulApiRespFactory.ok() : RestfulApiRespFactory.error("更新${desc}失败");
+        return updateDao.update() > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
 
     @Override
@@ -124,22 +120,21 @@ public class ${className} implements ${serviceName} {
 
         if (req.get${pkField.name?cap_first}() == null
                 && (req.get${pkField.name?cap_first}s() == null || req.get${pkField.name?cap_first}s().length == 0)) {
-            return  RestfulApiRespFactory.error("删除参数不能为空");
+            return  ApiResp.error("删除参数不能为空");
         }
 
-        boolean r;
+        boolean successful;
 
         try {
-            r = jpaDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
+            successful = jpaDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
         } catch (Exception e) {
-            r = jpaDao.updateTo(${entityName}.class)
+            successful = jpaDao.updateTo(${entityName}.class)
                     .set("deleted", true)
                     .appendByQueryObj(req)
                     .update() > 0;
-            //return RestfulApiRespFactory.error("无法删除${desc}");
         }
 
-        return r ? RestfulApiRespFactory.ok() : RestfulApiRespFactory.error("删除失败");
+        return successful?ApiResp.ok():ApiResp.error("删除${desc}失败");
     }
 
     @Override
@@ -156,8 +151,6 @@ public class ${className} implements ${serviceName} {
     public PagingData<${entityName}Info> query(Query${entityName}Req req) {
 
       return  PagingQueryHelper.findByPageOption(jpaDao, PagingData.class,req);
-
-      //return SimpleCommonDaoHelper.queryObject(jpaDao,${entityName}.class,${entityName}Info.class,req);
 
     }
 

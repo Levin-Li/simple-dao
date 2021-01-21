@@ -1,7 +1,9 @@
 package ${packageName};
 
-import com.oak.api.model.ApiBaseReq;
+<#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.levin.commons.service.domain.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -19,8 +21,6 @@ import lombok.experimental.*;
 import java.util.*;
 
 import ${entityClassName};
-import ${packageName}.req.*;
-import ${packageName}.info.${entityName}Info;
 
 
 <#list fields as field>
@@ -39,12 +39,13 @@ import ${imp};
 @Schema(description = "删除${desc}")
 @Data
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@Builder
+<#--@EqualsAndHashCode(callSuper = true)-->
+@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
-public class ${className} extends ApiBaseReq {
+public class ${className} implements ServiceReq {
 
     @Schema(description = "${pkField.desc}")
     private ${pkField.type} ${pkField.name};
@@ -54,11 +55,13 @@ public class ${className} extends ApiBaseReq {
     @Validator(expr = "${pkField.name} == null && ( ${pkField.name}s ==null || ${pkField.name}s.length == 0)",promptInfo = "${pkField.desc}必须指定")
     private ${pkField.type}[] ${pkField.name}s;
 
-    public ${className}() {
-    }
 
     public ${className}(${pkField.type} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
+    }
+
+    public ${className}(${pkField.type}... ${pkField.name}s) {
+        this.${pkField.name}s = ${pkField.name}s;
     }
 
 }
