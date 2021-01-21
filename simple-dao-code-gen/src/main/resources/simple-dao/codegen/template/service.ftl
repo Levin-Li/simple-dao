@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 
+import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
 

@@ -22,6 +22,7 @@ import lombok.experimental.*;
 import java.util.*;
 
 import ${entityClassName};
+import ${entityClassPackage}.*;
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
@@ -46,6 +47,8 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} extends PagingQueryReq {
+
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
     <#if field.type=='Date'>

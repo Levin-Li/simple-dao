@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
+import ${entityClassPackage}.*;
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
+
 
 
 @RestController

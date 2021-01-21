@@ -218,6 +218,7 @@ public final class ServiceModelCodeGenerator {
 
         Map<String, Object> params = new LinkedHashMap<>();
 
+        params.put("entityClassPackage", entityClass.getPackage().getName());
         params.put("entityClassName", entityClass.getName());
         params.put("entityName", entityClass.getSimpleName());
 
@@ -228,7 +229,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put("desc", desc);
 
-        params.put("serialVersionUID", entityClass.getName().hashCode());
+        params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("fields", fields);
 
@@ -337,45 +338,18 @@ public final class ServiceModelCodeGenerator {
 
     }
 
-    private static List<FieldModel> filter(List<FieldModel> old, String... ignoreNames) {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
 
-
-        ArrayList<FieldModel> fieldModels = new ArrayList<>(old.size());
-
-
-        for (FieldModel fieldModel : old) {
-
-            boolean isFiltered = false;
-
-            for (String fieldName : ignoreNames) {
-                if (fieldModel.name.equals(fieldName)) {
-                    isFiltered = true;
-                    break;
-                }
-            }
-
-            if (!isFiltered) {
-                fieldModels.add(fieldModel);
-            }
-
-        }
-
-        return fieldModels;
-
-    }
-
-    private static List<FieldModel> buildFieldModel(Class clzss, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
-
-        Object obj = clzss.newInstance();
+        Object obj = entityClass.newInstance();
 
         List<FieldModel> list = new ArrayList<>();
 
         final List<Field> declaredFields = new LinkedList<>();
 
-        ResolvableType resolvableTypeForClass = ResolvableType.forClass(clzss);
+        ResolvableType resolvableTypeForClass = ResolvableType.forClass(entityClass);
 
         //  System.out.println("found " + clzss + " : " + field);
-        ReflectionUtils.doWithFields(clzss, declaredFields::add);
+        ReflectionUtils.doWithFields(entityClass, declaredFields::add);
 
         // Field.setAccessible(declaredFields, true);
 
@@ -395,7 +369,7 @@ public final class ServiceModelCodeGenerator {
 
 
             if (field.getType() != fieldType) {
-                System.out.println("*** " + clzss + " 发现泛型字段 : " + field + " --> " + fieldType);
+                System.out.println("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
             }
 
 
@@ -433,7 +407,7 @@ public final class ServiceModelCodeGenerator {
 
                 fieldModel.setComplexClassPackageName(typePackageName);
 
-                //  fieldModel.getImports().add(typePackageName);
+                fieldModel.getImports().add(typePackageName + ".*");
 
                 //  fieldModel.infoClassName =  typePackageName + "." + fieldType.getSimpleName() + "Info";
             }
@@ -535,7 +509,7 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setAnnotations(annotations);
 
             if (excess) {
-                buildExcess(fieldModel);
+                buildExcess(entityClass, fieldModel);
             }
 
             String fieldValue = getFieldValue(field.getName(), obj);
@@ -587,7 +561,7 @@ public final class ServiceModelCodeGenerator {
         return value.toString();
     }
 
-    private static void buildExcess(FieldModel fieldModel) {
+    private static void buildExcess(Class entityClass, FieldModel fieldModel) {
 
         String name = fieldModel.getName();
         Class type = fieldModel.getClassType();
@@ -624,6 +598,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setExcessSuffix("Info");
             fieldModel.setExcessReturnType(returnName);
+
             fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".get" + complexName + "() : null;");
         }
 

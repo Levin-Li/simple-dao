@@ -21,7 +21,7 @@ import lombok.experimental.*;
 import java.util.*;
 
 import ${entityClassName};
-
+import ${entityClassPackage}.*;
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
@@ -46,6 +46,8 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} implements ServiceReq {
+
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
     @Schema(description = "${pkField.desc}")
     private ${pkField.type} ${pkField.name};

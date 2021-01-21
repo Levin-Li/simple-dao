@@ -19,7 +19,7 @@ import javax.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
-
+import ${entityClassPackage}.*;
 import ${entityClassName};
 
 <#list fields as field>
@@ -46,6 +46,7 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} implements ServiceReq {
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
     @Schema(description = "${pkField.desc}")
     @NotNull

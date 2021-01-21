@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.levin.commons.service.domain.*;
+
+import ${entityClassPackage}.*;
 import ${entityClassName};
 <#--import ${servicePackageName}.*;-->
 import ${servicePackageName}.req.*;

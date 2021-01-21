@@ -15,16 +15,17 @@ import com.levin.commons.dao.annotation.misc.*;
 
 import javax.validation.constraints.*;
 
+import ${entityClassPackage}.*;
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
-        import ${field.classType.name};
+ import ${field.classType.name};
     </#if>
     <#if (field.infoClassName)??>
-        import ${field.infoClassName};
+ import ${field.infoClassName};
     </#if>
     <#list field.imports as imp>
-        import ${imp};
+ import ${imp};
     </#list>
 </#list>
 
@@ -45,6 +46,8 @@ import java.util.Date;
 @ToString(exclude = {<#list fields as field><#if field.lazy?default(false)>"${field.name}${field.excessSuffix!}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
 public class ${className} implements Serializable {
+
+   private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
   <#if field.complex>

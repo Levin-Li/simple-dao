@@ -18,6 +18,7 @@ import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
 
+import ${entityClassPackage}.*;
 
 <#list fields as field>
     <#if !field.baseType && field.enums>
@@ -42,6 +43,8 @@ import ${imp};
 @AllArgsConstructor
 @Builder
 public class ${className} implements ServiceReq {
+
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
     <#if (!field.notUpdate && !field.hasDefValue && !field.complex) || (field.identity?? && !field.identity)>
