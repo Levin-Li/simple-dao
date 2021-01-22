@@ -1,7 +1,6 @@
 package ${packageName};
 
-import com.levin.commons.dao.JpaDao;
-import com.levin.commons.dao.UpdateDao;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 
 import org.springframework.beans.BeanUtils;

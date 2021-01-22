@@ -1,5 +1,6 @@
-package com.levin.commons.dao.service;
+package ${modulePackageName};
 
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.plugin.*;
 import lombok.extern.slf4j.Slf4j;
@@ -8,15 +9,21 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+//Auto gen by simple-dao-codegen ${.now}
+//模块插件
 
 @Slf4j
 @Component
-public class TestPlugin implements Plugin, PluginManagerAware {
+public class ${moduleName}Plugin implements Plugin, PluginManagerAware {
 
+    //dao
     @Autowired
     SimpleDaoRepository simpleDaoRepository;
+
+    @Autowired
+    private SimpleDao simpleDao;
 
     final String pid = getClass().getPackage().getName();
 
@@ -24,20 +31,22 @@ public class TestPlugin implements Plugin, PluginManagerAware {
 
     @Override
     public List<DataItem> getDataItems() {
+        //@todo
         return Collections.emptyList();
     }
 
     @Override
     public List<MenuItem> getMenuItems() {
-        return null;
+        //@todo
+        return Collections.emptyList();
     }
 
     @Override
     public boolean onEvent(Object... objects) {
 
-        log.debug(getDescription() + " onEvent " + Arrays.asList(objects));
-
-        return false;
+       //log.debug(getDescription() + " onEvent " + Arrays.asList(objects));
+        //@todo
+       return false;
     }
 
     @Override
@@ -47,7 +56,7 @@ public class TestPlugin implements Plugin, PluginManagerAware {
 
     @PostConstruct
     public void init() {
-        log.info("init...");
+       log.info("init...");
     }
 
     @Override
@@ -70,4 +79,4 @@ public class TestPlugin implements Plugin, PluginManagerAware {
         return getName();
     }
 
-}
+} // end class

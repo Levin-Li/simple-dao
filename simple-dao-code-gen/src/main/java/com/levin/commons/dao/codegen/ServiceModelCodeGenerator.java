@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
@@ -52,6 +53,7 @@ public final class ServiceModelCodeGenerator {
     public static final String CREATE_EVT_FTL = "create_evt.ftl";
     public static final String INFO_FTL = "info.ftl";
     public static final String CONTROLLER_FTL = "controller.ftl";
+    public static final String POM_XML_FTL = "pom.xml.ftl";
 
     private static Set<Class> baseTypes = new HashSet<>();
 
@@ -83,6 +85,72 @@ public final class ServiceModelCodeGenerator {
 
 
     /**
+     * 生成 POM 文件
+     *
+     * @param mavenProject
+     * @param moduleName    模块名字
+     * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param genParams
+     */
+    public static void tryGenPomFile(MavenProject mavenProject, String moduleName, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
+
+        moduleName = StringUtils.hasText(moduleName) ? moduleName + "-" : "";
+
+
+        String serviceArtifactId = "";
+
+        Map<String, Object> params = MapUtils.put("parent", (Object) mavenProject.getParent())
+                .put("groupId", mavenProject.getGroupId())
+                .put("version", mavenProject.getVersion())
+                .put("entities", mavenProject.getArtifact())
+                .build();
+
+        File pomFile = new File(serviceDir, "pom.xml");
+
+        serviceArtifactId = (moduleName + pomFile.getParentFile().getName());
+
+        if (!pomFile.exists()) {
+
+            params.put("artifactId", serviceArtifactId);
+
+            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+        }
+
+        if (!pomFile.exists()) {
+            serviceArtifactId = "";
+        }
+
+        pomFile = new File(controllerDir, "pom.xml");
+
+        if (!pomFile.exists()) {
+
+            params.put("artifactId", moduleName + pomFile.getParentFile().getName());
+
+            if (StringUtils.hasText(serviceArtifactId)) {
+                params.put("services", MapUtils.put("artifactId", serviceArtifactId));
+            }
+
+            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+        }
+
+    }
+
+    /**
+     * 生成 Spring boot auto stater 文件
+     *
+     * @param mavenProject
+     * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param genParams
+     */
+    public static void tryGenSpringBootStarterFile(MavenProject mavenProject, String moduleName, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
+
+
+
+    }
+
+    /**
      * 根据Maven目录样式生成 控制器，服务接口，请求和返回值
      *
      * @param classLoader
@@ -104,7 +172,7 @@ public final class ServiceModelCodeGenerator {
 
         file = new File(canonicalPath);
 
-        int suffixLen = ".class".length();
+        final int suffixLen = ".class".length();
 
         // logger.info("Files:" + FileUtils.listFiles(file, null, true));
 
@@ -113,6 +181,7 @@ public final class ServiceModelCodeGenerator {
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
                         .replace(File.separatorChar, '.'))
+
                 .map(fn -> fn.substring(0, fn.length() - suffixLen))
                 .map(n -> {
                     try {
@@ -130,7 +199,6 @@ public final class ServiceModelCodeGenerator {
                     }
 
                 });
-
     }
 
     /**

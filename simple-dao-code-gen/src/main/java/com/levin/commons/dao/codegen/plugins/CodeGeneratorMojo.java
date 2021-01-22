@@ -9,6 +9,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Map;
 
 
@@ -66,6 +67,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             if (StringUtils.hasText(entitiesModuleDirName)
                     && (basedirName.equals(entitiesModuleDirName) || basedirName.endsWith("-" + entitiesModuleDirName))) {
 
+                //如果发现实体目录匹配，也自动分割目录
+
                 int indexOf = basedirName.indexOf(entitiesModuleDirName);
 
                 if (indexOf > 0) {
@@ -73,6 +76,12 @@ public class CodeGeneratorMojo extends BaseMojo {
                 }
 
                 splitDir = true;
+            }
+
+            if (!splitDir) {
+                //如果发现目录存在，也自动分割目录
+                splitDir = new File(basedir, "../" + servicesModuleDirName).exists()
+                        || new File(basedir, "../" + apiModuleDirName).exists();
             }
 
             final String srcDir = mavenProject.getBuild().getSourceDirectory();
@@ -89,8 +98,18 @@ public class CodeGeneratorMojo extends BaseMojo {
             serviceDir = new File(serviceDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
 
+            //生成代码
+
             ServiceModelCodeGenerator.genCodeAsMavenStyle(useCustomClassLoader ? getClassLoader() : null
                     , outputDirectory, controllerDir, serviceDir, genParams);
+
+
+            //尝试生成Pom 文件
+            ServiceModelCodeGenerator.tryGenPomFile(mavenProject,dirPrefix,controllerDir,serviceDir,genParams);
+
+            //生成
+            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject,dirPrefix,controllerDir,serviceDir,genParams);
+
 
         } catch (Exception e) {
             getLog().error(mavenProject.getArtifactId() + " 模块代码生成错误：" + e.getMessage(), e);
