@@ -21,6 +21,7 @@ import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
 
+import ${servicePackageName}.info.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
 
@@ -45,7 +46,8 @@ import ${imp};
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
-@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
+@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS
+, resultClass = ${entityName}Info.class)
 public class ${className} extends PagingQueryReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;

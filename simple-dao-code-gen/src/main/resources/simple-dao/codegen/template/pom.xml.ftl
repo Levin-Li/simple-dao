@@ -45,7 +45,7 @@
 
     <dependencies>
 
-        <#if !entities>
+        <#if entities??>
         <dependency>
 
             <artifactId>${entities.artifactId}</artifactId>
@@ -55,7 +55,7 @@
         </dependency>
         </#if>
 
-        <#if !services>
+        <#if services??>
             <dependency>
                 <artifactId>${services.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>

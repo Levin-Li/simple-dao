@@ -10,7 +10,10 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Mojo(name = "gen-code", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
@@ -29,6 +32,18 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String apiModuleDirName = "api";
 
     /**
+     * 模块的包名
+     */
+    @Parameter
+    private String modulePackageName = "";
+
+    /**
+     * 模块名是否使用模块的文件夹名称
+     */
+    @Parameter
+    private boolean isModuleNameUseDirName = false;
+
+    /**
      * 是否拆分模块
      * 否则按自动处理
      */
@@ -42,6 +57,11 @@ public class CodeGeneratorMojo extends BaseMojo {
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
 
         try {
+
+            if (genParams == null) {
+                genParams = new LinkedHashMap<>();
+            }
+
 
             if ("pom".equalsIgnoreCase(mavenProject.getArtifact().getType())) {
                 return;
@@ -98,22 +118,34 @@ public class CodeGeneratorMojo extends BaseMojo {
             serviceDir = new File(serviceDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
 
+
+            String moduleName = "";
+
+            if (isModuleNameUseDirName) {
+                //下划线或是-号去除，并且转换为大写
+                moduleName = ServiceModelCodeGenerator.tryGetName(mavenProject.getBasedir().getParentFile().getName());
+            }
+
+            ServiceModelCodeGenerator.moduleName(moduleName);
+            ServiceModelCodeGenerator.modulePackageName(modulePackageName);
+
             //生成代码
 
-            ServiceModelCodeGenerator.genCodeAsMavenStyle(useCustomClassLoader ? getClassLoader() : null
+            ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, useCustomClassLoader ? getClassLoader() : null
                     , outputDirectory, controllerDir, serviceDir, genParams);
 
-
-            //尝试生成Pom 文件
-            ServiceModelCodeGenerator.tryGenPomFile(mavenProject,dirPrefix,controllerDir,serviceDir,genParams);
+            if (splitDir) { //尝试生成Pom 文件
+                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, genParams);
+            }
 
             //生成
-            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject,dirPrefix,controllerDir,serviceDir,genParams);
+            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, genParams);
 
 
         } catch (Exception e) {
             getLog().error(mavenProject.getArtifactId() + " 模块代码生成错误：" + e.getMessage(), e);
         }
     }
+
 
 }
