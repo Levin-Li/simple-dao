@@ -995,8 +995,49 @@
 ### 13 代码生成
 
    代码生成模块支持服务类和控制器类的生成。
-   在根 pom.xml 文件中配置如下插件：
-            
+   具体清参考 [simple-dao-code-gen-example](./simple-dao-code-gen-example/) 模块。
+   代码会在编译阶段生成，生成后，再次编译运行即可。
+   
+   代码生成插件配置如下：
+   
+   
+             <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
+             <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
+     
+             <levin.simple-dao.version>2.2.15-SNAPSHOT</levin.simple-dao.version>
+             <levin.service-support.version>1.1.20-SNAPSHOT</levin.service-support.version>
+   
+         
+      
+            <plugin>
+                <groupId>${levin.simple-dao.groupId}</groupId>
+                <artifactId>simple-dao-codegen</artifactId>
+                <version>${levin.simple-dao.version}</version>
+                <executions>
+                    <execution>
+
+                        <goals>
+                            <goal>gen-code</goal>
+                        </goals>
+                        <!--   编译阶段 -->
+                        <phase>compile</phase>
+
+                        <configuration>
+                            <skip>${simple-dao-codegen.skip}</skip>
+                            <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+                        </configuration>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>${levin.service-support.groupId}</groupId>
+                        <artifactId>service-support</artifactId>
+                        <version>${levin.service-support.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
    
 ### 14 附录
 
