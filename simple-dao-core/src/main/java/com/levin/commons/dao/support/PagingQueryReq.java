@@ -24,12 +24,12 @@ public class PagingQueryReq
     @Ignore
     @Schema(description = "是否查询总记录数")
     @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
-    boolean isRequireTotals = false;
+    boolean requireTotals = false;
 
     @Ignore
     @Schema(description = "是否查询结果集")
     @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
-    boolean isRequireResultList = true;
+    boolean requireResultList = true;
 
     @Ignore
     @Schema(description = "页面索引")

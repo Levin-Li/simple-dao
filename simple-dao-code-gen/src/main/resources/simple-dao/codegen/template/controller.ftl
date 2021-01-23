@@ -28,14 +28,13 @@ public class ${className} {
     private ${serviceName} ${serviceName?uncap_first};
 
 
-
     /**
      * 分页数据
      *
      * @param req  Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @GetMapping("/query")
+    @RequestMapping("/query")
     @Operation(summary = "查询${entityName}", description = "${desc}")
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req));

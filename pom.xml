@@ -20,9 +20,7 @@
     <properties>
 
         <levin.simple-dao.version>2.2.15-SNAPSHOT</levin.simple-dao.version>
-        <levin.service-support.version>1.1.19-SNAPSHOT</levin.service-support.version>
-
-        <maven-source-plugin.attach>true</maven-source-plugin.attach>
+        <levin.service-support.version>1.1.20-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -31,12 +29,9 @@
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.source.skip>true</maven.source.skip>
-        <!--<maven-source-plugin.attach>false</maven-source-plugin.attach>-->
 
-        <spring-boot-maven-plugin.skip>true</spring-boot-maven-plugin.skip>
-
+        <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
-
 
         <hibernate.version>5.4.21.Final</hibernate.version>
 
@@ -48,7 +43,9 @@
         <module>simple-dao-jpa</module>
         <module>simple-dao-jpa-starter</module>
         <module>simple-dao-examples</module>
+
         <module>simple-dao-code-gen</module>
+        <module>simple-dao-code-gen-example</module>
     </modules>
 
 

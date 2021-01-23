@@ -207,6 +207,7 @@ public class DaoExamplesTest {
 
     public void initTestData2() throws Exception {
 
+
         if (jpaDao.selectFrom(User.class).count() > 0) {
             return;
         }

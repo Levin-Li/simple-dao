@@ -824,7 +824,7 @@
       @Eq(condition="#_val != null")
       String name = "Echo";
 
-#### 10.4 变量上下文
+#### 10.4 变量上下文(重要)
 
   SPEL 中可以使用，任意的查询语句中也都可以使用
    
@@ -990,14 +990,21 @@
            boolean isSafeMode();
            
        }
-   
-### 13 附录
+       
+       
+### 13 代码生成
 
-#### 13.1 测试用例
+   代码生成模块支持服务类和控制器类的生成。
+   在根 pom.xml 文件中配置如下插件：
+            
+   
+### 14 附录
+
+#### 14.1 测试用例
 
  请参考测试用例： [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
   
-#### 13.2 联系作者
+#### 14.2 联系作者
 
  邮箱：99668980@qq.com
 

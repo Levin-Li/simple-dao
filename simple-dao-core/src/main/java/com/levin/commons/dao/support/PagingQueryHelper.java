@@ -61,41 +61,54 @@ public abstract class PagingQueryHelper {
             Field indexField = pageOptionFields.get(PageOption.Type.PageIndex);
             Field sizeField = pageOptionFields.get(PageOption.Type.PageSize);
 
+
+            Object pageIndex = null;
+            Object pageSize = null;
+
+
             if ((queryDto instanceof Paging)
                     || indexField == null
                     || sizeField == null
                     || !isEnable(queryDto, indexField)
-                    || !isEnable(queryDto, sizeField)
-            ) {
+                    || !isEnable(queryDto, sizeField)) {
+
+                if (queryDto instanceof Paging) {
+                    pageIndex = ((Paging) queryDto).getPageIndex();
+                    pageSize = ((Paging) queryDto).getPageSize();
+                }
+
                 resultList = simpleDao.findByQueryObj(queryDto);
 
             } else {
 
-                Object index = ReflectionUtils.getField(indexField, queryDto);
-                Object size = ReflectionUtils.getField(sizeField, queryDto);
+                pageIndex = ReflectionUtils.getField(indexField, queryDto);
+                pageSize = ReflectionUtils.getField(sizeField, queryDto);
 
                 PagingQueryReq paging = new PagingQueryReq(-1, -1);
 
-                if (index != null) {
-                    paging.setPageIndex(ObjectUtil.convert(index, Integer.class));
+                if (pageIndex != null) {
+                    paging.setPageIndex(ObjectUtil.convert(pageIndex, Integer.class));
                 }
 
-                if (size != null) {
-                    paging.setPageSize(ObjectUtil.convert(size, Integer.class));
+                if (pageSize != null) {
+                    paging.setPageSize(ObjectUtil.convert(pageSize, Integer.class));
                 }
 
                 resultList = simpleDao.findByQueryObj(queryDto, paging);
 
-                setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
-
-                setValueByPageOption(pagingData, PageOption.Type.PageSize, true, field -> size);
-
             }
 
-            //设置结果集
-            final Object resultListCopy = resultList;
 
-            setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultListCopy);
+            final Object pagingDataRef = pagingData;
+
+            Optional.ofNullable(pageIndex).ifPresent(index -> setValueByPageOption(pagingDataRef, PageOption.Type.PageIndex, true, field -> index));
+
+            Optional.ofNullable(pageSize).ifPresent(size -> setValueByPageOption(pagingDataRef, PageOption.Type.PageSize, true, field -> size));
+
+            //设置结果集
+            final Object resultListRef = resultList;
+
+            setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultListRef);
 
         }
 

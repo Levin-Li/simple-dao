@@ -38,7 +38,8 @@ import javax.sql.DataSource;
 
 @Role(BeanDefinition.ROLE_SUPPORT)
 
-@ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
+@ProxyBeanScan(scanType = EntityRepository.class
+        , factoryBeanClass = RepositoryFactoryBean.class
         , basePackages = {"com.levin.commons.dao.repository"})
 
 @Slf4j
@@ -60,25 +61,23 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @PersistenceContext
     private EntityManager defaultEntityManager;
 
-    @Autowired
-    DataSource dataSource;
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
-    JdbcTemplate jdbcTemplate() {
+    JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsert.class)
-    SimpleJdbcInsert simpleJdbcInsertOperations() {
-        return new SimpleJdbcInsert(jdbcTemplate());
+    SimpleJdbcInsert simpleJdbcInsertOperations(JdbcTemplate jdbcTemplate) {
+        return new SimpleJdbcInsert(jdbcTemplate);
     }
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCall.class)
-    SimpleJdbcCall simpleJdbcCallOperations() {
-        return new SimpleJdbcCall(jdbcTemplate());
+    SimpleJdbcCall simpleJdbcCallOperations(JdbcTemplate jdbcTemplate) {
+        return new SimpleJdbcCall(jdbcTemplate);
     }
 
 

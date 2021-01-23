@@ -2,20 +2,15 @@
 spring:
   datasource:
 #    url: jdbc:h2:./dev.db;MODE=MySQL;
-    url: jdbc:h2:mem:dev.db;MODE=MySQL;
+    url: jdbc:h2:mem:dev.db;
     username: dev
     password: dev
 
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
-    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: false
     hibernate:
       ddl-auto: create
-
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-
-
-logging:
-  level: debug
