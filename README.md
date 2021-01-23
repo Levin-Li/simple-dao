@@ -51,13 +51,13 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.13-SNAPSHOT</version>
+            <version>2.2.15-SNAPSHOT</version>
         </dependency>
         
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao</artifactId>
-            <version>2.2.13-SNAPSHOT</version>
+            <version>2.2.15-SNAPSHOT</version>
         </dependency>
         
 #### 1.2 定义DTO及注解
