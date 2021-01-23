@@ -6,7 +6,6 @@ import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.Secured;
 import com.levin.commons.service.support.ContextHolder;
-import com.levin.commons.service.support.EnvContext;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -41,6 +40,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //import org.apache.maven.project.MavenProject;
 
@@ -94,18 +94,15 @@ public final class ServiceModelCodeGenerator {
      * 生成 POM 文件
      *
      * @param mavenProject
-     * @param moduleName    模块名字
      * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param genParams
      */
     public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
 
-        String moduleName = moduleName();
-
         String serviceArtifactId = "";
 
-        Map<String, Object> params = MapUtils.copy(context.getAll(false))
+        Map<String, Object> params = MapUtils.put(context.getAll(false))
                 .put("parent", mavenProject.getParent())
                 .put("groupId", mavenProject.getGroupId())
                 .put("version", mavenProject.getVersion())
@@ -113,11 +110,9 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
-
-
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
-        serviceArtifactId = (moduleName +"-" +pomFile.getParentFile().getName());
+        serviceArtifactId = (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName());
 
         if (!pomFile.exists()) {
 
@@ -134,7 +129,7 @@ public final class ServiceModelCodeGenerator {
 
         if (!pomFile.exists()) {
 
-            params.put("artifactId", (moduleName+"-" + pomFile.getParentFile().getName()).toLowerCase());
+            params.put("artifactId", (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
             if (StringUtils.hasText(serviceArtifactId)) {
                 params.put("services", MapUtils.put("artifactId", serviceArtifactId).build());
@@ -150,7 +145,7 @@ public final class ServiceModelCodeGenerator {
      *
      * @param mavenProject
      * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
-     * @param genParams
+     * @param params
      */
     public static void tryGenSpringBootStarterFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> params) throws Exception {
 
@@ -166,15 +161,26 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
-
     }
 
-    public static String tryGetName(String moduleName) {
-        return Arrays.stream(moduleName.split("[-_]"))
+    public static String splitAndFirstToUpperCase(String moduleName) {
+        return splitAndFirstToUpperCase(moduleName, "-", "_");
+    }
+
+    /**
+     * 用指定的分隔符分隔，并且把首字母大写
+     *
+     * @param str
+     * @return
+     */
+    public static String splitAndFirstToUpperCase(String str, String... regexDelimiters) {
+
+        return Stream.of(str.split(String.format("[%s]", Stream.of(regexDelimiters).collect(Collectors.joining()))))
                 .map(txt -> txt.trim())
                 .filter(StringUtils::hasText)
-                .map(txt -> "" + Character.toUpperCase(txt.charAt(0)) + txt.substring(1))
+                .map(StringUtils::capitalize)
                 .collect(Collectors.joining());
+
     }
 
     /**
@@ -203,20 +209,12 @@ public final class ServiceModelCodeGenerator {
 
         // logger.info("Files:" + FileUtils.listFiles(file, null, true));
 
-        //是否外部有定义模块名称，和模块包名
-
-        String moduleName = moduleName();
-        boolean hasModuleName = StringUtils.hasText(moduleName);
-
-        String modulePackageName = modulePackageName();
-        boolean hasModulePackageName = StringUtils.hasText(modulePackageName);
-
         List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
                 .stream().filter(File::isFile)
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
-                        .replace(File.separatorChar, '.'))
-
+                        .replace('\\', '.')
+                        .replace("..", "."))
                 .map(fn -> fn.substring(0, fn.length() - suffixLen))
                 .map(n -> {
                     try {
@@ -235,8 +233,8 @@ public final class ServiceModelCodeGenerator {
         Class tempClass = null;
 
 
-        //如果包名没有确定
-        if (!hasModulePackageName) {
+        //如果包名没有确定，尝试获取实体类包名最短的为包名
+        if (!StringUtils.hasText(modulePackageName())) {
 
             for (Class<?> entityClass : classList) {
                 if (tempClass == null
@@ -245,29 +243,28 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            modulePackageName = tempClass.getPackage().getName();
-
-            int lastIndexOf = modulePackageName.lastIndexOf('.');
-
-            modulePackageName = lastIndexOf > 0 ? modulePackageName.substring(0, lastIndexOf) : "";
-
+            modulePackageName(upPackage(tempClass.getPackage().getName()));
         }
-
 
         //如果模块名没有确定
-        if (!hasModuleName) {
+        if (!StringUtils.hasText(moduleName())) {
+
+            String modulePackageName = modulePackageName();
+
+            String moduleName = "";
+
             if (modulePackageName != null
                     && modulePackageName.contains(".")) {
+                //自动获取模块的包名的最后一个包名为模块的包名, eg.  com.levin.xx.member --> member
                 moduleName = modulePackageName.substring(modulePackageName.lastIndexOf('.') + 1);
-                moduleName = "" + Character.toUpperCase(moduleName.charAt(0)) + moduleName.substring(1);
             } else {
-                moduleName = tryGetName(mavenProject.getBasedir().getParentFile().getName());
+                //自动获取项目目录的上级目录做为模块的包名
+                //要考虑为服务类和控制器类和实体在同一个项目的情况
+                moduleName = splitDir() ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName();
             }
+
+            moduleName(splitAndFirstToUpperCase(moduleName));
         }
-
-
-        moduleName(moduleName);
-        modulePackageName(modulePackageName);
 
         logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
 
@@ -295,15 +292,22 @@ public final class ServiceModelCodeGenerator {
         return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
+
     public static Class entityClass() {
         return context.get(ExceptionUtils.getInvokeMethodName());
     }
 
-    public static String moduleName(String newValue) {
+
+    public static Boolean splitDir(boolean newValue) {
         return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
-    public static String modulePackageName(String newValue) {
+    public static Boolean splitDir() {
+        return context.get(ExceptionUtils.getInvokeMethodName());
+    }
+
+
+    public static String moduleName(String newValue) {
         return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
@@ -311,8 +315,36 @@ public final class ServiceModelCodeGenerator {
         return context.get(ExceptionUtils.getInvokeMethodName());
     }
 
+    public static String modulePackageName(String newValue) {
+        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+    }
+
     public static String modulePackageName() {
         return context.get(ExceptionUtils.getInvokeMethodName());
+    }
+
+    public static String upPackage(String packageName) {
+        return upLevel(packageName, '.');
+    }
+
+    /**
+     * 包名或是目录向上一级
+     * 根为空字符串
+     *
+     * @param packageName
+     * @return
+     */
+    public static String upLevel(String packageName, char delim) {
+
+        int lastIndexOf = packageName.replace("" + delim + delim, "" + delim).lastIndexOf(delim);
+
+        //.eg  ""  "." "com" ".a" ".com" "com.a.b.c"
+
+        if (lastIndexOf <= 0) {
+            return "";
+        }
+
+        return packageName.substring(0, lastIndexOf);
     }
 
     /**
@@ -331,7 +363,7 @@ public final class ServiceModelCodeGenerator {
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
-        Map<String, Object> params = MapUtils.copy(context.getAll(true)).build();
+        Map<String, Object> params = MapUtils.put(context.getAll(true)).build();
 
         buildInfo(entityClass, fields, serviceDir, params);
 
@@ -348,14 +380,26 @@ public final class ServiceModelCodeGenerator {
         return subPkgName(entityClass(), modulePackageName());
     }
 
+
+    /***
+     * //获取 模块包名 往下一级剩下的包名部分
+     * 如类名   com.levin.member.entities.weixin.User
+     *         模块包名是 com.levin.member
+     *         返回 weixin.user
+     *
+     * @param entityClass
+     * @param modulePackageName
+     * @return
+     */
     private static String subPkgName(Class entityClass, final String modulePackageName) {
 
         String name = entityClass.getName();
 
         if (name.startsWith(modulePackageName)) {
-
+            //获取 模块包名 往下一级剩下的包名部分
             name = name.substring(modulePackageName.length() + 1).toLowerCase();
 
+            //取下一级剩下的包名部分
             return name.contains(".") ? name.substring(name.indexOf('.') + 1) : name;
 
         } else {

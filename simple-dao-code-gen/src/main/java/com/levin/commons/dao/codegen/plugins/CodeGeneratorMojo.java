@@ -9,11 +9,8 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @Mojo(name = "gen-code", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
@@ -41,7 +38,7 @@ public class CodeGeneratorMojo extends BaseMojo {
      * 模块名是否使用模块的文件夹名称
      */
     @Parameter
-    private boolean isModuleNameUseDirName = false;
+    private boolean moduleNameUseDirName = true;
 
     /**
      * 是否拆分模块
@@ -50,8 +47,11 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter
     private boolean forceSplitDir = false;
 
+
     @Parameter
     protected Map<String, Object> genParams;
+
+
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
@@ -85,7 +85,10 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             //如果当前项目目录规则匹配
             if (StringUtils.hasText(entitiesModuleDirName)
-                    && (basedirName.equals(entitiesModuleDirName) || basedirName.endsWith("-" + entitiesModuleDirName))) {
+                    && (basedirName.equals(entitiesModuleDirName)
+                    || basedirName.endsWith("-" + entitiesModuleDirName)
+                    || basedirName.endsWith("_" + entitiesModuleDirName)
+            )) {
 
                 //如果发现实体目录匹配，也自动分割目录
 
@@ -121,16 +124,19 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             String moduleName = "";
 
-            if (isModuleNameUseDirName) {
+            if (moduleNameUseDirName) {
                 //下划线或是-号去除，并且转换为大写
-                moduleName = ServiceModelCodeGenerator.tryGetName(mavenProject.getBasedir().getParentFile().getName());
+
+                moduleName = ServiceModelCodeGenerator.splitAndFirstToUpperCase
+                        (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
+
             }
 
+            ServiceModelCodeGenerator.splitDir(splitDir);
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
 
             //生成代码
-
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, useCustomClassLoader ? getClassLoader() : null
                     , outputDirectory, controllerDir, serviceDir, genParams);
 
