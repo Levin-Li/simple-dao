@@ -37,8 +37,9 @@ public abstract class CollectionHelper {
             , boolean isIgnorePrefixAndSuffixIfDataSetOnlyOneElement, boolean isIgnorePrefixAndSuffixIfNoContent
             , String prefix, String suffix) {
 
-        if (buf == null)
+        if (buf == null) {
             buf = new StringBuilder();
+        }
 
         int eleCount = 0;
 
@@ -65,12 +66,14 @@ public abstract class CollectionHelper {
                 || (isIgnorePrefixAndSuffixIfNoContent && buf.length() == 0);
 
         //增加前缀
-        if (prefix != null && !isIgnore)
+        if (prefix != null && !isIgnore) {
             buf.insert(0, prefix);
+        }
 
         //增加后缀
-        if (suffix != null && !isIgnore)
+        if (suffix != null && !isIgnore) {
             buf.append(suffix);
+        }
 
         return buf;
     }
@@ -86,8 +89,9 @@ public abstract class CollectionHelper {
 
             if (!isFirstElement
                     && delimiter != null
-                    && (allowEmptyOrNull || buf.length() > 0))
+                    && (allowEmptyOrNull || buf.length() > 0)) {
                 buf.append(delimiter);
+            }
 
             buf.append(txt);
         }
