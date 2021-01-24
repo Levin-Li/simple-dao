@@ -15,7 +15,7 @@ import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
-
+import org.springframework.util.*;
 
 @RestController
 @RequestMapping("/${entityName?lower_case}")

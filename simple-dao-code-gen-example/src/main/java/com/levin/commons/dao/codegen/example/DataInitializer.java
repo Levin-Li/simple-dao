@@ -166,6 +166,8 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
         log.info("***** 查询任务： http://127.0.0.1:" + port + "/task/query");
 
 
+        log.info("***** 查询插件： http://127.0.0.1:" + port + "/system/plugin/list");
+
     }
 
 }

@@ -7,22 +7,25 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 
-@Mojo(name = "run-groovy",requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "run-groovy", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class GroovyMojo extends BaseMojo {
 
     /**
-     * 类路径
+     * 为 groovy运行环境增加的类路径
      * <p>
      * jar包,zip包，或是目录
      */
     @Parameter
     private String[] classpaths = {};
 
+    /**
+     * 需要加载 groovy 文件集
+     */
     @Parameter
     private String[] groovyFiles = {};
 
     /**
-     * 按顺序把多个文件的内容合并为一个文件
+     * 需要加载并且合并到txtScripts的groovy 文件
      */
     @Parameter
     private String[] contentMergeFiles = {};
@@ -34,6 +37,9 @@ public class GroovyMojo extends BaseMojo {
     private String[] txtScripts = {};
 
 
+    /**
+     * 是否生成临时的 groovy 文件
+     */
     @Parameter
     private boolean genTmpFile = true;
 
@@ -41,7 +47,7 @@ public class GroovyMojo extends BaseMojo {
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
         try {
-            Utils.runScript(this,"" + this.groupId + "_" + this.artifactId, genTmpFile, null, vars, classpaths, groovyFiles, contentMergeFiles, txtScripts);
+            Utils.runScript(this, "" + this.mavenProject.getGroupId() + "_" + this.mavenProject.getArtifactId(), genTmpFile, null, vars, classpaths, groovyFiles, contentMergeFiles, txtScripts);
         } catch (Exception e) {
             getLog().error("执行脚本错误：" + e.getMessage(), e);
             throw new MojoFailureException("run groovy error", e);

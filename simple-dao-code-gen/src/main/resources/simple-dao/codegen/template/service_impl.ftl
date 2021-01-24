@@ -16,6 +16,8 @@ import ${entityClassName};
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
+import org.springframework.util.*;
+
 import java.util.Date;
 <#list fields as field>
     <#if (field.lzay)??>
@@ -39,14 +41,14 @@ public class ${className} implements ${serviceName} {
 
 
     @Autowired
-    private JpaDao jpaDao;
+    private SimpleDao simpleDao;
 
     @Override
     public  ApiResp<${pkField.type}> create(Create${entityName}Req req) {
 
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
-        long ${field.name}C = jpaDao.selectFrom(${entityName}.class)
+        long ${field.name}C = simpleDao.selectFrom(${entityName}.class)
                 .eq("${field.name}", req.get${field.name?cap_first}())
                 .count();
         if (${field.name}C > 0) {
@@ -77,7 +79,7 @@ public class ${className} implements ${serviceName} {
         </#if>
     </#list>
 
-        jpaDao.create(entity);
+        simpleDao.create(entity);
 
         return  ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
@@ -87,8 +89,8 @@ public class ${className} implements ${serviceName} {
 
 <#list fields as field>
     <#if !field.notUpdate && field.uk>
-        if (!StringUtils.isEmpty(req.get${field.name?cap_first}())) {
-            long ${field.name}C = jpaDao.selectFrom(${entityName}.class)
+        if (StringUtils.hasText(req.get${field.name?cap_first}())) {
+            long ${field.name}C = simpleDao.selectFrom(${entityName}.class)
                     .eq("${field.name}", req.get${field.name?cap_first}())
                     .where("${pkField.name} != :?", req.get${pkField.name?cap_first}())
                     .count();
@@ -99,12 +101,12 @@ public class ${className} implements ${serviceName} {
 
     </#if>
 </#list>
-        ${entityName} entity = jpaDao.find(${entityName}.class, req.get${pkField.name?cap_first}());
+        ${entityName} entity = simpleDao.find(${entityName}.class, req.get${pkField.name?cap_first}());
         if (entity == null) {
             return  ApiResp.error("${desc}数据不存在");
         }
 
-        UpdateDao<${entityName}> updateDao = jpaDao.updateTo(${entityName}.class).appendByQueryObj(req);
+        UpdateDao<${entityName}> updateDao = simpleDao.updateTo(${entityName}.class).appendByQueryObj(req);
 
 <#list fields as field>
     <#if field.name == 'updateTime'>
@@ -127,9 +129,9 @@ public class ${className} implements ${serviceName} {
         boolean successful;
 
         try {
-            successful = jpaDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
+            successful = simpleDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
         } catch (Exception e) {
-            successful = jpaDao.updateTo(${entityName}.class)
+            successful = simpleDao.updateTo(${entityName}.class)
                     .set("deleted", true)
                     .appendByQueryObj(req)
                     .update() > 0;
@@ -151,7 +153,7 @@ public class ${className} implements ${serviceName} {
     @Deprecated
     public PagingData<${entityName}Info> query(Query${entityName}Req req) {
 
-      return  PagingQueryHelper.findByPageOption(jpaDao, PagingData.class,req);
+      return  PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req);
 
     }
 
@@ -159,7 +161,7 @@ public class ${className} implements ${serviceName} {
 <#--    @Deprecated-->
 <#--    public Pagination<${entityName}Info> query(Query${entityName}Req req) {-->
 
-<#--        return SimpleCommonDaoHelper.queryObject(jpaDao,${entityName}.class,${entityName}Info.class,req);-->
+<#--        return SimpleCommonDaoHelper.queryObject(simpleDao,${entityName}.class,${entityName}Info.class,req);-->
 
 <#--    }-->
 }

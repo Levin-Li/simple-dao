@@ -1,6 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
-import com.levin.commons.dao.annotation.order.OrderBy;
+
 import com.levin.commons.utils.ClassUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -35,8 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class BaseMojo extends AbstractMojo {
 
-    @Parameter
-    protected boolean skip = false;
+
+    public final Logger logger = LoggerFactory.getLogger(getClass());
+
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject mavenProject;
@@ -59,33 +59,22 @@ public abstract class BaseMojo extends AbstractMojo {
     @Component
     private RepositoryManager repositoryManager;
 
+
+    /**
+     * 为 true 跳过插件的执行
+     */
+    @Parameter
+    protected boolean skip = false;
+
+    /**
+     * 是否打印异常
+     */
     @Parameter
     protected boolean isPrintException = false;
 
-    @Parameter(defaultValue = "${project.name}")
-    protected String name;
-
-    @Parameter(defaultValue = "${project.groupId}")
-    protected String groupId;
-
-    @Parameter(defaultValue = "${project.artifactId}")
-    protected String artifactId;
-
-    @Parameter(defaultValue = "${project.version}")
-    protected String version;
-
-    @Parameter(defaultValue = "${project.basedir}")
-    protected String basedir;
-
-    @Parameter(defaultValue = "${project.build.sourceDirectory}")
-    protected String sourceDirectory;
-
-    @Parameter(defaultValue = "${project.build.directory}")
-    protected String buildDirectory;
-
-    @Parameter(defaultValue = "${project.build.finalName}")
-    protected String buildFinalName;
-
+    /**
+     * 自定义变量
+     */
     @Parameter
     protected Map<String, Object> vars;
 
@@ -122,36 +111,39 @@ public abstract class BaseMojo extends AbstractMojo {
     protected String[] allowKeywords = {};
 
     /**
-     * 允许执行的构件清单
+     * 允许执行的构件ID清单
+     * <p>
      * 如果没有，则默认允许所有
      */
     @Parameter
-    protected String[] allowArtifacts = {};
+    protected String[] allowArtifactIds = {};
 
     /**
-     *
-     */
-    @Parameter(required = true, defaultValue = "${project.packaging}")
-    protected String packageType = "war";
-
-
-    /**
-     * 允许执行的项目类型
+     * 允许执行的项目packaging类型
+     * <p>
+     * 空为没有限制
      */
     @Parameter
     protected String[] allowPackageTypes = {};
 
     /**
-     * 插件的类加载器是否是独立的
+     * 插件的类加载器是否是独立
      */
     @Parameter
-    protected boolean isIndependentPluginClassLoader = false;
+    protected boolean independentPluginClassLoader = false;
+
+    /**
+     * 是否执行依赖的冲突检测
+     */
+    @Parameter
+    protected boolean Detection = true;
 
 
     final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 
-    public final Logger logger = LoggerFactory.getLogger(getClass());
-
+    /**
+     * 类加载器
+     */
     private URLClassLoader pluginClassLoader;
 
     /**
@@ -235,7 +227,7 @@ public abstract class BaseMojo extends AbstractMojo {
         if (urlList.size() > 0) {
 
             //是否要独立的类加载器
-            ClassLoader parent = (pluginClassLoader != null || isIndependentPluginClassLoader) ? pluginClassLoader : getClass().getClassLoader();
+            ClassLoader parent = (pluginClassLoader != null || independentPluginClassLoader) ? pluginClassLoader : getClass().getClassLoader();
 
             pluginClassLoader = new URLClassLoader(urlList.toArray(new URL[urlList.size()]), parent);
 
@@ -258,7 +250,6 @@ public abstract class BaseMojo extends AbstractMojo {
 //        mavenProject.getTestClasspathElements();
 
 
-
         String info = getBaseInfo();
 
         if (skip) {
@@ -270,7 +261,10 @@ public abstract class BaseMojo extends AbstractMojo {
 
         initVars();
 
-        if (!isAllow(artifactId, allowArtifacts)) {
+        String artifactId = mavenProject.getArtifactId();
+        String packageType = mavenProject.getPackaging();
+
+        if (!isAllow(artifactId, allowArtifactIds)) {
             getLog().info("not allow project artifactId:" + artifactId + ",skip");
             return;
         }
@@ -373,8 +367,9 @@ public abstract class BaseMojo extends AbstractMojo {
 
         Script scriptObj = cachedScripts.get(scriptTxt);
 
-        if (scriptObj != null)
+        if (scriptObj != null) {
             return scriptObj;
+        }
 
         scriptObj = new GroovyShell().parse(scriptTxt);
 
@@ -438,7 +433,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     protected String getBaseInfo() {
-        return "plugin " + getClass().getSimpleName() + "[" + groupId + ":" + artifactId + ":" + version + "(" + basedir + ")]";
+        return "plugin " + getClass().getSimpleName() + "[" + mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion() + "(" + mavenProject.getBasedir() + ")]";
     }
 
 

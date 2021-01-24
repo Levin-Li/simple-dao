@@ -38,7 +38,22 @@ public abstract class Utils {
     }
 
 
-    public static GroovyShell runScript( BaseMojo mojo, String name, boolean isGenFile, GroovyShell shell, Map<String, Object> vars, String[] classpaths, String[] groovyFiles, String[] contentMergeFiles, String... txtScripts) throws Exception {
+    /**
+     * 执行 groovy 脚本
+     *
+     * @param mojo
+     * @param name
+     * @param isGenFile
+     * @param shell
+     * @param vars
+     * @param classpaths
+     * @param groovyFiles
+     * @param contentMergeFiles
+     * @param txtScripts
+     * @return
+     * @throws Exception
+     */
+    public static GroovyShell runScript(BaseMojo mojo, String name, boolean isGenFile, GroovyShell shell, Map<String, Object> vars, String[] classpaths, String[] groovyFiles, String[] contentMergeFiles, String... txtScripts) throws Exception {
 
         if (shell == null)
             shell = new GroovyShell();
@@ -85,8 +100,9 @@ public abstract class Utils {
             for (String script : txtScripts) {
                 //shell.evaluate(script, "fileNameConvertScriptObj[" + n++ + "]", "mem://maven/fileNameConvertScriptObj/groovy/");
 
-                if (script != null)
+                if (script != null) {
                     builder.append("\n").append(script);
+                }
             }
         }
 

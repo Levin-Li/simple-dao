@@ -13,23 +13,38 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
+/**
+ * 扫描当前项目构建后的输出目录，发现目录中的 jpa 实体类，尝试自动生成服务类、控制器类、POM 文件、模块插件类、SpringBoot配置类 、 SpringBoot 启动文件
+ */
 @Mojo(name = "gen-code", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class CodeGeneratorMojo extends BaseMojo {
 
-    @Parameter
-    private boolean useCustomClassLoader = true;
-
-    @Parameter
+    /**
+     * 实体类的模块目录名称
+     * 如果pom 模块的目录名称如果等于 entitiesModuleDirName 指定的值，则表示这个模块都是实体类
+     * 那么就会在 pom 模块所在的同级目录 【servicesModuleDirName  apiModuleDirName】中生成服务类和控制器类
+     */
+    @Parameter(defaultValue = "entities")
     private String entitiesModuleDirName = "entities";
 
-    @Parameter
+    /**
+     * 生成的服务类的存放位置
+     * <p>
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "services")
     private String servicesModuleDirName = "services";
 
-    @Parameter
+    /**
+     * 生成的控制器类的存放位置
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "api")
     private String apiModuleDirName = "api";
 
     /**
-     * 模块的包名
+     * 强制指定模块的包名
+     * 默认会自动生成，建议自动生成
      */
     @Parameter
     private String modulePackageName = "";
@@ -37,31 +52,30 @@ public class CodeGeneratorMojo extends BaseMojo {
     /**
      * 模块名是否使用模块的文件夹名称
      */
-    @Parameter
+    @Parameter(defaultValue = "true")
     private boolean moduleNameUseDirName = true;
 
     /**
-     * 是否拆分模块
-     * 否则按自动处理
+     * 是否强制拆分模块，就是强制把服务类和控制器类生成在 servicesModuleDirName 和  apiModuleDirName 自动的目录中
+     * 默认不强制拆分，自动处理
      */
-    @Parameter
+    @Parameter(defaultValue = "false")
     private boolean forceSplitDir = false;
 
-
+    /**
+     * 代码生成的附加参数
+     */
     @Parameter
-    protected Map<String, Object> genParams;
-
-
+    protected Map<String, Object> codeGenParams;
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
 
         try {
 
-            if (genParams == null) {
-                genParams = new LinkedHashMap<>();
+            if (codeGenParams == null) {
+                codeGenParams = new LinkedHashMap<>();
             }
-
 
             if ("pom".equalsIgnoreCase(mavenProject.getArtifact().getType())) {
                 return;
@@ -137,15 +151,15 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
 
             //生成代码
-            ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, useCustomClassLoader ? getClassLoader() : null
-                    , outputDirectory, controllerDir, serviceDir, genParams);
+            ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
+                    , outputDirectory, controllerDir, serviceDir, codeGenParams);
 
             if (splitDir) { //尝试生成Pom 文件
-                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, genParams);
+                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, codeGenParams);
             }
 
             //生成
-            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, genParams);
+            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, codeGenParams);
 
 
         } catch (Exception e) {

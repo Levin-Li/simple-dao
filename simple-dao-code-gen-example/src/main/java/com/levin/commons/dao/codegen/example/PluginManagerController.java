@@ -16,7 +16,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/plugin")
+@RequestMapping("/system/plugin")
 @Tag(name = "Plugin", description = "插件管理")
 @Slf4j
 public class PluginManagerController {
@@ -35,7 +35,7 @@ public class PluginManagerController {
      *
      * @return
      */
-    @RequestMapping("")
+    @RequestMapping("/list")
     @Operation(summary = "查询插件列表", description = "Plugin")
     public ApiResp<List<Plugin>> list() {
         return ApiResp.ok(pluginManager.getInstalledPlugins());
@@ -47,10 +47,10 @@ public class PluginManagerController {
      * @param pluginId
      * @return
      */
-    @RequestMapping("/{pluginId}/menu")
-    @Operation(summary = "查询插件菜单", description = "Plugin")
-    public ApiResp<List<MenuItem>> menu(@PathVariable String pluginId) {
-        return ApiResp.ok(pluginManager.getInstalledPlugin(pluginId).getMenuItems());
+    @RequestMapping("/{pluginId}")
+    @Operation(summary = "查询插件", description = "Plugin")
+    public ApiResp<Plugin> plugin(@PathVariable String pluginId) {
+        return ApiResp.ok(pluginManager.getInstalledPlugin(pluginId));
     }
 
 }

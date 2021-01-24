@@ -100,6 +100,11 @@ public final class ServiceModelCodeGenerator {
      */
     public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
 
+        //如果没有包名，也没有发现实体类
+        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+            return;
+        }
+
         String serviceArtifactId = "";
 
         Map<String, Object> params = MapUtils.put(context.getAll(false))
@@ -148,6 +153,11 @@ public final class ServiceModelCodeGenerator {
      * @param params
      */
     public static void tryGenSpringBootStarterFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> params) throws Exception {
+
+        //如果没有包名，也没有发现实体类
+        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+            return;
+        }
 
         params.putAll(context.getAll(false));
 
@@ -229,6 +239,8 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
+        hasEntityClass(true);
+
         //获取包名最端的类，把最短的包名，做为模块的包名
         Class tempClass = null;
 
@@ -288,10 +300,19 @@ public final class ServiceModelCodeGenerator {
         return modulePackageName() + ".controller." + subPkgName();
     }
 
-    public static Class entityClass(Class newValue) {
+
+    private static Boolean hasEntityClass(boolean newValue) {
         return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
+    private static Boolean hasEntityClass() {
+        return context.get(ExceptionUtils.getInvokeMethodName());
+    }
+
+
+    public static Class entityClass(Class newValue) {
+        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+    }
 
     public static Class entityClass() {
         return context.get(ExceptionUtils.getInvokeMethodName());
