@@ -4,7 +4,7 @@ import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.domain.Secured;
+import com.levin.commons.service.domain.SecurityDomain;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
@@ -713,9 +713,9 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.getImports().add(InjectVar.class.getName());
             }
 
-            if (field.isAnnotationPresent(Secured.class)) {
-                annotations.add("@" + Secured.class.getSimpleName());
-                fieldModel.getImports().add(Secured.class.getName());
+            if (field.isAnnotationPresent(SecurityDomain.class)) {
+                annotations.add("@" + SecurityDomain.class.getSimpleName());
+                fieldModel.getImports().add(SecurityDomain.class.getName());
             }
 
 
