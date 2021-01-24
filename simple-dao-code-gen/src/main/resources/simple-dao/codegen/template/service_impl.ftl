@@ -62,26 +62,26 @@ public class ${className} implements ${serviceName} {
 
     <#list fields as field>
         <#if field.name == 'sn' && field.type == 'String'>
-            String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
-            entity.setSn(sn);
+        String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+        entity.setSn(sn);
         </#if>
         <#if field.name == 'addTime'>
-            entity.setAddTime(new Date());
+        entity.setAddTime(new Date());
         </#if>
         <#if field.name == 'createTime'>
-            entity.setCreateTime(new Date());
+        entity.setCreateTime(new Date());
         </#if>
         <#if field.name == 'updateTime'>
-            entity.setUpdateTime(new Date());
+        entity.setUpdateTime(new Date());
         </#if>
         <#if field.name == 'lastUpdateTime'>
-            entity.setLastUpdateTime(new Date());
+        entity.setLastUpdateTime(new Date());
         </#if>
     </#list>
 
         simpleDao.create(entity);
 
-        return  ApiResp.ok(entity.get${pkField.name?cap_first}());
+        return ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
 
     @Override
@@ -126,18 +126,19 @@ public class ${className} implements ${serviceName} {
             return  ApiResp.error("删除参数不能为空");
         }
 
-        boolean successful;
+        boolean successful = false;
 
         try {
             successful = simpleDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
-        } catch (Exception e) {
-            successful = simpleDao.updateTo(${entityName}.class)
-                    .set("deleted", true)
-                    .appendByQueryObj(req)
-                    .update() > 0;
+        } catch (Exception ex) {
+           // successful = simpleDao.updateTo(${entityName}.class)
+           //         .set("deleted", true)
+           //         .appendByQueryObj(req)
+           //         .update() > 0;
+          log.error("delete ${desc} [${entityName}] error",ex);
         }
 
-        return successful?ApiResp.ok():ApiResp.error("删除${desc}失败");
+        return successful ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
 
     @Override
@@ -145,15 +146,16 @@ public class ${className} implements ${serviceName} {
 
         Query${entityName}Req queryReq = new Query${entityName}Req();
         queryReq.set${pkField.name?cap_first}(${pkField.name});
-        return query(queryReq).getFirst();
 
+       // return query(queryReq).getFirst();
+
+        return simpleDao.findOneByQueryObj(queryReq);
     }
 
     @Override
-    @Deprecated
     public PagingData<${entityName}Info> query(Query${entityName}Req req) {
 
-      return  PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req);
+      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req);
 
     }
 

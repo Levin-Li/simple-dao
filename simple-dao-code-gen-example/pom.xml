@@ -218,6 +218,8 @@
 
         <plugins>
 
+
+
             <plugin>
                 <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
