@@ -63,9 +63,9 @@ public class QueryAnnotationUtilTest {
 
 //
 
-        List<String[]> test = QLUtils.parseSelectColumns(null, selectColumns, "testM,'adsfasdfads',123213,354654,-123123,cnt");
+//        List<String[]> test = QLUtils.parseSelectColumns(null, selectColumns, "testM,'adsfasdfads',123213,354654,-123123,cnt");
 
-        System.out.println(test);
+//        System.out.println(test);
 
     }
 }
