@@ -109,8 +109,8 @@
             <url>https://jitpack.io</url>
         </repository>
 
-        <!--        在 gitpack.io 打包时会非常的慢-->
-        <!--        <repository>
+                <!--  在 gitpack.io 打包时会非常的慢 -->
+<!--                <repository>
                     &lt;!&ndash; 仓库首页 https://maven.aliyun.com/ &ndash;&gt;
                     <id>aliyun-central仓和jcenter仓的聚合仓</id>
                     <url>https://maven.aliyun.com/repository/public</url>
@@ -191,6 +191,7 @@
                     <parameters>true</parameters>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+
                 </configuration>
             </plugin>
 
@@ -331,11 +332,9 @@
 
             </plugin>
 
-
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
-
 
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -382,6 +381,5 @@
         </plugins>
 
     </build>
-
 
 </project>

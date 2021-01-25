@@ -29,5 +29,5 @@ out
 **/services
 
 **/spring.factories
-**/SimpleDaoCodeGenExamplePlugin
-**/SimpleDaoCodeGenExampleSpringConfiguration
+**/SimpleDaoCodeGenExamplePlugin.java
+**/SimpleDaoCodeGenExampleSpringConfiguration.java

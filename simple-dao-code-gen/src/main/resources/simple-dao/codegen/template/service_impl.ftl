@@ -129,7 +129,7 @@ public class ${className} implements ${serviceName} {
         boolean successful = false;
 
         try {
-            successful = simpleDao.deleteFrom(${entityName}.class).appendByQueryObj(req).delete() > 0;
+            successful =  simpleDao.deleteByQueryObj(req) > 0;
         } catch (Exception ex) {
            // successful = simpleDao.updateTo(${entityName}.class)
            //         .set("deleted", true)
