@@ -19,7 +19,7 @@
 
     <properties>
 
-        <levin.simple-dao.version>2.2.19-SNAPSHOT</levin.simple-dao.version>
+        <levin.simple-dao.version>2.2.20-SNAPSHOT</levin.simple-dao.version>
         <levin.service-support.version>1.1.20-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
@@ -55,10 +55,10 @@
 
         <profile>
             <id>01-跳过测试</id>
-            <!--
-                        <activation>
-                            <activeByDefault>true</activeByDefault>
-                        </activation>-->
+
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
 
             <properties>
                 <maven.test.skip>true</maven.test.skip>
@@ -109,11 +109,12 @@
             <url>https://jitpack.io</url>
         </repository>
 
-        <repository>
-            <!-- 仓库首页 https://maven.aliyun.com/ -->
-            <id>aliyun-central仓和jcenter仓的聚合仓</id>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
+        <!--        在 gitpack.io 打包时会非常的慢-->
+        <!--        <repository>
+                    &lt;!&ndash; 仓库首页 https://maven.aliyun.com/ &ndash;&gt;
+                    <id>aliyun-central仓和jcenter仓的聚合仓</id>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                </repository>-->
 
     </repositories>
 

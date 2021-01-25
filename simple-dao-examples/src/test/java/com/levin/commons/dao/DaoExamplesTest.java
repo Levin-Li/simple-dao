@@ -730,7 +730,7 @@ public class DaoExamplesTest {
         System.out.println(byQueryObj);
     }
 
-    @Test
+    //@Test
     public void testNativeQuery() {
 
 
@@ -900,7 +900,6 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testStatDTO2() throws Exception {
 
-        jpaDao.selectFrom(User.class).setContext();
 
         List<UserStatDTO> byQueryObj = jpaDao.findByQueryObj(UserStatDTO.class, new UserStatDTO());
 
@@ -960,7 +959,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+//    @org.junit.Test
     public void testNativeSelect() throws Exception {
 
         SelectDao<User> selectDao = jpaDao.selectFrom("jpa_dao_test_User");
@@ -1117,7 +1116,7 @@ public class DaoExamplesTest {
         org.junit.Assert.assertNotNull(objects);
     }
 
-    @org.junit.Test
+    //@org.junit.Test
     public void testSelectFrom() throws Exception {
 
         long millis = System.currentTimeMillis();

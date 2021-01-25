@@ -4,7 +4,7 @@ package com.levin.commons.dao.util;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.service.domain.Desc;
-import com.levin.commons.service.domain.ServiceResponse;
+import com.levin.commons.service.domain.ServiceResp;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
@@ -122,51 +122,6 @@ public class ObjectUtilTest {
 
     }
 
-    public static class RESP extends ServiceResponse<Group> {
-
-        public RESP() {
-            super(null);
-        }
-
-        public RESP(Group data) {
-            super(data);
-        }
-    }
-
-    public static class Info extends D<User, RESP> {
-
-        public Info() {
-        }
-    }
-
-    static class Source extends S<User, RESP> {
-
-        {
-            Group g = new Group();
-            g.setId(100L);
-            g.setName("g100");
-
-            field1 = new User();
-            field1.setName("u100");
-            field1.setId(100L);
-
-
-            field1.setGroup(g);
-
-            value = new RESP(g);
-
-            listArray.add(new User[]{field1});
-            listArray.add(new User[]{field1});
-            listArray.add(new User[]{field1});
-            listArray.add(new User[]{field1});
-
-            resp.add(value);
-            resp.add(value);
-            resp.add(value);
-            resp.add(value);
-
-        }
-    }
 
 
 
@@ -186,37 +141,7 @@ public class ObjectUtilTest {
     }
 
 
-    @Test
-    public void testCopy() throws Exception {
 
-
-        Info copy = ObjectUtil.copy(new Source(), null, Info.class, 2, "");
-
-        ResolvableType resolvableType = ResolvableType.forType(copy.listArray.getClass());
-
-        System.out.println(resolvableType.resolve());
-
-        System.out.println(copy);
-
-    }
-
-
-    @Test
-    public void testCopyFail() throws Exception {
-
-
-        Source source = new Source();
-
-
-        Info copy = ObjectUtil.copy(source, Info.class, "");
-
-        ResolvableType resolvableType = ResolvableType.forType(copy.listArray.getClass());
-
-        System.out.println(resolvableType.resolve());
-
-        System.out.println(copy);
-
-    }
 
     private static List<String> foundColumn(String defaultResult, String selectColumns) {
 

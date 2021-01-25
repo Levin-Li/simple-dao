@@ -46,4 +46,8 @@ spring:
 #        hibernate.id.new_generator_mappings: false
 
 #        hibernate.dialect.storage_engine: innodb
+logging:
+  level:
+    root: warn
+    com.levin: trace
 
