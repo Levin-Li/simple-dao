@@ -1235,54 +1235,6 @@ public class SelectDaoImpl<T>
         return columnNames;
     }
 
-
-    private boolean isNameExists(String name, List<List<String>> names) {
-
-        for (List<String> list : names) {
-            if (list.contains(name)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private String getPropertyName(String key, Object[] keys) {
-
-        if (!hasText(key)) {
-            return key;
-        }
-
-        if (keys == null) {
-            return key;
-        }
-
-        //1、优先使用字段名
-        Object fieldOrMethod = keys[1];
-
-        //2、其次使用实体属性名
-        String entityAttrName = (String) keys[0];
-
-        if (fieldOrMethod != null) {
-            if (fieldOrMethod instanceof Field) {
-                key = ((Field) fieldOrMethod).getName();
-            } else if (fieldOrMethod instanceof Method) {
-                key = ((Method) fieldOrMethod).getName();
-                //去除 get
-                if (key.startsWith("get")) {
-                    key = Character.toLowerCase(key.charAt(3)) + key.substring(4);
-                }
-            } else if (fieldOrMethod instanceof String) {
-                key = removeAlias((String) fieldOrMethod);
-            }
-
-        } else if (hasText(entityAttrName)) {
-            key = entityAttrName;
-        }
-
-        return key;
-
-    }
 //////////////////////////////////////////////
 
     private SelectDao<T> processStat(int callMethodDeep, String expr, String alias, Object... paramValues) {
@@ -1332,7 +1284,7 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> groupByAsAnno(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> groupByAsAlias(String expr, String alias, Map<String, Object>... paramValues) {
 
         Annotation annotation = QueryAnnotationUtil.getAnnotation(GroupBy.class);
 

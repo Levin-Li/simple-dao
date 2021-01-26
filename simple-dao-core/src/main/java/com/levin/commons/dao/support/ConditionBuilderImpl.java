@@ -157,7 +157,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     protected EntityOption getEntityOption() {
-        return entityClass.getAnnotation(EntityOption.class); // QueryAnnotationUtil.getEntityOption(entityClass);
+
+        //
+        return entityClass != null ? entityClass.getAnnotation(EntityOption.class) : null;
+
+        // QueryAnnotationUtil.getEntityOption(entityClass);
     }
 
     protected void checkAction(EntityOption.Action action, Consumer checkFailCallback) {

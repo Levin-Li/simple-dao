@@ -179,15 +179,20 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> groupBy(String... columnNames);
 
     /**
-     * @param expr
-     * @param paramValues
+     *
+     * 增加 group by 语句和参数
+     *
+     * @param expr 表达式
+     * @param paramValues 参数
      * @return
      */
     SelectDao<T> groupBy(String expr, Object... paramValues);
 
     /**
-     * @param expr
-     * @param paramValues
+     * 增加 group by 语句和参数
+     *
+     * @param expr 表达式
+     * @param paramValues 参数
      * @return
      */
     SelectDao<T> groupBy(Boolean isAppend, String expr, Object... paramValues);

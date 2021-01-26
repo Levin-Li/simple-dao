@@ -32,6 +32,6 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T groupByAsAnno(String expr, String alias, Map<String, Object>... paramValues);
+    T groupByAsAlias(String expr, String alias, Map<String, Object>... paramValues);
 
 }

@@ -353,7 +353,8 @@ public class DaoExamplesTest {
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAnno(E_Group.name, "")
+                .groupByAsAlias(E_Group.name, "groupName")
+//                .groupBy("g.name")
                 .orderBy("ts2")
 //                .groupBy("g.name")
                 .find(Map.class);
@@ -362,7 +363,7 @@ public class DaoExamplesTest {
         Assert.isTrue(g.size() > 0);
 
         Assert.isTrue(g.get(0).containsKey("cnt"));
-        Assert.isTrue(g.get(0).containsKey(E_Group.name));
+        Assert.isTrue(g.get(0).containsKey("groupName"));
     }
 
     @Test
