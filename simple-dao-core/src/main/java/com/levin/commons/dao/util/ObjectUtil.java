@@ -26,12 +26,13 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
+ * 支持对象深度拷贝
+ * <p>
  * Created by echo on 2016/8/1.
  */
 public abstract class ObjectUtil {
@@ -668,7 +669,7 @@ public abstract class ObjectUtil {
      *
      * @param source              源对象
      * @param target              目标对象
-     * @param targetType          目标类似
+     * @param targetType          目标类
      * @param ownerResolvableType 当前泛型的上下文所有者
      * @param copyErrors          拷贝错误
      * @param propertyPath        当前的属性路径
@@ -782,8 +783,9 @@ public abstract class ObjectUtil {
             //获取集合元素类型
             Class eleType = eleResolvableType != null ? eleResolvableType.resolve() : null;
 
-            if (Object.class == eleType)
+            if (Object.class == eleType) {
                 eleType = null;
+            }
 
             //自己重新赋值，忽略旧值
             target = tryToNewCollectionInstance(targetType, source.getClass(), eleType, elements.size());
@@ -980,7 +982,7 @@ public abstract class ObjectUtil {
 
             } catch (PropertyNotFoundException ex) {
                 if (logger.isTraceEnabled()) {
-                    String errInfo = String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
+                    String errInfo = String.format("Can't copy [%s] from [%s], error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
                     logger.trace(errInfo);
                 }
             } catch (Exception e) {
@@ -990,14 +992,14 @@ public abstract class ObjectUtil {
 
                     if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
+                            logger.debug(String.format("Can't copy [%s] from [%s] , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
                         }
                     } else {
-                        logger.error(String.format("Can't copy [%s] from %s , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
+                        logger.error(String.format("Can't copy [%s] from [%s] , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
                     }
                 }
             } catch (StackOverflowError error) {
-                String errInfo = String.format("StackOverflowError Can't copy [%s] from %s , error:%s"
+                String errInfo = String.format("StackOverflowError Can't copy [%s] from [ %s] , error:%s"
                         , fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(error, "->"));
 
                 logger.error(errInfo, error);
