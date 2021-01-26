@@ -171,6 +171,13 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * FROM子句
+     * WHERE子句
+     * GROUP BY子句  不能使用别名
+     * HAVING子句
+     * SELECT子句
+     * ORDER BY子句
+     * <p>
      * 增加 group by 字段列表
      *
      * @param columnNames 字段列表，会尝试自动增加别名
@@ -179,10 +186,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> groupBy(String... columnNames);
 
     /**
-     *
      * 增加 group by 语句和参数
      *
-     * @param expr 表达式
+     * @param expr        表达式
      * @param paramValues 参数
      * @return
      */
@@ -191,7 +197,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     /**
      * 增加 group by 语句和参数
      *
-     * @param expr 表达式
+     * @param expr        表达式
      * @param paramValues 参数
      * @return
      */

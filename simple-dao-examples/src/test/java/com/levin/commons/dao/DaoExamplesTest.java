@@ -353,10 +353,10 @@ public class DaoExamplesTest {
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAlias(E_Group.name, "groupName")
+                .groupByAndSelect(E_Group.name, "groupName")
 //                .groupBy("g.name")
                 .orderBy("ts2")
-//                .groupBy("g.name")
+                .groupBy("g.name")
                 .find(Map.class);
 
 
@@ -465,7 +465,7 @@ public class DaoExamplesTest {
                 .eq(E_TestEntity.id, entity.getId())
                 .update();
 
-     //   boolean disableDel = entityOption != null &&  Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
+        //   boolean disableDel = entityOption != null &&  Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
 
         Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
 
@@ -1037,7 +1037,6 @@ public class DaoExamplesTest {
         testEntities = jpaDao.selectFrom(TestEntity.class)
                 .filterLogicDeletedData(false)
                 .find();
-
 
 
         EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);

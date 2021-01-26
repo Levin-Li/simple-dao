@@ -585,7 +585,6 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-
         genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
             boolean isGroupBy = opAnnotation instanceof GroupBy;
@@ -1259,36 +1258,36 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> count(String expr, String alias) {
-        return processStat(2, expr, alias);
-    }
-
-    @Override
-    public SelectDao<T> avg(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> count(String expr, String alias, Object... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> sum(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> avg(String expr, String alias, Object... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> max(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> sum(String expr, String alias, Object... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> min(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> max(String expr, String alias, Object... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> groupByAsAlias(String expr, String alias, Map<String, Object>... paramValues) {
+    public SelectDao<T> min(String expr, String alias, Object... paramValues) {
+        return processStat(2, expr, alias, paramValues);
+    }
 
-        Annotation annotation = QueryAnnotationUtil.getAnnotation(GroupBy.class);
+    @Override
+    public SelectDao<T> groupByAndSelect(String expr, String alias, Object... paramValues) {
 
-        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation, alias);
+        Annotation groupBy = QueryAnnotationUtil.getAnnotation(GroupBy.class);
+
+        processStatAnno(null, null, new Annotation[]{groupBy}, expr, null, paramValues, groupBy, alias);
 
         return this;
     }
