@@ -58,14 +58,22 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
     /**
      * 是否有限制影响记录数
-     *
+     * <p>
      * 如果最大结果集大于maxLimit，将返回 false
-     *
-     *
      *
      * @return
      */
     boolean hasLimit(int maxLimit);
+
+
+    /**
+     * 过滤操作已经被逻辑删除的数据
+     * 默认时过滤的
+     *
+     * @return
+     */
+    T filterLogicDeletedData(boolean enable);
+
 
     /**
      * 增加where条件及参数

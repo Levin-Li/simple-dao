@@ -49,7 +49,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     @Override
     SelectDao<T> page(Paging paging);
 
-
     ////////////////////////////////////////////////////////////////////////////
 
     /**

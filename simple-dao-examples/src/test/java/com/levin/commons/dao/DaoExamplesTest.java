@@ -18,6 +18,7 @@ import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.dao.support.PagingData;
+import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import org.junit.Before;
@@ -35,6 +36,7 @@ import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Created by echo on 2015/11/17.
@@ -172,20 +174,20 @@ public class DaoExamplesTest {
 
         n = n - jpaDao.updateTo(TestEntity.class, "e")
                 .set(E_TestEntity.name, "updateName")
-                .in(E_TestEntity.state, "S2","S4")
+                .in(E_TestEntity.state, "S2", "S4")
                 .notIn(E_TestEntity.category, "C1", "C4")
                 .eq(E_TestEntity.editable, true)
                 .update();
 
 
-        count = jpaDao.selectFrom("jpa_dao_test_entity")
+        count = jpaDao.selectFrom("simple_dao_test_entity")
                 .startsWith(E_TestEntity.name, "test")
                 .count();
 
         Assert.isTrue(count == n, "查询数量错误3");
 
 
-        count = jpaDao.selectFrom("jpa_dao_test_entity", "e")
+        count = jpaDao.selectFrom("simple_dao_test_entity", "e")
                 .select(E_TestEntity.name)
                 .startsWith(E_TestEntity.name, "test")
                 .count();
@@ -426,6 +428,8 @@ public class DaoExamplesTest {
     @Transactional
     public void testTransactional2() throws InterruptedException {
 
+        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+
         TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
                 .setScore(random.nextInt(750))
                 .setName("test" + random.nextInt(750))
@@ -459,6 +463,8 @@ public class DaoExamplesTest {
                 .set(E_TestEntity.orderCode, orderCode)
                 .eq(E_TestEntity.id, entity.getId())
                 .update();
+
+     //   boolean disableDel = entityOption != null &&  Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
 
         Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
 
@@ -959,7 +965,7 @@ public class DaoExamplesTest {
     }
 
 
-//    @org.junit.Test
+    //    @org.junit.Test
     public void testNativeSelect() throws Exception {
 
         SelectDao<User> selectDao = jpaDao.selectFrom("jpa_dao_test_User");
@@ -980,6 +986,76 @@ public class DaoExamplesTest {
 
 
     @org.junit.Test
+    public void testLogicDelete() throws Exception {
+
+        SelectDao<TestEntity> dao = jpaDao.selectFrom(TestEntity.class);
+
+        List<TestEntity> testEntities = dao.find();
+
+
+        List<Long> logicDeletedIds = new ArrayList<>();
+
+        for (TestEntity testEntity : testEntities) {
+
+            if (testEntity.getId() % 2 == 0) {
+
+                int n = jpaDao.deleteFrom(TestEntity.class)
+                        .eq(E_TestEntity.id, testEntity.getId())
+                        .delete();
+
+                Assert.isTrue(n > 0, "逻辑删除失败");
+
+                logicDeletedIds.add(testEntity.getId());
+            }
+
+        }
+
+
+        for (Long id : logicDeletedIds) {
+
+            int n = jpaDao.updateTo(TestEntity.class).set(E_TestEntity.remark, "逻辑删除备注更新").eq(E_TestEntity.id, id).update();
+            Assert.isTrue(n < 1, "已经逻辑删除的对象，还能被更新");
+
+            n = jpaDao.deleteFrom(TestEntity.class).eq(E_TestEntity.id, id).delete();
+            Assert.isTrue(n < 1, "已经逻辑删除的对象，还能被删除");
+
+            TestEntity entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, id).findOne();
+            Assert.isTrue(entity == null, "已经逻辑删除的对象，还能被查询到");
+
+        }
+
+
+        testEntities = jpaDao.selectFrom(TestEntity.class).find();
+
+        for (TestEntity testEntity : testEntities) {
+            Assert.isTrue(testEntity.getId() % 2 == 1, "已经逻辑删除的数据仍然被查询出来");
+        }
+
+
+        //
+        testEntities = jpaDao.selectFrom(TestEntity.class)
+                .filterLogicDeletedData(false)
+                .find();
+
+
+
+        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+
+
+        if (entityOption != null) {
+            //ID 为偶数的记录数必须大于0
+
+            boolean disableDel = Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
+
+            Assert.isTrue(!disableDel || testEntities.stream().filter(e -> e.getId() % 2 == 0).count() > 0, "逻辑删除的数据没有出现");
+        }
+
+
+    }
+
+
+    @org.junit.Test
+
     public void testSelect() throws Exception {
 
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class);

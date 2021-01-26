@@ -20,14 +20,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.findFirstMatched;
 import static com.levin.commons.dao.util.QueryAnnotationUtil.tryGetJpaEntityFieldName;
@@ -63,7 +67,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     private final boolean nativeQL;
 
 
-    private ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
+    private final ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
     private Map<String, Object> context;
 
@@ -79,9 +83,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected boolean safeMode = true;
 
-
     // protected String localParamPlaceholder = null;
 
+    protected boolean filterLogicDeletedData = true;
+
+
+    /**
+     * 实体对象，可空字段缓存
+     */
+    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
 
     protected ConditionBuilderImpl(boolean isNative) {
 
@@ -116,8 +126,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.nativeQL = true;
         this.alias = (alias != null && tableName != null) ? alias.trim() : null;
 
-        if (tableName == null)
+        if (tableName == null) {
             throw new IllegalArgumentException("tableName is null");
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +154,55 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public CB setValidator(javax.validation.Validator validator) {
         this.validator = validator;
         return (CB) this;
+    }
+
+    protected EntityOption getEntityOption() {
+        return QueryAnnotationUtil.getEntityOption(entityClass);
+    }
+
+    protected void checkAction(EntityOption.Action action, Consumer checkFailCallback) {
+        if (isDisable(action)) {
+            if (checkFailCallback != null) {
+                checkFailCallback.accept(action);
+            } else {
+                throw new StatementBuildException(" " + entityClass + " disable " + action + " action");
+            }
+        }
+    }
+
+    protected boolean isDisable(EntityOption.Action... actions) {
+
+        EntityOption entityOption = getEntityOption();
+
+        if (actions == null
+                || actions.length < 1
+                || entityOption == null
+                || entityOption.disableActions() == null
+                || entityOption.disableActions().length < 1) {
+
+            //没有禁止就是允许
+            return false;
+        }
+
+        for (EntityOption.Action allowableAction : entityOption.disableActions()) {
+            for (EntityOption.Action action : actions) {
+                if (action != null && action.equals(allowableAction)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    protected boolean hasLogicDeleteField() {
+
+        EntityOption entityOption = getEntityOption();
+
+        return entityOption != null
+                && StringUtils.hasText(entityOption.logicalDeleteField())
+                && StringUtils.hasText(entityOption.logicalDeleteValue());
     }
 
 
@@ -254,6 +314,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return rowCount > 0 && rowCount < maxLimit;
     }
 
+    @Override
+    public CB filterLogicDeletedData(boolean enable) {
+
+        filterLogicDeletedData = enable;
+
+        return (CB) this;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Override
     public CB where(String whereStatement, Object... paramValues) {
@@ -266,7 +334,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public CB where(Boolean isAppend, String conditionExpr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-            appendToWhere(conditionExpr, paramValues);
+            appendToWhere(conditionExpr, paramValues, false);
         }
 
         return (CB) this;
@@ -635,7 +703,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             setFromStatement(targetOption.fromStatement());
         }
 
-        this.where(targetOption.fixedCondition());
+        //  this.where(targetOption.fixedCondition());
 
         //设置limit，如果原来没有设置
 
@@ -1028,7 +1096,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             //当前节点是否有效
-            if (!whereExprRootNode.getCurrentNode().isValid()) {
+            if (!whereExprRootNode.currentNode().isValid()) {
                 return;
             }
 
@@ -1080,8 +1148,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         || annotation instanceof PrimitiveValue
                         || annotation instanceof Validator
                         || annotation instanceof Immutable
-                        || annotation instanceof Ignore)
+                        || annotation instanceof Ignore) {
                     continue;
+                }
 
 
                 String clsName = annotation.annotationType().getName();
@@ -1254,13 +1323,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void appendToWhere(String expr, Object value) {
+    private void appendToWhere(String expr, Object value, boolean addToFirst) {
 
         if (hasText(expr)
-                && whereExprRootNode.addToCurrentNode(expr)) {
-            whereParamValues.add(value);
+                && whereExprRootNode.currentNode().add(addToFirst, expr)) {
+            if (addToFirst) {
+                whereParamValues.add(0, value);
+            } else {
+                whereParamValues.add(value);
+            }
         }
-
     }
 
 
@@ -1460,10 +1532,96 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return hasText(text) ? text : defaultV;
     }
 
-    protected String genWhereStatement() {
-        return getText(whereExprRootNode.toString(), " Where ", " ", " ");
+    /**
+     * 是否不允许空
+     *
+     * @param propertyName
+     * @return
+     */
+    private boolean isNullable(String propertyName) {
 
+        String key = entityClass.getName() + "." + propertyName;
+
+        Boolean aBoolean = entityClassNullableFields.get(key);
+
+        if (aBoolean == null) {
+
+            Field field = ReflectionUtils.findField(entityClass, propertyName);
+
+            if (field == null) {
+                throw new RuntimeException(new NoSuchFieldException(key));
+            }
+
+            Column column = field.getAnnotation(Column.class);
+
+            aBoolean = column == null || column.nullable();
+
+            entityClassNullableFields.put(key, aBoolean);
+        }
+
+        return aBoolean;
     }
+
+    /**
+     * 获取查询条件
+     *
+     * @param action 动作
+     * @return
+     */
+    protected String genWhereStatement(EntityOption.Action action) {
+
+        if (isDisable(action)) {
+            throw new StatementBuildException(" " + entityClass + " disable " + action + " action");
+        }
+
+        String whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
+
+        if (this.isSafeMode()
+                && !hasText(whereStatement)
+                && !isSafeLimit()) {
+
+            //如果超出安全模式的限制
+            throw new StatementBuildException("dao safe mode not allow no where statement"
+                    + "or no limit or limit over " + getDao().safeModeMaxLimit());
+        }
+
+        //如果过滤逻辑删除的数据
+        if (filterLogicDeletedData
+                && hasLogicDeleteField()) {
+
+            EntityOption entityOption = getEntityOption();
+
+            String expr = genLogicDeleteExpr(entityOption, Op.NotEq);
+
+            String propertyName = entityOption.logicalDeleteField().trim();
+
+            if (isNullable(propertyName)) {
+                expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
+            }
+
+            whereExprRootNode.switchCurrentNodeToSelf();
+
+            appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
+
+            //重新生成 where
+            whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
+        }
+
+        return whereStatement;
+    }
+
+    protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {
+        return aroundColumnPrefix(entityOption.logicalDeleteField().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
+    }
+
+    protected Object convertLogicDeleteValue(EntityOption entityOption) {
+        return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteField().trim()));
+    }
+
+    protected Object tryConvertPropertyValue(String name, String value) {
+        return ObjectUtil.convert(value, QueryAnnotationUtil.getFieldType(entityClass, name));
+    }
+
 
     protected String getParamPlaceholder() {
 //        return localParamPlaceholder != null ? localParamPlaceholder : getDao().getParamPlaceholder(isNative());

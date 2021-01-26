@@ -1,10 +1,7 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.Converter;
-import com.levin.commons.dao.MiniDao;
-import com.levin.commons.dao.SelectDao;
-import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.E_C;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -352,7 +349,7 @@ public class SelectDaoImpl<T>
 
         if (Boolean.TRUE.equals(isAppend)
                 && hasText(havingStatement)
-                && this.havingExprRootNode.addToCurrentNode(havingStatement)) {
+                && this.havingExprRootNode.currentNode().add(havingStatement)) {
             this.havingParamValues.add(paramValues);
         }
 
@@ -742,7 +739,7 @@ public class SelectDaoImpl<T>
             fetchAttrs.values().forEach(v -> builder.append(" ").append(v).append(" "));
         }
 
-        String whereStatement = genWhereStatement();
+        String whereStatement = genWhereStatement(EntityOption.Action.Read);
 
         builder.append(" ").append(whereStatement);
 
@@ -863,7 +860,6 @@ public class SelectDaoImpl<T>
      */
 //    @Override
     public <E> List<E> findForResultClass(Class<E> resultClass) {
-
 
         return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
@@ -1128,7 +1124,7 @@ public class SelectDaoImpl<T>
     /**
      * 单查询返回值是数组时，尝试自动转换成 Map
      *
-     * @param data 数组对象
+     * @param data        数组对象
      * @param valueHolder 数据缓存
      * @return
      * @todo 优化性能，直接转换成对象

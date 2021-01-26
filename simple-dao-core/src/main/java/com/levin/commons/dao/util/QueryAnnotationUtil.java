@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 
+import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -15,6 +16,7 @@ import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.service.support.Locker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -96,6 +98,11 @@ public abstract class QueryAnnotationUtil {
     //缓存属性
     private static final Map<String, List<Field>> cacheFields = new ConcurrentReferenceHashMap<>();
 
+
+    public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+
+    private static final Locker locker = Locker.build();
+
     static {
         synchronized (allInstanceMap) {
             if (allInstanceMap.size() < 1) {
@@ -127,40 +134,65 @@ public abstract class QueryAnnotationUtil {
         return annotation != null && annotation.annotationType().getPackage().getName().equals(type.getPackage().getName());
     }
 
+    /**
+     * 获取缓存
+     *
+     * @return
+     */
+    public static EntityOption getEntityOption(Class entityClass) {
 
+        if (entityClass == null) {
+            return null;
+        }
+
+        String className = entityClass.getName();
+
+        Object value = cacheEntityOptionMap.get(className);
+
+        synchronized (locker.getLock(className)) {
+            if (value == null) {
+                value = entityClass.getAnnotation(EntityOption.class);
+                cacheEntityOptionMap.put(className, value != null ? value : Boolean.FALSE);
+            }
+        }
+
+        return (value instanceof EntityOption) ? (EntityOption) value : null;
+    }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param valueHolder
+     * @param valueList
      * @param paramValues
      * @return
      */
-    public static List flattenParams(List valueHolder, Object... paramValues) {
+    public static List flattenParams(List valueList, Object... paramValues) {
 
-        if (valueHolder == null)
-            valueHolder = new ArrayList();
+        if (valueList == null) {
+            valueList = new LinkedList();
+        }
 
-        if (paramValues == null)
-            return valueHolder;
+        if (paramValues == null) {
+            return valueList;
+        }
 
         for (Object paramValue : paramValues) {
             if (paramValue instanceof Collection) {
                 for (Object pv : ((Collection) paramValue)) {
-                    flattenParams(valueHolder, pv);
+                    flattenParams(valueList, pv);
                 }
             } else if (paramValue != null && paramValue.getClass().isArray()) {
                 int length = Array.getLength(paramValue);
                 for (int i = 0; i < length; i++) {
-                    flattenParams(valueHolder, Array.get(paramValue, i));
+                    flattenParams(valueList, Array.get(paramValue, i));
                 }
             } else if (paramValue instanceof Map) {
-                valueHolder.add(paramValue);
+                valueList.add(paramValue);
             } else {
-                valueHolder.add(paramValue);
+                valueList.add(paramValue);
             }
         }
 
-        return valueHolder;
+        return valueList;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,6 +297,7 @@ public abstract class QueryAnnotationUtil {
     public static Annotation getAnnotation(Class<? extends Annotation> type) {
         return allInstanceMap.get(type.getSimpleName());
     }
+
 
     public static Annotation[] getAnnotations(Class<? extends Annotation>... types) {
 

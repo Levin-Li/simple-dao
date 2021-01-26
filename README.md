@@ -51,13 +51,13 @@
         <dependency>
              <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.21-SNAPSHOT</version>
+            <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
         <dependency>
              <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao</artifactId>
-            <version>2.2.21-SNAPSHOT</version>
+            <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
 #### 1.2 定义DTO及注解
@@ -958,6 +958,50 @@
         //避免 N+1 查询
         List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
         
+        
+#### 11.4 逻辑删除 & 权限控制
+  dao 支持逻辑删除，逻辑删除后的数据，查询，更新，删除语句都会加上逻辑删除的条件。
+  通过注解实现 @EntityOption 实现，注解在实体类上。  
+  
+  默认情况下 DeleteDao 会先尝试物理删除，删除失败后会尝试逻辑删除。
+  
+     @Entity(name = "simple_dao_test_entity")
+     @Data
+     @Accessors(chain = true)
+     @FieldNameConstants
+     @EntityOption(disableActions = {EntityOption.Action.LogicalDelete}, logicalDeleteField = "state", logicalDeleteValue = "deleted")
+     public class TestEntity
+             extends AbstractTreeObject<Long, TestEntity>
+             implements StatefulObject<String> {
+     
+         @Id
+         @GeneratedValue
+         private Long id;
+     
+         @Desc("状态")
+         @Column(nullable = false)
+         String state = "C";
+     
+         @Desc("类别")
+         String category;
+     
+         @Desc("分数")
+         Integer score;
+     
+         @Desc("操作")
+         Op op;
+     
+     }
+  
+  
+   逻辑删除后，dao 可以通过 filterLogicDeletedData 来设定是否要过滤逻辑删除的数据，默认时过滤的。
+   
+   dao.selectFrom(TestEntity.class)
+                  .filterLogicDeletedData(false)
+                  .find(); 
+                               
+    
+        
 ### 12 安全模式
 
    数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
@@ -970,6 +1014,11 @@
                    .disableSafeMode()
                    .delete();
    
+  
+  同时也可以通过 EntityOption 注解的disableActions属性指定 Dao 禁止的操作。
+  
+     @EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteField = "state", logicalDeleteValue = "deleted")
+     //注解声明实体不允许物理删除，dao 会自动执行逻辑删除。
    
   安全控制接口定义
    
@@ -1004,7 +1053,7 @@
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.21-SNAPSHOT</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.20-SNAPSHOT</levin.service-support.version>
    
          

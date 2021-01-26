@@ -120,22 +120,17 @@ public class ${className} implements ${serviceName} {
     @Override
     public ApiResp<Void> delete(Delete${entityName}Req req) {
 
-
-        if (req.get${pkField.name?cap_first}() == null
-                && (req.get${pkField.name?cap_first}s() == null || req.get${pkField.name?cap_first}s().length == 0)) {
-            return  ApiResp.error("删除参数不能为空");
-        }
+        //if (req.get${pkField.name?cap_first}() == null
+        //        && (req.get${pkField.name?cap_first}s() == null || req.get${pkField.name?cap_first}s().length == 0)) {
+        //    return  ApiResp.error("删除参数不能为空");
+        // }
 
         boolean successful = false;
 
         try {
             successful =  simpleDao.deleteByQueryObj(req) > 0;
         } catch (Exception ex) {
-           // successful = simpleDao.updateTo(${entityName}.class)
-           //         .set("deleted", true)
-           //         .appendByQueryObj(req)
-           //         .update() > 0;
-          log.error("delete ${desc} [${entityName}] error",ex);
+            log.error("delete ${desc} [${entityName}] error" , ex);
         }
 
         return successful ? ApiResp.ok() : ApiResp.error("删除${desc}失败");

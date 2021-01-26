@@ -101,6 +101,7 @@ public @interface TargetOption {
      *
      * @return
      */
-    String fixedCondition() default "";
+    //@Deprecated
+    //String fixedCondition() default "";
 
 }

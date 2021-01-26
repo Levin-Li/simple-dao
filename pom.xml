@@ -19,14 +19,13 @@
 
     <properties>
 
-        <levin.simple-dao.version>2.2.21-SNAPSHOT</levin.simple-dao.version>
+        <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
         <levin.service-support.version>1.1.20-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>

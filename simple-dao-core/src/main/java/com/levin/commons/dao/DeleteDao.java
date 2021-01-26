@@ -14,4 +14,14 @@ public interface DeleteDao<T>
     @Transactional
     int delete();
 
+
+//    /**
+//     * 逻辑删除
+//     * 如果不支持逻辑删除，则直接返回 0
+//     *
+//     * @return
+//     */
+//    @Transactional
+//    int logicDelete();
+
 }

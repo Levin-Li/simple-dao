@@ -448,6 +448,7 @@ public class JpaDaoImpl
         if (!mergeOk) {
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
+
             em.persist(entity);
         }
 
@@ -759,6 +760,7 @@ public class JpaDaoImpl
      */
     @Override
     public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
+
 
         List paramValueList = flattenParams(null, paramValues);
 

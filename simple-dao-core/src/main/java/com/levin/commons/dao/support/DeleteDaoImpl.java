@@ -2,12 +2,14 @@ package com.levin.commons.dao.support;
 
 
 import com.levin.commons.dao.DeleteDao;
+import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -57,34 +59,114 @@ public class DeleteDaoImpl<T>
     @Override
     public String genFinalStatement() {
 
-        String whereStatement = genWhereStatement();
+        boolean disableDel = isDisable(EntityOption.Action.Delete);
+        boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
 
-        String ql = "Delete " + genFromStatement() + whereStatement;
+        if (disableDel && disableLogicDel) {
+            throw new StatementBuildException(" " + entityClass + " disable delete action");
+        }
 
-        //安全模式
-        if (this.isSafeMode() && !hasText(whereStatement) && !isSafeLimit()) {
-            throw new StatementBuildException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().safeModeMaxLimit() + "], SQL[" + ql + "]");
+        return genFinalStatement(!disableDel);
+    }
+
+    private final String genFinalStatement(boolean isLogicDelete) {
+
+        StringBuilder ql = new StringBuilder();
+
+        if (isLogicDelete) {
+
+            ql.append("Update ")
+                    .append(genEntityStatement())
+                    .append(" Set ")
+                    .append(genLogicDeleteExpr(getEntityOption(), Op.Eq))
+                    .append(genWhereStatement(EntityOption.Action.LogicalDelete));
+        } else {
+            ql.append("Delete ")
+                    .append(genFromStatement())
+                    .append(genWhereStatement(EntityOption.Action.Delete));
 
         }
 
-        return ExprUtils.replace(ql,getDaoContextValues());
-    }
+        return ExprUtils.replace(ql.toString(), getDaoContextValues());
 
+    }
 
     @Override
     public List genFinalParamList() {
+        //增加环境参数
+        return genFinalParamList(!isDisable(EntityOption.Action.Delete));
+    }
 
+    public List genFinalParamList(boolean isLogicDelete) {
         //增加环境参数
 
-        return QueryAnnotationUtil.flattenParams(null
+        List flattenParams = QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
                 , whereParamValues);
+
+        if (isLogicDelete) {
+            flattenParams.add(0, convertLogicDeleteValue(getEntityOption()));
+        }
+
+        return flattenParams;
     }
 
     @Override
     @Transactional
     public int delete() {
-        return dao.update(isNative(), rowStart, rowCount, genFinalStatement(), genFinalParamList());
+
+        boolean disableDel = isDisable(EntityOption.Action.Delete);
+        boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
+
+        if (disableDel && disableLogicDel) {
+            throw new StatementBuildException("" + entityClass + " disable delete");
+        }
+
+        boolean hasLogicDeleteField = hasLogicDeleteField();
+
+        if (!disableDel && !hasLogicDeleteField) {
+            //如果能物理删除，但又没有逻辑删除的字段，那么只能物理删除
+            return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
+        }
+
+        Exception ex = null;
+
+        if (!disableDel) {
+            ////如果能物理删除，先尝试物理删除
+            try {
+               // if (true) throw new StatementBuildException("mock delete error");
+                return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
+            } catch (Exception e) {
+                ex = e;
+            }
+        }
+
+        if (disableLogicDel) {
+            //如果不允许逻辑删除
+            reThrow(ex);
+        }
+
+        //接下来尝试逻辑删除
+
+        int n = dao.update(isNative(), rowStart, rowCount, genFinalStatement(true), genFinalParamList(true));
+
+        if (n > 0) {
+            if (ex != null) {
+                logger.warn("delete " + entityClass + " error ,"
+                        + ExceptionUtils.getAllCauseInfo(ex, " -> "));
+            }
+            return n;
+        }
+
+        return n;
+
     }
 
+    private void reThrow(Exception ex) {
+        if (ex instanceof RuntimeException) {
+            throw (RuntimeException) ex;
+        } else if (ex != null) {
+            throw new RuntimeException(ex);
+        }
+    }
 }

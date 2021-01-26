@@ -1,10 +1,11 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.util.CollectionHelper;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 树形表达式节点
@@ -13,13 +14,26 @@ import java.util.List;
 public class ExprNode<OP extends Serializable, E extends Serializable>
         implements Serializable {
 
+    @Getter
     private OP op;
 
+    @Getter
     private boolean valid;
 
-    private final List subNodes = new ArrayList(5);
+    /**
+     * 子节点
+     */
+    @Getter
+    private final List subNodes = new ArrayList(7);
+
+    /**
+     * 该节点的参数
+     */
+//    @Getter
+//    private final List params = new ArrayList(7);
 
     //父结点
+    @Getter
     private ExprNode<OP, E> parentNode;
 
     //当前活动节点
@@ -27,7 +41,12 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
     ///////////////////////////////////////////////////
 
+    @Getter
+    @Setter
     private String prefix = "(";
+
+    @Getter
+    @Setter
     private String suffix = ")";
 
     /////////////////////////////////////////////////////////
@@ -39,8 +58,9 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
     public ExprNode(ExprNode<OP, E> parentNode, OP op, boolean valid) {
 
-        if (op == null)
+        if (op == null) {
             throw new IllegalArgumentException("op is null");
+        }
 
         this.op = op;
 
@@ -55,12 +75,12 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
     public synchronized ExprNode<OP, E> clear() {
 
         subNodes.clear();
+//        params.clear();
 
         currentNode = this;
 
         return this;
     }
-
 
     /**
      * 开始新操作组
@@ -94,43 +114,113 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
     public synchronized ExprNode<OP, E> endGroup() {
 
         //回到自己
-        if (currentNode != this)
+        if (currentNode != this) {
             currentNode = currentNode.parentNode;
+        }
 
-        if (currentNode == null)
+        if (currentNode == null) {
             currentNode = this;
+        }
 
         return currentNode;
     }
 
-
-    public synchronized ExprNode<OP, E> add(E element) {
-
-        if (isValid() && element != null) {
-            subNodes.add(element);
-        }
-
+    /**
+     * 切换当前节点为自己
+     *
+     * @return
+     */
+    public synchronized ExprNode<OP, E> switchCurrentNodeToSelf() {
+        currentNode = this;
         return this;
-
     }
 
     /**
-     * 加入新元素到当前活动结点
+     * 获取根节点
+     *
+     * @return
+     */
+    public final synchronized ExprNode<OP, E> getRootNode() {
+
+        ExprNode<OP, E> parent = parentNode;
+
+        ExprNode<OP, E> top = this;
+
+        while (parent != null) {
+            top = parent;
+            parent = parent.parentNode;
+        }
+
+        return top;
+    }
+
+
+    /**
+     * 增加节点元素
      *
      * @param element
      * @return
      */
-    public synchronized boolean addToCurrentNode(E element) {
-
-        boolean isAdd = (element != null && currentNode.isValid());
-
-        if (isAdd) {
-            currentNode.subNodes.add(element);
-        }
-
-        return isAdd;
+    public synchronized boolean add(E element) {
+        return add(false, element);
     }
 
+    /**
+     * 增加节点元素和参数
+     *
+     * @param element    节点元素
+     * @param addToFirst //     * @param params     节点参数
+     * @return
+     */
+    public synchronized boolean add(boolean addToFirst, E element) {
+
+        if (element == null || !isValid()) {
+            return false;
+        }
+
+        if (addToFirst) {
+            //加到头部去
+
+            subNodes.add(0, element);
+
+//            if (params != null && params.length > 0) {
+//
+//                if (params.length == 1) {
+//                    this.params.add(0, params[0]);
+//                } else {
+//                    this.params.addAll(0, Arrays.asList(params));
+//                }
+//            }
+
+        } else {
+
+            subNodes.add(element);
+
+//            if (params != null
+//                    && params.length > 0) {
+//
+//                if (params.length == 1) {
+//                    this.params.add(params[0]);
+//                } else {
+//                    this.params.addAll(Arrays.asList(params));
+//                }
+//
+//            }
+
+        }
+
+        return true;
+    }
+
+
+    /**
+     * 获取当前节点
+     *
+     * @return
+     */
+    public synchronized ExprNode<OP, E> currentNode() {
+        return currentNode != null ? currentNode : this;
+    }
 
     @Override
     public String toString() {
@@ -144,54 +234,4 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public String getSuffix() {
-        return suffix;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
-    }
-
-    public List getSubNodes() {
-        //@todo 考虑是否要转换为不可修改的类
-        // return Collections.unmodifiableList(subNodes);
-
-        return subNodes;
-    }
-
-    public void setOp(OP op) {
-        this.op = op;
-    }
-
-    public OP getOp() {
-        return op;
-    }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
-
-    public boolean isValid() {
-        return valid;
-    }
-
-    public ExprNode<OP, E> getCurrentNode() {
-        return currentNode;
-    }
-
-    public ExprNode<OP, E> getParentNode() {
-        return parentNode;
-    }
-
-
 }
