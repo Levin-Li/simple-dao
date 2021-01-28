@@ -542,9 +542,9 @@ public class SelectDaoImpl<T>
 
         expr = isDistinct ? (" DISTINCT(" + expr + ") ") : expr;
 
-        if(isDistinct){
+        if (isDistinct) {
             expr = hasText(alias) ? " " + expr + " AS " + alias + " " : expr;
-        }else {
+        } else {
             expr = hasText(alias) ? " (" + expr + ") AS " + alias + " " : expr;
         }
 
@@ -1295,32 +1295,32 @@ public class SelectDaoImpl<T>
     }
 
     @Override
-    public SelectDao<T> count(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> count(String expr, String alias, Map<String, Object>... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> avg(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> avg(String expr, String alias, Map<String, Object>... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> sum(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> sum(String expr, String alias, Map<String, Object>... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> max(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> max(String expr, String alias, Map<String, Object>... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> min(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> min(String expr, String alias, Map<String, Object>... paramValues) {
         return processStat(2, expr, alias, paramValues);
     }
 
     @Override
-    public SelectDao<T> groupByAndSelect(String expr, String alias, Object... paramValues) {
+    public SelectDao<T> groupByAndSelect(String expr, String alias, Map<String, Object>... paramValues) {
 
         Annotation groupBy = QueryAnnotationUtil.getAnnotation(GroupBy.class);
 
