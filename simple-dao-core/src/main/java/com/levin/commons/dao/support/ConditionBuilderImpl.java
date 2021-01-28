@@ -157,7 +157,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     protected EntityOption getEntityOption() {
-        return QueryAnnotationUtil.getEntityOption(entityClass);
+
+        //
+        return entityClass != null ? entityClass.getAnnotation(EntityOption.class) : null;
+
+        // QueryAnnotationUtil.getEntityOption(entityClass);
     }
 
     protected void checkAction(EntityOption.Action action, Consumer checkFailCallback) {
@@ -805,20 +809,23 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected void walkMethod(Object bean, Method method, Object[] args) {
 
         //如果是忽略的方法
-        if (method.getAnnotation(Ignore.class) != null)
+        if (method.getAnnotation(Ignore.class) != null) {
             return;
+        }
 
         Class<?>[] parameterTypes = method.getParameterTypes();
 
         String[] parameterNames = getParameterNameDiscoverer().getParameterNames(method);
 
         if (parameterNames == null || parameterTypes == null
-                || parameterNames.length != parameterTypes.length)
+                || parameterNames.length != parameterTypes.length) {
             throw new IllegalStateException("method [" + method + "] can't get param name");
+        }
 
         for (String parameterName : parameterNames) {
-            if (parameterName == null || !hasText(parameterName))
+            if (parameterName == null || !hasText(parameterName)) {
                 throw new IllegalStateException("method [" + method + "] can't get param name");
+            }
         }
 
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -858,8 +865,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void walkObject(AttrCallback attrCallback, Object... queryObjs) {
 
-        if (queryObjs == null)
+        if (queryObjs == null) {
             return;
+        }
 
         setQueryOption(queryObjs);
 
@@ -1007,9 +1015,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 if (opAnno != null) {
                     //去除比较操作前缀
-                    if (name.length() > idx + 1)
+                    if (name.length() > idx + 1) {
                         name = name.substring(idx + 1);
-                    else {
+                    } else {
                         //logger.trace("");
                         continue;
                     }
@@ -1450,10 +1458,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     private void reAppendByQueryObj(Object queryObj) {
         if (queryObj != null) {
-            if (queryObj.getClass().isArray())
+            if (queryObj.getClass().isArray()) {
                 appendByQueryObj((Object[]) queryObj);
-            else
+            } else {
                 appendByQueryObj(queryObj);
+            }
         }
     }
 
@@ -1802,7 +1811,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 (this.context != null) ? this.context : Collections.EMPTY_MAP);
 
     }
-
 
     public List<Map<String, ? extends Object>> buildContextValues(Object root, Object value, String fieldName) {
 

@@ -41,7 +41,6 @@ public @interface Avg {
      */
     String value() default "";
 
-
     /**
      * aving 操作
      * <p>

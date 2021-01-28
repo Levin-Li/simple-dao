@@ -21,6 +21,7 @@ import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
+import javax.persistence.Tuple;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
@@ -79,6 +82,10 @@ public class DaoExamplesTest {
     @Autowired
     PluginManager pluginManager;
 
+
+    @Autowired
+    EntityManager entityManager;
+
     Random random = new Random(this.hashCode());
 
     /**
@@ -103,7 +110,6 @@ public class DaoExamplesTest {
     public void testGetEntityManager() throws Exception {
         EntityManager entityManager = jpaDao.getEntityManager();
         Assert.notNull(entityManager);
-
 
     }
 
@@ -200,10 +206,10 @@ public class DaoExamplesTest {
     public void initTestData() throws Exception {
 
         try {
-            DaoContext.setAutoFlush(false, false);
+          //  DaoContext.setAutoFlush(false, false);
             initTestData2();
         } finally {
-            DaoContext.setAutoFlush(false, true);
+          //  DaoContext.setAutoFlush(false, true);
         }
     }
 
@@ -302,6 +308,19 @@ public class DaoExamplesTest {
             }
 
         }
+
+        //   Session session = entityManager.unwrap(Session.class);
+
+        // session.isDirty();
+
+        //  session.setHibernateFlushMode(null);
+
+//        List<Tuple> resultList = session
+//                .createQuery("select id,name,group from " + User.class.getName(), Tuple.class)
+//                .getResultList();
+
+
+//          System.out.println(resultList);
     }
 
     @Test
@@ -349,20 +368,21 @@ public class DaoExamplesTest {
                 .join("left join " + User.class.getName() + " u on g.id = u.group.id")
                 .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
                 .count("1", "cnt")
-                .avg("t.score", "ts")
+                .avg("t.score + ${v}", "ts", MapUtils.put("v", (Object) 5L).build())
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
-                .groupByAsAnno(E_Group.name, "")
-                .orderBy("ts2")
+//                .where("u.name = :?","sss")
+                .groupByAndSelect(E_Group.name, "groupName")
 //                .groupBy("g.name")
+                .orderBy("ts2")
                 .find(Map.class);
 
 
         Assert.isTrue(g.size() > 0);
 
         Assert.isTrue(g.get(0).containsKey("cnt"));
-        Assert.isTrue(g.get(0).containsKey(E_Group.name));
+        Assert.isTrue(g.get(0).containsKey("groupName"));
     }
 
     @Test
@@ -464,7 +484,7 @@ public class DaoExamplesTest {
                 .eq(E_TestEntity.id, entity.getId())
                 .update();
 
-     //   boolean disableDel = entityOption != null &&  Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
+        //   boolean disableDel = entityOption != null &&  Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
 
         Assert.isTrue(jpaDao.find(TestEntity.class, entity.getId()).getOrderCode() == orderCode, "变更没有生效");
 
@@ -498,31 +518,82 @@ public class DaoExamplesTest {
     @Transactional
     public void testTransactional() {
 
-        TestEntity entity = (TestEntity) jpaDao.create(new TestEntity()
-                .setScore(random.nextInt(750))
+
+        TestEntity entity = (TestEntity) new TestEntity()
+                .setScore(15)
                 .setName("test" + 11)
                 .setRemark("system-" + 11)
-                .setOrderCode(11)
-        );
+                .setOrderCode(11);
+
+        entity = (TestEntity) jpaDao.create(entity);
+
+        long id = entity.getId();
+
+        entity = jpaDao.find(TestEntity.class, id);
+        Assert.isTrue(entity != null && entity.getId().equals(id), "1. 刚插入的数据无法加载 " + id);
 
 
-        User user = jpaDao.selectFrom(User.class).gt(E_User.id, 20).findOne();
-
-        Long uid = user.getId();
-
-
-        Object one = jpaDao.selectFrom(User.class, "u").eq(E_User.id, uid).findOne();
+        entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, id).findOne();
+        Assert.isTrue(entity != null && entity.getId().equals(id), "2. 刚插入的数据无法加载 " + id);
 
 
-        Assert.notNull(one);
+        entity = (TestEntity) new TestEntity()
+                .setScore(15)
+                .setName("test" + 11)
+                .setRemark("system-" + 11)
+                .setOrderCode(11);
+
+        entity = (TestEntity) jpaDao.create(entity);
+
+        id = entity.getId();
+
+        entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, id).findOne();
+        Assert.isTrue(entity != null && entity.getId().equals(id), "3. 刚插入的数据无法加载 " + id);
 
 
-        one = jpaDao.selectFrom(User.class, "u")
-                .where("u.id = ?1  order by u.id desc", uid)
-                .findOne();
+        entity = jpaDao.find(TestEntity.class, id);
+        Assert.isTrue(entity != null && entity.getId().equals(id), "4. 刚插入的数据无法加载 " + id);
 
 
-        Assert.notNull(one);
+        String newName = "" + id + "" + entity.hashCode();
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.name, newName)
+                .eq(E_TestEntity.id, id)
+                .update();
+
+
+        entity = jpaDao.find(TestEntity.class, id);
+        Assert.isTrue(entity != null && entity.getName().equals(newName), "5. 刚更新的数据无法获取 " + id);
+
+        newName = System.currentTimeMillis() + "_" + id + "" + entity.hashCode();
+        jpaDao.updateTo(TestEntity.class)
+                .set(E_TestEntity.name, newName)
+                .eq(E_TestEntity.id, id)
+                .update();
+
+        List<Object> objects = jpaDao.selectFrom(TestEntity.class).find();
+
+        entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, id).findOne();
+        Assert.isTrue(entity != null && entity.getName().equals(newName), "6. 刚更新的数据无法获取 " + id);
+
+        jpaDao.delete(entity);
+
+        objects = jpaDao.selectFrom(TestEntity.class).find();
+
+        Assert.isTrue(!objects.contains(entity), "7. 刚删除的数据还能获取 " + id);
+
+        entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, id).findOne();
+        Assert.isTrue(entity == null, "8. 刚删除的数据还能获取 " + id);
+
+
+        entity = jpaDao.selectFrom(TestEntity.class).findOne();
+
+        entity.setCategory(newName);
+
+        Object save = jpaDao.save(entity);
+
+        entity = jpaDao.selectFrom(TestEntity.class).eq(E_TestEntity.id, entity.getId()).findOne();
+        Assert.isTrue(entity.getCategory().equals(newName), "9. 刚save数据更新失败");
 
 
     }
@@ -769,6 +840,26 @@ public class DaoExamplesTest {
 
     }
 
+    @org.junit.Test
+    public void testJpaEntityStatusTest() throws Exception {
+
+        User user = jpaDao.selectFrom(User.class).findOne();
+
+        String description = "Update_" + new Date();
+        user.setDescription(description);
+
+        user.setId(10000L);
+        jpaDao.save(user);
+
+        user.setId(null);
+        jpaDao.save(user);
+
+        user.setId(null);
+        user = (User) jpaDao.create(user);
+
+        System.out.println(user);
+
+    }
 
     @org.junit.Test
     public void testSave() throws Exception {
@@ -842,9 +933,9 @@ public class DaoExamplesTest {
     public void testEnv() throws Exception {
 
 
-        DaoContext.setGlobalVar("DATE_FORMAT", "YYYY/MM/DD");
+        DaoContext.threadContext.put("DATE_FORMAT", "YYYY/MM/DD");
 
-        DaoContext.setThreadVar("orgId", 5L);
+        DaoContext.threadContext.put("orgId", 5L);
 
 
     }
@@ -941,13 +1032,13 @@ public class DaoExamplesTest {
 
         SelectDao<User> selectDao = jpaDao.selectFrom(User.class, "u");
 
-        DaoContext.setGlobalVar("env.g.P1", "全局参数1");
+        DaoContext.globalContext.put("env.g.P1", "全局参数1");
 
-        DaoContext.setGlobalVar("id", "默认全局id");
+        DaoContext.globalContext.put("id", "默认全局id");
 
-        DaoContext.setThreadVar("env.thread.P1", "线程参数1");
+        DaoContext.threadContext.put("env.thread.P1", "线程参数1");
 
-        DaoContext.setThreadVar("id", "默认线程Id");
+        DaoContext.threadContext.put("id", "默认线程Id");
 
 
         HashMap<String, Object> context = new HashMap<>();
@@ -1036,7 +1127,6 @@ public class DaoExamplesTest {
         testEntities = jpaDao.selectFrom(TestEntity.class)
                 .filterLogicDeletedData(false)
                 .find();
-
 
 
         EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);

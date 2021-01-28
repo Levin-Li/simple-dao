@@ -218,8 +218,9 @@ public abstract class QueryAnnotationUtil {
         for (Annotation anno : annotations) {
 
             //相同的包括名
-            if (!anno.annotationType().getPackage().getName().equals(packageName))
+            if (!anno.annotationType().getPackage().getName().equals(packageName)) {
                 continue;
+            }
 
             for (Class<? extends Annotation> excludeType : excludeTypes) {
                 if (excludeType.isInstance(anno)) {
@@ -228,8 +229,9 @@ public abstract class QueryAnnotationUtil {
                 }
             }
 
-            if (anno != null)
+            if (anno != null) {
                 result.add(anno);
+            }
         }
 
         return result;
@@ -266,11 +268,9 @@ public abstract class QueryAnnotationUtil {
      */
     public static Class getFieldType(Class<?> type, String propertyName) {
 
-        if (type == null)
+        if (type == null || !StringUtils.hasText(propertyName)) {
             return null;
-
-        if (!StringUtils.hasText(propertyName))
-            return null;
+        }
 
         String[] names = propertyName.split("\\.");
 
@@ -405,14 +405,16 @@ public abstract class QueryAnnotationUtil {
 
     public static <K, V> Map<K, V> copyMap(boolean isOnlyCopyPrimitive, Map<K, V> output, Map<K, V>... sources) {
 
-        if (output == null)
+        if (output == null) {
             output = new LinkedHashMap();
+        }
 
 
         for (Map<K, V> source : sources) {
 
-            if (source == null)
+            if (source == null) {
                 continue;
+            }
 
             for (Map.Entry<K, V> entry : source.entrySet()) {
 
@@ -491,14 +493,17 @@ public abstract class QueryAnnotationUtil {
      */
     public static int eleCount(Object value) {
 
-        if (value == null)
+        if (value == null) {
             return 0;
+        }
 
-        if (value instanceof Collection)
+        if (value instanceof Collection) {
             return ((Collection) value).size();
+        }
 
-        if (value.getClass().isArray())
+        if (value.getClass().isArray()) {
             return Array.getLength(value);
+        }
 
         return 1;
     }
@@ -624,8 +629,9 @@ public abstract class QueryAnnotationUtil {
 
         boolean isArray = (value != null) && value.getClass().isArray();
 
-        if (!isArray)
+        if (!isArray) {
             return false;
+        }
 
 
         if (isPrimitive(value.getClass().getComponentType())) {
@@ -637,8 +643,9 @@ public abstract class QueryAnnotationUtil {
 
         while (--length >= 0) {
             Object ele = Array.get(value, length);
-            if (ele != null && isPrimitive(ele.getClass()))
+            if (ele != null && isPrimitive(ele.getClass())) {
                 return true;
+            }
         }
 
         return false;

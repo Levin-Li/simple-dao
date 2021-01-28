@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 public @interface EntityOption {
 
     /**
-     *
+     * Dao 实体操作
      */
     enum Action {
 
@@ -72,6 +72,7 @@ public @interface EntityOption {
 
     /**
      * 逻辑删除的值
+     * dao 会自动根据字段类型进行值转换
      *
      * @return
      */

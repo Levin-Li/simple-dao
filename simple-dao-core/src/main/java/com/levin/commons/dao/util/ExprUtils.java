@@ -43,6 +43,11 @@ public abstract class ExprUtils {
     //匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
+
+    //替换变量
+    //SQL查询占位参数匹配样式：${:paramName} ，如  t.score +  ${:val}  --> t.score +  :?
+    //文本替换匹配样式：${paramName}  ，       如 t.score +  ${val}  --> t.score + 10
+
     /**
      * 关联字段缓存
      */
@@ -68,9 +73,13 @@ public abstract class ExprUtils {
             , ValueHolder holder, String paramPlaceholder, Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
 
+        // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
+        // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
+
         Op op = c.op();
 
         if (op == null) {
+            //默认用等于
             op = Op.Eq;
         }
 
@@ -86,8 +95,8 @@ public abstract class ExprUtils {
 
         boolean isNotOp = Op.Not.name().equals(op.name());
 
-        //自动
         if (op.isNeedFieldExpr() && op.isAllowFieldFunc()) {
+            //如果字段表达式中有函数，用函数包围
             fieldExpr = funcExpr(fieldExpr, c.fieldFuncs());
         }
 
@@ -103,11 +112,14 @@ public abstract class ExprUtils {
 
             paramExpr = (String) holder.value;
 
-        } else if (op.isNeedParamExpr()) {  //判读该操作是否需要参数表达式
+        } else if (hasDynamicExpr) {
 
+            //判读该操作是否需要参数表达式，默认大部分操作都需要右操作数，右操作数都是支持表达式的
 
             //优先使用表达式
             if (hasText(c.paramExpr())) {
+
+                //优先使用注解定义的表达式
 
                 paramExpr = c.paramExpr();
 
@@ -120,7 +132,7 @@ public abstract class ExprUtils {
                 hasDynamicExpr = true;
 
             } else if (isExistsOp
-                    && !hasConfig(c, op)
+                    && !isNotEmptyAnnotation(c, op)
                     && holder.value instanceof CharSequence) {
 
                 //如果是 Exist 操作，并且没有配置
@@ -133,8 +145,8 @@ public abstract class ExprUtils {
 
                 int eleCount = 1;
 
-                //是否可以展开参数
                 if (op.isExpandParamValue()) {
+                    //操作是否可以展开参数，如 in , not in ,between 等
 
                     //参数之间的分隔符，仅对参数是字符串时有效
                     if (holder.value instanceof CharSequence) {
@@ -182,6 +194,9 @@ public abstract class ExprUtils {
                 paramExpr = autoAroundParentheses("", paramExpr, "");
             }
 
+        } else {
+            // 如果不需要参数表达式，那什么也不做
+            //@todo
         }
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
@@ -189,7 +204,7 @@ public abstract class ExprUtils {
         final String oldParamExpr = paramExpr;
 
         if (op.isNeedParamExpr() && hasDynamicExpr) {
-            //动态参数，后面替换
+            //动态参数，后面替换,需要替换参数
             paramExpr = "${:" + paramKey + "}";
         }
 
@@ -198,18 +213,24 @@ public abstract class ExprUtils {
             paramExpr = funcExpr(paramExpr, c.paramFuncs());
         }
 
-
         //如果需要展开参数，没有参数内容
-        if (op.isExpandParamValue() && op.isNeedParamExpr() && !hasText(oldParamExpr)) {
+        if (op.isExpandParamValue()
+                && op.isNeedParamExpr()
+                && !hasText(oldParamExpr)) {
+
+            //如果需要展开参数，但又没有参数内容，被认为是无效的注解，直接忽略
+
             return "";
         }
 
 
-        //把参数值转换为 Map
-        if (!op.isNeedParamExpr()) {
+        if (!op.isNeedParamExpr() && op.isNeedFieldExpr()) {
+            
+            // 如果是一个不需参数的操作，把参数中的 Map 类型参数，加入到上下文
             flattenParams(null, holder.value).stream()
                     .filter(v -> v instanceof Map)
                     .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
+
         }
 
 
@@ -219,11 +240,13 @@ public abstract class ExprUtils {
 
         //    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
-
+        //替换参数
         String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
 
+        //替换参数
         ql = processParamPlaceholder(ql, (key, ctxs) -> {
 
+            //替换参数表达式和匹配参数
             if (key.equals(paramKey)) {
 
                 paramValues.add(holder.value);
@@ -231,15 +254,25 @@ public abstract class ExprUtils {
                 //替换参数表达式
                 return oldParamExpr;
             } else {
+
                 paramValues.add(ObjectUtil.findValue(key, true, true, ctxs));
+
                 return paramPlaceholder;
             }
 
         }, contexts).trim();
 
-
+        //替换参数和 占位参数不能共存，如：  distinct ( g.name || :? || ${:v} || ${v})  中 :? 和 ${:v} 不能共存
+        //
         if (paramValues.isEmpty()) {
+            //关键逻辑如果没有替换参数出现，则原有的参数保存不变
+
+//            if (holder.value != null) {
+//                log.warn(op + "  [ " + fieldExpr + " ] 发现参数 " + holder.value);
+//            }
+
             holder.value = Collections.emptyList();
+
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
         } else {
@@ -251,20 +284,35 @@ public abstract class ExprUtils {
 
 
     /**
+     * 如果只又一个元素，则只取第一个
+     *
      * @param arrayOrSet
      * @return
      */
     private static Object tryGetFirstElement(Object arrayOrSet) {
 
-        if (arrayOrSet == null) {
-            return arrayOrSet;
-        }
+        while (arrayOrSet != null) {
 
-        if (arrayOrSet.getClass().isArray()) {
-            return Array.getLength(arrayOrSet) == 1 ? Array.get(arrayOrSet, 0) : arrayOrSet;
-        } else if (arrayOrSet instanceof Collection) {
-            Collection set = (Collection) arrayOrSet;
-            return set.size() == 1 ? set.toArray()[0] : set;
+            if (arrayOrSet instanceof Collection) {
+                Collection set = (Collection) arrayOrSet;
+
+                if (set.size() == 1) {
+                    arrayOrSet = set.toArray()[0];
+                } else {
+                    break;
+                }
+
+            } else if (arrayOrSet.getClass().isArray()) {
+
+                if (Array.getLength(arrayOrSet) == 1) {
+                    arrayOrSet = Array.get(arrayOrSet, 0);
+                } else {
+                    break;
+                }
+
+            } else {
+                break;
+            }
         }
 
         return arrayOrSet;
@@ -357,13 +405,13 @@ public abstract class ExprUtils {
 
 
     /**
-     * 测试一个注解是否是空注解
+     * 测试一个注解是非空注解
      *
      * @param c
      * @param op
      * @return
      */
-    public static boolean hasConfig(C c, Op op) {
+    public static boolean isNotEmptyAnnotation(C c, Op op) {
 
         if (op == null) {
             op = c.op();

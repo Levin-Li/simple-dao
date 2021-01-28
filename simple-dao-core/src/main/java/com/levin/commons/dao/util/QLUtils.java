@@ -13,11 +13,9 @@ import java.util.List;
 
 
 /**
- *
  * SQL 解析工具类
- *
+ * <p>
  * https://github.com/alibaba/druid/wiki/Druid_SQL_AST
- *
  */
 public class QLUtils {
 
@@ -25,20 +23,31 @@ public class QLUtils {
     private static final ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
 
     /**
-     *
-     *
      * 只解析 select
-     *
      *
      * @param column
      * @return
      */
     public static String parseSelectColumn(String column) {
 
+        column = replace(column);
+
         List<String[]> selectColumns = parseSelectColumns(null, column);
 
         return (selectColumns.size() > 0) ? selectColumns.get(0)[0] : column;
 
+    }
+
+
+    /**
+     * 替换特殊字符
+     *
+     * @param column
+     * @return
+     */
+    private static String replace(String column) {
+        return column.replace("?", "_P_")
+                .replace(":", "_").trim();
     }
 
     /**
@@ -64,8 +73,7 @@ public class QLUtils {
             return Collections.emptyList();
         }
 
-
-        String cols = sb.toString().trim();
+        String cols = replace(sb.toString().trim());
 
         //使用缓存
         List<String[]> result = softRefCache.get(cols);
@@ -73,7 +81,6 @@ public class QLUtils {
         if (result != null) {
             return result;
         }
-
 
         SQLStatementParser parser = SQLParserUtils.createSQLStatementParser("select " + cols + " from Test_Table", dbType);
 
@@ -129,6 +136,19 @@ public class QLUtils {
         }
 
         return sb.toString();
+
+    }
+
+    public static void main(String[] args) {
+
+
+        parseSelectColumns(null, "avg( t.aa +${:a} ) as ts");
+        parseSelectColumns(null, "avg( t.aa +${a} ) as ts");
+        parseSelectColumns(null, "avg( t.aa + :name) as ts");
+        parseSelectColumns(null, "avg( t.aa + :name) as ts");
+        parseSelectColumns(null, "avg( t.aa + :?) as ts");
+        parseSelectColumns(null, "avg( t.aa + ?) as ts");
+        parseSelectColumns(null, "avg( t.aa + ?1) as ts");
 
     }
 
