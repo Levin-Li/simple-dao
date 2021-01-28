@@ -7,6 +7,7 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -332,6 +333,7 @@ public class JpaDaoImpl
     public EntityManager getEntityManager() {
 
         if (defaultEntityManager != null) {
+
             return defaultEntityManager;
         }
 
@@ -349,7 +351,6 @@ public class JpaDaoImpl
         }
 
         throw new IllegalStateException("can't find entityManager instance");
-
     }
 
     /**
@@ -792,10 +793,15 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
+        org.hibernate.query.Query hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
+
+//        hibernateQuery.setFlushMode(FlushModeType.AUTO);
+
+        //hibernateQuery.setHibernateFlushMode(null);
+
 //        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
 //        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
 //        query.setHint("org.hibernate.cacheMode", "REFRESH");
-
 
         setParams(getParamStartIndex(isNative), query, paramValueList);
 

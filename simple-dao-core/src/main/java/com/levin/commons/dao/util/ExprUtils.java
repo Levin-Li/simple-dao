@@ -231,15 +231,26 @@ public abstract class ExprUtils {
                 //替换参数表达式
                 return oldParamExpr;
             } else {
+
                 paramValues.add(ObjectUtil.findValue(key, true, true, ctxs));
+
                 return paramPlaceholder;
             }
 
         }, contexts).trim();
 
+        //替换参数和 占位参数不能共存，如：  distinct ( g.name || :? || ${:v} || ${v})  中 :? 和 ${:v} 不能共存
+        //
 
         if (paramValues.isEmpty()) {
+            //关键逻辑如果没有替换参数出现，则原有的参数保存不变
+
+            if (holder.value != null) {
+                log.warn(op + "  [ " + fieldExpr + " ] 发现参数 " + holder.value);
+            }
+
             holder.value = Collections.emptyList();
+
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
         } else {

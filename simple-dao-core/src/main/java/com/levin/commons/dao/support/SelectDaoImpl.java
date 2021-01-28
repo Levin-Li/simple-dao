@@ -19,6 +19,7 @@ import com.levin.commons.utils.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Tuple;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -529,6 +530,27 @@ public class SelectDaoImpl<T>
 
     }
 
+
+    private String tryAppendAlias(String expr, String alias) {
+        return hasText(alias) ? " " + expr + " AS " + alias + " " : expr;
+    }
+
+
+    String tryAppendDistinctAndAlias(String expr, String alias, Annotation opAnnotation) {
+
+        boolean isDistinct = Boolean.TRUE.equals(ClassUtils.getValue(opAnnotation, "isDistinct", false));
+
+        expr = isDistinct ? (" DISTINCT(" + expr + ") ") : expr;
+
+        if(isDistinct){
+            expr = hasText(alias) ? " " + expr + " AS " + alias + " " : expr;
+        }else {
+            expr = hasText(alias) ? " (" + expr + ") AS " + alias + " " : expr;
+        }
+
+        return expr;
+    }
+
     /**
      * @param bean
      * @param fieldOrMethod
@@ -545,27 +567,24 @@ public class SelectDaoImpl<T>
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
-
                 tryAppendHaving(opAnnotation, expr, holder, value);
 
-                expr = tryAppendAlias(expr, opAnnotation, alias);
+                String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
-                select(tryAppendDistinct(expr, opAnnotation), holder.value);
+                //  expr = tryAppendAlias(expr, newAlias);
+
+                expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
+
+                select(expr, holder.value);
 
                 //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-                appendColumnMap(expr, fieldOrMethod, name);
+                appendColumnMap(expr, newAlias, fieldOrMethod, name);
+
             });
 
         }
     }
 
-
-    String tryAppendDistinct(String expr, Annotation opAnnotation) {
-
-        Boolean isDistinct = ClassUtils.getValue(opAnnotation, "isDistinct", false);
-
-        return Boolean.TRUE.equals(isDistinct) ? (" DISTINCT(" + expr + ") ") : expr;
-    }
 
     /**
      * @param bean
@@ -591,40 +610,64 @@ public class SelectDaoImpl<T>
 
             final String oldExpr = expr;
 
-            String newAlias = hasText(alias) ? alias : ClassUtils.getValue(opAnnotation, "alias", false);
+            String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
-            boolean hasAlias = hasText(newAlias);
+            //expr = tryAppendAlias(expr, newAlias);
 
-            if (!hasAlias) {
-                newAlias = expr;
-            } else {
-                expr = expr + " AS " + newAlias;
-            }
+            expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
 
             if (isGroupBy) {
                 //增加GroupBy字段
-                if (hasAlias) {
-                    groupBy(true, newAlias);
-                } else {
-                    groupBy(oldExpr, holder.value);
-                }
+
+                //多数数据库的 group by 语句不支持别名，因为GROUP BY子句比SELECT子句先执行
+                //SQL按照如下顺序执行查询：
+                //FROM子句
+                //WHERE子句
+                //GROUP BY子句
+                //HAVING子句
+                //SELECT子句
+                //ORDER BY子句
+                groupBy(oldExpr, holder.value);
+
             }
 
-            //JPA having 字句 不支持别名
-            boolean useAlias = isNative() && hasAlias;
+            tryAppendHaving(opAnnotation, oldExpr, holder, value);
 
-            tryAppendHaving(opAnnotation, useAlias ? newAlias : oldExpr, useAlias ? null : holder, value);
-
-            //增加 Order By
-            tryAppendOrderBy(useAlias ? newAlias : oldExpr, opAnnotation);
+            //ORDER BY 也不能使用别名
+            tryAppendOrderBy(oldExpr, opAnnotation);
 
             select(expr, holder.value);
 
-            //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-            appendColumnMap(expr, fieldOrMethod, name);
+            //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字段名称，只好通过 druid 解析 SQL 语句
+            appendColumnMap(expr, newAlias, fieldOrMethod, name);
 
         });
 
+    }
+
+    private static String getAlias(Object fieldOrMethod, Annotation opAnnotation, String newAlias) {
+
+        if (!hasText(newAlias)) {
+            newAlias = ClassUtils.getValue(opAnnotation, "alias", false);
+        }
+
+        if (!hasText(newAlias)
+                && fieldOrMethod != null) {
+
+            if (fieldOrMethod instanceof CharSequence) {
+                newAlias = (String) fieldOrMethod;
+            } else if (fieldOrMethod instanceof Field) {
+                newAlias = ((Field) fieldOrMethod).getName();
+            } else if (fieldOrMethod instanceof Method) {
+                newAlias = ((Method) fieldOrMethod).getName();
+                if (newAlias.startsWith("get") && newAlias.length() > 3) {
+                    newAlias = Character.toLowerCase(newAlias.charAt(3)) + newAlias.length() > 4 ? newAlias.substring(4) : "";
+                }
+            }
+
+        }
+
+        return newAlias;
     }
 
     private void tryAppendOrderBy(String expr, Annotation opAnnotation) {
@@ -659,38 +702,20 @@ public class SelectDaoImpl<T>
     }
 
 
-    private String tryAppendAlias(String expr, Annotation opAnnotation, String alias) {
-
-        if (!hasText(alias)) {
-            alias = ClassUtils.getValue(opAnnotation, "alias", false);
-        }
-
-        return hasText(alias) ? expr + " AS " + alias + " " : expr;
-    }
-
     /**
      * 增加字段映射
      *
-     * @param column
+     * @param expr
      * @param fieldOrMethod
      * @param name
      */
-    protected void appendColumnMap(String column, Object fieldOrMethod, String name) {
+    protected void appendColumnMap(String expr, String alias, Object fieldOrMethod, String name) {
 
-/*        String name2 = null;
+        String key = hasText(alias) ? alias : QLUtils.parseSelectColumn(expr);
 
-        if (fieldOrMethod instanceof Field) {
-            name2 = ((Field) fieldOrMethod).getName();
-        } else if (fieldOrMethod instanceof Method) {
-            name2 = ((Method) fieldOrMethod).getName();
-            if (name2.startsWith("get")) {
-                name2 = "" + Character.toLowerCase(name2.charAt(3)) + name2.substring(4);
-            }
-        }*/
-
-        selectColumnsMap.put(QLUtils.parseSelectColumn(column.trim()), new Object[]{name, fieldOrMethod});
-
+        selectColumnsMap.put(key, new Object[]{name, fieldOrMethod});
     }
+
 
     @Override
     protected String genFromStatement() {
@@ -860,6 +885,11 @@ public class SelectDaoImpl<T>
 //    @Override
     public <E> List<E> findForResultClass(Class<E> resultClass) {
 
+        if (resultClass == null && hasSelectColumns()) {
+            //如果没有指定结果类，又有选择列
+            //  resultClass = (Class<E>) Tuple.class;
+        }
+
         return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
@@ -964,7 +994,7 @@ public class SelectDaoImpl<T>
             }
 
             //尝试自动转换成 Map
-            data = tryConvert2Map(data, valueHolder);
+            data = tryConvertArray2Map(data, valueHolder);
 
             if (data == null || targetType.isInstance(data)) {
                 returnList.add((E) data);
@@ -1015,7 +1045,7 @@ public class SelectDaoImpl<T>
         autoSetFetch(targetType);
 
         //尝试自动转换
-        Object data = tryConvert2Map(findOne(), null);
+        Object data = tryConvertArray2Map(findOne(), null);
 
         if (data == null || targetType.isInstance(data)) {
             return (E) data;
@@ -1120,6 +1150,13 @@ public class SelectDaoImpl<T>
         return column;
     }
 
+
+    public Object tryConvertTuple2Map(Tuple data, ValueHolder<List<List<String>>> valueHolder) {
+
+        return null;
+
+    }
+
     /**
      * 单查询返回值是数组时，尝试自动转换成 Map
      *
@@ -1128,7 +1165,7 @@ public class SelectDaoImpl<T>
      * @return
      * @todo 优化性能，直接转换成对象
      */
-    public Object tryConvert2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
+    public Object tryConvertArray2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
 
         if (data == null || !data.getClass().isArray()) {
             return data;

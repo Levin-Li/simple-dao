@@ -171,6 +171,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * SQL语句执行过程：
      * FROM子句
      * WHERE子句
      * GROUP BY子句  不能使用别名

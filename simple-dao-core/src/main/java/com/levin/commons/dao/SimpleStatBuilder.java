@@ -1,8 +1,6 @@
 package com.levin.commons.dao;
 
 
-import java.util.Map;
-
 /**
  * 简单条件构建器
  *
@@ -11,14 +9,44 @@ import java.util.Map;
  */
 public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
 
+    /**
+     * @param expr
+     * @param alias
+     * @param paramValues
+     * @return
+     */
     T count(String expr, String alias, Object... paramValues);
 
+    /**
+     * @param expr
+     * @param alias
+     * @param paramValues
+     * @return
+     */
     T avg(String expr, String alias, Object... paramValues);
 
+    /**
+     * @param expr
+     * @param alias
+     * @param paramValues
+     * @return
+     */
     T sum(String expr, String alias, Object... paramValues);
 
+    /**
+     * @param expr
+     * @param alias
+     * @param paramValues
+     * @return
+     */
     T max(String expr, String alias, Object... paramValues);
 
+    /**
+     * @param expr
+     * @param alias
+     * @param paramValues
+     * @return
+     */
     T min(String expr, String alias, Object... paramValues);
 
     /**

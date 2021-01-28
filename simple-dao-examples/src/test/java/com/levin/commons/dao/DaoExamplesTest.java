@@ -21,6 +21,7 @@ import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
+import javax.persistence.Tuple;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
@@ -79,6 +82,10 @@ public class DaoExamplesTest {
     @Autowired
     PluginManager pluginManager;
 
+
+    @Autowired
+    EntityManager entityManager;
+
     Random random = new Random(this.hashCode());
 
     /**
@@ -103,7 +110,6 @@ public class DaoExamplesTest {
     public void testGetEntityManager() throws Exception {
         EntityManager entityManager = jpaDao.getEntityManager();
         Assert.notNull(entityManager);
-
 
     }
 
@@ -302,6 +308,19 @@ public class DaoExamplesTest {
             }
 
         }
+
+     //   Session session = entityManager.unwrap(Session.class);
+
+       // session.isDirty();
+
+      //  session.setHibernateFlushMode(null);
+
+//        List<Tuple> resultList = session
+//                .createQuery("select id,name,group from " + User.class.getName(), Tuple.class)
+//                .getResultList();
+
+
+//          System.out.println(resultList);
     }
 
     @Test
@@ -349,14 +368,13 @@ public class DaoExamplesTest {
                 .join("left join " + User.class.getName() + " u on g.id = u.group.id")
                 .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
                 .count("1", "cnt")
-                .avg("t.score", "ts")
+                .avg("t.score + ${v}", "ts",MapUtils.put("v",(Object) 5L).build())
                 .avg("u.score", "us")
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
                 .groupByAndSelect(E_Group.name, "groupName")
 //                .groupBy("g.name")
                 .orderBy("ts2")
-                .groupBy("g.name")
                 .find(Map.class);
 
 

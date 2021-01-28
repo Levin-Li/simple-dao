@@ -34,7 +34,7 @@
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
-        <hibernate.version>5.4.21.Final</hibernate.version>
+        <hibernate.version>5.4.27.Final</hibernate.version>
 
     </properties>
 
