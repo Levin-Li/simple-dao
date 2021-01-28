@@ -1,6 +1,8 @@
 package com.levin.commons.dao;
 
 
+import java.util.Map;
+
 /**
  * 简单条件构建器
  *
@@ -15,7 +17,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T count(String expr, String alias, Object... paramValues);
+    T count(String expr, String alias, Map<String,Object>... paramValues);
 
     /**
      * @param expr
@@ -23,7 +25,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T avg(String expr, String alias, Object... paramValues);
+    T avg(String expr, String alias, Map<String,Object>... paramValues);
 
     /**
      * @param expr
@@ -31,7 +33,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T sum(String expr, String alias, Object... paramValues);
+    T sum(String expr, String alias, Map<String,Object>... paramValues);
 
     /**
      * @param expr
@@ -39,7 +41,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T max(String expr, String alias, Object... paramValues);
+    T max(String expr, String alias, Map<String,Object>... paramValues);
 
     /**
      * @param expr
@@ -47,7 +49,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T min(String expr, String alias, Object... paramValues);
+    T min(String expr, String alias, Map<String,Object>... paramValues);
 
     /**
      * <p>
@@ -58,6 +60,6 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T groupByAndSelect(String expr, String alias, Object... paramValues);
+    T groupByAndSelect(String expr, String alias, Map<String,Object>... paramValues);
 
 }
