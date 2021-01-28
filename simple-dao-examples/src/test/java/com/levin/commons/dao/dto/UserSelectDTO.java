@@ -25,10 +25,10 @@ public class UserSelectDTO extends UserDTO {
     
 
     @Ignore
-    @Select("score")
+//    @Select("score")
     UserStatDTO selectSubQueryDTO = new UserStatDTO();
 
-    @Ignore
+//    @Ignore
     @Select(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = ${:name1}")
     Map param = new HashMap();
 

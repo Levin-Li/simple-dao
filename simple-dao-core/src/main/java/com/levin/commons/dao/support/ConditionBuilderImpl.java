@@ -1812,7 +1812,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-
     public List<Map<String, ? extends Object>> buildContextValues(Object root, Object value, String fieldName) {
 
         List<Map<String, ? extends Object>> contextValues = new ArrayList<>();

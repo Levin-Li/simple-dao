@@ -827,6 +827,18 @@
 #### 10.4 变量上下文(重要)
 
   SPEL 中可以使用，任意的查询语句中也都可以使用
+  
+  
+  替换变量
+  
+      SQL查询占位参数匹配样式：${:paramName} ，如  t.score +  ${:val}  --> t.score +  :?
+      
+      文本替换匹配样式：${paramName}
+       如下：
+       
+       @Avg(value = "score",t.score +  ${val}")   表达式会被替换为 t.score + 10
+       Map<String,Object> params = [val:10]
+      
    
 
   可用默认变量：

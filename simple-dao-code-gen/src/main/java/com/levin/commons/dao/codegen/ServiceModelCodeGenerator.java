@@ -87,7 +87,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static final ContextHolder<String, Object> context = ContextHolder.build(false);
+    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
 
 
     /**
@@ -107,7 +107,7 @@ public final class ServiceModelCodeGenerator {
 
         String serviceArtifactId = "";
 
-        Map<String, Object> params = MapUtils.put(context.getAll(false))
+        Map<String, Object> params = MapUtils.put(threadContext.getAll(false))
                 .put("parent", mavenProject.getParent())
                 .put("groupId", mavenProject.getGroupId())
                 .put("version", mavenProject.getVersion())
@@ -159,7 +159,7 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
-        params.putAll(context.getAll(false));
+        params.putAll(threadContext.getAll(false));
 
         String prefix = serviceDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
@@ -302,46 +302,46 @@ public final class ServiceModelCodeGenerator {
 
 
     private static Boolean hasEntityClass(boolean newValue) {
-        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
     private static Boolean hasEntityClass() {
-        return context.get(ExceptionUtils.getInvokeMethodName());
+        return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
 
     public static Class entityClass(Class newValue) {
-        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
     public static Class entityClass() {
-        return context.get(ExceptionUtils.getInvokeMethodName());
+        return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
 
     public static Boolean splitDir(boolean newValue) {
-        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
     public static Boolean splitDir() {
-        return context.get(ExceptionUtils.getInvokeMethodName());
+        return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
 
     public static String moduleName(String newValue) {
-        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
     public static String moduleName() {
-        return context.get(ExceptionUtils.getInvokeMethodName());
+        return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
     public static String modulePackageName(String newValue) {
-        return context.put(ExceptionUtils.getInvokeMethodName(), newValue);
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
     public static String modulePackageName() {
-        return context.get(ExceptionUtils.getInvokeMethodName());
+        return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
     public static String upPackage(String packageName) {
@@ -384,7 +384,7 @@ public final class ServiceModelCodeGenerator {
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
-        Map<String, Object> params = MapUtils.put(context.getAll(true)).build();
+        Map<String, Object> params = MapUtils.put(threadContext.getAll(true)).build();
 
         buildInfo(entityClass, fields, serviceDir, params);
 

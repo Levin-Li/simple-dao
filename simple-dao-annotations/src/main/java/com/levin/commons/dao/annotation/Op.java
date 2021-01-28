@@ -10,14 +10,16 @@ import static com.levin.commons.dao.annotation.Op.OperandType.Field;
 import static com.levin.commons.dao.annotation.Op.OperandType.Param;
 
 /**
- *
  * 核心枚举类
- *
+ * <p>
  * 可扩展操作枚举对象
  */
 @Getter
 public enum Op
         implements Expr<String, String> {
+
+    // 格式
+    // 左操作数 + 操作符 + 前缀 + 右操作数 + 后缀
 
     //条件操作
     Eq("="), NotEq("!="),
@@ -48,7 +50,8 @@ public enum Op
 //    EndsWith("LIKE", "CONCAT('%',", ")"),
 
     //
-    In("IN", "(", ")"), NotIn("NOT IN", "(", ")"),
+    In("IN", "(", ")"),
+    NotIn("NOT IN", "(", ")"),
 
     //存在比较
     Exists("EXISTS", "(", Param, true, ")"),
@@ -69,12 +72,15 @@ public enum Op
     Max(null, "(", Field, true, ")"),
     Min(null, "(", Field, true, ")"),
 
-
     //Having(),
 
     Update("=", false),
 
     Expr("", null, Param),
+
+    Func(null,Field,null),
+
+    //  Func("",)
 
     None("");
 
@@ -155,6 +161,8 @@ public enum Op
     String suffix = "";
 
 
+
+
     void init() {
 
         if (this.name().equals("In")
@@ -218,7 +226,7 @@ public enum Op
 
 
     /**
-     * 表达构造
+     * 函数表达构造
      * <p>
      * 比如 Avg Sum
      *
@@ -262,6 +270,15 @@ public enum Op
         init();
     }
 
+    Op(OperandType leftOperandType, OperandType rightOperandType, boolean expandParamValue, String paramDelimiter, String operator, String prefix, String suffix) {
+        this.leftOperandType = leftOperandType;
+        this.rightOperandType = rightOperandType;
+        this.expandParamValue = expandParamValue;
+        this.paramDelimiter = paramDelimiter;
+        this.operator = operator;
+        this.prefix = prefix;
+        this.suffix = suffix;
+    }
 
     /**
      * 是否需要参数表达式
@@ -284,6 +301,9 @@ public enum Op
     /**
      * 生成表达式
      * <p>
+     * 核心方法
+     *
+     * <p>
      * 生成规则：  左操作数(可空)  + " " + 操作符(可空) + " " + 前缀(可空) + " " + 右操作数(可空) + " " + 后缀(可空);
      * <p>
      * 最后生成后去除头尾空格
@@ -302,7 +322,7 @@ public enum Op
         StringBuilder sb = new StringBuilder();
 
         //1、左操作数
-        if (OperandType.Field.equals(leftOperandType)) {
+        if (Field.equals(leftOperandType)) {
             sb.append(nullSafe(fieldExpr));
         } else if (Param.equals(leftOperandType)) {
             sb.append(nullSafe(paramExpr));
@@ -323,7 +343,7 @@ public enum Op
         //4、右操作数
         if (Param.equals(rightOperandType)) {
             sb.append(nullSafe(paramExpr));
-        } else if (OperandType.Field.equals(rightOperandType)) {
+        } else if (Field.equals(rightOperandType)) {
             sb.append(nullSafe(fieldExpr));
         }
 
@@ -334,7 +354,6 @@ public enum Op
 
         //最后生成后去除头尾空格
         return sb.toString().trim();
-
     }
 
 

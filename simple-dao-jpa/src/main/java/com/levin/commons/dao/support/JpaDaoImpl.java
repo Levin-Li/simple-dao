@@ -5,9 +5,9 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
+import com.levin.commons.service.support.ContextHolder;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -154,9 +154,7 @@ public class JpaDaoImpl
     @Autowired(required = false)
     FormattingConversionService formattingConversionService;
 
-
     private final Integer hibernateVersion;
-
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
@@ -168,12 +166,20 @@ public class JpaDaoImpl
 
     private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
 
+    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+
     private static final DeepCopier deepCopier = new DeepCopier() {
         @Override
         public <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
             return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
         }
     };
+
+
+    private final String AUTO_FLUSH = getClass().getName() + ".session.flush_" + hashCode();
+
+    private final String AUTO_CLEAR = getClass().getName() + ".session.clear_" + hashCode();
+
 
     @Data
     @Accessors(chain = true)
@@ -277,6 +283,9 @@ public class JpaDaoImpl
 
     }
 
+    public <V> V getThreadVar(String key, V defaultValue) {
+        return threadContext.get(key, defaultValue);
+    }
 
     @Override
     public Validator getValidator() {
@@ -360,34 +369,64 @@ public class JpaDaoImpl
      *
      * @param em
      */
-    public void tryAutoFlushAndDetachAfterUpdate(EntityManager em, Object entity) {
-        //是否自动发送语句，默认先发送语句
-        if (DaoContext.isAutoFlush(true)) {
-            em.flush();
+    protected void tryAutoFlushAndDetachAfterUpdate(EntityManager em, boolean isFlush, boolean isClear, Object entity) {
 
-            if (entity != null
-                    && em.contains(entity)) {
+        //是否自动发送语句，默认先发送语句
+        if (DaoContext.isAutoFlushAndClearBeforeQuery(true)
+                && em.isJoinedToTransaction()) {
+
+            if (isFlush) {
+                //em.flush();
+                //需要去FLUSH
+                logger.debug("*** tryAutoFlushAndDetachAfterUpdate AUTO_FLUSH");
+
+                threadContext.put(AUTO_FLUSH, true);
+            }
+
+            if (isClear) {
+                // em.clear();
+                //需要去 CLEAR
+                logger.debug("*** tryAutoFlushAndDetachAfterUpdate AUTO_CLEAR");
+                threadContext.put(AUTO_CLEAR, true);
+            } else if (entity != null && em.contains(entity)) {
                 em.detach(entity);
             }
 
         }
     }
 
+
     /**
      * 为了确保查询数据的正确性，在查询前自动清楚缓存
+     * <p>
+     * 当通过 update 语句更新，并且更新记录数大于 0 时，表示数据库被实际变更，则自动 flush，并且清除 session 缓存
      *
      * @param em
      */
-    public void autoClearSessionCacheBeforeQuery(EntityManager em) {
+    protected void autoFlushAndClearBeforeQuery(EntityManager em) {
 
-        if (DaoContext.isAutoClearSessionCacheBeforeQuery(true)
+        if (DaoContext.isAutoFlushAndClearBeforeQuery(true)
                 && em.isJoinedToTransaction()) {
 
-            em.flush();
+            if (threadContext.get(AUTO_FLUSH, false)) {
+                try {
+                    logger.debug("*** autoFlushAndClearBeforeQuery AUTO_FLUSH ...");
+                    em.flush();
+                } finally {
+                    threadContext.put(AUTO_FLUSH, false);
+                }
+            }
 
-            em.clear();
+            if (threadContext.get(AUTO_CLEAR, false)) {
+                try {
+                    logger.debug("*** autoFlushAndClearBeforeQuery AUTO_CLEAR ...");
+                    em.clear();
+                } finally {
+                    threadContext.put(AUTO_CLEAR, false);
+                }
+            }
+
         }
-
     }
 
     /**
@@ -406,19 +445,22 @@ public class JpaDaoImpl
     @Override
     @Transactional
     public Object create(Object entity) {
-
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
-
         //如果有ID对象，将会抛出异常
         EntityManager em = getEntityManager();
 
         try {
             em.persist(entity);
-        } catch (EntityExistsException e) {
-            entity = em.merge(entity);
-        }
+        } catch (EntityExistsException ex) {
 
-        tryAutoFlushAndDetachAfterUpdate(em, entity);
+            if (getEntityId(entity) != null) {
+                entity = em.merge(entity);
+            } else {
+                throw ex;
+            }
+
+            // tryAutoFlushAndDetachAfterUpdate(em, entity);
+        }
 
         return entity;
     }
@@ -437,6 +479,8 @@ public class JpaDaoImpl
             if (getEntityId(entity) != null) {
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
                 entity = em.merge(entity);
+
+                // tryAutoFlushAndDetachAfterUpdate(em, entity);
                 mergeOk = true;
             }
 
@@ -449,11 +493,8 @@ public class JpaDaoImpl
         if (!mergeOk) {
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
-
             em.persist(entity);
         }
-
-        tryAutoFlushAndDetachAfterUpdate(em, entity);
 
         return entity;
     }
@@ -471,7 +512,7 @@ public class JpaDaoImpl
         if (entity != null) {
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Deletable);
             em.remove(entity);
-            tryAutoFlushAndDetachAfterUpdate(em, null);
+            //tryAutoFlushAndDetachAfterUpdate(em, null);
         }
 
     }
@@ -562,7 +603,8 @@ public class JpaDaoImpl
 
         int n = query.executeUpdate();
 
-        tryAutoFlushAndDetachAfterUpdate(em, null);
+        //当通过 update 语句更新，并且更新记录数大于 0 时，表示数据库被实际变更，则自动 flush，并且清除 session 缓存
+        tryAutoFlushAndDetachAfterUpdate(em, n > 0, n > 0, null);
 
         return n;
     }
@@ -578,7 +620,7 @@ public class JpaDaoImpl
         EntityManager em = getEntityManager();
 
         //如果当前有事务，发送语句，在清除缓存，以保证数据正确加载
-        autoClearSessionCacheBeforeQuery(em);
+        autoFlushAndClearBeforeQuery(em);
 
         return em.find(entityClass, id);
     }
@@ -807,7 +849,7 @@ public class JpaDaoImpl
 
         setRange(query, start, count);
 
-        autoClearSessionCacheBeforeQuery(em);
+        autoFlushAndClearBeforeQuery(em);
 
         return (List<T>) query.getResultList();
 
