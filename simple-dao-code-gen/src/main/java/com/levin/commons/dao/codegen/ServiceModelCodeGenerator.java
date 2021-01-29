@@ -96,16 +96,15 @@ public final class ServiceModelCodeGenerator {
      * @param mavenProject
      * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param testcaseDir
      * @param genParams
      */
-    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
+    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> genParams) throws Exception {
 
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
             return;
         }
-
-        String serviceArtifactId = "";
 
         Map<String, Object> params = MapUtils.put(threadContext.getAll(false))
                 .put("parent", mavenProject.getParent())
@@ -116,39 +115,51 @@ public final class ServiceModelCodeGenerator {
                 .build();
 
 
+        final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
 
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
+
+        String parentDirName = mavenProject.getBasedir().getParentFile().getName();
+
+
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
         modules.add(pomFile.getParentFile().getName());
 
-        serviceArtifactId = (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName());
+        params.put("services", MapUtils.put(key, params.get(key)).build());
 
-        if (!pomFile.exists()) {
 
-            params.put("artifactId", serviceArtifactId.toLowerCase());
-
-            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
-        }
-
-        if (!pomFile.exists()) {
-            serviceArtifactId = "";
-        }
+/////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
+
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
         modules.add(pomFile.getParentFile().getName());
 
-        if (!pomFile.exists()) {
+        params.put("controller", MapUtils.put(key, params.get(key)).build());
 
-            params.put("artifactId", (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName()).toLowerCase());
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (StringUtils.hasText(serviceArtifactId)) {
-                params.put("services", MapUtils.put("artifactId", serviceArtifactId).build());
-            }
+        pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 
-            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
-        }
+
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
+        modules.add(pomFile.getParentFile().getName());
+
+
+        /////////////////////////////////////////////////////
+
 
         File parent = new File(serviceDir, "../../../../pom.xml").getCanonicalFile();
 
@@ -174,6 +185,37 @@ public final class ServiceModelCodeGenerator {
 
         FileUtils.write(parent, pomContent, "utf-8");
 
+    }
+
+
+    public static void tryGenTestcase(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> params) throws Exception {
+
+        //如果没有包名，也没有发现实体类
+        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+            return;
+        }
+
+        params.putAll(threadContext.getAll(false));
+
+        String prefix = testcaseDir + File.separator
+                + modulePackageName().replace('.', File.separatorChar)
+                + File.separator;
+
+        genFileByTemplate("testcase/DataInitializer.java", params, prefix + "DataInitializer.java");
+        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
+        genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
+
+        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "application.yml");
+
+        //替换成 test
+        prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+        new File(prefix).mkdirs();
+
+        testcaseDir = testcaseDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+
+        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir)
+                .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator + "application.yml");
     }
 
     /**
@@ -202,6 +244,8 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+
+
     }
 
     public static String splitAndFirstToUpperCase(String moduleName) {
@@ -915,6 +959,7 @@ public final class ServiceModelCodeGenerator {
 
         return e;
     }
+
 
     @Data
     @NoArgsConstructor

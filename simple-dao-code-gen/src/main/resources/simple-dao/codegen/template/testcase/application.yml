@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: example-server
+
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid: #单独使用druid时的配置
+      initial-size: 50
+      max-active: 500
+      min-idle: 50
+      max-wait: 60000
+      min-evictable-idle-time-millis: 1800000
+      max-evictable-idle-time-millis: 1800000
+      time-between-eviction-runs-millis: 0
+      validation-query: select 1
+      validation-query-timeout: 60000
+      test-on-borrow: false
+      test-on-return: false
+      test-while-idle: true
+      filters: stat,wall
+      stat-view-servlet:
+        loginUsername: admin
+        loginPassword: 123456
+        enabled: true
+        url-pattern: /druid/*
+        allow: " "
+
+
+    #    url: jdbc:h2:./dev.db;MODE=MySQL;
+    url: jdbc:h2:mem:dev.db;
+    username: dev
+    password: dev
+
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    database: H2
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+
+  task:
+    execution:
+      pool:
+        core-size: 200
+
+    scheduling:
+      pool:
+        size: 30
+
+#      MYSQL 配置选项
+#      properties:
+#        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
+#        hibernate.id.new_generator_mappings: false
+
+#        hibernate.dialect.storage_engine: innodb
+logging:
+  level:
+    root: warn
+    com.levin: trace
+

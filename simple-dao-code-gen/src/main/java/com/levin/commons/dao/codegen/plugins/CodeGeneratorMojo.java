@@ -43,6 +43,13 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String apiModuleDirName = "api";
 
     /**
+     * testcase
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "testcase")
+    private String testcaseModuleDirName = "testcase";
+
+    /**
      * 强制指定模块的包名
      * 默认会自动生成，建议自动生成
      */
@@ -70,7 +77,6 @@ public class CodeGeneratorMojo extends BaseMojo {
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
-
         try {
 
             if (codeGenParams == null) {
@@ -78,6 +84,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             }
 
             if ("pom".equalsIgnoreCase(mavenProject.getArtifact().getType())) {
+                logger.info("代码生成插件仅对非 pom 类型模块有效");
                 return;
             }
 
@@ -127,13 +134,17 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             String serviceDir = (splitDir && StringUtils.hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
             String controllerDir = (splitDir && StringUtils.hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
+            String testcaseDir = (splitDir && StringUtils.hasText(testcaseModuleDirName)) ? dirPrefix + testcaseModuleDirName : "";
+
 
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
-
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
+            testcaseDir = StringUtils.hasLength(testcaseDir) ? basedir.getAbsolutePath() + "/../" + testcaseDir + "/" + mavenDirStyle : srcDir;
+
 
             serviceDir = new File(serviceDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
+            testcaseDir = new File(testcaseDir).getCanonicalPath();
 
 
             String moduleName = "";
@@ -155,12 +166,14 @@ public class CodeGeneratorMojo extends BaseMojo {
                     , outputDirectory, controllerDir, serviceDir, codeGenParams);
 
             if (splitDir) { //尝试生成Pom 文件
-                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, codeGenParams);
+
+                ServiceModelCodeGenerator.tryGenTestcase(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
+                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
+
             }
 
             //生成
             ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, codeGenParams);
-
 
         } catch (Exception e) {
             getLog().error(mavenProject.getArtifactId() + " 模块代码生成错误：" + e.getMessage(), e);
