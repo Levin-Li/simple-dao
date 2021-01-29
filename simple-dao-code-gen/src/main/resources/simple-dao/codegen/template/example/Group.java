@@ -1,4 +1,4 @@
-package com.levin.commons.dao.codegen.example.entities;
+package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractTreeObject;
@@ -12,9 +12,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 /**
- *
- *
- *
+ * 示例代码
+ * <p>
+ * Created by simple-dao-code-gen on ${now}.
  */
 @Entity(name = "exam_groups")
 @Data
@@ -33,6 +33,7 @@ public class Group
 
     @Schema(description = "类别")
     String category;
+
 
     public Group(String name, Long parentId) {
         super(name, parentId);

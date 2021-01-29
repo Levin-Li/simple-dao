@@ -2,8 +2,10 @@ package com.levin.commons.dao.codegen.plugins;
 
 
 import com.levin.commons.utils.ClassUtils;
+import com.levin.commons.utils.MapUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -19,13 +21,16 @@ import org.apache.maven.shared.transfer.repository.RepositoryManager;
 import org.codehaus.plexus.util.AbstractScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,12 +64,17 @@ public abstract class BaseMojo extends AbstractMojo {
     @Component
     private RepositoryManager repositoryManager;
 
-
     /**
      * 为 true 跳过插件的执行
      */
     @Parameter
     protected boolean skip = false;
+
+    /**
+     * 插件仅在构建命令启动的模块中执行
+     */
+    @Parameter
+    private boolean onlyExecutionRoot = true;
 
     /**
      * 是否打印异常
@@ -132,12 +142,6 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter
     protected boolean independentPluginClassLoader = false;
 
-    /**
-     * 是否执行依赖的冲突检测
-     */
-    @Parameter
-    protected boolean Detection = true;
-
 
     final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 
@@ -145,6 +149,47 @@ public abstract class BaseMojo extends AbstractMojo {
      * 类加载器
      */
     private URLClassLoader pluginClassLoader;
+
+
+    /**
+     * 获取本插件的包名
+     *
+     * @return
+     * @throws IOException
+     */
+    protected Map<String, String> getPluginInfo(String prefix) throws IOException {
+
+        String xmlContent = IOUtils.resourceToString("META-INF/maven/plugin.xml", Charset.forName("utf-8"), getClass().getClassLoader());
+
+        if (!StringUtils.hasText(prefix)) {
+            prefix = "";
+        }
+
+        Map<String, String> info = new LinkedHashMap<>();
+
+        int indexOf = xmlContent.indexOf("</groupId>");
+
+        if (indexOf != -1) {
+
+            String groupId = "<groupId>";
+
+            groupId = xmlContent.substring(xmlContent.indexOf(groupId) + groupId.length(), indexOf);
+
+            info.put(prefix + "groupId", groupId);
+        }
+
+        indexOf = xmlContent.indexOf("</version>");
+
+        if (indexOf != -1) {
+
+            String version = "<version>";
+            version = xmlContent.substring(xmlContent.indexOf(version) + version.length(), indexOf);
+
+            info.put(prefix + "version", version);
+        }
+
+        return info;
+    }
 
     /**
      * 插件隔离的类加载器
@@ -253,7 +298,15 @@ public abstract class BaseMojo extends AbstractMojo {
         String info = getBaseInfo();
 
         if (skip) {
-            getLog().warn(info + " , skip.");
+            getLog().warn(info + " skip ，you can config true by [skip] parameter.");
+            return;
+        }
+
+        if (onlyExecutionRoot
+                && !mavenProject.isExecutionRoot()) {
+
+            getLog().warn(info + " 插件仅仅在命令启动的模块中[" + new File("").getAbsolutePath() + "]启用 ，可以配置插件参数[onlyExecutionRoot]启用.");
+
             return;
         }
 

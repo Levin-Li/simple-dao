@@ -5,26 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.1.RELEASE</version>
+        <groupId>${parent.groupId}</groupId>
+        <artifactId>${parent.artifactId}</artifactId>
+        <version>${parent.version}</version>
     </parent>
 
-    <groupId>com.levin.commons</groupId>
-    <artifactId>example</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+<!--    <groupId>${project.groupId}</groupId> -->
+<!--    <version>${project.version}</version> -->
 
-    <name>example</name>
-
-    <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
+    <artifactId>${project.artifactId}</artifactId>
 
     <properties>
 
-        <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
+        <levin.simple-dao.groupId>${codegen-plugin.groupId}</levin.simple-dao.groupId>
+        <levin.simple-dao.version>${codegen-plugin.version}</levin.simple-dao.version>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.groupId>${service-support.groupId}</levin.service-support.groupId>
+        <levin.service-support.version>${service-support.version}</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -32,7 +29,7 @@
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.source.skip>true</maven.source.skip>
-        <simple-dao-codegen.skip>true</simple-dao-codegen.skip>
+        <simple-dao-codegen.skip>false</simple-dao-codegen.skip>
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
@@ -96,9 +93,9 @@
         </profile>
 
         <profile>
-            <id>04-启用simple-dao代码生成</id>
+            <id>04-禁用simple-dao代码生成</id>
             <properties>
-                <simple-dao-codegen.skip>false</simple-dao-codegen.skip>
+                <simple-dao-codegen.skip>true</simple-dao-codegen.skip>
             </properties>
         </profile>
 
@@ -210,7 +207,6 @@
     <build>
 
         <plugins>
-
 
             <plugin>
                 <groupId>${levin.simple-dao.groupId}</groupId>
