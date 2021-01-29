@@ -76,10 +76,9 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("now", new Date().toString());
 
 
-            copyAndReplace(resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
-            copyAndReplace(resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
-
-            copyAndReplace(resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
+            copyAndReplace(false,resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
+            copyAndReplace(false,resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
+            copyAndReplace(false,resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
 
             if (isPomModule) {
 
@@ -108,16 +107,41 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             });
                         });
 
+
                 mapBuilder
-                        .put("project.artifactId", (hasSubModule ? subModuleName + "-" : "") + "entities")
                         .put("parent.groupId", mavenProject.getGroupId())
                         .put("parent.artifactId", mavenProject.getArtifactId())
                         .put("parent.version", mavenProject.getVersion())
                         .put(pluginInfo);
 
-                copyAndReplace(resTemplateDir + "pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
 
-                updatePom(mavenProject, (hasSubModule ? this.subModuleName + "/" : "") + "entities");
+                String pomResFile = "pom.xml";
+
+                if (hasSubModule) {
+
+                    mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
+                    mapBuilder.put("project.artifactId", subModuleName);
+
+                    mapBuilder.put("project.packaging", "pom");
+
+                    copyAndReplace(false, resTemplateDir + pomResFile, new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
+
+                    //变更父构建名称
+                    mapBuilder.put("parent.artifactId", subModuleName);
+
+                    pomResFile = "simple-pom.xml";
+                }
+
+                mapBuilder.put("modules", "");
+
+                mapBuilder.put("project.packaging", "jar");
+
+                mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName + "-" : "") + entitiesModuleDir.getName());
+
+                copyAndReplace(false, resTemplateDir + pomResFile, new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
+
+                updatePom(mavenProject, hasSubModule ? this.subModuleName : entitiesModuleDir.getName());
+
             }
 
         } catch (Exception e) {
@@ -164,55 +188,6 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             FileUtils.write(pomFile, pomContent, "utf-8");
         }
-    }
-
-
-    /**
-     * 替换并写入文件
-     *
-     * @param templateRes
-     * @param target
-     * @param varMaps
-     * @throws IOException
-     */
-    public void copyAndReplace(String templateRes, File target, Map<String, String>... varMaps) throws IOException {
-
-        String prefix = mavenProject.getBasedir().getCanonicalPath();
-
-        String path = target.getCanonicalPath();
-
-        if (path.startsWith(prefix)) {
-            path = path.substring(prefix.length());
-        }
-
-        if (target.exists()) {
-            logger.warn("*** 文件[" + path + "]已经存在，忽略代码生成。");
-            return;
-        }
-
-        logger.info("*** 开始生成 [" + path + "] 文件，替换变量：" + Arrays.asList(varMaps));
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        while (templateRes.trim().startsWith("/")) {
-            templateRes = templateRes.trim().substring(1);
-        }
-
-        String resText = IOUtils.resourceToString(templateRes, Charset.forName("utf-8"), classLoader);
-
-        if (varMaps != null) {
-            for (Map<String, String> varMap : varMaps) {
-                if (varMap != null) {
-                    for (Map.Entry<String, String> entry : varMap.entrySet()) {
-                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue());
-                    }
-                }
-            }
-        }
-
-        target.getParentFile().mkdirs();
-
-        FileUtils.write(target, resText, "utf-8");
     }
 
 

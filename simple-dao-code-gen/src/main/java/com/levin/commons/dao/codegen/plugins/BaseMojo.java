@@ -5,6 +5,7 @@ import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -150,47 +151,6 @@ public abstract class BaseMojo extends AbstractMojo {
      */
     private URLClassLoader pluginClassLoader;
 
-
-    /**
-     * 获取本插件的包名
-     *
-     * @return
-     * @throws IOException
-     */
-    protected Map<String, String> getPluginInfo(String prefix) throws IOException {
-
-        String xmlContent = IOUtils.resourceToString("META-INF/maven/plugin.xml", Charset.forName("utf-8"), getClass().getClassLoader());
-
-        if (!StringUtils.hasText(prefix)) {
-            prefix = "";
-        }
-
-        Map<String, String> info = new LinkedHashMap<>();
-
-        int indexOf = xmlContent.indexOf("</groupId>");
-
-        if (indexOf != -1) {
-
-            String groupId = "<groupId>";
-
-            groupId = xmlContent.substring(xmlContent.indexOf(groupId) + groupId.length(), indexOf);
-
-            info.put(prefix + "groupId", groupId);
-        }
-
-        indexOf = xmlContent.indexOf("</version>");
-
-        if (indexOf != -1) {
-
-            String version = "<version>";
-            version = xmlContent.substring(xmlContent.indexOf(version) + version.length(), indexOf);
-
-            info.put(prefix + "version", version);
-        }
-
-        return info;
-    }
-
     /**
      * 插件隔离的类加载器
      *
@@ -305,7 +265,7 @@ public abstract class BaseMojo extends AbstractMojo {
         if (onlyExecutionRoot
                 && !mavenProject.isExecutionRoot()) {
 
-            getLog().warn(info + " 插件仅仅在命令启动的模块中[" + new File("").getAbsolutePath() + "]启用 ，可以配置插件参数[onlyExecutionRoot]启用.");
+            getLog().warn(info + " 插件仅仅在命令启动的模块中[" + new File("").getAbsolutePath() + "]启用 ，可以配置插件参数[onlyExecutionRoot = false]禁用.");
 
             return;
         }
@@ -487,6 +447,97 @@ public abstract class BaseMojo extends AbstractMojo {
 
     protected String getBaseInfo() {
         return "plugin " + getClass().getSimpleName() + "[" + mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion() + "(" + mavenProject.getBasedir() + ")]";
+    }
+
+
+    /**
+     * 替换并写入文件
+     *
+     * @param templateRes
+     * @param target
+     * @param varMaps
+     * @throws IOException
+     */
+    protected void copyAndReplace(boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
+
+        String prefix = mavenProject.getBasedir().getCanonicalPath();
+
+        String path = target.getCanonicalPath();
+
+        if (path.startsWith(prefix)) {
+            path = path.substring(prefix.length());
+        }
+
+        if (!overwrite && target.exists()) {
+            logger.warn("*** 文件[" + path + "]已经存在，忽略代码生成。");
+            return;
+        }
+
+        logger.info("*** 开始生成 [" + path + "] 文件，替换变量：" + Arrays.asList(varMaps));
+
+        ClassLoader classLoader = getClass().getClassLoader();
+
+        while (templateRes.trim().startsWith("/")) {
+            templateRes = templateRes.trim().substring(1);
+        }
+
+        String resText = IOUtils.resourceToString(templateRes, Charset.forName("utf-8"), classLoader);
+
+        if (varMaps != null) {
+            for (Map<String, String> varMap : varMaps) {
+                if (varMap != null) {
+                    for (Map.Entry<String, String> entry : varMap.entrySet()) {
+                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue());
+                    }
+                }
+            }
+        }
+
+        target.getParentFile().mkdirs();
+
+        FileUtils.write(target, resText, "utf-8");
+    }
+
+
+
+    /**
+     * 获取本插件的包名
+     *
+     * @return
+     * @throws IOException
+     */
+    protected Map<String, String> getPluginInfo(String prefix) throws IOException {
+
+        String xmlContent = IOUtils.resourceToString("META-INF/maven/plugin.xml", Charset.forName("utf-8"), getClass().getClassLoader());
+
+        if (!StringUtils.hasText(prefix)) {
+            prefix = "";
+        }
+
+        Map<String, String> info = new LinkedHashMap<>();
+
+        int indexOf = xmlContent.indexOf("</groupId>");
+
+        if (indexOf != -1) {
+
+            String groupId = "<groupId>";
+
+            groupId = xmlContent.substring(xmlContent.indexOf(groupId) + groupId.length(), indexOf);
+
+            info.put(prefix + "groupId", groupId);
+        }
+
+        indexOf = xmlContent.indexOf("</version>");
+
+        if (indexOf != -1) {
+
+            String version = "<version>";
+            version = xmlContent.substring(xmlContent.indexOf(version) + version.length(), indexOf);
+
+            info.put(prefix + "version", version);
+        }
+
+        return info;
     }
 
 

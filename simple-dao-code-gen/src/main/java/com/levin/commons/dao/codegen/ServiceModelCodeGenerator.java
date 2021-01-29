@@ -115,7 +115,12 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
+
+        final List<String> modules = new ArrayList<>(2);
+
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
+
+        modules.add(pomFile.getParentFile().getName());
 
         serviceArtifactId = (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName());
 
@@ -132,6 +137,8 @@ public final class ServiceModelCodeGenerator {
 
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
+        modules.add(pomFile.getParentFile().getName());
+
         if (!pomFile.exists()) {
 
             params.put("artifactId", (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName()).toLowerCase());
@@ -142,6 +149,30 @@ public final class ServiceModelCodeGenerator {
 
             genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
         }
+
+        File parent = new File(serviceDir, "../../../../pom.xml").getCanonicalFile();
+
+        StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
+
+
+        for (String module : modules) {
+
+            module = "<module>" + module + "</module>";
+
+            if (pomContent.indexOf(module) == -1) {
+
+                int indexOf = pomContent.indexOf("</modules>");
+
+                if (indexOf == -1) {
+                    pomContent.insert(pomContent.indexOf("</project>"), "<modules>\n" + module + "\n</modules>\n");
+                } else {
+                    pomContent.insert(indexOf, "\n" + module + "\n");
+                }
+
+            }
+        }
+
+        FileUtils.write(parent, pomContent, "utf-8");
 
     }
 
@@ -236,6 +267,7 @@ public final class ServiceModelCodeGenerator {
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
+            logger.info("*** [" + file + "] 没有发现 Jpa 实体类，跳过代码生成。");
             return;
         }
 

@@ -42,7 +42,4 @@ public class Task
     @Schema(description = "分数")
     Integer score;
 
-    @Schema(description = "备注")
-    String remark;
-
 }
