@@ -2,7 +2,6 @@ package com.levin.commons.dao.codegen.example.entities;
 
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractTreeObject;
-import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -34,8 +33,6 @@ public class Group
 
     @Schema(description = "类别")
     String category;
-
-    Integer score;
 
     public Group(String name, Long parentId) {
         super(name, parentId);

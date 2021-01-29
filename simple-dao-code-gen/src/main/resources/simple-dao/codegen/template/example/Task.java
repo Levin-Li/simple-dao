@@ -2,8 +2,6 @@ package com.levin.commons.dao.codegen.example.entities;
 
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
-import com.levin.commons.service.domain.Desc;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;

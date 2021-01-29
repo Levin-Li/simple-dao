@@ -3,8 +3,8 @@ package com.levin.commons.dao.codegen.example.entities;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
@@ -13,11 +13,12 @@ import javax.persistence.*;
 /**
  * Created by echo on 2015/11/17.
  */
-@Entity(name = "exam_tasks")
+@Entity(name = "exam_users")
 @Data
 @Accessors(chain = true)
+@ToString(exclude = "group")
 @FieldNameConstants
-public class Task
+public class User
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {
 
@@ -31,10 +32,14 @@ public class Task
     @Column
     String area;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    Group group;
 
+    @Column
+    String job;
+
+    @Desc("分数")
     Integer score;
 
     String description;

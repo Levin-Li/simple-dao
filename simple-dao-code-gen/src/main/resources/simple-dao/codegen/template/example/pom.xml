@@ -11,10 +11,10 @@
     </parent>
 
     <groupId>com.levin.commons</groupId>
-    <artifactId>simple-dao-code-gen-example</artifactId>
+    <artifactId>example</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>code-gen-example</name>
+    <name>example</name>
 
     <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
 
@@ -103,7 +103,6 @@
         </profile>
 
     </profiles>
-
 
     <dependencyManagement>
         <dependencies>
@@ -274,6 +273,7 @@
                             <goal>clean</goal>
                         </goals>
                     </execution>
+
                 </executions>
 
             </plugin>
