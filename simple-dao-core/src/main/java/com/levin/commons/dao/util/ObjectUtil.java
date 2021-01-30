@@ -985,17 +985,17 @@ public abstract class ObjectUtil {
                     String errInfo = String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
                     logger.trace(errInfo);
                 }
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 if (copyErrors != null) {
-                    copyErrors.put(field, e);
+                    copyErrors.put(field, ex);
                 } else {
 
-                    if (e instanceof WarnException || e.getClass().getName().startsWith("org.hibernate.")) {
+                    if (ex instanceof WarnException || ex.getClass().getName().startsWith("org.hibernate.")) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(String.format("Can't copy [%s] from [%s] , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
+                            logger.debug(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
                         }
                     } else {
-                        logger.error(String.format("Can't copy [%s] from [%s] , error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(e, "->")));
+                        logger.error(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
                     }
                 }
             } catch (StackOverflowError error) {

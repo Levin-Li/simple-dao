@@ -29,7 +29,8 @@ public @interface Fetch {
 
     /**
      * 字段关联的属性名称
-     * 当 被注解的 DTO 是结果对象时，才有效
+     * 当被注解的 DTO 是结果对象时，才有效
+     *
      *
      * @return
      */
