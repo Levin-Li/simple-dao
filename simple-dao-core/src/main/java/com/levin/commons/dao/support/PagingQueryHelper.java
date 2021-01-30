@@ -5,7 +5,9 @@ import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
+import com.levin.commons.service.support.Locker;
 import org.springframework.beans.BeanUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -32,27 +34,33 @@ public abstract class PagingQueryHelper {
      * @param simpleDao  dao
      * @param pagingData 查询结果，可以是对象实例，也是可以是 Class 对象
      * @param queryDto   查询 DTO
+     * @param paging     如果 queryDto 本身也是 Paging对象，那么 paging参数将无效
      * @param <T>        查询结果
      * @return
      */
-    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto, @Nullable Paging paging) {
 
         if (pagingData instanceof Class) {
             pagingData = BeanUtils.instantiateClass((Class<T>) pagingData);
         }
 
+        //如果查询对象本身也是 Paging对象， 则该参数无意义
+        if (queryDto instanceof Paging) {
+            paging = null;
+        }
+
         if (pagingData == null) {
-            return (T) simpleDao.findByQueryObj(queryDto);
+            return (T) simpleDao.findByQueryObj(queryDto, paging);
         }
 
         //需要总记录数
-        if (isRequireRecordTotals(queryDto)) {
+        if (isRequireRecordTotals(paging) || isRequireRecordTotals(queryDto)) {
             setValueByPageOption(pagingData,
                     PageOption.Type.RequireTotals, false, (field) -> simpleDao.countByQueryObj(queryDto));
         }
 
         //需要结果集
-        if (isRequireResultList(queryDto)) {
+        if (isRequireResultList(paging) || isRequireResultList(queryDto)) {
 
             Object resultList = null;
 
@@ -65,8 +73,12 @@ public abstract class PagingQueryHelper {
             Object pageIndex = null;
             Object pageSize = null;
 
+            if (paging != null) {
 
-            if ((queryDto instanceof Paging)
+                pageIndex = paging.getPageIndex();
+                pageSize = paging.getPageSize();
+
+            } else if ((queryDto instanceof Paging)
                     || indexField == null
                     || sizeField == null
                     || !isEnable(queryDto, indexField)
@@ -77,26 +89,26 @@ public abstract class PagingQueryHelper {
                     pageSize = ((Paging) queryDto).getPageSize();
                 }
 
-                resultList = simpleDao.findByQueryObj(queryDto);
-
             } else {
 
                 pageIndex = ReflectionUtils.getField(indexField, queryDto);
                 pageSize = ReflectionUtils.getField(sizeField, queryDto);
 
-                PagingQueryReq paging = new PagingQueryReq(-1, -1);
+                SimplePaging simplePaging = new SimplePaging();
 
                 if (pageIndex != null) {
-                    paging.setPageIndex(ObjectUtil.convert(pageIndex, Integer.class));
+                    simplePaging.setPageIndex(ObjectUtil.convert(pageIndex, Integer.class));
                 }
 
                 if (pageSize != null) {
-                    paging.setPageSize(ObjectUtil.convert(pageSize, Integer.class));
+                    simplePaging.setPageSize(ObjectUtil.convert(pageSize, Integer.class));
                 }
 
-                resultList = simpleDao.findByQueryObj(queryDto, paging);
+                paging = simplePaging;
 
             }
+
+            resultList = simpleDao.findByQueryObj(queryDto, paging);
 
 
             final Object pagingDataRef = pagingData;
@@ -135,11 +147,29 @@ public abstract class PagingQueryHelper {
     }
 
     private static boolean isRequireRecordTotals(Object dto) {
+
+        if (dto == null) {
+            return false;
+        }
+
+        if (dto instanceof Paging) {
+            return ((Paging) dto).isRequireTotals();
+        }
+
         Field field = getPageOptionFields(dto.getClass()).get(PageOption.Type.RequireTotals);
         return field != null && isEnable(dto, field);
     }
 
     private static boolean isRequireResultList(Object dto) {
+
+        if (dto == null) {
+            return false;
+        }
+
+        if (dto instanceof Paging) {
+            return ((Paging) dto).isRequireResultList();
+        }
+
         Field field = getPageOptionFields(dto.getClass()).get(PageOption.Type.RequireResultList);
         return field == null || isEnable(dto, field);
     }
@@ -199,7 +229,7 @@ public abstract class PagingQueryHelper {
      */
     private static Map<PageOption.Type, Field> getPageOptionFields(Class type) {
 
-        synchronized (getSyncLock(type)) {
+        synchronized (locker.getLock(type)) {
 
             Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
 
@@ -223,30 +253,8 @@ public abstract class PagingQueryHelper {
 
     }
 
-    private static Object getSyncLock(Class type) {
-        return PagingQueryHelper.class.getName() + "_" + type.getName();
-    }
 
+    private static final Locker locker = Locker.build();
 
-    /**
-     * 通过注解提取
-     *
-     * @param queryDto
-     * @return
-     */
-    public static Paging extractPaging(Object... queryDto) {
-
-        if (queryDto == null) {
-            return null;
-        }
-
-        for (Object dto : queryDto) {
-            if (dto instanceof Paging) {
-                return (Paging) dto;
-            }
-        }
-
-        return null;
-    }
 
 }

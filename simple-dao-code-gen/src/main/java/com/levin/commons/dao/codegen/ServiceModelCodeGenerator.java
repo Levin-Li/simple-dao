@@ -96,16 +96,15 @@ public final class ServiceModelCodeGenerator {
      * @param mavenProject
      * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
+     * @param testcaseDir
      * @param genParams
      */
-    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
+    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> genParams) throws Exception {
 
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
             return;
         }
-
-        String serviceArtifactId = "";
 
         Map<String, Object> params = MapUtils.put(threadContext.getAll(false))
                 .put("parent", mavenProject.getParent())
@@ -115,32 +114,113 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
+
+        final String key = "artifactId";
+        final List<String> modules = new ArrayList<>(2);
+
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
-        serviceArtifactId = (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName());
 
-        if (!pomFile.exists()) {
+        String parentDirName = mavenProject.getBasedir().getParentFile().getName();
 
-            params.put("artifactId", serviceArtifactId.toLowerCase());
 
-            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
-        }
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-        if (!pomFile.exists()) {
-            serviceArtifactId = "";
-        }
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
+        modules.add(pomFile.getParentFile().getName());
+
+        params.put("services", MapUtils.put(key, params.get(key)).build());
+
+
+/////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
-        if (!pomFile.exists()) {
 
-            params.put("artifactId", (mavenProject.getBasedir().getParentFile().getName() + "-" + pomFile.getParentFile().getName()).toLowerCase());
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-            if (StringUtils.hasText(serviceArtifactId)) {
-                params.put("services", MapUtils.put("artifactId", serviceArtifactId).build());
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
+        modules.add(pomFile.getParentFile().getName());
+
+        params.put("controller", MapUtils.put(key, params.get(key)).build());
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
+
+
+        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+
+        genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
+        modules.add(pomFile.getParentFile().getName());
+
+
+        /////////////////////////////////////////////////////
+
+
+        File parent = new File(serviceDir, "../../../../pom.xml").getCanonicalFile();
+
+        StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
+
+
+        for (String module : modules) {
+
+            module = "<module>" + module + "</module>";
+
+            if (pomContent.indexOf(module) == -1) {
+
+                int indexOf = pomContent.indexOf("</modules>");
+
+                if (indexOf == -1) {
+                    pomContent.insert(pomContent.indexOf("</project>"), "<modules>\n" + module + "\n</modules>\n");
+                } else {
+                    pomContent.insert(indexOf, "\n" + module + "\n");
+                }
+
             }
+        }
 
-            genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+        FileUtils.write(parent, pomContent, "utf-8");
+
+    }
+
+
+    public static void tryGenTestcase(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> params) throws Exception {
+
+        //如果没有包名，也没有发现实体类
+        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+            return;
+        }
+
+        params.putAll(threadContext.getAll(false));
+
+        String prefix = testcaseDir + File.separator
+                + modulePackageName().replace('.', File.separatorChar)
+                + File.separator;
+
+        genFileByTemplate("testcase/DataInitializer.java", params, prefix + "DataInitializer.java");
+        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
+        genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
+
+        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "application.yml");
+
+        //替换成 test
+        prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+        new File(prefix).mkdirs();
+
+        genFileByTemplate("testcase/TestCase.java", params, prefix + "TestCase.java");
+
+        testcaseDir = testcaseDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+
+        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir)
+                .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator + "application.yml");
+
+        for (Class entityClass : entityClassList()) {
+            genTestCode(entityClass, testcaseDir, null);
         }
 
     }
@@ -171,6 +251,8 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+
+
     }
 
     public static String splitAndFirstToUpperCase(String moduleName) {
@@ -236,6 +318,7 @@ public final class ServiceModelCodeGenerator {
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
+            logger.info("*** [" + file + "] 没有发现 Jpa 实体类，跳过代码生成。");
             return;
         }
 
@@ -282,6 +365,9 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
+
+            entityClassList(clazz);
+
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
             try {
                 genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
@@ -309,6 +395,44 @@ public final class ServiceModelCodeGenerator {
         return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
+
+    public static List<Class> entityClassList(Class... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> serviceClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> controllerClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    /**
+     * @param key
+     * @param addValues
+     * @param <T>
+     * @return
+     */
+    protected static <T> List<T> addAndGetValueList(String key, T... addValues) {
+
+        List<T> valueList = threadContext.get(key);
+
+        if (valueList == null) {
+            valueList = new LinkedList<>();
+            threadContext.put(key, valueList);
+        }
+
+        if (addValues != null) {
+            for (T value : addValues) {
+                if (!valueList.contains(value)) {
+                    valueList.add(value);
+                }
+            }
+        }
+
+        return valueList;
+    }
 
     public static Class entityClass(Class newValue) {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
@@ -396,6 +520,31 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+    private static void genTestCode(Class entityClass, String srcDir, Map<String, Object> entityMapping) throws Exception {
+
+        if (entityMapping == null) {
+            entityMapping = new LinkedHashMap<>();
+        }
+
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
+
+        fields =  copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+
+        Map<String, Object> paramsMap = MapUtils.put(threadContext.getAll(true)).build();
+
+        String serviceName = entityClass.getSimpleName() + "Service";
+
+        //切换实体类
+        entityClass(entityClass);
+
+        genCode(entityClass, "service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
+                , params -> {
+                    params.put("servicePackageName", servicePackage());
+                    params.put("serviceName", serviceName);
+                    params.putAll(paramsMap);
+                });
+    }
+
 
     private static String subPkgName() {
         return subPkgName(entityClass(), modulePackageName());
@@ -470,12 +619,18 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName);
 
+
+        //加入服务类
+        serviceClassList((pkgName + "." + serviceName).replace("..", "."));
+
         genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
                 , params -> {
                     params.put("servicePackageName", pkgName);
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
                 });
+
+
     }
 
 
@@ -486,6 +641,10 @@ public final class ServiceModelCodeGenerator {
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
         };
+
+
+        //加入控制器类
+        controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
 
@@ -883,6 +1042,7 @@ public final class ServiceModelCodeGenerator {
 
         return e;
     }
+
 
     @Data
     @NoArgsConstructor

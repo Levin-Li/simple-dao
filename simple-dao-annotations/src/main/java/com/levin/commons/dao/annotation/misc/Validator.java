@@ -28,6 +28,8 @@ public @interface Validator {
 
     /**
      * 验证表达式，目前支持 SPEL
+     *
+     * 返回 true 表示验证通过
      * <p>
      * <p>
      * Root 对象为注解所在的对象

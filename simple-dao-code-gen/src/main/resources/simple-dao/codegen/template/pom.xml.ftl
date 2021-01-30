@@ -63,6 +63,15 @@
             </dependency>
         </#if>
 
+
+        <#if controller??>
+            <dependency>
+                <artifactId>${controller.artifactId}</artifactId>
+                <groupId>${r"${project.groupId}"}</groupId>
+                <version>${r"${project.version}"}</version>
+            </dependency>
+        </#if>
+
     </dependencies>
 
     <build>

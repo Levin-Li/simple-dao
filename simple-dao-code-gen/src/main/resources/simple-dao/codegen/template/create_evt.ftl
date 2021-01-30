@@ -41,6 +41,7 @@ import ${imp};
 <#--@EqualsAndHashCode(callSuper = true)-->
 @FieldNameConstants
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ${className} implements ServiceReq {
 
@@ -56,4 +57,6 @@ public class ${className} implements ServiceReq {
 
     </#if>
 </#list>
+
+
 }

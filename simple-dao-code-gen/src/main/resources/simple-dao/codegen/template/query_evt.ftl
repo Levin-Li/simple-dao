@@ -41,6 +41,7 @@ import ${imp};
 @Schema(description = "查询${desc}")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 <#--@EqualsAndHashCode(callSuper = true)-->
 @ToString
@@ -48,7 +49,7 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS
 , resultClass = ${entityName}Info.class)
-public class ${className} extends PagingQueryReq {
+public class ${className} implements ServiceReq  {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
@@ -79,8 +80,6 @@ public class ${className} extends PagingQueryReq {
 
     </#if>
 </#list>
-    public ${className}() {
-    }
 
     public ${className}(${pkField.type} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};

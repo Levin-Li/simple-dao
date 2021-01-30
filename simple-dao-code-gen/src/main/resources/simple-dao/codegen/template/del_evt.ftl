@@ -39,6 +39,7 @@ import ${imp};
 @Schema(description = "删除${desc}")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 <#--@EqualsAndHashCode(callSuper = true)-->
 @ToString
@@ -54,7 +55,7 @@ public class ${className} implements ServiceReq {
 
     @Schema(description = "${pkField.desc}集合")
     @In(E_${entityName}.${pkField.name})
-    @Validator(expr = "${pkField.name} == null && ( ${pkField.name}s == null || ${pkField.name}s.length == 0)" , promptInfo = "${pkField.desc}必须指定")
+    @Validator(expr = "${pkField.name} != null || ( ${pkField.name}s != null &&  ${pkField.name}s.length > 0)" , promptInfo = "删除${desc}必须指定ID")
     private ${pkField.type}[] ${pkField.name}s;
 
 

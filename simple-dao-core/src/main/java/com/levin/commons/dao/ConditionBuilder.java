@@ -57,13 +57,11 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
 
     /**
-     * 是否有限制影响记录数
-     * <p>
-     * 如果最大结果集大于maxLimit，将返回 false
+     * 当前limit 是否处于安全区域
      *
      * @return
      */
-    boolean hasLimit(int maxLimit);
+    boolean isSafeLimit();
 
 
     /**

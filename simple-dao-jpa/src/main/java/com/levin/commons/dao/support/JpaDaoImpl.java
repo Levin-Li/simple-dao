@@ -228,7 +228,7 @@ public class JpaDaoImpl
 
 
     @Override
-    public int safeModeMaxLimit() {
+    public int getSafeModeMaxLimit() {
         return safeModeMaxLimit;
     }
 
@@ -468,7 +468,7 @@ public class JpaDaoImpl
 
     @Override
     @Transactional
-    public Object save(Object entity) {
+    public <E> E save(E entity) {
 
         EntityManager em = getEntityManager();
 
@@ -544,7 +544,7 @@ public class JpaDaoImpl
      */
     @Override
     public int update(boolean isNative, String statement, Object... paramValues) {
-        return update(isNative, -1, -1, statement, paramValues);
+        return update(isNative, -1, getSafeModeMaxLimit(), statement, paramValues);
     }
 
     @Override
@@ -577,10 +577,17 @@ public class JpaDaoImpl
         return QLUtils.replaceParamPlaceholder(sql, placeholder, getParamStartIndex(isNative), "?", null);
     }
 
+    protected void checkLimit(int count) {
+        if (count < 1 || count > this.getSafeModeMaxLimit()) {
+            throw new DaoSecurityException("no limit or limit over " + getSafeModeMaxLimit());
+        }
+    }
 
     @Override
     @Transactional(rollbackFor = PersistenceException.class)
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
+
+        checkLimit(count);
 
         List paramValueList = flattenParams(null, paramValues);
 
@@ -589,7 +596,7 @@ public class JpaDaoImpl
         }
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Update Jpa Ql:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
+            logger.debug("Jpa Ql:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
@@ -603,6 +610,7 @@ public class JpaDaoImpl
 
         int n = query.executeUpdate();
 
+        //非常重要
         //当通过 update 语句更新，并且更新记录数大于 0 时，表示数据库被实际变更，则自动 flush，并且清除 session 缓存
         tryAutoFlushAndDetachAfterUpdate(em, n > 0, n > 0, null);
 
@@ -804,6 +812,7 @@ public class JpaDaoImpl
     @Override
     public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
 
+        checkLimit(count);
 
         List paramValueList = flattenParams(null, paramValues);
 
@@ -818,11 +827,9 @@ public class JpaDaoImpl
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
-
         EntityManager em = getEntityManager();
 
         Query query = null;
-
 
         //@todo hibernate 5.2.17 对结果类的映射，不支持自定义的类型
         // setResultTransformer 实际使用时无法获取到字段名，也许是 hibernate bug
@@ -916,6 +923,10 @@ public class JpaDaoImpl
         Class resultClazz = null;
 
         for (Object queryObj : queryObjs) {
+
+            if (queryObj == null) {
+                continue;
+            }
 
             TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
 

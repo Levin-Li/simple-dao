@@ -718,6 +718,21 @@ public class SelectDaoImpl<T>
 
 
     @Override
+    protected void checkSafeMode(String whereStatement) {
+
+        if (this.isSafeMode()
+                && (!isSafeLimit() && !hasText(whereStatement))) {
+
+            //对于查询默认2个条件满足一个即可
+
+            //如果超出安全模式的限制
+            throw new DaoSecurityException("dao safe mode no allow no where statement"
+                    + "or no limit or limit over " + getDao().getSafeModeMaxLimit());
+        }
+    }
+
+
+    @Override
     protected String genFromStatement() {
 
         if (hasText(fromStatement)) {
@@ -796,7 +811,7 @@ public class SelectDaoImpl<T>
         }
 
         if (this.isSafeMode() && !isCountQueryResult && !hasText(whereStatement) && !isSafeLimit()) {
-            throw new StatementBuildException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().safeModeMaxLimit() + "], SQL[" + builder + "]");
+            throw new DaoSecurityException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().getSafeModeMaxLimit() + "], SQL[" + builder + "]");
         }
 
         return ExprUtils.replace(builder.toString(), getDaoContextValues());
@@ -842,7 +857,7 @@ public class SelectDaoImpl<T>
      */
     private long count(String ql, Object... paramValues) {
 
-        List<Number> list = dao.find(isNative(), null, -1, -1, ql, paramValues);
+        List<Number> list = dao.find(isNative(), null, -1, rowCount, ql, paramValues);
 
         if (list.isEmpty() || list.get(0) == null) {
             return 0;

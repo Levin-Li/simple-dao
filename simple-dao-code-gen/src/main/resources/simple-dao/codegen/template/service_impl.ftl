@@ -2,13 +2,16 @@ package ${packageName};
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
+import com.levin.commons.service.domain.*;
 
+import org.springframework.util.*;
+import java.util.Date;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.levin.commons.service.domain.*;
+
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -16,9 +19,6 @@ import ${entityClassName};
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
-import org.springframework.util.*;
-
-import java.util.Date;
 <#list fields as field>
     <#if (field.lzay)??>
 import ${field.classType.package.name}.${field.classType.simpleName};
@@ -79,7 +79,7 @@ public class ${className} implements ${serviceName} {
         </#if>
     </#list>
 
-        simpleDao.create(entity);
+        entity = (${entityName}) simpleDao.create(entity);
 
         return ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
@@ -125,15 +125,7 @@ public class ${className} implements ${serviceName} {
         //    return  ApiResp.error("删除参数不能为空");
         // }
 
-        boolean successful = false;
-
-        try {
-            successful =  simpleDao.deleteByQueryObj(req) > 0;
-        } catch (Exception ex) {
-            log.error("delete ${desc} [${entityName}] error" , ex);
-        }
-
-        return successful ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
+        return simpleDao.deleteByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
 
     @Override
@@ -148,17 +140,10 @@ public class ${className} implements ${serviceName} {
     }
 
     @Override
-    public PagingData<${entityName}Info> query(Query${entityName}Req req) {
+    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
 
-      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req);
+      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req,paging);
 
     }
 
-<#--    @Override-->
-<#--    @Deprecated-->
-<#--    public Pagination<${entityName}Info> query(Query${entityName}Req req) {-->
-
-<#--        return SimpleCommonDaoHelper.queryObject(simpleDao,${entityName}.class,${entityName}Info.class,req);-->
-
-<#--    }-->
 }

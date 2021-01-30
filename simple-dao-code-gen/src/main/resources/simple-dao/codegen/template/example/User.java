@@ -1,23 +1,27 @@
-package com.levin.commons.dao.codegen.example.entities;
+package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 
 /**
- * Created by echo on 2015/11/17.
+ * 示例代码
+ * <p>
+ * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name = "exam_tasks")
+@Entity(name = "exam_users")
 @Data
 @Accessors(chain = true)
+@ToString(exclude = "group")
 @FieldNameConstants
-public class Task
+public class User
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {
 
@@ -25,18 +29,25 @@ public class Task
     @GeneratedValue
     private Long id;
 
+    @Schema(description = "状态")
     @Column
     String state;
 
+    @Schema(description = "区域")
     @Column
     String area;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    User user;
+    @Schema(description = "组织")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    Group group;
 
+    @Schema(description = "职业")
+    @Column
+    String job;
+
+    @Schema(description = "分数")
     Integer score;
 
-    String description;
 
 }

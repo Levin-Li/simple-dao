@@ -1,10 +1,7 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.DeleteDao;
-import com.levin.commons.dao.EntityOption;
-import com.levin.commons.dao.MiniDao;
-import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ExprUtils;
@@ -26,6 +23,11 @@ public class DeleteDaoImpl<T>
         implements DeleteDao<T> {
 
     transient MiniDao dao;
+
+    {
+        //默认为安全模式
+        safeMode = true;
+    }
 
     public DeleteDaoImpl() {
         this(true, null);
@@ -63,7 +65,7 @@ public class DeleteDaoImpl<T>
         boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
 
         if (disableDel && disableLogicDel) {
-            throw new StatementBuildException(" " + entityClass + " disable delete action");
+            throw new DaoSecurityException(" " + entityClass + " disable delete action");
         }
 
         return genFinalStatement(!disableDel);
@@ -119,7 +121,7 @@ public class DeleteDaoImpl<T>
         boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
 
         if (disableDel && disableLogicDel) {
-            throw new StatementBuildException("" + entityClass + " disable delete");
+            throw new DaoSecurityException("" + entityClass + " disable delete action");
         }
 
         boolean hasLogicDeleteField = hasLogicDeleteField();

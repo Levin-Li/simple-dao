@@ -38,6 +38,11 @@ public class UpdateDaoImpl<T>
 
     boolean throwExWhenNoColumnForUpdate = true;
 
+    {
+        //默认为安全模式
+        safeMode = true;
+    }
+
     public UpdateDaoImpl() {
         this(true, null);
     }

@@ -34,7 +34,7 @@ public interface MiniDao {
      *
      * @return
      */
-    default int safeModeMaxLimit() {
+    default int getSafeModeMaxLimit() {
         return 2000;
     }
 
