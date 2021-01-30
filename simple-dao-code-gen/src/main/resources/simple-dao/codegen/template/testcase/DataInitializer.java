@@ -16,6 +16,11 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executor;
 
+<#list serviceClassList as className>
+import ${className};
+</#list>
+
+
 @Component
 @Slf4j
 public class DataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
@@ -31,6 +36,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
 
     @Autowired
     ServerProperties serverProperties;
+
 
     private ApplicationContext applicationContext;
 

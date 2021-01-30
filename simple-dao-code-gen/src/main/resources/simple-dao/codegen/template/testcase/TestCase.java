@@ -24,6 +24,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+<#list serviceClassList as className>
+import ${className};
+</#list>
+
+
 //@ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 
@@ -44,6 +49,7 @@ public class TestCase {
 
     @Autowired
     SimpleDao simpleDao;
+
 
     @Before
     public void setup() {

@@ -361,6 +361,9 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
+
+            entityClassList(clazz);
+
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
             try {
                 genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
@@ -388,6 +391,39 @@ public final class ServiceModelCodeGenerator {
         return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
 
+
+    public static List<Class> entityClassList(Class... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> serviceClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> controllerClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    /**
+     * @param key
+     * @param addValues
+     * @param <T>
+     * @return
+     */
+    protected static <T> List<T> addAndGetValueList(String key, T... addValues) {
+
+        List<T> valueList = threadContext.putIfAbsent(key, new LinkedList<>());
+
+        if (addValues != null) {
+            for (T value : addValues) {
+                if (!valueList.contains(value)) {
+                    valueList.add(value);
+                }
+            }
+        }
+
+        return valueList;
+    }
 
     public static Class entityClass(Class newValue) {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
@@ -549,6 +585,9 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName);
 
+        //加入服务类
+        serviceClassList((pkgName + "." + serviceName).replace("..", "."));
+
         genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
                 , params -> {
                     params.put("servicePackageName", pkgName);
@@ -565,6 +604,10 @@ public final class ServiceModelCodeGenerator {
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
         };
+
+
+        //加入控制器类
+        controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
 
