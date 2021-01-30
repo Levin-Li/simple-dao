@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +42,8 @@ import javax.sql.DataSource;
 @ProxyBeanScan(scanType = EntityRepository.class
         , factoryBeanClass = RepositoryFactoryBean.class
         , basePackages = {"com.levin.commons.dao.repository"})
+
+@EntityScan({"com.levin.commons.dao.domain.support"})
 
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {

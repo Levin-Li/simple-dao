@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(JpaDaoConfiguration.class)
-public @interface EnableJpaDao {
+public @interface EnableSimpleDao {
 
     /**
      * bean 的名字

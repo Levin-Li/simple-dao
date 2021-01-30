@@ -212,10 +212,13 @@ public final class ServiceModelCodeGenerator {
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
+        genFileByTemplate("testcase/TestCase.java", params, prefix + "TestCase.java");
+
         testcaseDir = testcaseDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
 
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir)
                 .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator + "application.yml");
+
     }
 
     /**
