@@ -52,7 +52,7 @@ public class ${className} implements Serializable {
 <#list fields as field>
   <#if field.complex>
    <#if (field.lazy)??>
-       @Fetch(attrs = "${field.name}")
+   @Fetch(value = "${field.name}")
    </#if>
    @Schema(description = "${field.desc}")
    private ${field.excessReturnType} ${field.name}${field.excessSuffix};

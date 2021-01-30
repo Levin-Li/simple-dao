@@ -982,7 +982,7 @@ public abstract class ObjectUtil {
 
             } catch (PropertyNotFoundException ex) {
                 if (logger.isTraceEnabled()) {
-                    String errInfo = String.format("Can't copy [%s] from [%s], error:%s", fieldPropertyPath, field, ExceptionUtils.getAllCauseInfo(ex, "->"));
+                    String errInfo = String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
                     logger.trace(errInfo);
                 }
             } catch (Exception e) {
