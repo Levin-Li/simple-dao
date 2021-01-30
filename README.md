@@ -72,11 +72,10 @@
    
    建立一个空Maven项目，在 pom.xml 文件中加入以下内容
      
-       
     <properties>
 
-        <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.22</levin.simple-dao.version> 
+        <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
+        <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -127,15 +126,15 @@
     
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
 
-##### 1.1.3 生成代码
+##### 1.1.4 生成代码
 
    在生成好的实体模块上，双击插件的 gen-code 开始生成代码
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
     
-   代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码， 
+   代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码。
          
-##### 1.1.4 启动程序和查看运行结果
+##### 1.1.5 启动程序和查看运行结果
    
    在Maven操作面板上刷新项目，然后启动项目。
     
