@@ -992,10 +992,10 @@ public abstract class ObjectUtil {
 
                     if (ex instanceof WarnException || ex.getClass().getName().startsWith("org.hibernate.")) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
+                            logger.debug(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
                         }
                     } else {
-                        logger.error(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
+                        logger.error(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
                     }
                 }
             } catch (StackOverflowError error) {

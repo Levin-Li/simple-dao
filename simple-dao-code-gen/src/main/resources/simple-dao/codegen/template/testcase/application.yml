@@ -32,7 +32,7 @@ spring:
     password: dev
 
   jpa:
-    show-sql: true
+    show-sql: false
     generate-ddl: true
     database: H2
     open-in-view: false

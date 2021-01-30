@@ -125,15 +125,7 @@ public class ${className} implements ${serviceName} {
         //    return  ApiResp.error("删除参数不能为空");
         // }
 
-        boolean successful = false;
-
-        try {
-            successful =  simpleDao.deleteByQueryObj(req) > 0;
-        } catch (Exception ex) {
-            log.error("delete ${desc} [${entityName}] error" , ex);
-        }
-
-        return successful ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
+        return simpleDao.deleteByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
 
     @Override
@@ -154,11 +146,4 @@ public class ${className} implements ${serviceName} {
 
     }
 
-<#--    @Override-->
-<#--    @Deprecated-->
-<#--    public Pagination<${entityName}Info> query(Query${entityName}Req req) {-->
-
-<#--        return SimpleCommonDaoHelper.queryObject(simpleDao,${entityName}.class,${entityName}Info.class,req);-->
-
-<#--    }-->
 }

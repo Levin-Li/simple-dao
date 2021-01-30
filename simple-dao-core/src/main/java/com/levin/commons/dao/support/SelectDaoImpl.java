@@ -718,6 +718,21 @@ public class SelectDaoImpl<T>
 
 
     @Override
+    protected void checkSafeMode(String whereStatement) {
+
+        if (this.isSafeMode()
+                && (!isSafeLimit() && !hasText(whereStatement))) {
+
+            //对于查询默认2个条件满足一个即可
+
+            //如果超出安全模式的限制
+            throw new DaoSecurityException("dao safe mode no allow no where statement"
+                    + "or no limit or limit over " + getDao().getSafeModeMaxLimit());
+        }
+    }
+
+
+    @Override
     protected String genFromStatement() {
 
         if (hasText(fromStatement)) {

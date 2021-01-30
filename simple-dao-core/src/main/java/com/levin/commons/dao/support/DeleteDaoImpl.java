@@ -24,6 +24,11 @@ public class DeleteDaoImpl<T>
 
     transient MiniDao dao;
 
+    {
+        //默认为安全模式
+        safeMode = true;
+    }
+
     public DeleteDaoImpl() {
         this(true, null);
     }

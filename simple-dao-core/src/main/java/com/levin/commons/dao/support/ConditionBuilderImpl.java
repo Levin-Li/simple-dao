@@ -1313,10 +1313,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (validator != null
                 && hasContent(validator.expr())) {
-
             //如果验证识别
             if (!Boolean.TRUE.equals(evalExpr(bean, value, name, validator.expr()))) {
-                throw new StatementBuildException(bean.getClass() + " group valid fail: "
+                throw new StatementBuildException(bean.getClass() + " group verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
 
@@ -1567,13 +1566,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return aBoolean;
     }
 
+
+    protected void checkSafeMode(String whereStatement) {
+
+        if (this.isSafeMode()
+                && (!isSafeLimit() || !hasText(whereStatement))) {
+
+            //默认2个条件都要满足，要有查询条件，也要有数量限制
+
+            //如果超出安全模式的限制
+            throw new DaoSecurityException("dao safe mode no allow no where statement"
+                    + "or no limit or limit over " + getDao().getSafeModeMaxLimit());
+        }
+    }
+
     /**
      * 获取查询条件
      *
      * @param action 动作
      * @return
      */
-    protected String genWhereStatement(EntityOption.Action action) {
+    protected final String genWhereStatement(EntityOption.Action action) {
 
         if (isDisable(action)) {
             throw new DaoSecurityException(" " + entityClass + " disable " + action + " action");
@@ -1581,14 +1594,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         String whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
 
-        if (this.isSafeMode()
-                && !hasText(whereStatement)
-                && !isSafeLimit()) {
-
-            //如果超出安全模式的限制
-            throw new DaoSecurityException("dao safe mode not allow no where statement"
-                    + "or no limit or limit over " + getDao().getSafeModeMaxLimit());
-        }
+        checkSafeMode(whereStatement);
 
         //如果过滤逻辑删除的数据
         if (filterLogicDeletedData

@@ -130,7 +130,7 @@ public class ${className} {
     </#if>
 </#list>
 
-        PagingData<${entityName}Info> resp = ${serviceName?uncap_first}.query(req);
+        PagingData<${entityName}Info> resp = ${serviceName?uncap_first}.query(req,null);
 
         log.debug("查询${desc}->" + resp);
 
