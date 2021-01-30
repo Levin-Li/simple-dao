@@ -39,6 +39,7 @@ import ${imp};
 @Schema(description = "删除${desc}")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 <#--@EqualsAndHashCode(callSuper = true)-->
 @ToString

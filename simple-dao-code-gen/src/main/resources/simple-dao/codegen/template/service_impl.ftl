@@ -2,13 +2,16 @@ package ${packageName};
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
+import com.levin.commons.service.domain.*;
 
+import org.springframework.util.*;
+import java.util.Date;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.levin.commons.service.domain.*;
+
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -16,9 +19,6 @@ import ${entityClassName};
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
-import org.springframework.util.*;
-
-import java.util.Date;
 <#list fields as field>
     <#if (field.lzay)??>
 import ${field.classType.package.name}.${field.classType.simpleName};

@@ -53,4 +53,5 @@ public class ${className} implements ServiceReq {
     @Eq(require = true)
     private ${pkField.type} ${pkField.name};
 
+
 }

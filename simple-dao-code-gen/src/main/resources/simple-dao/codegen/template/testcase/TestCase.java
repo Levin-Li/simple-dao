@@ -28,6 +28,9 @@ import java.util.List;
 import ${className};
 </#list>
 
+<#list controllerClassList as className>
+import ${className};
+</#list>
 
 //@ActiveProfiles("test")
 @RunWith(SpringRunner.class)

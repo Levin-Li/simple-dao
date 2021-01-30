@@ -41,6 +41,7 @@ import ${imp};
 @Schema(description = "查询${desc}")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 <#--@EqualsAndHashCode(callSuper = true)-->
 @ToString
@@ -79,8 +80,6 @@ public class ${className} extends PagingQueryReq {
 
     </#if>
 </#list>
-    public ${className}() {
-    }
 
     public ${className}(${pkField.type} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};

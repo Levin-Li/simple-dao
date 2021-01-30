@@ -1,6 +1,7 @@
 package com.levin.commons.dao.codegen.plugins;
 
 
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
 import groovy.lang.GroovyShell;
@@ -143,8 +144,13 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter
     protected boolean independentPluginClassLoader = false;
 
+    /**
+     * 线程变量
+     */
+    protected static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+    protected static final ContextHolder<String, Object> inheritableThreadContext = ContextHolder.buildThreadContext(true, true);
 
-    final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
+    private final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 
     /**
      * 类加载器
@@ -241,6 +247,13 @@ public abstract class BaseMojo extends AbstractMojo {
 
     }
 
+    protected final String getInvokeMethodName() {
+        return getInvokeMethodName(1);
+    }
+
+    protected final String getInvokeMethodName(int index) {
+        return new Throwable().getStackTrace()[index].getMethodName();
+    }
 
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
@@ -497,7 +510,6 @@ public abstract class BaseMojo extends AbstractMojo {
 
         FileUtils.write(target, resText, "utf-8");
     }
-
 
 
     /**

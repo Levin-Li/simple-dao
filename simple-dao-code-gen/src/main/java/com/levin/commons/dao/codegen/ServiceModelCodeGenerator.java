@@ -219,6 +219,10 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir)
                 .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator + "application.yml");
 
+        for (Class entityClass : entityClassList()) {
+            genTestCode(entityClass, testcaseDir, null);
+        }
+
     }
 
     /**
@@ -412,7 +416,12 @@ public final class ServiceModelCodeGenerator {
      */
     protected static <T> List<T> addAndGetValueList(String key, T... addValues) {
 
-        List<T> valueList = threadContext.putIfAbsent(key, new LinkedList<>());
+        List<T> valueList = threadContext.get(key);
+
+        if (valueList == null) {
+            valueList = new LinkedList<>();
+            threadContext.put(key, valueList);
+        }
 
         if (addValues != null) {
             for (T value : addValues) {
@@ -511,6 +520,31 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+    private static void genTestCode(Class entityClass, String srcDir, Map<String, Object> entityMapping) throws Exception {
+
+        if (entityMapping == null) {
+            entityMapping = new LinkedHashMap<>();
+        }
+
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
+
+        fields =  copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+
+        Map<String, Object> paramsMap = MapUtils.put(threadContext.getAll(true)).build();
+
+        String serviceName = entityClass.getSimpleName() + "Service";
+
+        //切换实体类
+        entityClass(entityClass);
+
+        genCode(entityClass, "service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
+                , params -> {
+                    params.put("servicePackageName", servicePackage());
+                    params.put("serviceName", serviceName);
+                    params.putAll(paramsMap);
+                });
+    }
+
 
     private static String subPkgName() {
         return subPkgName(entityClass(), modulePackageName());
@@ -585,6 +619,7 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName);
 
+
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
@@ -594,6 +629,8 @@ public final class ServiceModelCodeGenerator {
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
                 });
+
+
     }
 
 
