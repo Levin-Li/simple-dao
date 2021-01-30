@@ -46,20 +46,20 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.22</version>
+            <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
         <!-- 代码生成插件 -->
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-code-gen</artifactId>
-            <version>2.2.22</version>
+            <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
         <dependency>
             <groupId>com.github.Levin-Li</groupId>
             <artifactId>simple-dao</artifactId>
-            <version>2.2.22</version>
+            <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
        
@@ -68,7 +68,7 @@
 
 #### 1.1 一键代码生成
    
-##### 1.1.1 加入插件
+##### 1.1.1 添加生成插件
    
    建立一个空Maven项目，在 pom.xml 文件中加入以下内容
      
@@ -113,7 +113,7 @@
 
 ##### 1.1.2 生成项目模板文件和示例文件
 
-   在 IDEA 的 Maven 操作面板上双击插件的 gen-project-template 生成模板文件
+   在 IDEA 的 Maven 操作面板上双击插件的 gen-project-template 生成模板文件。
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-1.png)
    
@@ -122,13 +122,13 @@
      
 ##### 1.1.3 编译项目
 
-   在生成好的实体模块上编译项目
+   在生成好的实体模块上编译项目。
     
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
 
 ##### 1.1.4 生成代码
 
-   在生成好的实体模块上，双击插件的 gen-code 开始生成代码
+   在生成好的实体模块上，双击插件的 gen-code 开始生成代码。
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
     
@@ -1151,7 +1151,7 @@
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.22</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
    
          
