@@ -79,7 +79,7 @@ public class ${className} implements ${serviceName} {
         </#if>
     </#list>
 
-        simpleDao.create(entity);
+        entity = (${entityName}) simpleDao.create(entity);
 
         return ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
@@ -148,9 +148,9 @@ public class ${className} implements ${serviceName} {
     }
 
     @Override
-    public PagingData<${entityName}Info> query(Query${entityName}Req req) {
+    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
 
-      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req);
+      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req,paging);
 
     }
 

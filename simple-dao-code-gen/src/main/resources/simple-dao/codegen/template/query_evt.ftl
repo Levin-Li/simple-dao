@@ -49,7 +49,7 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS
 , resultClass = ${entityName}Info.class)
-public class ${className} extends PagingQueryReq {
+public class ${className} implements ServiceReq  {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

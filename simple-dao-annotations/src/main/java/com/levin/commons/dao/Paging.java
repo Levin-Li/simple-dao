@@ -8,6 +8,24 @@ package com.levin.commons.dao;
 public interface Paging {
 
     /**
+     * 是否要返回记录总数
+     *
+     * @return
+     */
+    default boolean isRequireTotals() {
+        return false;
+    }
+
+    /**
+     * 是否要返回结果集
+     *
+     * @return
+     */
+    default boolean isRequireResultList() {
+        return true;
+    }
+
+    /**
      * 如果为负数表示不限制
      * <p>
      * 获取页面记录数大小

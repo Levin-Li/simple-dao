@@ -62,7 +62,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     final List whereParamValues = new ArrayList(5);
 
-    int rowStart = -1, rowCount = -1;
+    int rowStart = -1, rowCount = 512;
 
     private final boolean nativeQL;
 
@@ -169,7 +169,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             if (checkFailCallback != null) {
                 checkFailCallback.accept(action);
             } else {
-                throw new StatementBuildException(" " + entityClass + " disable " + action + " action");
+                throw new DaoSecurityException(" " + entityClass + " disable " + action + " action");
             }
         }
     }
@@ -251,8 +251,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
-    protected boolean isSafeLimit() {
-        return rowCount > 0 && rowCount <= getDao().safeModeMaxLimit();
+    @Override
+    public boolean isSafeLimit() {
+        return rowCount > 0 && rowCount <= getDao().getSafeModeMaxLimit();
     }
 
     @Override
@@ -311,11 +312,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         return (CB) this;
-    }
-
-    @Override
-    public boolean hasLimit(int maxLimit) {
-        return rowCount > 0 && rowCount < maxLimit;
     }
 
     @Override
@@ -1580,7 +1576,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected String genWhereStatement(EntityOption.Action action) {
 
         if (isDisable(action)) {
-            throw new StatementBuildException(" " + entityClass + " disable " + action + " action");
+            throw new DaoSecurityException(" " + entityClass + " disable " + action + " action");
         }
 
         String whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
@@ -1590,8 +1586,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 && !isSafeLimit()) {
 
             //如果超出安全模式的限制
-            throw new StatementBuildException("dao safe mode not allow no where statement"
-                    + "or no limit or limit over " + getDao().safeModeMaxLimit());
+            throw new DaoSecurityException("dao safe mode not allow no where statement"
+                    + "or no limit or limit over " + getDao().getSafeModeMaxLimit());
         }
 
         //如果过滤逻辑删除的数据

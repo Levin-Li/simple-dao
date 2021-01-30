@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
+
 import ${entityClassPackage}.*;
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
@@ -29,15 +30,15 @@ public class ${className} {
 
 
     /**
-     * 分页数据
+     * 分页查询
      *
      * @param req  Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @RequestMapping("/query")
     @Operation(summary = "查询${entityName}", description = "${desc}")
-    public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req) {
-        return ApiResp.ok(${serviceName?uncap_first}.query(req));
+    public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
+        return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
 
