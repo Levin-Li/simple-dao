@@ -30,6 +30,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * 支持对象深度拷贝
  * <p>
@@ -295,7 +297,7 @@ public abstract class ObjectUtil {
         String key = null;
 
         for (String name : names) {
-            if (!StringUtils.hasText(name)) {
+            if (!hasText(name)) {
                 continue;
             }
             key = name;
@@ -428,7 +430,7 @@ public abstract class ObjectUtil {
      */
     public static boolean isIgnore(String path, Object source, Object target, Field field, Class fieldType, String... ignoreProperties) {
 
-        if (!StringUtils.hasText(path)
+        if (!hasText(path)
                 || ignoreProperties == null) {
 
             return false;
@@ -436,7 +438,7 @@ public abstract class ObjectUtil {
 
         for (String ignoreProperty : ignoreProperties) {
 
-            if (!StringUtils.hasText(ignoreProperty))
+            if (!hasText(ignoreProperty))
                 continue;
 
             if (path.equals(ignoreProperty)
@@ -459,7 +461,7 @@ public abstract class ObjectUtil {
 
                 ignoreProperty = ignoreProperty.substring(3).trim();
 
-                if (!StringUtils.hasText(ignoreProperty)) {
+                if (!hasText(ignoreProperty)) {
                     continue;
                 }
 
@@ -911,27 +913,26 @@ public abstract class ObjectUtil {
                 //拷贝属性的转换
                 Desc desc = field.getAnnotation(Desc.class);
 
-                if (desc != null && StringUtils.hasText(desc.code())) {
+                if (desc != null && hasText(desc.code())) {
                     propertyName = desc.code();
                 }
 
+                Fetch fetch = field.getAnnotation(Fetch.class);
+                if (fetch != null && hasText(fetch.value())) {
+                    propertyName = fetch.value();
+                }
 
                 int fieldMaxCopyDeep = maxCopyDeep;
                 String[] fieldIgnoreProperties = ignoreProperties;
 
                 DeepCopy deepCopy = field.getAnnotation(DeepCopy.class);
 
-                if (deepCopy != null && StringUtils.hasText(deepCopy.value())) {
+                if (deepCopy != null && hasText(deepCopy.value())) {
                     propertyName = deepCopy.value();
                     fieldMaxCopyDeep = deepCopy.maxCopyDeep();
                     fieldIgnoreProperties = deepCopy.ignoreProperties();
                 }
 
-                Fetch fetch = field.getAnnotation(Fetch.class);
-
-                if (fetch != null && StringUtils.hasText(fetch.value())) {
-                    propertyName = fetch.value();
-                }
 
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 
@@ -982,7 +983,7 @@ public abstract class ObjectUtil {
 
             } catch (PropertyNotFoundException ex) {
                 if (logger.isTraceEnabled()) {
-                    String errInfo = String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
+                    String errInfo = String.format("Can't copy [%s], error: %s", field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage());
                     logger.trace(errInfo);
                 }
             } catch (Exception ex) {
@@ -992,10 +993,10 @@ public abstract class ObjectUtil {
 
                     if (ex instanceof WarnException || ex.getClass().getName().startsWith("org.hibernate.")) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
+                            logger.debug(String.format("Can't copy [%s], error: %s", field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
                         }
                     } else {
-                        logger.error(String.format("Can't copy [%s], error: %s",  field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
+                        logger.error(String.format("Can't copy [%s], error: %s", field.getDeclaringClass().getName() + "." + field.getName(), ex.getMessage()));
                     }
                 }
             } catch (StackOverflowError error) {
@@ -1103,7 +1104,7 @@ public abstract class ObjectUtil {
 
 
     public static String buildDeepPath(String path, String propertyName) {
-        return StringUtils.hasText(path) ? (path + "." + propertyName) : propertyName;
+        return hasText(path) ? (path + "." + propertyName) : propertyName;
     }
 
 

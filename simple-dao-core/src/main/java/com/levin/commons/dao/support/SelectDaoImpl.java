@@ -1090,23 +1090,20 @@ public class SelectDaoImpl<T>
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
 
-                    if (fetch.joinType() == Fetch.JoinType.None) {
+                    if (fetch.onlyForQueryObject()
+                            || fetch.joinType() == Fetch.JoinType.None) {
                         return;
                     }
 
                     //如果有条件，并且条件不成功
-                    if (StringUtils.hasText(fetch.condition())
+                    if (hasText(fetch.condition())
                             && !Boolean.TRUE.equals(evalExpr(null, null, null, fetch.condition()))) {
                         return;
                     }
 
-                    String property = fetch.value();
+                    String attrName = hasText(fetch.value()) ? fetch.value() : field.getName();
 
-                    if (!hasText(property)) {
-                        property = field.getName();
-                    }
-
-                    joinFetch(true, fetch.domain(), fetch.joinType(), property);
+                    joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
 
                 }, field -> field.getAnnotation(Fetch.class) != null
         );

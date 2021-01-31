@@ -1710,7 +1710,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return true;
         }
 
-        String conditionExpr = ClassUtils.getValue(anno, "condition", false);
+        String conditionExpr = ClassUtils.getValue(anno, E_C.condition, false);
 
         //如果没有内容默认为true
         if (!hasText(conditionExpr)) {
@@ -1720,7 +1720,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         boolean isOK = evalExpr(root, value, name, conditionExpr);
 
 
-        Boolean require = ClassUtils.getValue(anno, "require", false);
+        Boolean require = ClassUtils.getValue(anno, E_C.require, false);
 
         //如果是必须的，但条件又不成立，则抛出异常
         if (Boolean.TRUE.equals(require) && !isOK) {
