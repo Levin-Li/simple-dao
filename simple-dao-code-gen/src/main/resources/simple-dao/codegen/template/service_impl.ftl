@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
-<#--import ${servicePackageName}.*;-->
+
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
@@ -31,8 +31,8 @@ import ${field.infoClassName};
 
 /**
  *  ${desc}服务实现
- *  ${.now}
- *@author auto gen by oaknt
+ *
+ *@author auto gen by simple-dao-codegen ${.now}
  *
  */
 @Service
@@ -142,7 +142,7 @@ public class ${className} implements ${serviceName} {
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
 
-      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class,req,paging);
+      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class, req, paging);
 
     }
 

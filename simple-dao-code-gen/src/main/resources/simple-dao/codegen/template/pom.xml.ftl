@@ -10,6 +10,8 @@
         <version>${parent.version}</version>
     </parent>
 
+<#--    @Author Auto gen by simple-dao-codegen ${.now} -->
+
     <artifactId>${artifactId}</artifactId>
 
 <#--    <groupId>${groupId}</groupId>-->

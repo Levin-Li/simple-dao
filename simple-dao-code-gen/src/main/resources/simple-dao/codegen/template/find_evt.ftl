@@ -33,8 +33,8 @@ import ${imp};
 
 
 /**
- *  查找${desc}
- *  ${.now}
+ * 查找${desc}
+ * Auto gen by simple-dao-codegen ${.now}
  */
 @Schema(description = "查找${desc}")
 @Data

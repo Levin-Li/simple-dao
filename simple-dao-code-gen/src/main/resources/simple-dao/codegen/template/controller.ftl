@@ -18,6 +18,8 @@ import ${servicePackageName}.info.*;
 
 import org.springframework.util.*;
 
+//Auto gen by simple-dao-codegen ${.now}
+
 @RestController
 @RequestMapping("/${entityName?lower_case}")
 @Tag(name = "${desc}", description = "${desc}管理")

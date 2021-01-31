@@ -34,7 +34,7 @@ import ${imp};
 
 /**
  *  删除${desc}
- *  ${.now}
+ *  //Auto gen by simple-dao-codegen ${.now}
  */
 @Schema(description = "删除${desc}")
 @Data
