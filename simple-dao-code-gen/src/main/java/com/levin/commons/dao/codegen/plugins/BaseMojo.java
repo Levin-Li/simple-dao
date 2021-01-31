@@ -3,7 +3,6 @@ package com.levin.commons.dao.codegen.plugins;
 
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
-import com.levin.commons.utils.MapUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.apache.commons.io.FileUtils;
@@ -27,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -41,9 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class BaseMojo extends AbstractMojo {
 
-
     public final Logger logger = LoggerFactory.getLogger(getClass());
-
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject mavenProject;
@@ -275,6 +273,7 @@ public abstract class BaseMojo extends AbstractMojo {
             return;
         }
 
+
         if (onlyExecutionRoot
                 && !mavenProject.isExecutionRoot()) {
 
@@ -326,7 +325,7 @@ public abstract class BaseMojo extends AbstractMojo {
             throw e;
         } catch (Exception e) {
             printException(e);
-            throw e;
+            throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
         }
 
     }
@@ -539,6 +538,20 @@ public abstract class BaseMojo extends AbstractMojo {
             info.put(prefix + "groupId", groupId);
         }
 
+        /////////////////////////////////////////////////////////////
+
+        indexOf = xmlContent.indexOf("</artifactId>");
+
+        if (indexOf != -1) {
+
+            String artifactId = "<artifactId>";
+            artifactId = xmlContent.substring(xmlContent.indexOf(artifactId) + artifactId.length(), indexOf);
+
+            info.put(prefix + "artifactId", artifactId);
+        }
+
+        /////////////////////////////////////////////////////////////
+
         indexOf = xmlContent.indexOf("</version>");
 
         if (indexOf != -1) {
@@ -548,6 +561,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
             info.put(prefix + "version", version);
         }
+        ///////////////////////////////////////////////////////////////
 
         return info;
     }
@@ -558,6 +572,6 @@ public abstract class BaseMojo extends AbstractMojo {
     }
 
 
-    abstract protected void executeMojo() throws MojoExecutionException, MojoFailureException;
+    abstract protected void executeMojo() throws Exception;
 
 }
