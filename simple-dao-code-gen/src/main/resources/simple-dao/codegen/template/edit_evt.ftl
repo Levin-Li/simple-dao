@@ -36,7 +36,7 @@ import ${imp};
 
 /**
  *  编辑${desc}
- *  ${.now}
+ *  Auto gen by simple-dao-codegen ${.now}
  */
 @Schema(description = "编辑${desc}")
 @Data

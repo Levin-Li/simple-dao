@@ -32,7 +32,7 @@ import ${imp};
 
 /**
  *  创建${desc}
- *  ${.now}
+ *  //Auto gen by simple-dao-codegen ${.now}
  */
 @Schema(description = "创建${desc}")
 @Data

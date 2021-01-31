@@ -49,8 +49,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  *  ${desc}测试
- *  ${.now}
- *@author auto gen by oaknt
+ *
+ *  @author auto gen by simple-dao-codegen ${.now}
  *
  */
 //@ActiveProfiles("test")
@@ -139,6 +139,7 @@ public class ${className} {
 
     @Test
     public void delete${entityName}Test() {
+
         Delete${entityName}Req req = new Delete${entityName}Req();
         req.set${pkField.name?cap_first}(${pkField.name});
 

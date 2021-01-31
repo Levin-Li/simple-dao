@@ -192,9 +192,9 @@
   b) 执行查询
   
       @Autowired
-      JpaDao jpaDao;
+      SimpleDao dao;
       
-      jpaDao.findByQueryObj(TestEntityStatDto.class,new TestEntityStatDto());
+      dao.findByQueryObj(TestEntityStatDto.class,new TestEntityStatDto());
 
    以上代码将生成并执行以下SQL：
 
@@ -250,7 +250,7 @@
       }
        
         //执行查询，并把查询结果放在TableJoinStatDTO对象中
-       List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO());
+       List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO());
        
        //生成的语句
        Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  
@@ -327,7 +327,7 @@
    通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。             
    
      //使用示例
-     PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(jpaDao, 
+     PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, 
                              new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
    
    
@@ -429,34 +429,34 @@
 
 #### 2.1 直接使用通用Dao（推荐）
 
-##### 2.1.1 使用JpaDao
+##### 2.1.1 使用SimpleDao
 
-   在服务层代码中通过Spring注入JpaDao实例，通过JpaDao动态创建。
+   在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
 
    使用示例：
 
       @Autowired
-      JpaDao jpaDao;
+      SimpleDao dao;
 
-      SelectDao selectDao = jpaDao.selectFrom("t_table_name","alias");
+      SelectDao selectDao = dao.selectFrom("t_table_name","alias");
 
       List queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
 
 ##### 2.1.1 使用SelectDao 、UpdateDao、DeleteDao
 
     //查询DAO
-    SelectDao dao = jpaDao.selectFrom(Group.class);
+    SelectDao dao = dao.selectFrom(Group.class);
     dao.find()
 
     //更新DAO
-    UpdateDao dao = jpaDao.updateTo(Group.class);
+    UpdateDao dao = dao.updateTo(Group.class);
     dao.update()
 
     //删除DAO
-    DeleteDao dao = jpaDao.deleteFrom(Group.class)
+    DeleteDao dao = dao.deleteFrom(Group.class)
      dao.delete()
 
-#### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用JpaDao)
+#### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用SimpleDao)
 
 ##### 2.2.1 自定义DAO接口
 
@@ -520,7 +520,7 @@
     public abstract class GroupDao {
 
         @Autowired
-        private JpaDao jpaDao;
+        private SimpleDao dao;
 
         @QueryRequest
         public Group findOne(@OR @Eq Long id, @Like String name,
@@ -676,7 +676,7 @@
    Dao 支持多表统计，编码实现，如下例子：
    
        
-       jpaDao.selectFrom(Group.class, "g")
+       dao.selectFrom(Group.class, "g")
                        .join("left join " + User.class.getName() + " u on g.id = u.group.id")
                        .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
                        .count("1")
@@ -780,7 +780,7 @@
   Dao 方法支持
     
      //逻辑嵌套
-     jpaDao.selectFrom("table").and().or().and().end().end().end();
+     dao.selectFrom("table").and().or().and().end().end().end();
 
 ### 8 子查询
  
@@ -948,7 +948,7 @@
       
       DaoContext.getThreadContext(); //线程上下文
       
-      jpaDao.selectFrom(User.class).setContext(); //dao 实例上下文
+      dao.selectFrom(User.class).setContext(); //dao 实例上下文
       
       //参数上下文
  
@@ -1054,7 +1054,7 @@
         }      
         
         //避免 N+1 查询
-        List<UserInfo> userInfoList jpaDao.selectFrom(User.class, "u").find(UserInfo.class)     
+        List<UserInfo> userInfoList dao.selectFrom(User.class, "u").find(UserInfo.class)     
         
         
 #### 11.4 逻辑删除 & 权限控制
@@ -1108,7 +1108,7 @@
     
   默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
     
-    jpaDao.deleteFrom(User.class)
+    dao.deleteFrom(User.class)
                    .disableSafeMode()
                    .delete();
    

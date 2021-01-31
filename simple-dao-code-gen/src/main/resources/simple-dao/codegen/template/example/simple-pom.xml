@@ -10,6 +10,8 @@
         <version>${parent.version}</version>
     </parent>
 
+<!--    //Auto gen by simple-dao-codegen ${.now} -->
+
     <!--    <groupId>${project.groupId}</groupId> -->
     <!--    <version>${project.version}</version> -->
 

@@ -36,7 +36,7 @@ import java.util.Date;
 
 /**
 * ${desc}
-* ${.now}
+* @Author Auto gen by simple-dao-codegen ${.now}
 */
 @Schema(description ="${desc}")
 @Data

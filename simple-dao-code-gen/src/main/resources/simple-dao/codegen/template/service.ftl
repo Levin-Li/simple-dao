@@ -14,8 +14,7 @@ import ${packageName}.info.*;
 
 /**
  *  ${desc}服务
- *  ${.now}
- *  @author auto gen by oaknt
+ *  @author Auto gen by simple-dao-codegen ${.now}
  */
 public interface ${className} {
 
