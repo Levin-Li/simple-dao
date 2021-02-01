@@ -21,7 +21,7 @@
 
    DAO层的在Web应用中的位置：
 
-   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> dao(手动编写查询语句并映射参数) --> (JDBC,MyBatis,JPA,QueryDsl)
+   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> dao(编写查询语句并映射查询参数) --> (JDBC,MyBatis,JPA,QueryDsl)
 
    SimpleDao优化后的过程：
 
