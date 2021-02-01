@@ -58,6 +58,6 @@ spring:
 #        hibernate.dialect.storage_engine: innodb
 logging:
   level:
-    root: warn
+    root: info
     com.levin: trace
 

@@ -16,7 +16,7 @@ import java.util.*;
 
 @Slf4j
 @Component
-public class ${moduleName}Plugin implements Plugin, PluginManagerAware {
+public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware {
 
     //dao
     @Autowired

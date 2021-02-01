@@ -6,11 +6,14 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import static org.springframework.util.StringUtils.hasText;
 
 
 /**
@@ -51,16 +54,18 @@ public class CodeGeneratorMojo extends BaseMojo {
 
     /**
      * 强制指定模块的包名
-     * 默认会自动生成，建议自动生成
+     * 默认会自动识别
      */
     @Parameter
     private String modulePackageName = "";
 
     /**
-     * 模块名是否使用模块的文件夹名称
+     * 模块名称
+     * <p>
+     * 默认自动获取
      */
-    @Parameter(defaultValue = "true")
-    private boolean moduleNameUseDirName = true;
+    @Parameter
+    private String moduleName = "";
 
     /**
      * 是否强制拆分模块，就是强制把服务类和控制器类生成在 servicesModuleDirName 和  apiModuleDirName 自动的目录中
@@ -106,7 +111,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             final String basedirName = basedir.getName();
 
             //如果当前项目目录规则匹配
-            if (StringUtils.hasText(entitiesModuleDirName)
+            if (hasText(entitiesModuleDirName)
                     && (basedirName.equals(entitiesModuleDirName)
                     || basedirName.endsWith("-" + entitiesModuleDirName)
                     || basedirName.endsWith("_" + entitiesModuleDirName)
@@ -133,9 +138,9 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             final String mavenDirStyle = new File(srcDir).getCanonicalPath().substring(basedir.getCanonicalPath().length() + 1);
 
-            String serviceDir = (splitDir && StringUtils.hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
-            String controllerDir = (splitDir && StringUtils.hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
-            String testcaseDir = (splitDir && StringUtils.hasText(testcaseModuleDirName)) ? dirPrefix + testcaseModuleDirName : "";
+            String serviceDir = (splitDir && hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
+            String controllerDir = (splitDir && hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
+            String testcaseDir = (splitDir && hasText(testcaseModuleDirName)) ? dirPrefix + testcaseModuleDirName : "";
 
 
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
@@ -148,14 +153,22 @@ public class CodeGeneratorMojo extends BaseMojo {
             testcaseDir = new File(testcaseDir).getCanonicalPath();
 
 
-            String moduleName = "";
+            if (!hasText(moduleName)) {
+                MavenProject projectParent = mavenProject.getParent();
+                if (projectParent != null
+                        && projectParent.getBasedir() != null
+                        && new File(projectParent.getBasedir(), "pom.xml").exists()) {
+                    moduleName =  projectParent.getArtifactId();
+                } else {
+                    moduleName = mavenProject.getArtifactId();
+                }
+            }
 
-            if (moduleNameUseDirName) {
+            if (!hasText(moduleName)) {
                 //下划线或是-号去除，并且转换为大写
-
+                //自动获取模块名称为目录名称
                 moduleName = ServiceModelCodeGenerator.splitAndFirstToUpperCase
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
-
             }
 
             ServiceModelCodeGenerator.splitDir(splitDir);

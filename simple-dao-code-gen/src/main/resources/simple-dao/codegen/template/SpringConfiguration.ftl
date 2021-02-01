@@ -23,6 +23,6 @@ import org.springframework.context.annotation.Configuration;
 @ProxyBeanScan(scanType = EntityRepository.class
 , basePackages = {"${modulePackageName}"}
 , factoryBeanClass = RepositoryFactoryBean.class)
-public class ${moduleName}SpringConfiguration {
+public class ${camelStyleModuleName}SpringConfiguration {
 
 }
