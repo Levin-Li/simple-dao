@@ -844,6 +844,8 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
                 fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
             }
+
+
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
                 fieldModel.setComplex(true);

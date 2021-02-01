@@ -34,14 +34,14 @@
    
    二进制文件发布在[jitpack.io](https://jitpack.io/#Levin-Li/simple-dao)
    
-           <repositories>
-       
+          
+           <repositories> 
                <repository>
                    <id>jitpack.io</id>
                    <url>https://jitpack.io</url>
-               </repository> 
-               
+               </repository>  
            </repositories>
+           
 
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
@@ -81,14 +81,20 @@
 
     </properties>
   
-           <repositories>
-       
-               <repository>
-                   <id>jitpack.io</id>
-                   <url>https://jitpack.io</url>
-               </repository> 
-               
-           </repositories>
+    <repositories> 
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository> 
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
         <plugins>

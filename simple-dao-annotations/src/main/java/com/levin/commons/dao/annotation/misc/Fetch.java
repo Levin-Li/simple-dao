@@ -30,7 +30,7 @@ public @interface Fetch {
     /**
      * 被注解字段关联的属性名称
      * <p>
-     * 当 onlyForQueryObject 为 false 时，这个属性也会被关联抓取
+     * 当 onlyForQueryObject 为 false 时，这个属性会被关联抓取
      *
      * @return
      */
