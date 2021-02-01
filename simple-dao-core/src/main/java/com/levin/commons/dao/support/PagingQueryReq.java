@@ -18,28 +18,8 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 //@Builder
 @FieldNameConstants
-public class PagingQueryReq
+public class PagingQueryReq extends SimplePaging
         implements Paging, ServiceReq {
-
-    @Ignore
-    @Schema(description = "是否查询总记录数")
-    @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解设置是否查询总记录数，被标注字段值为 true 或是非空对象")
-    boolean requireTotals = false;
-
-    @Ignore
-    @Schema(description = "是否查询结果集")
-    @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解设置是否返回结果集列表，被标注字段值为 true 或是非空对象")
-    boolean requireResultList = true;
-
-    @Ignore
-    @Schema(description = "页面索引")
-    @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置页面索引")
-    int pageIndex = 1;
-
-    @Ignore
-    @Schema(description = "页面大小")
-    @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
-    int pageSize = 20;
 
     @Schema(description = "是否使用缓存")
     @Ignore

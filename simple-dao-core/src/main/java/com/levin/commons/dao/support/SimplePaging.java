@@ -37,5 +37,4 @@ public class SimplePaging
     @Schema(description = "页面大小")
     int pageSize = 20;
 
-
 }

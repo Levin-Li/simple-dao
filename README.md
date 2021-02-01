@@ -330,13 +330,13 @@
 #### 1.5 分页查询支持
    
    查询辅助类 [PagingQueryHelper](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingQueryHelper.java) 
-   通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。             
+             
    
      //使用示例
      PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, 
-                             new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true));
+                             new PagingData<TableJoinDTO>(), new SimplePaging().setRequireTotals(true));
    
-   
+  
        
    Dao 方法查询结果和总记录数
        
@@ -349,45 +349,32 @@
      @Accessors(chain = true)
      //@Builder
      @FieldNameConstants
-     public class PagingQueryReq
-             implements Paging, ServiceRequest {
+     @NoArgsConstructor
+     @AllArgsConstructor
+     public class SimplePaging
+             implements Paging, Serializable {
      
          @Ignore
          @Schema(description = "是否查询总记录数")
-         @PageOption(value = PageOption.Type.RequireTotals, remark = "通过注解获取是否查询总记录数，被标注字段值为 true 或是非空对象")
-         boolean isRequireTotals = false;
+         boolean requireTotals = false;
      
          @Ignore
          @Schema(description = "是否查询结果集")
-         @PageOption(value = PageOption.Type.RequireResultList, remark = "通过注解获取是否返回结果集列表，被标注字段值为 true 或是非空对象")
-         boolean isRequireResultList = true;
+         boolean requireResultList = true;
      
          @Ignore
          @Schema(description = "页面索引")
-         @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解获取页面索引")
          int pageIndex = 1;
      
          @Ignore
          @Schema(description = "页面大小")
-         @PageOption(value = PageOption.Type.PageSize, remark = "通过注解获取分页大小")
          int pageSize = 20;
-     
-         @Schema(description = "是否使用缓存")
-         @Ignore
-         Boolean fromCache;
-     
-         public PagingQueryReq() {
-         }
-     
-         public PagingQueryReq(int pageIndex, int pageSize) {
-             this.pageIndex = pageIndex;
-             this.pageSize = pageSize;
-         }
-     
+         
      }
    
        
    分页查询结果类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
+   通过 PageOption 注解自动把查询结果注入到返回对象中。
    
       @Data
       @Accessors(chain = true)
@@ -1042,19 +1029,21 @@
   
 #### 11.3 通过注解抓取
   
-  查询对象和结果对象都可以增加抓取注解
-    
+   查询对象和结果对象都可以增加抓取注解，通过 [Fetch](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/misc/Fetch.java) 注解实现。
+   注意：如果在结果对象上使用这个注解，需要设置注解的 onlyForQueryObject 为 false，才会生效。
+  
+  
         @Data
         @Accessors(chain = true)
         public class UserInfo {
       
-            @Fetch //设置立刻抓取 避免 N+1 查询 
+            @Fetch //设置立刻抓取 避免 N+1 查询 ，没有设置 onlyForQueryObject = false 该注解无效 
             Group group;
         
-            @Fetch(value = "group.name") //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.name" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
             String groupName;
         
-            @Fetch(value = "group.children" ) //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.children" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
             Collection<Group> parentChildren;
         
         }      
@@ -1064,8 +1053,12 @@
         
         
 #### 11.4 逻辑删除 & 权限控制
+
   dao 支持逻辑删除，逻辑删除后的数据，查询，更新，删除语句都会加上逻辑删除的条件。
-  通过注解实现 @EntityOption 实现，注解在实体类上。  
+  
+  通过注解 [EntityOption](./simple-dao-annotations/src/main/java/com/levin/commons/dao/EntityOption.java)  实现，注解在实体类上。  
+  
+  逻辑删除必须要定义逻辑删除的字段和字段值。
   
   默认情况下 DeleteDao 会先尝试物理删除，删除失败后会尝试逻辑删除。
   
@@ -1098,13 +1091,12 @@
      }
   
   
-   逻辑删除后，dao 可以通过 filterLogicDeletedData 来设定是否要过滤逻辑删除的数据，默认时过滤的。
+   逻辑删除后，dao 可以通过 filterLogicDeletedData 来设定是否要过滤逻辑删除的数据，默认是过滤逻辑删除的记录。
    
    dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
                                
-    
         
 ### 12 安全模式
 
@@ -1112,7 +1104,7 @@
 
    在安全模式下，必须指定部分条件，不允许无条件的更新、删除、查询。
     
-  默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
+   默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
     
     dao.deleteFrom(User.class)
                    .disableSafeMode()
@@ -1147,7 +1139,7 @@
        
 ### 13 代码生成
 
-   代码生成模块支持服务类和控制器类的生成。
+   代码生成模块支持服务类和控制器类的生成，参考快速上手部分内容。
    具体清参考 [simple-dao-code-gen-example](./simple-dao-code-gen-example/) 模块。
    代码会在编译阶段生成，生成后，再次编译运行即可。
    
@@ -1159,7 +1151,23 @@
      
              <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
-   
+           
+               <repositories>
+           
+                   <repository>
+                       <id>jitpack.io</id>
+                       <url>https://jitpack.io</url>
+                   </repository>
+            
+               </repositories>
+           
+               <pluginRepositories>
+                   <pluginRepository>
+                       <!--  插件库 -->
+                       <id>jitpack.io</id>
+                       <url>https://jitpack.io</url>
+                   </pluginRepository>
+               </pluginRepositories>
          
       
             <plugin>
