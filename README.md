@@ -34,31 +34,17 @@
    
    二进制文件发布在[jitpack.io](https://jitpack.io/#Levin-Li/simple-dao)
    
-          
-           <repositories> 
-               <repository>
-                   <id>jitpack.io</id>
-                   <url>https://jitpack.io</url>
-               </repository>  
-           </repositories>
+         
+        <repositories> 
+            <repository>
+                <id>jitpack.io</id>
+                <url>https://jitpack.io</url>
+            </repository>  
+        </repositories>
            
-
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.22-SNAPSHOT</version>
-        </dependency>
-        
-        <!-- 代码生成插件 -->
-        <dependency>
-            <groupId>com.github.Levin-Li.simple-dao</groupId>
-            <artifactId>simple-dao-code-gen</artifactId>
-            <version>2.2.22-SNAPSHOT</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.github.Levin-Li</groupId>
-            <artifactId>simple-dao</artifactId>
             <version>2.2.22-SNAPSHOT</version>
         </dependency>
         
@@ -67,6 +53,8 @@
 ### 1 快速上手
 
 #### 1.1 一键代码生成
+
+  如果文档中的图片不能显示，请访问 [https://gitee.com/Levin-Li/simple-dao](https://gitee.com/Levin-Li/simple-dao) 查看。
    
 ##### 1.1.1 添加生成插件
    
