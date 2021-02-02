@@ -121,10 +121,10 @@ public final class ServiceModelCodeGenerator {
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
 
-        String parentDirName = mavenProject.getBasedir().getParentFile().getName();
+        String moduleName = moduleName();// mavenProject.getBasedir().getParentFile().getName();
 
 
-        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+        params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
@@ -138,7 +138,7 @@ public final class ServiceModelCodeGenerator {
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
 
-        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+        params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
@@ -151,7 +151,7 @@ public final class ServiceModelCodeGenerator {
         pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 
 
-        params.put(key, (parentDirName + "-" + pomFile.getParentFile().getName()).toLowerCase());
+        params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
@@ -197,6 +197,8 @@ public final class ServiceModelCodeGenerator {
 
         params.putAll(threadContext.getAll(false));
 
+        params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
+
         String prefix = testcaseDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
@@ -241,17 +243,20 @@ public final class ServiceModelCodeGenerator {
 
         params.putAll(threadContext.getAll(false));
 
+        params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
+
         String prefix = serviceDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
-                + File.separator + moduleName();
+                + File.separator + splitAndFirstToUpperCase(moduleName());
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
+
+       // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
 
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
-
 
     }
 
@@ -358,7 +363,7 @@ public final class ServiceModelCodeGenerator {
                 moduleName = splitDir() ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName();
             }
 
-            moduleName(splitAndFirstToUpperCase(moduleName));
+            moduleName(moduleName);
         }
 
         logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
@@ -528,7 +533,7 @@ public final class ServiceModelCodeGenerator {
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
-        fields =  copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+        fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
         Map<String, Object> paramsMap = MapUtils.put(threadContext.getAll(true)).build();
 
@@ -698,6 +703,8 @@ public final class ServiceModelCodeGenerator {
         params.put("className", genClassName);
 
         params.put("desc", desc);
+
+        params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 

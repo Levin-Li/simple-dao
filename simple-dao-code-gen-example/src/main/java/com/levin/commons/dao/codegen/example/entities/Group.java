@@ -14,10 +14,8 @@ import javax.persistence.Id;
 
 /**
  *
- *
- *
  */
-@Entity(name = "exam_groups")
+@Entity(name = ModuleTableOption.PREFIX + "exam_groups")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants

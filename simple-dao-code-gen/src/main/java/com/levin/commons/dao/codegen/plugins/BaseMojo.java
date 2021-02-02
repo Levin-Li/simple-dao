@@ -26,7 +26,6 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -282,7 +281,6 @@ public abstract class BaseMojo extends AbstractMojo {
             return;
         }
 
-        getLog().info("Execute " + info + "...");
 
         initVars();
 
@@ -290,17 +288,17 @@ public abstract class BaseMojo extends AbstractMojo {
         String packageType = mavenProject.getPackaging();
 
         if (!isAllow(artifactId, allowArtifactIds)) {
-            getLog().info("not allow project artifactId:" + artifactId + ",skip");
+            getLog().info(info + "not allow project artifactId:" + artifactId + ",skip");
             return;
         }
 
         if (!isAllow(packageType, allowPackageTypes)) {
-            getLog().info("not allow project type:" + packageType + ",skip");
+            getLog().info(info + "not allow project type:" + packageType + ",skip");
             return;
         }
 
         if (!isAllow(keyword, allowKeywords)) {
-            getLog().info("not allow keyword :" + keyword + ",skip");
+            getLog().info(info + "not allow keyword :" + keyword + ",skip");
             return;
         }
 
@@ -308,7 +306,7 @@ public abstract class BaseMojo extends AbstractMojo {
         if (allowScripts != null) {
             for (String allowScript : allowScripts) {
                 if (!Boolean.TRUE.equals(getScript(allowScript).run())) {
-                    getLog().info("not allow script :[" + allowScript + "],skip");
+                    getLog().info(info + "not allow script :[" + allowScript + "],skip");
                     return;
                 }
             }
@@ -458,7 +456,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     protected String getBaseInfo() {
-        return "plugin " + getClass().getSimpleName() + "[" + mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion() + "(" + mavenProject.getBasedir() + ")]";
+        return " ["+ mavenProject.getArtifactId() +"] ";
     }
 
 

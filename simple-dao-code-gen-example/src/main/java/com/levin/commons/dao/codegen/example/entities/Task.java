@@ -13,7 +13,7 @@ import javax.persistence.*;
 /**
  * Created by echo on 2015/11/17.
  */
-@Entity(name = "exam_tasks")
+@Entity(name = ModuleTableOption.PREFIX + "exam_tasks")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants

@@ -16,7 +16,7 @@ import javax.persistence.Id;
  * <p>
  * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name = "exam_groups")
+@Entity(name = TableOption.PREFIX + "exam_groups")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants

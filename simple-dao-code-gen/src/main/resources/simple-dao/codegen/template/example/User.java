@@ -2,7 +2,6 @@ package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
-import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.ToString;
@@ -16,7 +15,7 @@ import javax.persistence.*;
  * <p>
  * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name = "exam_users")
+@Entity(name =TableOption.PREFIX +  "exam_users")
 @Data
 @Accessors(chain = true)
 @ToString(exclude = "group")

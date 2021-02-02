@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.springframework.util.StringUtils.hasText;
+
 
 /**
  * 生成项目模板
@@ -33,13 +35,13 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
      * 如果当前模块不是 pom模块，则subModuleName名称没有意义。
      */
     @Parameter
-    private String subModuleName = "example";
+    private String subModuleName = "";
 
     /**
      * 模块包名
      */
     @Parameter
-    private String packageName = "com.levin.commons.dao.example";
+    private String packageName = "";
 
 
     @Override
@@ -51,17 +53,22 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
 
-            boolean hasSubModule = StringUtils.hasText(this.subModuleName);
-
-            if (hasSubModule) {
+            if (this.subModuleName != null) {
                 subModuleName = subModuleName.trim();
             }
+
+            if (!hasText(this.packageName)) {
+                packageName = mavenProject.getGroupId();
+            }
+
+
+            boolean hasSubModule = hasText(this.subModuleName);
 
             File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
 
             entitiesModuleDir.mkdirs();
 
-            File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + packageName + "/entities");
+            File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + packageName.replace('.', '/') + "/entities");
 
             entitiesDir.mkdirs();
 
@@ -73,12 +80,16 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             MapUtils.Builder<String, String> mapBuilder =
                     MapUtils.put("CLASS_PACKAGE_NAME", packageName + ".entities")
+                            .put("modulePackageName", packageName)
                             .put("now", new Date().toString());
 
 
-            copyAndReplace(false,resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
-            copyAndReplace(false,resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
-            copyAndReplace(false,resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "TableOption.java", new File(entitiesDir, "TableOption.java"), mapBuilder.build());
+
+            copyAndReplace(false, resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
+
 
             if (isPomModule) {
 
@@ -119,6 +130,8 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
                 if (hasSubModule) {
 
+                    //生成 POM 文件
+
                     mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
                     mapBuilder.put("project.artifactId", subModuleName);
 
@@ -130,13 +143,17 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                     mapBuilder.put("parent.artifactId", subModuleName);
 
                     pomResFile = "simple-pom.xml";
+                } else {
+
                 }
+
 
                 mapBuilder.put("modules", "");
 
                 mapBuilder.put("project.packaging", "jar");
 
-                mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName + "-" : "") + entitiesModuleDir.getName());
+                //设置构建名称为：父节点的名称加上本节点的名称
+                mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : mavenProject.getArtifactId()) + "-" + entitiesModuleDir.getName());
 
                 copyAndReplace(false, resTemplateDir + pomResFile, new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
 
