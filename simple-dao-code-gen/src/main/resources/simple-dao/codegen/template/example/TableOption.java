@@ -15,6 +15,6 @@ public interface TableOption {
     /**
      * JPA/Hibernate table name prefix
      */
-    String PREFIX = "${CLASS_PACKAGE_NAME}-";
+    String PREFIX = "${modulePackageName}-";
 
 }

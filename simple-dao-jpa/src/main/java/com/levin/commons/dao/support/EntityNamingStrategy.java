@@ -33,7 +33,7 @@ public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
 
                 text = text.substring(text.lastIndexOf(".") + 1).trim();
 
-                name = getIdentifier(text + "_" + name.getText().substring(index), name.isQuoted(), jdbcEnvironment);
+                name = getIdentifier(text + "_" + name.getText().substring(index + 1), name.isQuoted(), jdbcEnvironment);
 
             }
         }
