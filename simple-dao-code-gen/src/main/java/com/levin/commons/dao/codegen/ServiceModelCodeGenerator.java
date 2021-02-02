@@ -251,11 +251,12 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
 
+       // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
+
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
-
 
     }
 
