@@ -20,6 +20,9 @@ import org.springframework.util.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
+http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
+
+
 @RestController
 @RequestMapping("/${entityName?lower_case}")
 @Tag(name = "${desc}", description = "${desc}管理")
@@ -37,12 +40,11 @@ public class ${className} {
      * @param req  Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @RequestMapping("/query")
+    @GetMapping("/query")
     @Operation(summary = "查询${entityName}", description = "${desc}")
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
-
 
 
     /**
@@ -51,7 +53,7 @@ public class ${className} {
      * @param req   Create${entityName}Evt
      * @return ApiResp
      */
-    @PostMapping("/create")
+    @PutMapping("/create")
     @Operation(summary = "创建${entityName}", description = "${desc}")
     //@ApiLog(value = "#JSON.toJSONString(req)")
     public ApiResp<Long> create(Create${entityName}Req req) {
@@ -75,7 +77,7 @@ public class ${className} {
     /**
      * 修改保存
      */
-     @PutMapping("/edit")
+     @PostMapping("/edit")
      @Operation(summary = "编辑${entityName}", description = "${desc}")
      public ApiResp<Void> edit(Edit${entityName}Req req) {
          return ${serviceName?uncap_first}.edit(req);
@@ -85,7 +87,7 @@ public class ${className} {
     /**
      * 删除
      */
-    @GetMapping("/delete")
+    @DeleteMapping("/delete")
     @Operation(summary = "删除${entityName}", description = "${desc}")
     public ApiResp<Void> delete(Delete${entityName}Req req) {
         return ${serviceName?uncap_first}.delete(req);
