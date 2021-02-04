@@ -7,6 +7,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 
+/**
+ * http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。
+ * 所以一般插入新数据的时候使用post方法，更新数据库时用put方法
+ *
+ */
 @Mojo(name = "run-groovy", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class GroovyMojo extends BaseMojo {
 

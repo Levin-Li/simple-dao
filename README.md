@@ -1040,7 +1040,46 @@
         List<UserInfo> userInfoList dao.selectFrom(User.class, "u").find(UserInfo.class)     
         
         
-#### 11.4 逻辑删除 & 权限控制
+
+### 12 安全模式
+
+   数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
+
+   在安全模式下，必须指定部分条件，不允许无条件的更新、删除、查询。
+    
+   默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
+    
+    dao.deleteFrom(User.class)
+                   .disableSafeMode()
+                   .delete();
+   
+  
+  同时也可以通过 EntityOption 注解的disableActions属性指定 Dao 禁止的操作。
+  
+     @EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteField = "state", logicalDeleteValue = "deleted")
+     //注解声明实体不允许物理删除，dao 会自动执行逻辑删除。
+   
+  安全控制接口定义
+   
+       public interface SafeController<T> {
+       
+           /**
+            * 禁止安全模式
+            */
+           T disableSafeMode();
+       
+           /**
+            * 安全模式
+            * <p>
+            * 在安全模式下，不允许无条件的查询、更新和删除
+            *
+            * @return
+            */
+           boolean isSafeMode();
+           
+       }
+       
+#### 12.1 逻辑删除 & 权限控制
 
   dao 支持逻辑删除，逻辑删除后的数据，查询，更新，删除语句都会加上逻辑删除的条件。
   
@@ -1085,45 +1124,7 @@
                   .filterLogicDeletedData(false)
                   .find(); 
                                
-        
-### 12 安全模式
-
-   数据安全是非常重要的事情，DAO 增加安全模式能避免一些因为疏忽导致的数据安全问题。
-
-   在安全模式下，必须指定部分条件，不允许无条件的更新、删除、查询。
-    
-   默认情况下 Dao 都是安全模式，可以调用 disableSafeMode() 禁用安全模式，如下：
-    
-    dao.deleteFrom(User.class)
-                   .disableSafeMode()
-                   .delete();
-   
-  
-  同时也可以通过 EntityOption 注解的disableActions属性指定 Dao 禁止的操作。
-  
-     @EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteField = "state", logicalDeleteValue = "deleted")
-     //注解声明实体不允许物理删除，dao 会自动执行逻辑删除。
-   
-  安全控制接口定义
-   
-       public interface SafeController<T> {
-       
-           /**
-            * 禁止安全模式
-            */
-           T disableSafeMode();
-       
-           /**
-            * 安全模式
-            * <p>
-            * 在安全模式下，不允许无条件的查询、更新和删除
-            *
-            * @return
-            */
-           boolean isSafeMode();
-           
-       }
-       
+               
        
 ### 13 代码生成
 
