@@ -456,7 +456,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     protected String getBaseInfo() {
-        return " ["+ mavenProject.getArtifactId() +"] ";
+        return " [" + mavenProject.getArtifactId() + "] ";
     }
 
 
@@ -562,6 +562,48 @@ public abstract class BaseMojo extends AbstractMojo {
         ///////////////////////////////////////////////////////////////
 
         return info;
+    }
+
+    /**
+     * 获取文件的相对路径
+     *
+     * @param currentFilePath 当前文件的路径，不包含文件名
+     * @param targetFilePath  要导入的目标文件的路径，不包含文件名
+     * @return
+     */
+    public static StringBuilder getRelativePath(String currentFilePath, String targetFilePath) {
+
+        Object[] currentFilePaths = Arrays.stream(currentFilePath.split("[\\/]"))
+                .filter(t -> !".".equals(t))
+                .filter(StringUtils::hasText)
+                .toArray();
+
+        Object[] targetFilePaths = Arrays.stream(targetFilePath.split("[\\/]"))
+                .filter(t -> !".".equals(t))
+                .filter(StringUtils::hasText)
+                .toArray();
+
+        StringBuilder result = new StringBuilder();
+
+        int idx = 0;
+        while (idx < currentFilePaths.length
+                && idx < targetFilePaths.length
+                && targetFilePaths[idx].equals(currentFilePaths[idx])) {
+            idx++;
+        }
+
+        int temp = idx;
+        while (temp++ < currentFilePaths.length) {
+            result.append("..").append(File.separator);
+        }
+
+        while (idx < targetFilePaths.length) {
+            result.append(targetFilePaths[idx++]).append(File.separator);
+        }
+
+        System.out.println("[" + targetFilePath + "] --> [" + currentFilePath + "] --> [" + result + "]");
+
+        return result;
     }
 
 
