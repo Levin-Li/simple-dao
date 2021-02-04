@@ -20,8 +20,7 @@ import org.springframework.util.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
-
+// http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
 
 @RestController
 @RequestMapping("/${entityName?lower_case}")
