@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.media.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
@@ -966,10 +967,12 @@ public final class ServiceModelCodeGenerator {
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
         return ClassUtils.isPrimitiveOrWrapper(type)
-                || String.class.isAssignableFrom(type)
-                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()))
+                || CharSequence.class.isAssignableFrom(type)
                 || type.isEnum()
-                || Date.class.isAssignableFrom(type);
+                || Number.class.isAssignableFrom(type)
+                || Date.class.isAssignableFrom(type)
+                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()));
+
     }
 
 
