@@ -23,14 +23,11 @@ import java.util.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
 
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-        <#list field.imports as imp>
-import ${imp};
-        </#list>
-    </#if>
+////////////////////////////////////
+<#list importList as imp>
+    import ${imp};
 </#list>
+////////////////////////////////////
 
 /**
  *  删除${desc}
@@ -51,19 +48,19 @@ public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
     @Schema(description = "${pkField.desc}")
-    private ${pkField.type} ${pkField.name};
+    private ${pkField.typeName} ${pkField.name};
 
     @Schema(description = "${pkField.desc}集合")
     @In(E_${entityName}.${pkField.name})
     @Validator(expr = "${pkField.name} != null || ( ${pkField.name}s != null &&  ${pkField.name}s.length > 0)" , promptInfo = "删除${desc}必须指定ID")
-    private ${pkField.type}[] ${pkField.name}s;
+    private ${pkField.typeName}[] ${pkField.name}s;
 
 
-    public ${className}(${pkField.type} ${pkField.name}) {
+    public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 
-    public ${className}(${pkField.type}... ${pkField.name}s) {
+    public ${className}(${pkField.typeName}... ${pkField.name}s) {
         this.${pkField.name}s = ${pkField.name}s;
     }
 

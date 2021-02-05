@@ -79,7 +79,7 @@ public class ${className} {
 
         Create${entityName}Req req = new Create${entityName}Req();
 <#list fields as field>
-    <#if (!field.notUpdate && field.testValue?? && !field.hasDefValue && !field.complex) || (field.identity?? && !field.identity)>
+    <#if (!field.notUpdate && field.testValue?? && !field.hasDefValue && !field.jpaEntity) || (field.autoIdentity?? && !field.autoIdentity)>
         <#if field.name!="id">
              req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
         </#if>
@@ -123,7 +123,7 @@ public class ${className} {
     <#if field.type=='Date'>
         //req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
         //req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
-    <#elseif !field.complex>
+    <#elseif !field.jpaEntity>
         req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue)});//${field.desc}
     <#elseif field.lazy!>
         req.setLoad${field.name?cap_first}(true);//加载${field.desc}

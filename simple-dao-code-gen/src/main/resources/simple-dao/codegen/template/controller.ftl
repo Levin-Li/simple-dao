@@ -64,11 +64,11 @@ public class ${className} {
     /**
     * 详情
     *
-    * @param ${pkField.name} ${pkField.type}
+    * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{id}")
     @Operation(summary = "详情${entityName}", description = "${desc}")
-    public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.type} ${pkField.name}) {
+    public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 

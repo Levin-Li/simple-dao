@@ -162,9 +162,8 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
         Integer port = Optional.ofNullable(serverProperties.getPort()).orElse(8080);
 
         log.info("***** 查询组织： http://127.0.0.1:" + port + "/group/query");
-        log.info("***** 查询用户&总数： http://127.0.0.1:" + port + "/user/query?pageSize=100&pageIndex=1&requireTotals=true");
+        log.info("***** 查询用户&总数： http://127.0.0.1:" + port + "/user/query?pageSize=100&pageIndex=1&requireTotals=true&loadGroup=true");
         log.info("***** 查询任务： http://127.0.0.1:" + port + "/task/query");
-
 
         log.info("***** 查询插件： http://127.0.0.1:" + port + "/system/plugin/list");
 

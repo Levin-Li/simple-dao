@@ -37,7 +37,6 @@ import io.swagger.v3.oas.annotations.media.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
@@ -703,6 +702,11 @@ public final class ServiceModelCodeGenerator {
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("fields", fields);
+        params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
+                .reduce(new LinkedHashSet<String>(), (f, s) -> {
+                    f.addAll(s);
+                    return f;
+                }));
 
         params.put("pkField", getPkField(entityClass, fields));
 
@@ -720,7 +724,7 @@ public final class ServiceModelCodeGenerator {
     private static FieldModel getPkField(Class entityClass, List<FieldModel> fields) {
 
         for (FieldModel field : fields) {
-            if (field.getPk()) {
+            if (field.isPk()) {
                 return field;
             }
         }
@@ -748,6 +752,19 @@ public final class ServiceModelCodeGenerator {
         }
 
     }
+
+
+    private static String getInfoClassImport(Class entity) {
+
+        String typePackageName = entity.getPackage().getName();
+
+        typePackageName = typePackageName.replace("entities", "services") + "."
+                + entity.getSimpleName().toLowerCase() + ".info";
+
+        return (typePackageName + ".*");
+
+    }
+
 
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
 
@@ -786,47 +803,60 @@ public final class ServiceModelCodeGenerator {
 
             if (Map.class.isAssignableFrom(fieldType)) {
                 //暂不支持Map
+                logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
                 continue;
             }
 
             boolean isCollection = fieldType.isArray() || Collection.class.isAssignableFrom(fieldType);
 
-
-            Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric(0)) : null;
-
+            Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
             FieldModel fieldModel = new FieldModel();
             fieldModel.setName(field.getName());
             fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
 
-            fieldModel.setType(fieldType.getSimpleName());
+            fieldModel.setTypeName(fieldType.getSimpleName());
 
-            fieldModel.setClassType(fieldType);
+            fieldModel.setType(fieldType);
             fieldModel.setSubType(subType);
 
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
-            fieldModel.setEnums(fieldType.isEnum());
-
-            fieldModel.setCollections(isCollection);
-
-            fieldModel.setComplex(!fieldModel.getBaseType());
+            fieldModel.setEnumType(fieldType.isEnum());
 
 
-            if (fieldModel.getComplex()) {
-                //得到包名 com.oaknt.udf.entities - com.oaknt.udf.servicess.sample.info;
+            fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
-                String typePackageName = fieldType.getPackage().getName();
+            fieldModel.imports.add(fieldType.getName());
 
-                typePackageName = typePackageName.replace("entities", "services") + "."
-                        + fieldType.getSimpleName().toLowerCase() + ".info";
-
-                fieldModel.setComplexClassPackageName(typePackageName);
-
-                fieldModel.getImports().add(typePackageName + ".*");
-
-                //  fieldModel.infoClassName =  typePackageName + "." + fieldType.getSimpleName() + "Info";
+            if (subType != null) {
+                fieldModel.imports.add(subType.getName());
             }
+
+            if (fieldModel.isJpaEntity()) {
+
+                fieldModel.getImports().add(getInfoClassImport(fieldType));
+                fieldModel.setTypeName(fieldType.getSimpleName() + "Info");
+
+            }
+
+            if (isCollection && subType != null) {
+
+                String subTypeName = subType.getSimpleName();
+
+                if (subType.isAnnotationPresent(Entity.class)) {
+                    subTypeName = subTypeName + "Info";
+                    fieldModel.getImports().add(getInfoClassImport(subType));
+                    fieldModel.setLazy(true);
+                    fieldModel.setBaseType(false);
+                }else {
+                    fieldModel.getImports().add(subType.getName());
+                    fieldModel.setBaseType(isBaseType(forField, subType));
+                }
+
+                fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
+            }
+
 
             boolean hasSchema = field.isAnnotationPresent(Schema.class);
             Schema schema = field.getAnnotation(Schema.class);
@@ -840,11 +870,11 @@ public final class ServiceModelCodeGenerator {
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
-            fieldModel.setLike(field.isAnnotationPresent(Like.class));
-            fieldModel.setNotUpdate(fieldModel.getPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.getComplex());
-            if (fieldModel.getPk()) {
+            fieldModel.setContains(field.isAnnotationPresent(Like.class));
+            fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
+            if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
-                fieldModel.setIdentity(field.isAnnotationPresent(GeneratedValue.class)
+                fieldModel.setAutoIdentity(field.isAnnotationPresent(GeneratedValue.class)
                         && !field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.AUTO));
             } else {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
@@ -854,7 +884,7 @@ public final class ServiceModelCodeGenerator {
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
-                fieldModel.setComplex(true);
+                fieldModel.setJpaEntity(true);
                 if (field.isAnnotationPresent(ManyToOne.class)) {
                     fieldModel.setLazy(field.getAnnotation(ManyToOne.class).fetch().equals(FetchType.LAZY));
                 } else if (field.isAnnotationPresent(OneToOne.class)) {
@@ -870,7 +900,7 @@ public final class ServiceModelCodeGenerator {
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
 
-            if (fieldModel.getRequired()) {
+            if (fieldModel.isRequired()) {
                 annotations.add("@NotNull");
             }
 
@@ -885,8 +915,7 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.getImports().add(SecurityDomain.class.getName());
             }
 
-
-            if (fieldModel.getClassType().equals(String.class)
+            if (fieldModel.getType().equals(String.class)
                     && fieldModel.getLength() != -1
                     && !fieldModel.getName().endsWith("Body")) {
                 boolean isLob = field.isAnnotationPresent(Lob.class);
@@ -926,9 +955,9 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setAnnotations(annotations);
 
-            if (excess) {
-                buildExcess(entityClass, fieldModel);
-            }
+//            if (excess) {
+//                buildExpandInfo(entityClass, fieldModel);
+//            }
 
             String fieldValue = getFieldValue(field.getName(), obj);
             if (fieldValue != null) {
@@ -942,20 +971,20 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"" + sn + "\"");
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
-                } else if (fieldModel.enums) {
+                } else if (fieldModel.enumType) {
                     fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
-                } else if (fieldModel.getClassType().equals(Boolean.class)) {
+                } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
-                } else if (fieldModel.getClassType().equals(String.class)) {
+                } else if (fieldModel.getType().equals(String.class)) {
                     fieldModel.setTestValue("\"" + fieldModel.getDesc() + "_1\"");
-                } else if (fieldModel.getClassType().equals(Integer.class) || fieldModel.getClassType().equals(Long.class)) {
+                } else if (fieldModel.getType().equals(Integer.class) || fieldModel.getType().equals(Long.class)) {
                     fieldModel.setTestValue(fieldModel.getName().endsWith("Id")
-                            ? "null" : ("1" + (fieldModel.getClassType().equals(Long.class) ? "L" : "")));
-                } else if (fieldModel.getClassType().equals(Double.class)) {
+                            ? "null" : ("1" + (fieldModel.getType().equals(Long.class) ? "L" : "")));
+                } else if (fieldModel.getType().equals(Double.class)) {
                     fieldModel.setTestValue("0.1d");
-                } else if (fieldModel.getClassType().equals(Float.class)) {
+                } else if (fieldModel.getType().equals(Float.class)) {
                     fieldModel.setTestValue("0.1f");
-                } else if (fieldModel.getClassType().equals(Date.class)) {
+                } else if (fieldModel.getType().equals(Date.class)) {
                     fieldModel.setTestValue("new Date()");
                 }
             }
@@ -977,6 +1006,7 @@ public final class ServiceModelCodeGenerator {
 
 
     public static String getFieldValue(String fieldName, Object obj) {
+
         if (fieldName == null || obj == null) {
             return null;
         }
@@ -989,46 +1019,49 @@ public final class ServiceModelCodeGenerator {
         return value.toString();
     }
 
-    private static void buildExcess(Class entityClass, FieldModel fieldModel) {
+    private static void buildExpandInfo(Class entityClass, FieldModel fieldModel) {
 
         String name = fieldModel.getName();
-        Class type = fieldModel.getClassType();
+        Class type = fieldModel.getType();
 
-        if (fieldModel.getEnums()
-//                && DescriptiveEnum.class.isAssignableFrom(type)
-                && Enum.class.isAssignableFrom(type)
-        ) {
-            //枚举描述
-            fieldModel.setExcessSuffix("Desc");
-            fieldModel.setExcessReturnType("String");
-            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".getDesc() : \"\";");
-        } else if ((type.equals(Integer.class) || type.equals(Long.class))
-                && name.endsWith("Fen")) {
-            //分转元
-            fieldModel.setExcessSuffix("2Yuan");
-            fieldModel.setExcessReturnType("Double");
-            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
-                    "                .divide(new java.math.BigDecimal(100), 2, java.math.BigDecimal.ROUND_HALF_UP)\n" +
-                    "                .doubleValue() : null;");
-        } else if ((type.equals(Integer.class) || type.equals(Long.class))
-                && name.endsWith("Ppt")) {
-            //千分比转百分比
-            fieldModel.setExcessSuffix("2Pct");
-            fieldModel.setExcessReturnType("Double");
-            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
-                    "                .divide(new java.math.BigDecimal(10), 1, java.math.BigDecimal.ROUND_HALF_UP)\n" +
-                    "                .doubleValue() : null;");
-        } else if (fieldModel.getComplex()) {
-            String returnName = type.getSimpleName().substring(0, 1).toUpperCase() + type.getSimpleName().substring(1)
-                    + "Info";
-            String complexName = name.substring(0, 1).toUpperCase() + name.substring(1)
-                    + "Info";
+//        if (fieldModel.isEnumType()
+////                && DescriptiveEnum.class.isAssignableFrom(type)
+//                && Enum.class.isAssignableFrom(type)
+//        ) {
+//            //枚举描述
+//            fieldModel.setExcessSuffix("Desc");
+//            fieldModel.setExcessReturnType("String");
+//            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".getDesc() : \"\";");
+//        } else if ((type.equals(Integer.class) || type.equals(Long.class))
+//                && name.endsWith("Fen")) {
+//            //分转元
+//            fieldModel.setExcessSuffix("2Yuan");
+//            fieldModel.setExcessReturnType("Double");
+//            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
+//                    "                .divide(new java.math.BigDecimal(100), 2, java.math.BigDecimal.ROUND_HALF_UP)\n" +
+//                    "                .doubleValue() : null;");
+//        } else if ((type.equals(Integer.class) || type.equals(Long.class))
+//                && name.endsWith("Ppt")) {
+//            //千分比转百分比
+//            fieldModel.setExcessSuffix("2Pct");
+//            fieldModel.setExcessReturnType("Double");
+//            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
+//                    "                .divide(new java.math.BigDecimal(10), 1, java.math.BigDecimal.ROUND_HALF_UP)\n" +
+//                    "                .doubleValue() : null;");
+//        }
 
-            fieldModel.setExcessSuffix("Info");
-            fieldModel.setExcessReturnType(returnName);
-
-            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".get" + complexName + "() : null;");
-        }
+//        if (fieldModel.isJpaEntity()) {
+//
+//            String returnName = type.getSimpleName().substring(0, 1).toUpperCase() + type.getSimpleName().substring(1)
+//                    + "Info";
+//            String complexName = name.substring(0, 1).toUpperCase() + name.substring(1)
+//                    + "Info";
+//
+//            fieldModel.setExcessSuffix("Info");
+//            fieldModel.setExcessReturnType(returnName);
+//
+//            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".get" + complexName + "() : null;");
+//        }
 
     }
 
@@ -1073,13 +1106,13 @@ public final class ServiceModelCodeGenerator {
 
         String prefix;
 
-        private String type;
+        private String typeName;
 
-        private Integer length = -1;
-
-        private Class classType;
+        private Class type;
 
         private Class subType;
+
+        private Integer length = -1;
 
         private String desc;
 
@@ -1089,42 +1122,31 @@ public final class ServiceModelCodeGenerator {
 
         private List<String> annotations = new ArrayList<>();
 
-        private Boolean pk = false;//是否主键字段
+        private boolean pk = false;//是否主键字段
 
-        private Boolean uk = false;//是否唯一键
+        private boolean uk = false;//是否唯一键
 
-        private Boolean baseType = true;//基础封装类型
+        private boolean baseType = true;//基础封装类型
 
+        private boolean enumType = false;//是否enum
 
-        private Boolean enums = false;//是否enum
+        private boolean jpaEntity = false;//是否 jpa 对象
 
-        private Boolean complex = false;//是否复杂对象
+        private boolean required = false;//是否必填
 
-        private String complexClassPackageName;//复杂对象包名
+        private boolean autoIdentity; //是否自动增长主键
 
-        private Boolean collections = false;//是否集合
+        private boolean notUpdate = false;//是否不需要更新
 
-        private Boolean required = false;//是否必填
+        private boolean hasDefValue = false;//是否有默认值
 
-        private Boolean identity; //是否自动增长主键
+        private boolean lazy = false;//是否lazy
 
-        private Boolean notUpdate = false;//是否不需要更新
-
-        private Boolean hasDefValue = false;//是否有默认值
-
-        private Boolean lazy = false;//是否lazy
-
-        private String excessSuffix;//生成额外的字段后缀
-
-        private String excessReturnType;//生成额外的返回类型
-
-        private String excessReturn;//生成额外的返回
+        private boolean contains; //是否生成模糊查询
 
         private String infoClassName;
 
         private String testValue;
-
-        private Boolean like;//是否生成模糊查询
 
     }
 

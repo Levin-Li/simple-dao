@@ -24,14 +24,11 @@ import ${entityClassName};
 import ${entityClassPackage}.*;
 
 
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-        <#list field.imports as imp>
+////////////////////////////////////
+<#list importList as imp>
 import ${imp};
-        </#list>
-    </#if>
 </#list>
+////////////////////////////////////
 
 
 /**
@@ -55,10 +52,10 @@ public class ${className} implements ServiceReq {
     @Schema(description = "${pkField.desc}")
     @NotNull
     @Eq(require = true)
-    private ${pkField.type} ${pkField.name};
+    private ${pkField.typeName} ${pkField.name};
 
 <#list fields as field>
-    <#if !field.notUpdate>
+    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
     <#if !(annotation?string)?contains("@NotNull")>
     ${annotation}
@@ -66,13 +63,13 @@ public class ${className} implements ServiceReq {
     </#list>
     @Schema(description = "${field.desc}")
     @Update
-    private ${field.type} ${field.name};
+    private ${field.typeName} ${field.name};
 
     </#if>
 </#list>
 
 
-    public ${className}(${pkField.type} ${pkField.name}) {
+    public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 }
