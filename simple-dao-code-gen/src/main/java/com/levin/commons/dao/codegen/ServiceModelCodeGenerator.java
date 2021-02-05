@@ -22,6 +22,7 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -58,27 +59,19 @@ public final class ServiceModelCodeGenerator {
     public static final String CONTROLLER_FTL = "controller.ftl";
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
-    private static Set<Class> baseTypes = new HashSet<>();
+//    private static Set<Class> baseTypes = new HashSet<>();
 
-    private static Set<Class> collectionsTypes = new HashSet<>();
+//    private static Set<Class> collectionsTypes = new HashSet<>();
 
     private static Set<String> notUpdateNames = new HashSet<>();
 
     static {
 
-        baseTypes.add(Integer.class);
-        baseTypes.add(Long.class);
-        baseTypes.add(Boolean.class);
-        baseTypes.add(Short.class);
-        baseTypes.add(Byte.class);
-        baseTypes.add(String.class);
-        baseTypes.add(Double.class);
-        baseTypes.add(Float.class);
-        baseTypes.add(Date.class);
+//        baseTypes.add(String.class);
+//        baseTypes.add(Date.class);
 
-        collectionsTypes.add(List.class);
-        collectionsTypes.add(Set.class);
-        collectionsTypes.add(Map.class);
+//        collectionsTypes.add(Collection.class);
+//        collectionsTypes.add(Map.class);
 
         notUpdateNames.add("addTime");
         notUpdateNames.add("updateTime");
@@ -251,7 +244,7 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
 
-       // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
+        // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
 
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
@@ -782,18 +775,23 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            Class<?> fieldType = ResolvableType.forField(field, resolvableTypeForClass).resolve(field.getType());
+            ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
+            Class<?> fieldType = forField.resolve(field.getType());
 
 
             if (field.getType() != fieldType) {
-                System.out.println("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
+                logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
             }
 
-
-            if (collectionsTypes.contains(fieldType)) {
-                //暂不支持集合类型
+            if (Map.class.isAssignableFrom(fieldType)) {
+                //暂不支持Map
                 continue;
             }
+
+            boolean isCollection = fieldType.isArray() || Collection.class.isAssignableFrom(fieldType);
+
+
+            Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric(0)) : null;
 
 
             FieldModel fieldModel = new FieldModel();
@@ -803,16 +801,16 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setType(fieldType.getSimpleName());
 
             fieldModel.setClassType(fieldType);
+            fieldModel.setSubType(subType);
 
-            fieldModel.setBaseType(baseTypes.contains(fieldType));
+            fieldModel.setBaseType(isBaseType(forField, fieldType));
 
             fieldModel.setEnums(fieldType.isEnum());
-            fieldModel.setCollections(collectionsTypes.contains(fieldType));
 
-            fieldModel.setComplex(!fieldType.isPrimitive()
-                    && !fieldModel.getBaseType()
-                    && !fieldModel.getEnums()
-                    && !fieldModel.getCollections());
+            fieldModel.setCollections(isCollection);
+
+            fieldModel.setComplex(!fieldModel.getBaseType());
+
 
             if (fieldModel.getComplex()) {
                 //得到包名 com.oaknt.udf.entities - com.oaknt.udf.servicess.sample.info;
@@ -966,6 +964,14 @@ public final class ServiceModelCodeGenerator {
         return list;
     }
 
+    private static boolean isBaseType(ResolvableType parent, Class type) {
+        return ClassUtils.isPrimitiveOrWrapper(type)
+                || String.class.isAssignableFrom(type)
+                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()))
+                || type.isEnum()
+                || Date.class.isAssignableFrom(type);
+    }
+
 
     public static String getFieldValue(String fieldName, Object obj) {
         if (fieldName == null || obj == null) {
@@ -1070,6 +1076,8 @@ public final class ServiceModelCodeGenerator {
 
         private Class classType;
 
+        private Class subType;
+
         private String desc;
 
         private String descDetail;
@@ -1083,6 +1091,7 @@ public final class ServiceModelCodeGenerator {
         private Boolean uk = false;//是否唯一键
 
         private Boolean baseType = true;//基础封装类型
+
 
         private Boolean enums = false;//是否enum
 
