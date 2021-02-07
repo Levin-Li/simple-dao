@@ -4,6 +4,7 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.Identifiable;
 import com.levin.commons.dao.domain.TreeObject;
 import com.levin.commons.service.domain.Desc;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -22,29 +23,31 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
     private static final long serialVersionUID = -123456789L;
 
-    @Desc("父ID")
+    @Schema(description = "父ID")
     @Column(name = "parent_id")
     protected ID parentId;
 
-    @Desc("父对象")
+    @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", insertable = false, updatable = false)
     protected T parent;
 
-    @Desc()
+    @Schema(description = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
     @OrderBy(value = "orderCode DESC,name ASC")
 //    @Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 
-    @Desc("类型")
-    @Column(name = "type")
+    @Schema(description = "类型")
+    @Column
     protected String type;
 
-
-    @Desc(name = "ID路径", detail = "id路径，使用|包围，如|1|3|15|")
-    @Column(name = "id_path", length = 1800)
+    @Schema(description = "ID路径， 使用|包围，如|1|3|15|")
+    @Column(length = 1800)
     protected String idPath;
+
+
+
 
     protected AbstractTreeObject() {
     }
@@ -61,18 +64,19 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     }
 
     public void setParent(T parent) {
+
         if (parent == null) {
             this.parent = null;
             this.parentId = null;
         } else {
 
-            if (this.equals(parent))
+            if (this.equals(parent)) {
                 throw new IllegalArgumentException("parent is self");
+            }
 
             this.parent = parent;
             this.parentId = parent.getId();
         }
     }
-
 
 }

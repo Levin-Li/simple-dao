@@ -2,6 +2,7 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.NamedEntityObject;
 import com.levin.commons.service.domain.Desc;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -21,8 +22,8 @@ public abstract class AbstractNamedEntityObject<ID extends Serializable>
 
     private static final long serialVersionUID = -123456789L;
 
-    @Desc("名称")
-    @Column(name = "name", nullable = false)
+    @Schema(description = "名称")
+    @Column(nullable = false)
     protected String name;
 
 

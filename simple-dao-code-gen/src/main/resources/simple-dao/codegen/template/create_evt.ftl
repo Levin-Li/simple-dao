@@ -50,7 +50,7 @@ public class ${className} implements ServiceReq {
 
 <#list fields as field>
 
-    <#if (!field.notUpdate && !field.hasDefValue && field.baseType && !field.lazy && !field.autoIdentity)>
+    <#if (!field.notUpdate && field.baseType && !field.lazy && !field.autoIdentity)>
     @Schema(description = "${field.desc}")
     <#list field.annotations as annotation>
     ${annotation}
