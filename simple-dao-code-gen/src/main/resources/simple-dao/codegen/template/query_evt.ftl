@@ -66,18 +66,15 @@ public class ${className} implements ServiceReq  {
     <#elseif field.baseType>
     @Schema(description = "${field.desc}")
     private ${field.typeName} ${field.name};
-
     <#if field.contains>
     @Schema(description = "${field.desc}")
     @Contains(E_${entityName}.${field.name})
     private ${field.typeName} ${field.name}Contains;
-
     </#if>
     <#elseif field.lazy!>
     @Schema(description = "加载${field.desc}")
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     private Boolean load${field.name?cap_first};
-
     </#if>
 
 </#list>
