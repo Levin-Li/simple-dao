@@ -38,7 +38,7 @@ public abstract class PagingQueryHelper {
      * @param <T>        查询结果
      * @return
      */
-    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto, @Nullable Paging paging) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto, @Nullable Paging paging, Object... otherQueryObjs) {
 
         if (pagingData instanceof Class) {
             pagingData = BeanUtils.instantiateClass((Class<T>) pagingData);
@@ -50,7 +50,7 @@ public abstract class PagingQueryHelper {
         }
 
         if (pagingData == null) {
-            return (T) simpleDao.findByQueryObj(queryDto, paging);
+            return (T) simpleDao.findByQueryObj(queryDto, paging, otherQueryObjs);
         }
 
         //需要总记录数
@@ -108,7 +108,7 @@ public abstract class PagingQueryHelper {
 
             }
 
-            resultList = simpleDao.findByQueryObj(queryDto, paging);
+            resultList = simpleDao.findByQueryObj(queryDto, paging, otherQueryObjs);
 
 
             final Object pagingDataRef = pagingData;

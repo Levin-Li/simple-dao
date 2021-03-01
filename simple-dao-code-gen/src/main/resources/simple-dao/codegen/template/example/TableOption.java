@@ -7,7 +7,7 @@ package ${CLASS_PACKAGE_NAME};
  *
  * //@Entity(name = ModuleTableOption.PREFIX + "exam_tasks")
  * //@Table(name = ModuleTableOption.PREFIX + "exam_tasks")
- * //Auto gen by simple-dao-codegen ${.now}
+ * //Auto gen by simple-dao-codegen ${now}
  *
  */
 public interface TableOption {

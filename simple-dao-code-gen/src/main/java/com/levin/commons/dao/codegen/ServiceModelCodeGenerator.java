@@ -114,7 +114,6 @@ public final class ServiceModelCodeGenerator {
         ////////////////////////服务层////////////////////////////////
 
 
-
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
 
@@ -123,7 +122,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-        params.put("moduleType","service");
+        params.put("moduleType", "service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -138,7 +137,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-        params.put("moduleType","controller");
+        params.put("moduleType", "controller");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -152,7 +151,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-        params.put("moduleType","testcase");
+        params.put("moduleType", "testcase");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -203,7 +202,7 @@ public final class ServiceModelCodeGenerator {
         params.putAll(threadContext.getAll(false));
 
         //是否 testcase
-        params.put("isTestcase",true);
+        params.put("isTestcase", true);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
@@ -253,13 +252,15 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
-        String prefix = serviceDir + File.separator
+        String pkgDir = serviceDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
-                + File.separator + splitAndFirstToUpperCase(moduleName());
+                + File.separator;
+
+        String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
+
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
-
-        // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
+        genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
 
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
@@ -556,7 +557,7 @@ public final class ServiceModelCodeGenerator {
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
 
-                    params.put("isServiceTest",true);
+                    params.put("isServiceTest", true);
                 });
     }
 
@@ -643,7 +644,7 @@ public final class ServiceModelCodeGenerator {
                     params.put("servicePackageName", pkgName);
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
-                    params.put("isService",true);
+                    params.put("isService", true);
                 });
 
 
@@ -656,7 +657,7 @@ public final class ServiceModelCodeGenerator {
             params.put("servicePackageName", servicePackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
-            params.put("isController",true);
+            params.put("isController", true);
         };
 
 
@@ -913,7 +914,7 @@ public final class ServiceModelCodeGenerator {
                 if (aClass instanceof Class) {
                     fieldModel.setInfoClassName(((Class) aClass).getPackage().getName() + "." + ((Class) aClass).getSimpleName());
                 }
-               // fieldModel.setTestValue("null");
+                // fieldModel.setTestValue("null");
             }
 
             //生成注解
@@ -1008,7 +1009,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("new Date()");
                 } else {
 
-                   // fieldModel.setTestValue("null");
+                    // fieldModel.setTestValue("null");
                 }
             }
 
