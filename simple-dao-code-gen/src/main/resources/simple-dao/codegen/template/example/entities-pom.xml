@@ -2,6 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}  -->
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -10,15 +13,21 @@
         <version>${parent.version}</version>
     </parent>
 
-<!--    //Auto gen by simple-dao-codegen ${.now} -->
+<!--    //Auto gen by simple-dao-codegen ${now}-->
 
-    <!--    <groupId>${project.groupId}</groupId> -->
-    <!--    <version>${project.version}</version> -->
+<!--    <groupId>${project.groupId}</groupId> -->
+<!--    <version>${project.version}</version> -->
 
     <artifactId>${project.artifactId}</artifactId>
 
-    <properties>
+    <packaging>${project.packaging}</packaging>
 
-    </properties>
+    <dependencies>
+
+    </dependencies>
+
+    <build>
+
+    </build>
 
 </project>

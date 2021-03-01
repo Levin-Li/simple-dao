@@ -83,7 +83,6 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("modulePackageName", packageName)
                             .put("now", new Date().toString());
 
-
             copyAndReplace(false, resTemplateDir + "TableOption.java", new File(entitiesDir, "TableOption.java"), mapBuilder.build());
 
             copyAndReplace(false, resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
@@ -91,74 +90,102 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
             copyAndReplace(false, resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
 
 
-            if (isPomModule) {
+            if (!isPomModule) {
+                return;
+            }
 
-                final Map<String, String> pluginInfo = getPluginInfo("codegen-plugin.");
+            final Map<String, String> pluginInfo = getPluginInfo("codegen-plugin.");
 
-                mavenProject.getBuildPlugins().stream()
-                        .filter(plugin -> "simple-dao-codegen".equalsIgnoreCase(plugin.getArtifactId()))
-                        .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                        .findAny()
-                        .ifPresent(plugin -> {
+            mavenProject.getBuildPlugins().stream()
+                    .filter(plugin -> "simple-dao-codegen".equalsIgnoreCase(plugin.getArtifactId()))
+                    .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
+                    .findAny()
+                    .ifPresent(plugin -> {
 
-                            logger.info("find codegen plugin: " + plugin);
+                        logger.info("find codegen plugin: " + plugin);
 
-                            pluginInfo.putIfAbsent("codegen-plugin.groupId", plugin.getGroupId());
-                            pluginInfo.putIfAbsent("codegen-plugin.version", plugin.getVersion());
+                        pluginInfo.putIfAbsent("codegen-plugin.groupId", plugin.getGroupId());
+                        pluginInfo.putIfAbsent("codegen-plugin.version", plugin.getVersion());
 
-                            plugin.getDependencies().stream()
-                                    .filter(dependency -> "service-support".equalsIgnoreCase(dependency.getArtifactId()))
-                                    .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                                    .findAny().ifPresent(dependency -> {
+                        plugin.getDependencies().stream()
+                                .filter(dependency -> "service-support".equalsIgnoreCase(dependency.getArtifactId()))
+                                .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
+                                .findAny().ifPresent(dependency -> {
 
-                                logger.info("find service-support: " + dependency);
+                            logger.info("find service-support: " + dependency);
 
-                                pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
-                                pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
-                            });
+                            pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
+                            pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
                         });
+                    });
 
 
-                mapBuilder
-                        .put("parent.groupId", mavenProject.getGroupId())
-                        .put("parent.artifactId", mavenProject.getArtifactId())
-                        .put("parent.version", mavenProject.getVersion())
-                        .put(pluginInfo);
+            mapBuilder
+                    .put("parent.groupId", mavenProject.getGroupId())
+                    .put("parent.artifactId", mavenProject.getArtifactId())
+                    .put("parent.version", mavenProject.getVersion())
+                    .put(pluginInfo);
 
 
-                String pomResFile = "pom.xml";
+            if (hasSubModule) {
 
-                if (hasSubModule) {
+                //生成 POM 文件
 
-                    //生成 POM 文件
+                mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
+                mapBuilder.put("project.artifactId", subModuleName);
 
-                    mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
-                    mapBuilder.put("project.artifactId", subModuleName);
+                mapBuilder.put("project.packaging", "pom");
 
-                    mapBuilder.put("project.packaging", "pom");
+                copyAndReplace(false, resTemplateDir + "root-pom.xml", new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
 
-                    copyAndReplace(false, resTemplateDir + pomResFile, new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
+                //变更父构建名称
+                mapBuilder.put("parent.artifactId", subModuleName);
 
-                    //变更父构建名称
-                    mapBuilder.put("parent.artifactId", subModuleName);
+            }
 
-                    pomResFile = "simple-pom.xml";
-                } else {
+            mapBuilder.put("modules", "");
 
+            mapBuilder.put("project.packaging", "jar");
+
+            //设置构建名称为：父节点的名称加上本节点的名称
+            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : mavenProject.getArtifactId()) + "-" + entitiesModuleDir.getName());
+
+            copyAndReplace(false, resTemplateDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
+
+            String moduleName = hasSubModule ? this.subModuleName : entitiesModuleDir.getName();
+
+            //如果是 root 项目
+            if (mavenProject.isExecutionRoot()) {
+                //直接整个覆盖
+                mapBuilder.put("modules", hasText(moduleName) ? "<module>" + moduleName + "</module>\n" : "");
+
+                if (mavenProject.getParent() == null
+                        || !hasText(mavenProject.getParent().getGroupId())) {
+
+                    mapBuilder.put("parent.groupId", "org.springframework.boot")
+                            .put("parent.artifactId", "spring-boot-starter-parent")
+                            .put("parent.version", "2.3.4.RELEASE");
+                }else {
+                    mapBuilder.put("parent.groupId", mavenProject.getParent().getGroupId())
+                            .put("parent.artifactId", mavenProject.getParent().getArtifactId())
+                            .put("parent.version", mavenProject.getParent().getVersion());
                 }
 
+                //
+                mapBuilder.put("project.groupId", mavenProject.getGroupId())
+                        .put("project.artifactId", mavenProject.getArtifactId())
+                        .put("project.version", mavenProject.getVersion());
 
-                mapBuilder.put("modules", "");
 
-                mapBuilder.put("project.packaging", "jar");
+                File pomFile = new File(basedir, "pom.xml");
 
-                //设置构建名称为：父节点的名称加上本节点的名称
-                mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : mavenProject.getArtifactId()) + "-" + entitiesModuleDir.getName());
+                // 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}
+                boolean overwrite = !FileUtils.readFileToString(pomFile, "utf-8").contains("simple-dao-codegen-flag=" + mapBuilder.build().get("parent.groupId"));
 
-                copyAndReplace(false, resTemplateDir + pomResFile, new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
+                copyAndReplace(overwrite, resTemplateDir + "root-pom.xml", pomFile, mapBuilder.build());
 
-                updatePom(mavenProject, hasSubModule ? this.subModuleName : entitiesModuleDir.getName());
-
+            } else {
+                updatePom(mavenProject, moduleName);
             }
 
         } catch (Exception e) {

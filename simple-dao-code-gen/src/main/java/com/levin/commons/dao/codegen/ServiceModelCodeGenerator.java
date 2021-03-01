@@ -111,6 +111,10 @@ public final class ServiceModelCodeGenerator {
         final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
 
+        ////////////////////////服务层////////////////////////////////
+
+
+
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
 
@@ -119,6 +123,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType","service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -133,25 +138,27 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType","controller");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
 
         params.put("controller", MapUtils.put(key, params.get(key)).build());
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////测试模块//////////////////////////////////////////
 
         pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType","testcase");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
 
 
-        /////////////////////////////////////////////////////
+        ///////////////////////// 修改项目根POM ////////////////////////////
 
 
         File parent = new File(serviceDir, "../../../../pom.xml").getCanonicalFile();
@@ -159,6 +166,7 @@ public final class ServiceModelCodeGenerator {
         StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
 
 
+        //写入模块
         for (String module : modules) {
 
             module = "<module>" + module + "</module>";
@@ -176,6 +184,10 @@ public final class ServiceModelCodeGenerator {
             }
         }
 
+        //写入依赖
+
+        //写入依赖
+
         FileUtils.write(parent, pomContent, "utf-8");
 
     }
@@ -189,6 +201,9 @@ public final class ServiceModelCodeGenerator {
         }
 
         params.putAll(threadContext.getAll(false));
+
+        //是否 testcase
+        params.put("isTestcase",true);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
@@ -540,6 +555,8 @@ public final class ServiceModelCodeGenerator {
                     params.put("servicePackageName", servicePackage());
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
+
+                    params.put("isServiceTest",true);
                 });
     }
 
@@ -626,6 +643,7 @@ public final class ServiceModelCodeGenerator {
                     params.put("servicePackageName", pkgName);
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
+                    params.put("isService",true);
                 });
 
 
@@ -638,6 +656,7 @@ public final class ServiceModelCodeGenerator {
             params.put("servicePackageName", servicePackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
+            params.put("isController",true);
         };
 
 
@@ -849,7 +868,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.getImports().add(getInfoClassImport(subType));
                     fieldModel.setLazy(true);
                     fieldModel.setBaseType(false);
-                }else {
+                } else {
                     fieldModel.getImports().add(subType.getName());
                     fieldModel.setBaseType(isBaseType(forField, subType));
                 }
@@ -894,7 +913,7 @@ public final class ServiceModelCodeGenerator {
                 if (aClass instanceof Class) {
                     fieldModel.setInfoClassName(((Class) aClass).getPackage().getName() + "." + ((Class) aClass).getSimpleName());
                 }
-                fieldModel.setTestValue("null");
+               // fieldModel.setTestValue("null");
             }
 
             //生成注解
@@ -960,6 +979,7 @@ public final class ServiceModelCodeGenerator {
 //            }
 
             String fieldValue = getFieldValue(field.getName(), obj);
+
             if (fieldValue != null) {
                 fieldModel.setHasDefValue(true);
                 fieldModel.setTestValue(fieldValue);
@@ -986,6 +1006,9 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("0.1f");
                 } else if (fieldModel.getType().equals(Date.class)) {
                     fieldModel.setTestValue("new Date()");
+                } else {
+
+                   // fieldModel.setTestValue("null");
                 }
             }
 

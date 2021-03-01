@@ -10,7 +10,7 @@
         <version>${parent.version}</version>
     </parent>
 
-<#--    @Author Auto gen by simple-dao-codegen ${.now} -->
+<#--    @Author Auto gen by simple-dao-codegen ${now} -->
 
     <artifactId>${artifactId}</artifactId>
 
@@ -25,17 +25,6 @@
 
     <repositories>
 
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-
-        <repository>
-            <!-- 仓库首页 https://maven.aliyun.com/ -->
-            <id>aliyun-central仓和jcenter仓的聚合仓</id>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
-
     </repositories>
 
 
@@ -48,13 +37,12 @@
     <dependencies>
 
         <#if entities??>
-        <dependency>
+            <dependency>
+                <artifactId>${entities.artifactId}</artifactId>
+                <groupId>${r"${project.groupId}"}</groupId>
+                <version>${r"${project.version}"}</version>
+            </dependency>
 
-            <artifactId>${entities.artifactId}</artifactId>
-            <groupId>${r"${project.groupId}"}</groupId>
-            <version>${r"${project.version}"}</version>
-
-        </dependency>
         </#if>
 
         <#if services??>
@@ -63,6 +51,7 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
         </#if>
 
 
@@ -72,6 +61,72 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+        </#if>
+
+        <#if moduleType?? && moduleType == 'service'>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-cache</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+        </#if>
+
+        <#if moduleType?? && moduleType == 'controller' >
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <scope>provided</scope>
+            </dependency>
+        </#if>
+
+        <#if moduleType?? && moduleType == 'testcase' >
+
+            <dependency>
+                <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
+                <artifactId>simple-dao-jpa-starter</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-cache</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <scope>test</scope>
+            </dependency>
+
+
         </#if>
 
     </dependencies>
