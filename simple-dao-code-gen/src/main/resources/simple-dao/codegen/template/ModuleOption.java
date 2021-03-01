@@ -13,6 +13,6 @@ public interface ModuleOption {
     /**
      * Module package name
      */
-    String PACKAGE_NAME = "${modulePackageName}";
+    String ID = "${modulePackageName}";
 
 }

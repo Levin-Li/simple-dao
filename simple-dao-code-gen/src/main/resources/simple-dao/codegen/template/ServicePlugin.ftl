@@ -25,7 +25,7 @@ public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware
     @Autowired
     private SimpleDao simpleDao;
 
-    final String pid = ModuleOption.PACKAGE_NAME;
+    final String pid = ModuleOption.ID;
 
     private PluginManager pluginManager;
 
