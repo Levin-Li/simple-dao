@@ -138,7 +138,9 @@ public final class ServiceModelCodeGenerator {
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
         params.put("moduleType", "controller");
+
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
 
         modules.add(pomFile.getParentFile().getName());
 
@@ -252,6 +254,15 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
+        String fileName = "index.html";
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
+
+        fileName = "ModuleWebMvcConfigurer.java";
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), "config", fileName));
+
+
         String pkgDir = serviceDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
@@ -261,11 +272,13 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
         genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
+        genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
 
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+
 
     }
 
@@ -377,6 +390,7 @@ public final class ServiceModelCodeGenerator {
 
         logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
 
+
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
 
@@ -389,6 +403,7 @@ public final class ServiceModelCodeGenerator {
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
             }
         }
+
 
     }
 
@@ -415,6 +430,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     public static List<String> serviceClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> serviceClassNameList(String... addValues) {
         return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
     }
 
@@ -639,6 +658,8 @@ public final class ServiceModelCodeGenerator {
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
+        serviceClassNameList(serviceName);
+
         genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
                 , params -> {
                     params.put("servicePackageName", pkgName);
@@ -665,6 +686,22 @@ public final class ServiceModelCodeGenerator {
         controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
+
+    }
+
+
+    /**
+     *
+     * @param mavenProject
+     * @param controllerDir
+     * @param serviceDir
+     * @param adminUiDir
+     * @param codeGenParams
+     */
+    public static void tryGenAdminUiFile(MavenProject mavenProject, String controllerDir, String serviceDir, String adminUiDir, Map<String, Object> codeGenParams) {
+
+
+
 
     }
 
@@ -1117,6 +1154,7 @@ public final class ServiceModelCodeGenerator {
 
         return e;
     }
+
 
 
     @Data
