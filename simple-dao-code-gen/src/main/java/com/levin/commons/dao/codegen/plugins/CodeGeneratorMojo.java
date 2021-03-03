@@ -154,7 +154,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
             testcaseDir = StringUtils.hasLength(testcaseDir) ? basedir.getAbsolutePath() + "/../" + testcaseDir + "/" + mavenDirStyle : srcDir;
-            adminUiDir = StringUtils.hasLength(adminUiDir) ? basedir.getAbsolutePath() + "/../" + adminUiDir + "/" + mavenDirStyle : srcDir;
+
+            adminUiDir = basedir.getAbsolutePath() + "/../" + adminUiDir;
 
 
             serviceDir = new File(serviceDir).getCanonicalPath();

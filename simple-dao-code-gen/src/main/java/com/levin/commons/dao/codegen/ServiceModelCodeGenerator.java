@@ -691,7 +691,6 @@ public final class ServiceModelCodeGenerator {
 
 
     /**
-     *
      * @param mavenProject
      * @param controllerDir
      * @param serviceDir
@@ -700,8 +699,18 @@ public final class ServiceModelCodeGenerator {
      */
     public static void tryGenAdminUiFile(MavenProject mavenProject, String controllerDir, String serviceDir, String adminUiDir, Map<String, Object> codeGenParams) {
 
+        File adminDir = new File(adminUiDir);
+        adminDir.mkdirs();
 
+        try {
+            if (!new File(adminDir, ".gitignore").exists()) {
+                Runtime.getRuntime().exec("git clone https://gitee.com/zhuox/vma-antd-vue-demo .", new String[0], adminDir).waitFor();
 
+                FileUtils.deleteDirectory(new File(adminDir, ".git"));
+            }
+        } catch (Exception e) {
+            logger.info("git clone fail", e);
+        }
 
     }
 
@@ -1154,7 +1163,6 @@ public final class ServiceModelCodeGenerator {
 
         return e;
     }
-
 
 
     @Data
