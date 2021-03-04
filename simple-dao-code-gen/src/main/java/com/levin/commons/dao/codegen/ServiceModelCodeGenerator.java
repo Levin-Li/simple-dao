@@ -170,16 +170,16 @@ public final class ServiceModelCodeGenerator {
         //写入模块
         for (String module : modules) {
 
-            module = "<module>" + module + "</module>";
+            module = "        <module>" + module + "</module>";
 
             if (pomContent.indexOf(module) == -1) {
 
-                int indexOf = pomContent.indexOf("</modules>");
+                int indexOf = pomContent.indexOf("<modules>");
 
                 if (indexOf == -1) {
-                    pomContent.insert(pomContent.indexOf("</project>"), "<modules>\n" + module + "\n</modules>\n");
+                    pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + module + "\n    </modules>\n");
                 } else {
-                    pomContent.insert(indexOf, "\n" + module + "\n");
+                    pomContent.insert(indexOf + "<modules>".length(), "\n" + module + "\n");
                 }
 
             }
