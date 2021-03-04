@@ -360,12 +360,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-
+                <inherited>true</inherited>
                 <executions>
 
                     <execution>
@@ -375,6 +370,10 @@
                             <goal>flatten</goal>
                         </goals>
                         <configuration>
+
+                            <updatePomFile>true</updatePomFile>
+                            <flattenMode>resolveCiFriendliesOnly</flattenMode>
+
                             <outputDirectory>${project.build.directory}</outputDirectory>
                         </configuration>
                     </execution>
