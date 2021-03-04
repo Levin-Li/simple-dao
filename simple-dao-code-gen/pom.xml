@@ -194,6 +194,17 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <configuration>
+                    <updatePomFile>false</updatePomFile>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 
