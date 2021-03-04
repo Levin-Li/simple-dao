@@ -28,6 +28,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>simple-dao-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact</artifactId>
             <version>${mavenVersion}</version>
@@ -128,14 +134,6 @@
             <version>3.2.0</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>simple-dao-annotations</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
@@ -182,30 +180,6 @@
         </dependency>
 
     </dependencies>
-
-    <build>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.6.0</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
-
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <configuration>
-                    <updatePomFile>false</updatePomFile>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 
 </project>

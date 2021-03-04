@@ -11,7 +11,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
- * @author lilw
+ *  启动类
+ *  @author Auto gen by simple-dao-codegen ${.now}
  */
 @SpringBootApplication
 @Slf4j

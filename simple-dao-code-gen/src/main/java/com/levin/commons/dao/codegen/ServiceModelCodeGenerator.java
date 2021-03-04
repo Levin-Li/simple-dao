@@ -703,11 +703,11 @@ public final class ServiceModelCodeGenerator {
         adminDir.mkdirs();
 
         try {
-            if (!new File(adminDir, ".gitignore").exists()) {
-                Runtime.getRuntime().exec("git clone https://gitee.com/zhuox/vma-antd-vue-demo .", new String[0], adminDir).waitFor();
-
-                FileUtils.deleteDirectory(new File(adminDir, ".git"));
-            }
+//            if (!new File(adminDir, ".gitignore").exists()) {
+//                Runtime.getRuntime().exec("git clone https://gitee.com/zhuox/vma-antd-vue-demo .", new String[0], adminDir).waitFor();
+//
+//                FileUtils.deleteDirectory(new File(adminDir, ".git"));
+//            }
         } catch (Exception e) {
             logger.info("git clone fail", e);
         }

@@ -29,7 +29,10 @@ import ${className};
 </#list>
 
 
-
+/**
+ *  数据初始化
+ *  @author Auto gen by simple-dao-codegen ${.now}
+ */
 @Component
 @Slf4j
 public class DataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {

@@ -1,3 +1,6 @@
+
+#Auto gen by simple-dao-codegen ${.now}
+
 spring:
   application:
     name: example-server
@@ -39,7 +42,9 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
+        #模块表名前缀映射类，重要
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
+
 
   task:
     execution:

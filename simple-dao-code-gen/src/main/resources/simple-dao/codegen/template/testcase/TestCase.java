@@ -47,7 +47,10 @@ import ${className};
 //@DataLdapTest //测试对LDAP的操作
 //@DataMongoTest //测试对MongoDB的操作
 //@DataNeo4jTest //测试对Neo4j的操作
-
+/**
+ *  测试类
+ *  @author Auto gen by simple-dao-codegen ${.now}
+ */
 public class TestCase {
 
     @Autowired
