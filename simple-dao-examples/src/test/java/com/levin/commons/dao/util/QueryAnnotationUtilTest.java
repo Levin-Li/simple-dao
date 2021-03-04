@@ -68,4 +68,5 @@ public class QueryAnnotationUtilTest {
 //        System.out.println(test);
 
     }
+
 }

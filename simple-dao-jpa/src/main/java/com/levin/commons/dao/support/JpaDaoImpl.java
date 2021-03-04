@@ -379,7 +379,6 @@ public class JpaDaoImpl
                 //em.flush();
                 //需要去FLUSH
                 logger.debug("*** tryAutoFlushAndDetachAfterUpdate AUTO_FLUSH");
-
                 threadContext.put(AUTO_FLUSH, true);
             }
 
@@ -1072,7 +1071,6 @@ public class JpaDaoImpl
         } catch (Exception e) {
             logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
         }
-
 
         return paramValue;
     }

@@ -22,6 +22,7 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -58,27 +59,19 @@ public final class ServiceModelCodeGenerator {
     public static final String CONTROLLER_FTL = "controller.ftl";
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
-    private static Set<Class> baseTypes = new HashSet<>();
+//    private static Set<Class> baseTypes = new HashSet<>();
 
-    private static Set<Class> collectionsTypes = new HashSet<>();
+//    private static Set<Class> collectionsTypes = new HashSet<>();
 
     private static Set<String> notUpdateNames = new HashSet<>();
 
     static {
 
-        baseTypes.add(Integer.class);
-        baseTypes.add(Long.class);
-        baseTypes.add(Boolean.class);
-        baseTypes.add(Short.class);
-        baseTypes.add(Byte.class);
-        baseTypes.add(String.class);
-        baseTypes.add(Double.class);
-        baseTypes.add(Float.class);
-        baseTypes.add(Date.class);
+//        baseTypes.add(String.class);
+//        baseTypes.add(Date.class);
 
-        collectionsTypes.add(List.class);
-        collectionsTypes.add(Set.class);
-        collectionsTypes.add(Map.class);
+//        collectionsTypes.add(Collection.class);
+//        collectionsTypes.add(Map.class);
 
         notUpdateNames.add("addTime");
         notUpdateNames.add("updateTime");
@@ -118,6 +111,9 @@ public final class ServiceModelCodeGenerator {
         final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
 
+        ////////////////////////服务层////////////////////////////////
+
+
         File pomFile = new File(serviceDir, "../../../pom.xml").getCanonicalFile();
 
 
@@ -126,6 +122,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType", "service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -140,25 +137,29 @@ public final class ServiceModelCodeGenerator {
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType", "controller");
+
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
+
 
         modules.add(pomFile.getParentFile().getName());
 
         params.put("controller", MapUtils.put(key, params.get(key)).build());
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////测试模块//////////////////////////////////////////
 
         pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
+        params.put("moduleType", "testcase");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
 
 
-        /////////////////////////////////////////////////////
+        ///////////////////////// 修改项目根POM ////////////////////////////
 
 
         File parent = new File(serviceDir, "../../../../pom.xml").getCanonicalFile();
@@ -166,6 +167,7 @@ public final class ServiceModelCodeGenerator {
         StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
 
 
+        //写入模块
         for (String module : modules) {
 
             module = "<module>" + module + "</module>";
@@ -183,6 +185,10 @@ public final class ServiceModelCodeGenerator {
             }
         }
 
+        //写入依赖
+
+        //写入依赖
+
         FileUtils.write(parent, pomContent, "utf-8");
 
     }
@@ -196,6 +202,9 @@ public final class ServiceModelCodeGenerator {
         }
 
         params.putAll(threadContext.getAll(false));
+
+        //是否 testcase
+        params.put("isTestcase", true);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
@@ -245,18 +254,31 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
-        String prefix = serviceDir + File.separator
+        String fileName = "index.html";
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
+
+        fileName = "ModuleWebMvcConfigurer.java";
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), "config", fileName));
+
+
+        String pkgDir = serviceDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
-                + File.separator + splitAndFirstToUpperCase(moduleName());
+                + File.separator;
+
+        String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
+
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
-
-       // genFileByTemplate("TableOption.java", params, prefix + "TableOption.java");
+        genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
+        genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
 
         genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+
 
     }
 
@@ -368,6 +390,7 @@ public final class ServiceModelCodeGenerator {
 
         logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
 
+
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
 
@@ -380,6 +403,7 @@ public final class ServiceModelCodeGenerator {
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
             }
         }
+
 
     }
 
@@ -406,6 +430,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     public static List<String> serviceClassList(String... addValues) {
+        return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
+    }
+
+    public static List<String> serviceClassNameList(String... addValues) {
         return addAndGetValueList(ExceptionUtils.getInvokeMethodName(), addValues);
     }
 
@@ -547,6 +575,8 @@ public final class ServiceModelCodeGenerator {
                     params.put("servicePackageName", servicePackage());
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
+
+                    params.put("isServiceTest", true);
                 });
     }
 
@@ -628,11 +658,14 @@ public final class ServiceModelCodeGenerator {
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
+        serviceClassNameList(serviceName);
+
         genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
                 , params -> {
                     params.put("servicePackageName", pkgName);
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
+                    params.put("isService", true);
                 });
 
 
@@ -645,6 +678,7 @@ public final class ServiceModelCodeGenerator {
             params.put("servicePackageName", servicePackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
+            params.put("isController", true);
         };
 
 
@@ -652,6 +686,31 @@ public final class ServiceModelCodeGenerator {
         controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
+
+    }
+
+
+    /**
+     * @param mavenProject
+     * @param controllerDir
+     * @param serviceDir
+     * @param adminUiDir
+     * @param codeGenParams
+     */
+    public static void tryGenAdminUiFile(MavenProject mavenProject, String controllerDir, String serviceDir, String adminUiDir, Map<String, Object> codeGenParams) {
+
+        File adminDir = new File(adminUiDir);
+        adminDir.mkdirs();
+
+        try {
+            if (!new File(adminDir, ".gitignore").exists()) {
+                Runtime.getRuntime().exec("git clone https://gitee.com/zhuox/vma-antd-vue-demo .", new String[0], adminDir).waitFor();
+
+                FileUtils.deleteDirectory(new File(adminDir, ".git"));
+            }
+        } catch (Exception e) {
+            logger.info("git clone fail", e);
+        }
 
     }
 
@@ -709,6 +768,11 @@ public final class ServiceModelCodeGenerator {
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("fields", fields);
+        params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
+                .reduce(new LinkedHashSet<String>(), (f, s) -> {
+                    f.addAll(s);
+                    return f;
+                }));
 
         params.put("pkField", getPkField(entityClass, fields));
 
@@ -726,7 +790,7 @@ public final class ServiceModelCodeGenerator {
     private static FieldModel getPkField(Class entityClass, List<FieldModel> fields) {
 
         for (FieldModel field : fields) {
-            if (field.getPk()) {
+            if (field.isPk()) {
                 return field;
             }
         }
@@ -755,6 +819,19 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+
+    private static String getInfoClassImport(Class entity) {
+
+        String typePackageName = entity.getPackage().getName();
+
+        typePackageName = typePackageName.replace("entities", "services") + "."
+                + entity.getSimpleName().toLowerCase() + ".info";
+
+        return (typePackageName + ".*");
+
+    }
+
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
 
         Object obj = entityClass.newInstance();
@@ -782,52 +859,70 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            Class<?> fieldType = ResolvableType.forField(field, resolvableTypeForClass).resolve(field.getType());
+            ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
+            Class<?> fieldType = forField.resolve(field.getType());
 
 
             if (field.getType() != fieldType) {
-                System.out.println("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
+                logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
             }
 
-
-            if (collectionsTypes.contains(fieldType)) {
-                //暂不支持集合类型
+            if (Map.class.isAssignableFrom(fieldType)) {
+                //暂不支持Map
+                logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
                 continue;
             }
 
+            boolean isCollection = fieldType.isArray() || Collection.class.isAssignableFrom(fieldType);
+
+            Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
             FieldModel fieldModel = new FieldModel();
             fieldModel.setName(field.getName());
             fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
 
-            fieldModel.setType(fieldType.getSimpleName());
+            fieldModel.setTypeName(fieldType.getSimpleName());
 
-            fieldModel.setClassType(fieldType);
+            fieldModel.setType(fieldType);
+            fieldModel.setSubType(subType);
 
-            fieldModel.setBaseType(baseTypes.contains(fieldType));
+            fieldModel.setBaseType(isBaseType(forField, fieldType));
 
-            fieldModel.setEnums(fieldType.isEnum());
-            fieldModel.setCollections(collectionsTypes.contains(fieldType));
+            fieldModel.setEnumType(fieldType.isEnum());
 
-            fieldModel.setComplex(!fieldType.isPrimitive()
-                    && !fieldModel.getBaseType()
-                    && !fieldModel.getEnums()
-                    && !fieldModel.getCollections());
 
-            if (fieldModel.getComplex()) {
-                //得到包名 com.oaknt.udf.entities - com.oaknt.udf.servicess.sample.info;
+            fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
-                String typePackageName = fieldType.getPackage().getName();
+            fieldModel.imports.add(fieldType.getName());
 
-                typePackageName = typePackageName.replace("entities", "services") + "."
-                        + fieldType.getSimpleName().toLowerCase() + ".info";
-
-                fieldModel.setComplexClassPackageName(typePackageName);
-
-                fieldModel.getImports().add(typePackageName + ".*");
-
-                //  fieldModel.infoClassName =  typePackageName + "." + fieldType.getSimpleName() + "Info";
+            if (subType != null) {
+                fieldModel.imports.add(subType.getName());
             }
+
+            if (fieldModel.isJpaEntity()) {
+
+                fieldModel.getImports().add(getInfoClassImport(fieldType));
+                fieldModel.setTypeName(fieldType.getSimpleName() + "Info");
+
+            }
+
+            if (isCollection && subType != null) {
+
+                String subTypeName = subType.getSimpleName();
+
+                if (subType.isAnnotationPresent(Entity.class)) {
+                    subTypeName = subTypeName + "Info";
+                    fieldModel.getImports().add(getInfoClassImport(subType));
+                    fieldModel.setLazy(true);
+                    fieldModel.setBaseType(false);
+                } else {
+                    fieldModel.getImports().add(subType.getName());
+                    fieldModel.setBaseType(isBaseType(forField, subType));
+                }
+
+                fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
+            }
+
 
             boolean hasSchema = field.isAnnotationPresent(Schema.class);
             Schema schema = field.getAnnotation(Schema.class);
@@ -841,11 +936,11 @@ public final class ServiceModelCodeGenerator {
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
-            fieldModel.setLike(field.isAnnotationPresent(Like.class));
-            fieldModel.setNotUpdate(fieldModel.getPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.getComplex());
-            if (fieldModel.getPk()) {
+            fieldModel.setContains(field.isAnnotationPresent(Like.class));
+            fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
+            if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
-                fieldModel.setIdentity(field.isAnnotationPresent(GeneratedValue.class)
+                fieldModel.setAutoIdentity(field.isAnnotationPresent(GeneratedValue.class)
                         && !field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.AUTO));
             } else {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
@@ -855,7 +950,7 @@ public final class ServiceModelCodeGenerator {
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
-                fieldModel.setComplex(true);
+                fieldModel.setJpaEntity(true);
                 if (field.isAnnotationPresent(ManyToOne.class)) {
                     fieldModel.setLazy(field.getAnnotation(ManyToOne.class).fetch().equals(FetchType.LAZY));
                 } else if (field.isAnnotationPresent(OneToOne.class)) {
@@ -865,13 +960,13 @@ public final class ServiceModelCodeGenerator {
                 if (aClass instanceof Class) {
                     fieldModel.setInfoClassName(((Class) aClass).getPackage().getName() + "." + ((Class) aClass).getSimpleName());
                 }
-                fieldModel.setTestValue("null");
+                // fieldModel.setTestValue("null");
             }
 
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
 
-            if (fieldModel.getRequired()) {
+            if (fieldModel.isRequired()) {
                 annotations.add("@NotNull");
             }
 
@@ -886,8 +981,7 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.getImports().add(SecurityDomain.class.getName());
             }
 
-
-            if (fieldModel.getClassType().equals(String.class)
+            if (fieldModel.getType().equals(String.class)
                     && fieldModel.getLength() != -1
                     && !fieldModel.getName().endsWith("Body")) {
                 boolean isLob = field.isAnnotationPresent(Lob.class);
@@ -927,11 +1021,12 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setAnnotations(annotations);
 
-            if (excess) {
-                buildExcess(entityClass, fieldModel);
-            }
+//            if (excess) {
+//                buildExpandInfo(entityClass, fieldModel);
+//            }
 
             String fieldValue = getFieldValue(field.getName(), obj);
+
             if (fieldValue != null) {
                 fieldModel.setHasDefValue(true);
                 fieldModel.setTestValue(fieldValue);
@@ -943,21 +1038,24 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"" + sn + "\"");
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
-                } else if (fieldModel.enums) {
+                } else if (fieldModel.enumType) {
                     fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
-                } else if (fieldModel.getClassType().equals(Boolean.class)) {
+                } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
-                } else if (fieldModel.getClassType().equals(String.class)) {
+                } else if (fieldModel.getType().equals(String.class)) {
                     fieldModel.setTestValue("\"" + fieldModel.getDesc() + "_1\"");
-                } else if (fieldModel.getClassType().equals(Integer.class) || fieldModel.getClassType().equals(Long.class)) {
+                } else if (fieldModel.getType().equals(Integer.class) || fieldModel.getType().equals(Long.class)) {
                     fieldModel.setTestValue(fieldModel.getName().endsWith("Id")
-                            ? "null" : ("1" + (fieldModel.getClassType().equals(Long.class) ? "L" : "")));
-                } else if (fieldModel.getClassType().equals(Double.class)) {
+                            ? "null" : ("1" + (fieldModel.getType().equals(Long.class) ? "L" : "")));
+                } else if (fieldModel.getType().equals(Double.class)) {
                     fieldModel.setTestValue("0.1d");
-                } else if (fieldModel.getClassType().equals(Float.class)) {
+                } else if (fieldModel.getType().equals(Float.class)) {
                     fieldModel.setTestValue("0.1f");
-                } else if (fieldModel.getClassType().equals(Date.class)) {
+                } else if (fieldModel.getType().equals(Date.class)) {
                     fieldModel.setTestValue("new Date()");
+                } else {
+
+                    // fieldModel.setTestValue("null");
                 }
             }
 
@@ -966,8 +1064,19 @@ public final class ServiceModelCodeGenerator {
         return list;
     }
 
+    private static boolean isBaseType(ResolvableType parent, Class type) {
+        return ClassUtils.isPrimitiveOrWrapper(type)
+                || CharSequence.class.isAssignableFrom(type)
+                || type.isEnum()
+                || Number.class.isAssignableFrom(type)
+                || Date.class.isAssignableFrom(type)
+                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()));
+
+    }
+
 
     public static String getFieldValue(String fieldName, Object obj) {
+
         if (fieldName == null || obj == null) {
             return null;
         }
@@ -980,46 +1089,49 @@ public final class ServiceModelCodeGenerator {
         return value.toString();
     }
 
-    private static void buildExcess(Class entityClass, FieldModel fieldModel) {
+    private static void buildExpandInfo(Class entityClass, FieldModel fieldModel) {
 
         String name = fieldModel.getName();
-        Class type = fieldModel.getClassType();
+        Class type = fieldModel.getType();
 
-        if (fieldModel.getEnums()
-//                && DescriptiveEnum.class.isAssignableFrom(type)
-                && Enum.class.isAssignableFrom(type)
-        ) {
-            //枚举描述
-            fieldModel.setExcessSuffix("Desc");
-            fieldModel.setExcessReturnType("String");
-            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".getDesc() : \"\";");
-        } else if ((type.equals(Integer.class) || type.equals(Long.class))
-                && name.endsWith("Fen")) {
-            //分转元
-            fieldModel.setExcessSuffix("2Yuan");
-            fieldModel.setExcessReturnType("Double");
-            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
-                    "                .divide(new java.math.BigDecimal(100), 2, java.math.BigDecimal.ROUND_HALF_UP)\n" +
-                    "                .doubleValue() : null;");
-        } else if ((type.equals(Integer.class) || type.equals(Long.class))
-                && name.endsWith("Ppt")) {
-            //千分比转百分比
-            fieldModel.setExcessSuffix("2Pct");
-            fieldModel.setExcessReturnType("Double");
-            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
-                    "                .divide(new java.math.BigDecimal(10), 1, java.math.BigDecimal.ROUND_HALF_UP)\n" +
-                    "                .doubleValue() : null;");
-        } else if (fieldModel.getComplex()) {
-            String returnName = type.getSimpleName().substring(0, 1).toUpperCase() + type.getSimpleName().substring(1)
-                    + "Info";
-            String complexName = name.substring(0, 1).toUpperCase() + name.substring(1)
-                    + "Info";
+//        if (fieldModel.isEnumType()
+////                && DescriptiveEnum.class.isAssignableFrom(type)
+//                && Enum.class.isAssignableFrom(type)
+//        ) {
+//            //枚举描述
+//            fieldModel.setExcessSuffix("Desc");
+//            fieldModel.setExcessReturnType("String");
+//            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".getDesc() : \"\";");
+//        } else if ((type.equals(Integer.class) || type.equals(Long.class))
+//                && name.endsWith("Fen")) {
+//            //分转元
+//            fieldModel.setExcessSuffix("2Yuan");
+//            fieldModel.setExcessReturnType("Double");
+//            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
+//                    "                .divide(new java.math.BigDecimal(100), 2, java.math.BigDecimal.ROUND_HALF_UP)\n" +
+//                    "                .doubleValue() : null;");
+//        } else if ((type.equals(Integer.class) || type.equals(Long.class))
+//                && name.endsWith("Ppt")) {
+//            //千分比转百分比
+//            fieldModel.setExcessSuffix("2Pct");
+//            fieldModel.setExcessReturnType("Double");
+//            fieldModel.setExcessReturn("return " + name + " != null ? new java.math.BigDecimal(" + name + ")\n" +
+//                    "                .divide(new java.math.BigDecimal(10), 1, java.math.BigDecimal.ROUND_HALF_UP)\n" +
+//                    "                .doubleValue() : null;");
+//        }
 
-            fieldModel.setExcessSuffix("Info");
-            fieldModel.setExcessReturnType(returnName);
-
-            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".get" + complexName + "() : null;");
-        }
+//        if (fieldModel.isJpaEntity()) {
+//
+//            String returnName = type.getSimpleName().substring(0, 1).toUpperCase() + type.getSimpleName().substring(1)
+//                    + "Info";
+//            String complexName = name.substring(0, 1).toUpperCase() + name.substring(1)
+//                    + "Info";
+//
+//            fieldModel.setExcessSuffix("Info");
+//            fieldModel.setExcessReturnType(returnName);
+//
+//            fieldModel.setExcessReturn("return " + name + " != null ? " + name + ".get" + complexName + "() : null;");
+//        }
 
     }
 
@@ -1064,11 +1176,13 @@ public final class ServiceModelCodeGenerator {
 
         String prefix;
 
-        private String type;
+        private String typeName;
+
+        private Class type;
+
+        private Class subType;
 
         private Integer length = -1;
-
-        private Class classType;
 
         private String desc;
 
@@ -1078,41 +1192,31 @@ public final class ServiceModelCodeGenerator {
 
         private List<String> annotations = new ArrayList<>();
 
-        private Boolean pk = false;//是否主键字段
+        private boolean pk = false;//是否主键字段
 
-        private Boolean uk = false;//是否唯一键
+        private boolean uk = false;//是否唯一键
 
-        private Boolean baseType = true;//基础封装类型
+        private boolean baseType = true;//基础封装类型
 
-        private Boolean enums = false;//是否enum
+        private boolean enumType = false;//是否enum
 
-        private Boolean complex = false;//是否复杂对象
+        private boolean jpaEntity = false;//是否 jpa 对象
 
-        private String complexClassPackageName;//复杂对象包名
+        private boolean required = false;//是否必填
 
-        private Boolean collections = false;//是否集合
+        private boolean autoIdentity; //是否自动增长主键
 
-        private Boolean required = false;//是否必填
+        private boolean notUpdate = false;//是否不需要更新
 
-        private Boolean identity; //是否自动增长主键
+        private boolean hasDefValue = false;//是否有默认值
 
-        private Boolean notUpdate = false;//是否不需要更新
+        private boolean lazy = false;//是否lazy
 
-        private Boolean hasDefValue = false;//是否有默认值
-
-        private Boolean lazy = false;//是否lazy
-
-        private String excessSuffix;//生成额外的字段后缀
-
-        private String excessReturnType;//生成额外的返回类型
-
-        private String excessReturn;//生成额外的返回
+        private boolean contains; //是否生成模糊查询
 
         private String infoClassName;
 
         private String testValue;
-
-        private Boolean like;//是否生成模糊查询
 
     }
 

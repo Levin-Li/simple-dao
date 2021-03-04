@@ -854,6 +854,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         walkObject(null, queryObjs);
     }
 
+
+    /**
+     * 展开嵌套对象
+     *
+     * @param resultList
+     * @param queryObjs
+     * @return
+     */
+    private static List<Object> expand(List resultList, Object... queryObjs) {
+
+        if (resultList == null) {
+            resultList = new ArrayList();
+        }
+
+        if (queryObjs == null) {
+            return resultList;
+        }
+
+        for (Object queryObj : queryObjs) {
+
+            if (queryObj == null) {
+                continue;
+            }
+
+            if (queryObj.getClass().isArray()) {
+                expand(resultList, (Object[]) queryObj);
+            } else {
+                resultList.add(queryObj);
+            }
+
+        }
+
+        return resultList;
+    }
+
     /**
      * 解析对象所有的属性，过滤并调用回调
      *
@@ -864,6 +899,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (queryObjs == null) {
             return;
         }
+
+        List<Object> expand = expand(new ArrayList(queryObjs.length), queryObjs);
+
+        queryObjs = expand.toArray();
 
         setQueryOption(queryObjs);
 

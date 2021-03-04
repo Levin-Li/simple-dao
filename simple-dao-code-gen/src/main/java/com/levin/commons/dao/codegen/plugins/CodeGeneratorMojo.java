@@ -53,6 +53,13 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String testcaseModuleDirName = "testcase";
 
     /**
+     * admin-ui
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "admin-ui")
+    private String adminUiModuleDirName = "admin-ui";
+
+    /**
      * 强制指定模块的包名
      * 默认会自动识别
      */
@@ -141,16 +148,20 @@ public class CodeGeneratorMojo extends BaseMojo {
             String serviceDir = (splitDir && hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
             String controllerDir = (splitDir && hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
             String testcaseDir = (splitDir && hasText(testcaseModuleDirName)) ? dirPrefix + testcaseModuleDirName : "";
+            String adminUiDir = (splitDir && hasText(adminUiModuleDirName)) ? dirPrefix + adminUiModuleDirName : "";
 
 
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
             testcaseDir = StringUtils.hasLength(testcaseDir) ? basedir.getAbsolutePath() + "/../" + testcaseDir + "/" + mavenDirStyle : srcDir;
 
+            adminUiDir = basedir.getAbsolutePath() + "/../" + adminUiDir;
+
 
             serviceDir = new File(serviceDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
             testcaseDir = new File(testcaseDir).getCanonicalPath();
+            adminUiDir = new File(adminUiDir).getCanonicalPath();
 
 
             if (!hasText(moduleName)) {
@@ -158,7 +169,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                 if (projectParent != null
                         && projectParent.getBasedir() != null
                         && new File(projectParent.getBasedir(), "pom.xml").exists()) {
-                    moduleName =  projectParent.getArtifactId();
+                    moduleName = projectParent.getArtifactId();
                 } else {
                     moduleName = mavenProject.getArtifactId();
                 }
@@ -184,6 +195,8 @@ public class CodeGeneratorMojo extends BaseMojo {
                 ServiceModelCodeGenerator.tryGenTestcase(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
                 ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
 
+                //生成界面文件
+                ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, controllerDir, serviceDir, adminUiDir, codeGenParams);
             }
 
             //生成

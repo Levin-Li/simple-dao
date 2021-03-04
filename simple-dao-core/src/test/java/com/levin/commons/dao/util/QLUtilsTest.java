@@ -1,18 +1,22 @@
 package com.levin.commons.dao.util;
 
-import org.junit.Test;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
-import java.util.List;
+import java.io.File;
+import java.util.Arrays;
+
 
 public class QLUtilsTest {
 
-    @Test
-    public void parseSelectColumns() {
+
+    public static void main(String[] args) {
 
 
-        List<String[]> strings = QLUtils.parseSelectColumns(null, "a.bb AS abb,c.bb AS cbb,d.bb");
-
-        System.out.println(strings);
 
     }
+
+
+
+
 }

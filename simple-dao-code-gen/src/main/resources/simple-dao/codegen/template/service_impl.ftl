@@ -44,7 +44,7 @@ public class ${className} implements ${serviceName} {
     private SimpleDao simpleDao;
 
     @Override
-    public  ApiResp<${pkField.type}> create(Create${entityName}Req req) {
+    public  ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
 
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
@@ -61,7 +61,7 @@ public class ${className} implements ${serviceName} {
         BeanUtils.copyProperties(req, entity);
 
     <#list fields as field>
-        <#if field.name == 'sn' && field.type == 'String'>
+        <#if field.name == 'sn' && field.typeName == 'String'>
         String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
         entity.setSn(sn);
         </#if>
@@ -129,7 +129,7 @@ public class ${className} implements ${serviceName} {
     }
 
     @Override
-    public ${entityName}Info findById(${pkField.type} ${pkField.name}) {
+    public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
 
         Query${entityName}Req queryReq = new Query${entityName}Req();
         queryReq.set${pkField.name?cap_first}(${pkField.name});

@@ -23,16 +23,15 @@ import java.util.*;
 
 import ${servicePackageName}.info.*;
 import ${entityClassName};
+
 import ${entityClassPackage}.*;
 
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-        <#list field.imports as imp>
+
+////////////////////////////////////
+<#list importList as imp>
 import ${imp};
-        </#list>
-    </#if>
 </#list>
+////////////////////////////////////
 
 /**
  *  查询${desc}
@@ -54,34 +53,33 @@ public class ${className} implements ServiceReq  {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-    <#if field.type=='Date'>
+
+    <#if field.typeName == 'Date'>
     @Schema(description = "最小${field.desc}")
     @Gte(E_${entityName}.${field.name})
-    private ${field.type} min${field.name?cap_first};
+    private ${field.typeName} min${field.name?cap_first};
 
     @Schema(description = "最大${field.desc}")
     @Lte(E_${entityName}.${field.name})
-    private ${field.type} max${field.name?cap_first};
+    private ${field.typeName} max${field.name?cap_first};
 
-    <#elseif !field.complex>
+    <#elseif field.baseType>
     @Schema(description = "${field.desc}")
-    private ${field.type} ${field.name};
-
-    <#if field.like>
+    private ${field.typeName} ${field.name};
+    <#if field.contains>
     @Schema(description = "${field.desc}")
     @Contains(E_${entityName}.${field.name})
-    private ${field.type} ${field.name}Like;
-
+    private ${field.typeName} ${field.name}Contains;
     </#if>
     <#elseif field.lazy!>
     @Schema(description = "加载${field.desc}")
-    @Fetch(value = E_${entityName}.${field.name}, condition = "#_val==true")
+    @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     private Boolean load${field.name?cap_first};
-
     </#if>
+
 </#list>
 
-    public ${className}(${pkField.type} ${pkField.name}) {
+    public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 }

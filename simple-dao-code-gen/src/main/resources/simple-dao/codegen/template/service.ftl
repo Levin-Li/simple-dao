@@ -19,7 +19,7 @@ import ${packageName}.info.*;
 public interface ${className} {
 
     @Schema(description = "创建${desc}")
-    ApiResp<${pkField.type}> create(Create${entityName}Req req);
+    ApiResp<${pkField.typeName}> create(Create${entityName}Req req);
 
     @Schema(description = "编辑${desc}")
     ApiResp<Void> edit(Edit${entityName}Req req);
@@ -28,7 +28,7 @@ public interface ${className} {
     ApiResp<Void> delete(Delete${entityName}Req req);
 
     @Schema(description = "通过ID查找${desc}")
-    ${entityName}Info findById(${pkField.type} ${pkField.name});
+    ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 
 
    /**

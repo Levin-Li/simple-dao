@@ -19,17 +19,16 @@ import javax.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
-import ${entityClassPackage}.*;
 import ${entityClassName};
 
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-        <#list field.imports as imp>
-import ${imp};
-        </#list>
-    </#if>
+import ${entityClassPackage}.*;
+
+
+////////////////////////////////////
+<#list importList as imp>
+    import ${imp};
 </#list>
+////////////////////////////////////
 
 
 /**
@@ -51,7 +50,7 @@ public class ${className} implements ServiceReq {
     @Schema(description = "${pkField.desc}")
     @NotNull
     @Eq(require = true)
-    private ${pkField.type} ${pkField.name};
+    private ${pkField.typeName} ${pkField.name};
 
 
 }

@@ -2,6 +2,14 @@ package ${packageName};
 
 <#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
+
+/////////////////////////////////////////////////////
+import javax.validation.constraints.*;
+import lombok.*;
+import lombok.experimental.*;
+import java.util.*;
+
+///////////////////////////////////////////////////////
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -12,22 +20,15 @@ import com.levin.commons.dao.annotation.order.*;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
-import javax.validation.constraints.*;
-
-import lombok.*;
-import lombok.experimental.*;
-import java.util.*;
 
 import ${entityClassPackage}.*;
 
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-        <#list field.imports as imp>
+
+////////////////////////////////////
+<#list importList as imp>
 import ${imp};
-        </#list>
-    </#if>
 </#list>
+////////////////////////////////////
 
 
 /**
@@ -48,12 +49,13 @@ public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-    <#if (!field.notUpdate && !field.hasDefValue && !field.complex) || (field.identity?? && !field.identity)>
+
+    <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
     @Schema(description = "${field.desc}")
     <#list field.annotations as annotation>
     ${annotation}
     </#list>
-    private ${field.type} ${field.name};
+    private ${field.typeName} ${field.name};
 
     </#if>
 </#list>

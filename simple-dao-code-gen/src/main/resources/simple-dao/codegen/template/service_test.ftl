@@ -1,22 +1,22 @@
 package ${packageName};
 
+
+import ${entityClassPackage}.*;
+import ${entityClassName};
+
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
-import ${servicePackageName}.info.${entityName}Info;
+import ${servicePackageName}.info.*;
 
 <#list fields as field>
     <#if (field.lzay)??>
-import ${field.classType.package.name}.${field.classType.simpleName};
+        import ${field.classType.package.name}.${field.classType.simpleName};
     </#if>
     <#if (field.infoClassName)??>
-import ${field.infoClassName};
+        import ${field.infoClassName};
     </#if>
 </#list>
-<#list fields as field>
-    <#if !field.baseType && field.enums>
-import ${field.classType.name};
-    </#if>
-</#list>
+
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
@@ -28,6 +28,8 @@ import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -63,7 +65,7 @@ public class ${className} {
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};
 
-    private ${pkField.type} ${pkField.name};
+    private ${pkField.typeName} ${pkField.name};
 
     @Before
     public void before() throws Exception {
@@ -79,15 +81,15 @@ public class ${className} {
 
         Create${entityName}Req req = new Create${entityName}Req();
 <#list fields as field>
-    <#if (!field.notUpdate && field.testValue?? && !field.hasDefValue && !field.complex) || (field.identity?? && !field.identity)>
+    <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefValue && !field.jpaEntity) >
         <#if field.name!="id">
-             req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
+             req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
         </#if>
 
     </#if>
 </#list>
 
-        ApiResp<${pkField.type}> resp = ${serviceName?uncap_first}.create(req);
+        ApiResp<${pkField.typeName}> resp = ${serviceName?uncap_first}.create(req);
 
         log.debug("创建${desc}->" + resp);
 
@@ -102,7 +104,7 @@ public class ${className} {
         Edit${entityName}Req req = new Edit${entityName}Req();
         req.set${pkField.name?cap_first}(${pkField.name});
 <#list fields as field>
-    <#if !field.notUpdate && field.testValue??>
+    <#if !field.notUpdate && field.testValue?? && field.baseType>
         req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
     </#if>
 </#list>
@@ -120,11 +122,11 @@ public class ${className} {
 
         Query${entityName}Req req = new Query${entityName}Req();
 <#list fields as field>
-    <#if field.type=='Date'>
+    <#if field.typeName=='Date'>
         //req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
         //req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
-    <#elseif !field.complex>
-        req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue)});//${field.desc}
+    <#elseif !field.jpaEntity && field.baseType>
+        req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
     <#elseif field.lazy!>
         req.setLoad${field.name?cap_first}(true);//加载${field.desc}
     </#if>

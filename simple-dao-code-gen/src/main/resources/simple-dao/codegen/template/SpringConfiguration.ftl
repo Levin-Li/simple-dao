@@ -16,13 +16,18 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 //spring data scan，jpa querydsl entity class ...
 
-@EntityScan({"${modulePackageName}"})
+@EntityScan({ModuleOption.PACKAGE_NAME})
 
-@ComponentScan("${modulePackageName}")
+@ComponentScan({ModuleOption.PACKAGE_NAME})
 
-@ProxyBeanScan(scanType = EntityRepository.class
-, basePackages = {"${modulePackageName}"}
+@ProxyBeanScan(basePackages = {ModuleOption.PACKAGE_NAME}
+, scanType = EntityRepository.class
 , factoryBeanClass = RepositoryFactoryBean.class)
 public class ${camelStyleModuleName}SpringConfiguration {
+
+
+  public void onInit(){
+
+  }
 
 }

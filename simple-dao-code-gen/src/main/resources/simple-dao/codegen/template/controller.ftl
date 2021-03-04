@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
-
+import ${modulePackageName}.*;
 import ${entityClassPackage}.*;
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
@@ -20,11 +20,10 @@ import org.springframework.util.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
-
+// http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
 
 @RestController
-@RequestMapping("/${entityName?lower_case}")
+@RequestMapping(ModuleOption.API_PATH + "${entityName?lower_case}")
 @Tag(name = "${desc}", description = "${desc}管理")
 @Slf4j
 public class ${className} {
@@ -65,11 +64,11 @@ public class ${className} {
     /**
     * 详情
     *
-    * @param ${pkField.name} ${pkField.type}
+    * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{id}")
     @Operation(summary = "详情${entityName}", description = "${desc}")
-    public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.type} ${pkField.name}) {
+    public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 
