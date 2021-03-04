@@ -108,7 +108,6 @@
     <dependencyManagement>
         <dependencies>
 
-
             <dependency>
                 <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-annotations</artifactId>
@@ -131,7 +130,6 @@
                 <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-jpa-starter</artifactId>
                 <version>${levin.simple-dao.version}</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -144,7 +142,6 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>2.1.2</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>

@@ -19,7 +19,7 @@
 
     <properties>
 
-        <levin.simple-dao.version>2.2.22-SNAPSHOT</levin.simple-dao.version>
+        <levin.simple-dao.version>2.2.23-SNAPSHOT</levin.simple-dao.version>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
@@ -192,6 +192,16 @@
     </dependencies>
 
     <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.6.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
         <plugins>
 
@@ -383,6 +393,23 @@
                         <phase>clean</phase>
                         <goals>
                             <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+
+                <inherited>true</inherited>
+
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>descriptor</goal>
                         </goals>
                     </execution>
                 </executions>
