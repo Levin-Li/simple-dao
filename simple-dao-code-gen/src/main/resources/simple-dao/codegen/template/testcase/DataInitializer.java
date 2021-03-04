@@ -31,7 +31,7 @@ import ${className};
 
 /**
  *  数据初始化
- *  @author Auto gen by simple-dao-codegen ${now}
+ *  @author Auto gen by simple-dao-codegen ${.now}
  */
 @Component
 @Slf4j

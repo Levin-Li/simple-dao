@@ -1,5 +1,5 @@
 
-#Auto gen by simple-dao-codegen ${now}
+#Auto gen by simple-dao-codegen ${.now}
 
 spring:
   application:

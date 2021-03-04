@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  *  启动类
- *  @author Auto gen by simple-dao-codegen ${now}
+ *  @author Auto gen by simple-dao-codegen ${.now}
  */
 @SpringBootApplication
 @Slf4j

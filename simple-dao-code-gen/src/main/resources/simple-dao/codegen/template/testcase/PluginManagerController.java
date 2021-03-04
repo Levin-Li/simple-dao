@@ -16,7 +16,7 @@ import java.util.List;
 /**
  *  全局插件控制器
  *
- *  @author Auto gen by simple-dao-codegen ${now}
+ *  @author Auto gen by simple-dao-codegen ${.now}
  */
 @RestController
 @RequestMapping("/system/plugin")
