@@ -150,7 +150,6 @@
             <artifactId>javax.persistence-api</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
@@ -180,6 +179,94 @@
         </dependency>
 
     </dependencies>
+
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <!-- 打包前进行替换,特别为 gitpack 打包处理 -->
+                    <execution>
+                        <id>replace-plugin.xml</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 自动识别到项目target文件夹 -->
+                            <basedir>${build.directory}</basedir>
+                            <!-- 替换的文件所在目录规则 -->
+                            <includes>
+                                <include>classes/META-INF/maven/plugin.xml</include>
+                            </includes>
+                            <replacements>
+                                <!-- 替换包名 -->
+                                <replacement>
+                                    <token>com.levin.commons.dao</token>
+                                    <value>SIMPLE_DAO_PACKAGE</value>
+                                </replacement>
+
+                                <!-- 替换包名 -->
+                                <replacement>
+                                    <token>com.levin.commons</token>
+                                    <value>${project.groupId}</value>
+                                </replacement>
+
+                                <replacement>
+                                    <token>SIMPLE_DAO_PACKAGE</token>
+                                    <value>com.levin.commons.dao</value>
+                                </replacement>
+
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>replace-plugin-help.xml</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 自动识别到项目target文件夹 -->
+                            <basedir>${build.directory}</basedir>
+                            <!-- 替换的文件所在目录规则 -->
+                            <includes>
+                                <include>classes/META-INF/maven/com.levin.commons/**/*.xml</include>
+                            </includes>
+                            <replacements>
+                                <!-- 替换包名 -->
+                                <replacement>
+                                    <token>com.levin.commons.dao</token>
+                                    <value>SIMPLE_DAO_PACKAGE</value>
+                                </replacement>
+
+                                <!-- 替换包名 -->
+                                <replacement>
+                                    <token>com.levin.commons</token>
+                                    <value>${project.groupId}</value>
+                                </replacement>
+
+                                <replacement>
+                                    <token>SIMPLE_DAO_PACKAGE</token>
+                                    <value>com.levin.commons.dao</value>
+                                </replacement>
+
+                            </replacements>
+                            <preserveDir>false</preserveDir>
+                            <outputDir>classes/META-INF/maven/${project.groupId}/${project.artifactId}</outputDir>
+                        </configuration>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+        </plugins>
+    </build>
 
 
 </project>

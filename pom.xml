@@ -408,14 +408,13 @@
                 <executions>
                     <execution>
                         <id>default-descriptor</id>
-                        <phase>prepare-package</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>descriptor</goal>
                             <goal>addPluginArtifactMetadata</goal>
                         </goals>
                     </execution>
                 </executions>
-
             </plugin>
 
         </plugins>
