@@ -185,6 +185,25 @@
         <plugins>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+
+                <inherited>true</inherited>
+
+                <executions>
+                    <execution>
+                        <id>default-descriptor</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>descriptor</goal>
+                            <goal>addPluginArtifactMetadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+            <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
                 <version>1.5.3</version>
