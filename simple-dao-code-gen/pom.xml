@@ -30,7 +30,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>simple-dao-annotations</artifactId>
-            <version>${project.version}</version>
+            <version>2.2.22</version>
+<!--            <version>${project.version}</version>-->
         </dependency>
 
         <dependency>
