@@ -135,7 +135,7 @@
     </project>
 
 
-##### 2.1.2 生成项目模板文件和示例文件
+##### 2.1.2 生成项目模板和示例文件
 
    在 IDEA 的 Maven 操作面板上双击插件的 gen-project-template 生成模板文件。
    
@@ -150,18 +150,15 @@
     
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
 
-##### 2.1.4 生成代码
+##### 2.1.4 生成代码(在实体模块上双击执行插件!)
 
-   在生成好的实体模块上，双击插件的 gen-code 开始生成代码。
-   ！！！注意是在实体模块上双击执行插件。
-   ！！！注意是在实体模块上双击执行插件。
-   ！！！注意是在实体模块上双击执行插件。
+   在编译成功后的实体模块上，双击插件的 gen-code 开始生成代码。(注意是在实体模块上双击执行插件!)
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
     
    代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码。
          
-##### 2.1.5 启动程序和查看运行结果
+##### 2.1.5 启动testcase程序和查看运行结果
    
    在Maven操作面板上刷新项目，然后启动项目。
     
