@@ -1302,6 +1302,14 @@ public class DaoExamplesTest {
     }
 
     @org.junit.Test
+    public void testSimpleSubQuery(){
+
+        List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
+
+        System.out.println(byQueryObj);
+    }
+
+    @org.junit.Test
     public void testSelectTime() throws Exception {
 
         long millis = System.currentTimeMillis();

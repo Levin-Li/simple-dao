@@ -768,26 +768,31 @@
 
 #### 8.1 手动指定子查询语句(paramExpr属性)
 
-          @Ignore
-          @SelectColumn("score")
-          UserStatDTO selectSubQueryDTO = new UserStatDTO();
-
-          @Ignore
-          @SelectColumn(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = t.id")
-          Map param = new HashMap();
-
-          //子查询，并使用命名参数，命名参数从Map变量中取
-          @NotExists(paramExpr = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
-          Map<String, Object> namedParams = new HashMap<>();
-
-
-          //子查询，子查询将从subQueryDTO查询对象中生成
-          @NotExists
-          UserStatDTO statDTO = new UserStatDTO();
-
-          //子查询产生
-          @Gt("score")
-          UserStatDTO whereSubQueryDTO = new UserStatDTO();
+          @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
+          public class SimpleSubQueryDTO {
+          
+              Paging paging = new PagingQueryReq(1, 20);
+          
+          
+              @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id)")
+              @Select(value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+              int taskCnt = 1;
+          
+              // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
+          
+          
+              @Ignore
+              Integer taskSum;
+          
+              @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
+              Map<String, Object> params = MapUtils.put("p1",(Object) "1").put("p2",2).put("fun","sum").build();
+              //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ?1 ) AS taskSum
+          
+          
+              //总的语句
+              //Select  (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt  ,  (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ?1 ) AS taskSum   From com.levin.commons.dao.domain.User u   Where (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) >   ?2
+              
+          }
 
 
 #### 8.2  使用嵌套查询对象
