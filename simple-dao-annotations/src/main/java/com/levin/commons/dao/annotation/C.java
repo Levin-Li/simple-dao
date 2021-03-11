@@ -77,6 +77,8 @@ public @interface C {
      * <p>
      * 对应数据库的字段名或是 Jpa 实体类的字段名
      *
+     *  通常代表左操作数
+     *
      * @return
      */
     String value() default "";
@@ -184,6 +186,8 @@ public @interface C {
     /**
      * 子查询或是表达式
      *
+     * 通常代表右操作数
+     *
      * @return
      */
 
@@ -192,7 +196,7 @@ public @interface C {
 
     /**
      * 数据类型转换模板
-     * 通常是date类型转换
+     * 通常是date类型转换 ，如： yyyy-MM-dd
      *
      * @return
      */

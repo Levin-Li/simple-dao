@@ -766,28 +766,44 @@
 ### 8 子查询
  
 
-#### 8.1 手动指定子查询语句(paramExpr属性)
+#### 8.1 手动指定子查询语句
 
-          @Ignore
-          @SelectColumn("score")
-          UserStatDTO selectSubQueryDTO = new UserStatDTO();
+    
 
-          @Ignore
-          @SelectColumn(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = t.id")
-          Map param = new HashMap();
-
-          //子查询，并使用命名参数，命名参数从Map变量中取
-          @NotExists(paramExpr = "select name from xxx.tab t where u.id = t.id and t.score > :minScore")
-          Map<String, Object> namedParams = new HashMap<>();
-
-
-          //子查询，子查询将从subQueryDTO查询对象中生成
-          @NotExists
-          UserStatDTO statDTO = new UserStatDTO();
-
-          //子查询产生
-          @Gt("score")
-          UserStatDTO whereSubQueryDTO = new UserStatDTO();
+          @Data
+          @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
+          public class SimpleSubQueryDTO {
+          
+              Paging paging = new PagingQueryReq(1, 20);
+          
+          
+              @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
+              @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
+          
+              @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875" , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+              int taskCnt = 1;
+          
+              @Ignore
+              Integer taskSum = 9876;
+          
+              // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
+          
+              @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
+              Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
+              //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+          
+          
+              //生成的语句
+              //Select  (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt  ,
+              //        (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ?1 ) AS taskSum
+              //From com.levin.commons.dao.domain.User u
+              //Where u.score <   (select sum(score) from com.levin.commons.dao.domain.Task   where user = u.id and 1 =  ?2 )
+              //     AND (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id and 9876 >  ?3  ) >   ?4
+          
+              //生成的参数列表
+             // Params:[9999, {requireTotals=false, requireResultList=true, pageIndex=1, pageSize=20, fromCache=null}, 1, 1, 1, {taskCnt=1, taskSum=9876}]
+          
+          }
 
 
 #### 8.2  使用嵌套查询对象
@@ -886,42 +902,72 @@
 
 #### 10.3 有条件忽略(SPEL表达式)
 
-   大部分的注解都有 condition 属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解有效，如：
+   大部分的注解都有 condition 属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解生效，如下：
 
       @Eq(condition="#_val != null")
+      String name = "Echo";
+      
+  当 condition 设置为空字符串时，表示没有条件，默认为注解生效，如下：
+  
+      @Eq(condition="")
       String name = "Echo";
 
 #### 10.4 变量上下文(重要)
 
   SPEL 中可以使用，任意的查询语句中也都可以使用
   
-  
+ 
   替换变量
   
-      SQL查询占位参数匹配样式：${:paramName} ，如  t.score +  ${:val}  --> t.score +  :?
-      
-      文本替换匹配样式：${paramName}
-       如下：
+      SQL查询参数匹配样式：${:paramName}  如下: 
        
-       @Avg(value = "score",t.score +  ${val}")   表达式会被替换为 t.score + 10
-       Map<String,Object> params = [val:10]
+          t.score +  ${:val}    替换后的语句 -->     t.score +  :?
+          
       
+      文本替换样式：${paramName}   如下：
+      
+       t.score +  ${val}    替换后的语句 -->     t.score +  123 
+       
+       @Avg(value = "score",t.score +  ${val}")  --> 表达式会被替换为 t.score + 10
+       Map<String,Object> params = [val:10]
+       
+      
+        @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
+        Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
+        
+       / /以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+       
+      
+     主要区别是冒号，加了冒号表示替换成参数。
+     
    
+  默认变量-1：
 
-  可用默认变量：
-
-       #_val 表示字段的值
+       _val 表示被注解字段的值
     
-       #_this 表示DTO对象
+       _this 表示DTO对象
     
-       #_name 当前注解所在的字段名
+       _name 表示被注解字段的字段名
     
-       #_isSelect 表示当前是否是SelectDao
+       _isSelect 表示当前是否是SelectDao
     
-       #_isUpdate 表示当前是否是UpdateDao
+       _isUpdate 表示当前是否是UpdateDao
     
-       #_isDelete 表示当前是否是DeleteDao
+       _isDelete 表示当前是否是DeleteDao
+       
+       
+  在 condition 属性上示 SPEL表达式，默认变量名前面需要加 # 号，如下
+  
+        @Eq(condition="#_val != null") //_val 变量名前要加#号
+        String name = "Echo";
+  
+  
+   默认变量-2：查询对象的字段名做为变量名
    
+      
+  
+  
+  
    
    上下文列表（越后面优先级越高）：
    

@@ -8,7 +8,8 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.annotation.update.UpdateColumn;
+//import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
 
@@ -52,7 +53,7 @@ public class UserDTO2 {
     protected String description = "desc";
 
 
-    @UpdateColumn
+    @Update
     protected Date lastUpdateTime = new Date();
 
 }

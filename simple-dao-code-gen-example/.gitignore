@@ -25,9 +25,5 @@ out
 
 
 #做为 demo 不提交生成的代码
-**/controller
-**/services
+**/src
 
-**/spring.factories
-**/SimpleDaoCodeGenExamplePlugin.java
-**/SimpleDaoCodeGenExampleSpringConfiguration.java

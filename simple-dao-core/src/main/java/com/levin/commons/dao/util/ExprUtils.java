@@ -225,7 +225,7 @@ public abstract class ExprUtils {
 
 
         if (!op.isNeedParamExpr() && op.isNeedFieldExpr()) {
-            
+
             // 如果是一个不需参数的操作，把参数中的 Map 类型参数，加入到上下文
             flattenParams(null, holder.value).stream()
                     .filter(v -> v instanceof Map)
@@ -383,8 +383,7 @@ public abstract class ExprUtils {
      */
     private static Object tryConvertToDate(Object data, String... patterns) {
 
-        if (data instanceof CharSequence && !(data instanceof Date)) {
-
+        if (data != null && !(data instanceof Date)) {
             for (String pattern : patterns) {
                 try {
                     return new SimpleDateFormat(pattern).parse(data.toString());
@@ -814,8 +813,16 @@ public abstract class ExprUtils {
 
             final String selfAlias = joinOption.alias();
 
+            if (!StringUtils.hasText(selfAlias)) {
+
+            }
+
+            if (!StringUtils.hasText(selfAlias)) {
+                throw new StatementBuildException(joinOption + ": 多表关联时，JoinOption注解 的 alias 属性必须指定");
+            }
+
             if (aliasMap.containsKey(selfAlias)) {
-                throw new StatementBuildException(joinOption + ": alias 重名");
+                throw new StatementBuildException(joinOption + ": alias 重名 ");
             } else {
                 aliasMap.put(selfAlias, joinOption.entityClass());
             }
@@ -860,6 +867,7 @@ public abstract class ExprUtils {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
             }
 
+            //
             builder.append(" ").append(joinOption.type().name()).append(" join ")
                     .append(fromStatement)
                     .append(" on ").append(targetAlias).append(".").append(targetColumn)

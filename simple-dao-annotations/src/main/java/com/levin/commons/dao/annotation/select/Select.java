@@ -170,7 +170,7 @@ public @interface Select {
      *
      * @return
      */
-    String paramExpr() default "";
+    //String paramExpr() default "";
 
 
     /**
@@ -184,6 +184,7 @@ public @interface Select {
     /**
      * 别名
      * 整个表达后的别名
+     * 默认为字段名
      *
      * @return
      */
