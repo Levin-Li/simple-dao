@@ -1306,7 +1306,7 @@ public class DaoExamplesTest {
 
         List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
 
-        System.out.println(byQueryObj);
+         System.out.println(byQueryObj);
     }
 
     @org.junit.Test

@@ -8,6 +8,8 @@ import java.lang.annotation.*;
  *
  * 连接注解
  *
+ *
+ *
  * @author llw
  * @version 2.0.0
  */
@@ -26,7 +28,7 @@ public @interface JoinOption {
     Fetch.JoinType type() default Fetch.JoinType.Left;
 
     /**
-     * 默认查询的目标实体类
+     * 实体类
      *
      * @return
      */
@@ -42,6 +44,7 @@ public @interface JoinOption {
     /**
      * 别名，必须，并且别名，不允许重名
      * <p>
+     * 自己的别名
      *
      * @return
      */
@@ -50,6 +53,10 @@ public @interface JoinOption {
     /**
      * 连接的列名或是字段名
      *
+     * 默认为主键字段名
+     *
+     * 本表的字段名
+     *
      * @return
      */
     String joinColumn() default "";
@@ -57,7 +64,7 @@ public @interface JoinOption {
     /**
      * 连接的目标的别名
      * <p>
-     * 默认是 @TargetOption注解中的别名
+     * 默认是主表的别名 @TargetOption注解中的别名
      *
      * @return
      */
