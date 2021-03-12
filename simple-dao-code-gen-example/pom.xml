@@ -24,6 +24,8 @@
         <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
+        <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
+
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
