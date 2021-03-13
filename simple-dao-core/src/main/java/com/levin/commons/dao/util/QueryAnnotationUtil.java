@@ -432,6 +432,9 @@ public abstract class QueryAnnotationUtil {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static boolean hasSelectAnnotationField(Class type) {
+        return hasSelectAnnotationField(type, null);
+    }
 
     /**
      * 是否有选择注解的字段
@@ -441,7 +444,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean hasSelectAnnotationField(Class type) {
+    public static boolean hasSelectAnnotationField(Class type, ResolvableType resolvableType) {
 
         if (type == null) {
             return false;
@@ -453,7 +456,9 @@ public abstract class QueryAnnotationUtil {
 
             hasAnno = false;
 
-            ResolvableType resolvableType = ResolvableType.forClass(type);
+            if (resolvableType == null) {
+                resolvableType = ResolvableType.forClass(type);
+            }
 
             List<Field> cacheFields = getCacheFields(type);
 
@@ -465,10 +470,13 @@ public abstract class QueryAnnotationUtil {
                 }
 
                 //如果示复杂对象
-                Class<?> fieldType = ResolvableType.forField(field, resolvableType).resolve(field.getType());
+                ResolvableType forField = ResolvableType.forField(field, resolvableType);
 
-                if (isComplexType(fieldType, null)) {
-                    hasAnno = hasSelectAnnotationField(fieldType);
+                Class<?> fieldType = forField.resolve(field.getType());
+
+                //防止递归
+                if (fieldType != type && isComplexType(fieldType, null)) {
+                    hasAnno = hasSelectAnnotationField(fieldType, forField);
                 }
 
                 if (hasAnno) {
@@ -517,11 +525,13 @@ public abstract class QueryAnnotationUtil {
 
         List<Field> fields = new ArrayList<>();
 
-        if (isRootObjectType(type)
+        if (type == null
+                || isRootObjectType(type)
                 || isPrimitive(type)
                 || isArray(type)
-                || isIgnore(type))
+                || isIgnore(type)) {
             return fields;
+        }
 
         fields.addAll(getFields(type.getSuperclass(), excludeModifiers));
 
