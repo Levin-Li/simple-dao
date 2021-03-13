@@ -105,7 +105,7 @@ public class DaoExamplesTest {
 
     @Before
     public void testGetEntityManager() throws Exception {
-      //  EntityManager entityManager = dao.getEntityManager();
+        //  EntityManager entityManager = dao.getEntityManager();
         Assert.notNull(entityManager);
 
     }
@@ -203,10 +203,10 @@ public class DaoExamplesTest {
     public void initTestData() throws Exception {
 
         try {
-          //  DaoContext.setAutoFlush(false, false);
+            //  DaoContext.setAutoFlush(false, false);
             initTestData2();
         } finally {
-          //  DaoContext.setAutoFlush(false, true);
+            //  DaoContext.setAutoFlush(false, true);
         }
     }
 
@@ -318,6 +318,23 @@ public class DaoExamplesTest {
 
 
 //          System.out.println(resultList);
+    }
+
+
+    @Test
+    public void testSimpleUserQO() {
+
+
+        Object byQueryObj = dao.findByQueryObj(new SimpleUserQO());
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO(), new SimpleUserQO.QResult());
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO());
+
+
+        System.out.println(byQueryObj);
     }
 
     @Test
@@ -972,7 +989,7 @@ public class DaoExamplesTest {
             long st = System.currentTimeMillis();
 
             PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,
-                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true),null);
+                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
 
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
@@ -985,7 +1002,7 @@ public class DaoExamplesTest {
     public void testPagingQueryHelper2() throws Exception {
 
         PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,
-                PagingData.class, new TableJoin3().setRequireTotals(true),null);
+                PagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
     }
@@ -1302,11 +1319,11 @@ public class DaoExamplesTest {
     }
 
     @org.junit.Test
-    public void testSimpleSubQuery(){
+    public void testSimpleSubQuery() {
 
         List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
 
-         System.out.println(byQueryObj);
+        System.out.println(byQueryObj);
     }
 
     @org.junit.Test
