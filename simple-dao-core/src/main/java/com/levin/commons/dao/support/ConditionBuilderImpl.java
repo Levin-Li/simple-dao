@@ -1444,7 +1444,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (validator != null
                 && hasContent(validator.expr())) {
             //如果验证识别
-            if (!Boolean.TRUE.equals(evalTrueExpr(bean, value, name, validator.expr()))) {
+            if (! evalTrueExpr(bean, value, name, validator.expr())) {
                 throw new StatementBuildException(bean.getClass() + " group verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
@@ -1897,7 +1897,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
 
-        return Boolean.TRUE.equals(ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name)));
+        return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
     }
 
 

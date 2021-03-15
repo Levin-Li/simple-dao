@@ -36,7 +36,7 @@ public class SimpleUserQO {
         Integer score;
 
         //有条件的查询状态信息
-        @Select(condition = "isQueryStatus")
+        @Select(condition = "#isQueryStatus")
         String state;
 
     }

@@ -1096,7 +1096,7 @@ public class SelectDaoImpl<T>
 
                     //如果有条件，并且条件不成功
                     if (hasText(fetch.condition())
-                            && !Boolean.TRUE.equals(evalTrueExpr(null, null, null, fetch.condition()))) {
+                            && !evalTrueExpr(null, null, null, fetch.condition())) {
                         return;
                     }
 
