@@ -252,6 +252,20 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+
+    /**
+     * @return
+     */
+    protected Map<String, Object> getLocalContext(boolean autoInit) {
+
+        if (autoInit && this.context == null) {
+            this.context = new ConcurrentReferenceHashMap<>();
+        }
+
+        return this.context;
+    }
+
+
     @Override
     public boolean isSafeLimit() {
         return rowCount > 0 && rowCount <= getDao().getSafeModeMaxLimit();
@@ -948,6 +962,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
 
+            processCtxVar(queryValueObj, fields);
+
             //开始处理字段
             for (Field field : fields) {
 
@@ -957,7 +973,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 }
 
                 ResolvableType fieldRT = ResolvableType.forField(field, rootType);
-
 
                 Class<?> fieldRealType = fieldRT.resolve(field.getType());
 
@@ -992,6 +1007,76 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             whereParamValues.add(QueryAnnotationUtil.copyMap(true, null, ObjectUtil.copyField2Map(queryValueObj, null)));
 
+        }
+    }
+
+    /**
+     * 出来上下文变量
+     *
+     * @param queryValueObj
+     * @param fields
+     */
+    private void processCtxVar(Object queryValueObj, List<Field> fields) {
+
+        //开始处理字段
+        for (Field field : fields) {
+
+            field.setAccessible(true);
+
+            CtxVar ctxVar = field.getAnnotation(CtxVar.class);
+
+            Object fieldValue = null;
+
+            try {
+                fieldValue = field.get(queryValueObj);
+                if (ctxVar == null
+                        || !evalTrueExpr(queryValueObj, fieldValue, field.getName(), ctxVar.condition())) {
+                    continue;
+                }
+            } catch (IllegalAccessException e) {
+                throw new StatementBuildException(field + "条件过滤失败", e);
+            }
+
+            String name = ctxVar.value();
+
+            if (!StringUtils.hasText(name)) {
+                name = field.getName();
+            }
+
+            if (ctxVar.inject()) {
+
+                //如果是强制覆盖，或是原值为 null
+                if (ctxVar.forceOverride()
+                        || fieldValue == null) {
+                    try {
+
+                        List<Map<String, ?>> contexts = buildContextValues(queryValueObj, fieldValue, field.getName());
+
+                        boolean isSpel = name.toUpperCase().trim().startsWith(ExpressionType.SPEL_PREFIX);
+
+                        name = isSpel ? name.trim().substring(ExpressionType.SPEL_PREFIX.length()) : name;
+
+                        Object tmpValue = isSpel ? ExprUtils.evalSpEL(queryValueObj, name, contexts) : ObjectUtil.findValue(name, true, false, contexts);
+
+                        fieldValue = ObjectUtil.convert(tmpValue, field.getType());
+
+                        field.set(queryValueObj, fieldValue);
+
+                    } catch (IllegalAccessException e) {
+                        throw new StatementBuildException(field + "变量注入识别", e);
+                    }
+                }
+
+            } else {
+
+                Map<String, Object> localContext = getLocalContext(true);
+
+                //如果是强制覆盖 或是原有变量等于 null
+                if (ctxVar.forceOverride()
+                        || localContext.get(name) == null) {
+                    localContext.put(name, fieldValue);
+                }
+            }
         }
     }
 
@@ -1359,7 +1444,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (validator != null
                 && hasContent(validator.expr())) {
             //如果验证识别
-            if (!Boolean.TRUE.equals(evalExpr(bean, value, name, validator.expr()))) {
+            if (!Boolean.TRUE.equals(evalTrueExpr(bean, value, name, validator.expr()))) {
                 throw new StatementBuildException(bean.getClass() + " group verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
@@ -1562,7 +1647,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         return ExprUtils.genExpr(c, aroundColumnPrefix(c.domain(), name), complexType, getExpectType(name), holder, getParamPlaceholder(),
                 this::buildSubQuery
-                , buildContextValues(holder.root, holder.value, name));
+                , this.buildContextValues(holder.root, holder.value, name));
     }
 
 
@@ -1762,7 +1847,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return true;
         }
 
-        boolean isOK = evalExpr(root, value, name, conditionExpr);
+        boolean isOK = evalTrueExpr(root, value, name, conditionExpr);
 
 
         Boolean require = ClassUtils.getValue(anno, E_C.require, false);
@@ -1784,28 +1869,35 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr  如果 expr 为 null
      * @return
      */
-    protected <T> T evalExpr(Object root, Object value, String name, String expr) {
+    protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
+
+        /**
+         * 默认是无条件限制
+         */
+        if (!StringUtils.hasText(expr)) {
+            return true;
+        }
 
         //优化性能
         if (C.NOT_NULL.equalsIgnoreCase(expr)) {
 
             if (value == null) {
-                return (T) Boolean.FALSE;
+                return false;
             } else if (value instanceof CharSequence) {
-                return (T) (Boolean) (((CharSequence) value).toString().trim().length() > 0);
+                return (((CharSequence) value).toString().trim().length() > 0);
             } else if (value.getClass().isArray()) {
-                return (T) (Boolean) (Array.getLength(value) > 0);
+                return (Array.getLength(value) > 0);
             } else if (value instanceof Collection) {
-                return (T) (Boolean) (((Collection) value).size() > 0);
+                return (((Collection) value).size() > 0);
             } else if (value instanceof Map) {
-                return (T) (Boolean) (((Map) value).size() > 0);
+                return (((Map) value).size() > 0);
             }
 
-            return (T) Boolean.TRUE;
-
+            return true;
         }
 
-        return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
+
+        return Boolean.TRUE.equals(ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name)));
     }
 
 
@@ -1859,6 +1951,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
+
+    /**
+     * @param root
+     * @param value
+     * @param fieldName
+     * @return
+     */
     public List<Map<String, ? extends Object>> buildContextValues(Object root, Object value, String fieldName) {
 
         List<Map<String, ? extends Object>> contextValues = new ArrayList<>();

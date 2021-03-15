@@ -17,7 +17,6 @@ import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.persistence.Tuple;
 import java.lang.annotation.Annotation;
@@ -1097,7 +1096,7 @@ public class SelectDaoImpl<T>
 
                     //如果有条件，并且条件不成功
                     if (hasText(fetch.condition())
-                            && !Boolean.TRUE.equals(evalExpr(null, null, null, fetch.condition()))) {
+                            && !Boolean.TRUE.equals(evalTrueExpr(null, null, null, fetch.condition()))) {
                         return;
                     }
 

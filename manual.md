@@ -963,7 +963,44 @@
   
   
    默认变量-2：查询对象的字段名做为变量名
+
+
+   默认变量-3：通过 [CtxVar](./simple-dao-annotations/src/main/java/com/levin/commons/dao/CtxVar.java)   注解增加变量。
    
+   通常用于跨类的变量传递，通过 CtxVar 注解配置。 
+   
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleUserQO.QResult.class)
+      public class SimpleUserQO {
+      
+          @Data
+          @NoArgsConstructor
+          public static class QResult {
+      
+              @Select
+              String name;
+      
+              @Select
+              Integer score;
+      
+              //有条件的查询状态信息,变量huo
+              @Select(condition = "isQueryStatus")
+              String status;
+          }
+       
+     
+          @Lt
+          protected Date createTime = new Date();
+      
+          @Ignore
+          String format = "YYYY-MM-DD";
+      
+          @Ignore
+          @CtxVar //把 isQueryStatus 变量注入到当前上下文中
+          boolean isQueryStatus = true;
+      
+      } 
       
   
   

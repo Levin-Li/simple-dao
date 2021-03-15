@@ -970,7 +970,7 @@ public class JpaDaoImpl
 
         Class type = tryFindResultClass(queryObjs);
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectAnnotationField(type);
+        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(type);
 
         SelectDao selectDao = null;
 
@@ -1000,9 +1000,9 @@ public class JpaDaoImpl
             type = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectAnnotationField(type);
+        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(type);
 
-        if (hasSelectAnnotationField && !hasType(type, queryObjs)) {
+        if (hasSelectStatementField && !hasType(type, queryObjs)) {
             return newDao(SelectDao.class, queryObjs, type).find(type);
         }
 
@@ -1018,9 +1018,9 @@ public class JpaDaoImpl
             type = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectAnnotationField(type);
+        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(type);
 
-        if (hasSelectAnnotationField && !hasType(type, queryObjs)) {
+        if (hasSelectStatementField && !hasType(type, queryObjs)) {
             return (E) newDao(SelectDao.class, queryObjs, type).findOne(type);
         }
 

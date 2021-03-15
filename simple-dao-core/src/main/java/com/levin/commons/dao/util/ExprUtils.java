@@ -279,7 +279,6 @@ public abstract class ExprUtils {
         return surroundNotExpr(c, replace(ql, contexts).trim());
     }
 
-
     /**
      * 如果只又一个元素，则只取第一个
      *

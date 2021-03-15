@@ -156,6 +156,14 @@ public @interface Between {
 
 
     /**
+     * 参数之间的最大差值
+     *
+     * @return
+     */
+    long maxDiffValue() default 0;
+
+
+    /**
      * 对整个表达式的包围后缀
      *
      * @return

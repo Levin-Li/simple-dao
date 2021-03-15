@@ -18,6 +18,7 @@ import com.levin.commons.dao.service.dto.UserUpdateEvt;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.dao.support.PagingData;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
@@ -324,6 +325,9 @@ public class DaoExamplesTest {
     @Test
     public void testSimpleUserQO() {
 
+//        Object v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), SimpleUserQO.Fields.isQueryStatus, Collections.emptyList());
+
+//        Assert.isTrue(Boolean.TRUE.equals(v),"");
 
         Object byQueryObj = dao.findByQueryObj(new SimpleUserQO());
 
@@ -331,10 +335,11 @@ public class DaoExamplesTest {
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO(), new SimpleUserQO.QResult());
 
-        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO());
-
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(false));
 
         System.out.println(byQueryObj);
+
+
     }
 
     @Test

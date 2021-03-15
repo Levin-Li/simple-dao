@@ -14,7 +14,6 @@ import com.levin.commons.dao.annotation.select.Select;
 //import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.annotation.update.Update;
 //import com.levin.commons.dao.annotation.update.UpdateColumn;
 import com.levin.commons.service.support.Locker;
 import org.slf4j.Logger;
@@ -432,8 +431,8 @@ public abstract class QueryAnnotationUtil {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static boolean hasSelectAnnotationField(Class type) {
-        return hasSelectAnnotationField(type, null);
+    public static boolean hasSelectStatementField(Class type) {
+        return hasSelectStatementField(type, null);
     }
 
     /**
@@ -444,7 +443,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean hasSelectAnnotationField(Class type, ResolvableType resolvableType) {
+    public static boolean hasSelectStatementField(Class type, ResolvableType resolvableType) {
 
         if (type == null) {
             return false;
@@ -463,8 +462,16 @@ public abstract class QueryAnnotationUtil {
             List<Field> cacheFields = getCacheFields(type);
 
             for (Field field : cacheFields) {
-
-                if (field.isAnnotationPresent(Select.class)) {
+                //如果是统计或是选择注解
+                if (
+                        field.isAnnotationPresent(Select.class)
+                                || field.isAnnotationPresent(Avg.class)
+                                || field.isAnnotationPresent(Count.class)
+                                || field.isAnnotationPresent(GroupBy.class)
+                                || field.isAnnotationPresent(Max.class)
+                                || field.isAnnotationPresent(Min.class)
+                                || field.isAnnotationPresent(Sum.class)
+                ) {
                     hasAnno = true;
                     break;
                 }
@@ -476,7 +483,7 @@ public abstract class QueryAnnotationUtil {
 
                 //防止递归
                 if (fieldType != type && isComplexType(fieldType, null)) {
-                    hasAnno = hasSelectAnnotationField(fieldType, forField);
+                    hasAnno = hasSelectStatementField(fieldType, forField);
                 }
 
                 if (hasAnno) {
