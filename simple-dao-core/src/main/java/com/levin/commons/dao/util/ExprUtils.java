@@ -665,7 +665,7 @@ public abstract class ExprUtils {
 
             String key = matcher.group(2);
 
-//            把占位符，替换掉
+            //把占位符，替换掉
             matcher.appendReplacement(sb, function.apply(key));
         }
 
@@ -845,7 +845,7 @@ public abstract class ExprUtils {
             }
 
             String fromStatement = genFromStatement(tableNameConverter, isNative, joinOption.entityClass(), joinOption.tableOrStatement(), joinOption.alias());
-            ;
+
 
             if (!StringUtils.hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -885,6 +885,11 @@ public abstract class ExprUtils {
 
             if (!StringUtils.hasText(joinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
+            }
+
+            if (isNative) {
+                targetColumn = QueryAnnotationUtil.getColumnName(entityClass, targetColumn);
+                joinColumn = QueryAnnotationUtil.getColumnName(joinOption.entityClass(), joinColumn);
             }
 
             if (columnNameConverter != null) {

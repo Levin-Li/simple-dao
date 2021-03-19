@@ -24,13 +24,16 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
+import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -100,14 +103,23 @@ public abstract class QueryAnnotationUtil {
     //缓存属性
     private static final Map<String, List<Field>> cacheFields = new ConcurrentReferenceHashMap<>();
 
+
     private static final Map<String, Boolean> hasSelectAnnotationCache = new ConcurrentReferenceHashMap<>();
 
+
     public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+    private static final Locker cacheEntityOptionMapLocker = Locker.build();
 
     public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
 
 
-    private static final Locker locker = Locker.build();
+    /**
+     * 实体类字段名和数据库字段名映射关系
+     */
+    protected static final Map<String/* 类名 */, Map<String/* 类字段名 */, String /* 数据库列名 */>> entityFieldNameMap = new ConcurrentReferenceHashMap<>();
+
+    private static final Locker entityFieldNameMapLocker = Locker.build();
+
 
     static {
 
@@ -135,6 +147,69 @@ public abstract class QueryAnnotationUtil {
         return allInstanceMap;
     }
 
+
+    /**
+     * 获取实体类类字段名对应的表列名
+     *
+     * @param entityClass
+     * @param fieldName
+     * @return
+     */
+    public static String getColumnName(Class entityClass, String fieldName) {
+
+        if (entityClass == null || entityClass == Void.class
+                || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
+            return fieldName;
+        }
+
+        if (!entityClass.isAnnotationPresent(Entity.class)) {
+            return fieldName;
+        }
+
+        String key = entityClass.getName();
+
+        Map<String, String> fieldMap = entityFieldNameMap.get(key);
+
+        if (fieldMap == null) {
+
+            synchronized (entityFieldNameMapLocker.getLock(key)) {
+
+                fieldMap = entityFieldNameMap.get(key);
+
+                //等到锁后如果还是为空
+                if (fieldMap == null) {
+
+                    fieldMap = new HashMap<>(7);
+
+                    final Map tempMap = fieldMap;
+
+                    ReflectionUtils.doWithFields(entityClass, field -> {
+
+                        String column = Optional.ofNullable(field.getAnnotation(Column.class))
+                                .map(Column::name)
+                                .filter(StringUtils::hasText)
+                                .orElse(
+                                        Optional.ofNullable(field.getAnnotation(JoinColumn.class))
+                                                .map(JoinColumn::name)
+                                                .filter(StringUtils::hasText)
+                                                .orElse(null)
+                                );
+
+                        if (hasText(column)) {
+                            tempMap.put(fieldName, column);
+                        }
+                    });
+
+                    entityFieldNameMap.put(key, Collections.unmodifiableMap(tempMap));
+                }
+
+            }
+        }
+
+        return fieldMap.getOrDefault(fieldName,fieldName);
+    }
+
+
     /**
      * 获取表名
      *
@@ -153,12 +228,12 @@ public abstract class QueryAnnotationUtil {
             return name;
         }
 
-        name = Optional.ofNullable((Table)entityClass.getAnnotation(Table.class))
-                .filter(( t) -> hasText(t.name()))
+        name = Optional.ofNullable((Table) entityClass.getAnnotation(Table.class))
+                .filter((t) -> hasText(t.name()))
                 .map(Table::name)
                 .orElse(
                         //否则取实体名
-                        Optional.ofNullable((Entity)entityClass.getAnnotation(Entity.class))
+                        Optional.ofNullable((Entity) entityClass.getAnnotation(Entity.class))
                                 .filter(t -> hasText(t.name()))
                                 .map(Entity::name).orElse(
                                 //否则取类名
@@ -198,7 +273,7 @@ public abstract class QueryAnnotationUtil {
 
         Object value = cacheEntityOptionMap.get(className);
 
-        synchronized (locker.getLock(className)) {
+        synchronized (cacheEntityOptionMapLocker.getLock(className)) {
             if (value == null) {
                 value = entityClass.getAnnotation(EntityOption.class);
                 cacheEntityOptionMap.put(className, value != null ? value : Boolean.FALSE);

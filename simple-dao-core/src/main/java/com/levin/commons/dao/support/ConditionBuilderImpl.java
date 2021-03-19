@@ -113,6 +113,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
 
+
     /**
      * 当原生查询时，是否允许名称转换，默认是允许的
      */
@@ -814,13 +815,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected String tryToPhysicalColumnName(String name) {
 
+        //尝试或是字段名
         PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
 
         if (isNative()
                 && enableNameConvert
                 && name != null
                 && namingStrategy != null) {
-
             //转换名称
             return namingStrategy.toPhysicalColumnName(name, null);
         }
@@ -863,13 +864,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return (CB) this;
         }
 
-        //使用 join 语句的方式增加连接语句
-        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
-                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
-                , targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
-        if (hasText(joinStatement)) {
-            join(true, joinStatement);
-        }
 
         this.entityClass = targetOption.entityClass();
 
@@ -888,13 +882,22 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //  this.where(targetOption.fixedCondition());
 
-        //设置limit，如果原来没有设置
 
         if (targetOption.maxResults() > 0) {
             this.rowCount = targetOption.maxResults();
         }
 
         tryUpdateTableName();
+
+        //使用 join 语句的方式增加连接语句
+        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+                , entityClass, tableName, alias, targetOption.joinOptions());
+
+        if (hasText(joinStatement)) {
+            join(true, joinStatement);
+        }
+
 
         return (CB) this;
 
@@ -2022,6 +2025,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         // :?P
 
         String prefix = getText(domain, "", ".", "");
+
+
+        if (isNative()) {
+            column = QueryAnnotationUtil.getColumnName(entityClass, column);
+        }
 
         //如果是原生查询，尝试转换成
         column = tryToPhysicalColumnName(column);

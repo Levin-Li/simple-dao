@@ -395,6 +395,15 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testNativeTableJoinDTO() {
+
+        List<NativeTableJoinDTO> byQueryObj = dao.findByQueryObj(NativeTableJoinDTO.class, new NativeTableJoinDTO());
+
+        System.out.println(byQueryObj);
+
+    }
+
 
     @Test
     public void testJoinAndStat() {
@@ -1290,8 +1299,8 @@ public class DaoExamplesTest {
     public void testJoin2() throws Exception {
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom(  "jpa_dao_test_User u")
-                .join("left join jpa_dao_test_Group g on u.group.id = g.id")
+        List<MulitTableJoinDTO> objects = dao.selectFrom("jpa_dao_test_User u")
+                .join("left join jpa_dao_test_Group g on u.group_id = g.id")
                 .select("u.id AS uid ,g.id AS gid")
 
                 .where("g.id > " + dao.getParamPlaceholder(false), 2L)
@@ -1308,13 +1317,42 @@ public class DaoExamplesTest {
     public void testJoin3() throws Exception {
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom( "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
+        List<MulitTableJoinDTO> objects = dao.selectFrom("jpa_dao_test_User u left join jpa_dao_test_Group g on u.group_id = g.id")
                 .appendByQueryObj(new MulitTableJoinDTO())
                 .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
                 .find(MulitTableJoinDTO.class);
 
+        org.junit.Assert.assertNotNull(objects);
+    }
+
+    /**
+     * 测试混合参数
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testMixParam() throws Exception {
+
+        String columnName = QueryAnnotationUtil.getColumnName(OperationLog.class, E_OperationLog.logText);
+
+        List<User> objects =
+                dao.selectFrom(User.class)
+                        .gt(E_User.score, 1)
+                        .where("id > :mapParam1  and id < :p2 ",
+                                MapUtils.put("mapParam1", "2")
+                                        .put("p1", "123456")
+                                        .put("p2", "23456")
+                                        .build())
+                        .gte(E_User.id, 2)
+                        .find(User.class);
+
+        //From com.levin.commons.dao.domain.User     Where score >   ?1  AND id > :mapParam1  and :p1 < :p2  AND id >=   ?2
+
+
+        OperationLog operationLog = dao.find(OperationLog.class, 1L);
 
         org.junit.Assert.assertNotNull(objects);
+
     }
 
     //@org.junit.Test
@@ -1472,7 +1510,7 @@ public class DaoExamplesTest {
 
         int update = dao.updateByQueryObj(new UserUpdateDTO());
 
-       // Assert.isTrue(update == 1, "更新记录错误");
+        // Assert.isTrue(update == 1, "更新记录错误");
 
         System.out.println(update);
 

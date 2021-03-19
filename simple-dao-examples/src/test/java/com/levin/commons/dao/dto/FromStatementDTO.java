@@ -16,12 +16,12 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(isNative = true,
-        tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
-//        fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
+        tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group_id = g.id"
+       // , fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
 )
 public class FromStatementDTO {
 
-    @Select(value = "u.id", isDistinct = true)
+    @Select(value = "u.id",isDistinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid = 1l;
 
