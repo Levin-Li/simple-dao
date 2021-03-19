@@ -53,6 +53,12 @@ public abstract class ExprUtils {
      */
     private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
 
+
+    /**
+     * 线程安全的解析器
+     */
+    private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+
     /**
      * 核心方法 生成语句，并返回参数
      *
@@ -616,18 +622,20 @@ public abstract class ExprUtils {
      */
     public static <T> T evalSpEL(Object rootObject, String expression, List<Map<String, ? extends Object>> contexts) {
 
-        final EvaluationContext ctx = new StandardEvaluationContext(rootObject);
+        final StandardEvaluationContext ctx = new StandardEvaluationContext(rootObject);
 
         Optional.ofNullable(contexts).ifPresent(
                 maps -> {
                     maps.stream().filter(Objects::nonNull)
-                            .forEach(map -> ((StandardEvaluationContext) ctx).setVariables((Map<String, Object>) map));
+                            .forEachOrdered(map -> ((StandardEvaluationContext) ctx).setVariables((Map<String, Object>) map));
                 }
         );
 
-        ExpressionParser parser = new SpelExpressionParser();
+        // ctx.setBeanResolver();
 
-        return (T) parser.parseExpression(expression).getValue(ctx);
+        // ExpressionParser parser = new SpelExpressionParser();
+
+        return (T) spelExpressionParser.parseExpression(expression).getValue(ctx);
 
     }
 
@@ -777,16 +785,27 @@ public abstract class ExprUtils {
     }
 
 
+    ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
+
+
     /**
      * 自动生成连接语句
      *
-     * @param entityClass
-     * @param tableOrStatement
-     * @param alias
-     * @param joinOptions
+     * @param miniDao
+     * @param isNative            是否是原生查询
+     * @param tableNameConverter  表名转化器
+     * @param columnNameConverter 列名转化器
+     * @param entityClass         主表
+     * @param tableOrStatement    主表
+     * @param alias               主表别名
+     * @param joinOptions         连接选项
      * @return
      */
-    public static String genJoinStatement(MiniDao miniDao, Class entityClass, String tableOrStatement, String alias, JoinOption... joinOptions) {
+    public static String genJoinStatement(MiniDao miniDao, boolean isNative,
+                                          Function<String, String> tableNameConverter,
+                                          Function<String, String> columnNameConverter,
+                                          Class entityClass, String tableOrStatement,
+                                          String alias, JoinOption... joinOptions) {
 
         StringBuilder builder = new StringBuilder();
 
@@ -825,7 +844,8 @@ public abstract class ExprUtils {
                 aliasMap.put(selfAlias, joinOption.entityClass());
             }
 
-            String fromStatement = genFromStatement(joinOption);
+            String fromStatement = genFromStatement(tableNameConverter, isNative, joinOption.entityClass(), joinOption.tableOrStatement(), joinOption.alias());
+            ;
 
             if (!StringUtils.hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -844,8 +864,10 @@ public abstract class ExprUtils {
             String targetColumn = joinOption.joinTargetColumn();
 
             if (!StringUtils.hasText(targetColumn)) {
+
                 //尝试自动获取字段名
                 List<String> refFieldNames = getRefFieldNames(aliasMap.get(targetAlias), joinOption.entityClass());
+
                 if (refFieldNames.size() == 1) {
                     targetColumn = refFieldNames.get(0);
                 }
@@ -865,33 +887,47 @@ public abstract class ExprUtils {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
             }
 
+            if (columnNameConverter != null) {
+                targetColumn = columnNameConverter.apply(targetColumn);
+                joinColumn = columnNameConverter.apply(joinColumn);
+            }
+
             //
             builder.append(" ").append(joinOption.type().name()).append(" join ")
                     .append(fromStatement)
                     .append(" on ").append(targetAlias).append(".").append(targetColumn)
                     .append(" = ").append(selfAlias).append(".").append(joinColumn).append(" ");
-
         }
 
         return builder.toString();
     }
 
-    public static String genFromStatement(JoinOption joinOption) {
-        return genFromStatement(joinOption.entityClass(), joinOption.tableOrStatement(), joinOption.alias());
-    }
 
-    public static String genFromStatement(Class entityClass, String tableOrStatement, String alias) {
+    public static String genFromStatement(Function<String, String> tableNameConverter, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
 
         if (StringUtils.hasText(tableOrStatement)) {
+
             //如果时表达式，不是表名，则加上挂号
             if (tableOrStatement.trim().contains(" ")) {
                 tableOrStatement = "(" + tableOrStatement + ")";
             }
+
         } else if (entityClass != null
                 && !Void.class.getName().equals(entityClass.getName())) {
+
             tableOrStatement = entityClass.getName();
+
+            if (isNative) {
+                //尝试获取表名
+                tableOrStatement = QueryAnnotationUtil.getTableNameByAnnotation(entityClass);
+            }
+
         } else {
             return "";
+        }
+
+        if (tableNameConverter != null) {
+            tableOrStatement = tableNameConverter.apply(tableOrStatement);
         }
 
         return tableOrStatement + " " + nullSafe(alias);
@@ -914,6 +950,7 @@ public abstract class ExprUtils {
         String key = owner.getName() + "_" + fieldClass.getName();
 
         List<String> value = refCache.get(key);
+
 
         if (value == null) {
 
@@ -941,8 +978,11 @@ public abstract class ExprUtils {
             refCache.put(key, value);
         }
 
+
         return value;
     }
+
+    ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
 
 
     public static void main(String[] args) {

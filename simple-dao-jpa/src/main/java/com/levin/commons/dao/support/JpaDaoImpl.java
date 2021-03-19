@@ -9,11 +9,15 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.hibernate.boot.model.naming.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
+import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -133,6 +137,8 @@ public class JpaDaoImpl
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
 
+    private final Integer hibernateVersion;
+
     //    @Autowired
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
@@ -155,13 +161,16 @@ public class JpaDaoImpl
     @Autowired(required = false)
     FormattingConversionService formattingConversionService;
 
-    private final Integer hibernateVersion;
-
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
 
     @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
     private int safeModeMaxLimit = 2000;
+
+
+    @Autowired
+    private HibernateProperties hibernateProperties;
+
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
@@ -282,6 +291,59 @@ public class JpaDaoImpl
             throw new IllegalStateException("entityManager or entityManagerFactory must be set");
         }
 
+    }
+
+    @Override
+    public PhysicalNamingStrategy getNamingStrategy() {
+
+        PhysicalNamingStrategy namingStrategy = DaoContext.getValue(PhysicalNamingStrategy.class.getName(), null);
+
+        if (namingStrategy == null && hibernateProperties.getNaming() != null) {
+
+            String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
+
+            if (!StringUtils.hasText(physicalStrategy)) {
+                physicalStrategy = SpringPhysicalNamingStrategy.class.getName();
+            }
+
+            try {
+
+                Class<?> aClass = ClassUtils.forName(physicalStrategy, this.getClass().getClassLoader());
+
+                namingStrategy = new PhysicalNamingStrategy() {
+
+                    final Map<String, String> nameMapCaches = new ConcurrentReferenceHashMap<>();
+
+                    SpringPhysicalNamingStrategy springPhysicalNamingStrategy = (SpringPhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
+
+                    @Override
+                    public String toPhysicalTableName(String name, Object jdbcEnvironment) {
+                        return springPhysicalNamingStrategy.toPhysicalTableName(Identifier.toIdentifier(name), null).getText();
+                    }
+
+                    @Override
+                    public String toPhysicalColumnName(String name, Object jdbcEnvironment) {
+
+                        String newName = nameMapCaches.get(name);
+
+                        if (!StringUtils.hasText(newName)) {
+                            newName = springPhysicalNamingStrategy.toPhysicalColumnName(Identifier.toIdentifier(name), null).getText();
+                            nameMapCaches.put(name, newName);
+                        }
+
+                        return newName;
+                    }
+                };
+
+                DaoContext.setGlobalValue(PhysicalNamingStrategy.class.getName(), namingStrategy);
+
+            } catch (ClassNotFoundException e) {
+
+            }
+
+        }
+
+        return namingStrategy;
     }
 
     public <V> V getThreadVar(String key, V defaultValue) {
@@ -597,6 +659,7 @@ public class JpaDaoImpl
 
         if (logger.isDebugEnabled()) {
             logger.debug("Jpa Ql:[" + statement + "], Param placeholder:" + getParamPlaceholder(isNative)
+                    + ", native: " + isNative + ", limits :" + start + "," + count
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
@@ -810,7 +873,7 @@ public class JpaDaoImpl
      * @return
      */
     @Override
-    public <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues) {
+    public <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues) {
 
         checkLimit(count);
 
@@ -824,6 +887,7 @@ public class JpaDaoImpl
 
         if (logger.isDebugEnabled()) {
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
+                    + ", native: " + isNative + ", limits :" + start + "," + count
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
         }
 
@@ -954,9 +1018,35 @@ public class JpaDaoImpl
         return clazz != null && clazz != Void.class;
     }
 
+
+
+    @Override
+    public <T> SelectDao<T> forSelect(Object... queryObjs) {
+        return forSelect(null, queryObjs);
+    }
+
+    public <T> SelectDao<T> forSelect(Class type, Object... queryObjs) {
+
+        if (type == null) {
+            type = tryFindResultClass(queryObjs);
+        }
+
+        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(type);
+
+        SelectDao selectDao = null;
+
+        if (hasSelectAnnotationField && !hasType(type, queryObjs)) {
+            selectDao = newDao(SelectDao.class, queryObjs, type);
+        } else {
+            selectDao = newDao(SelectDao.class, queryObjs);
+        }
+
+        return selectDao;
+    }
+
     @Override
     public long countByQueryObj(Object... queryObjs) {
-        return newDao(SelectDao.class, queryObjs).count();
+        return forSelect(queryObjs).count();
     }
 
     @Override
@@ -970,20 +1060,11 @@ public class JpaDaoImpl
 
         Class type = tryFindResultClass(queryObjs);
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(type);
-
-        SelectDao selectDao = null;
-
-        if (hasSelectAnnotationField && !hasType(type, queryObjs)) {
-            selectDao = newDao(SelectDao.class, queryObjs, type);
-        } else {
-            selectDao = newDao(SelectDao.class, queryObjs);
-        }
+        SelectDao selectDao = forSelect(queryObjs);
 
         return new TRS<E>()
                 .setTotals(selectDao.count())
                 .setResultList((List<E>) selectDao.find(type));
-
     }
 
 
@@ -1000,19 +1081,12 @@ public class JpaDaoImpl
             type = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(type);
-
-        if (hasSelectStatementField && !hasType(type, queryObjs)) {
-            return newDao(SelectDao.class, queryObjs, type).find(type);
-        }
-
-        return newDao(SelectDao.class, queryObjs).find(type);
+        return forSelect(type, queryObjs).find(type);
     }
 
 
     @Override
     public <E> E findOneByQueryObj(Class<E> type, Object... queryObjs) {
-
 
         if (type == null) {
             type = tryFindResultClass(queryObjs);
@@ -1023,7 +1097,6 @@ public class JpaDaoImpl
         if (hasSelectStatementField && !hasType(type, queryObjs)) {
             return (E) newDao(SelectDao.class, queryObjs, type).findOne(type);
         }
-
 
         return (E) newDao(SelectDao.class, queryObjs).findOne(type);
     }

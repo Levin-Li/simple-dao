@@ -42,8 +42,6 @@ public class SelectDaoImpl<T>
 
     private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
 
-    transient MiniDao dao;
-
     //选择
     final SimpleList<String> selectColumns = new SimpleList<>(true, new ArrayList(5), DELIMITER);
 
@@ -74,7 +72,6 @@ public class SelectDaoImpl<T>
 
     boolean hasStatColumns = false;
 
-
     Class resultType;
 
 
@@ -87,45 +84,37 @@ public class SelectDaoImpl<T>
     }
 
     public SelectDaoImpl(MiniDao dao, boolean isNative) {
-        super(isNative);
-        this.dao = dao;
+        super(dao, isNative);
+
     }
 
+    @Deprecated
     public SelectDaoImpl(MiniDao dao, boolean isNative, String fromStatement) {
 
-        super(isNative);
+        super(dao, isNative);
 
-        this.dao = dao;
 
         this.fromStatement = fromStatement;
 
         if (!hasText(fromStatement)) {
             throw new IllegalArgumentException("fromStatement is null");
         }
-
     }
 
-    public SelectDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public SelectDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
 
-    public SelectDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public SelectDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
 
     @Override
     protected void setFromStatement(String fromStatement) {
         //没有内容
         if (!hasText(this.fromStatement)
-                && (entityClass == null || entityClass == Void.class)
+                && !hasEntityClass()
                 && !hasText(this.tableName)) {
             this.fromStatement = fromStatement;
         }
@@ -809,6 +798,8 @@ public class SelectDaoImpl<T>
             }
         }
 
+        builder.append(" ").append(lastStatements);
+
         if (this.isSafeMode() && !isCountQueryResult && !hasText(whereStatement) && !isSafeLimit()) {
             throw new DaoSecurityException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().getSafeModeMaxLimit() + "], SQL[" + builder + "]");
         }
@@ -843,8 +834,8 @@ public class SelectDaoImpl<T>
         }
 
 
-        return count("Select Count(" + column + ") " + genQL(true), getDaoContextValues(), whereParamValues, havingParamValues);
-
+        return count("Select Count(" + column + ") " + genQL(true)
+                , getDaoContextValues(), whereParamValues, havingParamValues, lastStatementParamValues);
     }
 
     /**
@@ -878,7 +869,8 @@ public class SelectDaoImpl<T>
                 , selectParamValues
                 , whereParamValues
                 , groupByParamValues
-                , havingParamValues);
+                , havingParamValues
+                , lastStatementParamValues);
     }
 
     /**

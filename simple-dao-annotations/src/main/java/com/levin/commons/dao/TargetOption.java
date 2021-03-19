@@ -1,7 +1,5 @@
 package com.levin.commons.dao;
 
-import lombok.experimental.FieldNameConstants;
-
 import java.lang.annotation.*;
 
 /**
@@ -23,12 +21,45 @@ import java.lang.annotation.*;
 @Inherited
 public @interface TargetOption {
 
+
+    /**
+     * 是否是原生查询，默认 false
+     *
+     * @return
+     */
+    boolean isNative() default false;
+
     /**
      * 默认查询的目标实体类
      *
      * @return
      */
     Class entityClass() default Void.class;
+
+    /**
+     * 表名
+     * 表名有定义时表名优先
+     *
+     * @return
+     */
+    String tableName() default "";
+
+
+    /**
+     * from 字句
+     * <p>
+     * 仅对查询有效，对更新和删除操作无效，别名属性也将无效
+     * <p>
+     * fromStatement 优先级最高
+     * <p>
+     * <p>
+     * 不建议使用，下个版本将放弃
+     *
+     * @return
+     * @deprecated 使用joinOptions 替代
+     */
+//    @Deprecated
+//    String fromStatement() default "";
 
 
     /**
@@ -39,13 +70,6 @@ public @interface TargetOption {
      */
     Class resultClass() default Void.class;
 
-    /**
-     * 表名
-     *
-     * @return
-     */
-    String tableName() default "";
-
 
     /**
      * 别名
@@ -55,18 +79,6 @@ public @interface TargetOption {
      * @return
      */
     String alias() default "";
-
-
-    /**
-     * from 字句
-     * <p>
-     * 更新和删除操作，此属性无意义
-     *
-     * @deprecated 使用joinOptions 替代
-     * @return
-     */
-    @Deprecated
-    String fromStatement() default "";
 
 
     /**
@@ -91,6 +103,7 @@ public @interface TargetOption {
 
     /**
      * 查询的最大结果集记录数
+     * 或是更新的最大记录数
      *
      * @return
      */

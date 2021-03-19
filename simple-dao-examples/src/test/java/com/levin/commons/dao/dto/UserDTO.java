@@ -18,7 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.Date;
 
 
-@TargetOption(entityClass = User.class, alias = "u", maxResults = 100, fromStatement = "jpa_dao_test_User")
+@TargetOption(entityClass = User.class, alias = "u", maxResults = 100, tableName = "jpa_dao_test_User")
 public class UserDTO {
 
 

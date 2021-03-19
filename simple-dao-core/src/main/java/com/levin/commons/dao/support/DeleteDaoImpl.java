@@ -22,7 +22,6 @@ public class DeleteDaoImpl<T>
         extends ConditionBuilderImpl<T, DeleteDao<T>>
         implements DeleteDao<T> {
 
-    transient MiniDao dao;
 
     {
         //默认为安全模式
@@ -30,33 +29,25 @@ public class DeleteDaoImpl<T>
     }
 
     public DeleteDaoImpl() {
-        this(true, null);
+        this(null, true);
     }
 
-    public DeleteDaoImpl(boolean isNative, MiniDao dao) {
-        super(isNative);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative) {
+        super(dao, isNative);
     }
 
-    public DeleteDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-    public DeleteDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
 
 //    @Override
 //    protected String getParamPlaceholder() {
 //        return dao.getParamPlaceholder(isNative());
 //    }
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
 
     @Override
     public String genFinalStatement() {
@@ -81,11 +72,15 @@ public class DeleteDaoImpl<T>
                     .append(genEntityStatement())
                     .append(" Set ")
                     .append(genLogicDeleteExpr(getEntityOption(), Op.Eq))
-                    .append(genWhereStatement(EntityOption.Action.LogicalDelete));
+                    .append(genWhereStatement(EntityOption.Action.LogicalDelete))
+                    .append(" ").append(lastStatements)
+                    .append(getLimitStatement());
         } else {
             ql.append("Delete ")
                     .append(genFromStatement())
-                    .append(genWhereStatement(EntityOption.Action.Delete));
+                    .append(genWhereStatement(EntityOption.Action.Delete))
+                    .append(" ").append(lastStatements)
+                    .append(getLimitStatement());
 
         }
 
@@ -104,7 +99,7 @@ public class DeleteDaoImpl<T>
 
         List flattenParams = QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
-                , whereParamValues);
+                , whereParamValues, lastStatementParamValues);
 
         if (isLogicDelete) {
             flattenParams.add(0, convertLogicDeleteValue(getEntityOption()));
@@ -136,7 +131,7 @@ public class DeleteDaoImpl<T>
         if (!disableDel) {
             ////如果能物理删除，先尝试物理删除
             try {
-               // if (true) throw new StatementBuildException("mock delete error");
+                // if (true) throw new StatementBuildException("mock delete error");
                 return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
             } catch (Exception e) {
                 ex = e;

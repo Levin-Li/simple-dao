@@ -47,6 +47,15 @@ public interface MiniDao {
         return false;
     }
 
+    /**
+     * 获取命名策略
+     *
+     * @return
+     */
+    default PhysicalNamingStrategy getNamingStrategy() {
+        return null;
+    }
+
 
     /**
      * 获取表或是实体的主键名称
@@ -107,5 +116,5 @@ public interface MiniDao {
      * @param <T>
      * @return
      */
-    <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues);
+    <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues);
 }

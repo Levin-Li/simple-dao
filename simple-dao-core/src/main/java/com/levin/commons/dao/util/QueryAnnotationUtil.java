@@ -24,10 +24,14 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  *
@@ -89,7 +93,7 @@ public abstract class QueryAnnotationUtil {
     @Update
 //    @UpdateColumn
 
-    private static final Map<String, Annotation> allInstanceMap = new HashMap<>();
+    private static final Map<String, Annotation> allInstanceMap;
 
     //条件表达式
 
@@ -100,25 +104,71 @@ public abstract class QueryAnnotationUtil {
 
     public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
 
+    public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
+
+
     private static final Locker locker = Locker.build();
 
     static {
-        synchronized (allInstanceMap) {
-            if (allInstanceMap.size() < 1) {
-                try {
-                    Annotation[] annotations = QueryAnnotationUtil.class.getDeclaredField("allInstanceMap").getDeclaredAnnotations();
-                    for (Annotation annotation : annotations) {
-                        allInstanceMap.put(annotation.annotationType().getSimpleName(), annotation);
-                    }
-                } catch (NoSuchFieldException e) {
-                    throw new RuntimeException(e);
-                }
+
+        Map<String, Annotation> temp = new HashMap<>(64);
+
+        try {
+            Annotation[] annotations = QueryAnnotationUtil.class.getDeclaredField("allInstanceMap").getDeclaredAnnotations();
+            for (Annotation annotation : annotations) {
+                temp.put(annotation.annotationType().getSimpleName(), annotation);
             }
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
+
+        //不可修改的
+        allInstanceMap = Collections.unmodifiableMap(temp);
     }
 
+    /**
+     * 获取所有注解
+     *
+     * @return
+     */
     public static Map<String, Annotation> getAllAnnotations() {
-        return new HashMap<>(allInstanceMap);
+        return allInstanceMap;
+    }
+
+    /**
+     * 获取表名
+     *
+     * @param entityClass
+     * @return
+     */
+    public static String getTableNameByAnnotation(Class entityClass) {
+
+        if (entityClass == null) {
+            return null;
+        }
+
+        String name = entityTableNameCaches.get(entityClass.getName());
+
+        if (hasText(name)) {
+            return name;
+        }
+
+        name = Optional.ofNullable((Table)entityClass.getAnnotation(Table.class))
+                .filter(( t) -> hasText(t.name()))
+                .map(Table::name)
+                .orElse(
+                        //否则取实体名
+                        Optional.ofNullable((Entity)entityClass.getAnnotation(Entity.class))
+                                .filter(t -> hasText(t.name()))
+                                .map(Entity::name).orElse(
+                                //否则取类名
+                                entityClass.getSimpleName()
+                        )
+                );
+
+        entityTableNameCaches.put(entityClass.getName(), name);
+
+        return name;
     }
 
 
@@ -208,11 +258,13 @@ public abstract class QueryAnnotationUtil {
 
         List<Annotation> result = new ArrayList<>(2);
 
-        if (annotations == null)
+        if (annotations == null) {
             return result;
+        }
 
-        if (excludeTypes == null)
+        if (excludeTypes == null) {
             excludeTypes = new Class[0];
+        }
 
         for (Annotation anno : annotations) {
 
@@ -267,7 +319,7 @@ public abstract class QueryAnnotationUtil {
      */
     public static Class getFieldType(Class<?> type, String propertyName) {
 
-        if (type == null || !StringUtils.hasText(propertyName)) {
+        if (type == null || !hasText(propertyName)) {
             return null;
         }
 
@@ -343,7 +395,7 @@ public abstract class QueryAnnotationUtil {
 //            ReflectionUtils.rethrowRuntimeException(e);
         }
 
-        if (!StringUtils.hasText(newKey)
+        if (!hasText(newKey)
                 && entityClass != null
                 && ReflectionUtils.findField(entityClass, name) == null) {
 
@@ -361,7 +413,7 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-        return (StringUtils.hasText(newKey)) ? newKey : name;
+        return (hasText(newKey)) ? newKey : name;
 
     }
 
@@ -375,8 +427,9 @@ public abstract class QueryAnnotationUtil {
      */
     public static <A extends Annotation> A findFirstMatched(Annotation[] annotations, Class<? extends Annotation>... types) {
 
-        if (annotations == null || types == null)
+        if (annotations == null || types == null) {
             return null;
+        }
 
         for (Annotation annotation : annotations) {
 
@@ -650,7 +703,7 @@ public abstract class QueryAnnotationUtil {
 
 
     private static boolean isNull(Object value, boolean isFilterEmptyString) {
-        return value == null || (isFilterEmptyString && value instanceof CharSequence && !StringUtils.hasText((CharSequence) value));
+        return value == null || (isFilterEmptyString && value instanceof CharSequence && !hasText((CharSequence) value));
     }
 
 

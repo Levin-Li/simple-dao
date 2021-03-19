@@ -37,6 +37,20 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T limit(int rowStartPosition, int rowCount);
 
     /**
+     * 允许自动追加 limit 语句
+     * 默认是不允许的
+     * 查询也是不允许的
+     * <p>
+     * 这个方法用于更新或是删除时，限制记录数
+     * <p>
+     * 请注意，通常只对 Mysql 的 limit 语法兼容
+     *
+     * @return
+     */
+    T enableAutoAppendLimitStatement();
+
+
+    /**
      * 设置的分页
      *
      * @param pageIndex 第几页，从1开始
@@ -62,6 +76,21 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @return
      */
     boolean isSafeLimit();
+
+
+    /**
+     * 禁用表名和字段名称转换
+     * <p>
+     * 当原生查询模式时，默认字段名称会自动装换，但也会影响性能
+     * <p>
+     * 如果你确认字段名称正确，建议你调用这个方法
+     *
+     * <p>
+     * 禁用名称转换
+     *
+     * @return
+     */
+    T disableNameConvert();
 
 
     /**
@@ -95,6 +124,17 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T where(Boolean isAppend, String expr, Object... paramValues);
 
+    /**
+     * 把表达式加到最后
+     * <p>
+     * 比如 加 limits 的一些操作
+     *
+     * @param isAppend
+     * @param expr
+     * @param paramValues
+     * @return
+     */
+    T appendToLast(Boolean isAppend, String expr, Object... paramValues);
 
     /**
      * 自动把对象的所有属性枚举出来
@@ -169,7 +209,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @return this
      */
     T appendByAnnotations(Boolean isAppend, @NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes);
-
 
     ///////////////////////////////////////////////////////////////////////////////
 

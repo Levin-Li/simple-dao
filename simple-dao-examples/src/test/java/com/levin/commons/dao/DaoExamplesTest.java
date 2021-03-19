@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
@@ -321,11 +322,25 @@ public class DaoExamplesTest {
 //          System.out.println(resultList);
     }
 
+    @Test
+    public void testSPEL() {
+
+        Object v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), "#ABC", Collections.emptyList());
+
+        Assert.isNull(v, "true");
+
+        Map<String, ? extends Object> abc = MapUtils.put("ABC", (Object) this.hashCode()).build();
+
+        v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), "#ABC", Arrays.asList(abc));
+
+        Assert.isTrue(v.equals(this.hashCode()), "true");
+
+    }
+
 
     @Test
     public void testSimpleUserQO() {
 
-//        Object v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), SimpleUserQO.Fields.isQueryStatus, Collections.emptyList());
 
 //        Assert.isTrue(Boolean.TRUE.equals(v),"");
 
@@ -1275,7 +1290,7 @@ public class DaoExamplesTest {
     public void testJoin2() throws Exception {
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom(false, "jpa_dao_test_User u")
+        List<MulitTableJoinDTO> objects = dao.selectFrom(  "jpa_dao_test_User u")
                 .join("left join jpa_dao_test_Group g on u.group.id = g.id")
                 .select("u.id AS uid ,g.id AS gid")
 
@@ -1293,7 +1308,7 @@ public class DaoExamplesTest {
     public void testJoin3() throws Exception {
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom(false, "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
+        List<MulitTableJoinDTO> objects = dao.selectFrom( "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
                 .appendByQueryObj(new MulitTableJoinDTO())
                 .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
                 .find(MulitTableJoinDTO.class);
@@ -1330,7 +1345,63 @@ public class DaoExamplesTest {
         List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
 
         System.out.println(byQueryObj);
+
     }
+
+    @Test
+    public void testNativeSQL() {
+
+        EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
+
+        int n = dao.updateTo(E_User.ENTITY_NAME, "u")
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 3)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 3, "更新记录数错误1");
+
+
+        n = dao.updateTo(E_User.CLASS_NAME, "u")
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 1)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 1, "更新记录数错误2");
+
+
+        n = dao.updateByNative(User.class, E_User.ALIAS)
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 5)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 5, "更新记录数错误3");
+
+
+        System.out.println(n);
+
+    }
+
 
     @org.junit.Test
     public void testSelectTime() throws Exception {
@@ -1399,10 +1470,9 @@ public class DaoExamplesTest {
 
         UpdateDao<User> updateDao = dao.updateTo(User.class, "u");
 
-        int update = updateDao
-                //对象不为null的属性做为查询条件
-                .appendByQueryObj(new UserUpdateDTO())
-                .update();
+        int update = dao.updateByQueryObj(new UserUpdateDTO());
+
+       // Assert.isTrue(update == 1, "更新记录错误");
 
         System.out.println(update);
 

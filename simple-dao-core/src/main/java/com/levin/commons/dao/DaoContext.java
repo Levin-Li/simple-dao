@@ -38,11 +38,15 @@ public abstract class DaoContext {
      * @param <T>
      * @return
      */
-    public static <T> T getValue(String key, boolean defaultValue) {
+    public static <T> T getValue(String key, T defaultValue) {
 
         T value = threadContext.get(key);
 
         return value != null ? value : globalContext.get(key, defaultValue);
+    }
+
+    public static <T> T setGlobalValue(String key, T defaultValue) {
+        return globalContext.put(key, defaultValue);
     }
 
     /**

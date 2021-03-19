@@ -10,26 +10,32 @@ import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
+import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(isNative = true,
-        tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
-//        fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
-)
-public class FromStatementDTO {
+@TargetOption(
+        isNative = true,
+        entityClass = User.class, alias = E_User.ALIAS,
+        resultClass = NativeTableJoinDTO.class,
+        isSafeMode = false,
+        //连接表
+        joinOptions = {
+                @JoinOption(alias = E_Group.ALIAS, entityClass = Group.class)
+        })
+public class NativeTableJoinDTO extends PagingQueryReq {
 
-    @Select(value = "u.id", isDistinct = true)
+    @Select(value = E_User.id, isDistinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
-    Long uid = 1l;
+    Long uid;
 
     @Select(value = E_Group.id, domain = E_Group.ALIAS)
-    @Gte("g.id")
+    @Gte(value = E_User.id, domain = E_User.ALIAS)
     Long gid;
 
-    @Select(domain = E_User.ALIAS)
+    @Select
     String name;
 
     @Select(domain = E_Group.ALIAS, value = E_Group.name)

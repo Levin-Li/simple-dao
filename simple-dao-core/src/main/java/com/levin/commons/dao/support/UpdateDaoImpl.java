@@ -27,7 +27,6 @@ public class UpdateDaoImpl<T>
         extends ConditionBuilderImpl<T, UpdateDao<T>>
         implements UpdateDao<T> {
 
-    transient MiniDao dao;
 
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
 
@@ -44,30 +43,20 @@ public class UpdateDaoImpl<T>
     }
 
     public UpdateDaoImpl() {
-        this(true, null);
+        this(null, true);
     }
 
-    public UpdateDaoImpl(boolean isNative, MiniDao dao) {
-        super(isNative);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative) {
+        super(dao, isNative);
     }
 
-    public UpdateDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-    public UpdateDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
-
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
-
 
     @Override
     public UpdateDao<T> setColumns(String columns, Object... paramValues) {
@@ -133,7 +122,9 @@ public class UpdateDaoImpl<T>
                 .append(genEntityStatement())
                 .append(" Set ")
                 .append(updateColumns)
-                .append(whereStatement);
+                .append(whereStatement)
+                .append(" ").append(lastStatements)
+                .append(getLimitStatement());
 
         return ExprUtils.replace(ql.toString(), getDaoContextValues());
     }
@@ -153,7 +144,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public List genFinalParamList() {
-        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues);
+        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, lastStatementParamValues);
     }
 
     @Transactional
