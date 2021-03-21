@@ -1,6 +1,6 @@
 package com.levin.commons.dao;
 
-import java.lang.annotation.*; 
+import java.lang.annotation.*;
 
 /**
  * 上下文变量注解

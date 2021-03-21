@@ -28,7 +28,7 @@ public @interface Validator {
 
     /**
      * 验证表达式，目前支持 SPEL
-     *
+     * <p>
      * 返回 true 表示验证通过
      * <p>
      * <p>

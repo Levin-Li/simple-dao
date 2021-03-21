@@ -1,16 +1,16 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.*;
+import com.levin.commons.dao.DaoSecurityException;
+import com.levin.commons.dao.DeleteDao;
+import com.levin.commons.dao.EntityOption;
+import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
-import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 删除Dao实现类
@@ -84,7 +84,7 @@ public class DeleteDaoImpl<T>
 
         }
 
-        return ExprUtils.replace(ql.toString(), getDaoContextValues());
+        return replaceVar(ql.toString());
 
     }
 

@@ -15,9 +15,9 @@ import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
+import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
-import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
@@ -399,6 +399,17 @@ public class DaoExamplesTest {
     public void testNativeTableJoinDTO() {
 
         List<NativeTableJoinDTO> byQueryObj = dao.findByQueryObj(NativeTableJoinDTO.class, new NativeTableJoinDTO());
+
+        System.out.println(byQueryObj);
+
+    }
+
+    @Test
+    public void testCaseQL() {
+
+        List<NewDto> byQueryObj = dao.findByQueryObj(NewDto.class, new NewDto());
+
+        byQueryObj = dao.findByQueryObj(NewDto.class, new NewDto().setScoreLevel(2).setQueryState(true));
 
         System.out.println(byQueryObj);
 
@@ -819,8 +830,6 @@ public class DaoExamplesTest {
     //@Transactional
     public void testJoinFetch2() {
 
-
-        ;
         List<UserJoinFetchDTO> byQueryObj = dao.findByQueryObj(UserJoinFetchDTO.class, new UserJoinFetchDTO());
 
         Object user = byQueryObj.get(0);
@@ -1213,7 +1222,7 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testStat() throws Exception {
 
-        Object groupSelectDao = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
+        Object commDto = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
 
         List<GroupStatDTO> objects = dao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());
 
@@ -1312,18 +1321,6 @@ public class DaoExamplesTest {
         org.junit.Assert.assertNotNull(objects);
     }
 
-
-    @org.junit.Test
-    public void testJoin3() throws Exception {
-
-
-        List<MulitTableJoinDTO> objects = dao.selectFrom("jpa_dao_test_User u left join jpa_dao_test_Group g on u.group_id = g.id")
-                .appendByQueryObj(new MulitTableJoinDTO())
-                .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
-                .find(MulitTableJoinDTO.class);
-
-        org.junit.Assert.assertNotNull(objects);
-    }
 
     /**
      * 测试混合参数
@@ -1441,18 +1438,21 @@ public class DaoExamplesTest {
     }
 
 
+    /**
+     * 测试语句生成时间
+     *
+     * @throws Exception
+     */
     @org.junit.Test
-    public void testSelectTime() throws Exception {
+    public void testGenSQLTakeTime() throws Exception {
 
         long millis = System.currentTimeMillis();
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
 
-
         dao.selectFrom(User.class, "u")
                 .appendByQueryObj(new GroupStatDTO())
                 .genFinalStatement();
-
 
         millis = System.currentTimeMillis() - millis;
 

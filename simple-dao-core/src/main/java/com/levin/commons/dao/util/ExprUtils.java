@@ -6,41 +6,42 @@ import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
-import com.levin.commons.utils.MapUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
 import static org.springframework.util.StringUtils.hasText;
 
 public abstract class ExprUtils {
 
-    //匹配样式：${:paramName}
+    //占位参数匹配样式：${:paramName}
     public static final Pattern jpaNamedParamStylePattern = Pattern.compile("(\\$\\{\\s*:\\s*([\\w._]+)\\s*\\})");
 
-    //匹配样式：${paramName}
+    //字段替换匹配样式：F$:columnName
+    public static final Pattern fieldVarStylePattern = Pattern.compile("(F\\$:([\\w._]+))");
+
+    //直接替换匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
 
@@ -53,7 +54,6 @@ public abstract class ExprUtils {
      */
     private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
 
-
     /**
      * 线程安全的解析器
      */
@@ -63,7 +63,8 @@ public abstract class ExprUtils {
      * 核心方法 生成语句，并返回参数
      *
      * @param c
-     * @param fieldExpr
+     * @param entityClass
+     * @param name
      * @param complexType
      * @param expectType
      * @param holder
@@ -72,9 +73,16 @@ public abstract class ExprUtils {
      * @param contexts         注意，越后面，优先级越高，要可以修改的 List 对象
      * @return
      */
-    public static String genExpr(C c, String fieldExpr, boolean complexType, Class<?> expectType
-            , ValueHolder holder, String paramPlaceholder, Function<ValueHolder, String> subQueryBuilder,
+    public static String genExpr(C c, String name,
+                                 boolean complexType, Class<?> expectType,
+                                 ValueHolder holder, String paramPlaceholder,
+                                 Function<String, Object> ctxEvalFunc,
+                                 @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
+                                 Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
+
+        String fieldExpr = aroundColumnPrefixFunc.apply(c.domain(), name);
+
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -98,9 +106,15 @@ public abstract class ExprUtils {
 
         boolean isNotOp = Op.Not.name().equals(op.name());
 
-        if (op.isNeedFieldExpr() && op.isAllowFieldFunc()) {
+        if (op.isNeedFieldExpr()
+                && op.isAllowFieldExprExpand()) {
+
+            //如果字段表达式中有CASE 函数
+            fieldExpr = genCaseExpr(ctxEvalFunc, fieldExpr, c.fieldCases());
+
             //如果字段表达式中有函数，用函数包围
-            fieldExpr = funcExpr(fieldExpr, c.fieldFuncs());
+            fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
+
         }
 
         String paramExpr = "";
@@ -135,7 +149,7 @@ public abstract class ExprUtils {
                 hasDynamicExpr = true;
 
             } else if (isExistsOp
-                    && !isNotEmptyAnnotation(c, op)
+                    && !isNotEmptyAnnotation(ctxEvalFunc, c, op)
                     && holder.value instanceof CharSequence) {
 
                 //如果是 Exist 操作，并且没有配置
@@ -213,35 +227,32 @@ public abstract class ExprUtils {
 
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
-            paramExpr = funcExpr(paramExpr, c.paramFuncs());
+
+            paramExpr = genCaseExpr(ctxEvalFunc, paramExpr, c.paramCases());
+
+            paramExpr = genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs());
         }
 
         //如果需要展开参数，没有参数内容
         if (op.isExpandParamValue()
                 && op.isNeedParamExpr()
                 && !hasText(oldParamExpr)) {
-
             //如果需要展开参数，但又没有参数内容，被认为是无效的注解，直接忽略
-
             return "";
         }
 
-
         if (!op.isNeedParamExpr() && op.isNeedFieldExpr()) {
-
             // 如果是一个不需参数的操作，把参数中的 Map 类型参数，加入到上下文
             flattenParams(null, holder.value).stream()
                     .filter(v -> v instanceof Map)
                     .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
-
         }
-
 
         final List<Object> paramValues = new ArrayList(7);
 
         /// Function<String, String> genExpr = ql -> processParamPlaceholder(ql, paramPlaceholder, paramValues, contexts);
 
-        //    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([paramExpr or fieldValue])) +  surroundSuffix ";
+        // String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
         //替换参数
         String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
@@ -282,7 +293,10 @@ public abstract class ExprUtils {
             holder.value = paramValues;
         }
 
-        return surroundNotExpr(c, replace(ql, contexts).trim());
+        //文本变量替换
+
+        return surroundNotExpr(c, replace(ql, contexts, true,
+                column -> aroundColumnPrefixFunc.apply(c.domain(), column)).trim());
     }
 
     /**
@@ -408,18 +422,24 @@ public abstract class ExprUtils {
     /**
      * 测试一个注解是非空注解
      *
+     * @param ctxEvalFunc
      * @param c
      * @param op
      * @return
      */
-    public static boolean isNotEmptyAnnotation(C c, Op op) {
+    public static boolean isNotEmptyAnnotation(Function<String, Object> ctxEvalFunc, C c, Op op) {
 
         if (op == null) {
             op = c.op();
         }
 
-        String paramExpr = op.isNeedParamExpr() ? funcExpr("", c.paramFuncs()) : "";
-        String fieldExpr = op.isNeedFieldExpr() ? funcExpr("", c.fieldFuncs()) : "";
+        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(ctxEvalFunc, "", c.fieldCases()) : "";
+
+        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(ctxEvalFunc, "", c.paramCases()) : "";
+
+        fieldExpr = op.isNeedFieldExpr() ? genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs()) : fieldExpr;
+
+        paramExpr = op.isNeedParamExpr() ? genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs()) : paramExpr;
 
         String ql = c.surroundPrefix() + c.value() + c.paramExpr() + fieldExpr + paramExpr + c.surroundSuffix();
 
@@ -467,21 +487,72 @@ public abstract class ExprUtils {
 
 
     /**
-     * 函数调用叠加
+     * 生成匹配条件
+     * <p>
+     * CASE sex
+     * WHEN '1' THEN '男'
+     * ELSE '其他'
+     * END
      *
-     * @param name
+     * @param expr
+     * @param cases
+     * @return
+     */
+    public static String genCaseExpr(Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+        return Stream.of(cases)
+                //过滤条件匹配的 case
+                .filter(aCase -> Optional.ofNullable(conditionEvalFunc).map(func -> (boolean) func.apply(aCase.condition())).orElse(true))
+                //只找第一个
+                .findFirst()
+                .map(aCase ->
+                        String.join(" ", "CASE",
+                                //如果原值替换变量
+                                Case.ORIGIN_EXPR.equals(aCase.value()) ? expr : aCase.value(),
+                                Stream.of(aCase.whenOptions())
+                                        .map(when -> String.join(" ", "WHEN", when.whenExpr(), "THEN", when.thenExpr()))
+                                        .collect(Collectors.joining(" "))
+                                , "ELSE", aCase.elseExpr(), "END")
+                ).orElse(expr);
+    }
+
+
+    /**
+     * 获取函数表达
+     *
+     * @param conditionEvalFunc
+     * @param initExpr          初始化表达式
      * @param funcs
      * @return
      */
-    public static String funcExpr(String name, Func... funcs) {
+    public static String genFuncExpr(Function<String, Object> conditionEvalFunc, String initExpr, Func... funcs) {
         //允许没有名称
-
-        return Arrays.stream(funcs)
+        return Stream.of(funcs)
                 //  .filter(func -> StringUtils.hasText(func.value()))
-                .reduce(name,
-                        (expr, func) -> {
+                .filter(aCase -> Optional.ofNullable(conditionEvalFunc).map(func -> (boolean) func.apply(aCase.condition())).orElse(true))
+                .reduce(initExpr,
+                        (expr, func) ->
+                                //{
+                                String.join(" ",
+                                        //1、函数名
+                                        func.value(),
+                                        //2、前包围
+                                        func.prefix(),
 
-                            StringBuilder sb = new StringBuilder();
+                                        //3、组装参数
+                                        Stream.of(func.params())
+                                                //过滤空
+                                                .filter(StringUtils::hasText)
+                                                //如果参数是一个替换变量，直接替换成原表达式
+                                                .map(param -> Func.ORIGIN_EXPR.equals(param) ? expr : param)
+                                                //过滤空
+                                                .filter(StringUtils::hasText)
+                                                //合并参数，并用逗号分隔
+                                                .collect(Collectors.joining(func.paramDelimiter()))
+
+                                        //4、后包围
+                                        , func.suffix())
+
+/*                            StringBuilder sb = new StringBuilder();
 
                             for (String param : func.params()) {
 
@@ -501,9 +572,12 @@ public abstract class ExprUtils {
                                 expr = sb.toString();
                             }
 
-                            return func.value() + func.prefix() + expr + func.suffix();
-                        },
-                        (r1, r2) -> r1 + r2);
+                            return func.value() + func.prefix() + expr + func.suffix();*/
+
+                        //  }
+                        ,
+                        (r1, r2) -> r2 //不是并行流的时候，这个表达式无意义
+                );
     }
 
     /**
@@ -569,6 +643,8 @@ public abstract class ExprUtils {
 
     /**
      * 参数替换辅助类
+     * <p>
+     * 占位符变量替换
      *
      * @param qlSection
      * @param contexts
@@ -587,27 +663,54 @@ public abstract class ExprUtils {
 
     }
 
+    /**
+     * 文本变量替换
+     *
+     * @param txt
+     * @param contexts
+     * @return
+     */
     public static String replace(String txt, List<Map<String, ? extends Object>> contexts) {
-        return replace(txt, true, contexts);
+        return replace(txt, contexts, true, null);
     }
 
 
-    public static String replace(String txt, boolean isThrowExWhenKeyNotFound, List<Map<String, ? extends Object>> contexts) {
+    /**
+     * 替换文本内容
+     *
+     * @param txt
+     * @param isThrowExWhenKeyNotFound
+     * @param contexts
+     * @param fieldNameConverter
+     * @return
+     */
+    public static String replace(String txt, List<Map<String, ? extends Object>> contexts, boolean isThrowExWhenKeyNotFound,
+                                 Function<String, String> fieldNameConverter) {
 
         if (!hasText(txt)) {
             return txt;
         }
 
-        return replace(groovyVarStylePattern, txt, key -> {
+        //替换普通变量
+        final String oldTxt = txt;
+        txt = replace(groovyVarStylePattern, txt, key -> {
 
             Object v = ObjectUtil.findValue(key, true, isThrowExWhenKeyNotFound, contexts);
 
             if (v == null) {
-                throw new StatementBuildException(String.format("[{%s}] var {%s} not found on context", txt, key));
+                throw new StatementBuildException(String.format("[{%s}] var {%s} not found on context", oldTxt, key));
             }
 
             return v.toString();
         });
+
+
+        if (fieldNameConverter == null) {
+            return txt;
+        }
+
+        //替换字段名称
+        return replace(fieldVarStylePattern, txt, fieldNameConverter);
 
     }
 
@@ -675,7 +778,6 @@ public abstract class ExprUtils {
 
 
         return found ? sb.toString() : txt;
-
     }
 
     static String nullSafe(String txt) {
@@ -787,6 +889,10 @@ public abstract class ExprUtils {
 
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
 
+    public static boolean isValidClass(Class type) {
+        return type != null
+                && !(type == Void.class || type == void.class);
+    }
 
     /**
      * 自动生成连接语句
@@ -802,6 +908,7 @@ public abstract class ExprUtils {
      * @return
      */
     public static String genJoinStatement(MiniDao miniDao, boolean isNative,
+                                          BiConsumer<String, Class> aliasCacheFunc,
                                           Function<String, String> tableNameConverter,
                                           Function<String, String> columnNameConverter,
                                           Class entityClass, String tableOrStatement,
@@ -814,11 +921,11 @@ public abstract class ExprUtils {
             return "";
         }
 
-        if (!StringUtils.hasText(tableOrStatement) && entityClass == null) {
+        if (!hasText(tableOrStatement) && entityClass == null) {
             throw new StatementBuildException("多表关联时，entityClass 或 tableOrStatement 必须指定一个");
         }
 
-        if (!StringUtils.hasText(alias)) {
+        if (!hasText(alias)) {
             throw new StatementBuildException("多表关联时，别名不允许为空");
         }
 
@@ -826,75 +933,91 @@ public abstract class ExprUtils {
 
         aliasMap.put(alias, entityClass);
 
+        if (aliasCacheFunc != null) {
+            aliasCacheFunc.accept(alias, entityClass);
+        }
+
         for (JoinOption joinOption : joinOptions) {
 
-            final String selfAlias = joinOption.alias();
+            final String selfAlias = joinOption.alias().trim();
 
-            if (!StringUtils.hasText(selfAlias)) {
+            boolean hasJoinEntityClass = isValidClass(joinOption.entityClass());
 
+            Class joinEntityClass = hasJoinEntityClass ? joinOption.entityClass() : null;
+
+            if (!hasText(selfAlias)) {
             }
 
-            if (!StringUtils.hasText(selfAlias)) {
+            if (!hasText(selfAlias)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，JoinOption注解 的 alias 属性必须指定");
             }
 
             if (aliasMap.containsKey(selfAlias)) {
                 throw new StatementBuildException(joinOption + ": alias 重名 ");
             } else {
-                aliasMap.put(selfAlias, joinOption.entityClass());
+
+                aliasMap.put(selfAlias, joinEntityClass);
+
+                if (aliasCacheFunc != null) {
+                    aliasCacheFunc.accept(selfAlias, joinEntityClass);
+                }
+
             }
 
-            String fromStatement = genFromStatement(tableNameConverter, isNative, joinOption.entityClass(), joinOption.tableOrStatement(), joinOption.alias());
+            String fromStatement = genFromStatement(tableNameConverter, isNative, joinEntityClass,
+                    joinOption.tableOrStatement(), joinOption.alias());
 
-
-            if (!StringUtils.hasText(fromStatement)) {
+            if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
             }
 
-            String targetAlias = joinOption.joinTargetAlias();
+            String targetAlias = joinOption.joinTargetAlias().trim();
 
-            if (!StringUtils.hasText(targetAlias)) {
+            if (!hasText(targetAlias)) {
                 targetAlias = alias;
             }
 
-            if (!StringUtils.hasText(targetAlias)) {
+            if (!hasText(targetAlias)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的目标");
             }
 
             String targetColumn = joinOption.joinTargetColumn();
 
-            if (!StringUtils.hasText(targetColumn)) {
-
+            if (!hasText(targetColumn) && hasJoinEntityClass) {
                 //尝试自动获取字段名
-                List<String> refFieldNames = getRefFieldNames(aliasMap.get(targetAlias), joinOption.entityClass());
+                List<String> refFieldNames = getRefFieldNames(aliasMap.get(targetAlias), joinEntityClass);
 
-                if (refFieldNames.size() == 1) {
+                if (refFieldNames != null && refFieldNames.size() == 1) {
                     targetColumn = refFieldNames.get(0);
                 }
             }
 
-            if (!StringUtils.hasText(targetColumn)) {
+            if (!hasText(targetColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的目标列，没有或是存在多个关联字段");
             }
 
             String joinColumn = joinOption.joinColumn();
-            if (!StringUtils.hasText(joinColumn) && miniDao != null) {
+            if (!hasText(joinColumn) && miniDao != null && hasJoinEntityClass) {
                 //@todo 实现获取表的主键名称
-                joinColumn = miniDao.getPKName(joinOption.entityClass());
+                joinColumn = miniDao.getPKName(joinEntityClass);
             }
 
-            if (!StringUtils.hasText(joinColumn)) {
+            if (!hasText(joinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
             }
 
+            //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
-                targetColumn = QueryAnnotationUtil.getColumnName(entityClass, targetColumn);
-                joinColumn = QueryAnnotationUtil.getColumnName(joinOption.entityClass(), joinColumn);
-            }
 
-            if (columnNameConverter != null) {
-                targetColumn = columnNameConverter.apply(targetColumn);
-                joinColumn = columnNameConverter.apply(joinColumn);
+                targetColumn = QueryAnnotationUtil.getColumnName(entityClass, targetColumn);
+                joinColumn = QueryAnnotationUtil.getColumnName(joinEntityClass, joinColumn);
+
+                if (columnNameConverter != null) {
+                    //如果是 SQL 原生查询，需要转换列名
+                    targetColumn = columnNameConverter.apply(targetColumn);
+                    joinColumn = columnNameConverter.apply(joinColumn);
+                }
+
             }
 
             //
@@ -910,7 +1033,7 @@ public abstract class ExprUtils {
 
     public static String genFromStatement(Function<String, String> tableNameConverter, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
 
-        if (StringUtils.hasText(tableOrStatement)) {
+        if (hasText(tableOrStatement)) {
 
             //如果时表达式，不是表名，则加上挂号
             if (tableOrStatement.trim().contains(" ")) {
@@ -931,7 +1054,7 @@ public abstract class ExprUtils {
             return "";
         }
 
-        if (tableNameConverter != null) {
+        if (isNative && tableNameConverter != null) {
             tableOrStatement = tableNameConverter.apply(tableOrStatement);
         }
 
@@ -988,18 +1111,6 @@ public abstract class ExprUtils {
     }
 
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
-
-
-    public static void main(String[] args) {
-
-
-        String txt = "select * from ${table} t where t.name = :?  and t.age > :age  and t.sex = ${:sex} and t.desc like ${likeDesc}";
-
-
-        txt = replace(txt, Arrays.asList(MapUtils.put("table", "person").put("likeDesc", "'%it'").build()));
-
-
-    }
 
 
 }

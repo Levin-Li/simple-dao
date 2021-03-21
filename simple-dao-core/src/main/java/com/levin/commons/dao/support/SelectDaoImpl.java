@@ -11,7 +11,6 @@ import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
-import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
@@ -64,7 +63,7 @@ public class SelectDaoImpl<T>
 
     final Map<String, String> fetchAttrs = new LinkedHashMap<>();
 
-    //默认的排序
+    //默认的排序，当没有排序的时候的默认排序
     final StringBuilder defaultOrderByStatement = new StringBuilder();
 
     //自己定义表达式
@@ -804,7 +803,7 @@ public class SelectDaoImpl<T>
             throw new DaoSecurityException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().getSafeModeMaxLimit() + "], SQL[" + builder + "]");
         }
 
-        return ExprUtils.replace(builder.toString(), getDaoContextValues());
+        return replaceVar(builder.toString());
     }
 
     @Override

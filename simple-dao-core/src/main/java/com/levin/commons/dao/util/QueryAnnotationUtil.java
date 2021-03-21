@@ -157,7 +157,7 @@ public abstract class QueryAnnotationUtil {
      */
     public static String getColumnName(Class entityClass, String fieldName) {
 
-        if (entityClass == null || entityClass == Void.class
+        if (!ExprUtils.isValidClass(entityClass)
                 || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
             return fieldName;
         }
@@ -196,7 +196,7 @@ public abstract class QueryAnnotationUtil {
                                 );
 
                         if (hasText(column)) {
-                            tempMap.put(fieldName, column);
+                            tempMap.put(field.getName(), column);
                         }
                     });
 

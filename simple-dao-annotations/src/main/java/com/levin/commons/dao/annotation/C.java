@@ -2,7 +2,7 @@ package com.levin.commons.dao.annotation;
 
 
 import com.levin.commons.annotation.GenNameConstant;
-import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.misc.Case;
 
 import java.lang.annotation.*;
 
@@ -57,6 +57,11 @@ public @interface C {
 
 
     /**
+     * 原表达式
+     */
+    String ORIGIN_EXPR = "$$";
+
+    /**
      * 操作
      *
      * @return
@@ -71,13 +76,19 @@ public @interface C {
      */
 //    OrderBy[] orderBy() default {};
 
+    /**
+     * 字段归属的域，通常是表的别名
+     *
+     * @return
+     */
+    String domain() default "";
 
     /**
      * 查询字段名称，默认为字段的属性名称
      * <p>
      * 对应数据库的字段名或是 Jpa 实体类的字段名
-     *
-     *  通常代表左操作数
+     * <p>
+     * 通常代表左操作数
      *
      * @return
      */
@@ -139,10 +150,37 @@ public @interface C {
 
 
     /**
-     * 针对字段函数列表
-     * 后面的函数嵌套前面的函数
+     * 左操作数（字段） Case 选项
+     * 当存在多个时，只取第一个条件成立的 Case
      * <p>
-     * func3(func2(func1(t.field)
+     * 注意该表达式比 fieldFuncs 更早求取
+     *
+     * @return
+     */
+    Case[] fieldCases() default {};
+
+
+    /**
+     * 右操作数（参数） Case 选项
+     * 当存在多个时，只取第一个条件成立的 Case
+     * <p>
+     * 注意该表达式比 paramFuncs 更早求取
+     *
+     * @return
+     */
+    Case[] paramCases() default {};
+
+
+    /**
+     * 针对字段函数列表
+     * 最后一个函数有效
+     * <p>
+     * 但可以在 params 参数用 DEFAULT_PARAM 嵌套前一个函数的表达式
+     *
+     * <p>
+     * 也是左操作数
+     *
+     * <p>
      *
      * <p>
      * <p>
@@ -156,7 +194,10 @@ public @interface C {
     /**
      * 针对参数的函数列表
      * <p>
-     * 后面的函数嵌套前面的函数
+     * 也是右操作数
+     * 最后一个函数有效
+     * <p>
+     * 但可以在 params 参数用 DEFAULT_PARAM 嵌套前一个函数的表达式
      * <p>
      * 参数是指字段值或是子查询语句
      * <p>
@@ -175,17 +216,12 @@ public @interface C {
      */
     String surroundPrefix() default "";
 
-    /**
-     * 字段归属的域，通常是表的别名
-     *
-     * @return
-     */
-    String domain() default "";
-
 
     /**
      * 子查询或是表达式
-     *
+     * <p>
+     * 如果配置这个属性，将覆盖原有的占位符表达式
+     * <p>
      * 通常代表右操作数
      *
      * @return
@@ -224,9 +260,10 @@ public @interface C {
 
     /**
      * 描述信息
+     * 表达式的基本形态： 左操作数  +  操作  + 右操作数
      *
      * @return
      */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix ";
+    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
 }

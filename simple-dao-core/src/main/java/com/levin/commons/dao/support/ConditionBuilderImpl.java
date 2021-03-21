@@ -115,6 +115,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
+     * 别名缓存
+     */
+    protected final Map<String, Class> aliasMap = new ConcurrentReferenceHashMap<>();
+
+    /**
      * 当原生查询时，是否允许名称转换，默认是允许的
      */
 //    @Getter
@@ -891,6 +896,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //使用 join 语句的方式增加连接语句
         String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+                , aliasMap::put
                 , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
                 , entityClass, tableName, alias, targetOption.joinOptions());
 
@@ -898,9 +904,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             join(true, joinStatement);
         }
 
-
         return (CB) this;
-
     }
 
 
@@ -933,6 +937,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 if (hasValidQueryEntity()) {
                     String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+                            , aliasMap::put
                             , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
                             , entityClass, tableName, alias, queryOption.getJoinOptions());
                     if (hasText(joinStatement)) {
@@ -1294,8 +1299,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 if (hasPrefix) {
                     //如果不是有效的属性，则忽略
-                    if (!name.startsWith(paramPrefix))
+                    if (!name.startsWith(paramPrefix)) {
                         continue;
+                    }
                     //去除前缀
                     name = name.substring(paramPrefix.length());
                 }
@@ -1826,9 +1832,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         }
 
-        return ExprUtils.genExpr(c, aroundColumnPrefix(c.domain(), name), complexType, getExpectType(name), holder, getParamPlaceholder(),
-                this::buildSubQuery
-                , this.buildContextValues(holder.root, holder.value, name));
+        List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
+
+
+        return ExprUtils.genExpr(c, name, complexType, getExpectType(name), holder, getParamPlaceholder(),
+
+                //condition 求值回调
+                expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
+
+                //字段别名和转换回调 求值回调
+                this::aroundColumnPrefix,
+
+                this::buildSubQuery, contexts);
     }
 
 
@@ -1987,6 +2002,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     /**
+     * 转换名称
+     *
      * @param column
      * @return
      */
@@ -1994,28 +2011,47 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return aroundColumnPrefix(null, column);
     }
 
+
     /**
      * @param domain
      * @param column
      * @return
      */
     protected String aroundColumnPrefix(String domain, String column) {
+        return aroundColumnPrefix(entityClass, domain, column);
+    }
+
+    /**
+     * @param domain
+     * @param column
+     * @return
+     */
+    protected String aroundColumnPrefix(Class entityType, String domain, String column) {
 
         if (!hasText(column)) {
             return "";
         }
 
+        //去除空格
+        column = column.trim();
+
         boolean hasDomain = hasText(domain);
 
+        //关键逻辑点
         //如果包含占位符，则直接返回
-        //@fix bug 20200227
+        //@Fix bug 20200227
         if (column.contains(getParamPlaceholder().trim())
-                || !Character.isLetter(column.trim().charAt(0))
-                || StringUtils.containsWhitespace(column.trim()) //包含白空格
-                || (!hasDomain && column.contains("."))) {
+                || !Character.isLetter(column.charAt(0))
+                || StringUtils.containsWhitespace(column) //包含白空格
+                || !column.matches("[\\w._]+")
+            //  || (!hasDomain && column.contains("."))
+        ) {
 
             return column;
+        }
 
+        if (!hasDomain && column.contains(".")) {
+            return tryGetPhysicalColumnName(column);
         }
 
         if (!hasDomain) {
@@ -2026,19 +2062,49 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         String prefix = getText(domain, "", ".", "");
 
+        return tryGetPhysicalColumnName(column.trim().startsWith(prefix) ? column : prefix + column);
+    }
+
+    protected String tryGetPhysicalColumnName(String column) {
 
         if (isNative()) {
-            column = QueryAnnotationUtil.getColumnName(entityClass, column);
+
+            //获取别名
+            int indexOf = column.indexOf(".");
+
+            if (indexOf > 0) {
+                String domain = column.substring(0, indexOf).trim();
+
+                column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
+
+                column = tryToPhysicalColumnName(column);
+
+                column = domain + "." + column;
+
+            } else {
+
+                column = QueryAnnotationUtil.getColumnName(entityClass, column);
+                column = tryToPhysicalColumnName(column);
+            }
+
         }
 
-        //如果是原生查询，尝试转换成
-        column = tryToPhysicalColumnName(column);
-
-        return column.trim().startsWith(prefix) ? column : prefix + column;
+        return column;
     }
 
     protected String genFromStatement() {
         return " From " + genEntityStatement();
+    }
+
+
+    /**
+     * 替换文本变量，替换字段
+     *
+     * @param ql 查询语句
+     * @return
+     */
+    protected String replaceVar(String ql) {
+        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix);
     }
 
     /**
@@ -2086,6 +2152,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
+        return evalTrueExpr(root, value, expr, buildContextValues(root, value, name));
+    }
+
+    protected boolean evalTrueExpr(Object root, Object value, String expr, List<Map<String, ? extends Object>> contexts) {
 
         /**
          * 默认是无条件限制
@@ -2113,7 +2183,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
 
-        return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
+        try {
+            return ExprUtils.evalSpEL(root, expr, contexts);
+        } catch (Exception e) {
+            throw new StatementBuildException("boolean expression [" + expr + "] eval fail," + e.getMessage(), e);
+        }
     }
 
 

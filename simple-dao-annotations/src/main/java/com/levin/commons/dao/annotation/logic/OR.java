@@ -44,7 +44,6 @@ public @interface OR {
      */
     String condition() default "";
 
-
     /**
      * 描述信息
      *

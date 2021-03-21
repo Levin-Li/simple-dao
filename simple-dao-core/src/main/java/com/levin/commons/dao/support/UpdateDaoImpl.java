@@ -6,7 +6,6 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -14,8 +13,6 @@ import org.springframework.util.StringUtils;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 更新Dao实现类
@@ -126,7 +123,7 @@ public class UpdateDaoImpl<T>
                 .append(" ").append(lastStatements)
                 .append(getLimitStatement());
 
-        return ExprUtils.replace(ql.toString(), getDaoContextValues());
+        return replaceVar(ql.toString());
     }
 
     /**

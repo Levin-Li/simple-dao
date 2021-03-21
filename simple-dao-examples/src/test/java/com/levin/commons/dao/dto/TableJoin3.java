@@ -20,7 +20,7 @@ import lombok.experimental.Accessors;
         resultClass = TableJoin3.class,
 
         joinOptions = {
-        @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
+        @JoinOption(tableOrStatement = E_Group.CLASS_NAME, entityClass = Void.class,
                 alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
 })
 public class TableJoin3 {

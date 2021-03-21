@@ -23,11 +23,11 @@ import lombok.experimental.Accessors;
         isSafeMode = false,
         //连接表
         joinOptions = {
-                @JoinOption(alias = E_Group.ALIAS,joinTargetColumn = E_User.T_group, entityClass = Group.class)
+                @JoinOption(alias = E_Group.ALIAS, joinTargetColumn = E_User.group, entityClass = Group.class)
         })
 public class NativeTableJoinDTO extends PagingQueryReq {
 
-    @Select(value = E_User.id )
+    @Select(value = E_User.id)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid;
 

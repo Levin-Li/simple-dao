@@ -3,6 +3,7 @@ package com.levin.commons.dao.annotation.select;
 
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.annotation.misc.Case;
 
 import java.lang.annotation.*;
 
@@ -53,7 +54,6 @@ public @interface Select {
      * @return
      */
     String value() default "";
-
 
 
     /**
@@ -114,6 +114,17 @@ public @interface Select {
 
 
     /**
+     * 左操作数（字段） Case 选项
+     * 当存在多个时，只取第一个条件成立的 Case
+     * <p>
+     * 注意该表达式比 fieldFuncs 更早求取
+     *
+     * @return
+     */
+    Case[] fieldCases() default {};
+
+
+    /**
      * 针对字段函数列表
      * 后面的函数嵌套前面的函数
      * <p>
@@ -140,7 +151,7 @@ public @interface Select {
      *
      * @return
      */
-    Func[] paramFuncs() default {};
+//    Func[] paramFuncs() default {};
 
 
     /**
@@ -195,6 +206,6 @@ public @interface Select {
      *
      * @return
      */
-    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldName), func([paramExpr or fieldValue])) +  surroundSuffix ";
+    String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
 }

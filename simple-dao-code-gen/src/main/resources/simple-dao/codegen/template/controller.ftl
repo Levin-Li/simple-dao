@@ -54,7 +54,6 @@ public class ${className} {
      */
     @PutMapping("/create")
     @Operation(summary = "创建${entityName}", description = "${desc}")
-    //@ApiLog(value = "#JSON.toJSONString(req)")
     public ApiResp<Long> create(Create${entityName}Req req) {
         return ${serviceName?uncap_first}.create(req);
     }
