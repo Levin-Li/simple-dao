@@ -41,7 +41,7 @@ public @interface TargetOption {
      * 表名有定义时表名优先
      * <p>
      * 不建议使用，使用原生查询时，也可以通过实体名获取表名
-     *
+     * <p>
      * 如果
      *
      * @return
@@ -96,6 +96,13 @@ public @interface TargetOption {
      * @return
      */
     JoinOption[] joinOptions() default {};
+
+    /**
+     * 笛卡儿积
+     *
+     * @return
+     */
+    SimpleJoinOption[] simpleJoinOptions() default {};
 
     /**
      * 是否是安全模式

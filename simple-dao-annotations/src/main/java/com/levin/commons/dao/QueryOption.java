@@ -59,6 +59,16 @@ public interface QueryOption {
         return null;
     }
 
+
+    /**
+     * 笛卡儿积
+     *
+     * @return
+     */
+    default SimpleJoinOption[] simpleJoinOptions() {
+        return null;
+    }
+
     /**
      * 获取查询结果类
      *

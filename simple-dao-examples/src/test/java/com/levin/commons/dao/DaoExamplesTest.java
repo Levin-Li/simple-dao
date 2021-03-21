@@ -1383,6 +1383,43 @@ public class DaoExamplesTest {
 
     }
 
+
+    /**
+     * 笛卡儿积 连接
+     */
+    @Test
+    public void testSimpleJoin() {
+
+
+        List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
+                .join(true, Group.class, E_Group.ALIAS)
+                .select(true, "u")
+                .where("u.group.id = g.id ")
+                .isNotNull(E_User.id)
+                .gt(E_User.score, 5)
+                .limit(0, 20)
+                .find();
+
+        System.out.println(objects);
+
+        Assert.isTrue(objects.size() == 20);
+
+
+        List result = dao.selectByNative(User.class, E_User.ALIAS)
+                .join(true, Group.class, E_Group.ALIAS)
+                .select("u.*")
+                .where("F$:u.group.id = g.id ")
+                .isNotNull(E_User.id)
+                .gt(E_User.score, 5)
+                .limit(0, 20)
+                .find( );
+
+        System.out.println(result);
+
+        Assert.isTrue(result.size() == 20);
+
+    }
+
     @Test
     public void testNativeSQL() {
 

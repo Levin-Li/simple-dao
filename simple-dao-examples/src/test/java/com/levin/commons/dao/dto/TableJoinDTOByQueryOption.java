@@ -45,7 +45,6 @@ public class TableJoinDTOByQueryOption implements QueryOption {
 
     @Override
     public JoinOption[] getJoinOptions() {
-
         return new JoinOption[0];
     }
 }

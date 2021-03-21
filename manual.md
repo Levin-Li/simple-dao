@@ -313,6 +313,23 @@
            String groupName;
        
        } 
+       
+       
+##### 1.4.4 多表关联查询-笛卡儿积（ @SimpleJoinOption 注解）
+
+       代码的方式
+       
+         List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
+                      .join(true, Group.class, E_Group.ALIAS)
+                      .select(true, "u")
+                      .where("u.group.id = g.id ")
+                      .isNotNull(E_User.id)
+                      .gt(E_User.score, 5)
+                      .limit(0, 20)
+                      .find();
+                      
+            
+                            
 
 
 #### 1.5 分页查询支持
@@ -591,6 +608,124 @@
 *    [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
 *    [JpaDao](./simple-dao-jpa/src/main/java/com/levin/commons/dao/JpaDao.java)
+
+
+##### 3.1.1 常用接口
+
+      /**
+        * 从查询对象构造SelectDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> SelectDao<T> forSelect(Object... queryObjs);
+   
+       /**
+        * 从查询对象构造UpdateDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> UpdateDao<T> forUpdate(Object... queryObjs);
+   
+       /**
+        * 从查询对象构造UpdateDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> DeleteDao<T> forDelete(Object... queryObjs);
+       /////////////////////////////////////////////////////////////////////////////////////////
+   
+       /**
+        * 原生查询
+        *
+        * @param nativeQL      是否原生查询
+        * @param fromStatement
+        * @param <T>
+        * @return
+        */
+       @Deprecated
+       <T> SelectDao<T> selectFrom(boolean nativeQL, @NotNull String fromStatement);
+   
+       /**
+        * 创建一个指定类型的查询对象dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
+   
+       <T> SelectDao<T> selectByNative(@NotNull Class<T> clazz, String... alias);
+   
+       /**
+        * 创建一个指定类型的更新dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+   
+       <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias);
+   
+       /**
+        * 创建一个指定类型的删除dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+   
+       <T> DeleteDao<T> deleteByNative(@NotNull Class<T> clazz, String... alias);
+   
+       ///////////////////////////////////////////////////////////////////////////////////////
+   
+       /**
+        * 原生查询
+        *
+        * @param tableName 表名
+        * @param alias     表别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        */
+       <T> SelectDao<T> selectFrom(@NotNull String tableName, String... alias);
+   
+       /**
+        * 使用表名创建一个更新的dao
+        * 默认为原生查询
+        *
+        * @param tableName 表名，不允许为null
+        * @param alias     别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> UpdateDao<T> updateTo(@NotNull String tableName, String... alias);
+   
+       /**
+        * 使用表名创建一个删除的dao
+        * 默认为原生查询
+        * <p/>
+        * alias别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        *
+        * @param tableName 表名，不允许为null
+        * @param alias     为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        */
+       <T> DeleteDao<T> deleteFrom(@NotNull String tableName, String... alias);
+   
+       ////////////////////////////////////////////////////////////////////////////////////////////
+
        
 
 #### 3.2 注解的语句生成规则

@@ -17,6 +17,8 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -24,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
+import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
 
 public abstract class ExprUtils {
@@ -58,6 +62,14 @@ public abstract class ExprUtils {
      * 线程安全的解析器
      */
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+
+
+    /**
+     * 实体类缓存
+     * 用于防止频繁出现类加载
+     */
+    protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
+
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -887,12 +899,65 @@ public abstract class ExprUtils {
     }
 
 
+    /**
+     * 加载类，第二次要快速失败
+     *
+     * @param className
+     * @param classConsumer
+     * @return
+     */
+    public static Class tryLoadClass(String className, Consumer<Class> classConsumer) {
+
+        Class entityClass = null;
+
+        if (hasText(className)
+                && className.contains(".")
+                && !containsWhitespace(className)
+                && Character.isLetter(className.trim().charAt(0))
+                && className.matches("[\\w._$]+")) {
+
+            className = className.trim();
+
+            try {
+
+                Class tempClass = entityClassCaches.get(className);
+
+                if (tempClass == null
+                        && !entityClassCaches.containsKey(className)) {
+
+                    tempClass = Thread.currentThread().getContextClassLoader().loadClass(className.trim());
+
+                    entityClassCaches.put(className, tempClass);
+                }
+
+
+                if (tempClass != null && (tempClass.isAnnotationPresent(Entity.class)
+                        || tempClass.isAnnotationPresent(MappedSuperclass.class))) {
+
+                    entityClass = tempClass;
+                    //如果表名是类名，做个自动转换
+                    if (classConsumer != null) {
+                        classConsumer.accept(entityClass);
+                    }
+                    // this.tableName = getTableNameByAnnotation(entityClass);
+                }
+
+            } catch (ClassNotFoundException e) {
+                //放入 null 值，下次同样的加载可以快速失败
+                entityClassCaches.put(className, null);
+            }
+        }
+
+        return entityClass;
+    }
+
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
 
     public static boolean isValidClass(Class type) {
         return type != null
                 && !(type == Void.class || type == void.class);
     }
+
 
     /**
      * 自动生成连接语句
@@ -929,9 +994,14 @@ public abstract class ExprUtils {
             throw new StatementBuildException("多表关联时，别名不允许为空");
         }
 
+        if (entityClass == null) {
+            entityClass = tryLoadClass(tableOrStatement, null);
+        }
+
         Map<String, Class> aliasMap = new HashMap<>(joinOptions.length + 1);
 
-        aliasMap.put(alias, entityClass);
+        //别名转换成小写
+        aliasMap.put(alias.trim().toLowerCase(), entityClass);
 
         if (aliasCacheFunc != null) {
             aliasCacheFunc.accept(alias, entityClass);
@@ -939,11 +1009,17 @@ public abstract class ExprUtils {
 
         for (JoinOption joinOption : joinOptions) {
 
-            final String selfAlias = joinOption.alias().trim();
+            //别名全部用小写
+            final String selfAlias = joinOption.alias().trim().toLowerCase();
 
             boolean hasJoinEntityClass = isValidClass(joinOption.entityClass());
 
             Class joinEntityClass = hasJoinEntityClass ? joinOption.entityClass() : null;
+
+
+            if (joinEntityClass == null) {
+                joinEntityClass = tryLoadClass(joinOption.tableOrStatement(), null);
+            }
 
             if (!hasText(selfAlias)) {
             }
@@ -965,13 +1041,13 @@ public abstract class ExprUtils {
             }
 
             String fromStatement = genFromStatement(tableNameConverter, isNative, joinEntityClass,
-                    joinOption.tableOrStatement(), joinOption.alias());
+                    joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
             }
 
-            String targetAlias = joinOption.joinTargetAlias().trim();
+            String targetAlias = joinOption.joinTargetAlias();
 
             if (!hasText(targetAlias)) {
                 targetAlias = alias;
@@ -980,6 +1056,8 @@ public abstract class ExprUtils {
             if (!hasText(targetAlias)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的目标");
             }
+
+            targetAlias = targetAlias.trim().toLowerCase();
 
             String targetColumn = joinOption.joinTargetColumn();
 

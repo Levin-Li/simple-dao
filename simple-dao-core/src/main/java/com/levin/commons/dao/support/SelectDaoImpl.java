@@ -11,12 +11,14 @@ import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.repository.annotation.QueryRequest;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
+import javax.persistence.Entity;
 import javax.persistence.Tuple;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -25,6 +27,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.ExprUtils.getExprForJpaJoinFetch;
 import static org.springframework.util.StringUtils.hasText;
@@ -219,6 +222,92 @@ public class SelectDaoImpl<T>
 
         return this;
     }
+
+    protected void appendToAliasMap(String targetAlias, Class targetClass) {
+
+        if (!ExprUtils.isValidClass(targetClass)) {
+            throw new StatementBuildException("join class " + targetClass + " fail");
+        }
+
+        if (!targetClass.isAnnotationPresent(Entity.class)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " not an entity class");
+        }
+
+        if (!hasText(targetAlias)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " have to an alias ");
+        }
+
+        //转换成小写
+        targetAlias = targetAlias.trim().toLowerCase();
+
+        if (aliasMap.containsKey(targetAlias)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " alias " + targetAlias + " already use by " + aliasMap.get(targetAlias));
+        }
+
+        aliasMap.put(targetAlias, targetClass);
+
+    }
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias) {
+
+        if (!Boolean.TRUE.equals(isAppend)) {
+            return this;
+        }
+
+        appendToAliasMap(targetAlias, targetClass);
+
+
+        String targetName = targetClass.getName();
+
+        if (isNative()) {
+
+            targetName = QueryAnnotationUtil.getTableNameByAnnotation(targetClass);
+
+            targetName = tryToPhysicalTableName(targetName);
+
+        }
+
+        //加入表达式
+        join(" , " + targetName + " " + targetAlias + " ");
+
+        return this;
+    }
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions) {
+
+        if (Boolean.TRUE.equals(isAppend) && joinOptions != null) {
+
+            Stream.of(joinOptions).filter(Objects::nonNull).forEachOrdered(
+                    o -> join(true, o.entityClass(), o.alias())
+            );
+
+        }
+
+        return this;
+    }
+
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions) {
+
+        if (!Boolean.TRUE.equals(isAppend) || joinOptions == null) {
+            return this;
+        }
+
+        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+                , this::appendToAliasMap
+                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+                , entityClass, tableName, alias, joinOptions);
+
+        if (hasText(joinStatement)) {
+            join(true, joinStatement);
+        }
+
+        return this;
+    }
+
 
     @Override
     public SelectDao<T> joinFetch(String... setAttrs) {
@@ -725,7 +814,7 @@ public class SelectDaoImpl<T>
         if (hasText(fromStatement)) {
             String from = getText(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
-            return (hasKey ? " " + fromStatement : " From " + fromStatement) + getText(joinStatement.toString(), " ");
+            return (hasKey ? " " + fromStatement : " From " + fromStatement) + " " + getText(joinStatement.toString(), " ");
         } else {
             return super.genFromStatement() + getText(joinStatement.toString(), " ");
         }

@@ -28,8 +28,6 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -106,12 +104,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 实体对象，可空字段缓存
      */
     protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
-
-    /**
-     * 实体类缓存
-     * 用于防止频繁出现类加载
-     */
-    protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
 
 
     /**
@@ -753,38 +745,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         this.tableName = tableName;
 
-        if (!hasEntityClass()
-                && hasText(tableName)
-                && !containsWhitespace(tableName)
-                && tableName.contains(".")) {
+        if (!hasEntityClass()) {
 
-            tableName = tableName.trim();
-
-            try {
-
-                Class tempClass = entityClassCaches.get(tableName);
-
-                if (tempClass == null
-                        && !entityClassCaches.containsKey(tableName)) {
-
-                    tempClass = Thread.currentThread().getContextClassLoader().loadClass(tableName.trim());
-
-                    entityClassCaches.put(tableName, tempClass);
-                }
-
-
-                if (tempClass != null && (tempClass.isAnnotationPresent(Entity.class)
-                        || tempClass.isAnnotationPresent(MappedSuperclass.class))) {
-
-                    this.entityClass = tempClass;
-                    //如果表名是类名，做个自动转换
-                    this.tableName = getTableNameByAnnotation(entityClass);
-                }
-
-            } catch (ClassNotFoundException e) {
-                //放入 null 值，下次同样的加载可以快速失败
-                entityClassCaches.put(tableName, null);
-            }
+            ExprUtils.tryLoadClass(tableName, clazz -> {
+                this.entityClass = clazz;
+                //如果表名是类名，做个自动转换
+                this.tableName = getTableNameByAnnotation(entityClass);
+            });
         }
 
         return (CB) this;
@@ -895,18 +862,43 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         tryUpdateTableName();
 
         //使用 join 语句的方式增加连接语句
-        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
-                , aliasMap::put
-                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
-                , entityClass, tableName, alias, targetOption.joinOptions());
+//        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+//                , aliasMap::put
+//                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+//                , entityClass, tableName, alias, targetOption.joinOptions());
+//
+//        if (hasText(joinStatement)) {
+//            join(true, joinStatement);
+//        }
 
-        if (hasText(joinStatement)) {
-            join(true, joinStatement);
-        }
+        join(true, targetOption.joinOptions());
+        join(true, targetOption.simpleJoinOptions());
 
         return (CB) this;
     }
 
+
+    /**
+     * 只对SelectDao 有效
+     * 其它 Dao 默认忽略这个部分
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
+    protected CB join(Boolean isAppend, JoinOption... joinOptions) {
+
+        //Nothing to do
+
+        return (CB) this;
+    }
+
+    protected CB join(Boolean isAppend, SimpleJoinOption... joinOptions) {
+
+        //Nothing to do
+
+        return (CB) this;
+    }
 
     protected CB setQueryOption(Object... queryObjs) {
 
@@ -936,13 +928,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 tryUpdateTableName();
 
                 if (hasValidQueryEntity()) {
-                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
-                            , aliasMap::put
-                            , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
-                            , entityClass, tableName, alias, queryOption.getJoinOptions());
-                    if (hasText(joinStatement)) {
-                        join(true, joinStatement);
-                    }
+
+//                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+//                            , aliasMap::put
+//                            , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+//                            , entityClass, tableName, alias, queryOption.getJoinOptions());
+//                    if (hasText(joinStatement)) {
+//                        join(true, joinStatement);
+//                    }
+
+                    join(true, queryOption.getJoinOptions());
+
+                    join(true, queryOption.simpleJoinOptions());
                 }
 
             });
@@ -2073,7 +2070,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             int indexOf = column.indexOf(".");
 
             if (indexOf > 0) {
-                String domain = column.substring(0, indexOf).trim();
+
+                //转换成小写
+                String domain = column.substring(0, indexOf).trim().toLowerCase();
 
                 column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
 
