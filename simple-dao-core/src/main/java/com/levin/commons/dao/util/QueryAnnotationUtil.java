@@ -162,9 +162,9 @@ public abstract class QueryAnnotationUtil {
             return fieldName;
         }
 
-        if (!entityClass.isAnnotationPresent(Entity.class)) {
-            return fieldName;
-        }
+//        if (!entityClass.isAnnotationPresent(Entity.class)) {
+//            return fieldName;
+//        }
 
         String key = entityClass.getName();
 

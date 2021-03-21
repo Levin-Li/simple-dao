@@ -62,6 +62,18 @@ public @interface C {
     String ORIGIN_EXPR = "$$";
 
     /**
+     * 替换字段前缀
+     * <p>
+     * 单原生查询时，可以用对象的属性自动转换成数据库列名
+     * <p>
+     * 如：
+     * F$:u.userId
+     * 原生查询 --->   u.user_id
+     * JPA查询 --->   u.userId
+     */
+    String FIELD_PREFIX = "F$:";
+
+    /**
      * 操作
      *
      * @return

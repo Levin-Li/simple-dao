@@ -580,15 +580,15 @@
 
 ### 3 组件接口及注解
 
-#### 3.1 Dao接口
+#### 3.1 Dao核心接口
+
+*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
 *    [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
 *    [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
 *    [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
-
-*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
        
 *    [JpaDao](./simple-dao-jpa/src/main/java/com/levin/commons/dao/JpaDao.java)
        
@@ -630,6 +630,71 @@
        @Contains
        String classId;
 
+### 4.1 CASE 语句支持
+
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
+      public class CaseTestDto {
+      
+          @C
+          @CList({@C(op = Op.StartsWith)})
+          @Select
+          String name;
+      
+          // states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
+      
+          @Select(value = E_User.score, fieldCases = {
+                  @Case(value = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
+                          @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
+                          , @Case.When(whenExpr = "score > 85", thenExpr = "2")
+                          , @Case.When(whenExpr = "score > 60", thenExpr = "3")
+                          , @Case.When(whenExpr = "score > 30", thenExpr = "4")
+                  })
+      
+                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", whenOptions = {
+                  @Case.When(whenExpr = "'正常'", thenExpr = "1")
+                  , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
+                  , @Case.When(whenExpr = "'审请中'", thenExpr = "3")
+                  , @Case.When(whenExpr = "'已删除'", thenExpr = "4")
+          })
+          })
+          int scoreLevel = 1;
+      
+          @Ignore
+          boolean queryState = false;
+          
+      }
+     
+     //以上注解将生成以下语句
+     
+      //Select  (u.name) AS name  ,  
+           (CASE  
+             WHEN u.score > 95 AND u.lastUpdateTime is null THEN 1 
+             WHEN score > 85 THEN 2 WHEN score > 60 THEN 3 
+             WHEN score > 30 THEN 4 
+             ELSE 5 
+             END) AS scoreLevel   
+           From com.levin.commons.dao.domain.User u 
+    
+ 
+### 4.1 函数的支持（@Func注解实现）     
+           
+        
+            @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
+            protected Date createTime = new Date();
+            
+            @Ignore
+            String format ="'YYYY-MM-DD'";
+            
+            //以上注解将生成： DATE_FORMAT(createTime,'YYYY-MM-DD')
+            
+            // Func.ORIGIN_EXPR 代表原表达式
+            
+            //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
+            
+     
+               
 
 ### 5 统计查询
 
@@ -1002,10 +1067,17 @@
       
       } 
       
-  
-  
-  
    
+   字段变量的替换
+   为了兼容 原生查询和 JPA 查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
+   
+      F$:score > 95 AND F$:u.lastUpdateTime
+      
+      以上表达式当原生查询时语句被替换成：u.score > 95 AND u.last_update_time
+      当使用 JPA 查询时语句被替换成：u.score > 95 AND u.lastUpdateTime
+      
+      没有指定别名的字段，自动加上别名。
+ 
    上下文列表（越后面优先级越高）：
    
       DaoContext.getGlobalContext(); //全局上下文
@@ -1015,6 +1087,35 @@
       dao.selectFrom(User.class).setContext(); //dao 实例上下文
       
       //参数上下文
+      
+      
+   组校验，基于 SPEL 实现跨字段的参数验证，通过 @Validator 注解实现。
+   
+     public class DeleteCustomerReq extends BaseTreeQueryReq implements ServiceReq {
+     
+         private static final long serialVersionUID = -350965260L;
+     
+         @Schema(description = "ID")
+         private Long id;
+     
+         @Schema(description = "ID集合")
+         @In(E_Customer.id)
+         @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
+         private Long[] ids;
+         
+         //删除客户信息表必须指定ID或是 ID 列表
+     
+         public DeleteCustomerReq(Long id) {
+             this.id = id;
+         }
+     
+         public DeleteCustomerReq(Long... ids) {
+             this.ids = ids;
+         }
+     
+     }
+   
+      
  
 #### 10.5 字段值自动转换
 

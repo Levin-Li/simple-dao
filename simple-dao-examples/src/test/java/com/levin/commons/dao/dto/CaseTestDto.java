@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
-public class NewDto {
+public class CaseTestDto {
 
     @C
     @CList({@C(op = Op.StartsWith)})
@@ -26,7 +26,7 @@ public class NewDto {
 
     @Select(value = E_User.score, fieldCases = {
             @Case(value = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
-                    @Case.When(whenExpr = "F$:score > 95", thenExpr = "1")
+                    @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
                     , @Case.When(whenExpr = "score > 85", thenExpr = "2")
                     , @Case.When(whenExpr = "score > 60", thenExpr = "3")
                     , @Case.When(whenExpr = "score > 30", thenExpr = "4")
@@ -43,12 +43,5 @@ public class NewDto {
 
     @Ignore
     boolean queryState = false;
-
-    @C(op = Op.Gt)
-    Integer age;
-
-    @CList({@C(op = Op.StartsWith)})
-    String detail;
-
 
 }

@@ -407,9 +407,9 @@ public class DaoExamplesTest {
     @Test
     public void testCaseQL() {
 
-        List<NewDto> byQueryObj = dao.findByQueryObj(NewDto.class, new NewDto());
+        List<CaseTestDto> byQueryObj = dao.findByQueryObj(CaseTestDto.class, new CaseTestDto());
 
-        byQueryObj = dao.findByQueryObj(NewDto.class, new NewDto().setScoreLevel(2).setQueryState(true));
+        byQueryObj = dao.findByQueryObj(CaseTestDto.class, new CaseTestDto().setScoreLevel(2).setQueryState(true));
 
         System.out.println(byQueryObj);
 
@@ -1444,7 +1444,7 @@ public class DaoExamplesTest {
      * @throws Exception
      */
     @org.junit.Test
-    public void testGenSQLTakeTime() throws Exception {
+    public void testGenSQLSpeed() throws Exception {
 
         long millis = System.currentTimeMillis();
 
@@ -1480,7 +1480,7 @@ public class DaoExamplesTest {
 
         millis = System.currentTimeMillis() - millis;
 
-        System.out.println("3 testSelectTime:" + millis);
+        System.out.println("3 speed testSelectTime:" + millis);
 
 
         millis = System.currentTimeMillis();

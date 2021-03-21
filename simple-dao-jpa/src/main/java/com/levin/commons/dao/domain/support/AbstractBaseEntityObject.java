@@ -33,7 +33,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     protected Boolean editable = true;
 
     @Schema(description = "创建时间")
-    @Column
+    @Column(nullable = false)
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createTime;
 
