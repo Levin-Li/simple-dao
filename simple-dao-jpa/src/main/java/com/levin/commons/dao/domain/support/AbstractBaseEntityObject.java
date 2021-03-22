@@ -1,7 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.BaseEntityObject;
-import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,7 +19,20 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
 
     private static final long serialVersionUID = -123456789L;
 
+    @Schema(description = "创建者")
+    protected String creator;
 
+    @Schema(description = "创建时间")
+    @Column(nullable = false)
+    @Temporal(value = TemporalType.TIMESTAMP)
+    protected Date createTime;
+
+    @Schema(description = "最后更新时间")
+    @Column
+    @Temporal(value = TemporalType.TIMESTAMP)
+    protected Date lastUpdateTime;
+
+//    @OrderBy
     @Schema(description = "排序代码")
     protected Integer orderCode;
 
@@ -32,20 +44,9 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Column(nullable = false)
     protected Boolean editable = true;
 
-    @Schema(description = "创建时间")
-    @Column(nullable = false)
-    @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date createTime;
-
-    @Schema(description = "更新时间")
-    @Column
-    @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date lastUpdateTime;
-
     @Schema(description = "备注")
     @Column(length = 1000)
     protected String remark;
-
 
     @PrePersist
     public void prePersist() {
@@ -54,9 +55,6 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
             createTime = new Date();
         }
 
-        if (lastUpdateTime == null) {
-            lastUpdateTime = new Date();
-        }
     }
 
     @PreUpdate
