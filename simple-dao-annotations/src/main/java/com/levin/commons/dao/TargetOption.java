@@ -49,24 +49,6 @@ public @interface TargetOption {
     @Deprecated
     String tableName() default "";
 
-
-    /**
-     * from 字句
-     * <p>
-     * 仅对查询有效，对更新和删除操作无效，别名属性也将无效
-     * <p>
-     * fromStatement 优先级最高
-     * <p>
-     * <p>
-     * 不建议使用，下个版本将放弃
-     *
-     * @return
-     * @deprecated 使用joinOptions 替代
-     */
-//    @Deprecated
-//    String fromStatement() default "";
-
-
     /**
      * 查询期望的查询结果类
      * 只针对查询有效
