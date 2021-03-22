@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Configuration
+@Configuration("${modulePackageName}.config.ModuleWebMvcConfigurer")
 @Slf4j
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 

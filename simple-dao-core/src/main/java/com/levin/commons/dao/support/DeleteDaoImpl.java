@@ -81,11 +81,9 @@ public class DeleteDaoImpl<T>
                     .append(genWhereStatement(EntityOption.Action.Delete))
                     .append(" ").append(lastStatements)
                     .append(getLimitStatement());
-
         }
 
         return replaceVar(ql.toString());
-
     }
 
     @Override

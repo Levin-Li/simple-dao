@@ -51,6 +51,15 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
 
     /**
+     * 禁用默认的更新和删除的条件
+     *
+     * @return
+     * @see EntityOption#updateCondition()
+     * @see EntityOption#deleteCondition()
+     */
+    T disableOperationCondition();
+
+    /**
      * 设置的分页
      *
      * @param pageIndex 第几页，从1开始

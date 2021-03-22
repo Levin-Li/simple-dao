@@ -125,6 +125,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //    @Getter
     protected boolean autoAppendLimitStatement = false;
 
+    /**
+     * 默认自动追加更新或是删除的条件
+     */
+    private boolean autoAppendOperationCondition = true;
+
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
 
         this.dao = dao;
@@ -239,7 +244,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         EntityOption entityOption = getEntityOption();
 
         return entityOption != null
-                && StringUtils.hasText(entityOption.logicalDeleteField())
+                && StringUtils.hasText(entityOption.logicalDeleteFieldName())
                 && StringUtils.hasText(entityOption.logicalDeleteValue());
     }
 
@@ -332,6 +337,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    @Override
+    public CB disableOperationCondition() {
+
+        autoAppendOperationCondition = false;
+
+        return (CB) this;
+    }
 
     protected String getLimitStatement() {
 
@@ -1919,37 +1931,50 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         checkSafeMode(whereStatement);
 
+        EntityOption entityOption = getEntityOption();
+
+        if (entityOption == null) {
+            return whereStatement;
+        }
+
+        whereExprRootNode.switchCurrentNodeToSelf();
+
+        if (autoAppendOperationCondition) {
+
+            if (this instanceof UpdateDao
+                    && hasText(entityOption.updateCondition())) {
+                appendToWhere(entityOption.updateCondition(), Collections.emptyList(), true);
+            } else if (this instanceof DeleteDao
+                    && hasText(entityOption.deleteCondition())) {
+                appendToWhere(entityOption.deleteCondition(), Collections.emptyList(), true);
+            }
+
+        }
+
         //如果过滤逻辑删除的数据
         if (filterLogicDeletedData
                 && hasLogicDeleteField()) {
 
-            EntityOption entityOption = getEntityOption();
-
             String expr = genLogicDeleteExpr(entityOption, Op.NotEq);
 
-            String propertyName = entityOption.logicalDeleteField().trim();
+            String propertyName = entityOption.logicalDeleteFieldName().trim();
 
             if (isNullable(propertyName)) {
                 expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
             }
 
-            whereExprRootNode.switchCurrentNodeToSelf();
-
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
-
-            //重新生成 where
-            whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
         }
 
-        return whereStatement;
+        return getText(whereExprRootNode.toString(), " Where ", " ", " ");
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {
-        return aroundColumnPrefix(entityOption.logicalDeleteField().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
+        return aroundColumnPrefix(entityOption.logicalDeleteFieldName().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
     }
 
     protected Object convertLogicDeleteValue(EntityOption entityOption) {
-        return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteField().trim()));
+        return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteFieldName().trim()));
     }
 
     protected Object tryConvertPropertyValue(String name, String value) {

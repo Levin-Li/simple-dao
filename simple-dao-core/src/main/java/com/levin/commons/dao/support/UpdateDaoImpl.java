@@ -6,10 +6,12 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;

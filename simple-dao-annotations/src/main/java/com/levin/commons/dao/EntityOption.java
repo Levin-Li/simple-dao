@@ -61,13 +61,48 @@ public @interface EntityOption {
     Action[] disableActions() default {};
 
     /**
-     * 逻辑删除的字段
+     * 可更新记录的条件
+     * <p>
+     * <p>
+     * 所有的更新语句都会加上这个条件
+     * 细粒度控制
+     * <p>
+     * 比如 editable == true
+     *
+     * <p>
+     * 默认没有条件
+     *
+     * @return
+     */
+    String updateCondition() default "";
+
+
+    /**
+     * 可删除记录的条件
+     * <p>
+     * <p>
+     * 所有的删除语句都会加上这个条件
+     * 细粒度控制
+     * <p>
+     * 比如 status != '已使用'
+     *
+     * <p>
+     * 默认没有条件
+     *
+     * @return
+     */
+    String deleteCondition() default "";
+
+
+    /**
+     * 逻辑删除的字段名
      * <p>
      * 该字段一般不允许空值
      *
      * @return
+     * @todo 抽象为逻辑删除的可见表达式
      */
-    String logicalDeleteField() default "";
+    String logicalDeleteFieldName() default "";
 
 
     /**
@@ -75,6 +110,9 @@ public @interface EntityOption {
      * dao 会自动根据字段类型进行值转换
      *
      * @return
+     * @todo 抽象为逻辑删除的设值表达式
+     * <p>
+     * 如： state= 'deleted'
      */
     String logicalDeleteValue() default "";
 
