@@ -1138,6 +1138,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //对 注解的支持 PostConstruct
+            ClassUtils.invokeFirstPostConstructMethod(queryValueObj);
+
             //没有回调时，表示本地调用
             if (attrCallback == null) {
                 //尝试设置分页

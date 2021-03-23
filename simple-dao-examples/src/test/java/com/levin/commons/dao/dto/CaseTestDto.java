@@ -25,14 +25,14 @@ public class CaseTestDto {
     // states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
 
     @Select(value = E_User.score, fieldCases = {
-            @Case(value = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
+            @Case(column = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
                     @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
                     , @Case.When(whenExpr = "score > 85", thenExpr = "2")
                     , @Case.When(whenExpr = "score > 60", thenExpr = "3")
                     , @Case.When(whenExpr = "score > 30", thenExpr = "4")
             })
 
-            , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", whenOptions = {
+            , @Case(column = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", whenOptions = {
             @Case.When(whenExpr = "'正常'", thenExpr = "1")
             , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
             , @Case.When(whenExpr = "'审请中'", thenExpr = "3")

@@ -78,7 +78,7 @@ public @interface Case {
      *
      * @return
      */
-    String value() default ORIGIN_EXPR;
+    String column() default ORIGIN_EXPR;
 
     /**
      * 选项

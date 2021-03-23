@@ -519,7 +519,7 @@ public abstract class ExprUtils {
                 .map(aCase ->
                         String.join(" ", "CASE",
                                 //如果原值替换变量
-                                Case.ORIGIN_EXPR.equals(aCase.value()) ? expr : aCase.value(),
+                                Case.ORIGIN_EXPR.equals(aCase.column()) ? expr : aCase.column(),
                                 Stream.of(aCase.whenOptions())
                                         .map(when -> String.join(" ", "WHEN", when.whenExpr(), "THEN", when.thenExpr()))
                                         .collect(Collectors.joining(" "))
