@@ -80,7 +80,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
 
     /**

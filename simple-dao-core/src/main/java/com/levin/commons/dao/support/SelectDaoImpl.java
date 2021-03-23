@@ -238,7 +238,7 @@ public class SelectDaoImpl<T>
         }
 
         //转换成小写
-        targetAlias = targetAlias.trim().toLowerCase();
+//        targetAlias = targetAlias.trim().toLowerCase();
 
         if (aliasMap.containsKey(targetAlias)) {
             throw new StatementBuildException("join class " + targetClass.getName() + " alias " + targetAlias + " already use by " + aliasMap.get(targetAlias));

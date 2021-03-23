@@ -18,7 +18,7 @@ public abstract class DaoContext {
 
     public static final ContextHolder<String, Object> globalContext = ContextHolder.buildContext(true);
 
-    public static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+    public static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ public abstract class DaoContext {
 
         T value = threadContext.get(key);
 
-        return value != null ? value : globalContext.get(key, defaultValue);
+        return value != null ? value : globalContext.getOrDefault(key, defaultValue);
     }
 
     public static <T> T setGlobalValue(String key, T defaultValue) {

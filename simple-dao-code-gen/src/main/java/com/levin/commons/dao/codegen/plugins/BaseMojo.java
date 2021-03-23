@@ -144,8 +144,7 @@ public abstract class BaseMojo extends AbstractMojo {
     /**
      * 线程变量
      */
-    protected static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
-    protected static final ContextHolder<String, Object> inheritableThreadContext = ContextHolder.buildThreadContext(true, true);
+    protected static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
     private final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 

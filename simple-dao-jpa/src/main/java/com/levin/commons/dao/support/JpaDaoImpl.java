@@ -176,7 +176,7 @@ public class JpaDaoImpl
 
     private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
 
-    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
     private static final DeepCopier deepCopier = new DeepCopier() {
         @Override
@@ -347,7 +347,7 @@ public class JpaDaoImpl
     }
 
     public <V> V getThreadVar(String key, V defaultValue) {
-        return threadContext.get(key, defaultValue);
+        return threadContext.getOrDefault(key, defaultValue);
     }
 
     @Override
@@ -470,7 +470,7 @@ public class JpaDaoImpl
         if (DaoContext.isAutoFlushAndClearBeforeQuery(true)
                 && em.isJoinedToTransaction()) {
 
-            if (threadContext.get(AUTO_FLUSH, false)) {
+            if (threadContext.getOrDefault(AUTO_FLUSH, false)) {
                 try {
                     logger.debug("*** autoFlushAndClearBeforeQuery AUTO_FLUSH ...");
                     em.flush();
@@ -479,7 +479,7 @@ public class JpaDaoImpl
                 }
             }
 
-            if (threadContext.get(AUTO_CLEAR, false)) {
+            if (threadContext.getOrDefault(AUTO_CLEAR, false)) {
                 try {
                     logger.debug("*** autoFlushAndClearBeforeQuery AUTO_CLEAR ...");
                     em.clear();

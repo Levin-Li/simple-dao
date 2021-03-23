@@ -11,10 +11,9 @@ import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
-//import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
-//import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +34,9 @@ import java.util.*;
 
 import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
+
+//import com.levin.commons.dao.annotation.select.SelectColumn;
+//import com.levin.commons.dao.annotation.update.UpdateColumn;
 
 /**
  *
@@ -119,6 +121,8 @@ public abstract class QueryAnnotationUtil {
     protected static final Map<String/* 类名 */, Map<String/* 类字段名 */, String /* 数据库列名 */>> entityFieldNameMap = new ConcurrentReferenceHashMap<>();
 
     private static final Locker entityFieldNameMapLocker = Locker.build();
+
+    private static final ContextHolder<String, String> propertyNameMapCaches = ContextHolder.buildContext(false);
 
 
     static {
@@ -206,7 +210,7 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-        return fieldMap.getOrDefault(fieldName,fieldName);
+        return fieldMap.getOrDefault(fieldName, fieldName);
     }
 
 
@@ -420,8 +424,8 @@ public abstract class QueryAnnotationUtil {
     }
 
 
-    public static Annotation getAnnotation(Class<? extends Annotation> type) {
-        return allInstanceMap.get(type.getSimpleName());
+    public static <T extends Annotation> T getAnnotation(Class<T> type) {
+        return (T) allInstanceMap.get(type.getSimpleName());
     }
 
 
@@ -462,33 +466,52 @@ public abstract class QueryAnnotationUtil {
             return name;
         }
 
-        String newKey = null;
+        //提升字段查找性能
+
+        String newName = null;
 
         try {
-            newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
+            newName = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
 //            ReflectionUtils.rethrowRuntimeException(e);
         }
 
-        if (!hasText(newKey)
-                && entityClass != null
-                && ReflectionUtils.findField(entityClass, name) == null) {
-
-            // 以下逻辑是自动去除查找，去除注解名称以后的属性
-            int len = opAnno.annotationType().getSimpleName().length();
-
-            if (name.length() > len) {
-
-                newKey = Character.toLowerCase(name.charAt(len)) + name.substring(len + 1);
-
-                if (ReflectionUtils.findField(entityClass, newKey) == null) {
-                    newKey = null;
-                }
-
-            }
+        if (hasText(newName)) {
+            return newName;
         }
 
-        return (hasText(newKey)) ? newKey : name;
+        if (entityClass == null) {
+            return name;
+        }
+
+        String key = entityClass.getName() + "-" + opAnno.annotationType().getSimpleName() + "-" + name;
+
+
+        newName = propertyNameMapCaches.getAndAutoPut(key, v -> true, () -> {
+
+            String findName = null;
+
+            if (ReflectionUtils.findField(entityClass, name) == null) {
+                // 以下逻辑是自动去除查找，去除注解名称以后的属性
+                int len = opAnno.annotationType().getSimpleName().length();
+
+                if (name.length() > len) {
+
+                    findName = Character.toLowerCase(name.charAt(len)) + name.substring(len + 1);
+
+                    if (ReflectionUtils.findField(entityClass, findName) == null) {
+                        findName = null;
+                    }
+
+                }
+            }
+
+            return findName;
+
+        });
+
+
+        return (hasText(newName)) ? newName : name;
 
     }
 
@@ -800,21 +823,6 @@ public abstract class QueryAnnotationUtil {
     public static boolean isRootObjectType(Type type) {
         return (type instanceof Class)
                 && (Object.class == type || Object.class.getName().equals(((Class) type).getName()));
-    }
-
-    public static boolean isPrimitiveCollection(Class value) {
-
-
-        ResolvableType resolvableType = ResolvableType.forClass(value.getClass());
-
-        Class<?> rawClass = resolvableType.resolveGeneric(0);
-
-        boolean b = resolvableType.hasGenerics();
-
-
-        System.out.println(b);
-
-        return false;
     }
 
     /**

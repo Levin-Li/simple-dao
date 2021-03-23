@@ -13,6 +13,7 @@ import com.levin.commons.dao.annotation.update.Immutable;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
 import lombok.Getter;
@@ -109,7 +110,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     /**
      * 别名缓存
      */
-    protected final Map<String, Class> aliasMap = new ConcurrentReferenceHashMap<>();
+    protected final ContextHolder<String, Class> aliasMap = ContextHolder.buildContext(true);
+    {
+        aliasMap.setKeyConverter(key -> key.trim().toLowerCase());
+    }
 
     /**
      * 当原生查询时，是否允许名称转换，默认是允许的
@@ -129,6 +133,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 默认自动追加更新或是删除的条件
      */
     private boolean autoAppendOperationCondition = true;
+
+
 
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
 
@@ -1555,7 +1561,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             if ((!complexType) && !isNullOrEmptyTxt(value)) {
                 //如果没有注解，不是复杂类型，则默认为等于查询
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, QueryAnnotationUtil.getAnnotation(Eq.class));
+                Eq eq = getAnnotation(Eq.class);
+                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(eq, entityClass, name), varType, value, eq);
             } else {
 
                 //如果不是
@@ -1577,12 +1584,31 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(annotation -> isValid(annotation, bean, name, value))
                     .forEach(annotation -> {
                         processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                tryGetJpaEntityFieldName(annotation, this.entityClass, name),
+                                tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
                                 varType, value, annotation);
                     });
         }
 
+
     }
+
+    protected static String trim(String str) {
+        return str == null ? null : str.trim();
+    }
+
+
+    protected Class tryGetEntityClass(Annotation annotation) {
+
+        String domainAlias = ClassUtils.getValue(annotation, E_C.domain, false);
+
+        if (!hasText(domainAlias)
+                || domainAlias.trim().equalsIgnoreCase(trim(alias))) {
+            return entityClass;
+        }
+
+        return aliasMap.get(domainAlias );
+    }
+
 
     protected boolean isPackageStartsWith(String packageName, Annotation opAnnotation) {
         return opAnnotation != null && opAnnotation.annotationType().getName().startsWith(packageName);
