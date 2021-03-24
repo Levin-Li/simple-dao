@@ -1258,7 +1258,17 @@ public class SelectDaoImpl<T>
      */
     public Object tryConvertArray2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
 
-        if (data == null || !data.getClass().isArray()) {
+        if (data == null) {
+            return data;
+        }
+
+        //只有一个元素时，hibernate不会返回数组，直接返回值
+        if (this.selectColumns.size() == 1
+                && !data.getClass().isArray()) {
+            data = new Object[]{data};
+        }
+
+        if (!data.getClass().isArray()) {
             return data;
         }
 
