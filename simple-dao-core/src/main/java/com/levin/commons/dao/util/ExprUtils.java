@@ -95,7 +95,6 @@ public abstract class ExprUtils {
 
         String fieldExpr = aroundColumnPrefixFunc.apply(c.domain(), name);
 
-
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
 
@@ -118,16 +117,16 @@ public abstract class ExprUtils {
 
         boolean isNotOp = Op.Not.name().equals(op.name());
 
-        if (op.isNeedFieldExpr()
-                && op.isAllowFieldExprExpand()) {
+        boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
 
+        if (isFieldExpand) {
             //如果字段表达式中有CASE 函数
             fieldExpr = genCaseExpr(ctxEvalFunc, fieldExpr, c.fieldCases());
 
             //如果字段表达式中有函数，用函数包围
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
-
         }
+
 
         String paramExpr = "";
 
@@ -141,7 +140,7 @@ public abstract class ExprUtils {
 
             paramExpr = (String) holder.value;
 
-        } else if (hasDynamicExpr) {
+        } else if (hasDynamicExpr) { //如果是需要参数表达式
 
             //判读该操作是否需要参数表达式，默认大部分操作都需要右操作数，右操作数都是支持表达式的
 
@@ -217,31 +216,49 @@ public abstract class ExprUtils {
 
             }
 
-            //自动加大挂号
-            if ((hasText(c.paramExpr()) || complexType) && !isExistsOp) {
-                //尝试自动加挂号
-                paramExpr = autoAroundParentheses("", paramExpr, "");
+        } else if (isFieldExpand) {
+
+            if (complexType) {
+                fieldExpr = subQueryBuilder.apply(holder);
+                hasDynamicExpr = true;
             }
 
-        } else {
-            // 如果不需要参数表达式，那什么也不做
-            //@todo
         }
+
+        //自动加大挂号
+        if ((hasText(c.paramExpr()) || complexType) && !isExistsOp) {
+            //尝试自动加挂号
+            paramExpr = autoAroundParentheses("", paramExpr, "");
+        }
+
+
+        if (isFieldExpand && hasText(fieldExpr) && !isExistsOp) {
+            //尝试自动加挂号
+            //  fieldExpr = autoAroundParentheses("", fieldExpr, "");
+        }
+
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
 
-        final String oldParamExpr = paramExpr;
+        String tempOldParamExpr = paramExpr;
 
-        if (op.isNeedParamExpr() && hasDynamicExpr) {
-            //动态参数，后面替换,需要替换参数
-            paramExpr = "${:" + paramKey + "}";
+        if (hasDynamicExpr) {
+            if (op.isNeedParamExpr()) {
+                //动态参数，后面替换,需要替换参数
+                tempOldParamExpr = paramExpr;
+                paramExpr = "${:" + paramKey + "}";
+            } else if (isFieldExpand) {
+                tempOldParamExpr = fieldExpr;
+                fieldExpr = "${:" + paramKey + "}";
+            }
         }
+
+        final String oldParamExpr = tempOldParamExpr;
+
 
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
-
             paramExpr = genCaseExpr(ctxEvalFunc, paramExpr, c.paramCases());
-
             paramExpr = genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs());
         }
 
@@ -266,10 +283,11 @@ public abstract class ExprUtils {
 
         // String desc() default "语句表达式生成规则： surroundPrefix + op.gen( func(fieldExpr), func([paramExpr or fieldValue])) +  surroundSuffix ";
 
+        //===================================以下部分替换占位符参数等========================================
         //替换参数
         String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
 
-        //替换参数
+        //生成后的语句进行替换参数
         ql = processParamPlaceholder(ql, (key, ctxs) -> {
 
             //替换参数表达式和匹配参数
@@ -293,12 +311,7 @@ public abstract class ExprUtils {
         if (paramValues.isEmpty()) {
             //关键逻辑如果没有替换参数出现，则原有的参数保存不变
 
-//            if (holder.value != null) {
-//                log.warn(op + "  [ " + fieldExpr + " ] 发现参数 " + holder.value);
-//            }
-
             holder.value = Collections.emptyList();
-
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
         } else {
@@ -306,6 +319,7 @@ public abstract class ExprUtils {
         }
 
         //文本变量替换
+        //===================================以下部分替换文本========================================
 
         return surroundNotExpr(c, replace(ql, contexts, true,
                 column -> aroundColumnPrefixFunc.apply(c.domain(), column)).trim());
@@ -478,13 +492,7 @@ public abstract class ExprUtils {
 
         Object queryObj = holder.value;
 
-        if (queryObj != null) {
-            if (queryObj.getClass().isArray()) {
-                selectDao.appendByQueryObj((Object[]) queryObj);
-            } else {
-                selectDao.appendByQueryObj(queryObj);
-            }
-        }
+        selectDao.appendByQueryObj(queryObj);
 
         String subStatement = selectDao.genFinalStatement();
 

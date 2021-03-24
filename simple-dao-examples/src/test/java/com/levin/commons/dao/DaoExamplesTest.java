@@ -1377,6 +1377,26 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testSimpleSubQuery() {
 
+
+        int[] oj = {2, 33,};
+
+        Integer[] ojb = {2, 3, 4};
+
+        Object[] ddd = {"dafa", 3.4, 23423};
+
+        User[] sss = { };
+
+
+        System.out.println(sss instanceof Object[]);
+
+        System.out.println(int[].class == oj.getClass());
+        System.out.println(int[].class == oj.getClass());
+        System.out.println(Object[].class.isAssignableFrom(oj.getClass()));
+
+        System.out.println(Object[].class.isAssignableFrom(ojb.getClass()));
+        System.out.println(Object[].class.isAssignableFrom(ddd.getClass()));
+        System.out.println(Object[].class.isAssignableFrom(sss.getClass()));
+
         List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
 
         System.out.println(byQueryObj);
@@ -1412,7 +1432,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.id)
                 .gt(E_User.score, 5)
                 .limit(0, 20)
-                .find( );
+                .find();
 
         System.out.println(result);
 

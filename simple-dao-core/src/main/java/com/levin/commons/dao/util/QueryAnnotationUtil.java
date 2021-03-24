@@ -729,7 +729,13 @@ public abstract class QueryAnnotationUtil {
         return 1;
     }
 
+
     /**
+     * 判定复杂对象的方法
+     * <p>
+     * 如果是数组，Map , List 等都不认为是复杂对象
+     *
+     * <p>
      * 关键方法
      * <p>
      * 如果是数组，必须要求不存在原子元素，并且不为空数组，并且元素不都是Null
@@ -751,9 +757,13 @@ public abstract class QueryAnnotationUtil {
         }
 
         return varType != null
-                && varType.getAnnotation(PrimitiveValue.class) == null
-                && !QueryAnnotationUtil.isPrimitive(varType);
+                && !QueryAnnotationUtil.isPrimitive(varType)
+                && !Object[].class.isAssignableFrom(varType)
+                && !Map.class.isAssignableFrom(varType) //并且不是 Map
+                && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
+                && !varType.isAnnotationPresent(PrimitiveValue.class);
     }
+
 
     /**
      * 如果value是集合，则移除集合中的null对象，并返回新的集合对象
@@ -839,11 +849,10 @@ public abstract class QueryAnnotationUtil {
             return false;
         }
 
-
-        if (isPrimitive(value.getClass().getComponentType())) {
+        Class<?> componentType = value.getClass().getComponentType();
+        if (isPrimitive(componentType)) {
             return true;
         }
-
 
         int length = Array.getLength(value);
 

@@ -111,6 +111,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 别名缓存
      */
     protected final ContextHolder<String, Class> aliasMap = ContextHolder.buildContext(true);
+
     {
         aliasMap.setKeyConverter(key -> key.trim().toLowerCase());
     }
@@ -133,7 +134,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 默认自动追加更新或是删除的条件
      */
     private boolean autoAppendOperationCondition = true;
-
 
 
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
@@ -1101,6 +1101,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             if (queryObj.getClass().isArray()) {
                 expand(resultList, (Object[]) queryObj);
+            } else if (queryObj instanceof Iterable) {
+                ///////////////////////////////////////
+                for (Object o : ((Iterable) queryObj)) {
+                    expand(resultList, o);
+                }
             } else {
                 resultList.add(queryObj);
             }
@@ -1558,11 +1563,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-
             if ((!complexType) && !isNullOrEmptyTxt(value)) {
                 //如果没有注解，不是复杂类型，则默认为等于查询
-                Eq eq = getAnnotation(Eq.class);
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(eq, entityClass, name), varType, value, eq);
+                Annotation opAnno = getAnnotation(Eq.class);
+
+                //如果参数是一个可迭代对象，改为用 in
+                if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
+                        || value instanceof Object[]) {
+                    opAnno = getAnnotation(In.class);
+                }
+
+                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
             } else {
 
                 //如果不是
@@ -1606,7 +1617,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return entityClass;
         }
 
-        return aliasMap.get(domainAlias );
+        return aliasMap.get(domainAlias);
     }
 
 
@@ -1725,31 +1736,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    /**
-     * 关键方法
-     * <p>
-     * 如果是数组，必须要求不存在原子元素，并且不为空数组，并且元素不都是Null
-     *
-     * @param varType
-     * @param value
-     * @return
-     */
-    protected boolean isComplexType(Class<?> varType, Object value) {
-
-        if (varType == null && value != null) {
-
-            // 是数组并且有原子元素
-            if (QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)) {
-                return false;
-            }
-
-            varType = value.getClass();
-        }
-
-        return varType != null
-                && varType.getAnnotation(PrimitiveValue.class) == null
-                && !QueryAnnotationUtil.isPrimitive(varType);
-    }
 
 
     protected CB having(String expr, Object... paramValues) {
@@ -1786,13 +1772,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    public void genExprAndProcess(Object bean, Class<?> varType, String name, Object value,
+    public void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
                                   PrimitiveValue primitiveValue, Annotation opAnnotation,
                                   BiConsumer<String, ValueHolder<? extends Object>> consumer) {
 
-        boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
 
-        ValueHolder<Object> holder = new ValueHolder<>(bean, name, value);
+        boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
+
+
+        ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 
         String expr = genConditionExpr(complexType, opAnnotation, name, holder);
 
@@ -1807,13 +1795,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param queryObj
      */
     private void reAppendByQueryObj(Object queryObj) {
-        if (queryObj != null) {
-            if (queryObj.getClass().isArray()) {
-                appendByQueryObj((Object[]) queryObj);
-            } else {
-                appendByQueryObj(queryObj);
-            }
-        }
+        appendByQueryObj(queryObj);
     }
 
 
