@@ -25,10 +25,8 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -100,11 +98,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected boolean filterLogicDeletedData = true;
 
     transient MiniDao dao;
-
-    /**
-     * 实体对象，可空字段缓存
-     */
-    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
 
 
     /**
@@ -1171,7 +1164,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            List<Field> fields = QueryAnnotationUtil.getCacheFields(typeClass);
+            List<Field> fields = QueryAnnotationUtil.getNonStaticFields(typeClass);
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
 
@@ -1740,8 +1733,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-
-
     protected CB having(String expr, Object... paramValues) {
         throw new UnsupportedOperationException("appendHaving [" + expr + "]");
     }
@@ -1886,36 +1877,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return hasText(text) ? text : defaultV;
     }
 
-    /**
-     * 是否不允许空
-     *
-     * @param propertyName
-     * @return
-     */
-    private boolean isNullable(String propertyName) {
-
-        String key = entityClass.getName() + "." + propertyName;
-
-        Boolean aBoolean = entityClassNullableFields.get(key);
-
-        if (aBoolean == null) {
-
-            Field field = ReflectionUtils.findField(entityClass, propertyName);
-
-            if (field == null) {
-                throw new RuntimeException(new NoSuchFieldException(key));
-            }
-
-            Column column = field.getAnnotation(Column.class);
-
-            aBoolean = column == null || column.nullable();
-
-            entityClassNullableFields.put(key, aBoolean);
-        }
-
-        return aBoolean;
-    }
-
 
     protected void checkSafeMode(String whereStatement) {
 
@@ -1974,7 +1935,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             String propertyName = entityOption.logicalDeleteFieldName().trim();
 
-            if (isNullable(propertyName)) {
+            if (isNullable(entityClass, propertyName)) {
                 expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
             }
 

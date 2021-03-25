@@ -124,6 +124,11 @@ public abstract class QueryAnnotationUtil {
 
     private static final ContextHolder<String, String> propertyNameMapCaches = ContextHolder.buildContext(false);
 
+    /**
+     * 实体对象，可空字段缓存
+     */
+    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
+
 
     static {
 
@@ -150,6 +155,39 @@ public abstract class QueryAnnotationUtil {
     public static Map<String, Annotation> getAllAnnotations() {
         return allInstanceMap;
     }
+
+
+
+    /**
+     * 是否不允许空
+     *
+     * @param propertyName
+     * @return
+     */
+    public static boolean isNullable(Class entityClass ,String propertyName) {
+
+        String key = entityClass.getName() + "." + propertyName;
+
+        Boolean aBoolean = entityClassNullableFields.get(key);
+
+        if (aBoolean == null) {
+
+            Field field = ReflectionUtils.findField(entityClass, propertyName);
+
+            if (field == null) {
+                throw new RuntimeException(new NoSuchFieldException(key));
+            }
+
+            Column column = field.getAnnotation(Column.class);
+
+            aBoolean = column == null || column.nullable();
+
+            entityClassNullableFields.put(key, aBoolean);
+        }
+
+        return aBoolean;
+    }
+
 
 
     /**
@@ -610,7 +648,7 @@ public abstract class QueryAnnotationUtil {
                 resolvableType = ResolvableType.forClass(type);
             }
 
-            List<Field> cacheFields = getCacheFields(type);
+            List<Field> cacheFields = getNonStaticFields(type);
 
             for (Field field : cacheFields) {
                 //如果是统计或是选择注解
@@ -658,18 +696,19 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static List<Field> getCacheFields(Class type) {
+    public static List<Field> getNonStaticFields(Class type) {
 
         List<Field> fields = cacheFields.get(type.getName());
 
         if (fields == null) {
-            fields = getFields(type, Modifier.STATIC | Modifier.TRANSIENT);
-            if (fields.size() > 0) {
-                cacheFields.put(type.getName(), fields);
-            }
+
+            fields = getFields(type, Modifier.STATIC);
+
+            //放入不可变的列表
+            cacheFields.put(type.getName(), Collections.unmodifiableList(fields));
         }
 
-        return fields.size() > 0 ? new ArrayList<>(fields) : Collections.emptyList();
+        return fields;
     }
 
 
@@ -681,15 +720,17 @@ public abstract class QueryAnnotationUtil {
      */
     static List<Field> getFields(Class type, int excludeModifiers) {
 
-        List<Field> fields = new ArrayList<>();
-
         if (type == null
                 || isRootObjectType(type)
                 || isPrimitive(type)
                 || isArray(type)
                 || isIgnore(type)) {
-            return fields;
+
+            return Collections.emptyList();
         }
+
+
+        List<Field> fields = new ArrayList<>(10);
 
         fields.addAll(getFields(type.getSuperclass(), excludeModifiers));
 

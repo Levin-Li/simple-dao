@@ -75,7 +75,6 @@ public abstract class ExprUtils {
      * 核心方法 生成语句，并返回参数
      *
      * @param c
-     * @param entityClass
      * @param name
      * @param complexType
      * @param expectType
@@ -915,6 +914,7 @@ public abstract class ExprUtils {
      * @return
      */
     public static Class tryLoadClass(String className, Consumer<Class> classConsumer) {
+
 
         Class entityClass = null;
 

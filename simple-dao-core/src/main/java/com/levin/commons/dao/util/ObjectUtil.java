@@ -153,7 +153,7 @@ public abstract class ObjectUtil {
         }
 
 
-        List<Field> fields = QueryAnnotationUtil.getCacheFields(bean.getClass());
+        List<Field> fields = QueryAnnotationUtil.getNonStaticFields(bean.getClass());
 
         for (Field field : fields) {
             try {
