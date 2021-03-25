@@ -110,6 +110,8 @@ public class DeleteDaoImpl<T>
     @Transactional
     public int delete() {
 
+        EntityOption entityOption = getEntityOption();
+
         boolean disableDel = isDisable(EntityOption.Action.Delete);
         boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
 
@@ -117,7 +119,7 @@ public class DeleteDaoImpl<T>
             throw new DaoSecurityException("" + entityClass + " disable delete action");
         }
 
-        boolean hasLogicDeleteField = hasLogicDeleteField();
+        boolean hasLogicDeleteField = hasLogicDeleteField(entityOption);
 
         if (!disableDel && !hasLogicDeleteField) {
             //如果能物理删除，但又没有逻辑删除的字段，那么只能物理删除

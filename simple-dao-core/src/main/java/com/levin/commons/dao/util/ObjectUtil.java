@@ -9,12 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.format.AnnotationFormatterFactory;
 import org.springframework.format.Printer;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,7 +18,6 @@ import org.springframework.format.datetime.DateTimeFormatAnnotationFormatterFact
 import org.springframework.format.number.NumberFormatAnnotationFormatterFactory;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
@@ -652,19 +646,6 @@ public abstract class ObjectUtil {
 
 
     /**
-     *
-     * <p>
-     * <p>
-     * 若果是未知类型的值，将直接复制引用
-     *
-     * @param source
-     * @param targetType
-     * @param copyErrors
-     * @param <T>
-     * @return
-     */
-
-    /**
      * 支持递归拷贝
      * <p>
      * 若果是未知类型的值，将直接复制引用
@@ -895,11 +876,7 @@ public abstract class ObjectUtil {
 
         final List<Field> fieldList = new ArrayList<>(15);
 
-        ReflectionUtils.doWithFields(targetType, field -> {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                fieldList.add(field);
-            }
-        });
+        ReflectionUtils.doWithFields(targetType, field -> fieldList.add(field), field -> !Modifier.isStatic(field.getModifiers()));
 
         //按字段复制
         for (Field field : fieldList) {

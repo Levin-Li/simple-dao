@@ -245,14 +245,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected boolean hasLogicDeleteField() {
-
-        EntityOption entityOption = getEntityOption();
+    protected boolean hasLogicDeleteField(EntityOption entityOption) {
 
         return entityOption != null
                 && StringUtils.hasText(entityOption.logicalDeleteFieldName())
                 && StringUtils.hasText(entityOption.logicalDeleteValue());
     }
+
+//    protected boolean hasLogicDeleteStatement(EntityOption entityOption) {
+//        return entityOption != null
+//                && StringUtils.hasText(entityOption.logicalDeleteSetValueStatement())
+//                && StringUtils.hasText(entityOption.logicalDeleteDeterminedStatement());
+//    }
 
 
     /**
@@ -1964,7 +1968,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //如果过滤逻辑删除的数据
         if (filterLogicDeletedData
-                && hasLogicDeleteField()) {
+                && hasLogicDeleteField(entityOption)) {
 
             String expr = genLogicDeleteExpr(entityOption, Op.NotEq);
 

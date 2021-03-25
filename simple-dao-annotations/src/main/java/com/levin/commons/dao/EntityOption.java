@@ -16,6 +16,17 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+
+/*
+
+类继承关系中@Inherited的作用
+类继承关系中，子类会继承父类使用的注解中被@Inherited修饰的注解
+接口继承关系中@Inherited的作用
+接口继承关系中，子接口不会继承父接口中的任何注解，不管父接口中使用的注解有没有被@Inherited修饰
+类实现接口关系中@Inherited的作用
+类实现接口时不会继承任何接口中定义的注解
+
+*/
 public @interface EntityOption {
 
     /**
@@ -93,14 +104,42 @@ public @interface EntityOption {
      */
     String deleteCondition() default "";
 
+    //////////////////////////////////////////////////////////////
+
 
     /**
+     * 逻辑删除记录的判定语句
+     *
+     *
+     * <p>
+     * 如  status = 'Deleted' AND  enable = 'False'
+     * @todo 涉及到字段别名问题，暂不支持
+     * @return
+     */
+
+//    String logicalDeleteDeterminedStatement() default "";
+
+
+    /**
+     * 逻辑删除的设置语句，多个字段之间逗号隔开
+     *
+     *
+     * <p>
+     * 如  status = 'Deleted' , enable = 'False'
+     * @todo 涉及到字段别名问题，暂不支持
+     * @return
+     */
+//    String logicalDeleteSetValueStatement() default "";
+
+    /////////////////////////////////////////////////////////////////////
+
+    /**
+     * 注意 优先级 低于 logicalDeleteDeterminedStatement
      * 逻辑删除的字段名
      * <p>
      * 该字段一般不允许空值
      *
      * @return
-     * @todo 抽象为逻辑删除的可见表达式
      */
     String logicalDeleteFieldName() default "";
 
@@ -109,11 +148,15 @@ public @interface EntityOption {
      * 逻辑删除的值
      * dao 会自动根据字段类型进行值转换
      *
-     * @return
-     * @todo 抽象为逻辑删除的设值表达式
-     * <p>
+     * @return <p>
      * 如： state= 'deleted'
      */
     String logicalDeleteValue() default "";
+
+
+    /**
+     * @return
+     */
+    String desc() default "逻辑删除的自定义语句优先级高于指定字段的方式，注意逻辑删除，并不影响连接查询";
 
 }

@@ -1262,7 +1262,7 @@ public class SelectDaoImpl<T>
             return data;
         }
 
-        //只有一个元素时，hibernate不会返回数组，直接返回值
+        //只有一个元素时，hibernate不会返回数组，直接返回数据
         if (this.selectColumns.size() == 1
                 && !data.getClass().isArray()) {
             data = new Object[]{data};
@@ -1319,7 +1319,6 @@ public class SelectDaoImpl<T>
 
             //列明对应关系
             columnNames.add(aliases);
-
 
             String expr = selectColumn[0];
 
