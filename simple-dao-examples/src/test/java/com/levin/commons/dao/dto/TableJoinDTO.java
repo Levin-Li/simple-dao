@@ -18,14 +18,14 @@ import lombok.experimental.Accessors;
 @TargetOption(
         entityClass = User.class, alias = E_User.ALIAS,
         resultClass = TableJoinDTO.class,
-        isSafeMode = false,
+        safeMode = false,
         //连接表
         joinOptions = {
                 @JoinOption(alias = E_Group.ALIAS, entityClass = Group.class)
         })
 public class TableJoinDTO extends PagingQueryReq {
 
-    @Select(value = "u.id", isDistinct = true)
+    @Select(value = "u.id", distinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid;
 

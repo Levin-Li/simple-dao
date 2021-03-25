@@ -17,10 +17,10 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(
-        isNative = true,
+        nativeQL = true,
         entityClass = User.class, alias = E_User.ALIAS,
         resultClass = NativeTableJoinDTO.class,
-        isSafeMode = false,
+        safeMode = false,
         //连接表
         joinOptions = {
                 @JoinOption(alias = E_Group.ALIAS, joinTargetColumn = E_User.group, entityClass = Group.class)

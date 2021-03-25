@@ -25,7 +25,7 @@ import lombok.experimental.Accessors;
 })
 public class TableJoin3 {
 
-    @Select(domain = E_User.ALIAS, value = E_User.id, isDistinct = true)
+    @Select(domain = E_User.ALIAS, value = E_User.id, distinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid = 1l;
 

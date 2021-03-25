@@ -23,7 +23,7 @@ import lombok.experimental.Accessors;
         , maxResults = 100)
 public class MulitTableJoinDTO {
 
-    @Select(value = "u.id", isDistinct = false)
+    @Select(value = "u.id", distinct = false)
     @C(value = "u.group.id", paramExpr = "g.id", condition = "")
     Long uid;
 

@@ -101,7 +101,7 @@ public @interface Select {
     /**
      * 是否是唯一值 DISTINCT
      */
-    boolean isDistinct() default false;
+    boolean distinct() default false;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值

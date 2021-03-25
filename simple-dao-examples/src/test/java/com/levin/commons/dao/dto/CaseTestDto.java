@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
+@TargetOption(nativeQL = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
 public class CaseTestDto {
 
     @C

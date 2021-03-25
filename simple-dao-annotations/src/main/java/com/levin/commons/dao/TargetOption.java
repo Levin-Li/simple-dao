@@ -21,13 +21,12 @@ import java.lang.annotation.*;
 @Inherited
 public @interface TargetOption {
 
-
     /**
      * 是否是原生查询，默认 false
      *
      * @return
      */
-    boolean isNative() default false;
+    boolean nativeQL() default false;
 
     /**
      * 默认查询的目标实体类
@@ -93,7 +92,7 @@ public @interface TargetOption {
      *
      * @return
      */
-    boolean isSafeMode() default true;
+    boolean safeMode() default true;
 
     /**
      * 查询的最大结果集记录数

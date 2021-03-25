@@ -856,12 +856,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         setTableName(targetOption.tableName());
 
-        this.nativeQL = targetOption.isNative();
+        this.nativeQL = targetOption.nativeQL();
 
         this.alias = targetOption.alias();
 
         //如果是第一个
-        this.safeMode = targetOption.isSafeMode();
+        this.safeMode = targetOption.safeMode();
 
 //        if (hasText(targetOption.fromStatement())) {
 //            setFromStatement(targetOption.fromStatement());
