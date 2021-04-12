@@ -218,7 +218,7 @@
               entityClass = User.class, //主表
               alias = E_User.ALIAS, //主表别名
               resultClass = TableJoinStatDTO.class, //结果类
-              isSafeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
+              safeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
               //连接表
               joinOptions = {
                       @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
@@ -1442,7 +1442,13 @@
    dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
+                  
                                
+#### 12.2 PostConstruct 注解支持
+
+   有标记 javax.annotation.PostConstruct 注解的方法，将会在查询之前被执行。
+   可以做些初始化的事情，比如初始化时间。
+   
                
        
 ### 13 代码生成
