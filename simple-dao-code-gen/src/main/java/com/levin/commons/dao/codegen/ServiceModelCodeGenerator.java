@@ -766,6 +766,7 @@ public final class ServiceModelCodeGenerator {
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("fields", fields);
+
         params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<String>(), (f, s) -> {
                     f.addAll(s);
@@ -1201,15 +1202,17 @@ public final class ServiceModelCodeGenerator {
                 type = type.getComponentType();
             }
 
-            if (!type.isPrimitive()) {
+            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
                 //如果是类中类
-                if (type.getDeclaringClass() != null) {
-                    imports.add(type.getDeclaringClass().getName() + ".*");
+                Class declaringClass = type.getDeclaringClass();
+                if (declaringClass != null) {
+                    logger.info("add import " + type + ",DeclaringClass :" + declaringClass);
+                    imports.add(declaringClass.getName() + ".*");
                 } else {
                     imports.add(type.getName());
                 }
-            }
 
+            }
         }
 
 

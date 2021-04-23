@@ -17,6 +17,12 @@ import ${servicePackageName}.info.*;
     </#if>
 </#list>
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+import ${imp};
+</#list>
+////////////////////////////////////
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;

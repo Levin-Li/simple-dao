@@ -28,6 +28,12 @@ import ${field.infoClassName};
     </#if>
 </#list>
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+    import ${imp};
+</#list>
+////////////////////////////////////
 
 /**
  *  ${desc}服务实现
