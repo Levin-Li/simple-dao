@@ -40,14 +40,17 @@ public enum Op
     NotLike("NOT LIKE", "", ""),
 
     //% 通配符
-    Contains("LIKE", "'%'||", "||'%'"),
-    StartsWith("LIKE", "", "||'%'"),
-    EndsWith("LIKE", "'%'||", ""),
+
+//    该CONCAT功能在 JPA 2.0中 进行了扩展，以允许从规范的4.6.17.2.1节（字符串函数）传递两个以上的参数：
+//    CONCAT(string_primary, string_primary {, string_primary}* )
+//    在JPA 1中，这仅限于两个参数。
 
     // 函数形式
 //    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
-//    StartsWith("LIKE", "CONCAT(", ",'%')"),
-//    EndsWith("LIKE", "CONCAT('%',", ")"),
+    //改成 JPA 2.0 支持多于2个参数的形式
+    Contains("LIKE", "CONCAT('%',", ",'%')"),
+    StartsWith("LIKE", "CONCAT(", ",'%')"),
+    EndsWith("LIKE", "CONCAT('%',", ")"),
 
     //
     In("IN", "(", ")"),
