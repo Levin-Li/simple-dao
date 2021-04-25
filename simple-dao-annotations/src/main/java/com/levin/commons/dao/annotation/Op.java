@@ -45,10 +45,11 @@ public enum Op
 //    CONCAT(string_primary, string_primary {, string_primary}* )
 //    在JPA 1中，这仅限于两个参数。
 
-    // 函数形式
-//    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
+    //20210425号修复这个 bug，原来使用 || 连接符
+    // 函数形式，为了更好的兼容性，使用嵌套函数
+    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
     //改成 JPA 2.0 支持多于2个参数的形式
-    Contains("LIKE", "CONCAT('%',", ",'%')"),
+//    Contains("LIKE", "CONCAT('%',", ",'%')"),
     StartsWith("LIKE", "CONCAT(", ",'%')"),
     EndsWith("LIKE", "CONCAT('%',", ")"),
 
