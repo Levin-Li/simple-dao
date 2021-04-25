@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-@Configuration
+@Configuration("${modulePackageName}.${camelStyleModuleName}SpringConfiguration")
 @Slf4j
 //spring data scan，jpa querydsl entity class ...
 

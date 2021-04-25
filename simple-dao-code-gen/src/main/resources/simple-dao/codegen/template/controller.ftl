@@ -22,12 +22,11 @@ import org.springframework.util.*;
 
 // http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
 
-@RestController
+@RestController("${packageName}.${className}")
 @RequestMapping(ModuleOption.API_PATH + "${entityName?lower_case}")
 @Tag(name = "${desc}", description = "${desc}管理")
 @Slf4j
 public class ${className} {
-
 
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};

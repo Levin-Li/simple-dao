@@ -1161,7 +1161,7 @@
         @Eq(condition="#_val != null") //_val 变量名前要加#号
         String name = "Echo";
   
-  
+
    默认变量-2：查询对象的字段名做为变量名
 
 
@@ -1249,8 +1249,7 @@
          }
      
      }
-   
-      
+    
  
 #### 10.5 字段值自动转换
 
@@ -1298,8 +1297,7 @@
       
        @In(not = true, having = true)
        String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
-       
-      
+        
     
 ### 11  避免 N + 1 查询         
 

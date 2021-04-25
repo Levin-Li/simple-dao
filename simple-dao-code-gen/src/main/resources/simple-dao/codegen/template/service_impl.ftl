@@ -41,7 +41,7 @@ import ${field.infoClassName};
  *@author auto gen by simple-dao-codegen ${.now}
  *
  */
-@Service
+@Service("${packageName}.${serviceName}")
 @Slf4j
 public class ${className} implements ${serviceName} {
 

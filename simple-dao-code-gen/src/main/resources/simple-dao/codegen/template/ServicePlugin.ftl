@@ -15,7 +15,7 @@ import java.util.*;
 //模块插件
 
 @Slf4j
-@Component("${modulePackageName}.${camelStyleModuleName}Plugin")
+@Component("${modulePackageName}.Plugin")
 public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware {
 
     //dao
