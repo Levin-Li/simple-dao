@@ -1,5 +1,6 @@
 package com.levin.commons.dao;
 
+import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.misc.Fetch;
 
 import java.lang.annotation.*;
@@ -15,6 +16,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@GenNameConstant
 public @interface JoinOption {
 
     /**

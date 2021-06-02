@@ -148,13 +148,13 @@
 
    在生成好的实体模块上编译项目。
     
-   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
+   ![编译实体类](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
 
 ##### 2.1.4 生成代码(在实体模块上双击执行插件!)
 
    在编译成功后的实体模块上，双击插件的 gen-code 开始生成代码。(注意是在实体模块上双击执行插件!)
    
-   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
+   ![生成代码](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
     
    代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码。
          
@@ -162,11 +162,11 @@
    
    在Maven操作面板上刷新项目，然后启动项目。
     
-   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-4.png)     
+   ![启动项目](./simple-dao-code-gen/src/main/resources/public/images/step-4.png)     
            
    项目启动成功，点击控制台的链接查看运行结果。    
    
-   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-5.png)    
+   ![查看结果](./simple-dao-code-gen/src/main/resources/public/images/step-5.png)    
    
    So Easy!  
         
@@ -174,6 +174,18 @@
 #### 3 用户手册
      
    其它请查看 [用户手册](./manual.md) 
+   
+
+#### 4 鼓励一下
+     
+   支付宝 微信   
+   
+   ![支付宝](./public/zfb.jpg) ![微信](./public/wx.jpg)   
+      
+
+#### 5 联系作者
+
+ 邮箱：99668980@qq.com   
  
 
 
