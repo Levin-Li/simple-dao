@@ -13,18 +13,20 @@ import com.levin.commons.dao.annotation.update.Immutable;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -33,8 +35,8 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static com.levin.commons.dao.util.QueryAnnotationUtil.findFirstMatched;
-import static com.levin.commons.dao.util.QueryAnnotationUtil.tryGetJpaEntityFieldName;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
+import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -54,17 +56,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected javax.validation.Validator validator;
 
+
+    //////////////////////////////////////////////////////////
     protected Class<T> entityClass;
 
     protected String tableName;
 
     protected String alias;
 
+    private boolean nativeQL = false;
+    ///////////////////////////////////////////////////////////
+
     final List whereParamValues = new ArrayList(5);
 
-    int rowStart = -1, rowCount = 512;
+    //加到最后的语句
+    final SimpleList<String> lastStatements = new SimpleList<>(true, new ArrayList(2), " ");
 
-    private final boolean nativeQL;
+    final List lastStatementParamValues = new ArrayList(2);
+
+    @Getter
+    @Setter
+    int rowStart = -1, rowCount = 512;
 
 
     private final ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
@@ -73,13 +85,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected ParameterNameDiscoverer parameterNameDiscoverer;
 
-    protected final List<TargetOption> targetOptionAnnoList = new ArrayList<>(5);
-
+    protected final List<TargetOption> targetOptionList = new ArrayList<>(5);
 
     public static final String BASE_PACKAGE_NAME = Eq.class.getPackage().getName();
 
     public static final String LOGIC_PACKAGE_NAME = AND.class.getPackage().getName();
-
 
     protected boolean safeMode = true;
 
@@ -87,14 +97,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected boolean filterLogicDeletedData = true;
 
+    transient MiniDao dao;
+
 
     /**
-     * 实体对象，可空字段缓存
+     * 别名缓存
      */
-    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
+    protected final ContextHolder<String, Class> aliasMap = ContextHolder.buildContext(true);
 
-    protected ConditionBuilderImpl(boolean isNative) {
+    {
+        aliasMap.setKeyConverter(key -> key.trim().toLowerCase());
+    }
 
+    /**
+     * 当原生查询时，是否允许名称转换，默认是允许的
+     */
+//    @Getter
+    protected boolean enableNameConvert = true;
+
+    /**
+     * 自动在最后面追加 limit 语句
+     * <p>
+     * 查询时无效
+     */
+//    @Getter
+    protected boolean autoAppendLimitStatement = false;
+
+    /**
+     * 默认自动追加更新或是删除的条件
+     */
+    private boolean autoAppendOperationCondition = true;
+
+
+    protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
+
+        this.dao = dao;
         this.nativeQL = isNative;
         this.entityClass = null;
         this.tableName = null;
@@ -102,34 +139,33 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-    public ConditionBuilderImpl(Class<T> entityClass, String alias) {
-
-        this.entityClass = entityClass;
-        this.nativeQL = false;
-        this.tableName = null;
-        this.alias = (alias != null && entityClass != null) ? alias.trim() : null;
+    public ConditionBuilderImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
 
         if (entityClass == null) {
             throw new IllegalArgumentException("entityClass is null");
         }
 
-//        if (!entityClass.isAnnotationPresent(Entity.class)) {
-//            throw new IllegalArgumentException("entityClass is not a jpa Entity class");
-//        }
+        this.dao = dao;
+        this.entityClass = entityClass;
+        this.tableName = null;
+        this.nativeQL = isNative;
+        this.alias = alias;
 
     }
 
-    public ConditionBuilderImpl(String tableName, String alias) {
-
-        this.tableName = tableName;
-        this.entityClass = null;
-        this.nativeQL = true;
-        this.alias = (alias != null && tableName != null) ? alias.trim() : null;
+    public ConditionBuilderImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
 
         if (tableName == null) {
             throw new IllegalArgumentException("tableName is null");
         }
+        this.dao = dao;
+        this.entityClass = null;
+        setTableName(tableName);
+        this.nativeQL = isNative;
+        this.alias = alias;
+
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -147,9 +183,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+
     public javax.validation.Validator getValidator() {
         return validator;
     }
+
 
     public CB setValidator(javax.validation.Validator validator) {
         this.validator = validator;
@@ -159,7 +197,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected EntityOption getEntityOption() {
 
         //
-        return entityClass != null ? entityClass.getAnnotation(EntityOption.class) : null;
+        return hasEntityClass() ? entityClass.getAnnotation(EntityOption.class) : null;
 
         // QueryAnnotationUtil.getEntityOption(entityClass);
     }
@@ -200,14 +238,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected boolean hasLogicDeleteField() {
-
-        EntityOption entityOption = getEntityOption();
+    protected boolean hasLogicDeleteField(EntityOption entityOption) {
 
         return entityOption != null
-                && StringUtils.hasText(entityOption.logicalDeleteField())
+                && StringUtils.hasText(entityOption.logicalDeleteFieldName())
                 && StringUtils.hasText(entityOption.logicalDeleteValue());
     }
+
+//    protected boolean hasLogicDeleteStatement(EntityOption entityOption) {
+//        return entityOption != null
+//                && StringUtils.hasText(entityOption.logicalDeleteSetValueStatement())
+//                && StringUtils.hasText(entityOption.logicalDeleteDeterminedStatement());
+//    }
 
 
     /**
@@ -231,19 +273,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return safeMode;
     }
 
-    /**
-     * 获取参数占位符
-     * <p/>
-     * 后期考虑支持位置参数
-     * 还有命名参数
-     *
-     * @param name
-     * @return
-     */
-    protected String getParamPlaceholder(String name) {
-        return hasText(name) ? ":" + name : getParamPlaceholder();
-    }
-
 
     @Override
     public CB setContext(Map<String, Object> context) {
@@ -251,9 +280,31 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+
+    /**
+     * @return
+     */
+    protected Map<String, Object> getLocalContext(boolean autoInit) {
+
+        if (autoInit && this.context == null) {
+            this.context = new ConcurrentReferenceHashMap<>();
+        }
+
+        return this.context;
+    }
+
+
     @Override
     public boolean isSafeLimit() {
         return rowCount > 0 && rowCount <= getDao().getSafeModeMaxLimit();
+    }
+
+    @Override
+    public CB disableNameConvert() {
+
+        enableNameConvert = false;
+
+        return (CB) this;
     }
 
     @Override
@@ -279,6 +330,44 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.rowStart = rowStartPosition;
         this.rowCount = rowCount;
         return (CB) this;
+    }
+
+    @Override
+    public CB enableAutoAppendLimitStatement() {
+
+        autoAppendLimitStatement = true;
+
+        return (CB) this;
+    }
+
+    @Override
+    public CB disableOperationCondition() {
+
+        autoAppendOperationCondition = false;
+
+        return (CB) this;
+    }
+
+    protected String getLimitStatement() {
+
+        String ql = "";
+
+        if (autoAppendLimitStatement) {
+
+            if (rowStart > 0) {
+                ql = " " + rowStart;
+            }
+
+            if (rowCount > 0) {
+                ql = (ql.length() > 0 ? " , " : " ") + rowCount;
+            }
+
+            if (ql.length() > 0) {
+                ql = " limit " + ql;
+            }
+        }
+
+        return ql;
     }
 
     /**
@@ -335,6 +424,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (Boolean.TRUE.equals(isAppend)) {
             appendToWhere(conditionExpr, paramValues, false);
+        }
+
+        return (CB) this;
+    }
+
+
+    @Override
+    public CB appendToLast(Boolean isAppend, String expr, Object... paramValues) {
+
+        if (Boolean.TRUE.equals(isAppend)
+                && hasText(expr)) {
+            lastStatements.add(expr);
+            lastStatementParamValues.add(paramValues);
         }
 
         return (CB) this;
@@ -638,33 +740,98 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return processAnno(2, entityAttrName, keyword);
     }
 
-
-    public int getRowStart() {
-        return rowStart;
-    }
-
-    public void setRowStart(int rowStart) {
-        this.rowStart = rowStart;
-    }
-
-    public int getRowCount() {
-        return rowCount;
-    }
-
-    public void setRowCount(int rowCount) {
-        this.rowCount = rowCount;
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 是否有有效的查询实体
+     * 是否已经设置了要查询的实体或是表名
      *
      * @return
      */
     protected boolean hasValidQueryEntity() {
-        return (entityClass != null && entityClass != Void.class) || hasText(tableName);
+        return hasEntityClass() || hasText(tableName);
     }
+
+    protected boolean hasEntityClass() {
+        return (entityClass != null && entityClass != Void.class);
+    }
+
+
+    protected CB setTableName(String tableName) {
+
+        this.tableName = tableName;
+
+        if (!hasEntityClass()) {
+
+            ExprUtils.tryLoadClass(tableName, clazz -> {
+                this.entityClass = clazz;
+                //如果表名是类名，做个自动转换
+                this.tableName = getTableNameByAnnotation(entityClass);
+            });
+        }
+
+        return (CB) this;
+    }
+
+
+    /**
+     * 尝试转换表名
+     */
+    protected void tryToPhysicalTableName() {
+        this.tableName = tryToPhysicalTableName(tableName);
+    }
+
+    protected String tryToPhysicalTableName(String tableName) {
+
+        if (isNative() && enableNameConvert && hasText(tableName)
+                && !containsWhitespace(tableName) && getDao() != null) {
+
+            PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+
+            if (namingStrategy != null) {
+                //转换名称
+                tableName = namingStrategy.toPhysicalTableName(tableName, null);
+            }
+        }
+
+        return tableName;
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    protected String tryToPhysicalColumnName(String name) {
+
+        //尝试或是字段名
+        PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+
+        if (isNative()
+                && enableNameConvert
+                && name != null
+                && namingStrategy != null) {
+            //转换名称
+            return namingStrategy.toPhysicalColumnName(name, null);
+        }
+
+        return name;
+    }
+
+    /**
+     * 自动更新表名
+     *
+     * @return
+     */
+    protected CB tryUpdateTableName() {
+
+        if (isNative()
+                && hasEntityClass()
+                && !StringUtils.hasText(tableName)) {
+            setTableName(getTableNameByAnnotation(entityClass));
+        }
+
+        return (CB) this;
+    }
+
 
     protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
@@ -674,48 +841,79 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         //重复的不再处理
-        if (targetOptionAnnoList.contains(targetOption)) {
+        if (targetOptionList.contains(targetOption)) {
             return (CB) this;
         }
 
-        targetOptionAnnoList.add(targetOption);
+        targetOptionList.add(targetOption);
 
         if (hasValidQueryEntity()) {
             return (CB) this;
         }
 
-        //使用 join 语句的方式增加连接语句
-        String joinStatement = ExprUtils.genJoinStatement(getDao(), targetOption.entityClass(), targetOption.tableName(), targetOption.alias(), targetOption.joinOptions());
-        if (hasText(joinStatement)) {
-            join(true, joinStatement);
-        }
 
         this.entityClass = targetOption.entityClass();
 
-        this.tableName = targetOption.tableName();
+        setTableName(targetOption.tableName());
+
+        this.nativeQL = targetOption.nativeQL();
 
         this.alias = targetOption.alias();
 
         //如果是第一个
-        this.safeMode = targetOption.isSafeMode();
+        this.safeMode = targetOption.safeMode();
 
-        if (hasText(targetOption.fromStatement())) {
-            setFromStatement(targetOption.fromStatement());
-        }
+//        if (hasText(targetOption.fromStatement())) {
+//            setFromStatement(targetOption.fromStatement());
+//        }
 
         //  this.where(targetOption.fixedCondition());
 
-        //设置limit，如果原来没有设置
 
-        if (this.rowCount < 1
-                && targetOption.maxResults() > 0) {
+        if (targetOption.maxResults() > 0) {
             this.rowCount = targetOption.maxResults();
         }
 
-        return (CB) this;
+        tryUpdateTableName();
 
+        //使用 join 语句的方式增加连接语句
+//        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+//                , aliasMap::put
+//                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+//                , entityClass, tableName, alias, targetOption.joinOptions());
+//
+//        if (hasText(joinStatement)) {
+//            join(true, joinStatement);
+//        }
+
+        join(true, targetOption.joinOptions());
+        join(true, targetOption.simpleJoinOptions());
+
+        return (CB) this;
     }
 
+
+    /**
+     * 只对SelectDao 有效
+     * 其它 Dao 默认忽略这个部分
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
+    protected CB join(Boolean isAppend, JoinOption... joinOptions) {
+
+        //Nothing to do
+
+        return (CB) this;
+    }
+
+    protected CB join(Boolean isAppend, SimpleJoinOption... joinOptions) {
+
+        //Nothing to do
+
+        return (CB) this;
+    }
 
     protected CB setQueryOption(Object... queryObjs) {
 
@@ -733,19 +931,34 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 }
 
                 entityClass = queryOption.getEntityClass();
-                tableName = queryOption.getEntityName();
+
+                this.nativeQL = queryOption.isNative();
+
+                // tableName = queryOption.getEntityName();
+
+                setTableName(queryOption.getEntityName());
+
                 alias = queryOption.getAlias();
 
+                tryUpdateTableName();
+
                 if (hasValidQueryEntity()) {
-                    String joinStatement = ExprUtils.genJoinStatement(getDao(), entityClass, tableName, alias, queryOption.getJoinOptions());
-                    if (hasText(joinStatement)) {
-                        join(true, joinStatement);
-                    }
+
+//                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+//                            , aliasMap::put
+//                            , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+//                            , entityClass, tableName, alias, queryOption.getJoinOptions());
+//                    if (hasText(joinStatement)) {
+//                        join(true, joinStatement);
+//                    }
+
+                    join(true, queryOption.getJoinOptions());
+
+                    join(true, queryOption.simpleJoinOptions());
                 }
 
             });
         });
-
 
         return (CB) this;
     }
@@ -862,7 +1075,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param queryObjs
      * @return
      */
-    private static List<Object> expand(List resultList, Object... queryObjs) {
+    protected static List<Object> expand(List resultList, Object... queryObjs) {
 
         if (resultList == null) {
             resultList = new ArrayList();
@@ -878,8 +1091,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //如果是类，则实例化
+            if (queryObj instanceof Class) {
+                queryObj = BeanUtils.instantiateClass((Class<? extends Object>) queryObj);
+            }
+
             if (queryObj.getClass().isArray()) {
                 expand(resultList, (Object[]) queryObj);
+            } else if (queryObj instanceof Iterable) {
+                ///////////////////////////////////////
+                for (Object o : ((Iterable) queryObj)) {
+                    expand(resultList, o);
+                }
             } else {
                 resultList.add(queryObj);
             }
@@ -923,6 +1146,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //对 注解的支持 PostConstruct
+            ClassUtils.invokeFirstPostConstructMethod(queryValueObj);
+
             //没有回调时，表示本地调用
             if (attrCallback == null) {
                 //尝试设置分页
@@ -938,9 +1164,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            List<Field> fields = QueryAnnotationUtil.getCacheFields(typeClass);
+            List<Field> fields = QueryAnnotationUtil.getNonStaticFields(typeClass);
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
+
+            processCtxVar(queryValueObj, fields);
 
             //开始处理字段
             for (Field field : fields) {
@@ -951,7 +1179,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 }
 
                 ResolvableType fieldRT = ResolvableType.forField(field, rootType);
-
 
                 Class<?> fieldRealType = fieldRT.resolve(field.getType());
 
@@ -990,6 +1217,76 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     /**
+     * 出来上下文变量
+     *
+     * @param queryValueObj
+     * @param fields
+     */
+    private void processCtxVar(Object queryValueObj, List<Field> fields) {
+
+        //开始处理字段
+        for (Field field : fields) {
+
+            field.setAccessible(true);
+
+            CtxVar ctxVar = field.getAnnotation(CtxVar.class);
+
+            Object fieldValue = null;
+
+            try {
+                fieldValue = field.get(queryValueObj);
+                if (ctxVar == null
+                        || !evalTrueExpr(queryValueObj, fieldValue, field.getName(), ctxVar.condition())) {
+                    continue;
+                }
+            } catch (IllegalAccessException e) {
+                throw new StatementBuildException(field + "条件过滤失败", e);
+            }
+
+            String name = ctxVar.value();
+
+            if (!StringUtils.hasText(name)) {
+                name = field.getName();
+            }
+
+            if (ctxVar.inject()) {
+
+                //如果是强制覆盖，或是原值为 null
+                if (ctxVar.forceOverride()
+                        || fieldValue == null) {
+                    try {
+
+                        List<Map<String, ?>> contexts = buildContextValues(queryValueObj, fieldValue, field.getName());
+
+                        boolean isSpel = name.toUpperCase().trim().startsWith(ExpressionType.SPEL_PREFIX);
+
+                        name = isSpel ? name.trim().substring(ExpressionType.SPEL_PREFIX.length()) : name;
+
+                        Object tmpValue = isSpel ? ExprUtils.evalSpEL(queryValueObj, name, contexts) : ObjectUtil.findValue(name, true, false, contexts);
+
+                        fieldValue = ObjectUtil.convert(tmpValue, field.getType());
+
+                        field.set(queryValueObj, fieldValue);
+
+                    } catch (IllegalAccessException e) {
+                        throw new StatementBuildException(field + "变量注入识别", e);
+                    }
+                }
+
+            } else {
+
+                Map<String, Object> localContext = getLocalContext(true);
+
+                //如果是强制覆盖 或是原有变量等于 null
+                if (ctxVar.forceOverride()
+                        || localContext.get(name) == null) {
+                    localContext.put(name, fieldValue);
+                }
+            }
+        }
+    }
+
+    /**
      * 参数的属性名称中带有查询注释说明
      * <p/>
      * 如：属性名Q_Not_Like_name  值 llw，表f示会生成查询条件 name not like '%llw%'
@@ -1001,8 +1298,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     public void walkMap(String paramPrefix, Map<String, Object>... queryParams) {
 
-        if (queryParams == null)
+        if (queryParams == null) {
             return;
+        }
 
         boolean hasPrefix = hasText(paramPrefix);
 
@@ -1016,14 +1314,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 String name = entry.getKey();
 
-                final String oldExpr = name;
+                // final String oldExpr = name;
 
                 Object paramValue = entry.getValue();
 
                 if (hasPrefix) {
                     //如果不是有效的属性，则忽略
-                    if (!name.startsWith(paramPrefix))
+                    if (!name.startsWith(paramPrefix)) {
                         continue;
+                    }
                     //去除前缀
                     name = name.substring(paramPrefix.length());
                 }
@@ -1262,10 +1561,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-
             if ((!complexType) && !isNullOrEmptyTxt(value)) {
                 //如果没有注解，不是复杂类型，则默认为等于查询
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, QueryAnnotationUtil.getAnnotation(Eq.class));
+                Annotation opAnno = getAnnotation(Eq.class);
+
+                //如果参数是一个可迭代对象，改为用 in
+                if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
+                        || value instanceof Object[]) {
+                    opAnno = getAnnotation(In.class);
+                }
+
+                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
             } else {
 
                 //如果不是
@@ -1287,12 +1593,31 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(annotation -> isValid(annotation, bean, name, value))
                     .forEach(annotation -> {
                         processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                tryGetJpaEntityFieldName(annotation, this.entityClass, name),
+                                tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
                                 varType, value, annotation);
                     });
         }
 
+
     }
+
+    protected static String trim(String str) {
+        return str == null ? null : str.trim();
+    }
+
+
+    protected Class tryGetEntityClass(Annotation annotation) {
+
+        String domainAlias = ClassUtils.getValue(annotation, E_C.domain, false);
+
+        if (!hasText(domainAlias)
+                || domainAlias.trim().equalsIgnoreCase(trim(alias))) {
+            return entityClass;
+        }
+
+        return aliasMap.get(domainAlias);
+    }
+
 
     protected boolean isPackageStartsWith(String packageName, Annotation opAnnotation) {
         return opAnnotation != null && opAnnotation.annotationType().getName().startsWith(packageName);
@@ -1353,7 +1678,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (validator != null
                 && hasContent(validator.expr())) {
             //如果验证识别
-            if (!Boolean.TRUE.equals(evalExpr(bean, value, name, validator.expr()))) {
+            if (!evalTrueExpr(bean, value, name, validator.expr())) {
                 throw new StatementBuildException(bean.getClass() + " group verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
@@ -1409,33 +1734,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    /**
-     * 关键方法
-     * <p>
-     * 如果是数组，必须要求不存在原子元素，并且不为空数组，并且元素不都是Null
-     *
-     * @param varType
-     * @param value
-     * @return
-     */
-    protected boolean isComplexType(Class<?> varType, Object value) {
-
-        if (varType == null && value != null) {
-
-            // 是数组并且有原子元素
-            if (QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)) {
-                return false;
-            }
-
-            varType = value.getClass();
-        }
-
-        return varType != null
-                && varType.getAnnotation(PrimitiveValue.class) == null
-                && !QueryAnnotationUtil.isPrimitive(varType);
-    }
-
-
     protected CB having(String expr, Object... paramValues) {
         throw new UnsupportedOperationException("appendHaving [" + expr + "]");
     }
@@ -1470,13 +1768,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    public void genExprAndProcess(Object bean, Class<?> varType, String name, Object value,
+    public void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
                                   PrimitiveValue primitiveValue, Annotation opAnnotation,
                                   BiConsumer<String, ValueHolder<? extends Object>> consumer) {
 
-        boolean complexType = (primitiveValue == null) && isComplexType(varType, value);
 
-        ValueHolder<Object> holder = new ValueHolder<>(bean, name, value);
+        boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
+
+
+        ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 
         String expr = genConditionExpr(complexType, opAnnotation, name, holder);
 
@@ -1491,13 +1791,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param queryObj
      */
     private void reAppendByQueryObj(Object queryObj) {
-        if (queryObj != null) {
-            if (queryObj.getClass().isArray()) {
-                appendByQueryObj((Object[]) queryObj);
-            } else {
-                appendByQueryObj(queryObj);
-            }
-        }
+        appendByQueryObj(queryObj);
     }
 
 
@@ -1554,9 +1848,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         }
 
-        return ExprUtils.genExpr(c, aroundColumnPrefix(c.domain(), name), complexType, getExpectType(name), holder, getParamPlaceholder(),
-                this::buildSubQuery
-                , buildContextValues(holder.root, holder.value, name));
+        List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
+
+
+        return ExprUtils.genExpr(c, name, complexType, getExpectType(name), holder, getParamPlaceholder(),
+
+                //condition 求值回调
+                expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
+
+                //字段别名和转换回调 求值回调
+                this::aroundColumnPrefix,
+
+                this::buildSubQuery, contexts);
     }
 
 
@@ -1573,36 +1876,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected String getText(String text, String defaultV) {
         return hasText(text) ? text : defaultV;
-    }
-
-    /**
-     * 是否不允许空
-     *
-     * @param propertyName
-     * @return
-     */
-    private boolean isNullable(String propertyName) {
-
-        String key = entityClass.getName() + "." + propertyName;
-
-        Boolean aBoolean = entityClassNullableFields.get(key);
-
-        if (aBoolean == null) {
-
-            Field field = ReflectionUtils.findField(entityClass, propertyName);
-
-            if (field == null) {
-                throw new RuntimeException(new NoSuchFieldException(key));
-            }
-
-            Column column = field.getAnnotation(Column.class);
-
-            aBoolean = column == null || column.nullable();
-
-            entityClassNullableFields.put(key, aBoolean);
-        }
-
-        return aBoolean;
     }
 
 
@@ -1635,37 +1908,50 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         checkSafeMode(whereStatement);
 
+        EntityOption entityOption = getEntityOption();
+
+        if (entityOption == null) {
+            return whereStatement;
+        }
+
+        whereExprRootNode.switchCurrentNodeToSelf();
+
+        if (autoAppendOperationCondition) {
+
+            if (this instanceof UpdateDao
+                    && hasText(entityOption.updateCondition())) {
+                appendToWhere(entityOption.updateCondition(), Collections.emptyList(), true);
+            } else if (this instanceof DeleteDao
+                    && hasText(entityOption.deleteCondition())) {
+                appendToWhere(entityOption.deleteCondition(), Collections.emptyList(), true);
+            }
+
+        }
+
         //如果过滤逻辑删除的数据
         if (filterLogicDeletedData
-                && hasLogicDeleteField()) {
-
-            EntityOption entityOption = getEntityOption();
+                && hasLogicDeleteField(entityOption)) {
 
             String expr = genLogicDeleteExpr(entityOption, Op.NotEq);
 
-            String propertyName = entityOption.logicalDeleteField().trim();
+            String propertyName = entityOption.logicalDeleteFieldName().trim();
 
-            if (isNullable(propertyName)) {
+            if (isNullable(entityClass, propertyName)) {
                 expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
             }
 
-            whereExprRootNode.switchCurrentNodeToSelf();
-
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
-
-            //重新生成 where
-            whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
         }
 
-        return whereStatement;
+        return getText(whereExprRootNode.toString(), " Where ", " ", " ");
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {
-        return aroundColumnPrefix(entityOption.logicalDeleteField().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
+        return aroundColumnPrefix(entityOption.logicalDeleteFieldName().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
     }
 
     protected Object convertLogicDeleteValue(EntityOption entityOption) {
-        return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteField().trim()));
+        return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteFieldName().trim()));
     }
 
     protected Object tryConvertPropertyValue(String name, String value) {
@@ -1678,7 +1964,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return getDao().getParamPlaceholder(isNative());
     }
 
-    protected abstract MiniDao getDao();
+    protected MiniDao getDao() {
+        return dao;
+    }
 
     /**
      * @return
@@ -1687,36 +1975,82 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return this.nativeQL;
     }
 
+    /**
+     * 生成语句
+     *
+     * @return
+     */
     protected String genEntityStatement() {
 
-        if (hasText(this.tableName)) {
-            return tableName + " " + getText(alias, " ");
-        } else if (entityClass != null) {
+        if (isNative()) {
+
+            tryUpdateTableName();
+
+            tryToPhysicalTableName();
+
+            if (hasText(this.tableName)) {
+                return tableName + " " + getText(alias, " ");
+            }
+        }
+
+        if (!isNative() && hasEntityClass()) {
             return entityClass.getName() + " " + getText(alias, " ");
         }
 
-        throw new IllegalArgumentException("entityClass or tableName is null");
+        throw new IllegalArgumentException("entityClass or tableName is no valid");
     }
 
+    /**
+     * 转换名称
+     *
+     * @param column
+     * @return
+     */
     protected String aroundColumnPrefix(String column) {
         return aroundColumnPrefix(null, column);
     }
 
+
+    /**
+     * @param domain
+     * @param column
+     * @return
+     */
     protected String aroundColumnPrefix(String domain, String column) {
+        return aroundColumnPrefix(entityClass, domain, column);
+    }
+
+    /**
+     * @param domain
+     * @param column
+     * @return
+     */
+    protected String aroundColumnPrefix(Class entityType, String domain, String column) {
 
         if (!hasText(column)) {
             return "";
         }
 
+        //去除空格
+        column = column.trim();
+
         boolean hasDomain = hasText(domain);
 
+        //关键逻辑点
         //如果包含占位符，则直接返回
-        //@fix bug 20200227
+        //@Fix bug 20200227
         if (column.contains(getParamPlaceholder().trim())
-                || !Character.isLetter(column.trim().charAt(0))
-                || StringUtils.containsWhitespace(column.trim()) //包含白空格
-                || (!hasDomain && column.contains("."))) {
+                || !Character.isLetter(column.charAt(0))
+                || StringUtils.containsWhitespace(column) //包含白空格
+                || !column.matches("[\\w._]+")
+            //  || (!hasDomain && column.contains("."))
+        ) {
+
             return column;
+        }
+
+        if (!hasDomain && column.contains(".")) {
+            return tryGetPhysicalColumnName(column);
         }
 
         if (!hasDomain) {
@@ -1727,12 +2061,63 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         String prefix = getText(domain, "", ".", "");
 
-        return column.trim().startsWith(prefix) ? column : prefix + column;
+        return tryGetPhysicalColumnName(column.trim().startsWith(prefix) ? column : prefix + column);
+    }
+
+    protected String tryGetPhysicalColumnName(String column) {
+
+        if (isNative()) {
+
+            //获取别名
+            int indexOf = column.indexOf(".");
+
+            if (indexOf > 0) {
+
+                //转换成小写
+                String domain = column.substring(0, indexOf).trim().toLowerCase();
+
+                column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
+
+                column = tryToPhysicalColumnName(column);
+
+                column = domain + "." + column;
+
+            } else {
+
+                column = QueryAnnotationUtil.getColumnName(entityClass, column);
+                column = tryToPhysicalColumnName(column);
+            }
+
+        }
+
+        return column;
     }
 
     protected String genFromStatement() {
         return " From " + genEntityStatement();
     }
+
+
+    /**
+     * 替换文本变量，替换字段
+     *
+     * @param ql 查询语句
+     * @return
+     */
+    protected String replaceVar(String ql) {
+        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix, this::toFromTableName);
+    }
+
+
+    protected String toFromTableName(String tableName) {
+
+        if (isNative()) {
+            return getTableNameByEntityClassName(tableName);
+        }
+
+        return tableName;
+    }
+
 
     /**
      * 返回当前节点是否有效
@@ -1756,7 +2141,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return true;
         }
 
-        boolean isOK = evalExpr(root, value, name, conditionExpr);
+        boolean isOK = evalTrueExpr(root, value, name, conditionExpr);
 
 
         Boolean require = ClassUtils.getValue(anno, E_C.require, false);
@@ -1778,28 +2163,43 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr  如果 expr 为 null
      * @return
      */
-    protected <T> T evalExpr(Object root, Object value, String name, String expr) {
+    protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
+        return evalTrueExpr(root, value, expr, buildContextValues(root, value, name));
+    }
+
+    protected boolean evalTrueExpr(Object root, Object value, String expr, List<Map<String, ? extends Object>> contexts) {
+
+        /**
+         * 默认是无条件限制
+         */
+        if (!StringUtils.hasText(expr)) {
+            return true;
+        }
 
         //优化性能
         if (C.NOT_NULL.equalsIgnoreCase(expr)) {
 
             if (value == null) {
-                return (T) Boolean.FALSE;
+                return false;
             } else if (value instanceof CharSequence) {
-                return (T) (Boolean) (((CharSequence) value).toString().trim().length() > 0);
+                return (((CharSequence) value).toString().trim().length() > 0);
             } else if (value.getClass().isArray()) {
-                return (T) (Boolean) (Array.getLength(value) > 0);
+                return (Array.getLength(value) > 0);
             } else if (value instanceof Collection) {
-                return (T) (Boolean) (((Collection) value).size() > 0);
+                return (((Collection) value).size() > 0);
             } else if (value instanceof Map) {
-                return (T) (Boolean) (((Map) value).size() > 0);
+                return (((Map) value).size() > 0);
             }
 
-            return (T) Boolean.TRUE;
-
+            return true;
         }
 
-        return ExprUtils.evalSpEL(root, expr, buildContextValues(root, value, name));
+
+        try {
+            return ExprUtils.evalSpEL(root, expr, contexts);
+        } catch (Exception e) {
+            throw new StatementBuildException("boolean expression [" + expr + "] eval fail," + e.getMessage(), e);
+        }
     }
 
 
@@ -1840,7 +2240,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     protected Class<?> getExpectType(String name) {
-        return entityClass != null ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
+        return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
     }
 
 
@@ -1853,6 +2253,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
+
+    /**
+     * @param root
+     * @param value
+     * @param fieldName
+     * @return
+     */
     public List<Map<String, ? extends Object>> buildContextValues(Object root, Object value, String fieldName) {
 
         List<Map<String, ? extends Object>> contextValues = new ArrayList<>();

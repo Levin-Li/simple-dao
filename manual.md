@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.26.RELEASE</version>
+            <version>2.2.28-SNAPSHOT</version>
         </dependency>
         
        
@@ -63,7 +63,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.26.RELEASE</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -218,7 +218,7 @@
               entityClass = User.class, //主表
               alias = E_User.ALIAS, //主表别名
               resultClass = TableJoinStatDTO.class, //结果类
-              isSafeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
+              safeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
               //连接表
               joinOptions = {
                       @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
@@ -313,6 +313,23 @@
            String groupName;
        
        } 
+       
+       
+##### 1.4.4 多表关联查询-笛卡儿积（ @SimpleJoinOption 注解）
+
+       代码的方式
+       
+         List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
+                      .join(true, Group.class, E_Group.ALIAS)
+                      .select(true, "u")
+                      .where("u.group.id = g.id ")
+                      .isNotNull(E_User.id)
+                      .gt(E_User.score, 5)
+                      .limit(0, 20)
+                      .find();
+                      
+            
+                            
 
 
 #### 1.5 分页查询支持
@@ -580,17 +597,135 @@
 
 ### 3 组件接口及注解
 
-#### 3.1 Dao接口
+#### 3.1 Dao核心接口
+
+*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
 *    [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
 *    [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
 *    [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
-
-*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
        
 *    [JpaDao](./simple-dao-jpa/src/main/java/com/levin/commons/dao/JpaDao.java)
+
+
+##### 3.1.1 常用接口
+
+      /**
+        * 从查询对象构造SelectDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> SelectDao<T> forSelect(Object... queryObjs);
+   
+       /**
+        * 从查询对象构造UpdateDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> UpdateDao<T> forUpdate(Object... queryObjs);
+   
+       /**
+        * 从查询对象构造UpdateDao
+        *
+        * @param <T>
+        * @return
+        */
+       <T> DeleteDao<T> forDelete(Object... queryObjs);
+       /////////////////////////////////////////////////////////////////////////////////////////
+   
+       /**
+        * 原生查询
+        *
+        * @param nativeQL      是否原生查询
+        * @param fromStatement
+        * @param <T>
+        * @return
+        */
+       @Deprecated
+       <T> SelectDao<T> selectFrom(boolean nativeQL, @NotNull String fromStatement);
+   
+       /**
+        * 创建一个指定类型的查询对象dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
+   
+       <T> SelectDao<T> selectByNative(@NotNull Class<T> clazz, String... alias);
+   
+       /**
+        * 创建一个指定类型的更新dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+   
+       <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias);
+   
+       /**
+        * 创建一个指定类型的删除dao
+        *
+        * @param clazz 实体类，不允许为null
+        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+   
+       <T> DeleteDao<T> deleteByNative(@NotNull Class<T> clazz, String... alias);
+   
+       ///////////////////////////////////////////////////////////////////////////////////////
+   
+       /**
+        * 原生查询
+        *
+        * @param tableName 表名
+        * @param alias     表别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        */
+       <T> SelectDao<T> selectFrom(@NotNull String tableName, String... alias);
+   
+       /**
+        * 使用表名创建一个更新的dao
+        * 默认为原生查询
+        *
+        * @param tableName 表名，不允许为null
+        * @param alias     别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+        */
+       <T> UpdateDao<T> updateTo(@NotNull String tableName, String... alias);
+   
+       /**
+        * 使用表名创建一个删除的dao
+        * 默认为原生查询
+        * <p/>
+        * alias别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+        *
+        * @param tableName 表名，不允许为null
+        * @param alias     为了接口使用更方便，使用可变参，但只获取第一个别名
+        * @param <T>
+        * @return
+        */
+       <T> DeleteDao<T> deleteFrom(@NotNull String tableName, String... alias);
+   
+       ////////////////////////////////////////////////////////////////////////////////////////////
+
        
 
 #### 3.2 注解的语句生成规则
@@ -630,6 +765,71 @@
        @Contains
        String classId;
 
+### 4.1 CASE 语句支持
+
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
+      public class CaseTestDto {
+      
+          @C
+          @CList({@C(op = Op.StartsWith)})
+          @Select
+          String name;
+      
+          // states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
+      
+          @Select(value = E_User.score, fieldCases = {
+                  @Case(value = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
+                          @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
+                          , @Case.When(whenExpr = "score > 85", thenExpr = "2")
+                          , @Case.When(whenExpr = "score > 60", thenExpr = "3")
+                          , @Case.When(whenExpr = "score > 30", thenExpr = "4")
+                  })
+      
+                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", whenOptions = {
+                  @Case.When(whenExpr = "'正常'", thenExpr = "1")
+                  , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
+                  , @Case.When(whenExpr = "'审请中'", thenExpr = "3")
+                  , @Case.When(whenExpr = "'已删除'", thenExpr = "4")
+          })
+          })
+          int scoreLevel = 1;
+      
+          @Ignore
+          boolean queryState = false;
+          
+      }
+     
+     //以上注解将生成以下语句
+     
+      //Select  (u.name) AS name  ,  
+           (CASE  
+             WHEN u.score > 95 AND u.lastUpdateTime is null THEN 1 
+             WHEN score > 85 THEN 2 WHEN score > 60 THEN 3 
+             WHEN score > 30 THEN 4 
+             ELSE 5 
+             END) AS scoreLevel   
+           From com.levin.commons.dao.domain.User u 
+    
+ 
+### 4.1 函数的支持（@Func注解实现）     
+           
+        
+            @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
+            protected Date createTime = new Date();
+            
+            @Ignore
+            String format ="'YYYY-MM-DD'";
+            
+            //以上注解将生成： DATE_FORMAT(createTime,'YYYY-MM-DD')
+            
+            // Func.ORIGIN_EXPR 代表原表达式
+            
+            //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
+            
+     
+               
 
 ### 5 统计查询
 
@@ -961,14 +1161,58 @@
         @Eq(condition="#_val != null") //_val 变量名前要加#号
         String name = "Echo";
   
-  
+
    默认变量-2：查询对象的字段名做为变量名
+
+
+   默认变量-3：通过 [CtxVar](./simple-dao-annotations/src/main/java/com/levin/commons/dao/CtxVar.java)   注解增加变量。
    
+   通常用于跨类的变量传递，通过 CtxVar 注解配置。 
+   
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleUserQO.QResult.class)
+      public class SimpleUserQO {
       
-  
-  
-  
+          @Data
+          @NoArgsConstructor
+          public static class QResult {
+      
+              @Select
+              String name;
+      
+              @Select
+              Integer score;
+      
+              //有条件的查询状态信息,变量huo
+              @Select(condition = "isQueryStatus")
+              String status;
+          }
+       
+     
+          @Lt
+          protected Date createTime = new Date();
+      
+          @Ignore
+          String format = "YYYY-MM-DD";
+      
+          @Ignore
+          @CtxVar //把 isQueryStatus 变量注入到当前上下文中
+          boolean isQueryStatus = true;
+      
+      } 
+      
    
+   字段变量的替换
+   为了兼容 原生查询和 JPA 查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
+   
+      F$:score > 95 AND F$:u.lastUpdateTime
+      
+      以上表达式当原生查询时语句被替换成：u.score > 95 AND u.last_update_time
+      当使用 JPA 查询时语句被替换成：u.score > 95 AND u.lastUpdateTime
+      
+      没有指定别名的字段，自动加上别名。
+ 
    上下文列表（越后面优先级越高）：
    
       DaoContext.getGlobalContext(); //全局上下文
@@ -978,6 +1222,34 @@
       dao.selectFrom(User.class).setContext(); //dao 实例上下文
       
       //参数上下文
+      
+      
+   组校验，基于 SPEL 实现跨字段的参数验证，通过 @Validator 注解实现。
+   
+     public class DeleteCustomerReq extends BaseTreeQueryReq implements ServiceReq {
+     
+         private static final long serialVersionUID = -350965260L;
+     
+         @Schema(description = "ID")
+         private Long id;
+     
+         @Schema(description = "ID集合")
+         @In(E_Customer.id)
+         @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
+         private Long[] ids;
+         
+         //删除客户信息表必须指定ID或是 ID 列表
+     
+         public DeleteCustomerReq(Long id) {
+             this.id = id;
+         }
+     
+         public DeleteCustomerReq(Long... ids) {
+             this.ids = ids;
+         }
+     
+     }
+    
  
 #### 10.5 字段值自动转换
 
@@ -1025,8 +1297,7 @@
       
        @In(not = true, having = true)
        String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
-       
-      
+        
     
 ### 11  避免 N + 1 查询         
 
@@ -1169,7 +1440,13 @@
    dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
+                  
                                
+#### 12.2 PostConstruct 注解支持
+
+   有标记 javax.annotation.PostConstruct 注解的方法，将会在查询之前被执行。
+   可以做些初始化的事情，比如初始化时间。
+   
                
        
 ### 13 代码生成
@@ -1184,7 +1461,7 @@
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.26.RELEASE</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
            
                <repositories>

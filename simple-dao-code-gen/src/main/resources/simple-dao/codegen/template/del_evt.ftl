@@ -24,6 +24,7 @@ import ${entityClassName};
 import ${entityClassPackage}.*;
 
 ////////////////////////////////////
+//自动导入列表
 <#list importList as imp>
     import ${imp};
 </#list>

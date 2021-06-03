@@ -6,16 +6,15 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 更新Dao实现类
@@ -27,7 +26,6 @@ public class UpdateDaoImpl<T>
         extends ConditionBuilderImpl<T, UpdateDao<T>>
         implements UpdateDao<T> {
 
-    transient MiniDao dao;
 
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
 
@@ -44,30 +42,20 @@ public class UpdateDaoImpl<T>
     }
 
     public UpdateDaoImpl() {
-        this(true, null);
+        this(null, true);
     }
 
-    public UpdateDaoImpl(boolean isNative, MiniDao dao) {
-        super(isNative);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative) {
+        super(dao, isNative);
     }
 
-    public UpdateDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-    public UpdateDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public UpdateDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
-
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
-
 
     @Override
     public UpdateDao<T> setColumns(String columns, Object... paramValues) {
@@ -133,9 +121,11 @@ public class UpdateDaoImpl<T>
                 .append(genEntityStatement())
                 .append(" Set ")
                 .append(updateColumns)
-                .append(whereStatement);
+                .append(whereStatement)
+                .append(" ").append(lastStatements)
+                .append(getLimitStatement());
 
-        return ExprUtils.replace(ql.toString(), getDaoContextValues());
+        return replaceVar(ql.toString());
     }
 
     /**
@@ -153,7 +143,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public List genFinalParamList() {
-        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues);
+        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, lastStatementParamValues);
     }
 
     @Transactional
@@ -194,6 +184,5 @@ public class UpdateDaoImpl<T>
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
     }
-
 
 }

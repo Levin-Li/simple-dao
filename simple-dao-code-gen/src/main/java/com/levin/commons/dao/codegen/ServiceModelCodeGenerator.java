@@ -12,6 +12,7 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,9 +32,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-
-import io.swagger.v3.oas.annotations.media.*;
-
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -80,7 +78,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true, false);
+    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
 
     /**
@@ -768,6 +766,7 @@ public final class ServiceModelCodeGenerator {
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("fields", fields);
+
         params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<String>(), (f, s) -> {
                     f.addAll(s);
@@ -893,10 +892,10 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
-            fieldModel.imports.add(fieldType.getName());
+            fieldModel.addImport(fieldType);
 
             if (subType != null) {
-                fieldModel.imports.add(subType.getName());
+                fieldModel.addImport(subType);
             }
 
             if (fieldModel.isJpaEntity()) {
@@ -916,7 +915,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setLazy(true);
                     fieldModel.setBaseType(false);
                 } else {
-                    fieldModel.getImports().add(subType.getName());
+                    fieldModel.addImport(subType);
                     fieldModel.setBaseType(isBaseType(forField, subType));
                 }
 
@@ -973,12 +972,12 @@ public final class ServiceModelCodeGenerator {
             //
             if (field.isAnnotationPresent(InjectVar.class)) {
                 annotations.add("@" + InjectVar.class.getSimpleName() + "");
-                fieldModel.getImports().add(InjectVar.class.getName());
+                fieldModel.addImport(InjectVar.class);
             }
 
             if (field.isAnnotationPresent(SecurityDomain.class)) {
                 annotations.add("@" + SecurityDomain.class.getSimpleName());
-                fieldModel.getImports().add(SecurityDomain.class.getName());
+                fieldModel.addImport(SecurityDomain.class);
             }
 
             if (fieldModel.getType().equals(String.class)
@@ -1191,6 +1190,31 @@ public final class ServiceModelCodeGenerator {
         private Set<String> imports = new LinkedHashSet<>();
 
         private List<String> annotations = new ArrayList<>();
+
+
+        public void addImport(Class type) {
+
+            if (type == null) {
+                return;
+            }
+
+            while (type.isArray()) {
+                type = type.getComponentType();
+            }
+
+            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
+                //如果是类中类
+                Class declaringClass = type.getDeclaringClass();
+                if (declaringClass != null) {
+                    logger.info("add import " + type + ",DeclaringClass :" + declaringClass);
+                    imports.add(declaringClass.getName() + ".*");
+                } else {
+                    imports.add(type.getName());
+                }
+
+            }
+        }
+
 
         private boolean pk = false;//是否主键字段
 

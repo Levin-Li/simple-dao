@@ -28,6 +28,12 @@ import ${field.infoClassName};
     </#if>
 </#list>
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+    import ${imp};
+</#list>
+////////////////////////////////////
 
 /**
  *  ${desc}服务实现
@@ -35,7 +41,7 @@ import ${field.infoClassName};
  *@author auto gen by simple-dao-codegen ${.now}
  *
  */
-@Service
+@Service("${packageName}.${serviceName}")
 @Slf4j
 public class ${className} implements ${serviceName} {
 

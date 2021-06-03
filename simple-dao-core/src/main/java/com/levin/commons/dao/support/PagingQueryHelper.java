@@ -199,8 +199,7 @@ public abstract class PagingQueryHelper {
 
         }
 
-        return Boolean.TRUE.equals(ExprUtils.evalSpEL(queryDto, expr, null));
-
+        return ExprUtils.evalSpEL(queryDto, expr, null);
     }
 
     private static Map<PageOption.Type, Field> getPageOptionFields(Object... dtos) {

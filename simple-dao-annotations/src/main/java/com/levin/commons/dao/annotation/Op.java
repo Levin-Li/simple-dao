@@ -40,14 +40,18 @@ public enum Op
     NotLike("NOT LIKE", "", ""),
 
     //% 通配符
-    Contains("LIKE", "'%'||", "||'%'"),
-    StartsWith("LIKE", "", "||'%'"),
-    EndsWith("LIKE", "'%'||", ""),
 
-    // 函数形式
-//    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
-//    StartsWith("LIKE", "CONCAT(", ",'%')"),
-//    EndsWith("LIKE", "CONCAT('%',", ")"),
+//    该CONCAT功能在 JPA 2.0中 进行了扩展，以允许从规范的4.6.17.2.1节（字符串函数）传递两个以上的参数：
+//    CONCAT(string_primary, string_primary {, string_primary}* )
+//    在JPA 1中，这仅限于两个参数。
+
+    //20210425号修复这个 bug，原来使用 || 连接符
+    // 函数形式，为了更好的兼容性，使用嵌套函数
+    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
+    //改成 JPA 2.0 支持多于2个参数的形式
+//    Contains("LIKE", "CONCAT('%',", ",'%')"),
+    StartsWith("LIKE", "CONCAT(", ",'%')"),
+    EndsWith("LIKE", "CONCAT('%',", ")"),
 
     //
     In("IN", "(", ")"),
@@ -78,7 +82,7 @@ public enum Op
 
     Expr("", null, Param),
 
-    Func(null,Field,null),
+    Func(null, Field, null),
 
     //  Func("",)
 
@@ -116,12 +120,16 @@ public enum Op
 
 
     /**
-     * 是否允许字段上的函数注解
+     * 是否允许字段表达式扩展
+     * <p>
+     * 目前 SQL 只有 update 不允许扩展
+     * update set t.name = ?
+     *
      * <p>
      * 默认可以，查询和条件都可以跌加，但更新是不允许字段叠加
      */
 
-    boolean allowFieldFunc = true;
+    boolean allowFieldExprExpand = true;
 
 
     /**
@@ -161,8 +169,6 @@ public enum Op
     String suffix = "";
 
 
-
-
     void init() {
 
         if (this.name().equals("In")
@@ -190,9 +196,9 @@ public enum Op
     }
 
 
-    Op(String operator, boolean allowFieldFunc) {
+    Op(String operator, boolean allowFieldExprExpand) {
         this.operator = operator;
-        this.allowFieldFunc = allowFieldFunc;
+        this.allowFieldExprExpand = allowFieldExprExpand;
         init();
     }
 

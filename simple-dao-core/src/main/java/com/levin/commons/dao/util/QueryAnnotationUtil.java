@@ -11,24 +11,33 @@ import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
-//import com.levin.commons.dao.annotation.select.SelectColumn;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.annotation.update.Update;
-//import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+
+import static org.springframework.util.StringUtils.containsWhitespace;
+import static org.springframework.util.StringUtils.hasText;
+
+//import com.levin.commons.dao.annotation.select.SelectColumn;
+//import com.levin.commons.dao.annotation.update.UpdateColumn;
 
 /**
  *
@@ -90,7 +99,7 @@ public abstract class QueryAnnotationUtil {
     @Update
 //    @UpdateColumn
 
-    private static final Map<String, Annotation> allInstanceMap = new HashMap<>();
+    private static final Map<String, Annotation> allInstanceMap;
 
     //条件表达式
 
@@ -98,27 +107,201 @@ public abstract class QueryAnnotationUtil {
     private static final Map<String, List<Field>> cacheFields = new ConcurrentReferenceHashMap<>();
 
 
-    public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, Boolean> hasSelectAnnotationCache = new ConcurrentReferenceHashMap<>();
 
-    private static final Locker locker = Locker.build();
+
+    public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+    private static final Locker cacheEntityOptionMapLocker = Locker.build();
+
+    public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
+
+
+    /**
+     * 实体类字段名和数据库字段名映射关系
+     */
+    protected static final Map<String/* 类名 */, Map<String/* 类字段名 */, String /* 数据库列名 */>> entityFieldNameMap = new ConcurrentReferenceHashMap<>();
+
+    private static final Locker entityFieldNameMapLocker = Locker.build();
+
+    private static final ContextHolder<String, String> propertyNameMapCaches = ContextHolder.buildContext(false);
+
+    /**
+     * 实体对象，可空字段缓存
+     */
+    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
+
 
     static {
-        synchronized (allInstanceMap) {
-            if (allInstanceMap.size() < 1) {
-                try {
-                    Annotation[] annotations = QueryAnnotationUtil.class.getDeclaredField("allInstanceMap").getDeclaredAnnotations();
-                    for (Annotation annotation : annotations) {
-                        allInstanceMap.put(annotation.annotationType().getSimpleName(), annotation);
-                    }
-                } catch (NoSuchFieldException e) {
-                    throw new RuntimeException(e);
-                }
+
+        Map<String, Annotation> temp = new HashMap<>(64);
+
+        try {
+            Annotation[] annotations = QueryAnnotationUtil.class.getDeclaredField("allInstanceMap").getDeclaredAnnotations();
+            for (Annotation annotation : annotations) {
+                temp.put(annotation.annotationType().getSimpleName(), annotation);
             }
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
+
+        //不可修改的
+        allInstanceMap = Collections.unmodifiableMap(temp);
     }
 
+    /**
+     * 获取所有注解
+     *
+     * @return
+     */
     public static Map<String, Annotation> getAllAnnotations() {
-        return new HashMap<>(allInstanceMap);
+        return allInstanceMap;
+    }
+
+
+    /**
+     * 是否不允许空
+     *
+     * @param propertyName
+     * @return
+     */
+    public static boolean isNullable(Class entityClass, String propertyName) {
+
+        String key = entityClass.getName() + "." + propertyName;
+
+        Boolean aBoolean = entityClassNullableFields.get(key);
+
+        if (aBoolean == null) {
+
+            Field field = ReflectionUtils.findField(entityClass, propertyName);
+
+            if (field == null) {
+                throw new RuntimeException(new NoSuchFieldException(key));
+            }
+
+            Column column = field.getAnnotation(Column.class);
+
+            aBoolean = column == null || column.nullable();
+
+            entityClassNullableFields.put(key, aBoolean);
+        }
+
+        return aBoolean;
+    }
+
+
+    /**
+     * 获取实体类类字段名对应的表列名
+     *
+     * @param entityClass
+     * @param fieldName
+     * @return
+     */
+    public static String getColumnName(Class entityClass, String fieldName) {
+
+        if (!ExprUtils.isValidClass(entityClass)
+                || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
+            return fieldName;
+        }
+
+//        if (!entityClass.isAnnotationPresent(Entity.class)) {
+//            return fieldName;
+//        }
+
+        String key = entityClass.getName();
+
+        Map<String, String> fieldMap = entityFieldNameMap.get(key);
+
+        if (fieldMap == null) {
+
+            synchronized (entityFieldNameMapLocker.getLock(key)) {
+
+                fieldMap = entityFieldNameMap.get(key);
+
+                //等到锁后如果还是为空
+                if (fieldMap == null) {
+
+                    fieldMap = new HashMap<>(7);
+
+                    final Map tempMap = fieldMap;
+
+                    ReflectionUtils.doWithFields(entityClass, field -> {
+
+                        String column = Optional.ofNullable(field.getAnnotation(Column.class))
+                                .map(Column::name)
+                                .filter(StringUtils::hasText)
+                                .orElse(
+                                        Optional.ofNullable(field.getAnnotation(JoinColumn.class))
+                                                .map(JoinColumn::name)
+                                                .filter(StringUtils::hasText)
+                                                .orElse(null)
+                                );
+
+                        if (hasText(column)) {
+                            tempMap.put(field.getName(), column);
+                        }
+                    });
+
+                    entityFieldNameMap.put(key, Collections.unmodifiableMap(tempMap));
+                }
+
+            }
+        }
+
+        return fieldMap.getOrDefault(fieldName, fieldName);
+    }
+
+    /**
+     * 获取表名
+     *
+     * @param entityClassName
+     * @return
+     */
+    public static String getTableNameByEntityClassName(String entityClassName) {
+
+        String name = entityTableNameCaches.get(entityClassName);
+
+        if (hasText(name)) {
+            return name;
+        }
+
+        //通过类加载
+        return getTableNameByAnnotation(ClassUtils.resolveClassName(entityClassName, Thread.currentThread().getContextClassLoader()));
+    }
+
+    /**
+     * 获取表名
+     *
+     * @param entityClass
+     * @return
+     */
+    public static String getTableNameByAnnotation(Class entityClass) {
+
+        if (entityClass == null) {
+            return null;
+        }
+
+        String name = entityTableNameCaches.get(entityClass.getName());
+
+        if (hasText(name)) {
+            return name;
+        }
+
+        name = Optional.ofNullable((Table) entityClass.getAnnotation(Table.class))
+                .filter((t) -> hasText(t.name()))
+                .map(Table::name)
+                .orElse(
+                        //否则取实体名
+                        Optional.ofNullable((Entity) entityClass.getAnnotation(Entity.class))
+                                .filter(t -> hasText(t.name()))
+                                .map(Entity::name).orElse(
+                                //否则取类名
+                                entityClass.getSimpleName()
+                        )
+                );
+
+        entityTableNameCaches.put(entityClass.getName(), name);
+
+        return name;
     }
 
 
@@ -148,7 +331,7 @@ public abstract class QueryAnnotationUtil {
 
         Object value = cacheEntityOptionMap.get(className);
 
-        synchronized (locker.getLock(className)) {
+        synchronized (cacheEntityOptionMapLocker.getLock(className)) {
             if (value == null) {
                 value = entityClass.getAnnotation(EntityOption.class);
                 cacheEntityOptionMap.put(className, value != null ? value : Boolean.FALSE);
@@ -208,11 +391,13 @@ public abstract class QueryAnnotationUtil {
 
         List<Annotation> result = new ArrayList<>(2);
 
-        if (annotations == null)
+        if (annotations == null) {
             return result;
+        }
 
-        if (excludeTypes == null)
+        if (excludeTypes == null) {
             excludeTypes = new Class[0];
+        }
 
         for (Annotation anno : annotations) {
 
@@ -267,7 +452,7 @@ public abstract class QueryAnnotationUtil {
      */
     public static Class getFieldType(Class<?> type, String propertyName) {
 
-        if (type == null || !StringUtils.hasText(propertyName)) {
+        if (type == null || !hasText(propertyName)) {
             return null;
         }
 
@@ -293,8 +478,8 @@ public abstract class QueryAnnotationUtil {
     }
 
 
-    public static Annotation getAnnotation(Class<? extends Annotation> type) {
-        return allInstanceMap.get(type.getSimpleName());
+    public static <T extends Annotation> T getAnnotation(Class<T> type) {
+        return (T) allInstanceMap.get(type.getSimpleName());
     }
 
 
@@ -335,33 +520,52 @@ public abstract class QueryAnnotationUtil {
             return name;
         }
 
-        String newKey = null;
+        //提升字段查找性能
+
+        String newName = null;
 
         try {
-            newKey = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
+            newName = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
         } catch (Exception e) {
 //            ReflectionUtils.rethrowRuntimeException(e);
         }
 
-        if (!StringUtils.hasText(newKey)
-                && entityClass != null
-                && ReflectionUtils.findField(entityClass, name) == null) {
-
-            // 以下逻辑是自动去除查找，去除注解名称以后的属性
-            int len = opAnno.annotationType().getSimpleName().length();
-
-            if (name.length() > len) {
-
-                newKey = Character.toLowerCase(name.charAt(len)) + name.substring(len + 1);
-
-                if (ReflectionUtils.findField(entityClass, newKey) == null) {
-                    newKey = null;
-                }
-
-            }
+        if (hasText(newName)) {
+            return newName;
         }
 
-        return (StringUtils.hasText(newKey)) ? newKey : name;
+        if (entityClass == null) {
+            return name;
+        }
+
+        String key = entityClass.getName() + "-" + opAnno.annotationType().getSimpleName() + "-" + name;
+
+
+        newName = propertyNameMapCaches.getAndAutoPut(key, v -> true, () -> {
+
+            String findName = null;
+
+            if (ReflectionUtils.findField(entityClass, name) == null) {
+                // 以下逻辑是自动去除查找，去除注解名称以后的属性
+                int len = opAnno.annotationType().getSimpleName().length();
+
+                if (name.length() > len) {
+
+                    findName = Character.toLowerCase(name.charAt(len)) + name.substring(len + 1);
+
+                    if (ReflectionUtils.findField(entityClass, findName) == null) {
+                        findName = null;
+                    }
+
+                }
+            }
+
+            return findName;
+
+        });
+
+
+        return (hasText(newName)) ? newName : name;
 
     }
 
@@ -375,8 +579,9 @@ public abstract class QueryAnnotationUtil {
      */
     public static <A extends Annotation> A findFirstMatched(Annotation[] annotations, Class<? extends Annotation>... types) {
 
-        if (annotations == null || types == null)
+        if (annotations == null || types == null) {
             return null;
+        }
 
         for (Annotation annotation : annotations) {
 
@@ -427,30 +632,99 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-
         return output;
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static boolean hasSelectStatementField(Class type) {
+        return hasSelectStatementField(type, null);
+    }
 
     /**
-     * 获取字段列表，以包括所有父对象的子段
+     * 是否有选择注解的字段
+     * <p>
+     * 不支持嵌套
      *
      * @param type
      * @return
      */
-    public static List<Field> getCacheFields(Class type) {
+    public static boolean hasSelectStatementField(Class type, ResolvableType resolvableType) {
+
+        if (type == null) {
+            return false;
+        }
+
+        Boolean hasAnno = hasSelectAnnotationCache.get(type.getName());
+
+        if (hasAnno == null) {
+
+            hasAnno = false;
+
+            if (resolvableType == null) {
+                resolvableType = ResolvableType.forClass(type);
+            }
+
+            List<Field> cacheFields = getNonStaticFields(type);
+
+            for (Field field : cacheFields) {
+                //如果是统计或是选择注解
+                if (
+                        field.isAnnotationPresent(Select.class)
+                                || field.isAnnotationPresent(Avg.class)
+                                || field.isAnnotationPresent(Count.class)
+                                || field.isAnnotationPresent(GroupBy.class)
+                                || field.isAnnotationPresent(Max.class)
+                                || field.isAnnotationPresent(Min.class)
+                                || field.isAnnotationPresent(Sum.class)
+                ) {
+                    hasAnno = true;
+                    break;
+                }
+
+                //如果示复杂对象
+                ResolvableType forField = ResolvableType.forField(field, resolvableType);
+
+                Class<?> fieldType = forField.resolve(field.getType());
+
+                //防止递归
+                if (fieldType != type && isComplexType(fieldType, null)) {
+                    hasAnno = hasSelectStatementField(fieldType, forField);
+                }
+
+                if (hasAnno) {
+                    break;
+                }
+
+            }
+
+            hasSelectAnnotationCache.put(type.getName(), hasAnno);
+
+        }
+
+        return hasAnno;
+    }
+
+    /**
+     * 获取字段列表，以包括所有父对象的子段
+     * <p>
+     * 不包括
+     *
+     * @param type
+     * @return
+     */
+    public static List<Field> getNonStaticFields(Class type) {
 
         List<Field> fields = cacheFields.get(type.getName());
 
         if (fields == null) {
-            fields = getFields(type, Modifier.STATIC | Modifier.TRANSIENT);
-            if (fields.size() > 0) {
-                cacheFields.put(type.getName(), fields);
-            }
+
+            fields = getFields(type, Modifier.STATIC);
+
+            //放入不可变的列表
+            cacheFields.put(type.getName(), Collections.unmodifiableList(fields));
         }
 
-        return fields.size() > 0 ? new ArrayList<>(fields) : Collections.emptyList();
+        return fields;
     }
 
 
@@ -460,22 +734,27 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static List<Field> getFields(Class type, int excludeModifiers) {
+    static List<Field> getFields(Class type, int excludeModifiers) {
 
-        List<Field> fields = new ArrayList<>();
-
-        if (isRootObjectType(type)
+        if (type == null
+                || isRootObjectType(type)
                 || isPrimitive(type)
                 || isArray(type)
-                || isIgnore(type))
-            return fields;
+                || isIgnore(type)) {
+
+            return Collections.emptyList();
+        }
+
+
+        List<Field> fields = new ArrayList<>(10);
 
         fields.addAll(getFields(type.getSuperclass(), excludeModifiers));
 
         for (Field field : type.getDeclaredFields()) {
             //如果不是被过滤的类型
-            if ((field.getModifiers() & excludeModifiers) == 0)
+            if ((field.getModifiers() & excludeModifiers) == 0) {
                 fields.add(field);
+            }
         }
 
         return fields;
@@ -507,7 +786,13 @@ public abstract class QueryAnnotationUtil {
         return 1;
     }
 
+
     /**
+     * 判定复杂对象的方法
+     * <p>
+     * 如果是数组，Map , List 等都不认为是复杂对象
+     *
+     * <p>
      * 关键方法
      * <p>
      * 如果是数组，必须要求不存在原子元素，并且不为空数组，并且元素不都是Null
@@ -529,9 +814,13 @@ public abstract class QueryAnnotationUtil {
         }
 
         return varType != null
-                && varType.getAnnotation(PrimitiveValue.class) == null
-                && !QueryAnnotationUtil.isPrimitive(varType);
+                && !QueryAnnotationUtil.isPrimitive(varType)
+                && !Object[].class.isAssignableFrom(varType)
+                && !Map.class.isAssignableFrom(varType) //并且不是 Map
+                && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
+                && !varType.isAnnotationPresent(PrimitiveValue.class);
     }
+
 
     /**
      * 如果value是集合，则移除集合中的null对象，并返回新的集合对象
@@ -579,7 +868,7 @@ public abstract class QueryAnnotationUtil {
 
 
     private static boolean isNull(Object value, boolean isFilterEmptyString) {
-        return value == null || (isFilterEmptyString && value instanceof CharSequence && !StringUtils.hasText((CharSequence) value));
+        return value == null || (isFilterEmptyString && value instanceof CharSequence && !hasText((CharSequence) value));
     }
 
 
@@ -603,21 +892,6 @@ public abstract class QueryAnnotationUtil {
                 && (Object.class == type || Object.class.getName().equals(((Class) type).getName()));
     }
 
-    public static boolean isPrimitiveCollection(Class value) {
-
-
-        ResolvableType resolvableType = ResolvableType.forClass(value.getClass());
-
-        Class<?> rawClass = resolvableType.resolveGeneric(0);
-
-        boolean b = resolvableType.hasGenerics();
-
-
-        System.out.println(b);
-
-        return false;
-    }
-
     /**
      * 是数组并且有原子元素
      *
@@ -632,11 +906,10 @@ public abstract class QueryAnnotationUtil {
             return false;
         }
 
-
-        if (isPrimitive(value.getClass().getComponentType())) {
+        Class<?> componentType = value.getClass().getComponentType();
+        if (isPrimitive(componentType)) {
             return true;
         }
-
 
         int length = Array.getLength(value);
 
@@ -648,32 +921,6 @@ public abstract class QueryAnnotationUtil {
         }
 
         return false;
-    }
-
-
-    /**
-     * 是否是一个空数组
-     *
-     * @param value
-     * @return
-     */
-    public static boolean isEmptyArray(Object value) {
-        return value != null
-                && value.getClass().isArray()
-                && (Array.getLength(value) == 0);
-    }
-
-
-    /**
-     * 是否是一个空数组
-     *
-     * @param value
-     * @return
-     */
-    public static boolean isNotEmptyArray(Object value) {
-        return value != null
-                && value.getClass().isArray()
-                && (Array.getLength(value) > 0);
     }
 
     /**
@@ -691,15 +938,11 @@ public abstract class QueryAnnotationUtil {
     }
 
     public static boolean isIgnore(Class clazz) {
-        return clazz.getAnnotation(Ignore.class) != null;
-    }
-
-    public static boolean isIgnore(Method method) {
-        return method.getAnnotation(Ignore.class) != null;
+        return clazz.isAnnotationPresent(Ignore.class);
     }
 
     public static boolean isIgnore(Field field) {
-        return field.getAnnotation(Ignore.class) != null;
+        return field.isAnnotationPresent(Ignore.class);
     }
 
 }

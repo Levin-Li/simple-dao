@@ -140,6 +140,46 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> join(Boolean isAppend, String... joinStatements);
 
 
+    /**
+     * 笛卡儿积
+     *
+     * @param isAppend
+     * @param targetClass
+     * @param targetAlias
+     * @return
+     */
+    SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias);
+
+
+    /**
+     * 笛卡儿积
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
+    SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions);
+
+    /**
+     * join
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
+    SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions);
+    
+    /**
+     * @param isAppend
+     * @param joinType
+     * @param entityClass
+     * @param alias
+     * @param joinColumn
+     * @param joinTargetAlias
+     * @param joinTargetColumn
+     * @return
+     */
+    SelectDao<T> join(Boolean isAppend, Fetch.JoinType joinType, Class entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn);
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -279,6 +319,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    ////////////////////////////////////////////////////////////////////////////
 
     /**
      * 获取结果集，并转换成指定的对对象

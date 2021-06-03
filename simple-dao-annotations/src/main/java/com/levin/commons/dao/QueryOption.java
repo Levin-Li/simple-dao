@@ -9,6 +9,15 @@ package com.levin.commons.dao;
 public interface QueryOption {
 
     /**
+     * 是否是原生查询
+     *
+     * @return
+     */
+    default boolean isNative() {
+        return false;
+    }
+
+    /**
      * 获取查询的主体目标实体类
      *
      * @return
@@ -47,6 +56,16 @@ public interface QueryOption {
      * @return
      */
     default JoinOption[] getJoinOptions() {
+        return null;
+    }
+
+
+    /**
+     * 笛卡儿积
+     *
+     * @return
+     */
+    default SimpleJoinOption[] simpleJoinOptions() {
         return null;
     }
 

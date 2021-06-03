@@ -19,7 +19,7 @@
 
     <properties>
 
-        <levin.simple-dao.version>2.2.26.RELEASE</levin.simple-dao.version>
+        <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
@@ -35,6 +35,9 @@
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
         <hibernate.version>5.4.27.Final</hibernate.version>
+
+        <io.swagger.core.v3.version>2.1.2</io.swagger.core.v3.version>
+        <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
 
     </properties>
 
@@ -128,14 +131,6 @@
     <dependencyManagement>
         <dependencies>
 
-            <!--            <dependency>-->
-            <!--                <groupId>org.springframework.boot</groupId>-->
-            <!--                <artifactId>spring-boot-dependencies</artifactId>-->
-            <!--                <type>pom</type>-->
-            <!--                <scope>import</scope>-->
-            <!--                <version>2.2.8.RELEASE</version>-->
-            <!--            </dependency>-->
-
             <dependency>
                 <groupId>${levin.service-support.groupId}</groupId>
                 <artifactId>service-support</artifactId>
@@ -146,17 +141,18 @@
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
-                <version>2.1.2</version>
+                <version>${io.swagger.core.v3.version}</version>
                 <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
-                <version>1.1.24</version>
+                <version>${com.alibaba.druid.version}</version>
             </dependency>
 
         </dependencies>
+
     </dependencyManagement>
 
     <dependencies>
@@ -164,6 +160,7 @@
         <dependency>
             <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

@@ -17,6 +17,12 @@ import ${servicePackageName}.info.*;
     </#if>
 </#list>
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+import ${imp};
+</#list>
+////////////////////////////////////
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
@@ -55,12 +61,15 @@ import org.slf4j.LoggerFactory;
  *  @author auto gen by simple-dao-codegen ${.now}
  *
  */
+
 //@ActiveProfiles("test")
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 //@Transactional(rollbackFor = {Throwable.class})
 @Slf4j
 public class ${className} {
+
 
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};

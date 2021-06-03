@@ -1,7 +1,5 @@
 package com.levin.commons.dao;
 
-import lombok.experimental.FieldNameConstants;
-
 import java.lang.annotation.*;
 
 /**
@@ -24,12 +22,31 @@ import java.lang.annotation.*;
 public @interface TargetOption {
 
     /**
+     * 是否是原生查询，默认 false
+     *
+     * @return
+     */
+    boolean nativeQL() default false;
+
+    /**
      * 默认查询的目标实体类
      *
      * @return
      */
     Class entityClass() default Void.class;
 
+    /**
+     * 表名
+     * 表名有定义时表名优先
+     * <p>
+     * 不建议使用，使用原生查询时，也可以通过实体名获取表名
+     * <p>
+     * 如果
+     *
+     * @return
+     */
+    @Deprecated
+    String tableName() default "";
 
     /**
      * 查询期望的查询结果类
@@ -38,13 +55,6 @@ public @interface TargetOption {
      * @return
      */
     Class resultClass() default Void.class;
-
-    /**
-     * 表名
-     *
-     * @return
-     */
-    String tableName() default "";
 
 
     /**
@@ -55,18 +65,6 @@ public @interface TargetOption {
      * @return
      */
     String alias() default "";
-
-
-    /**
-     * from 字句
-     * <p>
-     * 更新和删除操作，此属性无意义
-     *
-     * @deprecated 使用joinOptions 替代
-     * @return
-     */
-    @Deprecated
-    String fromStatement() default "";
 
 
     /**
@@ -81,16 +79,24 @@ public @interface TargetOption {
     JoinOption[] joinOptions() default {};
 
     /**
+     * 笛卡儿积
+     *
+     * @return
+     */
+    SimpleJoinOption[] simpleJoinOptions() default {};
+
+    /**
      * 是否是安全模式
      * <p>
      * 安全模式时，不允许无条件的更新
      *
      * @return
      */
-    boolean isSafeMode() default true;
+    boolean safeMode() default true;
 
     /**
      * 查询的最大结果集记录数
+     * 或是更新的最大记录数
      *
      * @return
      */

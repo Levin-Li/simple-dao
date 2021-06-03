@@ -25,7 +25,7 @@ import ${clazz.name};
 import ${className};
 </#list>
 
-@Component
+@Component("${modulePackageName}.ModuleDataInitializer")
 @Slf4j
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 

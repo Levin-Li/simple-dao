@@ -16,9 +16,11 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.utils.ClassUtils;
+import com.levin.commons.utils.MapUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
 import javax.persistence.Tuple;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -27,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.ExprUtils.getExprForJpaJoinFetch;
 import static org.springframework.util.StringUtils.hasText;
@@ -42,8 +45,6 @@ public class SelectDaoImpl<T>
         implements SelectDao<T> {
 
     private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
-
-    transient MiniDao dao;
 
     //选择
     final SimpleList<String> selectColumns = new SimpleList<>(true, new ArrayList(5), DELIMITER);
@@ -67,14 +68,13 @@ public class SelectDaoImpl<T>
 
     final Map<String, String> fetchAttrs = new LinkedHashMap<>();
 
-    //默认的排序
+    //默认的排序，当没有排序的时候的默认排序
     final StringBuilder defaultOrderByStatement = new StringBuilder();
 
     //自己定义表达式
     String fromStatement;
 
     boolean hasStatColumns = false;
-
 
     Class resultType;
 
@@ -88,45 +88,37 @@ public class SelectDaoImpl<T>
     }
 
     public SelectDaoImpl(MiniDao dao, boolean isNative) {
-        super(isNative);
-        this.dao = dao;
+        super(dao, isNative);
+
     }
 
+    @Deprecated
     public SelectDaoImpl(MiniDao dao, boolean isNative, String fromStatement) {
 
-        super(isNative);
+        super(dao, isNative);
 
-        this.dao = dao;
 
         this.fromStatement = fromStatement;
 
         if (!hasText(fromStatement)) {
             throw new IllegalArgumentException("fromStatement is null");
         }
-
     }
 
-    public SelectDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public SelectDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
 
-    public SelectDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public SelectDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
 
     @Override
     protected void setFromStatement(String fromStatement) {
         //没有内容
         if (!hasText(this.fromStatement)
-                && (entityClass == null || entityClass == Void.class)
+                && !hasEntityClass()
                 && !hasText(this.tableName)) {
             this.fromStatement = fromStatement;
         }
@@ -213,6 +205,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> join(String... joinStatements) {
 
         if (joinStatements != null) {
+            
             for (String statement : joinStatements) {
                 if (hasText(statement)) {
                     this.joinStatement.append(" ").append(statement).append(" ");
@@ -232,6 +225,128 @@ public class SelectDaoImpl<T>
 
         return this;
     }
+
+    protected void appendToAliasMap(String targetAlias, Class targetClass) {
+
+        if (!ExprUtils.isValidClass(targetClass)) {
+            throw new StatementBuildException("join class " + targetClass + " fail");
+        }
+
+        if (!targetClass.isAnnotationPresent(Entity.class)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " not an entity class");
+        }
+
+        if (!hasText(targetAlias)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " have to an alias ");
+        }
+
+        //转换成小写
+//        targetAlias = targetAlias.trim().toLowerCase();
+
+        if (aliasMap.containsKey(targetAlias)) {
+            throw new StatementBuildException("join class " + targetClass.getName() + " alias " + targetAlias + " already use by " + aliasMap.get(targetAlias));
+        }
+
+        aliasMap.put(targetAlias, targetClass);
+
+    }
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias) {
+
+        if (!Boolean.TRUE.equals(isAppend)) {
+            return this;
+        }
+
+        appendToAliasMap(targetAlias, targetClass);
+
+
+        String targetName = targetClass.getName();
+
+        if (isNative()) {
+
+            targetName = QueryAnnotationUtil.getTableNameByAnnotation(targetClass);
+
+            targetName = tryToPhysicalTableName(targetName);
+
+        }
+
+        //加入表达式
+        join(" , " + targetName + " " + targetAlias + " ");
+
+        return this;
+    }
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions) {
+
+        if (Boolean.TRUE.equals(isAppend) && joinOptions != null) {
+
+            Stream.of(joinOptions).filter(Objects::nonNull).forEachOrdered(
+                    o -> join(true, o.entityClass(), o.alias())
+            );
+
+        }
+
+        return this;
+    }
+
+
+    @Override
+    public SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions) {
+
+        if (!Boolean.TRUE.equals(isAppend) || joinOptions == null) {
+            return this;
+        }
+
+        String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
+                , this::appendToAliasMap
+                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+                , entityClass, tableName, alias, joinOptions);
+
+        if (hasText(joinStatement)) {
+            join(true, joinStatement);
+        }
+
+        return this;
+    }
+
+
+    String fallbackAlias(String newAlias) {
+        return StringUtils.hasText(newAlias) ? newAlias : this.alias;
+    }
+
+    /**
+     * @param isAppend
+     * @param entityClass
+     * @param alias
+     * @param joinColumn
+     * @param joinTargetAlias
+     * @param joinTargetColumn
+     * @return
+     */
+    @Override
+    public SelectDao<T> join(Boolean isAppend, Fetch.JoinType joinType, Class entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn) {
+
+        if (joinType == null) {
+            joinType = Fetch.JoinType.Left;
+        }
+
+        //保持注解一样
+        joinColumn = hasText(joinColumn) ? joinColumn : "";
+        joinTargetAlias = hasText(joinTargetAlias) ? joinTargetAlias : "";
+        joinTargetColumn = hasText(joinTargetColumn) ? joinTargetColumn : "";
+
+        Map<String, Object> map = MapUtils.putFirst(E_JoinOption.entityClass, entityClass)
+                .put(E_JoinOption.type, joinType)
+                .put(E_JoinOption.alias, alias)
+                .put(E_JoinOption.joinColumn, joinColumn)
+                .put(E_JoinOption.joinTargetAlias, fallbackAlias(joinTargetAlias))
+                .put(E_JoinOption.joinTargetColumn, joinTargetColumn).build();
+
+        return join(isAppend, (JoinOption) ClassUtils.newAnnotation(JoinOption.class, map));
+    }
+
 
     @Override
     public SelectDao<T> joinFetch(String... setAttrs) {
@@ -738,7 +853,7 @@ public class SelectDaoImpl<T>
         if (hasText(fromStatement)) {
             String from = getText(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
-            return (hasKey ? " " + fromStatement : " From " + fromStatement) + getText(joinStatement.toString(), " ");
+            return (hasKey ? " " + fromStatement : " From " + fromStatement) + " " + getText(joinStatement.toString(), " ");
         } else {
             return super.genFromStatement() + getText(joinStatement.toString(), " ");
         }
@@ -810,11 +925,13 @@ public class SelectDaoImpl<T>
             }
         }
 
+        builder.append(" ").append(lastStatements);
+
         if (this.isSafeMode() && !isCountQueryResult && !hasText(whereStatement) && !isSafeLimit()) {
             throw new DaoSecurityException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().getSafeModeMaxLimit() + "], SQL[" + builder + "]");
         }
 
-        return ExprUtils.replace(builder.toString(), getDaoContextValues());
+        return replaceVar(builder.toString());
     }
 
     @Override
@@ -844,8 +961,8 @@ public class SelectDaoImpl<T>
         }
 
 
-        return count("Select Count(" + column + ") " + genQL(true), getDaoContextValues(), whereParamValues, havingParamValues);
-
+        return count("Select Count(" + column + ") " + genQL(true)
+                , getDaoContextValues(), whereParamValues, havingParamValues, lastStatementParamValues);
     }
 
     /**
@@ -879,7 +996,8 @@ public class SelectDaoImpl<T>
                 , selectParamValues
                 , whereParamValues
                 , groupByParamValues
-                , havingParamValues);
+                , havingParamValues
+                , lastStatementParamValues);
     }
 
     /**
@@ -1097,7 +1215,7 @@ public class SelectDaoImpl<T>
 
                     //如果有条件，并且条件不成功
                     if (hasText(fetch.condition())
-                            && !Boolean.TRUE.equals(evalExpr(null, null, null, fetch.condition()))) {
+                            && !evalTrueExpr(null, null, null, fetch.condition())) {
                         return;
                     }
 
@@ -1179,7 +1297,17 @@ public class SelectDaoImpl<T>
      */
     public Object tryConvertArray2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
 
-        if (data == null || !data.getClass().isArray()) {
+        if (data == null) {
+            return data;
+        }
+
+        //只有一个元素时，hibernate不会返回数组，直接返回数据
+        if (this.selectColumns.size() == 1
+                && !data.getClass().isArray()) {
+            data = new Object[]{data};
+        }
+
+        if (!data.getClass().isArray()) {
             return data;
         }
 
@@ -1230,7 +1358,6 @@ public class SelectDaoImpl<T>
 
             //列明对应关系
             columnNames.add(aliases);
-
 
             String expr = selectColumn[0];
 

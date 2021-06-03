@@ -176,7 +176,7 @@ public class RepositoryFactoryBean<T>
 
         } else if (opAnnotation instanceof UpdateRequest) {
 
-            UpdateDaoImpl<Object> updateDao = new UpdateDaoImpl<>(false, jpaDao);
+            UpdateDaoImpl<Object> updateDao = new UpdateDaoImpl<>( jpaDao,false);
 
             return updateDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())
@@ -187,7 +187,7 @@ public class RepositoryFactoryBean<T>
 
         } else if (opAnnotation instanceof DeleteRequest) {
 
-            DeleteDaoImpl<Object> deleteDao = new DeleteDaoImpl<>(false, jpaDao);
+            DeleteDaoImpl<Object> deleteDao = new DeleteDaoImpl<>( jpaDao,false);
 
             return deleteDao
                     .setParameterNameDiscoverer(getParameterNameDiscoverer())

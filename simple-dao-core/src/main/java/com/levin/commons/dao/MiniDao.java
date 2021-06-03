@@ -1,5 +1,6 @@
 package com.levin.commons.dao;
 
+import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -47,6 +48,34 @@ public interface MiniDao {
         return false;
     }
 
+    /**
+     * 获取命名策略
+     *
+     * @return
+     */
+    default PhysicalNamingStrategy getNamingStrategy() {
+        return null;
+    }
+
+    /**
+     * 获取表名称
+     *
+     * @param entityClass
+     * @return
+     */
+    default String getTableName(Class entityClass) {
+        return getNamingStrategy().toPhysicalTableName(QueryAnnotationUtil.getTableNameByAnnotation(entityClass), null);
+    }
+
+    /**
+     * 获取表名称
+     *
+     * @param entityClassName
+     * @return
+     */
+    default String getTableName(String entityClassName) {
+        return getNamingStrategy().toPhysicalTableName(QueryAnnotationUtil.getTableNameByEntityClassName(entityClassName), null);
+    }
 
     /**
      * 获取表或是实体的主键名称
@@ -107,5 +136,5 @@ public interface MiniDao {
      * @param <T>
      * @return
      */
-    <T> List<T> find(boolean isNative, Class resultClass, int start, int count, String statement, Object... paramValues);
+    <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues);
 }

@@ -1,16 +1,16 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.*;
+import com.levin.commons.dao.DaoSecurityException;
+import com.levin.commons.dao.DeleteDao;
+import com.levin.commons.dao.EntityOption;
+import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
-import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 删除Dao实现类
@@ -22,7 +22,6 @@ public class DeleteDaoImpl<T>
         extends ConditionBuilderImpl<T, DeleteDao<T>>
         implements DeleteDao<T> {
 
-    transient MiniDao dao;
 
     {
         //默认为安全模式
@@ -30,33 +29,25 @@ public class DeleteDaoImpl<T>
     }
 
     public DeleteDaoImpl() {
-        this(true, null);
+        this(null, true);
     }
 
-    public DeleteDaoImpl(boolean isNative, MiniDao dao) {
-        super(isNative);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative) {
+        super(dao, isNative);
     }
 
-    public DeleteDaoImpl(MiniDao dao, Class<T> entityClass, String alias) {
-        super(entityClass, alias);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+        super(dao, isNative, entityClass, alias);
     }
 
-    public DeleteDaoImpl(MiniDao dao, String tableName, String alias) {
-        super(tableName, alias);
-        this.dao = dao;
+    public DeleteDaoImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+        super(dao, isNative, tableName, alias);
     }
 
 //    @Override
 //    protected String getParamPlaceholder() {
 //        return dao.getParamPlaceholder(isNative());
 //    }
-
-    @Override
-    protected MiniDao getDao() {
-        return dao;
-    }
 
     @Override
     public String genFinalStatement() {
@@ -81,16 +72,18 @@ public class DeleteDaoImpl<T>
                     .append(genEntityStatement())
                     .append(" Set ")
                     .append(genLogicDeleteExpr(getEntityOption(), Op.Eq))
-                    .append(genWhereStatement(EntityOption.Action.LogicalDelete));
+                    .append(genWhereStatement(EntityOption.Action.LogicalDelete))
+                    .append(" ").append(lastStatements)
+                    .append(getLimitStatement());
         } else {
             ql.append("Delete ")
                     .append(genFromStatement())
-                    .append(genWhereStatement(EntityOption.Action.Delete));
-
+                    .append(genWhereStatement(EntityOption.Action.Delete))
+                    .append(" ").append(lastStatements)
+                    .append(getLimitStatement());
         }
 
-        return ExprUtils.replace(ql.toString(), getDaoContextValues());
-
+        return replaceVar(ql.toString());
     }
 
     @Override
@@ -104,7 +97,7 @@ public class DeleteDaoImpl<T>
 
         List flattenParams = QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
-                , whereParamValues);
+                , whereParamValues, lastStatementParamValues);
 
         if (isLogicDelete) {
             flattenParams.add(0, convertLogicDeleteValue(getEntityOption()));
@@ -117,6 +110,8 @@ public class DeleteDaoImpl<T>
     @Transactional
     public int delete() {
 
+        EntityOption entityOption = getEntityOption();
+
         boolean disableDel = isDisable(EntityOption.Action.Delete);
         boolean disableLogicDel = isDisable(EntityOption.Action.LogicalDelete);
 
@@ -124,7 +119,7 @@ public class DeleteDaoImpl<T>
             throw new DaoSecurityException("" + entityClass + " disable delete action");
         }
 
-        boolean hasLogicDeleteField = hasLogicDeleteField();
+        boolean hasLogicDeleteField = hasLogicDeleteField(entityOption);
 
         if (!disableDel && !hasLogicDeleteField) {
             //如果能物理删除，但又没有逻辑删除的字段，那么只能物理删除
@@ -136,7 +131,7 @@ public class DeleteDaoImpl<T>
         if (!disableDel) {
             ////如果能物理删除，先尝试物理删除
             try {
-               // if (true) throw new StatementBuildException("mock delete error");
+                // if (true) throw new StatementBuildException("mock delete error");
                 return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
             } catch (Exception e) {
                 ex = e;

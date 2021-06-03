@@ -5,7 +5,6 @@ import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Gt;
-import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.Where;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.Group;
@@ -24,8 +23,8 @@ import lombok.experimental.Accessors;
         , maxResults = 100)
 public class MulitTableJoinDTO {
 
-    @Select(value = "u.id", isDistinct = true)
-    @C(op = Op.Expr, paramExpr = "u.group.id = g.id", condition = "")
+    @Select(value = "u.id", distinct = false)
+    @C(value = "u.group.id", paramExpr = "g.id", condition = "")
     Long uid;
 
 

@@ -3,6 +3,7 @@ package com.levin.commons.dao;
 /**
  * 属性拷贝器
  */
+@FunctionalInterface
 public interface DeepCopier {
 
 

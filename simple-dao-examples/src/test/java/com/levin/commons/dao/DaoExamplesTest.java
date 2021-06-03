@@ -15,9 +15,10 @@ import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
 import com.levin.commons.dao.service.dto.UserInfo;
 import com.levin.commons.dao.service.dto.UserUpdateEvt;
+import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
-import com.levin.commons.dao.support.PagingData;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
@@ -33,6 +34,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
@@ -105,7 +107,7 @@ public class DaoExamplesTest {
 
     @Before
     public void testGetEntityManager() throws Exception {
-      //  EntityManager entityManager = dao.getEntityManager();
+        //  EntityManager entityManager = dao.getEntityManager();
         Assert.notNull(entityManager);
 
     }
@@ -203,10 +205,10 @@ public class DaoExamplesTest {
     public void initTestData() throws Exception {
 
         try {
-          //  DaoContext.setAutoFlush(false, false);
+            //  DaoContext.setAutoFlush(false, false);
             initTestData2();
         } finally {
-          //  DaoContext.setAutoFlush(false, true);
+            //  DaoContext.setAutoFlush(false, true);
         }
     }
 
@@ -321,6 +323,42 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testSPEL() {
+
+        Object v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), "#ABC", Collections.emptyList());
+
+        Assert.isNull(v, "true");
+
+        Map<String, ? extends Object> abc = MapUtils.put("ABC", (Object) this.hashCode()).build();
+
+        v = ExprUtils.evalSpEL(new SimpleUserQO().setQueryStatus(true), "#ABC", Arrays.asList(abc));
+
+        Assert.isTrue(v.equals(this.hashCode()), "true");
+
+    }
+
+
+    @Test
+    public void testSimpleUserQO() {
+
+
+//        Assert.isTrue(Boolean.TRUE.equals(v),"");
+
+        Object byQueryObj = dao.findByQueryObj(new SimpleUserQO());
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
+
+
+        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(false));
+
+        System.out.println(byQueryObj);
+
+
+    }
+
+    @Test
     public void testJoinFetch() {
 
 
@@ -354,6 +392,26 @@ public class DaoExamplesTest {
         // System.out.println(byQueryObj1);
 
         assert byQueryObj1.size() > 0;
+
+    }
+
+    @Test
+    public void testNativeTableJoinDTO() {
+
+        List<NativeTableJoinDTO> byQueryObj = dao.findByQueryObj(NativeTableJoinDTO.class, new NativeTableJoinDTO());
+
+        System.out.println(byQueryObj);
+
+    }
+
+    @Test
+    public void testCaseQL() {
+
+        List<CaseTestDto> byQueryObj = dao.findByQueryObj(CaseTestDto.class, new CaseTestDto());
+
+        byQueryObj = dao.findByQueryObj(CaseTestDto.class, new CaseTestDto().setScoreLevel(2).setQueryState(true));
+
+        System.out.println(byQueryObj);
 
     }
 
@@ -772,8 +830,6 @@ public class DaoExamplesTest {
     //@Transactional
     public void testJoinFetch2() {
 
-
-        ;
         List<UserJoinFetchDTO> byQueryObj = dao.findByQueryObj(UserJoinFetchDTO.class, new UserJoinFetchDTO());
 
         Object user = byQueryObj.get(0);
@@ -972,7 +1028,7 @@ public class DaoExamplesTest {
             long st = System.currentTimeMillis();
 
             PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,
-                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true),null);
+                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
 
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
@@ -985,7 +1041,7 @@ public class DaoExamplesTest {
     public void testPagingQueryHelper2() throws Exception {
 
         PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,
-                PagingData.class, new TableJoin3().setRequireTotals(true),null);
+                PagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
     }
@@ -1166,7 +1222,7 @@ public class DaoExamplesTest {
     @org.junit.Test
     public void testStat() throws Exception {
 
-        Object groupSelectDao = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
+        Object commDto = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
 
         List<GroupStatDTO> objects = dao.findByQueryObj(GroupStatDTO.class, new GroupStatDTO());
 
@@ -1252,8 +1308,8 @@ public class DaoExamplesTest {
     public void testJoin2() throws Exception {
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom(false, "jpa_dao_test_User u")
-                .join("left join jpa_dao_test_Group g on u.group.id = g.id")
+        List<MulitTableJoinDTO> objects = dao.selectFrom("jpa_dao_test_User u")
+                .join("left join jpa_dao_test_Group g on u.group_id = g.id")
                 .select("u.id AS uid ,g.id AS gid")
 
                 .where("g.id > " + dao.getParamPlaceholder(false), 2L)
@@ -1266,17 +1322,34 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
-    public void testJoin3() throws Exception {
+    /**
+     * 测试混合参数
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testMixParam() throws Exception {
+
+        String columnName = QueryAnnotationUtil.getColumnName(OperationLog.class, E_OperationLog.logText);
+
+        List<User> objects =
+                dao.selectFrom(User.class)
+                        .gt(E_User.score, 1)
+                        .where("id > :mapParam1  and id < :p2 ",
+                                MapUtils.put("mapParam1", "2")
+                                        .put("p1", "123456")
+                                        .put("p2", "23456")
+                                        .build())
+                        .gte(E_User.id, 2)
+                        .find(User.class);
+
+        //From com.levin.commons.dao.domain.User     Where score >   ?1  AND id > :mapParam1  and :p1 < :p2  AND id >=   ?2
 
 
-        List<MulitTableJoinDTO> objects = dao.selectFrom(false, "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id")
-                .appendByQueryObj(new MulitTableJoinDTO())
-                .where("u.id > :mapParam1", MapUtils.put("mapParam1", "2").build())
-                .find(MulitTableJoinDTO.class);
-
+        OperationLog operationLog = dao.find(OperationLog.class, 1L);
 
         org.junit.Assert.assertNotNull(objects);
+
     }
 
     //@org.junit.Test
@@ -1302,25 +1375,141 @@ public class DaoExamplesTest {
     }
 
     @org.junit.Test
-    public void testSimpleSubQuery(){
+    public void testSimpleSubQuery() {
+
+
+        int[] oj = {2, 33,};
+
+        Integer[] ojb = {2, 3, 4};
+
+        Object[] ddd = {"dafa", 3.4, 23423};
+
+        User[] sss = { };
+
+
+        System.out.println(sss instanceof Object[]);
+
+        System.out.println(int[].class == oj.getClass());
+        System.out.println(int[].class == oj.getClass());
+        System.out.println(Object[].class.isAssignableFrom(oj.getClass()));
+
+        System.out.println(Object[].class.isAssignableFrom(ojb.getClass()));
+        System.out.println(Object[].class.isAssignableFrom(ddd.getClass()));
+        System.out.println(Object[].class.isAssignableFrom(sss.getClass()));
 
         List<Object> byQueryObj = dao.findByQueryObj(new SimpleSubQueryDTO());
 
-         System.out.println(byQueryObj);
+        System.out.println(byQueryObj);
+
     }
 
+
+    /**
+     * 笛卡儿积 连接
+     */
+    @Test
+    public void testSimpleJoin() {
+
+
+        List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
+                .join(true, Group.class, E_Group.ALIAS)
+                .select(true, "u")
+                .where("u.group.id = g.id ")
+                .isNotNull(E_User.id)
+                .gt(E_User.score, 5)
+                .limit(0, 20)
+                .find();
+
+        System.out.println(objects);
+
+        Assert.isTrue(objects.size() == 20);
+
+
+        List result = dao.selectByNative(User.class, E_User.ALIAS)
+                .join(true, Group.class, E_Group.ALIAS)
+                .select("u.*")
+                .where("F$:u.group.id = g.id ")
+                .isNotNull(E_User.id)
+                .gt(E_User.score, 5)
+                .limit(0, 20)
+                .find();
+
+        System.out.println(result);
+
+        Assert.isTrue(result.size() == 20);
+
+    }
+
+    @Test
+    public void testNativeSQL() {
+
+        EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
+
+        int n = dao.updateTo(E_User.ENTITY_NAME, "u")
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 3)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 3, "更新记录数错误1");
+
+
+        n = dao.updateTo(E_User.CLASS_NAME, "u")
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 1)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 1, "更新记录数错误2");
+
+
+        n = dao.updateByNative(User.class, E_User.ALIAS)
+                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(E_User.lastUpdateTime, new Date())
+                .or()
+                .isNull(E_User.score)
+                .isNotNull(E_User.createTime)
+                .end()
+                .limit(-1, 5)
+                .enableAutoAppendLimitStatement()
+                // .appendToLast(true,"order by id limit 1")
+                .update();
+
+        Assert.isTrue(n == 5, "更新记录数错误3");
+
+
+        System.out.println(n);
+
+    }
+
+
+    /**
+     * 测试语句生成时间
+     *
+     * @throws Exception
+     */
     @org.junit.Test
-    public void testSelectTime() throws Exception {
+    public void testGenSQLSpeed() throws Exception {
 
         long millis = System.currentTimeMillis();
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
 
-
         dao.selectFrom(User.class, "u")
                 .appendByQueryObj(new GroupStatDTO())
                 .genFinalStatement();
-
 
         millis = System.currentTimeMillis() - millis;
 
@@ -1348,7 +1537,7 @@ public class DaoExamplesTest {
 
         millis = System.currentTimeMillis() - millis;
 
-        System.out.println("3 testSelectTime:" + millis);
+        System.out.println("3 speed testSelectTime:" + millis);
 
 
         millis = System.currentTimeMillis();
@@ -1376,10 +1565,9 @@ public class DaoExamplesTest {
 
         UpdateDao<User> updateDao = dao.updateTo(User.class, "u");
 
-        int update = updateDao
-                //对象不为null的属性做为查询条件
-                .appendByQueryObj(new UserUpdateDTO())
-                .update();
+        int update = dao.updateByQueryObj(new UserUpdateDTO());
+
+        // Assert.isTrue(update == 1, "更新记录错误");
 
         System.out.println(update);
 

@@ -20,12 +20,12 @@ import lombok.experimental.Accessors;
         resultClass = TableJoin3.class,
 
         joinOptions = {
-        @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
+        @JoinOption(tableOrStatement = E_Group.CLASS_NAME, entityClass = Void.class,
                 alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
 })
 public class TableJoin3 {
 
-    @Select(domain = E_User.ALIAS, value = E_User.id, isDistinct = true)
+    @Select(domain = E_User.ALIAS, value = E_User.id, distinct = true)
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid = 1l;
 

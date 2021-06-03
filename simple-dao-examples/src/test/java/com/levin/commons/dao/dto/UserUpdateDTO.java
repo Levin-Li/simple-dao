@@ -2,21 +2,21 @@ package com.levin.commons.dao.dto;
 
 
 
+import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.IsNotNull;
+import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Update;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.levin.commons.dao.domain.User;
 
 
-public class UserUpdateDTO extends UserDTO {
+@TargetOption(entityClass = User.class, alias = "u", maxResults = 1)
+public class UserUpdateDTO  {
 
     @Update
     Integer score = this.hashCode();
 
-//    @UpdateColumn("state")
-//    UserStatDTO selectSubQueryDTO = new UserStatDTO();
-
-//    @UpdateColumn(value = "score", paramExpr = "select 3000 from xxx.tab t where u.id = ${:oak}")
-    Map param = new HashMap();
+    @OrderBy
+    @IsNotNull
+    String name;
 
 }

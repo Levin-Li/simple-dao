@@ -3,7 +3,6 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.Identifiable;
 import com.levin.commons.dao.domain.TreeObject;
-import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -45,8 +44,6 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     @Schema(description = "ID路径， 使用|包围，如|1|3|15|")
     @Column(length = 1800)
     protected String idPath;
-
-
 
 
     protected AbstractTreeObject() {

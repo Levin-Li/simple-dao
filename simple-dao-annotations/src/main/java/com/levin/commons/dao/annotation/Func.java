@@ -1,5 +1,7 @@
 package com.levin.commons.dao.annotation;
 
+import com.levin.commons.annotation.GenNameConstant;
+
 import java.lang.annotation.*;
 
 /**
@@ -12,12 +14,22 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@GenNameConstant
 public @interface Func {
 
     /**
-     * 默认参数占位符
+     * 原表达式
      */
-    String DEFAULT_PARAM = "$$";
+    String ORIGIN_EXPR = "$$";
+
+
+    /**
+     * 条件
+     * SPEL 表达式
+     *
+     * @return
+     */
+    String condition() default "";
 
     /**
      * 函数名称
@@ -36,7 +48,6 @@ public @interface Func {
      */
     String prefix() default "(";
 
-
     /**
      * 函数的参数
      * <p>
@@ -44,7 +55,16 @@ public @interface Func {
      *
      * @return
      */
-    String[] params() default {DEFAULT_PARAM};
+    String[] params() default {ORIGIN_EXPR};
+
+
+    /**
+     * 参数分隔符
+     * 默认式逗号
+     *
+     * @return
+     */
+    String paramDelimiter() default ",";
 
 
     /**
@@ -60,12 +80,11 @@ public @interface Func {
      */
     String suffix() default ")";
 
-
     /**
      * 说明
      *
      * @return
      */
-    String desc() default "单参数函数表达式生成规则：value + prefix + 被包围对象 + suffix";
+    String desc() default "函数表达式生成规则：value + prefix + params + suffix";
 
 }

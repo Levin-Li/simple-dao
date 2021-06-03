@@ -7,6 +7,7 @@ package com.levin.commons.dao;
  * @param <L> 左操作数
  * @param <R> 右操作数
  */
+@FunctionalInterface
 public interface Expr<L, R> {
 
     /**
