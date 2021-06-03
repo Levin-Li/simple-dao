@@ -71,6 +71,14 @@ public interface DaoFactory {
      */
     <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
 
+    /**
+     * 原生查询
+     *
+     * @param clazz
+     * @param alias
+     * @param <T>
+     * @return
+     */
     <T> SelectDao<T> selectByNative(@NotNull Class<T> clazz, String... alias);
 
     /**
