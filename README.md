@@ -19,7 +19,7 @@
         * 数据传输对象(兼查询对象，通过注解产生SQL语句)
         */
       @Data
-      @TargetOption(entityClass = TestEntity.class)
+      @TargetOption(entityClass = TestEntity.class, resultClass = TestEntityStatDto.class)
       public class TestEntityStatDto {
              
           @Min
@@ -48,7 +48,7 @@
          SimpleDao dao;
          
          //查询并返回结果
-        List<TestEntityStatDto> result =  dao.findByQueryObj(TestEntityStatDto.class,new TestEntityStatDto());   
+        List<TestEntityStatDto> result =  dao.findByQueryObj(new TestEntityStatDto());   
 
    生成并执行以下查询语句
    
