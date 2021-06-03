@@ -110,7 +110,7 @@ public abstract class ExprUtils {
         }
 
         //如果只有一个元素的数组
-        holder.value = tryGetFirstElement(holder.value);
+        holder.value = tryGetFirstElementIfOnlyOne(holder.value);
 
         boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
@@ -325,12 +325,12 @@ public abstract class ExprUtils {
     }
 
     /**
-     * 如果只又一个元素，则只取第一个
+     * 如果有且只有一个元素，则只取第一个
      *
      * @param arrayOrSet
      * @return
      */
-    private static Object tryGetFirstElement(Object arrayOrSet) {
+    public static Object tryGetFirstElementIfOnlyOne(Object arrayOrSet) {
 
         while (arrayOrSet != null) {
 

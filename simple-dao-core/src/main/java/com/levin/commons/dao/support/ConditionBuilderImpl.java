@@ -693,7 +693,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB exists(Object exprOrQueryObj, Object... paramValues) {
-        return processOp("EXIST", exprOrQueryObj, paramValues);
+        return processOp(Op.Exists.getOperator(), exprOrQueryObj, paramValues);
     }
 
     /**
@@ -705,12 +705,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     @Override
     public CB notExists(Object exprOrQueryObj, Object... paramValues) {
-        return processOp("NOT EXIST", exprOrQueryObj, paramValues);
+        return processOp(Op.NotExists.getOperator(), exprOrQueryObj, paramValues);
     }
 
     protected CB processOp(String op, Object exprOrQueryObj, Object paramValues) {
 
         String expr = "";
+
+        paramValues = ExprUtils.tryGetFirstElementIfOnlyOne(paramValues);
 
         if (exprOrQueryObj instanceof CharSequence) {
 
