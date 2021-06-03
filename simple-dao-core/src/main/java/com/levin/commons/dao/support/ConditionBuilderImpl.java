@@ -1298,8 +1298,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     public void walkMap(String paramPrefix, Map<String, Object>... queryParams) {
 
-        if (queryParams == null)
+        if (queryParams == null) {
             return;
+        }
 
         boolean hasPrefix = hasText(paramPrefix);
 
@@ -2104,8 +2105,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     protected String replaceVar(String ql) {
-        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix);
+        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix, this::toFromTableName);
     }
+
+
+    protected String toFromTableName(String tableName) {
+
+        if (isNative()) {
+            return getTableNameByEntityClassName(tableName);
+        }
+
+        return tableName;
+    }
+
 
     /**
      * 返回当前节点是否有效

@@ -45,6 +45,9 @@ public abstract class ExprUtils {
     //字段替换匹配样式：F$:columnName
     public static final Pattern fieldVarStylePattern = Pattern.compile("(F\\$:([\\w._]+))");
 
+    //表名替换匹配样式：E$:entityName
+    public static final Pattern entityVarStylePattern = Pattern.compile("(E\\$:([\\w._]+))");
+
     //直接替换匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
@@ -321,7 +324,7 @@ public abstract class ExprUtils {
         //===================================以下部分替换文本========================================
 
         return surroundNotExpr(c, replace(ql, contexts, true,
-                column -> aroundColumnPrefixFunc.apply(c.domain(), column)).trim());
+                column -> aroundColumnPrefixFunc.apply(c.domain(), column), null).trim());
     }
 
     /**
@@ -690,7 +693,7 @@ public abstract class ExprUtils {
      * @return
      */
     public static String replace(String txt, List<Map<String, ? extends Object>> contexts) {
-        return replace(txt, contexts, true, null);
+        return replace(txt, contexts, true, null, null);
     }
 
 
@@ -704,7 +707,7 @@ public abstract class ExprUtils {
      * @return
      */
     public static String replace(String txt, List<Map<String, ? extends Object>> contexts, boolean isThrowExWhenKeyNotFound,
-                                 Function<String, String> fieldNameConverter) {
+                                 Function<String, String> fieldNameConverter, Function<String, String> tableNameConverter) {
 
         if (!hasText(txt)) {
             return txt;
@@ -712,6 +715,7 @@ public abstract class ExprUtils {
 
         //替换普通变量
         final String oldTxt = txt;
+
         txt = replace(groovyVarStylePattern, txt, key -> {
 
             Object v = ObjectUtil.findValue(key, true, isThrowExWhenKeyNotFound, contexts);
@@ -723,13 +727,11 @@ public abstract class ExprUtils {
             return v.toString();
         });
 
-
-        if (fieldNameConverter == null) {
-            return txt;
-        }
-
         //替换字段名称
-        return replace(fieldVarStylePattern, txt, fieldNameConverter);
+        txt = replace(fieldVarStylePattern, txt, fieldNameConverter);
+
+        //替换表名
+        return replace(entityVarStylePattern, txt, tableNameConverter);
 
     }
 
@@ -766,12 +768,12 @@ public abstract class ExprUtils {
      *
      * @param pattern
      * @param txt
-     * @param function 替换回调
+     * @param replaceFun 替换回调
      * @return
      */
-    private static String replace(Pattern pattern, String txt, Function<String, String> function) {
+    private static String replace(Pattern pattern, String txt, Function<String, String> replaceFun) {
 
-        if (txt == null || txt.length() == 0) {
+        if (txt == null || txt.length() == 0 || replaceFun == null) {
             return txt;
         }
 
@@ -788,7 +790,7 @@ public abstract class ExprUtils {
             String key = matcher.group(2);
 
             //把占位符，替换掉
-            matcher.appendReplacement(sb, function.apply(key));
+            matcher.appendReplacement(sb, replaceFun.apply(key));
         }
 
         if (found) {

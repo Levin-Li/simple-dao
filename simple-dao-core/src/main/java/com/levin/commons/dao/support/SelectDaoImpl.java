@@ -205,6 +205,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> join(String... joinStatements) {
 
         if (joinStatements != null) {
+            
             for (String statement : joinStatements) {
                 if (hasText(statement)) {
                     this.joinStatement.append(" ").append(statement).append(" ");

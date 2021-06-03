@@ -21,7 +21,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T setContext(Map<String, Object> context);
 
-
     /**
      * 设置查询结果集的的范围
      * <p/>

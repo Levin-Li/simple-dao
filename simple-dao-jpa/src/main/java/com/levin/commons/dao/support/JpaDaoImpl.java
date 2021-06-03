@@ -176,7 +176,7 @@ public class JpaDaoImpl
 
     private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
 
-    private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
+    private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
     private static final DeepCopier deepCopier = new DeepCopier() {
         @Override
@@ -312,7 +312,7 @@ public class JpaDaoImpl
 
                 namingStrategy = new PhysicalNamingStrategy() {
 
-                    final Map<String, String> nameMapCaches = new ConcurrentReferenceHashMap<>();
+                    final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
 
                     SpringPhysicalNamingStrategy springPhysicalNamingStrategy = (SpringPhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
@@ -324,11 +324,11 @@ public class JpaDaoImpl
                     @Override
                     public String toPhysicalColumnName(String name, Object jdbcEnvironment) {
 
-                        String newName = nameMapCaches.get(name);
+                        String newName = columnNameMapCaches.get(name);
 
                         if (!StringUtils.hasText(newName)) {
                             newName = springPhysicalNamingStrategy.toPhysicalColumnName(Identifier.toIdentifier(name), null).getText();
-                            nameMapCaches.put(name, newName);
+                            columnNameMapCaches.put(name, newName);
                         }
 
                         return newName;
@@ -347,7 +347,7 @@ public class JpaDaoImpl
     }
 
     public <V> V getThreadVar(String key, V defaultValue) {
-        return threadContext.getOrDefault(key, defaultValue);
+        return autoFlushThreadContext.getOrDefault(key, defaultValue);
     }
 
     @Override
@@ -442,14 +442,14 @@ public class JpaDaoImpl
                 //em.flush();
                 //需要去FLUSH
                 logger.debug("*** tryAutoFlushAndDetachAfterUpdate AUTO_FLUSH");
-                threadContext.put(AUTO_FLUSH, true);
+                autoFlushThreadContext.put(AUTO_FLUSH, true);
             }
 
             if (isClear) {
                 // em.clear();
                 //需要去 CLEAR
                 logger.debug("*** tryAutoFlushAndDetachAfterUpdate AUTO_CLEAR");
-                threadContext.put(AUTO_CLEAR, true);
+                autoFlushThreadContext.put(AUTO_CLEAR, true);
             } else if (entity != null && em.contains(entity)) {
                 em.detach(entity);
             }
@@ -470,21 +470,21 @@ public class JpaDaoImpl
         if (DaoContext.isAutoFlushAndClearBeforeQuery(true)
                 && em.isJoinedToTransaction()) {
 
-            if (threadContext.getOrDefault(AUTO_FLUSH, false)) {
+            if (autoFlushThreadContext.getOrDefault(AUTO_FLUSH, false)) {
                 try {
                     logger.debug("*** autoFlushAndClearBeforeQuery AUTO_FLUSH ...");
                     em.flush();
                 } finally {
-                    threadContext.put(AUTO_FLUSH, false);
+                    autoFlushThreadContext.put(AUTO_FLUSH, false);
                 }
             }
 
-            if (threadContext.getOrDefault(AUTO_CLEAR, false)) {
+            if (autoFlushThreadContext.getOrDefault(AUTO_CLEAR, false)) {
                 try {
                     logger.debug("*** autoFlushAndClearBeforeQuery AUTO_CLEAR ...");
                     em.clear();
                 } finally {
-                    threadContext.put(AUTO_CLEAR, false);
+                    autoFlushThreadContext.put(AUTO_CLEAR, false);
                 }
             }
 

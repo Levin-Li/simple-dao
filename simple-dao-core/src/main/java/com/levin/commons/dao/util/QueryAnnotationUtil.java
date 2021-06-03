@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -157,14 +158,13 @@ public abstract class QueryAnnotationUtil {
     }
 
 
-
     /**
      * 是否不允许空
      *
      * @param propertyName
      * @return
      */
-    public static boolean isNullable(Class entityClass ,String propertyName) {
+    public static boolean isNullable(Class entityClass, String propertyName) {
 
         String key = entityClass.getName() + "." + propertyName;
 
@@ -187,7 +187,6 @@ public abstract class QueryAnnotationUtil {
 
         return aBoolean;
     }
-
 
 
     /**
@@ -251,6 +250,23 @@ public abstract class QueryAnnotationUtil {
         return fieldMap.getOrDefault(fieldName, fieldName);
     }
 
+    /**
+     * 获取表名
+     *
+     * @param entityClassName
+     * @return
+     */
+    public static String getTableNameByEntityClassName(String entityClassName) {
+
+        String name = entityTableNameCaches.get(entityClassName);
+
+        if (hasText(name)) {
+            return name;
+        }
+
+        //通过类加载
+        return getTableNameByAnnotation(ClassUtils.resolveClassName(entityClassName, Thread.currentThread().getContextClassLoader()));
+    }
 
     /**
      * 获取表名
