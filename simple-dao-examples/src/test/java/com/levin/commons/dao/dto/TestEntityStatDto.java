@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@TargetOption(entityClass = TestEntity.class)
+@TargetOption(entityClass = TestEntity.class, resultClass = TestEntityStatDto.class)
 public class TestEntityStatDto {
 
     @Min

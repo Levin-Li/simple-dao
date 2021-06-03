@@ -51,7 +51,6 @@ public abstract class ExprUtils {
     //直接替换匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
-
     //替换变量
     //SQL查询占位参数匹配样式：${:paramName} ，如  t.score +  ${:val}  --> t.score +  :?
     //文本替换匹配样式：${paramName}  ，       如 t.score +  ${val}  --> t.score + 10
@@ -66,13 +65,11 @@ public abstract class ExprUtils {
      */
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
-
     /**
      * 实体类缓存
      * 用于防止频繁出现类加载
      */
     protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
-
 
     /**
      * 核心方法 生成语句，并返回参数

@@ -519,14 +519,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            throw new IllegalArgumentException("expr has no content");
 //        }
 
-        String methodName = new Exception().getStackTrace()[callMethodDeep].getMethodName();
+        final Exception exception = new UnsupportedOperationException("");
 
-        methodName = Character.toUpperCase(methodName.charAt(0)) + methodName.substring(1);
+        String name = exception.getStackTrace()[callMethodDeep].getMethodName();
 
-        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(methodName);
+        name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+
+        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(name);
 
         if (annotation == null) {
-            throw new IllegalArgumentException("Annotation " + methodName + " not found");
+            throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
         if (annotation instanceof IsNotNull
@@ -535,6 +537,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             processWhereCondition(null, null, expr, value, null, annotation);
 
+        } else {
+            logger.warn("注解 " + name + "无法处理", exception);
         }
 
         return (CB) this;
@@ -688,8 +692,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB exists(Object exprOrQueryObj) {
-        return processAnno(2, "", exprOrQueryObj);
+    public CB exists(Object exprOrQueryObj, Object... paramValues) {
+        return processOp("EXIST", exprOrQueryObj, paramValues);
     }
 
     /**
@@ -700,9 +704,42 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB notExists(Object exprOrQueryObj) {
-        return processAnno(2, "", exprOrQueryObj);
+    public CB notExists(Object exprOrQueryObj, Object... paramValues) {
+        return processOp("NOT EXIST", exprOrQueryObj, paramValues);
     }
+
+    protected CB processOp(String op, Object exprOrQueryObj, Object paramValues) {
+
+        String expr = "";
+
+        if (exprOrQueryObj instanceof CharSequence) {
+
+            expr = exprOrQueryObj.toString();
+
+        } else if (exprOrQueryObj instanceof StatementBuilder) {
+
+            StatementBuilder builder = (StatementBuilder) exprOrQueryObj;
+
+            expr = builder.genFinalStatement();
+
+            //原有参数放回去
+            paramValues = Arrays.asList(paramValues, builder.genFinalParamList());
+
+        } else {
+            //忽略 paramValues
+            return processAnno(3, "", exprOrQueryObj);
+        }
+
+        if (hasText(expr)) {
+            expr = op + "(" + expr + ")";
+        }
+
+        appendToWhere(expr, paramValues, false);
+
+        return (CB) this;
+
+    }
+
 
     /**
      * like %keyword%
@@ -1772,9 +1809,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                                   PrimitiveValue primitiveValue, Annotation opAnnotation,
                                   BiConsumer<String, ValueHolder<? extends Object>> consumer) {
 
-
         boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
-
 
         ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 
@@ -1850,7 +1885,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
 
-
         return ExprUtils.genExpr(c, name, complexType, getExpectType(name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
@@ -1860,6 +1894,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 this::aroundColumnPrefix,
 
                 this::buildSubQuery, contexts);
+
     }
 
 
