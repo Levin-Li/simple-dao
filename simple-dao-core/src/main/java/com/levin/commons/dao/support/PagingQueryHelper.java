@@ -32,7 +32,7 @@ public abstract class PagingQueryHelper {
      * 通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。
      *
      * @param simpleDao  dao
-     * @param pagingData 查询结果，可以是对象实例，也是可以是 Class 对象
+     * @param pagingData 查询结果，可以是对象实例，也是可以是 Class 对象，对象的字段上有 #{PageOption} 注解
      * @param queryDto   查询 DTO
      * @param paging     如果 queryDto 本身也是 Paging对象，那么 paging参数将无效
      * @param <T>        查询结果
