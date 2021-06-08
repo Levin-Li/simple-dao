@@ -1569,10 +1569,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            return;
 //        }
 
-        List<Annotation> daoAnnotations = new ArrayList<>(5);
+        final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
-        for (Annotation annotation : findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations)) {
 
+        final Consumer<Annotation> consumer = annotation -> {
             if (annotation instanceof CList) {
 
                 if (isValid(annotation, bean, name, value)) {
@@ -1588,29 +1588,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             } else {
                 daoAnnotations.add(annotation);
             }
+        };
 
-        }
-
+        //过滤字段级别注解
+        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(consumer);
 
         //如果没有注解
-        if (daoAnnotations.size() == 0) {
+        if (daoAnnotations.isEmpty()) {
 
             //如果字段上没有需要处理的注解
             //默认为 EQ
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-            if ((!complexType) && !isNullOrEmptyTxt(value)) {
-                //如果没有注解，不是复杂类型，则默认为等于查询
-                Annotation opAnno = getAnnotation(Eq.class);
 
-                //如果参数是一个可迭代对象，改为用 in
-                if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
-                        || value instanceof Object[]) {
-                    opAnno = getAnnotation(In.class);
+            if ((!complexType) && !isNullOrEmptyTxt(value)) {
+
+                if (bean != null) {
+                    //扫描类级别注解
+                    findNeedProcessDaoAnnotations(null, bean.getClass().getAnnotations()).forEach(consumer);
                 }
 
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
+                //如果类上面也没有效注解
+                if (daoAnnotations.isEmpty()) {
+                    //如果没有注解，不是复杂类型，则默认为等于查询
+                    Annotation opAnno = getAnnotation(Eq.class);
+
+                    //如果参数是一个可迭代对象，改为用 in
+                    if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
+                            || value instanceof Object[]) {
+                        opAnno = getAnnotation(In.class);
+                    }
+
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
+                }
+
             } else {
 
                 //如果不是
@@ -1625,18 +1637,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
                 }
             }
-
-
-        } else {
-            daoAnnotations.stream()
-                    .filter(annotation -> isValid(annotation, bean, name, value))
-                    .forEach(annotation -> {
-                        processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                                varType, value, annotation);
-                    });
         }
 
+        //迭代注解
+        daoAnnotations.stream()
+                .filter(annotation -> isValid(annotation, bean, name, value))
+                .forEach(annotation -> {
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations,
+                            tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
+                            varType, value, annotation);
+                });
 
     }
 
