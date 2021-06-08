@@ -32,20 +32,20 @@ public class Case implements Serializable {
 
     private final Map<String, String> whenList = new LinkedHashMap<>();
 
-    @Data
-    @Accessors(chain = true)
-    zhe g@FieldNameConstants
-    public class When implements Serializable {
-
-        String when;
-
-        String then;
-
-        @Override
-        public String toString() {
-            return " WHEN " + when + " THEN " + when;
-        }
-    }
+//    @Data
+//    @Accessors(chain = true)
+//    @FieldNameConstants
+//    public class When implements Serializable {
+//
+//        String when;
+//
+//        String then;
+//
+//        @Override
+//        public String toString() {
+//            return " WHEN " + when + " THEN " + when;
+//        }
+//    }
 
 
     /**
