@@ -1,5 +1,6 @@
 package com.levin.commons.dao;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -27,6 +28,7 @@ import java.util.Map;
  */
 @Data
 @Accessors(chain = true)
+@Builder
 @FieldNameConstants
 public class Case implements Serializable {
 
