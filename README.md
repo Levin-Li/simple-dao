@@ -113,7 +113,9 @@
          SimpleDao dao;
          
          //查询并返回结果
-         List<TestEntityStatDto> result =  dao.findByQueryObj(TestEntityStatDto.class,new TestEntityStatDto());   
+ 
+         List<TestEntityStatDto> result =  dao.findByQueryObj(new TestEntityStatDto());   
+ 
 
    生成并执行以下查询语句
    
@@ -156,7 +158,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
