@@ -3,30 +3,12 @@
 
 ### 简介 
    
-   SimpleDao是一个使用注解生成SQL语句和参数的组件。
-   
-   目前组件基于JPA/Hibernate，如果非JPA环境项目需要使用，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
-   
+   SimpleDao是一个使用注解生成SQL语句和参数的组件，通过在DTO对象中加入自定义注解自动生成查询语句。
+
    在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询、逻辑删除，安全模式等。
-
-   SimpleDao的目标
-
-   1、减少直接编写查询语句（SQL或JPQL），提升开发效率，减少代码量，降低编码能力要求。
-
-   2、简化DAO层，或是直接放弃具体的Domain对象DAO层，使用支持泛型通用的Dao。
-
-   设计思路
-
-   通过在DTO对象中加入自定义注解自动生成查询语句。
-
-   DAO层的在Web应用中的位置：
-
-   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> dao(编写查询语句并映射查询参数) --> (JDBC,MyBatis,JPA,QueryDsl)
-
-   SimpleDao优化后的过程：
-
-   client request --> spring mvc controller --> DTO(数据传输对象) --> service(含cache)  --> SimpleDao(使用DTO自动生成查询语句) --> (JDBC,MyBatis,JPA)
-   
+ 
+   目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
+  
    测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
    
 ### 二进制发布
@@ -334,16 +316,13 @@
 
 #### 1.5 分页查询支持
    
-   查询辅助类 [PagingQueryHelper](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingQueryHelper.java) 
-             
+   方法1： 查询结果和总记录数            
    
      //使用示例
-     PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, 
-                             new PagingData<TableJoinDTO>(), new SimplePaging().setRequireTotals(true));
+     PagingData<TableJoinDTO> resp = dao.findPagingDataByQueryObj(new TableJoinDTO() , new SimplePaging().setRequireTotals(true));
    
-  
        
-   Dao 方法查询结果和总记录数
+   方法2： 查询结果和总记录数
        
        dao.findTotalsAndResultList(Object... queryObjs);
    
@@ -452,7 +431,7 @@
 
     //删除DAO
     DeleteDao dao = dao.deleteFrom(Group.class)
-     dao.delete()
+    dao.delete()
 
 #### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用SimpleDao)
 
@@ -599,133 +578,54 @@
 
 #### 3.1 Dao核心接口
 
-*    [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
+*    1-[SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
-*    [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
+*    2-[SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
-*    [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
+*    3-[UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
-*    [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
+*    4-[DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
-*    [JpaDao](./simple-dao-jpa/src/main/java/com/levin/commons/dao/JpaDao.java)
 
+##### 3.1.1 SimpleDao 常用方法
 
-##### 3.1.1 常用接口
-
-      /**
-        * 从查询对象构造SelectDao
-        *
-        * @param <T>
-        * @return
-        */
-       <T> SelectDao<T> forSelect(Object... queryObjs);
-   
-       /**
-        * 从查询对象构造UpdateDao
-        *
-        * @param <T>
-        * @return
-        */
-       <T> UpdateDao<T> forUpdate(Object... queryObjs);
-   
-       /**
-        * 从查询对象构造UpdateDao
-        *
-        * @param <T>
-        * @return
-        */
-       <T> DeleteDao<T> forDelete(Object... queryObjs);
-       /////////////////////////////////////////////////////////////////////////////////////////
-   
-       /**
-        * 原生查询
-        *
-        * @param nativeQL      是否原生查询
-        * @param fromStatement
-        * @param <T>
-        * @return
-        */
-       @Deprecated
-       <T> SelectDao<T> selectFrom(boolean nativeQL, @NotNull String fromStatement);
-   
-       /**
-        * 创建一个指定类型的查询对象dao
-        *
-        * @param clazz 实体类，不允许为null
-        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-        */
-       <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
-   
-       <T> SelectDao<T> selectByNative(@NotNull Class<T> clazz, String... alias);
-   
-       /**
-        * 创建一个指定类型的更新dao
-        *
-        * @param clazz 实体类，不允许为null
-        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-        */
-       <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
-   
-       <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias);
-   
-       /**
-        * 创建一个指定类型的删除dao
-        *
-        * @param clazz 实体类，不允许为null
-        * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-        */
-       <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
-   
-       <T> DeleteDao<T> deleteByNative(@NotNull Class<T> clazz, String... alias);
-   
-       ///////////////////////////////////////////////////////////////////////////////////////
-   
-       /**
-        * 原生查询
-        *
-        * @param tableName 表名
-        * @param alias     表别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        */
-       <T> SelectDao<T> selectFrom(@NotNull String tableName, String... alias);
-   
-       /**
-        * 使用表名创建一个更新的dao
-        * 默认为原生查询
-        *
-        * @param tableName 表名，不允许为null
-        * @param alias     别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-        */
-       <T> UpdateDao<T> updateTo(@NotNull String tableName, String... alias);
-   
-       /**
-        * 使用表名创建一个删除的dao
-        * 默认为原生查询
-        * <p/>
-        * alias别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-        *
-        * @param tableName 表名，不允许为null
-        * @param alias     为了接口使用更方便，使用可变参，但只获取第一个别名
-        * @param <T>
-        * @return
-        */
-       <T> DeleteDao<T> deleteFrom(@NotNull String tableName, String... alias);
-   
-       ////////////////////////////////////////////////////////////////////////////////////////////
-
+            /**
+             * 创建一个指定类型的查询对象dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
+          
+          
+            /**
+             * 创建一个指定类型的更新dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+            
+            
+            
+            /**
+             * 创建一个指定类型的删除dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+       
+        
        
 
 #### 3.2 注解的语句生成规则
@@ -826,23 +726,25 @@
         ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
     
  
-### 4.1 函数的支持（@Func注解实现）     
+### 4.2 函数的支持（@Func注解实现）     
            
-        
+           class XXX {
             @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
             protected Date createTime = new Date();
             
             @Ignore
-            String format ="'YYYY-MM-DD'";
+            String format ="'yyyy-MM-DD'";
             
-            //以上注解将生成： DATE_FORMAT(createTime,'YYYY-MM-DD')
+            ...
+            
+            }
+            //字符串类型的 createTime 字段
+            //以上注解将生成语句： DATE_FORMAT(createTime,'yyyy-MM-DD') < ?  ,  参数为 new Date()
             
             // Func.ORIGIN_EXPR 代表原表达式
             
             //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
-            
-     
-               
+             
 
 ### 5 统计查询
 
@@ -865,7 +767,7 @@
          @Gt 
          int month = 5;
    
-   意思注解将产生语句： select month , AVG(score) from XXX where month > 5 having AVG(score) > 10 
+   以上注解将产生语句： select month , AVG(score) from XXX where month > 5 having AVG(score) > 10 
    
    Dao 支持多表统计，编码实现，如下例子：
    
@@ -935,7 +837,6 @@
          set lastUpdateTime = ?
 
 
-
 ### 7 复杂查询(逻辑嵌套)
 
    逻辑注解支持
@@ -981,7 +882,6 @@
 
 #### 8.1 手动指定子查询语句
 
-    
 
           @Data
           @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
@@ -1068,17 +968,17 @@
 
 
 ##### 10.1.1 基本类型字段无注解
+
   基本类型无注解示例：
 
        Long id;
        String name = "Echo";
 
-  基本类型且无注解，将默认为等于操作。以上注解将产生如下语句：
+  需要看类上的默认注解，如果类定义上面无默认注解 ，将默认为等于操作注解。以上注解将产生如下语句：
 
       name = ?
 
   注意以上id字段并没有生产条件，默认情况下，字段值为null值或是空字符串，字段都将被忽略。
-
 
 
 ##### 10.1.2 复杂类型字段无注解
