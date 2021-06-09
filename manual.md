@@ -1476,7 +1476,8 @@
      
              <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
-           
+              
+        
                <repositories>
            
                    <repository>

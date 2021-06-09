@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.levin.commons</groupId>
         <artifactId>simple-dao-parent</artifactId>
-        <version>${levin.simple-dao.version}</version>
+        <version>${revision}</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>

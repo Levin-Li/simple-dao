@@ -12,7 +12,7 @@
 
     <groupId>com.levin.commons</groupId>
     <artifactId>simple-dao-code-gen-example</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <name>code-gen-example</name>
 
@@ -20,8 +20,7 @@
 
     <properties>
 
-        <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version>
+        <revision>2.2.27-SNAPSHOT</revision>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
@@ -120,17 +119,18 @@
         <dependencies>
 
             <dependency>
-                <groupId>${levin.simple-dao.groupId}</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-jpa</artifactId>
-                <version>${levin.simple-dao.version}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>${levin.simple-dao.groupId}</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-jpa-starter</artifactId>
-                <version>${levin.simple-dao.version}</version>
+                <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
+
 
             <dependency>
                 <groupId>${levin.service-support.groupId}</groupId>
@@ -248,7 +248,7 @@
         </dependency>
 
         <dependency>
-            <groupId>${levin.simple-dao.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
         </dependency>
 
@@ -275,9 +275,9 @@
 
 
             <plugin>
-                <groupId>${levin.simple-dao.groupId}</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
-                <version>${levin.simple-dao.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
 

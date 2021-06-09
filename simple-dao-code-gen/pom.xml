@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.levin.commons</groupId>
         <artifactId>simple-dao-parent</artifactId>
-        <version>${levin.simple-dao.version}</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>simple-dao-codegen</artifactId>
@@ -233,7 +233,7 @@
                                 </goals>
                                 <configuration>
                                     <!-- 自动识别到项目target文件夹 -->
-                                    <basedir>${build.directory}</basedir>
+                                    <basedir>${project.build.directory}</basedir>
                                     <!-- 替换的文件所在目录规则 -->
                                     <includes>
                                         <include>classes/META-INF/maven/plugin.xml</include>
