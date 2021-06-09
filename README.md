@@ -44,7 +44,7 @@
              //针对字段默认为  @Select 注解
              @Select
              @Data
-             public class Info{  
+             public static class Info{  
                 Long id; 
                 String name; 
              } 
