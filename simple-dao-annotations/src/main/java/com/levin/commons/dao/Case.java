@@ -1,6 +1,6 @@
 package com.levin.commons.dao;
 
-import lombok.Builder;
+import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -28,10 +28,12 @@ import java.util.Map;
  * @author llw
  */
 @Data
-@Accessors(chain = true,fluent = true)
+@Accessors(chain = true, fluent = true)
 @NoArgsConstructor
 //@Builder
 @FieldNameConstants
+
+@PrimitiveValue(isExpr = true)
 public class Case implements Serializable {
 
     private final Map<String, String> whenList = new LinkedHashMap<>();

@@ -7,6 +7,9 @@ import java.lang.annotation.*;
  * <p>
  * 用于兼容现有的类设计
  *
+ *
+ * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+ *
  * <p>
  *
  * @author levin li
