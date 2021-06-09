@@ -92,6 +92,15 @@ public interface DaoFactory {
      */
     <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
 
+    /**
+     * 创建一个指定类型的更新dao
+     *
+     * @param clazz 实体类，不允许为null
+     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+     * @param <T>
+     * @return
+     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+     */
     <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias);
 
     /**
@@ -105,6 +114,12 @@ public interface DaoFactory {
      */
     <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
 
+    /**
+     * @param clazz
+     * @param alias
+     * @param <T>
+     * @return
+     */
     <T> DeleteDao<T> deleteByNative(@NotNull Class<T> clazz, String... alias);
 
     ///////////////////////////////////////////////////////////////////////////////////////
