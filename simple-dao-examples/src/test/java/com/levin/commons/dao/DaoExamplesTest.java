@@ -413,6 +413,14 @@ public class DaoExamplesTest {
 
         System.out.println(byQueryObj);
 
+
+        String ql = new Case().column("status")
+                .when("'A'", "0")
+                .when("'B'", "1")
+                .elseExpr("2")
+                .toString();
+
+
     }
 
 
@@ -1384,7 +1392,7 @@ public class DaoExamplesTest {
 
         Object[] ddd = {"dafa", 3.4, 23423};
 
-        User[] sss = { };
+        User[] sss = {};
 
 
         System.out.println(sss instanceof Object[]);

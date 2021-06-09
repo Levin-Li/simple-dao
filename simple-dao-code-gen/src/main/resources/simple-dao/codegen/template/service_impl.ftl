@@ -72,16 +72,16 @@ public class ${className} implements ${serviceName} {
         entity.setSn(sn);
         </#if>
         <#if field.name == 'addTime'>
-        entity.setAddTime(new Date());
+        //entity.setAddTime(new Date());
         </#if>
         <#if field.name == 'createTime'>
-        entity.setCreateTime(new Date());
+        //entity.setCreateTime(new Date());
         </#if>
         <#if field.name == 'updateTime'>
-        entity.setUpdateTime(new Date());
+        //entity.setUpdateTime(new Date());
         </#if>
         <#if field.name == 'lastUpdateTime'>
-        entity.setLastUpdateTime(new Date());
+        //entity.setLastUpdateTime(new Date());
         </#if>
     </#list>
 
@@ -116,20 +116,14 @@ public class ${className} implements ${serviceName} {
 
 <#list fields as field>
     <#if field.name == 'updateTime'>
-        updateDao.set(E_${entityName}.updateTime, new Date());
+        //updateDao.set(E_${entityName}.updateTime, new Date());
     </#if>
 </#list>
-
         return updateDao.update() > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
 
     @Override
     public ApiResp<Void> delete(Delete${entityName}Req req) {
-
-        //if (req.get${pkField.name?cap_first}() == null
-        //        && (req.get${pkField.name?cap_first}s() == null || req.get${pkField.name?cap_first}s().length == 0)) {
-        //    return  ApiResp.error("删除参数不能为空");
-        // }
 
         return simpleDao.deleteByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
@@ -140,15 +134,13 @@ public class ${className} implements ${serviceName} {
         Query${entityName}Req queryReq = new Query${entityName}Req();
         queryReq.set${pkField.name?cap_first}(${pkField.name});
 
-       // return query(queryReq).getFirst();
-
         return simpleDao.findOneByQueryObj(queryReq);
     }
 
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
 
-      return PagingQueryHelper.findByPageOption(simpleDao, PagingData.class, req, paging);
+      return simpleDao.findPagingDataByQueryObj(req, paging);
 
     }
 

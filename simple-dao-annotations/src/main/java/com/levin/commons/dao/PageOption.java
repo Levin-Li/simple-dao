@@ -7,6 +7,9 @@ import java.lang.annotation.*;
  * <p>
  * 用于兼容现有的类设计
  *
+ *
+ * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+ *
  * <p>
  *
  * @author levin li
@@ -50,6 +53,8 @@ public @interface PageOption {
     /**
      * 注解生效条件
      * SPEL 表达式
+     *
+     * 如果表达式为空，被注解字段为 boolean 类型，或是 值不为 null 条件即成立
      *
      * @return
      */

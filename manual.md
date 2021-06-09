@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.28-SNAPSHOT</version>
+            <version>2.2.27-SNAPSHOT</version>
         </dependency>
         
        
@@ -63,7 +63,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -767,6 +767,8 @@
 
 ### 4.1 CASE 语句支持
 
+#### 4.1.1 注解支持
+  
       @Data
       @Accessors(chain = true)
       @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
@@ -811,6 +813,17 @@
              ELSE 5 
              END) AS scoreLevel   
            From com.levin.commons.dao.domain.User u 
+    
+#### 4.1.2 简单类支持
+
+        String ql = new Case().column("status")
+                .when("'A'", "0")
+                .when("'B'", "1")
+                .elseExpr("2")
+                .toString();
+                    
+        //语句            
+        ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
     
  
 ### 4.1 函数的支持（@Func注解实现）     
@@ -1461,9 +1474,10 @@
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
-           
+              
+        
                <repositories>
            
                    <repository>

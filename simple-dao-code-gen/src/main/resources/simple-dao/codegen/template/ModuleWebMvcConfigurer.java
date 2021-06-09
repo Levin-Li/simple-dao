@@ -1,18 +1,18 @@
 package ${modulePackageName}.config;
 
-
-import ${modulePackageName}.*;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.config.annotation.*;
+
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.config.annotation.*;
+
+import ${modulePackageName}.*;
 
 
 @Configuration("${modulePackageName}.config.ModuleWebMvcConfigurer")
@@ -28,7 +28,7 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
             //Preflighted requests in CORS
             boolean isCorsPreflightRequest =
                     StringUtils.hasText(request.getHeader("Access-Control-Request-Method"))
-                            || StringUtils.hasText(request.getHeader("AAccess-Control-Request-Headers"));
+                            || StringUtils.hasText(request.getHeader("Access-Control-Request-Headers"));
 
             if (isCorsPreflightRequest
                     && HttpMethod.OPTIONS.toString().equals(request.getMethod())
@@ -51,6 +51,8 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
                 response.setStatus(HttpStatus.NO_CONTENT.value());
 
                 log.debug("跨域配置method:{}, requestURI:{}", request.getMethod(), request.getRequestURI());
+
+                return false;
 
             }
 

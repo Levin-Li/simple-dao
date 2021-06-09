@@ -32,6 +32,12 @@ public @interface PrimitiveValue {
      */
     boolean require() default false;
 
+    /**
+     * 是否是表达式
+     *
+     * @return
+     */
+    boolean isExpr() default false;
 
     /**
      * @return

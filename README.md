@@ -9,8 +9,73 @@
  
    目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
     
-#### 1 简单就是美
+### 1 使用预览
+
+   JPA实体类定义
    
+      @Entity(name = "test_entity")
+      @Data
+      @Accessors(chain = true)
+      @FieldNameConstants 
+      public class TestEntity{
+      
+         @Id
+         @GeneratedValue
+         private Long id;
+         
+         @Column(nullable = false)
+         String name;
+         
+         @Column(nullable = false)
+         String state;
+         
+         ... 
+             
+      }
+   
+#### 1.1 简单查询
+
+           // 查询对象
+           @Data
+           //声明查询的目标表，和查询结果的对象类型
+           @TargetOption(entityClass = TestEntity.class, resultClass = QueryDto.Info.class)
+           public class QueryDto {
+           
+             //针对字段默认为  @Select 注解
+             @Select
+             @Data
+             public static class Info{  
+                Long id; 
+                String name; 
+             } 
+             
+             //等于注解
+             @Eq
+             String status;
+             
+           }
+           
+           //服务类
+           public class TestEntityService{
+           
+               //注入通用Dao
+               @Autowired
+               SimpleDao dao;
+               
+               //查询指定状态的记录，返回QueryDto.Info的结果集
+               List<QueryDto.Info> findByStatus(String status){
+                  
+                   //下面的将生成SQL： select id , name from test_entity where status = ?
+                   
+                   return dao.findByQueryObj(new QueryDto().setStatus(status));
+                   
+               }
+            
+           }
+
+
+#### 1.2 统计查询
+
    根据查询对象生成查询语句和参数。
    
    1）定义查询对象
@@ -48,7 +113,9 @@
          SimpleDao dao;
          
          //查询并返回结果
-        List<TestEntityStatDto> result =  dao.findByQueryObj(new TestEntityStatDto());   
+ 
+         List<TestEntityStatDto> result =  dao.findByQueryObj(new TestEntityStatDto());   
+ 
 
    生成并执行以下查询语句
    
@@ -91,7 +158,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.28-SNAPSHOT</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.27-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -187,5 +254,3 @@
 
  邮箱：99668980@qq.com   
  
-
-

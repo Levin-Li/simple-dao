@@ -51,7 +51,6 @@ public abstract class ExprUtils {
     //直接替换匹配样式：${paramName}
     public static final Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
 
-
     //替换变量
     //SQL查询占位参数匹配样式：${:paramName} ，如  t.score +  ${:val}  --> t.score +  :?
     //文本替换匹配样式：${paramName}  ，       如 t.score +  ${val}  --> t.score + 10
@@ -66,13 +65,11 @@ public abstract class ExprUtils {
      */
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
-
     /**
      * 实体类缓存
      * 用于防止频繁出现类加载
      */
     protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
-
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -113,7 +110,7 @@ public abstract class ExprUtils {
         }
 
         //如果只有一个元素的数组
-        holder.value = tryGetFirstElement(holder.value);
+        holder.value = tryGetFirstElementIfOnlyOne(holder.value);
 
         boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
@@ -328,12 +325,12 @@ public abstract class ExprUtils {
     }
 
     /**
-     * 如果只又一个元素，则只取第一个
+     * 如果有且只有一个元素，则只取第一个
      *
      * @param arrayOrSet
      * @return
      */
-    private static Object tryGetFirstElement(Object arrayOrSet) {
+    public static Object tryGetFirstElementIfOnlyOne(Object arrayOrSet) {
 
         while (arrayOrSet != null) {
 

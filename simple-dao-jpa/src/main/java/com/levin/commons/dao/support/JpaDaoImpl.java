@@ -1019,7 +1019,6 @@ public class JpaDaoImpl
     }
 
 
-
     @Override
     public <T> SelectDao<T> forSelect(Object... queryObjs) {
         return forSelect(null, queryObjs);
@@ -1049,11 +1048,29 @@ public class JpaDaoImpl
         return forSelect(queryObjs).count();
     }
 
+
     @Override
     public <E> List<E> findByQueryObj(Object... queryObjs) {
         return findByQueryObj(tryFindResultClass(queryObjs), queryObjs);
     }
 
+
+    /**
+     * 查询分页数据
+     * <p>
+     * 参考注解类PageOption {@link PageOption}
+     * <p>
+     * 参考 PagingData  {@link PagingData}
+     *
+     * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
+     * @param queryObjs                   查询对象
+     * @return 返回分页对象
+     * @since 2.2.27 新增方法
+     */
+    @Override
+    public <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs) {
+        return PagingQueryHelper.findPageByQueryObj(this, pagingHolderInstanceOrClass, queryObjs);
+    }
 
     @Override
     public <E> RS<E> findTotalsAndResultList(Object... queryObjs) {

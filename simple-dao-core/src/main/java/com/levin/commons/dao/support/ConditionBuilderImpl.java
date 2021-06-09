@@ -519,14 +519,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            throw new IllegalArgumentException("expr has no content");
 //        }
 
-        String methodName = new Exception().getStackTrace()[callMethodDeep].getMethodName();
+        final Exception exception = new UnsupportedOperationException("");
 
-        methodName = Character.toUpperCase(methodName.charAt(0)) + methodName.substring(1);
+        String name = exception.getStackTrace()[callMethodDeep].getMethodName();
 
-        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(methodName);
+        name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+
+        Annotation annotation = QueryAnnotationUtil.getAllAnnotations().get(name);
 
         if (annotation == null) {
-            throw new IllegalArgumentException("Annotation " + methodName + " not found");
+            throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
         if (annotation instanceof IsNotNull
@@ -535,6 +537,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             processWhereCondition(null, null, expr, value, null, annotation);
 
+        } else {
+            logger.warn("注解 " + name + "无法处理", exception);
         }
 
         return (CB) this;
@@ -688,8 +692,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB exists(Object exprOrQueryObj) {
-        return processAnno(2, "", exprOrQueryObj);
+    public CB exists(Object exprOrQueryObj, Object... paramValues) {
+        return processOp(Op.Exists.getOperator(), exprOrQueryObj, paramValues);
     }
 
     /**
@@ -700,9 +704,44 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB notExists(Object exprOrQueryObj) {
-        return processAnno(2, "", exprOrQueryObj);
+    public CB notExists(Object exprOrQueryObj, Object... paramValues) {
+        return processOp(Op.NotExists.getOperator(), exprOrQueryObj, paramValues);
     }
+
+    protected CB processOp(String op, Object exprOrQueryObj, Object paramValues) {
+
+        String expr = "";
+
+        paramValues = ExprUtils.tryGetFirstElementIfOnlyOne(paramValues);
+
+        if (exprOrQueryObj instanceof CharSequence) {
+
+            expr = exprOrQueryObj.toString();
+
+        } else if (exprOrQueryObj instanceof StatementBuilder) {
+
+            StatementBuilder builder = (StatementBuilder) exprOrQueryObj;
+
+            expr = builder.genFinalStatement();
+
+            //原有参数放回去
+            paramValues = Arrays.asList(paramValues, builder.genFinalParamList());
+
+        } else {
+            //忽略 paramValues
+            return processAnno(3, "", exprOrQueryObj);
+        }
+
+        if (hasText(expr)) {
+            expr = op + "(" + expr + ")";
+        }
+
+        appendToWhere(expr, paramValues, false);
+
+        return (CB) this;
+
+    }
+
 
     /**
      * like %keyword%
@@ -1530,10 +1569,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            return;
 //        }
 
-        List<Annotation> daoAnnotations = new ArrayList<>(5);
+        final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
-        for (Annotation annotation : findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations)) {
 
+        final Consumer<Annotation> consumer = annotation -> {
             if (annotation instanceof CList) {
 
                 if (isValid(annotation, bean, name, value)) {
@@ -1549,29 +1588,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             } else {
                 daoAnnotations.add(annotation);
             }
+        };
 
-        }
-
+        //过滤字段级别注解
+        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(consumer);
 
         //如果没有注解
-        if (daoAnnotations.size() == 0) {
+        if (daoAnnotations.isEmpty()) {
 
             //如果字段上没有需要处理的注解
             //默认为 EQ
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-            if ((!complexType) && !isNullOrEmptyTxt(value)) {
-                //如果没有注解，不是复杂类型，则默认为等于查询
-                Annotation opAnno = getAnnotation(Eq.class);
 
-                //如果参数是一个可迭代对象，改为用 in
-                if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
-                        || value instanceof Object[]) {
-                    opAnno = getAnnotation(In.class);
+            if ((!complexType) && !isNullOrEmptyTxt(value)) {
+
+                if (bean != null) {
+                    //扫描类级别注解
+                    findNeedProcessDaoAnnotations(null, bean.getClass().getAnnotations()).forEach(consumer);
                 }
 
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
+                //如果类上面也没有效注解
+                if (daoAnnotations.isEmpty()) {
+                    //如果没有注解，不是复杂类型，则默认为等于查询
+                    Annotation opAnno = getAnnotation(Eq.class);
+
+                    //如果参数是一个可迭代对象，改为用 in
+                    if (value instanceof Iterable || QueryAnnotationUtil.isArrayAndExistPrimitiveElement(value)
+                            || value instanceof Object[]) {
+                        opAnno = getAnnotation(In.class);
+                    }
+
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
+                }
+
             } else {
 
                 //如果不是
@@ -1586,18 +1637,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
                 }
             }
-
-
-        } else {
-            daoAnnotations.stream()
-                    .filter(annotation -> isValid(annotation, bean, name, value))
-                    .forEach(annotation -> {
-                        processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                                tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                                varType, value, annotation);
-                    });
         }
 
+        //迭代注解
+        daoAnnotations.stream()
+                .filter(annotation -> isValid(annotation, bean, name, value))
+                .forEach(annotation -> {
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations,
+                            tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
+                            varType, value, annotation);
+                });
 
     }
 
@@ -1772,9 +1821,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                                   PrimitiveValue primitiveValue, Annotation opAnnotation,
                                   BiConsumer<String, ValueHolder<? extends Object>> consumer) {
 
-
         boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
-
 
         ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 
@@ -1850,7 +1897,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
 
-
         return ExprUtils.genExpr(c, name, complexType, getExpectType(name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
@@ -1860,6 +1906,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 this::aroundColumnPrefix,
 
                 this::buildSubQuery, contexts);
+
     }
 
 

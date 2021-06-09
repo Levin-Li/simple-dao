@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.levin.commons</groupId>
         <artifactId>simple-dao-parent</artifactId>
-        <version>${levin.simple-dao.version}</version>
+        <version>${revision}</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -30,11 +30,6 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
         </dependency>
 
 
@@ -62,16 +57,6 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
@@ -80,21 +65,6 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>${levin.service-support.groupId}</groupId>
-            <artifactId>service-support</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -102,7 +72,7 @@
         </dependency>
 
         <dependency>
-             <groupId>${project.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>simple-dao-jpa</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -134,10 +104,10 @@
 
 
         <!--<dependency>-->
-            <!--<groupId>de.codecentric</groupId>-->
-            <!--<artifactId>spring-boot-admin-server</artifactId>-->
-            <!--<version>RELEASE</version>-->
-            <!--<scope>test</scope>-->
+        <!--<groupId>de.codecentric</groupId>-->
+        <!--<artifactId>spring-boot-admin-server</artifactId>-->
+        <!--<version>RELEASE</version>-->
+        <!--<scope>test</scope>-->
         <!--</dependency>-->
 
         <dependency>
