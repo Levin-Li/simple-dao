@@ -52,4 +52,5 @@ public class CommDto {
     void init3() {
         System.out.println(getClass().getName() + " init 3 ...");
     }
+
 }
