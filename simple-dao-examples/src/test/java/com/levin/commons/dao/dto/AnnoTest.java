@@ -7,6 +7,8 @@ import com.levin.commons.dao.domain.User;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.annotation.PostConstruct;
+
 @TargetOption(entityClass = User.class)
 @Data
 @Accessors(chain = true)
@@ -52,5 +54,22 @@ public class AnnoTest {
     @Gt
     @Gte(not = true)
     String name ="S1";
+
+
+    @PostConstruct
+    void init() {
+        System.out.println(getClass().getName() + " init 1 ...");
+    }
+
+    @PostConstruct
+    void init2() {
+        System.out.println(getClass().getName() + " init 2 ...");
+    }
+
+
+    @PostConstruct
+    void init3() {
+        System.out.println(getClass().getName() + " init 3 ...");
+    }
 
 }

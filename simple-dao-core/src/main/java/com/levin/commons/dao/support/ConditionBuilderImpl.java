@@ -27,6 +27,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -1185,8 +1187,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            //对 注解的支持 PostConstruct
-            ClassUtils.invokeFirstPostConstructMethod(queryValueObj);
+            //对注解的支持 PostConstruct
+            ClassUtils.invokePostConstructMethod(queryValueObj);
+
+            if (this instanceof UpdateDao) {
+                ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreUpdate.class);
+            } else if (this instanceof DeleteDao) {
+                ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreRemove.class);
+            }
 
             //没有回调时，表示本地调用
             if (attrCallback == null) {

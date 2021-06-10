@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.annotation.PostConstruct;
 import java.util.Date;
 
 @Data
@@ -36,4 +37,19 @@ public class CommDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     String createTime;
 
+    @PostConstruct
+    void init() {
+        System.out.println(getClass().getName() + " init 1 ...");
+    }
+
+    @PostConstruct
+    void init2() {
+        System.out.println(getClass().getName() + " init 2 ...");
+    }
+
+
+    @PostConstruct
+    void init3() {
+        System.out.println(getClass().getName() + " init 3 ...");
+    }
 }

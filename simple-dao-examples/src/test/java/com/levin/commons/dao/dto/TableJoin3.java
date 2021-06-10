@@ -13,6 +13,8 @@ import com.levin.commons.dao.domain.E_User;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.annotation.PostConstruct;
+
 @Data
 @Accessors(chain = true)
 @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
@@ -51,4 +53,20 @@ public class TableJoin3 {
     @PageOption(PageOption.Type.RequireTotals)
     boolean requireTotals;
 
+    @PostConstruct
+    void init() {
+        System.out.println(getClass().getName() + " init 1 ...");
+    }
+
+    @PostConstruct
+    void init2() {
+        System.out.println(getClass().getName() + " init 2 ...");
+
+    }
+
+
+    @PostConstruct
+    void init3() {
+        System.out.println(getClass().getName() + " init 3 ...");
+    }
 }

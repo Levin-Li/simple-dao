@@ -11,11 +11,12 @@ import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.annotation.PostConstruct;
 import java.util.Date;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = Group.class,   maxResults = 100)
+@TargetOption(entityClass = Group.class, maxResults = 100)
 public class GroupDTO {
 
     Long id = 1L;
@@ -30,7 +31,7 @@ public class GroupDTO {
     @OrderBy(order = 2)
     protected Integer orderCode;
 
-    Paging paging = new PagingQueryReq().setPageIndex(1).setPageSize( 20);
+    Paging paging = new PagingQueryReq().setPageIndex(1).setPageSize(20);
 
     String state = "A";
 
@@ -42,7 +43,7 @@ public class GroupDTO {
 
     protected Boolean editable = true;
 
-    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${:format}"},condition = "true"))
+    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {Func.ORIGIN_EXPR, "${:format}"}, condition = "true"))
     protected Date createTime = new Date();
 
     @Update
@@ -52,6 +53,23 @@ public class GroupDTO {
     protected String description = " info ";
 
     @Ignore
-    String format ="YYYY-MM-DD";
+    String format = "YYYY-MM-DD";
+
+
+    @PostConstruct
+    void init() {
+        System.out.println(getClass().getName() + " init 1 ...");
+    }
+
+    @PostConstruct
+    void init2() {
+        System.out.println(getClass().getName() + " init 2 ...");
+    }
+
+
+    @PostConstruct
+    void init3() {
+        System.out.println(getClass().getName() + " init 3 ...");
+    }
 
 }
