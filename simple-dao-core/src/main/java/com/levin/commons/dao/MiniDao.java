@@ -54,7 +54,7 @@ public interface MiniDao {
      * @return
      */
     default PhysicalNamingStrategy getNamingStrategy() {
-        return null;
+        return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
 
     /**

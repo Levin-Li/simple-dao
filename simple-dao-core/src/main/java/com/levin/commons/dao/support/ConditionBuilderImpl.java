@@ -813,45 +813,48 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
-
     /**
-     * 尝试转换表名
+     * @param name
+     * @return
      */
-    protected void tryToPhysicalTableName() {
-        this.tableName = tryToPhysicalTableName(tableName);
-    }
+    protected String getTableNameByPhysicalNamingStrategy(String name) {
 
-    protected String tryToPhysicalTableName(String tableName) {
-
-        if (isNative() && enableNameConvert && hasText(tableName)
-                && !containsWhitespace(tableName) && getDao() != null) {
+        if (isNative()
+                && enableNameConvert
+                && hasText(name)
+                && !containsWhitespace(name)
+                && getDao() != null) {
 
             PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
 
             if (namingStrategy != null) {
                 //转换名称
-                tableName = namingStrategy.toPhysicalTableName(tableName, null);
+                name = namingStrategy.toPhysicalTableName(name, null);
             }
         }
 
-        return tableName;
+        return name;
     }
+
 
     /**
      * @param name
      * @return
      */
-    protected String tryToPhysicalColumnName(String name) {
-
-        //尝试或是字段名
-        PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+    protected String getColumnNameByPhysicalNamingStrategy(String name) {
 
         if (isNative()
                 && enableNameConvert
-                && name != null
-                && namingStrategy != null) {
-            //转换名称
-            return namingStrategy.toPhysicalColumnName(name, null);
+                && hasText(name)
+                && !containsWhitespace(name)
+                && getDao() != null) {
+
+            PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+
+            if (namingStrategy != null) {
+                //转换名称
+                name = namingStrategy.toPhysicalColumnName(name, null);
+            }
         }
 
         return name;
@@ -2041,7 +2044,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             tryUpdateTableName();
 
-            tryToPhysicalTableName();
+            this.tableName = getTableNameByPhysicalNamingStrategy(tableName);
 
             if (hasText(this.tableName)) {
                 return tableName + " " + getText(alias, " ");
@@ -2133,14 +2136,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
 
-                column = tryToPhysicalColumnName(column);
+                column = getColumnNameByPhysicalNamingStrategy(column);
 
                 column = domain + "." + column;
 
             } else {
 
                 column = QueryAnnotationUtil.getColumnName(entityClass, column);
-                column = tryToPhysicalColumnName(column);
+
+                column = getColumnNameByPhysicalNamingStrategy(column);
             }
 
         }

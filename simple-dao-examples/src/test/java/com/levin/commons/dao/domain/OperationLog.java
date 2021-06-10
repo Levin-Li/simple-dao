@@ -5,6 +5,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Data
@@ -18,8 +19,12 @@ public class OperationLog  implements Serializable {
     @ManyToOne
     User user;
 
+
     @Lob
     @Column(name = "log_text_FieldName")
     String logText;
+
+    @Temporal(value = TemporalType.TIMESTAMP)
+    protected Date lastUpdateTime;
 
 }

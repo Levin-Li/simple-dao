@@ -205,7 +205,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> join(String... joinStatements) {
 
         if (joinStatements != null) {
-            
+
             for (String statement : joinStatements) {
                 if (hasText(statement)) {
                     this.joinStatement.append(" ").append(statement).append(" ");
@@ -267,7 +267,7 @@ public class SelectDaoImpl<T>
 
             targetName = QueryAnnotationUtil.getTableNameByAnnotation(targetClass);
 
-            targetName = tryToPhysicalTableName(targetName);
+            targetName = getTableNameByPhysicalNamingStrategy(targetName);
 
         }
 
@@ -301,7 +301,8 @@ public class SelectDaoImpl<T>
 
         String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
                 , this::appendToAliasMap
-                , this::tryToPhysicalTableName, this::tryToPhysicalColumnName
+                , this::getTableNameByPhysicalNamingStrategy
+                , this::getColumnNameByPhysicalNamingStrategy
                 , entityClass, tableName, alias, joinOptions);
 
         if (hasText(joinStatement)) {

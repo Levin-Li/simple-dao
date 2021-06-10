@@ -23,7 +23,9 @@ import lombok.experimental.Accessors;
         safeMode = false,
         //连接表
         joinOptions = {
-                @JoinOption(alias = E_Group.ALIAS, joinTargetColumn = E_User.group, entityClass = Group.class)
+                @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS,
+                        joinColumn = E_Group.F_id,
+                        joinTargetColumn = E_User.group)
         })
 public class NativeTableJoinDTO extends PagingQueryReq {
 
@@ -38,7 +40,7 @@ public class NativeTableJoinDTO extends PagingQueryReq {
     @Select
     String name;
 
-    @Select(domain = E_Group.ALIAS, value = E_Group.name )
+    @Select(domain = E_Group.ALIAS, value = E_Group.name)
     String groupName;
 
 }
