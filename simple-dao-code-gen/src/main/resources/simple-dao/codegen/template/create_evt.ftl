@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /////////////////////////////////////////////////////
 import javax.validation.constraints.*;
+import javax.annotation.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
@@ -44,6 +45,7 @@ import ${entityClassPackage}.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
@@ -60,5 +62,28 @@ public class ${className} implements ServiceReq {
     </#if>
 </#list>
 
+    @PostConstruct
+    public void prePersist() {
+    //保存之前初始化数据
+<#list fields as field>
+    <#if field.name == 'sn' && field.typeName == 'String'>
+        String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+         setSn(sn);
+    </#if>
+    <#if field.name == 'addTime'>
+         setAddTime(new Date());
+    </#if>
+    <#if field.name == 'createTime'>
+         setCreateTime(new Date());
+    </#if>
+    <#if field.name == 'updateTime'>
+          //setUpdateTime(new Date());
+    </#if>
+    <#if field.name == 'lastUpdateTime'>
+         //setLastUpdateTime(new Date());
+    </#if>
+</#list>
+
+    }
 
 }

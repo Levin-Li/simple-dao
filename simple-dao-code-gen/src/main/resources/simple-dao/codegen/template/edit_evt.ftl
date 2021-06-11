@@ -15,6 +15,7 @@ import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
 import javax.validation.constraints.*;
+import javax.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -46,6 +47,8 @@ import ${entityClassPackage}.*;
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
+//默认更新注解
+@Update
 public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
@@ -63,7 +66,6 @@ public class ${className} implements ServiceReq {
     </#if>
     </#list>
     @Schema(description = "${field.desc}")
-    @Update
     private ${field.typeName} ${field.name};
 
     </#if>
@@ -73,4 +75,12 @@ public class ${className} implements ServiceReq {
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+
+
+    @PostConstruct
+    public void preUpdate() {
+    //更新之前初始化数据
+
+    }
+
 }

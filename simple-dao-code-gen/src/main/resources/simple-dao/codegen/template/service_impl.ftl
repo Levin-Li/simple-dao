@@ -45,10 +45,10 @@ import ${field.infoClassName};
 @Slf4j
 public class ${className} implements ${serviceName} {
 
-
     @Autowired
     private SimpleDao simpleDao;
 
+    @Schema(description = "创建${desc}")
     @Override
     public  ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
 
@@ -60,83 +60,37 @@ public class ${className} implements ${serviceName} {
         if (${field.name}C > 0) {
             return ApiResp.error("${field.desc}已被使用");
         }
-
-        </#if>
-    </#list>
-        ${entityName} entity = new ${entityName}();
-        BeanUtils.copyProperties(req, entity);
-
-    <#list fields as field>
-        <#if field.name == 'sn' && field.typeName == 'String'>
-        String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
-        entity.setSn(sn);
-        </#if>
-        <#if field.name == 'addTime'>
-        //entity.setAddTime(new Date());
-        </#if>
-        <#if field.name == 'createTime'>
-        //entity.setCreateTime(new Date());
-        </#if>
-        <#if field.name == 'updateTime'>
-        //entity.setUpdateTime(new Date());
-        </#if>
-        <#if field.name == 'lastUpdateTime'>
-        //entity.setLastUpdateTime(new Date());
         </#if>
     </#list>
 
-        entity = (${entityName}) simpleDao.create(entity);
+        ${entityName} entity = (${entityName}) simpleDao.create(req);
 
         return ApiResp.ok(entity.get${pkField.name?cap_first}());
     }
 
+    @Schema(description = "编辑${desc}")
     @Override
     public ApiResp<Void> edit(Edit${entityName}Req req) {
 
-<#list fields as field>
-    <#if !field.notUpdate && field.uk>
-        if (StringUtils.hasText(req.get${field.name?cap_first}())) {
-            long ${field.name}C = simpleDao.selectFrom(${entityName}.class)
-                    .eq("${field.name}", req.get${field.name?cap_first}())
-                    .where("${pkField.name} != :?", req.get${pkField.name?cap_first}())
-                    .count();
-            if (${field.name}C > 0) {
-                return  ApiResp.error("${field.desc}已被使用");
-            }
-        }
+        return simpleDao.updateByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
 
-    </#if>
-</#list>
-        ${entityName} entity = simpleDao.find(${entityName}.class, req.get${pkField.name?cap_first}());
-        if (entity == null) {
-            return  ApiResp.error("${desc}数据不存在");
-        }
-
-        UpdateDao<${entityName}> updateDao = simpleDao.updateTo(${entityName}.class).appendByQueryObj(req);
-
-<#list fields as field>
-    <#if field.name == 'updateTime'>
-        //updateDao.set(E_${entityName}.updateTime, new Date());
-    </#if>
-</#list>
-        return updateDao.update() > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
 
+    @Schema(description = "删除${desc}")
     @Override
     public ApiResp<Void> delete(Delete${entityName}Req req) {
 
         return simpleDao.deleteByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
 
+    @Schema(description = "通过ID查找${desc}")
     @Override
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
 
-        Query${entityName}Req queryReq = new Query${entityName}Req();
-        queryReq.set${pkField.name?cap_first}(${pkField.name});
-
-        return simpleDao.findOneByQueryObj(queryReq);
+        return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
 
+    @Schema(description = "分页查找${desc}")
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
 
