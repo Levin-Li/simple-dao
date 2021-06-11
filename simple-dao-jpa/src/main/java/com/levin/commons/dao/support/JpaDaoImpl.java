@@ -542,7 +542,7 @@ public class JpaDaoImpl
 
             TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
 
-            if (targetOption != null && targetOption.entityClass() != null) {
+            if (targetOption != null && isValidClass(targetOption.entityClass())) {
 
                 //执行初始化方法
                 com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
@@ -550,7 +550,7 @@ public class JpaDaoImpl
                 //执行初始化方法
                 com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
 
-                entityOrDto = copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
             }
 
         }
