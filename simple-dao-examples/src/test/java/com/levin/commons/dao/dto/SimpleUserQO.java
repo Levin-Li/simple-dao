@@ -27,12 +27,13 @@ public class SimpleUserQO {
 
     @Data
     @NoArgsConstructor
+    @Select
     public static class QResult {
 
-        @Select
+        //@Select
         String name;
 
-        @Select
+        //@Select
         Integer score;
 
         //有条件的查询状态信息

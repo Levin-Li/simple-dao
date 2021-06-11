@@ -344,9 +344,13 @@ public class DaoExamplesTest {
 
 //        Assert.isTrue(Boolean.TRUE.equals(v),"");
 
-        Object byQueryObj = dao.findByQueryObj(new SimpleUserQO());
+        List<SimpleUserQO.QResult> list = dao.findByQueryObj(new SimpleUserQO());
 
-        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
+        Assert.isTrue(list.size()>0,"空");
+        Assert.notNull(list.get(0).getName(),"空");
+        Assert.notNull(list.get(0).getScore(),"空");
+
+      Object  byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
 
