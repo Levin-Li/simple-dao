@@ -25,7 +25,8 @@ import javax.persistence.PreUpdate;
 
         joinOptions = {
                 @JoinOption(tableOrStatement = E_Group.CLASS_NAME, entityClass = Void.class,
-                        alias = E_Group.ALIAS, joinColumn = E_Group.id, joinTargetAlias = E_User.ALIAS, joinTargetColumn = E_User.group)
+                        alias = E_Group.ALIAS, joinColumn = E_Group.F_id,
+                        joinTargetAlias = E_User.ALIAS, joinTargetColumn = E_User.F_group)
         })
 public class TableJoin3 {
 
@@ -34,13 +35,13 @@ public class TableJoin3 {
     Long uid = 1l;
 
     @Select(value = E_Group.id, domain = E_Group.ALIAS)
-    @Gte(domain = E_Group.ALIAS, value = E_Group.id)
+    @Gte(domain = E_Group.ALIAS, value = E_Group.F_id)
     Long gid;
 
     @Select
     String name;
 
-    @Select(domain = E_Group.ALIAS, value = E_Group.name)
+    @Select(domain = E_Group.ALIAS, value = E_Group.F_name)
     String groupName;
 
     @Ignore

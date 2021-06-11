@@ -4,8 +4,10 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
 
+/**
+ * 表名和字段名命名策略
+ */
 public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
-
 
     @Override
     public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
@@ -16,7 +18,7 @@ public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
 
         if (index > 1) {
 
-            //com.vma.commons.agent-exam_tasks
+            //com.xxx.commons.agent-exam_tasks
 
             //@Entity(name = ModuleTableOption.PREFIX + "exam_tasks")
             // String PREFIX = "${modulePackageName}_";
@@ -40,4 +42,5 @@ public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
 
         return super.toPhysicalTableName(name, jdbcEnvironment);
     }
+
 }

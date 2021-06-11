@@ -530,7 +530,37 @@ public class JpaDaoImpl
 
     @Override
     @Transactional
-    public <E> E save(E entity) {
+    public <E> E save(E entityOrDto) {
+
+        if (entityOrDto == null) {
+            throw new PersistenceException("persist object is null");
+        }
+        //如果不是实体类
+        Class<?> entityOrDtoClass = entityOrDto.getClass();
+
+        if (!entityOrDtoClass.isAnnotationPresent(Entity.class)) {
+
+            TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
+
+            if (targetOption != null && isValidClass(targetOption.entityClass())) {
+
+                //执行初始化方法
+                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
+
+                //执行初始化方法
+                com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
+
+                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+            }
+
+        }
+
+        return saveEntity(entityOrDto);
+
+    }
+
+    @Transactional
+    public <E> E saveEntity(E entity) {
 
         EntityManager em = getEntityManager();
 
@@ -559,6 +589,7 @@ public class JpaDaoImpl
         }
 
         return entity;
+
     }
 
     @Override

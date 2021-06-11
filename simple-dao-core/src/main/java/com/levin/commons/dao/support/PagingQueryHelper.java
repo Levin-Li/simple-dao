@@ -241,6 +241,9 @@ public abstract class PagingQueryHelper {
                 final Map tempMap = new LinkedHashMap<>();
 
                 ReflectionUtils.doWithFields(type, field -> {
+
+                    field.setAccessible(true);
+
                     PageOption option = field.getAnnotation(PageOption.class);
                     if (option != null) {
                         tempMap.put(option.value(), field);

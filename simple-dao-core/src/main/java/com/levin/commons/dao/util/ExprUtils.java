@@ -70,6 +70,10 @@ public abstract class ExprUtils {
      * 用于防止频繁出现类加载
      */
     protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
+    /**
+     *
+     */
+    private static final String COLUMN_REPLACE_PREFIX = "F$:";
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -1029,6 +1033,7 @@ public abstract class ExprUtils {
             }
 
             if (!hasText(selfAlias)) {
+
             }
 
             if (!hasText(selfAlias)) {
@@ -1047,8 +1052,7 @@ public abstract class ExprUtils {
 
             }
 
-            String fromStatement = genFromStatement(tableNameConverter, isNative, joinEntityClass,
-                    joinOption.tableOrStatement(), selfAlias);
+            String fromStatement = genFromStatement(tableNameConverter, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -1082,6 +1086,7 @@ public abstract class ExprUtils {
             }
 
             String joinColumn = joinOption.joinColumn();
+
             if (!hasText(joinColumn) && miniDao != null && hasJoinEntityClass) {
                 //@todo 实现获取表的主键名称
                 joinColumn = miniDao.getPKName(joinEntityClass);
@@ -1089,6 +1094,14 @@ public abstract class ExprUtils {
 
             if (!hasText(joinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
+            }
+
+            if (joinColumn.startsWith(COLUMN_REPLACE_PREFIX)) {
+                joinColumn = joinColumn.substring(COLUMN_REPLACE_PREFIX.length());
+            }
+
+            if (targetColumn.startsWith(COLUMN_REPLACE_PREFIX)) {
+                targetColumn = targetColumn.substring(COLUMN_REPLACE_PREFIX.length());
             }
 
             //如果是 SQL 原生查询，需要转换列名
@@ -1102,7 +1115,6 @@ public abstract class ExprUtils {
                     targetColumn = columnNameConverter.apply(targetColumn);
                     joinColumn = columnNameConverter.apply(joinColumn);
                 }
-
             }
 
             //

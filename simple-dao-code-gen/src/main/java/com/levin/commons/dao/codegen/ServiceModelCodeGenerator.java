@@ -620,11 +620,11 @@ public final class ServiceModelCodeGenerator {
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
-        List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+       // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
         final String pkgName = servicePackage() + ".req";
 
-        final Consumer<Map<String, Object>> mapConsumer = (map) -> map.put("fields", tempFiles);
+        final Consumer<Map<String, Object>> mapConsumer = (map) -> map.put("fields", fields);
 
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
