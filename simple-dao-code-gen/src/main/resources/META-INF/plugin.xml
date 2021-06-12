@@ -7,7 +7,7 @@
   <description>Parent pom providing dependency and plugin management for applications built with Maven</description>
   <groupId>com.github.Levin-Li.simple-dao</groupId>
   <artifactId>simple-dao-codegen</artifactId>
-  <version>2.2.27-SNAPSHOT</version>
+  <version>2.2.28-SNAPSHOT</version>
   <goalPrefix>simple-dao-codegen</goalPrefix>
   <isolatedRealm>false</isolatedRealm>
   <inheritedByDefault>true</inheritedByDefault>
@@ -953,7 +953,7 @@ jar包,zip包，或是目录</description>
       <groupId>com.github.Levin-Li.simple-dao</groupId>
       <artifactId>simple-dao-annotations</artifactId>
       <type>jar</type>
-      <version>2.2.27-SNAPSHOT</version>
+      <version>2.2.28-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

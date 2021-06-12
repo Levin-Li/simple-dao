@@ -20,7 +20,7 @@
 
     <properties>
 
-        <revision>2.2.27-SNAPSHOT</revision>
+        <revision>2.2.28-SNAPSHOT</revision>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
