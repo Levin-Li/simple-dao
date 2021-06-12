@@ -7,9 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <!--<version>RELEASE</version>-->
-        <!--        <version>2.2.8.RELEASE</version>-->
-        <version>2.3.1.RELEASE</version>
+        <version>2.3.5.RELEASE</version>
     </parent>
 
     <groupId>com.levin.commons</groupId>
@@ -19,7 +17,7 @@
 
     <properties>
 
-        <revision>2.2.27-SNAPSHOT</revision>
+        <revision>2.2.28-SNAPSHOT</revision>
 
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -35,7 +33,7 @@
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
-        <hibernate.version>5.4.27.Final</hibernate.version>
+        <!--        <hibernate.version>5.4.27.Final</hibernate.version> -->
 
         <io.swagger.core.v3.version>2.1.2</io.swagger.core.v3.version>
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
@@ -215,6 +213,7 @@
 
     </dependencies>
 
+
     <build>
 
         <pluginManagement>
@@ -237,7 +236,6 @@
                     <parameters>true</parameters>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
-
                 </configuration>
             </plugin>
 
@@ -322,7 +320,6 @@
                 </configuration>
             </plugin>
 
-
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <inherited>true</inherited>
@@ -382,14 +379,14 @@
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
 
-            <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <inherited>true</inherited>
+            <!--            <plugin>-->
+            <!--                <artifactId>maven-deploy-plugin</artifactId>-->
+            <!--                <inherited>true</inherited>-->
 
-                <configuration>
-                    <uniqueVersion>true</uniqueVersion>
-                </configuration>
-            </plugin>
+            <!--                <configuration>-->
+            <!--                    <uniqueVersion>true</uniqueVersion>-->
+            <!--                </configuration> -->
+            <!--            </plugin>-->
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

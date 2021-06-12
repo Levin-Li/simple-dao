@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by echo on 2016/8/1.
@@ -14,7 +16,36 @@ import java.util.Map;
 public class QueryAnnotationUtilTest {
 
 
+    public static String toSnapshotVersion(String version) {
+
+        //notBlank( version, "version can neither be null, empty nor blank" );
+
+        int lastHyphen = version.lastIndexOf('-');
+
+        if (lastHyphen > 0) {
+            int prevHyphen = version.lastIndexOf('-', lastHyphen - 1);
+            if (prevHyphen > 0) {
+                Matcher m = VERSION_FILE_PATTERN.matcher(version);
+                if (m.matches()) {
+                    return m.group(1) + "-" + SNAPSHOT_VERSION;
+                }
+            }
+        }
+        return version;
+    }
+
+    static final Pattern VERSION_FILE_PATTERN = Pattern.compile("^(.*)-([0-9]{8}\\.[0-9]{6})-([0-9]+)$");
+
+    static final String RELEASE_VERSION = "RELEASE";
+
+    static final String LATEST_VERSION = "LATEST";
+
+    static final String SNAPSHOT_VERSION = "SNAPSHOT";
+
+
     private Map<String, Object> param = new LinkedHashMap<>();
+
+
 
     @Before
     public void init() {
@@ -47,6 +78,12 @@ public class QueryAnnotationUtilTest {
 
     @Test
     public void testWalkMap() throws Exception {
+
+
+        System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));
+        System.out.println(toSnapshotVersion("2.2.27-7f07bc4c8e-1"));
+        System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));
+        System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));
 
 
     }
