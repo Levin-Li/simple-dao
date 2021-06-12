@@ -149,7 +149,7 @@
         
        <modelVersion>4.0.0</modelVersion>
      
-       <groupId>com.codegen.example</groupId>
+       <groupId>com.levin.codegen.example</groupId>
        <artifactId>codegen-example</artifactId>
        <version>1.0.0-SNAPSHOT</version>
    
