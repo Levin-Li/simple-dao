@@ -10,7 +10,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>simple-dao-code-gen-example</artifactId>
+    <artifactId>simple-dao-codegen-example</artifactId>
 
     <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
 
