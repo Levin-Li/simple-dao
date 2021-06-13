@@ -578,13 +578,13 @@
 
 #### 3.1 Dao核心接口
 
-*    1-[SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
+*    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
-*    2-[SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
+*    2 - [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
-*    3-[UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
+*    3 - [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
-*    4-[DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
+*    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
 
 ##### 3.1.1 SimpleDao 常用方法
