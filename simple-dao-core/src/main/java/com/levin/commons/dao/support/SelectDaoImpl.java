@@ -21,7 +21,6 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
-import javax.persistence.Tuple;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -1127,14 +1126,7 @@ public class SelectDaoImpl<T>
                 data = new Object[]{data};
             }
 
-            //尝试自动转换成 Map
-            data = tryConvertArray2Map(data, valueHolder);
-
-            if (data == null || targetType.isInstance(data)) {
-                returnList.add((E) data);
-            } else {
-                returnList.add(ObjectUtil.copy(data, targetType, maxCopyDeep, ignoreProperties));
-            }
+            returnList.add(tryConvertData(data, targetType, valueHolder, maxCopyDeep, ignoreProperties));
 
         }
 
@@ -1178,14 +1170,19 @@ public class SelectDaoImpl<T>
 
         autoSetFetch(targetType);
 
-        //尝试自动转换
-        Object data = tryConvertArray2Map(findOne(), null);
+        return tryConvertData(findOne(), targetType, null, maxCopyDeep, ignoreProperties);
+
+    }
+
+    private <E> E tryConvertData(Object data, Class<E> targetType, ValueHolder<List<List<String>>> valueHolder, int maxCopyDeep, String... ignoreProperties) {
+
+        data = tryConvertArray2Map(data, valueHolder);
 
         if (data == null || targetType.isInstance(data)) {
             return (E) data;
         }
 
-        return ObjectUtil.copy(data, targetType, maxCopyDeep, ignoreProperties);
+        return (E) copyProperties(data, targetType, maxCopyDeep, ignoreProperties);
 
     }
 
@@ -1204,7 +1201,6 @@ public class SelectDaoImpl<T>
 
         this.resultType = targetType;
 
-
         ReflectionUtils.doWithFields(targetType, field -> {
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
@@ -1214,13 +1210,14 @@ public class SelectDaoImpl<T>
                         return;
                     }
 
-                    //如果有条件，并且条件不成功
+                    String attrName = hasText(fetch.value()) ? fetch.value() : field.getName();
+
+                    //如果有条件，并且条件不成立
                     if (hasText(fetch.condition())
                             && !evalTrueExpr(null, null, null, fetch.condition())) {
+                        attrFetchList.put(attrName, false);
                         return;
                     }
-
-                    String attrName = hasText(fetch.value()) ? fetch.value() : field.getName();
 
                     joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
 
@@ -1254,12 +1251,22 @@ public class SelectDaoImpl<T>
         Object data = findOne();
 
         return data != null ? converter.apply(data) : null;
+
     }
 
 
+    public <E> E copyProperties(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
+        try {
+            ObjectUtil.propertiesFilters.set(Arrays.asList((key) -> !attrFetchList.getOrDefault(key, true)));
+            return (E) ObjectUtil.copyProperties(source, target, maxCopyDeep, ignoreProperties);
+        } finally {
+            ObjectUtil.propertiesFilters.set(null);
+        }
+    }
+
     @Override
     public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
-        return (E) ObjectUtil.copyProperties(source, target, -1, ignoreProperties);
+        return copyProperties(source, target, -1, ignoreProperties);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1281,12 +1288,6 @@ public class SelectDaoImpl<T>
         return column;
     }
 
-
-    public Object tryConvertTuple2Map(Tuple data, ValueHolder<List<List<String>>> valueHolder) {
-
-        return null;
-
-    }
 
     /**
      * 单查询返回值是数组时，尝试自动转换成 Map

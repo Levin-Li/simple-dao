@@ -23,6 +23,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Predicate;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -35,11 +36,13 @@ public abstract class ObjectUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectUtil.class);
 
-
     public static final GenericConversionService conversionService = new DefaultFormattingConversionService();
 
     private static final AnnotationFormatterFactory<DateTimeFormat> dateFormatterFactory = new DateTimeFormatAnnotationFormatterFactory();
+
     private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
+
+    public static final ThreadLocal<List<Predicate<String>>> propertiesFilters = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -75,6 +78,16 @@ public abstract class ObjectUtil {
         return copy(source, targetType, -1, ignoreProperties);
     }
 
+
+    /**
+     * @param source
+     * @param targetType
+     * @param maxCopyDeep
+     * @param ignoreProperties
+     * @param <T>
+     * @return
+     * @throws RuntimeException
+     */
     public static <T> T copy(Object source, Class<T> targetType, int maxCopyDeep, String... ignoreProperties) throws RuntimeException {
         return copy(source, null, targetType, maxCopyDeep, ignoreProperties);
     }
@@ -886,20 +899,19 @@ public abstract class ObjectUtil {
 
                 String propertyName = field.getName();
 
-
                 //拷贝属性的转换
                 Desc desc = field.getAnnotation(Desc.class);
-
                 if (desc != null && hasText(desc.code())) {
                     propertyName = desc.code();
                 }
 
                 Fetch fetch = field.getAnnotation(Fetch.class);
-                if (fetch != null && hasText(fetch.value())) {
-                    propertyName = fetch.value();
+                if (fetch != null) {
+                    propertyName = hasText(fetch.value()) ? fetch.value() : propertyName;
                 }
 
                 int fieldMaxCopyDeep = maxCopyDeep;
+
                 String[] fieldIgnoreProperties = ignoreProperties;
 
                 DeepCopy deepCopy = field.getAnnotation(DeepCopy.class);
@@ -910,6 +922,16 @@ public abstract class ObjectUtil {
                     fieldIgnoreProperties = deepCopy.ignoreProperties();
                 }
 
+                //是否是不拷贝的属性
+                List<Predicate<String>> predicates = propertiesFilters.get();
+                if (predicates != null) {
+                    for (Predicate<String> predicate : predicates) {
+                        if (predicate.test(propertyName)) {
+                            //是否是不拷贝的属性
+                            continue;
+                        }
+                    }
+                }
 
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 

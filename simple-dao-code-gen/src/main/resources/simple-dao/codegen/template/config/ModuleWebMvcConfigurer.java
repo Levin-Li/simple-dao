@@ -1,5 +1,7 @@
 package ${modulePackageName}.config;
 
+import ${modulePackageName}.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,8 +13,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
-
-import ${modulePackageName}.*;
 
 
 @Configuration("${modulePackageName}.config.ModuleWebMvcConfigurer")

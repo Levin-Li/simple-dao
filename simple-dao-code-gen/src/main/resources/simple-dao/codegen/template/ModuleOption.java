@@ -28,7 +28,7 @@ public interface ModuleOption {
      * base path
      * 注意路径必须以 / 结尾
      */
-    String BASE_PATH = ID + "/" + VERSION+"/";
+    String BASE_PATH = ID + "/" + VERSION + "/";
 
     /**
      * api path

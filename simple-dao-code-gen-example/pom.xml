@@ -177,6 +177,11 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
@@ -236,6 +241,11 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
@@ -259,6 +269,12 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.Levin-Li</groupId>
+            <artifactId>service-support</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

@@ -8,6 +8,7 @@ import org.springframework.util.*;
 import java.util.Date;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,9 @@ import ${field.infoClassName};
  */
 @Service("${packageName}.${serviceName}")
 @Slf4j
+
+//@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
+@Validated
 public class ${className} implements ${serviceName} {
 
     @Autowired

@@ -256,9 +256,20 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
 
-        fileName = "ModuleWebMvcConfigurer.java";
+
+        fileName = String.join(File.separator, "config", "ModuleWebMvcConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), "config", fileName));
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "config","ModuleWebControllerAdvice.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "aspect","ModuleWebControllerAspect.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
         String pkgDir = serviceDir + File.separator
@@ -266,7 +277,6 @@ public final class ServiceModelCodeGenerator {
                 + File.separator;
 
         String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
-
 
         genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
         genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
@@ -620,7 +630,7 @@ public final class ServiceModelCodeGenerator {
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
-       // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+        // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
         final String pkgName = servicePackage() + ".req";
 

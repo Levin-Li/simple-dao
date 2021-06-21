@@ -4,11 +4,13 @@ import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import lombok.extern.slf4j.Slf4j;
-
+import com.levin.commons.service.support.SimpleVariableInjector;
+import com.levin.commons.service.support.VariableInjector;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -25,9 +27,13 @@ import org.springframework.context.annotation.Configuration;
 , factoryBeanClass = RepositoryFactoryBean.class)
 public class ${camelStyleModuleName}SpringConfiguration {
 
-
   public void onInit(){
+  }
 
+  @Bean
+  @ConditionalOnMissingBean(VariableInjector.class)
+  public VariableInjector variableInjector() {
+     return SimpleVariableInjector.defaultSimpleVariableInjector;
   }
 
 }

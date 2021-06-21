@@ -6,6 +6,7 @@ import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
+import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderByList;
@@ -101,6 +102,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     transient MiniDao dao;
 
+    /**
+     * false 表示 不需要抓取的属性
+     */
+    protected final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildContext(true);
 
     /**
      * 别名缓存
@@ -1608,7 +1613,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-
             if ((!complexType)) {
 
                 if (bean != null) {
@@ -1746,7 +1750,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 throw new StatementBuildException(bean.getClass() + " group verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
-
         }
 
     }
@@ -2213,6 +2216,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (Boolean.TRUE.equals(require) && !isOK) {
             throw new IllegalArgumentException(String.format("field [%s] is require, annotation [%s] condition[%s] must be true"
                     , name, anno.annotationType().getSimpleName(), conditionExpr));
+        }
+
+        if (!isOK && anno instanceof Fetch) {
+            attrFetchList.put(name, false);
         }
 
         return isOK;

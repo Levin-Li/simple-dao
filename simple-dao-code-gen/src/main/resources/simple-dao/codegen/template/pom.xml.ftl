@@ -61,6 +61,13 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'service'>
@@ -178,6 +185,10 @@
                 <artifactId>simple-dao-jpa-starter</artifactId>
             </dependency>
 
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>

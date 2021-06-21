@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.*;
+import javax.validation.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
@@ -16,7 +18,6 @@ import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
-import org.springframework.util.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -26,6 +27,8 @@ import org.springframework.util.*;
 @RequestMapping(ModuleOption.API_PATH + "${entityName?lower_case}")
 @Tag(name = "${desc}", description = "${desc}管理")
 @Slf4j
+////@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
+@Valid
 public class ${className} {
 
     @Autowired

@@ -30,7 +30,7 @@ public @interface DeepCopy {
      *
      * @return
      */
-    int maxCopyDeep() default 3;
+    int maxCopyDeep() default 1;
 
     /**
      * 忽略的属性
