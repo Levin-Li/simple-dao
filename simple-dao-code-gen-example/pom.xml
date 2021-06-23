@@ -16,10 +16,6 @@
 
     <properties>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
-
-        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -272,9 +268,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.Levin-Li</groupId>
+            <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
-            <scope>test</scope>
+            <version>${levin.service-support.version}</version>
         </dependency>
 
     </dependencies>
@@ -348,6 +344,12 @@
                 </executions>
 
             </plugin>
+
+
+<!--            <plugin>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+<!--            </plugin>-->
 
         </plugins>
     </build>

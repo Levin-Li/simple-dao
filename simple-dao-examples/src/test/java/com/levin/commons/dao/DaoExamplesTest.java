@@ -858,6 +858,8 @@ public class DaoExamplesTest {
 
         Object user = byQueryObj.get(0);
 
+        List  byQueryObjs = dao.findByQueryObj(null, new GroupJoinFetchDTO());
+
         System.out.println(byQueryObj);
     }
 
