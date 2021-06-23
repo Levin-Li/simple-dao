@@ -922,14 +922,15 @@ public abstract class ObjectUtil {
 
                     String key = field.getDeclaringClass().getName() + "|" + propertyName;
 
-                    if (Optional.ofNullable(fetchPropertiesFilters.get())
+                    //如果绑定到字段，并且没有抓取，则忽略该字段
+                    if (fetch.isBindToField()
+                            && Optional.ofNullable(fetchPropertiesFilters.get())
                             .orElse(Collections.emptyList())
                             .stream()
                             .filter(Objects::nonNull)
                             .noneMatch(predicate -> predicate.test(key))) {
 
                         continue;
-
                     }
                 }
 
