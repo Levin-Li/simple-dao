@@ -42,7 +42,7 @@ public abstract class ObjectUtil {
 
     private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
 
-    public static final ThreadLocal<List<Predicate<String>>> propertiesFilters = new ThreadLocal<>();
+    public static final ThreadLocal<List<Predicate<String>>> fetchPropertiesFilters = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -103,10 +103,11 @@ public abstract class ObjectUtil {
             return target == null ? rValue : target;
 
         } catch (Exception e) {
-            if (e instanceof RuntimeException)
+            if (e instanceof RuntimeException) {
                 throw ((RuntimeException) e);
-            else
+            } else {
                 throw new RuntimeException(e);
+            }
         }
     }
 
@@ -445,8 +446,9 @@ public abstract class ObjectUtil {
 
         for (String ignoreProperty : ignoreProperties) {
 
-            if (!hasText(ignoreProperty))
+            if (!hasText(ignoreProperty)) {
                 continue;
+            }
 
             if (path.equals(ignoreProperty)
                     || ignoreProperty.equals(path + "*")) {
@@ -460,8 +462,9 @@ public abstract class ObjectUtil {
             if (fieldType != null && !BeanUtils.isSimpleProperty(fieldType)) {
                 if (ignoreProperty.equals("{*}")
                         || ignoreProperty.equals(path + ".{*}")
-                        || ignoreProperty.equals(path + String.format(".{%s}", fieldType.getName())))
+                        || ignoreProperty.equals(path + String.format(".{%s}", fieldType.getName()))) {
                     return true;
+                }
             }
 
             if (ignoreProperty.startsWith("spel:")) {
@@ -637,8 +640,9 @@ public abstract class ObjectUtil {
 
     private static boolean hasGenerics(ResolvableType resolvableType) {
 
-        if (resolvableType == null)
+        if (resolvableType == null) {
             return false;
+        }
 
         return resolvableType.hasGenerics()
                 || (resolvableType.isArray() && resolvableType.getComponentType().hasGenerics());
@@ -651,8 +655,9 @@ public abstract class ObjectUtil {
 
     private static ResolvableType getCollectionEleType(ResolvableType resolvableType) {
 
-        if (resolvableType.isArray())
+        if (resolvableType.isArray()) {
             return resolvableType.getComponentType();
+        }
 
         return resolvableType.hasGenerics() ? resolvableType.getGeneric(0) : null;
     }
@@ -687,16 +692,18 @@ public abstract class ObjectUtil {
             , Stack objectStack, int invokeDeep, int maxCopyDeep
             , String... ignoreProperties) throws Exception {
 
-        if (source == null)
+        if (source == null) {
             return null;
+        }
 
         if (targetType == null
                 && target != null) {
             targetType = (Class<T>) target.getClass();
         }
 
-        if (targetType == null)
+        if (targetType == null) {
             throw new IllegalArgumentException("targetType and target is null");
+        }
 
         ///////////////////////////////////////////////////////////////////
         final ResolvableType myResolvableType = ResolvableType.forType(targetType, ownerResolvableType);
@@ -763,8 +770,9 @@ public abstract class ObjectUtil {
 
         } else if (targetType.isArray() || Collection.class.isAssignableFrom(targetType)) {
 
-            if (source instanceof CharSequence)
+            if (source instanceof CharSequence) {
                 source = source.toString().split(",");
+            }
 
             //可以考虑自动，转化单个对象为数组
             Collection elements = tryToGetElements(source);
@@ -877,8 +885,9 @@ public abstract class ObjectUtil {
 //                    || !Modifier.isPublic(targetType.getModifiers())
                     || Modifier.isAbstract(targetType.getModifiers())) {
 
-                if (!objectStack.empty())
+                if (!objectStack.empty()) {
                     objectStack.pop();
+                }
 
                 return (T) source;
             }
@@ -906,8 +915,22 @@ public abstract class ObjectUtil {
                 }
 
                 Fetch fetch = field.getAnnotation(Fetch.class);
+
                 if (fetch != null) {
+
                     propertyName = hasText(fetch.value()) ? fetch.value() : propertyName;
+
+                    String key = field.getDeclaringClass().getName() + "|" + propertyName;
+
+                    if (Optional.ofNullable(fetchPropertiesFilters.get())
+                            .orElse(Collections.emptyList())
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .noneMatch(predicate -> predicate.test(key))) {
+
+                        continue;
+
+                    }
                 }
 
                 int fieldMaxCopyDeep = maxCopyDeep;
@@ -922,16 +945,6 @@ public abstract class ObjectUtil {
                     fieldIgnoreProperties = deepCopy.ignoreProperties();
                 }
 
-                //是否是不拷贝的属性
-                List<Predicate<String>> predicates = propertiesFilters.get();
-                if (predicates != null) {
-                    for (Predicate<String> predicate : predicates) {
-                        if (predicate.test(propertyName)) {
-                            //是否是不拷贝的属性
-                            continue;
-                        }
-                    }
-                }
 
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 
@@ -966,8 +979,9 @@ public abstract class ObjectUtil {
 
                 if (value == null) {
                     //优化处理，直接返回
-                    if (!isSimpleType)
+                    if (!isSimpleType) {
                         field.set(target, null);
+                    }
                 } else if (isSimpleType) { //  || BeanUtils.isSimpleValueType(value.getClass())
                     //优化处理，直接返回
                     field.set(target, convert(value, fieldType));

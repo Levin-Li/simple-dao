@@ -15,6 +15,7 @@ import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
 import org.springframework.util.ReflectionUtils;
@@ -76,6 +77,9 @@ public class SelectDaoImpl<T>
     boolean hasStatColumns = false;
 
     Class resultType;
+
+
+    final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildThreadContext(true);
 
 
     {
@@ -383,34 +387,27 @@ public class SelectDaoImpl<T>
             joinType = Fetch.JoinType.Inner;
         }
 
-        for (String setAttr : setAttrs) {
+        for (String attr : setAttrs) {
 
-            if (!hasText(setAttr)) {
+            if (!hasText(attr)) {
                 continue;
             }
 
-            setAttr = getExprForJpaJoinFetch(entityClass, getAlias(), setAttr);
-
-//            //如果没有使用别名，尝试使用别名
-//            if (!setAttr.contains(".")) {
-//
-//                if (!hasText(this.alias)) {
-//                    throw new StatementBuildException("join fetch  attr [" + setAttr + "] must be set alias");
-//                }
-//
-//                setAttr = aroundColumnPrefix(domain, setAttr);
-//            }
+            if (hasText(domain) && !domain.equalsIgnoreCase(getAlias())) {
+                attr = getExprForJpaJoinFetch(aliasMap.get(domain), domain, attr);
+            } else {
+                attr = getExprForJpaJoinFetch(entityClass, getAlias(), attr);
+            }
 
             //如果不是对象的属性
-            if (!hasText(setAttr)) {
+            if (!hasText(attr)) {
                 continue;
             }
 
-            setAttr = aroundColumnPrefix(domain, setAttr);
+            attr = aroundColumnPrefix(domain, attr);
 
-            //   select(isAppendToSelect, setAttr);
-
-            fetchAttrs.put(setAttr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + setAttr);
+            //如果是相同的字段，会覆盖旧抓取属性
+            fetchAttrs.put(attr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + attr);
 
         }
 
@@ -613,6 +610,18 @@ public class SelectDaoImpl<T>
         if ((opAnnotation instanceof Fetch)) {
 
             Fetch fetch = (Fetch) opAnnotation;
+
+            if (fetch.isBindToField()
+                    && fetch.joinType() != Fetch.JoinType.None
+                    && fieldOrMethod instanceof Field) {
+
+                String attrName = hasText(fetch.value()) ? fetch.value() : ((Field) fieldOrMethod).getName();
+
+                joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
+
+                attrFetchList.put(((Field) fieldOrMethod).getDeclaringClass().getName() + "|" + attrName, true);
+
+            }
 
             //增加集合抓取
             joinFetch(false, fetch.domain(), fetch.joinType(), fetch.attrs());
@@ -881,7 +890,7 @@ public class SelectDaoImpl<T>
 
         String genFromStatement = genFromStatement();
 
-        if (!hasContent(genFromStatement)) {
+        if (!hasText(genFromStatement)) {
             throw new IllegalArgumentException("from statement not set");
         }
 
@@ -1205,23 +1214,24 @@ public class SelectDaoImpl<T>
 
                     Fetch fetch = field.getAnnotation(Fetch.class);
 
-                    if (fetch.onlyForQueryObject()
-                            || fetch.joinType() == Fetch.JoinType.None) {
+                    //绑定到字段的
+                    if (!fetch.isBindToField() || fetch.joinType() == Fetch.JoinType.None) {
+                        return;
+                    }
+
+                    //如果有条件，并且条件不成立
+                    if (hasText(fetch.condition())
+                            && !evalTrueExpr(null, null, null, fetch.condition())) {
                         return;
                     }
 
                     String attrName = hasText(fetch.value()) ? fetch.value() : field.getName();
 
-                    //如果有条件，并且条件不成立
-                    if (hasText(fetch.condition())
-                            && !evalTrueExpr(null, null, null, fetch.condition())) {
-                        attrFetchList.put(attrName, false);
-                        return;
-                    }
+                    attrFetchList.put(field.getDeclaringClass().getName() + "|" + attrName, true);
 
                     joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
 
-                }, field -> field.getAnnotation(Fetch.class) != null
+                }, field -> field.isAnnotationPresent(Fetch.class)
         );
 
 
@@ -1257,10 +1267,10 @@ public class SelectDaoImpl<T>
 
     public <E> E copyProperties(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
-            ObjectUtil.propertiesFilters.set(Arrays.asList((key) -> !attrFetchList.getOrDefault(key, true)));
+            ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
             return (E) ObjectUtil.copyProperties(source, target, maxCopyDeep, ignoreProperties);
         } finally {
-            ObjectUtil.propertiesFilters.set(null);
+            ObjectUtil.fetchPropertiesFilters.set(null);
         }
     }
 

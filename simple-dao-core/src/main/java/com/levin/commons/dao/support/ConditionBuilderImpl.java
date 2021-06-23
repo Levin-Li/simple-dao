@@ -6,7 +6,6 @@ import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
-import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderByList;
@@ -101,11 +100,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected boolean filterLogicDeletedData = true;
 
     transient MiniDao dao;
-
-    /**
-     * false 表示 不需要抓取的属性
-     */
-    protected final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildContext(true);
 
     /**
      * 别名缓存
@@ -1744,7 +1738,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected void verifyGroupValidation(Object bean, String name, Object value, Validator validator) {
 
         if (validator != null
-                && hasContent(validator.expr())) {
+                && hasText(validator.expr())) {
             //如果验证识别
             if (!evalTrueExpr(bean, value, name, validator.expr())) {
                 throw new StatementBuildException(bean.getClass() + " group verify fail: "
@@ -1915,7 +1909,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
 
-        return ExprUtils.genExpr(c, name, complexType, getExpectType(name), holder, getParamPlaceholder(),
+        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
                 expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
@@ -1925,14 +1919,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 this::buildSubQuery, contexts);
 
-    }
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Deprecated
-    protected boolean hasContent(String text) {
-        return hasText(text);
     }
 
     protected String getText(String text, String prefix, String suffix, String defaultV) {
@@ -2075,22 +2061,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return aroundColumnPrefix(null, column);
     }
 
-
     /**
      * @param domain
      * @param column
      * @return
      */
     protected String aroundColumnPrefix(String domain, String column) {
-        return aroundColumnPrefix(entityClass, domain, column);
-    }
-
-    /**
-     * @param domain
-     * @param column
-     * @return
-     */
-    protected String aroundColumnPrefix(Class entityType, String domain, String column) {
 
         if (!hasText(column)) {
             return "";
@@ -2102,7 +2078,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         boolean hasDomain = hasText(domain);
 
         //关键逻辑点
-        //如果包含占位符，则直接返回
+        //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
         //@Fix bug 20200227
         if (column.contains(getParamPlaceholder().trim())
                 || !Character.isLetter(column.charAt(0))
@@ -2114,10 +2090,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return column;
         }
 
+        //如果没有指定别名，但有包含点，
         if (!hasDomain && column.contains(".")) {
             return tryGetPhysicalColumnName(column);
         }
 
+        //如果没有指定别名，则用默认别名
         if (!hasDomain) {
             domain = alias;
         }
@@ -2218,10 +2196,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     , name, anno.annotationType().getSimpleName(), conditionExpr));
         }
 
-        if (!isOK && anno instanceof Fetch) {
-            attrFetchList.put(name, false);
-        }
-
         return isOK;
     }
 
@@ -2309,7 +2283,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param name
      * @return
      */
-    protected Class<?> getExpectType(String name) {
+    protected Class<?> getExpectFieldType(String name) {
         return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
     }
 
