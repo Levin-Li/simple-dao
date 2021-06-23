@@ -121,11 +121,25 @@
         </#if>
 
         <#if moduleType?? && moduleType == 'controller' >
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <scope>provided</scope>
             </dependency>
+
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'testcase' >
