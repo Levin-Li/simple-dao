@@ -73,6 +73,10 @@ public class ModuleWebControllerAspect {
 
                 value = request.getScheme();
 
+            } else if ("moduleId".equalsIgnoreCase(name)) {
+
+                value = ModuleOption.ID;
+
             } else {
                 return ValueHolder.notValue();
             }
@@ -86,7 +90,7 @@ public class ModuleWebControllerAspect {
     /**
      * 模块包
      */
-    @Pointcut("execution(* com.levin.codegen.example..*.*(..))")
+    @Pointcut("execution(* ${modulePackageName}..*.*(..))")
     public void modulePackagePointcut() {
     }
 
