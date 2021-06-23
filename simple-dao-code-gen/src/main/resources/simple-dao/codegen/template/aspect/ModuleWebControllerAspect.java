@@ -127,7 +127,7 @@ public class ModuleWebControllerAspect {
 
         log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
 
-        //加入线程级别的http请求解析器
+        //加入线程级别的http请求解析器，线程级别解析器会被优先使用
         variableResolverManager.addVariableResolvers(true, httpRequestInfoResolver);
 
         Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
