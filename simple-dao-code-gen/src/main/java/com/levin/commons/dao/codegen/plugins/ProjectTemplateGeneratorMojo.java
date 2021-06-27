@@ -160,7 +160,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
                     mapBuilder.put("parent.groupId", "org.springframework.boot")
                             .put("parent.artifactId", "spring-boot-starter-parent")
-                            .put("parent.version", "2.3.4.RELEASE");
+                            .put("parent.version", "2.3.5.RELEASE");
                 } else {
                     mapBuilder.put("parent.groupId", mavenProject.getParent().getGroupId())
                             .put("parent.artifactId", mavenProject.getParent().getArtifactId())
