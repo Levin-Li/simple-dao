@@ -16,11 +16,13 @@
 
     <groupId>${project.groupId}</groupId>
     <artifactId>${project.artifactId}</artifactId>
-    <version>${project.version}</version>
+    <version>${revision}</version>
 
     <packaging>pom</packaging>
 
     <properties>
+
+        <revision>${project.version}</revision>
 
         <levin.simple-dao.groupId>${codegen-plugin.groupId}</levin.simple-dao.groupId>
         <levin.simple-dao.version>${codegen-plugin.version}</levin.simple-dao.version>
