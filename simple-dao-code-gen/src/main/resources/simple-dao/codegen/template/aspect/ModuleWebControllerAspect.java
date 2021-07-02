@@ -6,15 +6,16 @@ import ${modulePackageName}.*;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.IPAddrUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+
+import org.aspectj.lang.*;
+import org.aspectj.lang.reflect.*;
+import org.aspectj.lang.annotation.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -140,6 +141,34 @@ public class ModuleWebControllerAspect {
                     });
         });
 
+    }
+
+    /**
+     * 记录日志
+     */
+    //@Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
+
+        //获取方法参数值数组
+        Object[] args = joinPoint.getArgs();
+
+        //得到其方法签名
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+
+        //获取方法参数类型数组
+        Class[] paramTypeArray = methodSignature.getParameterTypes();
+
+        log.info("请求参数为{}", args);
+
+        //动态修改其参数
+        //注意，如果调用joinPoint.proceed()方法，则修改的参数值不会生效，必须调用joinPoint.proceed(Object[] args)
+        Object result = joinPoint.proceed(args);
+
+        log.info("响应结果为{}", result);
+
+        //如果这里不返回result，则目标对象实际返回值会被置为null
+
+        return result;
     }
 
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.util.*;
 import javax.validation.*;
 
+import javax.servlet.http.*;
+
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
@@ -31,9 +33,16 @@ import ${servicePackageName}.info.*;
 @Valid
 public class ${className} {
 
+    //请求级别变量
+    @Autowired
+    HttpServletResponse httpResponse;
+
+    //请求级别变量
+    @Autowired
+    HttpServletRequest httpRequest;
+
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};
-
 
     /**
      * 分页查询
