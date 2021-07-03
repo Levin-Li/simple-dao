@@ -1,1 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.levin.commons.dao.starter.JpaDaoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.levin.commons.dao.starter.JpaDaoConfiguration

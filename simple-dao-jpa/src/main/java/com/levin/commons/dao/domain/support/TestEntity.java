@@ -14,6 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity(name = "simple_dao_test_entity")
+//@DynamicInsert
+//@DynamicUpdate
 @Data
 @Accessors(chain = true)
 @FieldNameConstants

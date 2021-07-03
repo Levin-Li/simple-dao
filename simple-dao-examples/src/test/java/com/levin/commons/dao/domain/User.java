@@ -12,7 +12,8 @@ import javax.persistence.*;
 /**
  * Created by echo on 2015/11/17.
  */
-@Entity(name = "JpaDaoTestUser")
+@Entity()
+@Table(name = "JpaDaoTestUser")
 @Data
 @Accessors(chain = true)
 @ToString(exclude = "group")

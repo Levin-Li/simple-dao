@@ -12,6 +12,5 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-
       naming:
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
