@@ -13,6 +13,7 @@ import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.JpaDaoImpl;
+import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -201,12 +202,26 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
             entityType.getAttributes().forEach(attribute -> {
 
-                Schema schema = ((AccessibleObject) attribute.getJavaMember()).getAnnotation(Schema.class);
 
                 Attribute.PersistentAttributeType type = attribute.getPersistentAttributeType();
 
-                if (schema != null
-                        && StringUtils.hasText(schema.description())
+                String comment = "";
+
+                Schema schema = ((AccessibleObject) attribute.getJavaMember()).getAnnotation(Schema.class);
+
+                if (!StringUtils.hasText(comment)
+                        && schema != null && StringUtils.hasText(schema.description())) {
+                    comment = schema.description();
+                }
+
+                Desc desc = ((AccessibleObject) attribute.getJavaMember()).getAnnotation(Desc.class);
+
+                if (!StringUtils.hasText(comment)
+                        && desc != null && StringUtils.hasText(desc.value())) {
+                    comment = desc.value();
+                }
+
+                if (StringUtils.hasText(comment)
                         && Attribute.PersistentAttributeType.BASIC.equals(type)) {
 
                     String columnName = namingStrategy.toPhysicalColumnName(attribute.getName(), null);
@@ -214,7 +229,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
                     sql.append(String.format("alter table `%s` modify column `%s` %s comment '%s';\n",
                             tableName, columnName,
                             columnDefinitions.getOrDefault((tableName + "." + columnName).toUpperCase(), ""),
-                            schema.description()));
+                            comment));
                 }
 
             });
