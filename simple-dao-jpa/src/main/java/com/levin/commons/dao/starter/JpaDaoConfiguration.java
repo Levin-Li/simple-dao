@@ -255,7 +255,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
 
         if (!StringUtils.hasText(dbType)) {
-            log.warn("can't recognition dbtype by {} {}", dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+            log.warn("can't recognition db type by {} {}", dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
             return columnDefinitions;
         }
 
