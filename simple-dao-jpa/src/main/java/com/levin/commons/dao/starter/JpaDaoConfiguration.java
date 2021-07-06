@@ -85,6 +85,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @Autowired
     DataSourceProperties dataSourceProperties;
 
+    public static final String CFG_KEY = "simpledao.alter_table_comment";
+
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
     JdbcTemplate jdbcTemplate(DataSource dataSource) {
@@ -167,9 +169,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @SneakyThrows
     void initTableComments() {
 
-        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault("simpledao.alter_table_comment", "false"));
+        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault(CFG_KEY, "false"));
 
         if (!alterTableComment) {
+            log.info("*** you can config [spring.jpa.properties.{} = true] to enable init table comments.", CFG_KEY);
             return;
         }
 
