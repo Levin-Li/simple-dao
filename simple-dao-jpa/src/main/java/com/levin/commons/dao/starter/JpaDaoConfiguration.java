@@ -1,5 +1,9 @@
 package com.levin.commons.dao.starter;
 
+import com.alibaba.druid.sql.ast.statement.SQLColumnDefinition;
+import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.util.JdbcUtils;
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
 import com.levin.commons.dao.JpaDao;
@@ -19,6 +23,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -39,6 +44,12 @@ import javax.persistence.PersistenceUnit;
 import javax.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
 import java.lang.reflect.AccessibleObject;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 
@@ -55,13 +66,6 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
 //    @DynamicInsert和@DynamicUpdate
 
-/*    @Bean
-    @ConditionalOnList({
-            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = FormattingConversionService.class),
-    })
-    FormattingConversionServiceFactoryBean formattingConversionServiceFactoryBean() {
-        return new FormattingConversionServiceFactoryBean();
-    }*/
 
     //    @Autowired
     @PersistenceUnit
@@ -76,6 +80,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
     @Autowired
     private JpaProperties jpaProperties;
+
+    @Autowired
+    DataSourceProperties dataSourceProperties;
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
@@ -151,7 +158,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         try {
             initTableComments();
         } catch (Exception e) {
-            log.warn("update table comments error " , e);
+            log.warn("update table comments error ", e);
         }
 
     }
@@ -159,8 +166,18 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @SneakyThrows
     void initTableComments() {
 
-        if (!jpaProperties.isGenerateDdl()) {
+        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault("simpledao.alter_table_comment", "false"));
+
+        if (!alterTableComment) {
             return;
+        }
+
+        final Map<String, String> columnDefinitions = loadTableColumnDefinitions();
+
+        if (columnDefinitions == null
+                || columnDefinitions.isEmpty()) {
+            log.warn("can't load table column definitions,ignore modify table comment");
+            //  return;
         }
 
         JpaDao simpleDao = newJpaDao();
@@ -171,7 +188,6 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
         entityManagerFactory.getMetamodel().getEntities().forEach(entityType -> {
 
-
             Class<?> entityClass = entityType.getJavaType();
 
             Schema schemaOnTable = entityClass.getAnnotation(Schema.class);
@@ -180,7 +196,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
             if (schemaOnTable != null
                     && StringUtils.hasText(schemaOnTable.description())) {
-                sql.append(String.format("alter table `%s` comment '%s';\n" , tableName, schemaOnTable.description()));
+                sql.append(String.format("alter table `%s` comment '%s';\n", tableName, schemaOnTable.description()));
             }
 
             entityType.getAttributes().forEach(attribute -> {
@@ -195,19 +211,81 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
                     String columnName = namingStrategy.toPhysicalColumnName(attribute.getName(), null);
 
-                    sql.append(String.format("alter table `%s` modify column `%s` comment '%s';\n" , tableName, columnName, schema.description()));
-
+                    sql.append(String.format("alter table `%s` modify column `%s` %s comment '%s';\n",
+                            tableName, columnName,
+                            columnDefinitions.getOrDefault((tableName + "." + columnName).toUpperCase(), ""),
+                            schema.description()));
                 }
 
             });
 
-            if (sql.length() > 0) {
-                log.info("*** update table and column comments <<< {} >>>" , sql);
-                // jdbcTemplate(dataSource).execute(sql.toString());
+            log.info("*** table and column comments <<< {} >>>", sql);
+
+            if (sql.length() > 0 && jpaProperties.isGenerateDdl()) {
+                log.info("*** alter table and column comments...");
+                jdbcTemplate(dataSource).execute(sql.toString());
             }
 
         });
 
+    }
+
+    protected Map<String, String> loadTableColumnDefinitions() throws SQLException {
+
+        final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
+
+        String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+
+        if (!StringUtils.hasText(dbType)) {
+            log.warn("can't recognition dbtype by {} {}", dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+            return columnDefinitions;
+        }
+
+        Connection connection = dataSource.getConnection();
+
+        try {
+
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            log.info("*** DB *** Catalog:{} Schema:{} Version:{}.{} userName:{}", connection.getCatalog(), connection.getSchema()
+                    , metaData.getJDBCMajorVersion(), metaData.getJDBCMinorVersion(), metaData.getUserName());
+
+            ResultSet tablesResultSet = metaData.getTables(connection.getCatalog(), connection.getSchema(), null, new String[]{"TABLE"});
+
+            while (tablesResultSet.next()) {
+
+                String tableName = tablesResultSet.getString("TABLE_NAME");
+
+                String tableSql = tablesResultSet.getString("SQL");
+
+                log.debug("*** table {} --> <<< {} >>>", tableName, tableSql);
+
+                tableSql = tableSql.replace("CREATE CACHED TABLE ", "CREATE TABLE ");
+
+                try {
+                    SQLCreateTableStatement tableStatement = SQLParserUtils.createSQLStatementParser(tableSql, dbType, true)
+                            .getSQLCreateTableParser().parseCreateTable();
+
+                    tableStatement.getTableElementList().stream()
+                            .filter(sqlTableElement -> sqlTableElement instanceof SQLColumnDefinition)
+                            .map(sqlTableElement -> (SQLColumnDefinition) sqlTableElement)
+                            .forEach(sqlTableElement -> {
+                                String columnName = sqlTableElement.getColumnName().replace("\"", "");
+                                sqlTableElement.setName("");
+                                String columnDefinition = sqlTableElement.toString();
+                                columnDefinitions.put((tableName + "." + columnName).toUpperCase(), columnDefinition);
+                            });
+
+                } catch (Exception e) {
+                    log.warn("parse sql error, sql:" + tableSql, e);
+                }
+
+            }
+        } finally {
+            connection.close();
+        }
+
+        return columnDefinitions;
     }
 
 }

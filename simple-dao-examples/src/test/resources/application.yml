@@ -32,7 +32,8 @@ spring:
     open-in-view: false
 
 #      MYSQL 配置选项
-#      properties:
+    properties:
+       simpledao.alter_table_comment: true
 #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
 #        hibernate.id.new_generator_mappings: false
 #        hibernate.dialect.storage_engine: innodb
