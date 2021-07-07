@@ -241,6 +241,16 @@ public @interface C {
 
     String paramExpr() default "";
 
+    /**
+     * 对当前字段转换成字符串的模板
+     * <p>
+     * 通常是 group by 时间字段时使用
+     * <p>
+     * 支持格式 y m d h m s 代表年 月 日 时 分 秒
+     *
+     * @return
+     */
+    String toCharPattern() default "";
 
     /**
      * 数据类型转换模板

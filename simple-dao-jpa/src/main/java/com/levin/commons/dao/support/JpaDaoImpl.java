@@ -504,9 +504,40 @@ public class JpaDaoImpl
 //
 //        }
 //    }
+    protected <E> E tryConvertToEntityObject(E entityOrDto) {
+
+        if (entityOrDto == null) {
+            throw new PersistenceException("persist object is null");
+        }
+
+        //如果不是实体类
+        Class<?> entityOrDtoClass = entityOrDto.getClass();
+
+        if (!entityOrDtoClass.isAnnotationPresent(Entity.class)) {
+
+            TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
+
+            if (targetOption != null && isValidClass(targetOption.entityClass())) {
+
+                //执行初始化方法
+                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
+
+                //执行初始化方法
+                com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
+
+                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+            }
+        }
+
+        return entityOrDto;
+    }
+
     @Override
     @Transactional
-    public Object create(Object entity) {
+    public <E> E create(E entityOrDto) {
+
+        E entity = tryConvertToEntityObject(entityOrDto);
+
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
         EntityManager em = getEntityManager();
@@ -527,40 +558,11 @@ public class JpaDaoImpl
         return entity;
     }
 
-
     @Override
     @Transactional
     public <E> E save(E entityOrDto) {
 
-        if (entityOrDto == null) {
-            throw new PersistenceException("persist object is null");
-        }
-        //如果不是实体类
-        Class<?> entityOrDtoClass = entityOrDto.getClass();
-
-        if (!entityOrDtoClass.isAnnotationPresent(Entity.class)) {
-
-            TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
-
-            if (targetOption != null && isValidClass(targetOption.entityClass())) {
-
-                //执行初始化方法
-                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
-
-                //执行初始化方法
-                com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
-
-                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
-            }
-
-        }
-
-        return saveEntity(entityOrDto);
-
-    }
-
-    @Transactional
-    public <E> E saveEntity(E entity) {
+        E entity = tryConvertToEntityObject(entityOrDto);
 
         EntityManager em = getEntityManager();
 
