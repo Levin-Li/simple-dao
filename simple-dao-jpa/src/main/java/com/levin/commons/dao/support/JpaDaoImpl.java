@@ -491,12 +491,12 @@ public class JpaDaoImpl
         }
     }
 
-    /**
-     * 检查访问级别
-     * 暂不实现
-     *
-     * @param entity
-     */
+//    /**
+//     * 检查访问级别
+//     * 暂不实现
+//     *
+//     * @param entity
+//     */
 //    void checkAccessLevel(Object entity, EntityOption.AccessLevel accessLevel) {
 //        EntityOption entityOption = entity.getClass().getAnnotation(EntityOption.class);
 //
@@ -504,7 +504,8 @@ public class JpaDaoImpl
 //
 //        }
 //    }
-    protected <E> E tryConvertToEntityObject(E entityOrDto) {
+
+    protected <E> E tryConvertToEntityObject(Object entityOrDto) {
 
         if (entityOrDto == null) {
             throw new PersistenceException("persist object is null");
@@ -529,12 +530,12 @@ public class JpaDaoImpl
             }
         }
 
-        return entityOrDto;
+        return (E) entityOrDto;
     }
 
     @Override
     @Transactional
-    public <E> E create(E entityOrDto) {
+    public <E> E create(Object entityOrDto) {
 
         E entity = tryConvertToEntityObject(entityOrDto);
 
@@ -560,7 +561,7 @@ public class JpaDaoImpl
 
     @Override
     @Transactional
-    public <E> E save(E entityOrDto) {
+    public <E> E save(Object entityOrDto) {
 
         E entity = tryConvertToEntityObject(entityOrDto);
 

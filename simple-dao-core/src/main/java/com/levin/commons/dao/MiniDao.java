@@ -105,7 +105,7 @@ public interface MiniDao {
      * @return 返回的对象已经托管
      */
     @Transactional
-    <E> E create(E entityOrDto);
+    <E> E create(Object entityOrDto);
 
     /**
      * @param start

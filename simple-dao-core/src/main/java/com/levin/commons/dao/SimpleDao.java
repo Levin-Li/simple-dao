@@ -16,7 +16,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     @Transactional
-    <E> E save(E entity);
+    <E> E save(Object entity);
 
     /**
      * 删除一个实体对象
