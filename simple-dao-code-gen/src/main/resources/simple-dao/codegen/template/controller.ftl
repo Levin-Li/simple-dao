@@ -51,7 +51,7 @@ public class ${className} {
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(summary = "查询${entityName}", description = "${desc}")
+    @Operation(tags = {"${desc}"}, summary = "查询${desc}${entityName}", description = "${desc}(${entityName})")
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
@@ -64,7 +64,7 @@ public class ${className} {
      * @return ApiResp
      */
     @PutMapping("/create")
-    @Operation(summary = "创建${entityName}", description = "${desc}")
+    @Operation(tags = {"${desc}"}, summary = "创建${desc}${entityName}", description = "${desc}(${entityName})")
     public ApiResp<Long> create(Create${entityName}Req req) {
         return ${serviceName?uncap_first}.create(req);
     }
@@ -77,7 +77,7 @@ public class ${className} {
     * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{id}")
-    @Operation(summary = "详情${entityName}", description = "${desc}")
+    @Operation(tags = {"${desc}"}, summary = "详情${desc}${entityName}", description = "${desc}(${entityName})")
     public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
@@ -87,7 +87,7 @@ public class ${className} {
      * 修改保存
      */
      @PostMapping("/edit")
-     @Operation(summary = "编辑${entityName}", description = "${desc}")
+     @Operation(tags = {"${desc}"}, summary = "编辑${desc}${entityName}", description = "${desc}(${entityName})")
      public ApiResp<Void> edit(Edit${entityName}Req req) {
          return ${serviceName?uncap_first}.edit(req);
     }
@@ -97,7 +97,7 @@ public class ${className} {
      * 删除
      */
     @DeleteMapping("/delete")
-    @Operation(summary = "删除${entityName}", description = "${desc}")
+    @Operation(tags = {"${desc}"}, summary = "删除${desc}", description = "${desc}(${entityName})")
     public ApiResp<Void> delete(Delete${entityName}Req req) {
         return ${serviceName?uncap_first}.delete(req);
     }

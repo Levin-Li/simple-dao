@@ -45,10 +45,8 @@ import javax.persistence.PersistenceUnit;
 import javax.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
 import java.lang.reflect.AccessibleObject;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -176,12 +174,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             return;
         }
 
-        final Map<String, String> columnDefinitions = loadTableColumnDefinitions();
+        final Map<String, String> columnDefinitions = new HashMap<>(loadTableColumnDefinitions());
 
-        if (columnDefinitions == null
-                || columnDefinitions.isEmpty()) {
-            log.warn("can't load table column definitions,ignore modify table comment");
-            //  return;
+        if (columnDefinitions.isEmpty()) {
+            columnDefinitions.putAll(loadTableColumnDefinitionsByDefault());
         }
 
         JpaDao simpleDao = newJpaDao();
@@ -248,6 +244,56 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
     }
 
+    protected Map<String, String> loadTableColumnDefinitionsByDefault() throws SQLException {
+
+        final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
+
+        // String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+
+        Connection connection = dataSource.getConnection();
+
+        try {
+
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            ResultSet tablesResultSet = metaData.getTables(connection.getCatalog(), connection.getSchema(), null, new String[]{"TABLE"});
+
+            while (tablesResultSet.next()) {
+
+                String tableName = tablesResultSet.getString("TABLE_NAME");
+
+                ResultSet columnRS = metaData.getColumns(connection.getCatalog(), connection.getSchema(), tableName, null);
+
+                ResultSetMetaData columnRSMetaData = columnRS.getMetaData();
+                int n = columnRSMetaData.getColumnCount();
+
+                Map<String, String> colNames = new HashMap<>();
+
+                while (n-- >= 0) {
+                    colNames.put(columnRSMetaData.getColumnName(n), columnRSMetaData.getColumnTypeName(n)
+                            + ":" + columnRSMetaData.getScale(n) + ":" + columnRSMetaData.getPrecision(n)
+                            + ":" + columnRSMetaData.getColumnLabel(n));
+
+                }
+
+                while (columnRS.next()) {
+
+                    log.debug(" " + columnRS.toString());
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            log.warn(" Can't load table column definitions " + e.getMessage());
+        } finally {
+            connection.close();
+        }
+
+        return columnDefinitions;
+
+    }
+
     protected Map<String, String> loadTableColumnDefinitions() throws SQLException {
 
         final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
@@ -265,8 +311,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
             DatabaseMetaData metaData = connection.getMetaData();
 
-            log.info("*** DB *** Catalog:{} Schema:{} Version:{}.{} userName:{}", connection.getCatalog(), connection.getSchema()
-                    , metaData.getJDBCMajorVersion(), metaData.getJDBCMinorVersion(), metaData.getUserName());
+            log.info("*** {} DB  *** Catalog:{} Schema:{} Version:{}.{} userName:{} determineUrl:{} :determineDriverClassName{}", dbType, connection.getCatalog(), connection.getSchema()
+                    , metaData.getJDBCMajorVersion(), metaData.getJDBCMinorVersion(), metaData.getUserName()
+                    , dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
 
             ResultSet tablesResultSet = metaData.getTables(connection.getCatalog(), connection.getSchema(), null, new String[]{"TABLE"});
 
@@ -281,6 +328,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
                 tableSql = tableSql.replace("CREATE CACHED TABLE ", "CREATE TABLE ");
 
                 try {
+
                     SQLCreateTableStatement tableStatement = SQLParserUtils.createSQLStatementParser(tableSql, dbType, true)
                             .getSQLCreateTableParser().parseCreateTable();
 
@@ -299,6 +347,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
                 }
 
             }
+        } catch (Exception e) {
+            log.warn(" Can't load table column definitions " + e.getMessage());
         } finally {
             connection.close();
         }
