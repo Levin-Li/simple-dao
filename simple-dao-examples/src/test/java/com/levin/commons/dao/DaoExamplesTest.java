@@ -265,7 +265,7 @@ public class DaoExamplesTest {
 
             group.setScore(Math.abs(random.nextInt(100)));
 
-            dao.create(group);
+            group = dao.create(group);
 
             long uCount = 3 * gCount;
 
@@ -1459,7 +1459,7 @@ public class DaoExamplesTest {
 
         EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
 
-        int n = dao.updateTo(E_User.ENTITY_NAME, "u")
+        int n = dao.updateTo(E_User.E_ENTITY_NAME, "u")
                 .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
                 .set(E_User.lastUpdateTime, new Date())
                 .or()

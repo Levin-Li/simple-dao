@@ -36,6 +36,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -801,7 +802,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.tableName = tableName;
 
         if (!hasEntityClass()) {
-
             ExprUtils.tryLoadClass(tableName, clazz -> {
                 this.entityClass = clazz;
                 //如果表名是类名，做个自动转换
@@ -873,6 +873,148 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         return (CB) this;
+    }
+
+    /**
+     * 生成语句
+     *
+     * @return
+     */
+    protected String genEntityStatement() {
+
+        if (isNative()) {
+
+            tryUpdateTableName();
+
+            Matcher matcher = ExprUtils.entityVarStylePattern.matcher(tableName);
+
+            if (!matcher.matches()) {
+                this.tableName = getTableNameByPhysicalNamingStrategy(tableName);
+            }
+
+            if (hasText(this.tableName)) {
+                return tableName + " " + getText(alias, " ");
+            }
+        }
+
+        if (!isNative() && hasEntityClass()) {
+            return entityClass.getName() + " " + getText(alias, " ");
+        }
+
+        throw new IllegalArgumentException("entityClass or tableName is no valid");
+    }
+
+    /**
+     * 转换名称
+     *
+     * @param column
+     * @return
+     */
+    protected String aroundColumnPrefix(String column) {
+        return aroundColumnPrefix(null, column);
+    }
+
+    /**
+     * 重点方法
+     *
+     * @param domain
+     * @param column
+     * @return
+     */
+    protected String aroundColumnPrefix(String domain, String column) {
+
+        if (!hasText(column)) {
+            return "";
+        }
+
+        //去除空格
+        column = column.trim();
+
+        boolean hasDomain = hasText(domain);
+
+        //关键逻辑点
+        //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
+        //@Fix bug 20200227
+        if (column.contains(getParamPlaceholder().trim()) //如果包含参数占位符
+                || !Character.isLetter(column.charAt(0)) //如果首字符不是字母
+                || StringUtils.containsWhitespace(column) //包含白空格
+                || !column.matches("[\\w._]+") //如果是特殊字符
+            //  || (!hasDomain && column.contains("."))
+        ) {
+            //直接返回
+            return column;
+        }
+
+        //如果没有指定别名，但有包含点，
+        if (!hasDomain && column.contains(".")) {
+            return tryGetPhysicalColumnName(column);
+        }
+
+        //如果没有指定别名，则用默认别名
+        if (!hasDomain) {
+            domain = alias;
+        }
+
+        // :?P
+
+        String prefix = getText(domain, "", ".", "");
+
+        return tryGetPhysicalColumnName(column.trim().startsWith(prefix) ? column : prefix + column);
+    }
+
+    protected String tryGetPhysicalColumnName(String column) {
+
+        if (isNative()) {
+
+            //获取别名
+            int indexOf = column.indexOf(".");
+
+            if (indexOf > 0) {
+
+                //转换成小写
+                String domain = column.substring(0, indexOf).trim().toLowerCase();
+
+                column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
+
+                column = getColumnNameByPhysicalNamingStrategy(column);
+
+                column = domain + "." + column;
+
+            } else {
+
+                column = QueryAnnotationUtil.getColumnName(entityClass, column);
+
+                column = getColumnNameByPhysicalNamingStrategy(column);
+            }
+
+        }
+
+        return column;
+    }
+
+    protected String genFromStatement() {
+        return " From " + genEntityStatement();
+    }
+
+
+    /**
+     * 替换文本变量，替换字段
+     *
+     * @param ql 查询语句
+     * @return
+     */
+    protected String replaceVar(String ql) {
+        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix, this::tryToPhysicalTableName);
+    }
+
+
+    protected String tryToPhysicalTableName(String tableName) {
+
+        if (isNative()) {
+            return this.getTableNameByPhysicalNamingStrategy(getTableNameByEntityClassName(tableName));
+        }
+
+        return tableName;
     }
 
 
@@ -2024,142 +2166,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     protected boolean isNative() {
         return this.nativeQL;
-    }
-
-    /**
-     * 生成语句
-     *
-     * @return
-     */
-    protected String genEntityStatement() {
-
-        if (isNative()) {
-
-            tryUpdateTableName();
-
-            this.tableName = getTableNameByPhysicalNamingStrategy(tableName);
-
-            if (hasText(this.tableName)) {
-                return tableName + " " + getText(alias, " ");
-            }
-        }
-
-        if (!isNative() && hasEntityClass()) {
-            return entityClass.getName() + " " + getText(alias, " ");
-        }
-
-        throw new IllegalArgumentException("entityClass or tableName is no valid");
-    }
-
-    /**
-     * 转换名称
-     *
-     * @param column
-     * @return
-     */
-    protected String aroundColumnPrefix(String column) {
-        return aroundColumnPrefix(null, column);
-    }
-
-    /**
-     * @param domain
-     * @param column
-     * @return
-     */
-    protected String aroundColumnPrefix(String domain, String column) {
-
-        if (!hasText(column)) {
-            return "";
-        }
-
-        //去除空格
-        column = column.trim();
-
-        boolean hasDomain = hasText(domain);
-
-        //关键逻辑点
-        //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
-        //@Fix bug 20200227
-        if (column.contains(getParamPlaceholder().trim())
-                || !Character.isLetter(column.charAt(0))
-                || StringUtils.containsWhitespace(column) //包含白空格
-                || !column.matches("[\\w._]+")
-            //  || (!hasDomain && column.contains("."))
-        ) {
-
-            return column;
-        }
-
-        //如果没有指定别名，但有包含点，
-        if (!hasDomain && column.contains(".")) {
-            return tryGetPhysicalColumnName(column);
-        }
-
-        //如果没有指定别名，则用默认别名
-        if (!hasDomain) {
-            domain = alias;
-        }
-
-        // :?P
-
-        String prefix = getText(domain, "", ".", "");
-
-        return tryGetPhysicalColumnName(column.trim().startsWith(prefix) ? column : prefix + column);
-    }
-
-    protected String tryGetPhysicalColumnName(String column) {
-
-        if (isNative()) {
-
-            //获取别名
-            int indexOf = column.indexOf(".");
-
-            if (indexOf > 0) {
-
-                //转换成小写
-                String domain = column.substring(0, indexOf).trim().toLowerCase();
-
-                column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
-
-                column = getColumnNameByPhysicalNamingStrategy(column);
-
-                column = domain + "." + column;
-
-            } else {
-
-                column = QueryAnnotationUtil.getColumnName(entityClass, column);
-
-                column = getColumnNameByPhysicalNamingStrategy(column);
-            }
-
-        }
-
-        return column;
-    }
-
-    protected String genFromStatement() {
-        return " From " + genEntityStatement();
-    }
-
-
-    /**
-     * 替换文本变量，替换字段
-     *
-     * @param ql 查询语句
-     * @return
-     */
-    protected String replaceVar(String ql) {
-        return ExprUtils.replace(ql, getDaoContextValues(), true, this::aroundColumnPrefix, this::toFromTableName);
-    }
-
-
-    protected String toFromTableName(String tableName) {
-
-        if (isNative()) {
-            return getTableNameByEntityClassName(tableName);
-        }
-
-        return tableName;
     }
 
 
