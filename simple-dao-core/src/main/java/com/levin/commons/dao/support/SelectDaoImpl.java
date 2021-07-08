@@ -709,6 +709,25 @@ public class SelectDaoImpl<T>
         }
     }
 
+    /**
+     * 关键方法，根据注解生成SQL语句
+     *
+     * @param complexType
+     * @param opAnno
+     * @param name
+     * @param holder
+     * @return
+     */
+    @Override
+    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
+
+        String expr = super.genConditionExpr(complexType, opAnno, name, holder);
+
+        //加入排序
+        tryAppendOrderBy(expr, opAnno);
+
+        return expr;
+    }
 
     /**
      * @param bean
@@ -758,7 +777,7 @@ public class SelectDaoImpl<T>
             tryAppendHaving(opAnnotation, oldExpr, holder, value);
 
             //ORDER BY 也不能使用别名
-            tryAppendOrderBy(oldExpr, opAnnotation);
+            //tryAppendOrderBy(oldExpr, opAnnotation);
 
             select(expr, holder.value);
 
@@ -794,7 +813,7 @@ public class SelectDaoImpl<T>
         return newAlias;
     }
 
-    private void tryAppendOrderBy(String expr, Annotation opAnnotation) {
+    protected void tryAppendOrderBy(String expr, Annotation opAnnotation) {
 
         OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
 

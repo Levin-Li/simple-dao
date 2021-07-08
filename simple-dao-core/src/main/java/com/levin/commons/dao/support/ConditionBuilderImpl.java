@@ -2014,8 +2014,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    private String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
-
+    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
 
         C c = null;
 

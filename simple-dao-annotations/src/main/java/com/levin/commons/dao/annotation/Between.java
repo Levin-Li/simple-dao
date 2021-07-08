@@ -1,6 +1,7 @@
 package com.levin.commons.dao.annotation;
 
 import com.levin.commons.dao.annotation.misc.Case;
+import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -37,6 +38,13 @@ public @interface Between {
      * @return
      */
     String value() default "";
+
+    /**
+     * 统计字段的排序
+     *
+     * @return
+     */
+    OrderBy[] orderBy() default {};
 
     /**
      * 操作
