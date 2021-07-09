@@ -108,12 +108,7 @@ public @interface C {
     String value() default "";
 
 
-    /**
-     * 统计字段的排序
-     *
-     * @return
-     */
-    OrderBy[] orderBy() default {};
+
 
 
     /**

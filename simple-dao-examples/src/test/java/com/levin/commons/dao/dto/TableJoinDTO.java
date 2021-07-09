@@ -3,7 +3,9 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.Gt;
+import com.levin.commons.dao.annotation.Gte;
+import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
@@ -25,7 +27,7 @@ import lombok.experimental.Accessors;
         })
 public class TableJoinDTO extends PagingQueryReq {
 
-    @Select(value = "u.id", distinct = true)
+    @Select(value = "u.id", distinct = true, orderBy = @OrderBy(useAlias = true))
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid;
 

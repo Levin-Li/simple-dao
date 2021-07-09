@@ -92,6 +92,7 @@ public abstract class ExprUtils {
                                  boolean complexType, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
+                             //    Consumer<String> fieldExprConsumer,
                                  @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
                                  Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
@@ -240,10 +241,9 @@ public abstract class ExprUtils {
             //  fieldExpr = autoAroundParentheses("", fieldExpr, "");
         }
 
-
-
-
-
+//        if (fieldExprConsumer != null) {
+//            fieldExprConsumer.accept(fieldExpr);
+//        }
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
 

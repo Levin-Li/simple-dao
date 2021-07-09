@@ -2055,6 +2055,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //condition 求值回调
                 expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
 
+                // (fieldExpr) -> tryAppendOrderBy(fieldExpr, opAnno),
+
                 //字段别名和转换回调 求值回调
                 this::aroundColumnPrefix,
 

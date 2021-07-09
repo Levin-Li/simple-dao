@@ -31,6 +31,7 @@ public @interface OrderBy {
      */
     String value() default "";
 
+
     /**
      * 字段归属的域，通常是表的别名
      *
@@ -74,6 +75,14 @@ public @interface OrderBy {
      * @return
      */
     Type type() default Type.Desc;
+
+
+    /**
+     * 是否使用别名做为排序关键字
+     *
+     * @return
+     */
+    boolean useAlias() default false;
 
     /**
      * 描述信息

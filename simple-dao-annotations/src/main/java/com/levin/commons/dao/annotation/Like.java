@@ -42,12 +42,7 @@ public @interface Like {
     String value() default "";
 
 
-    /**
-     * 统计字段的排序
-     *
-     * @return
-     */
-    OrderBy[] orderBy() default {};
+
 
     /**
      * 是否是having 操作

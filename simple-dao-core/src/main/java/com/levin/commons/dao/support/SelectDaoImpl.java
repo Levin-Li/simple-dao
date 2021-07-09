@@ -686,7 +686,6 @@ public class SelectDaoImpl<T>
      */
     protected void processSelectAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation, String alias) {
 
-
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
@@ -696,6 +695,10 @@ public class SelectDaoImpl<T>
                 String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
                 //  expr = tryAppendAlias(expr, newAlias);
+
+                // ORDER BY 也不能使用别名
+
+                tryAppendOrderBy(expr, newAlias, opAnnotation);
 
                 expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
 
@@ -709,25 +712,6 @@ public class SelectDaoImpl<T>
         }
     }
 
-    /**
-     * 关键方法，根据注解生成SQL语句
-     *
-     * @param complexType
-     * @param opAnno
-     * @param name
-     * @param holder
-     * @return
-     */
-    @Override
-    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
-
-        String expr = super.genConditionExpr(complexType, opAnno, name, holder);
-
-        //加入排序
-        tryAppendOrderBy(expr, opAnno);
-
-        return expr;
-    }
 
     /**
      * @param bean
@@ -776,8 +760,8 @@ public class SelectDaoImpl<T>
 
             tryAppendHaving(opAnnotation, oldExpr, holder, value);
 
-            //ORDER BY 也不能使用别名
-            //tryAppendOrderBy(oldExpr, opAnnotation);
+            // ORDER BY 也不能使用别名
+            tryAppendOrderBy(oldExpr, newAlias, opAnnotation);
 
             select(expr, holder.value);
 
@@ -813,15 +797,16 @@ public class SelectDaoImpl<T>
         return newAlias;
     }
 
-    protected void tryAppendOrderBy(String expr, Annotation opAnnotation) {
+    //    @Override
+    protected void tryAppendOrderBy(String expr, String newAlias, Annotation opAnnotation) {
 
         OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
 
-        appendOrderBy(expr, orderByList);
+        appendOrderBy(expr, newAlias, orderByList);
 
     }
 
-    protected SelectDao<T> appendOrderBy(String expr, OrderBy... orderByList) {
+    protected SelectDao<T> appendOrderBy(final String oldExpr, final String newAlias, OrderBy... orderByList) {
 
         if (orderByList != null) {
 
@@ -832,6 +817,8 @@ public class SelectDaoImpl<T>
                 if (orderBy == null) {
                     continue;
                 }
+
+                String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
                 expr = hasText(orderBy.value()) ? aroundColumnPrefix(orderBy.domain(), orderBy.value()) : expr;
 
