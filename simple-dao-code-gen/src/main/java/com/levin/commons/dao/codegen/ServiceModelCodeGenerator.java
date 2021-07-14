@@ -217,6 +217,12 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
                 + File.separator + "resources" + File.separator + "application.yml");
 
+        genFileByTemplate("testcase/shell/startup.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "shell" + File.separator + "startup.sh");
+
+        genFileByTemplate("testcase/shell/shutdown.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "shell" + File.separator + "shutdown.sh");
+
         //替换成 test
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();

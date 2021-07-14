@@ -255,6 +255,101 @@
             </plugins>
         </pluginManagement>
 
+        <#if moduleType?? && moduleType == 'testcase'>
+        <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+
+                <execution>
+                    <id>copy-biz-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-dependencies</goal>
+                    </goals>
+
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/biz-libs</outputDirectory>
+                        <includeGroupIds>
+                            com.xbms
+                        </includeGroupIds>
+                    </configuration>
+                </execution>
+
+                <execution>
+                    <id>copy-third-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-dependencies</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/third-libs</outputDirectory>
+                        <excludeGroupIds>com.xbms</excludeGroupIds>
+                    </configuration>
+                </execution>
+            </executions>
+
+        </plugin>
+
+        <!--            <plugin>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            &lt;!&ndash;如果想在没有web.xml文件的情况下构建WAR，请设置为false。&ndash;&gt;
+                            <failOnMissingWebXml>false</failOnMissingWebXml>
+                            &lt;!&ndash;                    <warSourceExcludes>src/main/resources/**</warSourceExcludes>&ndash;&gt;
+                        </configuration>
+                    </plugin>-->
+
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+
+            <configuration>
+                <!--   ZIP 布局 -->
+                <layout>ZIP</layout>
+                <includes>
+                    <include>
+                        <!--   不包含任何依赖 -->
+                        <groupId>nothing</groupId>
+                        <artifactId>nothing</artifactId>
+                    </include>
+                </includes>
+            </configuration>
+
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>copy-shell-file</id>
+                    <!-- here the phase you need -->
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-resources</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}</outputDirectory>
+                        <resources>
+
+                            <resource>
+                                <directory>${project.basedir}/src/main/resources/shell</directory>
+                                <!--                                    <filtering>true</filtering>-->
+                            </resource>
+                        </resources>
+
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+        </#if>
+
     </build>
 
 
