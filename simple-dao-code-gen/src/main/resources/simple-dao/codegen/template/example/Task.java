@@ -18,6 +18,7 @@ import javax.persistence.*;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
+@Schema(description = "任务")
 public class Task
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {

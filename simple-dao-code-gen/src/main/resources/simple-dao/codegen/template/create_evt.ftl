@@ -33,10 +33,10 @@ import ${entityClassPackage}.*;
 
 
 /**
- *  创建${desc}
+ *  新增${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "创建${desc}")
+@Schema(description = "新增${desc}")
 @Data
 @Accessors(chain = true)
 @ToString

@@ -79,7 +79,9 @@ public class ${className} implements ServiceReq  {
 
 </#list>
 
+<#if pkField?exists>
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+</#if>
 }

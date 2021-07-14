@@ -83,7 +83,9 @@ public class ${className} {
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};
 
+<#if pkField?exists>
     private ${pkField.typeName} ${pkField.name};
+</#if>
 
     @Before
     public void before() throws Exception {
@@ -98,6 +100,7 @@ public class ${className} {
     public void create${entityName}Test() {
 
         Create${entityName}Req req = new Create${entityName}Req();
+/*
 <#list fields as field>
     <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefValue && !field.jpaEntity) >
         <#if field.name!="id">
@@ -106,32 +109,13 @@ public class ${className} {
 
     </#if>
 </#list>
+*/
+       ${entityName} resp = ${serviceName?uncap_first}.create(req);
 
-        ApiResp<${pkField.typeName}> resp = ${serviceName?uncap_first}.create(req);
+        log.debug("新增${desc}->" + resp);
 
-        log.debug("创建${desc}->" + resp);
+        Assert.assertTrue(resp != null);
 
-        ${pkField.name} = resp.getData();
-        Assert.assertTrue(resp.isSuccessful());
-
-    }
-
-    @Test
-    public void edit${entityName}Test() {
-
-        Edit${entityName}Req req = new Edit${entityName}Req();
-        req.set${pkField.name?cap_first}(${pkField.name});
-<#list fields as field>
-    <#if !field.notUpdate && field.testValue?? && field.baseType>
-        req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
-    </#if>
-</#list>
-
-        ApiResp resp = ${serviceName?uncap_first}.edit(req);
-
-        log.debug("修改${desc}->" + resp);
-
-        Assert.assertTrue(resp.isSuccessful());
     }
 
 
@@ -139,6 +123,7 @@ public class ${className} {
     public void query${entityName}Test() {
 
         Query${entityName}Req req = new Query${entityName}Req();
+/*
 <#list fields as field>
     <#if field.typeName=='Date'>
         //req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
@@ -149,7 +134,7 @@ public class ${className} {
         req.setLoad${field.name?cap_first}(true);//加载${field.desc}
     </#if>
 </#list>
-
+*/
         PagingData<${entityName}Info> resp = ${serviceName?uncap_first}.query(req,null);
 
         log.debug("查询${desc}->" + resp);
@@ -158,15 +143,41 @@ public class ${className} {
     }
 
     @Test
+    public void edit${entityName}Test() {
+
+    Edit${entityName}Req req = new Edit${entityName}Req();
+
+    <#if pkField?exists>
+        req.set${pkField.name?cap_first}(${pkField.name});
+    </#if>
+
+    /*
+    <#list fields as field>
+        <#if !field.notUpdate && field.testValue?? && field.baseType>
+            req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
+        </#if>
+    </#list>
+    */
+    int resp = ${serviceName?uncap_first}.edit(req);
+
+    log.debug(" 修改${desc}-> " + resp);
+
+    Assert.assertTrue(resp > 0);
+    }
+
+    @Test
     public void delete${entityName}Test() {
 
         Delete${entityName}Req req = new Delete${entityName}Req();
+
+    <#if pkField?exists>
         req.set${pkField.name?cap_first}(${pkField.name});
+    </#if>
 
-        ApiResp resp = ${serviceName?uncap_first}.delete(req);
+        int n = ${serviceName?uncap_first}.delete(req);
 
-        log.debug("删除${desc}->" + resp);
+        log.debug("删除${desc}->" + n);
 
-        Assert.assertTrue(resp.isSuccessful());
+        Assert.assertTrue(n > 0);
     }
 }

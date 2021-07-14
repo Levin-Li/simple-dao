@@ -53,10 +53,12 @@ public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#if pkField?exists>
     @Schema(description = "${pkField.desc}")
     @NotNull
     @Eq(require = true)
     private ${pkField.typeName} ${pkField.name};
+</#if>
 
 <#list fields as field>
     <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
@@ -71,12 +73,11 @@ public class ${className} implements ServiceReq {
     </#if>
 </#list>
 
-
+<#if pkField?exists>
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
-
-
+</#if>
     @PostConstruct
     public void preUpdate() {
     //更新之前初始化数据

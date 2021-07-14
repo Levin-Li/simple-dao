@@ -52,54 +52,58 @@ public class ${className} implements ${serviceName} {
     @Autowired
     private SimpleDao simpleDao;
 
-    @Schema(description = "创建${desc}")
+    @Schema(description = "新增${desc}")
     @Override
-    public  ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
-
+<#if pkField?exists>
+    public ${pkField.typeName} create(Create${entityName}Req req){
+<#else>
+    public boolean create(Create${entityName}Req req){
+</#if>
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
-        long ${field.name}C = simpleDao.selectFrom(${entityName}.class)
+        long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
                 .eq("${field.name}", req.get${field.name?cap_first}())
                 .count();
-        if (${field.name}C > 0) {
-            return ApiResp.error("${field.desc}已被使用");
+        if (${field.name}Cnt > 0) {
+            throw new EntityExistsException("${field.desc}已经存在");
         }
         </#if>
     </#list>
-
-        ${entityName} entity = (${entityName}) simpleDao.create(req);
-
-        return ApiResp.ok(entity.get${pkField.name?cap_first}());
+        ${entityName} entity = simpleDao.create(req);
+<#if pkField?exists>
+         return entity.get${pkField.name?cap_first}();
+<#else>
+         return entity != null;
+</#if>
     }
+
 
     @Schema(description = "编辑${desc}")
     @Override
-    public ApiResp<Void> edit(Edit${entityName}Req req) {
-
-        return simpleDao.updateByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
-
+    public int edit(Edit${entityName}Req req) {
+        return simpleDao.updateByQueryObj(req);
     }
 
     @Schema(description = "删除${desc}")
     @Override
-    public ApiResp<Void> delete(Delete${entityName}Req req) {
-
-        return simpleDao.deleteByQueryObj(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
+    public int delete(Delete${entityName}Req req) {
+        return simpleDao.deleteByQueryObj(req);
     }
 
+
+<#if pkField?exists>
     @Schema(description = "通过ID查找${desc}")
     @Override
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-
         return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
+</#if>
+
 
     @Schema(description = "分页查找${desc}")
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
-
       return simpleDao.findPagingDataByQueryObj(req, paging);
-
     }
 
 }

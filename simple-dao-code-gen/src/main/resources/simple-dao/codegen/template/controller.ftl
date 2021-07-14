@@ -60,7 +60,6 @@ public class ${className} {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
-
     /**
      * 新增保存
      *
@@ -68,13 +67,22 @@ public class ${className} {
      * @return ApiResp
      */
     @PutMapping("/create")
-    @Operation(tags = {"${desc}"}, summary = "创建${desc}", description = "${desc}(${entityName})")
-    public ApiResp<Long> create(Create${entityName}Req req) {
-        return ${serviceName?uncap_first}.create(req);
+    @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "${desc}(${entityName})")
+
+<#if pkField?exists>
+    public ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
+<#else>
+    public ApiResp<Boolean> create(Create${entityName}Req req) {
+</#if>
+   <#if pkField?exists>
+        return ApiResp.ok(${serviceName?uncap_first}.create(req));
+    <#else>
+        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error("新增${desc}失败");
+    </#if>
     }
 
 
-
+<#if pkField?exists>
     /**
     * 详情
     *
@@ -85,7 +93,7 @@ public class ${className} {
     public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
-
+</#if>
 
     /**
      * 修改保存
@@ -93,7 +101,7 @@ public class ${className} {
      @PostMapping("/edit")
      @Operation(tags = {"${desc}"}, summary = "编辑${desc}", description = "${desc}(${entityName})")
      public ApiResp<Void> edit(Edit${entityName}Req req) {
-         return ${serviceName?uncap_first}.edit(req);
+         return ${serviceName?uncap_first}.edit(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
 
 
@@ -103,7 +111,7 @@ public class ${className} {
     @DeleteMapping("/delete")
     @Operation(tags = {"${desc}"}, summary = "删除${desc}", description = "${desc}(${entityName})")
     public ApiResp<Void> delete(Delete${entityName}Req req) {
-        return ${serviceName?uncap_first}.delete(req);
+        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }
 
 

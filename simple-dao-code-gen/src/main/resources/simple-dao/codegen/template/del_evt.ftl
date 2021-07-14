@@ -47,7 +47,7 @@ import ${entityClassPackage}.*;
 public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
-
+<#if pkField?exists>
     @Schema(description = "${pkField.desc}")
     private ${pkField.typeName} ${pkField.name};
 
@@ -64,5 +64,5 @@ public class ${className} implements ServiceReq {
     public ${className}(${pkField.typeName}... ${pkField.name}s) {
         this.${pkField.name}s = ${pkField.name}s;
     }
-
+</#if>
 }

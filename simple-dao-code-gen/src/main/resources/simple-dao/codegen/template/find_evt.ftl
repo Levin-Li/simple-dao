@@ -48,10 +48,11 @@ import ${entityClassPackage}.*;
 public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#if pkField?exists>
     @Schema(description = "${pkField.desc}")
     @NotNull
     @Eq(require = true)
     private ${pkField.typeName} ${pkField.name};
-
+</#if>
 
 }

@@ -34,7 +34,9 @@ import ${imp};
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
+<#if pkField?exists>
 @EqualsAndHashCode(of = {"${pkField.name}"})
+</#if>
 @ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
 public class ${className} implements Serializable {

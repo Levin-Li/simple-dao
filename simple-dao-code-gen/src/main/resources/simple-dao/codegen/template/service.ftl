@@ -18,18 +18,23 @@ import ${packageName}.info.*;
  */
 public interface ${className} {
 
-    @Schema(description = "创建${desc}")
-    ApiResp<${pkField.typeName}> create(Create${entityName}Req req);
+    @Schema(description = "新增${desc}")
+<#if pkField?exists>
+    ${pkField.typeName} create(Create${entityName}Req req);
+<#else>
+    boolean create(Create${entityName}Req req);
+</#if>
 
     @Schema(description = "编辑${desc}")
-    ApiResp<Void> edit(Edit${entityName}Req req);
+    int edit(Edit${entityName}Req req);
 
     @Schema(description = "删除${desc}")
-    ApiResp<Void> delete(Delete${entityName}Req req);
+    int delete(Delete${entityName}Req req);
 
+<#if pkField?exists>
     @Schema(description = "通过ID查找${desc}")
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
-
+</#if>
 
    /**
     * 分页查询
