@@ -1,4 +1,3 @@
-
 package ${modulePackageName}.aspect;
 
 import ${modulePackageName}.*;
@@ -9,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.aspectj.lang.*;
 import org.aspectj.lang.reflect.*;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.annotation.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.*;
@@ -24,6 +25,7 @@ import java.util.Optional;
 @Aspect
 @Component("${modulePackageName}.aspect.ModuleWebControllerAspect")
 @Slf4j
+@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
     @Autowired

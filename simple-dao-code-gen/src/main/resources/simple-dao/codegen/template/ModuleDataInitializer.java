@@ -5,6 +5,7 @@ import com.levin.commons.plugin.PluginManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -27,6 +28,7 @@ import ${className};
 
 @Component("${modulePackageName}.ModuleDataInitializer")
 @Slf4j
+@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired

@@ -3,6 +3,7 @@ package ${modulePackageName}.config;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration("${modulePackageName}.config.ModuleWebMvcConfigurer")
 @Slf4j
+@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
 

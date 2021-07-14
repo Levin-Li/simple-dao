@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.*;
 import javax.validation.*;
+
 
 import javax.servlet.http.*;
 
@@ -31,6 +33,8 @@ import ${servicePackageName}.info.*;
 @Slf4j
 ////@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 @Valid
+
+@ConditionalOnProperty(value = "plugin.${packageName}.${className}", havingValue = "false", matchIfMissing = true)
 public class ${className} {
 
     //请求级别变量

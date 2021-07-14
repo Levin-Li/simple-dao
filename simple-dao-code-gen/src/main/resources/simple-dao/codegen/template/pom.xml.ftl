@@ -130,6 +130,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <scope>provided</scope>
@@ -167,6 +173,10 @@
                 <artifactId>druid</artifactId>
             </dependency>
 
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>com.querydsl</groupId>
