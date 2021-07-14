@@ -190,11 +190,11 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
 
+            getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
+
             //生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
                     , outputDirectory, controllerDir, serviceDir, codeGenParams);
-
-            getLog().info(String.format(" *** 模块名称：{} ，模块包名：{} ， 服务类生成路径：{}，控制器类生成路径：{}", moduleName, modulePackageName, serviceDir, controllerDir));
 
             if (splitDir) { //尝试生成Pom 文件
 

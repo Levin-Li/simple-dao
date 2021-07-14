@@ -39,7 +39,7 @@ import ${entityClassPackage}.*;
 @Schema(description = "查找${desc}")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 <#--@EqualsAndHashCode(callSuper = true)-->
 @ToString
 @Accessors(chain = true)

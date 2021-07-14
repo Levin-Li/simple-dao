@@ -1,3 +1,4 @@
+<#noparse>
 #!/bin/bash
 
 execDir=`pwd`
@@ -28,3 +29,4 @@ else
 
 fi
 
+</#noparse>

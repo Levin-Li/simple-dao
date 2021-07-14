@@ -36,7 +36,7 @@ import ${entityClassPackage}.*;
  */
 @Schema(description = "删除${desc}")
 @Data
-@AllArgsConstructor
+//@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 <#--@EqualsAndHashCode(callSuper = true)-->

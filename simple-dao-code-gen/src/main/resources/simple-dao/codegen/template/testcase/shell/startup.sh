@@ -1,3 +1,4 @@
+<#noparse>
 #!/bin/bash
 
 execDir=`pwd`
@@ -27,3 +28,4 @@ fi
 #回到原目录
 #cd $execDir
 
+</#noparse>
