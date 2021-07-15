@@ -27,10 +27,12 @@ import ${className};
 </#list>
 
 <#list controllerClassList as className>
-import $
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.method.HandlerMethod;{className};
+import ${className};
 </#list>
+
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.HandlerMethod;
 
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.plugin.PluginManager;
@@ -125,7 +127,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
 
         log.info("***** 服务根路径： http://" + rootUrl);
 
-        boolean haveSwagger = false;//org.springframework.util.ClassUtils.isPresent("springfox.documentation.spring.web.plugins.Docket", getClass().getClassLoader());
+        boolean haveSwagger = org.springframework.util.ClassUtils.isPresent("springfox.documentation.spring.web.plugins.Docket", getClass().getClassLoader());
 
         if (haveSwagger) {
             if (applicationContext.getBeanProvider(springfox.documentation.spring.web.plugins.Docket.class).getIfAvailable(() -> null) != null) {
