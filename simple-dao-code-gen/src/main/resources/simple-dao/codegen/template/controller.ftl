@@ -90,7 +90,7 @@ public class ${className} {
     */
     @GetMapping("/{id}")
     @Operation(tags = {"${desc}"}, summary = "查看详情${desc}", description = "查看详情${desc}(${entityName})")
-    public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<${entityName}Info> detail(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 </#if>
@@ -103,7 +103,6 @@ public class ${className} {
      public ApiResp<Void> edit(Edit${entityName}Req req) {
          return ${serviceName?uncap_first}.edit(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
-
 
     /**
      * 删除
