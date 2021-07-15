@@ -69,7 +69,6 @@ public class ${className} {
      */
     @PutMapping("/create")
     @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "新增${desc}(${entityName})")
-
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
 <#else>

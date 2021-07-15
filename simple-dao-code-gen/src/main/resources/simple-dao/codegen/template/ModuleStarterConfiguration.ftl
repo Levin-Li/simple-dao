@@ -20,15 +20,13 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @Configuration(PLUGIN_PREFIX + "ModuleStarterConfiguration")
 @Slf4j
-//spring data scan，jpa querydsl entity class ...
 
+//spring data scan，jpa querydsl entity class ...
 @EntityScan({PACKAGE_NAME})
 
 @ComponentScan({PACKAGE_NAME})
 
-@ProxyBeanScan(basePackages = {PACKAGE_NAME}
-, scanType = EntityRepository.class
-, factoryBeanClass = RepositoryFactoryBean.class)
+@ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
 <#--public class ${camelStyleModuleName}SpringConfiguration {-->
 public class ModuleStarterConfiguration {
 
