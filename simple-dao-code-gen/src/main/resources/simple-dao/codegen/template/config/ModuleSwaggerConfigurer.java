@@ -55,7 +55,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
         return new Docket(DocumentationType.OAS_30)
                 .apiInfo(apiInfo())
                 .enable(enabled)
-                .groupName("Plugin[" + ModuleOption.ID+"]")
+                .groupName("Plugin_" + ModuleOption.ID)
                 .select()
                 //apis： 添加swagger接口提取范围
                 .apis(RequestHandlerSelectors.basePackage(ModuleOption.PACKAGE_NAME))

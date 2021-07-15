@@ -34,15 +34,15 @@ import ${entityClassPackage}.*;
 
 
 /**
- *  编辑${desc}
+ *  更新${desc}
  *  Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "编辑${desc}")
+@Schema(description = "更新${desc}")
 @Data
-//@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants

@@ -39,10 +39,10 @@ import ${entityClassPackage}.*;
  */
 @Schema(description = "查询${desc}")
 @Data
-//@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants

@@ -100,21 +100,25 @@ public class ${className} {
     public void create${entityName}Test() {
 
         Create${entityName}Req req = new Create${entityName}Req();
-/*
+
 <#list fields as field>
     <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefValue && !field.jpaEntity) >
         <#if field.name!="id">
-             req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
+            // req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
         </#if>
 
     </#if>
 </#list>
-*/
-       ${entityName} resp = ${serviceName?uncap_first}.create(req);
 
-        log.debug("新增${desc}->" + resp);
+<#if pkField?exists>
+       ${pkField.typeName} ${pkField.name}  = ${serviceName?uncap_first}.create(req);
 
-        Assert.assertTrue(resp != null);
+        log.debug("新增${desc}->" + ${pkField.name});
+
+        Assert.assertTrue(${pkField.name} != null);
+<#else>
+        Assert.assertTrue(${serviceName?uncap_first}.create(req));
+</#if>
 
     }
 
@@ -123,18 +127,18 @@ public class ${className} {
     public void query${entityName}Test() {
 
         Query${entityName}Req req = new Query${entityName}Req();
-/*
+
 <#list fields as field>
     <#if field.typeName=='Date'>
-        //req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
-        //req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
+        // req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
+        // req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
     <#elseif !field.jpaEntity && field.baseType>
-        req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
+        // req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
     <#elseif field.lazy!>
-        req.setLoad${field.name?cap_first}(true);//加载${field.desc}
+        // req.setLoad${field.name?cap_first}(true);//加载${field.desc}
     </#if>
 </#list>
-*/
+
         PagingData<${entityName}Info> resp = ${serviceName?uncap_first}.query(req,null);
 
         log.debug("查询${desc}->" + resp);
@@ -145,24 +149,24 @@ public class ${className} {
     @Test
     public void edit${entityName}Test() {
 
-    Edit${entityName}Req req = new Edit${entityName}Req();
+         Edit${entityName}Req req = new Edit${entityName}Req();
 
     <#if pkField?exists>
-        req.set${pkField.name?cap_first}(${pkField.name});
+         req.set${pkField.name?cap_first}(${pkField.name});
     </#if>
 
-    /*
+
     <#list fields as field>
         <#if !field.notUpdate && field.testValue?? && field.baseType>
-            req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
+           // req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
         </#if>
     </#list>
-    */
-    int resp = ${serviceName?uncap_first}.edit(req);
 
-    log.debug(" 修改${desc}-> " + resp);
+          int resp = ${serviceName?uncap_first}.edit(req);
 
-    Assert.assertTrue(resp > 0);
+          log.debug("更新${desc}-> " + resp);
+
+          Assert.assertTrue(resp > 0);
     }
 
     @Test

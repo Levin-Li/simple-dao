@@ -39,8 +39,10 @@ import ${entityClassPackage}.*;
 @Schema(description = "查找${desc}")
 @Data
 @NoArgsConstructor
-//@AllArgsConstructor
-<#--@EqualsAndHashCode(callSuper = true)-->
+<#if pkField?exists>
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+</#if>
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants

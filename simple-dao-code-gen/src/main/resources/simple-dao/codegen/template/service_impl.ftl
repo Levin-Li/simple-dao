@@ -78,7 +78,7 @@ public class ${className} implements ${serviceName} {
     }
 
 
-    @Schema(description = "编辑${desc}")
+    @Schema(description = "更新${desc}")
     @Override
     public int edit(Edit${entityName}Req req) {
         return simpleDao.updateByQueryObj(req);

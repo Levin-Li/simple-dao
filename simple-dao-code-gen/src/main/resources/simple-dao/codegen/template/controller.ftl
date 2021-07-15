@@ -49,25 +49,25 @@ public class ${className} {
     private ${serviceName} ${serviceName?uncap_first};
 
     /**
-     * 分页查询
+     * 分页查找
      *
      * @param req  Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(tags = {"${desc}"}, summary = "查询${desc}", description = "${desc}(${entityName})")
+    @Operation(tags = {"${desc}"}, summary = "分页查找${desc}", description = "分页查找${desc}(${entityName})")
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
     /**
-     * 新增保存
+     * 新增
      *
      * @param req   Create${entityName}Evt
      * @return ApiResp
      */
     @PutMapping("/create")
-    @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "${desc}(${entityName})")
+    @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "新增${desc}(${entityName})")
 
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
@@ -84,22 +84,22 @@ public class ${className} {
 
 <#if pkField?exists>
     /**
-    * 详情
+    * 查看详情
     *
     * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{id}")
-    @Operation(tags = {"${desc}"}, summary = "详情${desc}", description = "${desc}(${entityName})")
+    @Operation(tags = {"${desc}"}, summary = "查看详情${desc}", description = "查看详情${desc}(${entityName})")
     public ApiResp<${entityName}Info> detail(@PathVariable ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 </#if>
 
     /**
-     * 修改保存
+     * 更新
      */
      @PostMapping("/edit")
-     @Operation(tags = {"${desc}"}, summary = "编辑${desc}", description = "${desc}(${entityName})")
+     @Operation(tags = {"${desc}"}, summary = "更新${desc}", description = "更新${desc}(${entityName})")
      public ApiResp<Void> edit(Edit${entityName}Req req) {
          return ${serviceName?uncap_first}.edit(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
@@ -109,7 +109,7 @@ public class ${className} {
      * 删除
      */
     @DeleteMapping("/delete")
-    @Operation(tags = {"${desc}"}, summary = "删除${desc}", description = "${desc}(${entityName})")
+    @Operation(tags = {"${desc}"}, summary = "删除${desc}", description = "删除${desc}(${entityName})")
     public ApiResp<Void> delete(Delete${entityName}Req req) {
         return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
     }

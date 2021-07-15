@@ -83,6 +83,12 @@
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-jpa</artifactId>
                 <scope>provided</scope>
             </dependency>
@@ -124,7 +130,6 @@
                 <artifactId>spring-boot-starter-cache</artifactId>
                 <scope>provided</scope>
             </dependency>
-
 
 
         </#if>
@@ -170,10 +175,14 @@
                 <artifactId>validation-api</artifactId>
             </dependency>
 
-
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
             </dependency>
 
             <dependency>

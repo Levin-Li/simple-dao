@@ -25,7 +25,7 @@ public interface ${className} {
     boolean create(Create${entityName}Req req);
 </#if>
 
-    @Schema(description = "编辑${desc}")
+    @Schema(description = "更新${desc}")
     int edit(Edit${entityName}Req req);
 
     @Schema(description = "删除${desc}")

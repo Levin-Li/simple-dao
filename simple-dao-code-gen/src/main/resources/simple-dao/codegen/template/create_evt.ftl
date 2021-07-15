@@ -40,9 +40,9 @@ import ${entityClassPackage}.*;
 @Data
 @Accessors(chain = true)
 @ToString
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants
-//@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
@@ -68,7 +68,7 @@ public class ${className} implements ServiceReq {
 <#list fields as field>
     <#if field.name == 'sn' && field.typeName == 'String'>
         if(getSn() == null){
-         String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+         String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
          setSn(sn);
         }
     </#if>

@@ -36,10 +36,14 @@ import ${entityClassPackage}.*;
  */
 @Schema(description = "删除${desc}")
 @Data
-//@AllArgsConstructor
+
+<#if pkField?exists>
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+</#if>
+
 @NoArgsConstructor
 @Builder
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
@@ -47,6 +51,7 @@ import ${entityClassPackage}.*;
 public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
+
 <#if pkField?exists>
     @Schema(description = "${pkField.desc}")
     private ${pkField.typeName} ${pkField.name};
