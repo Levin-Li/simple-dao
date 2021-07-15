@@ -298,11 +298,11 @@ public final class ServiceModelCodeGenerator {
 
         String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
 
-        genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
+        genFileByTemplate("ModulePlugin.ftl", params, pkgDir + "ModulePlugin.java");
         genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
         genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
 
-        genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
+        genFileByTemplate("ModuleStarterConfiguration.ftl", params, pkgDir + "ModuleStarterConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
@@ -569,7 +569,9 @@ public final class ServiceModelCodeGenerator {
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
-        Map<String, Object> params = MapUtils.put(threadContext.getAll(true)).build();
+        Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
+                .put("modulePackageName",modulePackageName())
+                .build();
 
         buildInfo(entityClass, fields, serviceDir, params);
 

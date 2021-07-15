@@ -1,5 +1,6 @@
 package ${packageName};
 
+import static ${modulePackageName}.ModuleOption.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import javax.servlet.http.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
+import javax.validation.constraints.*;
 
 import ${modulePackageName}.*;
 import ${entityClassPackage}.*;
@@ -26,15 +28,14 @@ import ${servicePackageName}.info.*;
 //Auto gen by simple-dao-codegen ${.now}
 
 // http协议明确规定，put、get、delete请求都是具有幂等性的，而post为非幂等性的。所以一般插入新数据的时候使用post方法，更新数据库时用put方法
+// @Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
-@RestController("${packageName}.${className}")
-@RequestMapping(ModuleOption.API_PATH + "${entityName?lower_case}")
+@RestController(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "${className}", havingValue = "false", matchIfMissing = true)
+@RequestMapping(API_PATH + "${entityName?lower_case}")
+
 @Tag(name = "${desc}", description = "${desc}管理")
-@Slf4j
-////@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
-@Valid
-
-@ConditionalOnProperty(value = "plugin.${packageName}.${className}", havingValue = "false", matchIfMissing = true)
+@Slf4j @Valid
 public class ${className} {
 
     //请求级别变量
@@ -46,7 +47,7 @@ public class ${className} {
     HttpServletRequest httpRequest;
 
     @Autowired
-    private ${serviceName} ${serviceName?uncap_first};
+    ${serviceName} ${serviceName?uncap_first};
 
     /**
      * 分页查找

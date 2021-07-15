@@ -1,6 +1,6 @@
 package ${packageName};
 
-
+import static ${modulePackageName}.ModuleOption.*;
 import ${entityClassPackage}.*;
 import ${entityClassName};
 

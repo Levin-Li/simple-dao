@@ -1,5 +1,6 @@
 package ${modulePackageName}.aspect;
 
+import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import com.levin.commons.service.support.*;
@@ -23,9 +24,9 @@ import java.util.Optional;
 
 
 @Aspect
-@Component("${modulePackageName}.aspect.ModuleWebControllerAspect")
+@Component(PLUGIN_PREFIX + "ModuleWebControllerAspect")
 @Slf4j
-@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(value =  PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
     @Autowired

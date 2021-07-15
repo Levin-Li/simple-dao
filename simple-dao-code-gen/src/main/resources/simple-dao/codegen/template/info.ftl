@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.*;

@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 <#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 

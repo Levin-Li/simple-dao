@@ -1,5 +1,7 @@
 package ${packageName};
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
@@ -42,11 +44,12 @@ import ${field.infoClassName};
  *@author auto gen by simple-dao-codegen ${.now}
  *
  */
-@Service("${packageName}.${serviceName}")
-@Slf4j
 
 //@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
-@Validated
+
+@Service(PLUGIN_PREFIX + "${serviceName}")
+@Slf4j
+//@Validated
 public class ${className} implements ${serviceName} {
 
     @Autowired

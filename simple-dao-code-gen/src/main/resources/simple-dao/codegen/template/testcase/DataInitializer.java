@@ -1,5 +1,7 @@
 package ${modulePackageName};
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.plugin.PluginManager;
 import lombok.extern.slf4j.Slf4j;

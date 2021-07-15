@@ -1,5 +1,6 @@
 package ${modulePackageName}.config;
 
+import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 
@@ -37,9 +38,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 //@EnableSwagger2
 
-@Configuration("${modulePackageName}.config.ModuleSwaggerConfigurer")
+@Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @Slf4j
-@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleSwaggerConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleSwaggerConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
     /**
@@ -58,9 +59,9 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
                 .groupName("Plugin_" + ModuleOption.ID)
                 .select()
                 //apis： 添加swagger接口提取范围
-                .apis(RequestHandlerSelectors.basePackage(ModuleOption.PACKAGE_NAME))
+                .apis(RequestHandlerSelectors.basePackage(PACKAGE_NAME))
                 //.apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
-//                .paths(path -> path.startsWith(ModuleOption.API_PATH))
+//                .paths(path -> path.startsWith(API_PATH))
                 .paths(PathSelectors.any())
                 .build();
     }

@@ -1,5 +1,7 @@
 package ${modulePackageName};
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.service.proxy.ProxyBeanScan;
@@ -16,18 +18,19 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-@Configuration("${modulePackageName}.${camelStyleModuleName}SpringConfiguration")
+@Configuration(PLUGIN_PREFIX + "ModuleStarterConfiguration")
 @Slf4j
 //spring data scan，jpa querydsl entity class ...
 
-@EntityScan({ModuleOption.PACKAGE_NAME})
+@EntityScan({PACKAGE_NAME})
 
-@ComponentScan({ModuleOption.PACKAGE_NAME})
+@ComponentScan({PACKAGE_NAME})
 
-@ProxyBeanScan(basePackages = {ModuleOption.PACKAGE_NAME}
+@ProxyBeanScan(basePackages = {PACKAGE_NAME}
 , scanType = EntityRepository.class
 , factoryBeanClass = RepositoryFactoryBean.class)
-public class ${camelStyleModuleName}SpringConfiguration {
+<#--public class ${camelStyleModuleName}SpringConfiguration {-->
+public class ModuleStarterConfiguration {
 
 
     @Autowired

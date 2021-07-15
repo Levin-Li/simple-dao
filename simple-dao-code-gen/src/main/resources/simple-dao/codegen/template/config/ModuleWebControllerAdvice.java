@@ -1,5 +1,6 @@
 package ${modulePackageName}.config;
 
+import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +31,8 @@ import java.text.SimpleDateFormat;
  * 可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping、@PostMapping， @GetMapping注解中。
  */
 @Slf4j
-//@ControllerAdvice("${modulePackageName}")
-@RestControllerAdvice("${modulePackageName}")
-@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleWebControllerAdvice", havingValue = "false", matchIfMissing = true)
+@RestControllerAdvice(PACKAGE_NAME)
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAdvice", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAdvice {
 
 //    // 这里@ModelAttribute("loginUserInfo")标注的modelAttribute()方法表示会在Controller方法之前

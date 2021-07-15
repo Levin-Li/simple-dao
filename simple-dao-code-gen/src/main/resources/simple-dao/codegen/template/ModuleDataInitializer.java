@@ -1,5 +1,7 @@
 package ${modulePackageName};
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.plugin.PluginManager;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +24,13 @@ import java.util.concurrent.Executor;
 import ${clazz.name};
 </#list>
 
-<#list serviceClassList as className>
-import ${className};
+<#list serviceClassList as clazzName>
+import ${clazzName};
 </#list>
 
-@Component("${modulePackageName}.ModuleDataInitializer")
+@Component(PLUGIN_PREFIX + "ModuleDataInitializer")
 @Slf4j
-@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired

@@ -1,5 +1,7 @@
 package ${modulePackageName};
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.plugin.*;
@@ -15,8 +17,9 @@ import java.util.*;
 //模块插件
 
 @Slf4j
-@Component("${modulePackageName}.Plugin")
-public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware {
+@Component(PLUGIN_PREFIX + "ModulePlugin")
+<#--public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware {-->
+public class ModulePlugin implements Plugin, PluginManagerAware {
 
     //dao
     @Autowired

@@ -1,6 +1,6 @@
 package ${modulePackageName};
 
-
+import static ${modulePackageName}.ModuleOption.*;
 import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.service.domain.ApiResp;

@@ -1,5 +1,6 @@
 package ${modulePackageName}.config;
 
+import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,12 @@ import org.springframework.security.web.SecurityFilterChain;
 //参考文章： https://blog.csdn.net/u012702547/article/details/106800446/
 
 
-@Configuration("${modulePackageName}.config.ModuleWebSecurityConfigurer")
+@Configuration(PLUGIN_PREFIX + "ModuleWebSecurityConfigurer")
 //@Order(101)
 @Slf4j
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
-@ConditionalOnProperty(value = "plugin." + ModuleOption.ID + ".ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
 
@@ -53,10 +54,10 @@ public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
                 "/swagger-ui/**/*",
                 "/springfox-swagger-ui/**/*",
                 "/swagger-resources/**",
-                "/" + ModuleOption.ADMIN_PATH + "**",
-                "/" + ModuleOption.H5_PATH + "**",
-                "/" + ModuleOption.API_PATH + "auth/**",
-                "/" + ModuleOption.API_PATH + "weixin/**"
+                "/" + ADMIN_PATH + "**",
+                "/" + H5_PATH + "**",
+                "/" + API_PATH + "auth/**",
+                "/" + API_PATH + "weixin/**"
         );
 
         log.debug("config WebSecurity");

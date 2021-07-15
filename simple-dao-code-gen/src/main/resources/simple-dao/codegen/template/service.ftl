@@ -1,5 +1,6 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -36,13 +37,7 @@ public interface ${className} {
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 </#if>
 
-   /**
-    * 分页查询
-    *
-    * @param req     查询对象
-    * @param paging  分页参数，如果 req 参数本身也是Paging对象，那么 paging 参数将无效
-    * @return
-    */
+
     @Schema(description = "分页查找${desc}")
     PagingData<${entityName}Info> query(Query${entityName}Req req , Paging paging);
 
