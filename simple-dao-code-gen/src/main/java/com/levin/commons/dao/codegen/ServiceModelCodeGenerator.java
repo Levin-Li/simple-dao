@@ -48,7 +48,7 @@ public final class ServiceModelCodeGenerator {
     private static final Logger logger = LoggerFactory.getLogger(ServiceModelCodeGenerator.class);
 
     public static final String DEL_EVT_FTL = "del_evt.ftl";
-    public static final String EDIT_EVT_FTL = "edit_evt.ftl";
+    public static final String UPDATE_EVT_FTL = "update_evt.ftl";
     public static final String QUERY_EVT_FTL = "query_evt.ftl";
     public static final String SERVICE_FTL = "service.ftl";
     public static final String SERVICE_IMPL_FTL = "service_impl.ftl";
@@ -661,8 +661,8 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        genCode(entityClass, EDIT_EVT_FTL, fields, srcDir,
-                pkgName, "Edit" + entityClass.getSimpleName() + "Req", mapConsumer);
+        genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
+                pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,

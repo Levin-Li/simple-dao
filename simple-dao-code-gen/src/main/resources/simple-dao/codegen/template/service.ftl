@@ -26,17 +26,16 @@ public interface ${className} {
     boolean create(Create${entityName}Req req);
 </#if>
 
-    @Schema(description = "更新${desc}")
-    int edit(Edit${entityName}Req req);
-
-    @Schema(description = "删除${desc}")
-    int delete(Delete${entityName}Req req);
-
 <#if pkField?exists>
-    @Schema(description = "通过ID查找${desc}")
+    @Schema(description = "通过ID找回${desc}")
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 </#if>
 
+    @Schema(description = "更新${desc}")
+    int update(Update${entityName}Req req);
+
+    @Schema(description = "删除${desc}")
+    int delete(Delete${entityName}Req req);
 
     @Schema(description = "分页查找${desc}")
     PagingData<${entityName}Info> query(Query${entityName}Req req , Paging paging);

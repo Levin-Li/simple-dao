@@ -80,10 +80,17 @@ public class ${className} implements ${serviceName} {
 </#if>
     }
 
+<#if pkField?exists>
+    @Schema(description = "通过ID查找${desc}")
+    @Override
+    public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
+    return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
+    }
+</#if>
 
     @Schema(description = "更新${desc}")
     @Override
-    public int edit(Edit${entityName}Req req) {
+    public int update(Update${entityName}Req req) {
         return simpleDao.updateByQueryObj(req);
     }
 
@@ -92,16 +99,6 @@ public class ${className} implements ${serviceName} {
     public int delete(Delete${entityName}Req req) {
         return simpleDao.deleteByQueryObj(req);
     }
-
-
-<#if pkField?exists>
-    @Schema(description = "通过ID查找${desc}")
-    @Override
-    public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
-    }
-</#if>
-
 
     @Schema(description = "分页查找${desc}")
     @Override

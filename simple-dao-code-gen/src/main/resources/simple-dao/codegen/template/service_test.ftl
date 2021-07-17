@@ -147,9 +147,9 @@ public class ${className} {
     }
 
     @Test
-    public void edit${entityName}Test() {
+    public void update${entityName}Test() {
 
-         Edit${entityName}Req req = new Edit${entityName}Req();
+         Update${entityName}Req req = new Update${entityName}Req();
 
     <#if pkField?exists>
          req.set${pkField.name?cap_first}(${pkField.name});
@@ -162,7 +162,7 @@ public class ${className} {
         </#if>
     </#list>
 
-          int resp = ${serviceName?uncap_first}.edit(req);
+          int resp = ${serviceName?uncap_first}.update(req);
 
           log.debug("更新${desc}-> " + resp);
 

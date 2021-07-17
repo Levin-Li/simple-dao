@@ -313,21 +313,11 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>
-                <executions>
-                    <execution>
 
-                        <goals>
-                            <goal>gen-code</goal>
-                        </goals>
-                        <!--   编译阶段 -->
-                        <phase>compile</phase>
-
-                        <configuration>
-                            <skip>${simple-dao-codegen.skip}</skip>
-                            <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <skip>${simple-dao-codegen.skip}</skip>
+                    <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+                </configuration>
 
                 <dependencies>
                     <dependency>

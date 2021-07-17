@@ -98,10 +98,10 @@ public class ${className} {
     /**
      * 更新
      */
-     @PostMapping("/edit")
+     @PostMapping("/update")
      @Operation(tags = {"${desc}"}, summary = "更新${desc}", description = "更新${desc}(${entityName})")
-     public ApiResp<Void> edit(Edit${entityName}Req req) {
-         return ${serviceName?uncap_first}.edit(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
+     public ApiResp<Void> update(Update${entityName}Req req) {
+         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
     }
 
     /**
