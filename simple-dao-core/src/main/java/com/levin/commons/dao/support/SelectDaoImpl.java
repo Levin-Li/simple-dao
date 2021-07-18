@@ -883,15 +883,20 @@ public class SelectDaoImpl<T>
      */
     String genQL(boolean isCountQueryResult) {
 
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         //目前如果没有要选择字段，不会加入select 子句
         if (!isCountQueryResult && selectColumns.length() > 0) {
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
 
-            builder.insert(0, "Select * ");
+            builder.append("Select ");
 
+            if (aliasMap.isEmpty()) {
+                builder.append(" * ");
+            } else {
+                aliasMap.getAll(true).forEach((k, v) -> builder.append(k + ".*"));
+            }
 
         } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() < 1) {
             //如果连接有查询
