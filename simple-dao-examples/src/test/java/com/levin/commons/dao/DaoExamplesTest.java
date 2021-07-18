@@ -346,11 +346,11 @@ public class DaoExamplesTest {
 
         List<SimpleUserQO.QResult> list = dao.findByQueryObj(new SimpleUserQO());
 
-        Assert.isTrue(list.size()>0,"空");
-        Assert.notNull(list.get(0).getName(),"空");
-        Assert.notNull(list.get(0).getScore(),"空");
+        Assert.isTrue(list.size() > 0, "空");
+        Assert.notNull(list.get(0).getName(), "空");
+        Assert.notNull(list.get(0).getScore(), "空");
 
-      Object  byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
+        Object byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
 
@@ -396,6 +396,19 @@ public class DaoExamplesTest {
         // System.out.println(byQueryObj1);
 
         assert byQueryObj1.size() > 0;
+
+    }
+
+    @Test
+    public void testTableJoin4() {
+
+        List<UserInfo> byQueryObj1 = dao.findByQueryObj(new TableJoin4());
+
+        // System.out.println(byQueryObj1);
+
+        assert byQueryObj1.size() > 0;
+
+        assert byQueryObj1.get(0) instanceof UserInfo;
 
     }
 
@@ -858,7 +871,7 @@ public class DaoExamplesTest {
 
         Object user = byQueryObj.get(0);
 
-        List  byQueryObjs = dao.findByQueryObj(null, new GroupJoinFetchDTO());
+        List byQueryObjs = dao.findByQueryObj(null, new GroupJoinFetchDTO());
 
         System.out.println(byQueryObj);
     }
