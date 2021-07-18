@@ -402,13 +402,13 @@ public class DaoExamplesTest {
     @Test
     public void testTableJoin4() {
 
-        List<UserInfo> byQueryObj1 = dao.findByQueryObj(new TableJoin4());
+        List<User > byQueryObj1 = dao.findByQueryObj(new TableJoin4());
 
         // System.out.println(byQueryObj1);
 
         assert byQueryObj1.size() > 0;
 
-        assert byQueryObj1.get(0) instanceof UserInfo;
+        assert byQueryObj1.get(0) instanceof User;
 
     }
 

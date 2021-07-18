@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
+import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.service.dto.UserInfo;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,7 +21,7 @@ import javax.persistence.PreUpdate;
 @Accessors(chain = true)
 @TargetOption(tableName = E_User.CLASS_NAME, alias = E_User.ALIAS,
 
-        resultClass = UserInfo.class,
+        resultClass = User.class,
 
         joinOptions = {
                 @JoinOption(tableOrStatement = E_Group.CLASS_NAME, entityClass = Void.class,
