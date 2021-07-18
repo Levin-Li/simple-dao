@@ -889,7 +889,10 @@ public class SelectDaoImpl<T>
         if (!isCountQueryResult && selectColumns.length() > 0) {
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
+
             builder.insert(0, "Select * ");
+
+
         } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() < 1) {
             //如果连接有查询
             builder.insert(0, "Select " + getAlias() + " ");
