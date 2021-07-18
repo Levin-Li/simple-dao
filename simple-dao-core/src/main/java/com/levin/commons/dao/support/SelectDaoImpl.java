@@ -892,10 +892,10 @@ public class SelectDaoImpl<T>
 
             builder.append("Select ");
 
-            if (aliasMap.isEmpty()) {
+            if (joinStatement.length() < 1) {
                 builder.append(" * ");
             } else {
-                aliasMap.getAll(true).forEach((k, v) -> builder.append(k + ".*"));
+                builder.append(getAlias() + ".* ");
             }
 
         } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() < 1) {
