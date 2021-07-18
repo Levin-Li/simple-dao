@@ -2050,7 +2050,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
 
-        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(name), holder, getParamPlaceholder(),
+        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(c.domain(), name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
                 expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
@@ -2146,10 +2146,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected Object convertLogicDeleteValue(EntityOption entityOption) {
         return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteFieldName().trim()));
-    }
-
-    protected Object tryConvertPropertyValue(String name, String value) {
-        return ObjectUtil.convert(value, QueryAnnotationUtil.getFieldType(entityClass, name));
     }
 
 
@@ -2290,8 +2286,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param name
      * @return
      */
-    protected Class<?> getExpectFieldType(String name) {
-        return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
+    //@todo
+    protected Class<?> getExpectFieldType(String domain, String name) {
+
+        if (!hasText(domain)) {
+            return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
+        }
+
+        return QueryAnnotationUtil.getFieldType(aliasMap.get(domain), name);
+
     }
 
 
