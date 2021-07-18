@@ -3,7 +3,6 @@ package com.levin.commons.dao.annotation;
 
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.misc.Case;
-import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -229,6 +228,13 @@ public @interface C {
      */
     String surroundPrefix() default "";
 
+
+    /**
+     * 强行设置字段表达式
+     *
+     * @return
+     */
+    String fieldExpr() default "";
 
     /**
      * 子查询或是表达式

@@ -92,12 +92,13 @@ public abstract class ExprUtils {
                                  boolean complexType, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
-                             //    Consumer<String> fieldExprConsumer,
+                                 //    Consumer<String> fieldExprConsumer,
                                  @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
                                  Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
 
-        String fieldExpr = aroundColumnPrefixFunc.apply(c.domain(), name);
+        //优先使用 fieldExpr
+        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(c.domain(), name);
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}

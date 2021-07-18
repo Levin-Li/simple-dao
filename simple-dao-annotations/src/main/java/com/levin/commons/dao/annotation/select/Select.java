@@ -47,6 +47,14 @@ public @interface Select {
      */
 //    Op op() default Op.Select;
 
+
+    /**
+     * 强行设置字段表达式
+     *
+     * @return
+     */
+    String fieldExpr() default "";
+
     /**
      * 查询字段名称，默认为字段的属性名称
      * <p>
@@ -175,20 +183,6 @@ public @interface Select {
      * @return
      */
     String domain() default "";
-
-    /**
-     * 子查询表达式
-     * <p>
-     * <p/>
-     * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
-     * <p>
-     * <p>
-     * 被注解的字段，
-     * 如果是是数组，列表，如果
-     *
-     * @return
-     */
-    //String paramExpr() default "";
 
 
     /**
