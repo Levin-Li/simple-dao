@@ -780,7 +780,7 @@ public class SelectDaoImpl<T>
         }
 
         //特殊处理的别名
-        if (C.NOT_NULL.equalsIgnoreCase(newAlias)) {
+        if (C.NULL_VALUE.equalsIgnoreCase(newAlias)) {
             return "";
         }
 

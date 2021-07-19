@@ -4,12 +4,13 @@ package com.levin.commons.dao.dto;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Ignore;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.service.dto.UserInfo;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -31,6 +32,7 @@ import javax.persistence.PreUpdate;
 public class TableJoin4 {
 
     @Eq
+    @Select(value = E_User.ALIAS, domain = C.NULL_VALUE, alias = C.NULL_VALUE)
     String name;
 
     @Ignore
