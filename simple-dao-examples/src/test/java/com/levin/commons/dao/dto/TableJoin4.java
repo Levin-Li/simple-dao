@@ -55,7 +55,6 @@ public class TableJoin4 {
     @PostConstruct
     void init2() {
         System.out.println(getClass().getName() + " init 2 ...");
-
     }
 
 

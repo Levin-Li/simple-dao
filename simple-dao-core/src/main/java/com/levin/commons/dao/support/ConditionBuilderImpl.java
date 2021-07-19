@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -1749,7 +1750,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //如果没有注解
         if (daoAnnotations.isEmpty()) {
-
             //如果字段上没有需要处理的注解
             //默认为 EQ
 
@@ -1801,13 +1801,26 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         //迭代注解
-        daoAnnotations.stream()
-                .filter(annotation -> isValid(annotation, bean, name, value))
-                .forEach(annotation -> {
-                    processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                            tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                            varType, value, annotation);
-                });
+        List<Annotation> annotationList = daoAnnotations.stream()
+                .filter(annotation -> isValid(annotation, bean, name, value)).collect(Collectors.toList());
+
+        Check check = findFirstMatched(varAnnotations, Check.class);
+
+        if (check != null) {
+            String pkgName = Where.class.getPackage().getName();
+            if (annotationList.stream()
+                    .filter(annotation -> annotation.annotationType().getName().startsWith(pkgName))
+                    .count() < check.requireWhereCount()) {
+                throw new StatementBuildException(String.format("fieldOrMethod: %s, name:%s check fail , requireWhereCount >= %s ,remark:%s",
+                        fieldOrMethod, name, check.requireWhereCount(), check.remark()));
+            }
+        }
+
+        annotationList.forEach(annotation -> {
+            processAttrAnno(bean, fieldOrMethod, varAnnotations,
+                    tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
+                    varType, value, annotation);
+        });
 
     }
 
