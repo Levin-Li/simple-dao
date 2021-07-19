@@ -94,6 +94,8 @@ public @interface C {
 
     /**
      * 字段归属的域，通常是表的别名
+     * <p>
+     * 如果为 "NULL" 值，则忽略这个值
      *
      * @return
      */
