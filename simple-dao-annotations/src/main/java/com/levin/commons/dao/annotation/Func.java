@@ -18,12 +18,6 @@ import java.lang.annotation.*;
 public @interface Func {
 
     /**
-     * 原表达式
-     */
-    String ORIGIN_EXPR = "$$";
-
-
-    /**
      * 条件
      * SPEL 表达式
      *
@@ -55,7 +49,7 @@ public @interface Func {
      *
      * @return
      */
-    String[] params() default {ORIGIN_EXPR};
+    String[] params() default {C.ORIGIN_EXPR};
 
 
     /**

@@ -1,6 +1,7 @@
 package com.levin.commons.dao.annotation.misc;
 
 import com.levin.commons.annotation.GenNameConstant;
+import com.levin.commons.dao.annotation.C;
 
 import java.lang.annotation.*;
 
@@ -28,16 +29,6 @@ import java.lang.annotation.*;
 @Inherited
 @GenNameConstant
 public @interface Case {
-
-    /**
-     * 空值
-     */
-    String NULL_VALUE = "NULL";
-
-    /**
-     * 原表达式
-     */
-    String ORIGIN_EXPR = "$$";
 
     /**
      * Case 选项
@@ -78,7 +69,7 @@ public @interface Case {
      *
      * @return
      */
-    String column() default ORIGIN_EXPR;
+    String column() default C.ORIGIN_EXPR;
 
     /**
      * 选项

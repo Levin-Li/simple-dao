@@ -932,6 +932,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         boolean hasDomain = hasText(domain);
 
+
         //关键逻辑点
         //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
         //@Fix bug 20200227
@@ -956,6 +957,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         // :?P
+
+        //如果别名指定为 null，按特殊值处理
+        if (C.NULL_VALUE.equalsIgnoreCase(domain)) {
+            domain = "";
+        }
 
         String prefix = getText(domain, "", ".", "");
 

@@ -55,6 +55,10 @@ public @interface C {
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
     String NOT_NULL = "NOT_EMPTY";
 
+    /**
+     * 空值
+     */
+    String NULL_VALUE = "NULL";
 
     /**
      * 原表达式

@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import com.levin.commons.dao.*;
+import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.E_C;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -776,6 +777,11 @@ public class SelectDaoImpl<T>
 
         if (!hasText(newAlias)) {
             newAlias = ClassUtils.getValue(opAnnotation, "alias", false);
+        }
+
+        //特殊处理的别名
+        if (C.NOT_NULL.equalsIgnoreCase(newAlias)) {
+            return "";
         }
 
         if (!hasText(newAlias)

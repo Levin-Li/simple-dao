@@ -43,7 +43,7 @@ public class GroupDTO {
 
     protected Boolean editable = true;
 
-    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {Func.ORIGIN_EXPR, "${:format}"}, condition = "true"))
+    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {C.ORIGIN_EXPR, "${:format}"}, condition = "true"))
     protected Date createTime = new Date();
 
     @Update
