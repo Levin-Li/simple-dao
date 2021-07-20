@@ -490,13 +490,10 @@ public abstract class ExprUtils {
      */
     public static String buildSubQuery(ValueHolder holder, MiniDao dao, final boolean isNative, Map<String, Object> context) {
 
-        SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative) {
-            //非常重要
-            @Override
-            protected boolean setNative(boolean nativeQL) {
-                return isNative;
-            }
-        };
+        SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative);
+
+        //不允许改变NativeQL
+        selectDao.setCanChangeNativeQL(false);
 
         if (context != null) {
             selectDao.setContext(context);

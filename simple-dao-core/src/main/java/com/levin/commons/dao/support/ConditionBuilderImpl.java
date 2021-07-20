@@ -68,8 +68,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected String alias;
 
+    private boolean canChangeNativeQL = true;
 
     private boolean nativeQL = false;
+
     ///////////////////////////////////////////////////////////
 
     final List whereParamValues = new ArrayList(5);
@@ -136,7 +138,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
 
         this.dao = dao;
-        this.setNative(isNative);
+        this.nativeQL = (isNative);
         this.entityClass = null;
         this.tableName = null;
         this.alias = null;
@@ -152,7 +154,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.dao = dao;
         this.entityClass = entityClass;
         this.tableName = null;
-        this.setNative(isNative);
+        this.nativeQL = (isNative);
         this.alias = alias;
 
     }
@@ -165,7 +167,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.dao = dao;
         this.entityClass = null;
         setTableName(tableName);
-        this.setNative(isNative);
+        this.nativeQL = (isNative);
         this.alias = alias;
 
     }
@@ -2189,7 +2191,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     protected boolean setNative(boolean nativeQL) {
-        return this.nativeQL = nativeQL;
+
+        if (canChangeNativeQL) {
+            this.nativeQL = nativeQL;
+        }
+
+        return this.nativeQL;
+    }
+
+    public CB setCanChangeNativeQL(boolean canChangeNativeQL) {
+        this.canChangeNativeQL = canChangeNativeQL;
+        return (CB) this;
     }
 
     /**
