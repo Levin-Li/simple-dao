@@ -482,16 +482,21 @@ public abstract class ExprUtils {
 
     }
 
-
     /**
      * 构建子查询语句及参数
      *
      * @param holder
      * @return
      */
-    public static String buildSubQuery(ValueHolder holder, MiniDao dao, boolean isNative, Map<String, Object> context) {
+    public static String buildSubQuery(ValueHolder holder, MiniDao dao, final boolean isNative, Map<String, Object> context) {
 
-        SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative);
+        SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative) {
+            //非常重要
+            @Override
+            protected boolean setNative(boolean nativeQL) {
+                return isNative;
+            }
+        };
 
         if (context != null) {
             selectDao.setContext(context);

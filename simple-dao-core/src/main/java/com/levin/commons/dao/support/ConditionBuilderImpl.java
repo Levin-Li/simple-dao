@@ -68,6 +68,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected String alias;
 
+
     private boolean nativeQL = false;
     ///////////////////////////////////////////////////////////
 
@@ -135,7 +136,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
 
         this.dao = dao;
-        this.nativeQL = isNative;
+        this.setNative(isNative);
         this.entityClass = null;
         this.tableName = null;
         this.alias = null;
@@ -151,7 +152,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.dao = dao;
         this.entityClass = entityClass;
         this.tableName = null;
-        this.nativeQL = isNative;
+        this.setNative(isNative);
         this.alias = alias;
 
     }
@@ -164,7 +165,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.dao = dao;
         this.entityClass = null;
         setTableName(tableName);
-        this.nativeQL = isNative;
+        this.setNative(isNative);
         this.alias = alias;
 
     }
@@ -1048,7 +1049,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         setTableName(targetOption.tableName());
 
-        this.nativeQL = targetOption.nativeQL();
+        this.setNative(targetOption.nativeQL());
 
         this.alias = targetOption.alias();
 
@@ -1124,7 +1125,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 entityClass = queryOption.getEntityClass();
 
-                this.nativeQL = queryOption.isNative();
+                this.setNative(queryOption.isNative());
 
                 // tableName = queryOption.getEntityName();
 
@@ -2184,6 +2185,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return this.nativeQL;
     }
 
+    /**
+     * @return
+     */
+    protected boolean setNative(boolean nativeQL) {
+        return this.nativeQL = nativeQL;
+    }
 
     /**
      * 返回当前节点是否有效

@@ -1,32 +1,26 @@
-package ${modulePackageName}.aspect;
-
-import static ${modulePackageName}.ModuleOption.*;
-import ${modulePackageName}.*;
+package $
 
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.IPAddrUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import org.aspectj.lang.*;
-import org.aspectj.lang.reflect.*;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.annotation.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.*;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
+{modulePackageName}.aspect;
+        {modulePackageName}.ModuleOption.*;
+        {modulePackageName}.*;
+
 
 @Aspect
 @Component(PLUGIN_PREFIX + "ModuleWebControllerAspect")
 @Slf4j
-@ConditionalOnProperty(value =  PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
     @Autowired
@@ -131,16 +125,14 @@ public class ModuleWebControllerAspect {
 
         log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
 
-        //加入线程级别的http请求解析器，线程级别解析器会被优先使用
-        variableResolverManager.addVariableResolvers(true, httpRequestInfoResolver);
+        // 加入线程级别的http请求解析器，线程级别解析器会被优先使用
+        // variableResolverManager.addVariableResolvers(true, httpRequestInfoResolver);
 
         Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
             Arrays.stream(args)
                     .filter(Objects::nonNull)
                     .forEachOrdered(arg -> {
-                        variableInjector.injectByVariableResolver(arg
-                                , () -> variableResolverManager.getVariableResolvers(true)
-                                , () -> variableResolverManager.getVariableResolvers(false));
+                       // variableInjector.inject(arg, );
                     });
         });
 
