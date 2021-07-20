@@ -707,11 +707,12 @@ public abstract class ExprUtils {
 
             Object v = ObjectUtil.findValue(key, true, isThrowExWhenKeyNotFound, contexts);
 
-            if (v == null) {
-                throw new StatementBuildException(String.format("[{%s}] var {%s} not found on context", oldTxt, key));
-            }
+//            if (v == null) {
+//                throw new StatementBuildException(String.format("expr {%s} var {%s} not found or null value in context", oldTxt, key));
+//            }
 
-            return v.toString();
+//            允许返回null 字符串
+            return "" + v;
         });
 
         //替换字段名称

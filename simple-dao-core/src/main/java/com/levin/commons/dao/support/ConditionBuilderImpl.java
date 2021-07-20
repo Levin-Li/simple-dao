@@ -1404,7 +1404,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                                 field.get(queryValueObj));
                     }
                 } catch (Exception e) {
-                    throw new StatementBuildException(typeClass + " 处理注解失败，字段:" + field + "", e);
+                    throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);
                 }
             }
 
@@ -1810,7 +1810,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         Check check = findFirstMatched(varAnnotations, Check.class);
 
         if (check != null) {
-            String pkgName = Where.class.getPackage().getName();
+            String pkgName = Eq.class.getPackage().getName();
             if (annotationList.stream()
                     .filter(annotation -> annotation.annotationType().getName().startsWith(pkgName))
                     .count() < check.requireWhereCount()) {
@@ -2036,7 +2036,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, ValueHolder holder) {
+    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder holder) {
 
         C c = null;
 
@@ -2070,19 +2070,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         }
 
-        List<Map<String, ?>> contexts = this.buildContextValues(holder.root, holder.value, name);
+        List<Map<String, ?>> fieldCtxs = this.buildContextValues(holder.root, holder.value, name);
 
         return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(c.domain(), name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
-                expr -> evalTrueExpr(holder.root, holder.value, expr, contexts),
+                expr -> evalTrueExpr(holder.root, holder.value, expr, fieldCtxs),
 
                 // (fieldExpr) -> tryAppendOrderBy(fieldExpr, opAnno),
 
                 //字段别名和转换回调 求值回调
                 this::aroundColumnPrefix,
 
-                this::buildSubQuery, contexts);
+                this::buildSubQuery, fieldCtxs);
 
     }
 
