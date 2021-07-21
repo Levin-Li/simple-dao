@@ -292,7 +292,8 @@
                             </goals>
 
                             <configuration>
-                                <includeGroupIds>${parent.groupId}</includeGroupIds>
+                                <!--  包含的业务包名  -->
+                                <includeGroupIds>${r"${parent.groupId}"}</includeGroupIds>
                                 <outputDirectory>${r"${project.build.directory}/biz-libs"}</outputDirectory>
                             </configuration>
                         </execution>
@@ -304,7 +305,8 @@
                                 <goal>copy-dependencies</goal>
                             </goals>
                             <configuration>
-                                <includeGroupIds>${parent.groupId}</includeGroupIds>
+                                <!--  排除的业务包名  -->
+                                <excludeGroupIds>${r"${parent.groupId}"}</excludeGroupIds>
                                 <outputDirectory>${r"${project.build.directory}/third-libs"}</outputDirectory>
                             </configuration>
                         </execution>
