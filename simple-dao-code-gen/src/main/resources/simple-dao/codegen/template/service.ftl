@@ -1,5 +1,6 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,26 +19,24 @@ import ${packageName}.info.*;
  */
 public interface ${className} {
 
-    @Schema(description = "创建${desc}")
-    ApiResp<${pkField.typeName}> create(Create${entityName}Req req);
+    @Schema(description = "新增${desc}")
+<#if pkField?exists>
+    ${pkField.typeName} create(Create${entityName}Req req);
+<#else>
+    boolean create(Create${entityName}Req req);
+</#if>
 
-    @Schema(description = "编辑${desc}")
-    ApiResp<Void> edit(Edit${entityName}Req req);
+<#if pkField?exists>
+    @Schema(description = "通过ID找回${desc}")
+    ${entityName}Info findById(${pkField.typeName} ${pkField.name});
+</#if>
+
+    @Schema(description = "更新${desc}")
+    int update(Update${entityName}Req req);
 
     @Schema(description = "删除${desc}")
-    ApiResp<Void> delete(Delete${entityName}Req req);
+    int delete(Delete${entityName}Req req);
 
-    @Schema(description = "通过ID查找${desc}")
-    ${entityName}Info findById(${pkField.typeName} ${pkField.name});
-
-
-   /**
-    * 分页查询
-    *
-    * @param req     查询对象
-    * @param paging  分页参数，如果 req 参数本身也是Paging对象，那么 paging 参数将无效
-    * @return
-    */
     @Schema(description = "分页查找${desc}")
     PagingData<${entityName}Info> query(Query${entityName}Req req , Paging paging);
 

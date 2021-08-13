@@ -3,7 +3,6 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.misc.Fetch;
-import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.Group;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -21,11 +20,11 @@ public class GroupInfo implements Serializable {
     String id;
 
     //    @Ignore
-    @Fetch(value = "parent.name", joinType = Fetch.JoinType.Left, onlyForQueryObject = false)
+    @Fetch(value = "parent.name", joinType = Fetch.JoinType.Left, isBindToField = false)
     String parentName;
 
 
-    @Fetch(joinType = Fetch.JoinType.Left)
+    @Fetch(joinType = Fetch.JoinType.Left, condition = "false")
     List<GroupInfo> children;
 
 }

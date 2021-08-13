@@ -10,16 +10,12 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>simple-dao-code-gen-example</artifactId>
+    <artifactId>simple-dao-codegen-example</artifactId>
 
     <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
 
     <properties>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
-
-        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -144,6 +140,12 @@
                 <version>1.1.24</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <version>2.3.6.RELEASE</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -166,6 +168,19 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>-->
 
+
+        <!-- 引入Swagger3依赖 -->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -177,6 +192,11 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
@@ -236,6 +256,11 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
@@ -252,6 +277,16 @@
         </dependency>
 
         <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
         </dependency>
@@ -259,6 +294,12 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>${levin.service-support.groupId}</groupId>
+            <artifactId>service-support</artifactId>
+            <version>${levin.service-support.version}</version>
         </dependency>
 
     </dependencies>
@@ -272,21 +313,11 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>
-                <executions>
-                    <execution>
 
-                        <goals>
-                            <goal>gen-code</goal>
-                        </goals>
-                        <!--   编译阶段 -->
-                        <phase>compile</phase>
-
-                        <configuration>
-                            <skip>${simple-dao-codegen.skip}</skip>
-                            <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <skip>${simple-dao-codegen.skip}</skip>
+                    <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+                </configuration>
 
                 <dependencies>
                     <dependency>
@@ -332,6 +363,12 @@
                 </executions>
 
             </plugin>
+
+
+<!--            <plugin>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+<!--            </plugin>-->
 
         </plugins>
     </build>

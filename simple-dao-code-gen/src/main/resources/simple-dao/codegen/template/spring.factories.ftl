@@ -1,1 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=${modulePackageName}.${camelStyleModuleName}SpringConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=${modulePackageName}.ModuleStarterConfiguration

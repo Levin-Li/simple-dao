@@ -19,6 +19,18 @@ public interface ModuleOption {
      */
     String ID = PACKAGE_NAME;
 
+
+    /**
+     * module prefix
+     */
+    String ID_PREFIX = ID +".";
+
+    /**
+     * module prefix
+     */
+    String PLUGIN_PREFIX =  "plugin."  + ID_PREFIX;
+
+
     /**
      * version
      */
@@ -28,7 +40,7 @@ public interface ModuleOption {
      * base path
      * 注意路径必须以 / 结尾
      */
-    String BASE_PATH = ID + "/" + VERSION+"/";
+    String BASE_PATH = ID + "/" + VERSION + "/";
 
     /**
      * api path

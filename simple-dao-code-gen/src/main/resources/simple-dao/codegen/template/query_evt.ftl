@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 <#--import com.oak.api.model.ApiBaseQueryReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -39,10 +41,10 @@ import ${entityClassPackage}.*;
  */
 @Schema(description = "查询${desc}")
 @Data
-@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
@@ -79,7 +81,9 @@ public class ${className} implements ServiceReq  {
 
 </#list>
 
+<#if pkField?exists>
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+</#if>
 }

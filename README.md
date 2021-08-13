@@ -11,126 +11,79 @@
     
 ### 1 使用预览
 
-   JPA实体类定义
+   实体类定义
    
-      @Entity(name = "test_entity")
+      //学生考试成绩表
+      
+      @Entity(name = "exam_log")
       @Data
       @Accessors(chain = true)
       @FieldNameConstants 
-      public class TestEntity{
+      public class ExamLog{
       
          @Id
          @GeneratedValue
          private Long id;
          
-         @Column(nullable = false)
-         String name;
+         //学生 
+         String studentName;
          
-         @Column(nullable = false)
-         String state;
+         //学科
+         String subject;
          
+         //成绩分数
+         Integer score;
+
          ... 
              
       }
+      
+   查询统计需求： 找出语数英三科考试中总分超过260分，学科平均分高于80，名字中包含特定字符的学生姓名、总分、平均分。
    
-#### 1.1 简单查询
-
-           // 查询对象
-           @Data
-           //声明查询的目标表，和查询结果的对象类型
-           @TargetOption(entityClass = TestEntity.class, resultClass = QueryDto.Info.class)
-           public class QueryDto {
-           
-             //针对字段默认为  @Select 注解
-             @Select
-             @Data
-             public static class Info{  
-                Long id; 
-                String name; 
-             } 
-             
-             //等于注解
-             @Eq
-             String status;
-             
-           }
-           
-           //服务类
-           public class TestEntityService{
-           
-               //注入通用Dao
-               @Autowired
-               SimpleDao dao;
-               
-               //查询指定状态的记录，返回QueryDto.Info的结果集
-               List<QueryDto.Info> findByStatus(String status){
-                  
-                   //下面的将生成SQL： select id , name from test_entity where status = ?
-                   
-                   return dao.findByQueryObj(new QueryDto().setStatus(status));
-                   
-               }
-            
-           }
-
-
-#### 1.2 统计查询
-
-   根据查询对象生成查询语句和参数。
-   
+   3 步实现
+ 
    1）定义查询对象
   
        /**
         * 数据传输对象(兼查询对象，通过注解产生SQL语句)
         */
       @Data
-      @TargetOption(entityClass = TestEntity.class, resultClass = TestEntityStatDto.class)
-      public class TestEntityStatDto {
-             
-          @Min
-          Long minScore; //当minScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 minScore -> score
-          
-          @Max
-          Long maxScore;
+      @TargetOption(entityClass = ExamLog.class, resultClass = ExamStatDto.class)
+      public class ExamStatDto {
       
-          @Avg
-          Long avgScore;
+          @Sum(having=Op.Gt)
+          Long sumScore = 260L;      
+              
+          @Avg(having=Op.Gt)
+          Long avgScore = 80L; //当avgScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 avgScore -> score
+
+          @In
+          String[] subject = {"语文", "数学", "英语"}; 
       
-          @Count
-          Long countScore;
-      
+          @Contains //学生名字中包含'李'字
           @GroupBy
-          @NotIn
-          String[] state = {"A", "B", "C"}; 
-      
-          @Contains
-          String name = "test"; 
+          String studentName = "李"; 
       }
    
-   2） 查询结果集 
+   2） 查询结果集
         
          @Autowired
          SimpleDao dao;
          
          //查询并返回结果
  
-         List<TestEntityStatDto> result =  dao.findByQueryObj(new TestEntityStatDto());   
+         List<ExamStatDto> result =  dao.findByQueryObj(new ExamStatDto());   
  
-
-   生成并执行以下查询语句
+         以上查询等效的SQL语句如下：
    
             Select 
-            Min( score ) , 
-            Max( score ) , 
-            Avg( score ) , 
-            Count( 1 ) , 
-            state  
-            From com.levin.commons.dao.domain.support.TestEntity     
+            studentName ,  Avg(score) ,  Sum(score) 
+            From exam_log 
             Where 
-            state NOT IN (  ?1 , ?2 , ?3  ) 
-            AND name LIKE '%' ||  ?4  || '%'  
-            Group By  state
-        
+            subject IN ("语文", "数学", "英语")  AND studentName LIKE '%李%'  
+            Group By studentName
+            Having Avg(score) > 80 and Sum(score) > 260
+            
  
 ### 2 快速上手
 
@@ -158,7 +111,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.29.RELEASE</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.30-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 

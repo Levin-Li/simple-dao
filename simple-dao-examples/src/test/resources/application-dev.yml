@@ -1,17 +1,15 @@
 
 spring:
   datasource:
-#    url: jdbc:h2:./dev.db;MODE=MySQL;
-    url: jdbc:h2:mem:dev.db;MODE=MySQL;
+    url: jdbc:h2:mem:dev;MODE=MySQL;
+#    url: jdbc:h2:file:./dev;MODE=MySQL;
     username: dev
     password: dev
-
 
   jpa:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     show-sql: true
     hibernate:
       ddl-auto: update
-
       naming:
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy

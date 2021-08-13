@@ -168,7 +168,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @return
      */
     SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions);
-    
+
     /**
      * @param isAppend
      * @param joinType

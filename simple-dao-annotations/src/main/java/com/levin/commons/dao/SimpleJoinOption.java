@@ -20,7 +20,6 @@ public @interface SimpleJoinOption {
      * <p>
      * 对应表名
      *
-     *
      * @return
      */
     Class entityClass();

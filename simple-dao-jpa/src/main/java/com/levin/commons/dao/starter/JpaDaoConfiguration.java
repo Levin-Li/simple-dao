@@ -1,22 +1,31 @@
 package com.levin.commons.dao.starter;
 
+import com.alibaba.druid.sql.ast.statement.SQLColumnDefinition;
+import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.util.JdbcUtils;
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.MiniDao;
+import com.levin.commons.dao.PhysicalNamingStrategy;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.JpaDaoImpl;
-import com.levin.commons.service.proxy.EnableProxyBean;
+import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -24,16 +33,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
-import org.springframework.jdbc.core.simple.SimpleJdbcCallOperations;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
+import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
+import java.lang.reflect.AccessibleObject;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 
@@ -48,13 +63,8 @@ import javax.sql.DataSource;
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware {
 
-/*    @Bean
-    @ConditionalOnList({
-            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = FormattingConversionService.class),
-    })
-    FormattingConversionServiceFactoryBean formattingConversionServiceFactoryBean() {
-        return new FormattingConversionServiceFactoryBean();
-    }*/
+//    @DynamicInsert和@DynamicUpdate
+
 
     //    @Autowired
     @PersistenceUnit
@@ -64,6 +74,16 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @PersistenceContext
     private EntityManager defaultEntityManager;
 
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired
+    private JpaProperties jpaProperties;
+
+    @Autowired
+    DataSourceProperties dataSourceProperties;
+
+    public static final String CFG_KEY = "simpledao.alter_table_comment";
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
@@ -129,6 +149,211 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.context = applicationContext;
+    }
+
+
+    @SneakyThrows
+    @PostConstruct
+    void init() {
+
+        try {
+            initTableComments();
+        } catch (Exception e) {
+            log.warn("update table comments error ", e);
+        }
+
+    }
+
+    @SneakyThrows
+    void initTableComments() {
+
+        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault(CFG_KEY, "false"));
+
+        if (!alterTableComment) {
+            log.info("*** you can config [spring.jpa.properties.{} = true] to enable init table comments.", CFG_KEY);
+            return;
+        }
+
+        final Map<String, String> columnDefinitions = new HashMap<>(loadTableColumnDefinitions());
+
+        if (columnDefinitions.isEmpty()) {
+            columnDefinitions.putAll(loadTableColumnDefinitionsByDefault());
+        }
+
+        JpaDao simpleDao = newJpaDao();
+
+        PhysicalNamingStrategy namingStrategy = simpleDao.getNamingStrategy();
+
+        StringBuilder sql = new StringBuilder();
+
+        entityManagerFactory.getMetamodel().getEntities().forEach(entityType -> {
+
+            Class<?> entityClass = entityType.getJavaType();
+
+            Schema schemaOnTable = entityClass.getAnnotation(Schema.class);
+
+            String tableName = simpleDao.getTableName(entityClass);
+
+            if (schemaOnTable != null
+                    && StringUtils.hasText(schemaOnTable.description())) {
+                sql.append(String.format("alter table `%s` comment '%s';\n", tableName, schemaOnTable.description()));
+            }
+
+            entityType.getAttributes().forEach(attribute -> {
+
+
+                Attribute.PersistentAttributeType type = attribute.getPersistentAttributeType();
+
+                String comment = "";
+
+                Schema schema = ((AccessibleObject) attribute.getJavaMember()).getAnnotation(Schema.class);
+
+                if (!StringUtils.hasText(comment)
+                        && schema != null && StringUtils.hasText(schema.description())) {
+                    comment = schema.description();
+                }
+
+                Desc desc = ((AccessibleObject) attribute.getJavaMember()).getAnnotation(Desc.class);
+
+                if (!StringUtils.hasText(comment)
+                        && desc != null && StringUtils.hasText(desc.value())) {
+                    comment = desc.value();
+                }
+
+                if (StringUtils.hasText(comment)
+                        && Attribute.PersistentAttributeType.BASIC.equals(type)) {
+
+                    String columnName = namingStrategy.toPhysicalColumnName(attribute.getName(), null);
+
+                    sql.append(String.format("alter table `%s` modify column `%s` %s comment '%s';\n",
+                            tableName, columnName,
+                            columnDefinitions.getOrDefault((tableName + "." + columnName).toUpperCase(), ""),
+                            comment));
+                }
+
+            });
+
+            log.info("*** table and column comments <<< {} >>>", sql);
+
+            if (sql.length() > 0 && jpaProperties.isGenerateDdl()) {
+                log.info("*** alter table and column comments...");
+                jdbcTemplate(dataSource).execute(sql.toString());
+            }
+
+        });
+
+    }
+
+    protected Map<String, String> loadTableColumnDefinitionsByDefault() throws SQLException {
+
+        final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
+
+        // String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+
+        Connection connection = dataSource.getConnection();
+
+        try {
+
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            ResultSet tablesResultSet = metaData.getTables(connection.getCatalog(), connection.getSchema(), null, new String[]{"TABLE"});
+
+            while (tablesResultSet.next()) {
+
+                String tableName = tablesResultSet.getString("TABLE_NAME");
+
+                ResultSet columnRS = metaData.getColumns(connection.getCatalog(), connection.getSchema(), tableName, null);
+
+                ResultSetMetaData columnRSMetaData = columnRS.getMetaData();
+                int n = columnRSMetaData.getColumnCount();
+
+                Map<String, String> colNames = new HashMap<>();
+
+                while (n-- >= 0) {
+                    colNames.put(columnRSMetaData.getColumnName(n), columnRSMetaData.getColumnTypeName(n)
+                            + ":" + columnRSMetaData.getScale(n) + ":" + columnRSMetaData.getPrecision(n)
+                            + ":" + columnRSMetaData.getColumnLabel(n));
+
+                }
+
+                while (columnRS.next()) {
+
+                    log.debug(" " + columnRS.toString());
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            log.warn(" Can't load table column definitions " + e.getMessage());
+        } finally {
+            connection.close();
+        }
+
+        return columnDefinitions;
+
+    }
+
+    protected Map<String, String> loadTableColumnDefinitions() throws SQLException {
+
+        final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
+
+        String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+
+        if (!StringUtils.hasText(dbType)) {
+            log.warn("can't recognition db type by {} {}", dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+            return columnDefinitions;
+        }
+
+        Connection connection = dataSource.getConnection();
+
+        try {
+
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            log.info("*** {} DB  *** Catalog:{} Schema:{} Version:{}.{} userName:{} determineUrl:{} :determineDriverClassName{}", dbType, connection.getCatalog(), connection.getSchema()
+                    , metaData.getJDBCMajorVersion(), metaData.getJDBCMinorVersion(), metaData.getUserName()
+                    , dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+
+            ResultSet tablesResultSet = metaData.getTables(connection.getCatalog(), connection.getSchema(), null, new String[]{"TABLE"});
+
+            while (tablesResultSet.next()) {
+
+                String tableName = tablesResultSet.getString("TABLE_NAME");
+
+                String tableSql = tablesResultSet.getString("SQL");
+
+                log.debug("*** table {} --> <<< {} >>>", tableName, tableSql);
+
+                tableSql = tableSql.replace("CREATE CACHED TABLE ", "CREATE TABLE ");
+
+                try {
+
+                    SQLCreateTableStatement tableStatement = SQLParserUtils.createSQLStatementParser(tableSql, dbType, true)
+                            .getSQLCreateTableParser().parseCreateTable();
+
+                    tableStatement.getTableElementList().stream()
+                            .filter(sqlTableElement -> sqlTableElement instanceof SQLColumnDefinition)
+                            .map(sqlTableElement -> (SQLColumnDefinition) sqlTableElement)
+                            .forEach(sqlTableElement -> {
+                                String columnName = sqlTableElement.getColumnName().replace("\"", "");
+                                sqlTableElement.setName("");
+                                String columnDefinition = sqlTableElement.toString();
+                                columnDefinitions.put((tableName + "." + columnName).toUpperCase(), columnDefinition);
+                            });
+
+                } catch (Exception e) {
+                    log.warn("parse sql error, sql:" + tableSql, e);
+                }
+
+            }
+        } catch (Exception e) {
+            log.warn(" Can't load table column definitions " + e.getMessage());
+        } finally {
+            connection.close();
+        }
+
+        return columnDefinitions;
     }
 
 }

@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 <#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -39,8 +41,10 @@ import ${entityClassPackage}.*;
 @Schema(description = "查找${desc}")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-<#--@EqualsAndHashCode(callSuper = true)-->
+<#if pkField?exists>
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+</#if>
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
@@ -48,10 +52,11 @@ import ${entityClassPackage}.*;
 public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#if pkField?exists>
     @Schema(description = "${pkField.desc}")
     @NotNull
     @Eq(require = true)
     private ${pkField.typeName} ${pkField.name};
-
+</#if>
 
 }

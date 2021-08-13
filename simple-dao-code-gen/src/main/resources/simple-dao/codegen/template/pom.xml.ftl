@@ -7,7 +7,8 @@
     <parent>
         <groupId>${parent.groupId}</groupId>
         <artifactId>${parent.artifactId}</artifactId>
-        <version>${parent.version}</version>
+<#--        <version>${parent.version}</version>-->
+        <version>${r"${revision}"}</version>
     </parent>
 
 <#--  @Author Auto gen by simple-dao-codegen ${now} -->
@@ -43,6 +44,14 @@
                 <version>${r"${project.version}"}</version>
             </dependency>
 
+       <#else>
+
+           <dependency>
+               <groupId>org.springframework.boot</groupId>
+               <artifactId>spring-boot-starter-security</artifactId>
+               <scope>provided</scope>
+           </dependency>
+
         </#if>
 
         <#if services??>
@@ -61,9 +70,22 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'service'>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -110,15 +132,34 @@
             </dependency>
 
 
-
         </#if>
 
         <#if moduleType?? && moduleType == 'controller' >
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <scope>provided</scope>
             </dependency>
+
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'testcase' >
@@ -134,10 +175,14 @@
                 <artifactId>validation-api</artifactId>
             </dependency>
 
-
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
             </dependency>
 
             <dependency>
@@ -145,6 +190,10 @@
                 <artifactId>druid</artifactId>
             </dependency>
 
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>com.querydsl</groupId>
@@ -178,6 +227,10 @@
                 <artifactId>simple-dao-jpa-starter</artifactId>
             </dependency>
 
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -205,6 +258,10 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+            </dependency>
 
         </#if>
 
@@ -218,6 +275,96 @@
 
             </plugins>
         </pluginManagement>
+
+        <plugins>
+
+                <#if moduleType?? && moduleType == 'testcase'>
+
+                <plugin>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <executions>
+
+                        <execution>
+                            <id>copy-biz-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+
+                            <configuration>
+                                <!--  包含的业务包名  -->
+                                <includeGroupIds>${r"${parent.groupId}"}</includeGroupIds>
+                                <outputDirectory>${r"${project.build.directory}/biz-libs"}</outputDirectory>
+                            </configuration>
+                        </execution>
+
+                        <execution>
+                            <id>copy-third-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <!--  排除的业务包名  -->
+                                <excludeGroupIds>${r"${parent.groupId}"}</excludeGroupIds>
+                                <outputDirectory>${r"${project.build.directory}/third-libs"}</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+
+                </plugin>
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+
+                    <configuration>
+                        <!--   ZIP 布局 -->
+                        <layout>ZIP</layout>
+                        <includes>
+                            <include>
+                                <!--   不包含任何依赖 -->
+                                <groupId>nothing</groupId>
+                                <artifactId>nothing</artifactId>
+                            </include>
+                        </includes>
+                    </configuration>
+
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>copy-shell-file</id>
+                            <!-- here the phase you need -->
+                            <phase>package</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${r"${project.build.directory}"}</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>${r"${project.basedir}/src/main/resources/shell"}</directory>
+                                        <!--    <filtering>true</filtering> -->
+                                    </resource>
+                                </resources>
+
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+        </#if>
+
+       </plugins>
 
     </build>
 

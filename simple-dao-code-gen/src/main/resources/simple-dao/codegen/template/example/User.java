@@ -20,6 +20,7 @@ import javax.persistence.*;
 @Accessors(chain = true)
 @ToString(exclude = "group")
 @FieldNameConstants
+@Schema(description = "用户")
 public class User
         extends AbstractNamedEntityObject<Long>
         implements StatefulObject<String> {

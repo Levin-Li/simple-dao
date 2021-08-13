@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 <#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -15,7 +17,6 @@ import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
 import javax.validation.constraints.*;
-import javax.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -24,7 +25,6 @@ import java.util.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
 
-
 ////////////////////////////////////
 //自动导入列表
 <#list importList as imp>
@@ -32,55 +32,47 @@ import ${entityClassPackage}.*;
 </#list>
 ////////////////////////////////////
 
-
 /**
- *  编辑${desc}
- *  Auto gen by simple-dao-codegen ${.now}
+ *  统计${desc}
+ *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "编辑${desc}")
+@Schema(description = "统计${desc}")
 @Data
-@AllArgsConstructor
+
+<#if pkField?exists>
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+</#if>
+
 @NoArgsConstructor
 @Builder
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
-@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
-//默认更新注解
-@Update
+@TargetOption(nativeQL = false, entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} implements ServiceReq {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
-    @Schema(description = "${pkField.desc}")
-    @NotNull
-    @Eq(require = true)
-    private ${pkField.typeName} ${pkField.name};
+    @Schema(description = "统计${desc}结果")
+    @Data
+    public static class StatInfo  implements Serializable  {
 
-<#list fields as field>
-    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
-    <#list field.annotations as annotation>
-    <#if !(annotation?string)?contains("@NotNull")>
-    ${annotation}
-    </#if>
-    </#list>
-    @Schema(description = "${field.desc}")
-    private ${field.typeName} ${field.name};
+        //@Schema(description = "累加")
+        //@Sum
+        //Double amount;
 
-    </#if>
-</#list>
-
-
-    public ${className}(${pkField.typeName} ${pkField.name}) {
-        this.${pkField.name} = ${pkField.name};
+        @Schema(description = "条数大于0")
+        @Count(havingOp = Op.Gt)
+        Integer cnt = 0;
     }
 
+    @Schema(description = "名称模糊匹配")
+    @Contains
+    String name;
 
-    @PostConstruct
-    public void preUpdate() {
-    //更新之前初始化数据
+    @Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyyMMdd hh24:mm:ss"})  // 参数将用 - 号分隔，自动转换成 Date 类型
+    String betweenCreateTime = "20190101-20220201"; //生成语句 createTime between ? AND ?
 
-    }
 
 }

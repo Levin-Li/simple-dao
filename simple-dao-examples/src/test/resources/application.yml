@@ -25,17 +25,6 @@ spring:
         url-pattern: /druid/*
         allow: " "
 
-  jpa:
-    show-sql: true
-    generate-ddl: true
-    database: H2
-    open-in-view: false
-
-#      MYSQL 配置选项
-#      properties:
-#        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
-#        hibernate.id.new_generator_mappings: false
-#        hibernate.dialect.storage_engine: innodb
 
 logging:
   level:

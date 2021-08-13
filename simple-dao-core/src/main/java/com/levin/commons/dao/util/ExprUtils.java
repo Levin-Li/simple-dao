@@ -92,11 +92,13 @@ public abstract class ExprUtils {
                                  boolean complexType, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
+                                 //    Consumer<String> fieldExprConsumer,
                                  @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
                                  Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
 
-        String fieldExpr = aroundColumnPrefixFunc.apply(c.domain(), name);
+        //优先使用 fieldExpr
+        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(c.domain(), name);
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -124,7 +126,7 @@ public abstract class ExprUtils {
 
         if (isFieldExpand) {
             //如果字段表达式中有CASE 函数
-            fieldExpr = genCaseExpr(ctxEvalFunc, fieldExpr, c.fieldCases());
+            fieldExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, fieldExpr, c.fieldCases());
 
             //如果字段表达式中有函数，用函数包围
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
@@ -163,7 +165,7 @@ public abstract class ExprUtils {
                 hasDynamicExpr = true;
 
             } else if (isExistsOp
-                    && !isNotEmptyAnnotation(ctxEvalFunc, c, op)
+                    && !isNotEmptyAnnotation(aroundColumnPrefixFunc, ctxEvalFunc, c, op)
                     && holder.value instanceof CharSequence) {
 
                 //如果是 Exist 操作，并且没有配置
@@ -240,6 +242,9 @@ public abstract class ExprUtils {
             //  fieldExpr = autoAroundParentheses("", fieldExpr, "");
         }
 
+//        if (fieldExprConsumer != null) {
+//            fieldExprConsumer.accept(fieldExpr);
+//        }
 
         final String paramKey = "P_" + Math.abs(paramExpr.hashCode()) + "_" + System.currentTimeMillis();
 
@@ -261,7 +266,7 @@ public abstract class ExprUtils {
 
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
-            paramExpr = genCaseExpr(ctxEvalFunc, paramExpr, c.paramCases());
+            paramExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());
             paramExpr = genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs());
         }
 
@@ -451,20 +456,21 @@ public abstract class ExprUtils {
     /**
      * 测试一个注解是非空注解
      *
+     * @param aroundColumnPrefixFunc
      * @param ctxEvalFunc
      * @param c
      * @param op
      * @return
      */
-    public static boolean isNotEmptyAnnotation(Function<String, Object> ctxEvalFunc, C c, Op op) {
+    public static boolean isNotEmptyAnnotation(@NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> ctxEvalFunc, C c, Op op) {
 
         if (op == null) {
             op = c.op();
         }
 
-        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(ctxEvalFunc, "", c.fieldCases()) : "";
+        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.fieldCases()) : "";
 
-        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(ctxEvalFunc, "", c.paramCases()) : "";
+        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.paramCases()) : "";
 
         fieldExpr = op.isNeedFieldExpr() ? genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs()) : fieldExpr;
 
@@ -476,16 +482,18 @@ public abstract class ExprUtils {
 
     }
 
-
     /**
      * 构建子查询语句及参数
      *
      * @param holder
      * @return
      */
-    public static String buildSubQuery(ValueHolder holder, MiniDao dao, boolean isNative, Map<String, Object> context) {
+    public static String buildSubQuery(ValueHolder holder, MiniDao dao, final boolean isNative, Map<String, Object> context) {
 
         SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative);
+
+        //不允许改变NativeQL
+        selectDao.setCanChangeNativeQL(false);
 
         if (context != null) {
             selectDao.setContext(context);
@@ -521,7 +529,8 @@ public abstract class ExprUtils {
      * @param cases
      * @return
      */
-    public static String genCaseExpr(Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+    public static String genCaseExpr(C c, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+
         return Stream.of(cases)
                 //过滤条件匹配的 case
                 .filter(aCase -> Optional.ofNullable(conditionEvalFunc).map(func -> (boolean) func.apply(aCase.condition())).orElse(true))
@@ -530,7 +539,8 @@ public abstract class ExprUtils {
                 .map(aCase ->
                         String.join(" ", "CASE",
                                 //如果原值替换变量
-                                Case.ORIGIN_EXPR.equals(aCase.column()) ? expr : aCase.column(),
+                                C.ORIGIN_EXPR.equals(aCase.column()) ? expr :
+                                        (aroundColumnPrefixFunc == null ? aCase.column() : aroundColumnPrefixFunc.apply(c != null ? c.domain() : null, aCase.column())),
                                 Stream.of(aCase.whenOptions())
                                         .map(when -> String.join(" ", "WHEN", when.whenExpr(), "THEN", when.thenExpr()))
                                         .collect(Collectors.joining(" "))
@@ -566,7 +576,7 @@ public abstract class ExprUtils {
                                                 //过滤空
                                                 .filter(StringUtils::hasText)
                                                 //如果参数是一个替换变量，直接替换成原表达式
-                                                .map(param -> Func.ORIGIN_EXPR.equals(param) ? expr : param)
+                                                .map(param -> C.ORIGIN_EXPR.equals(param) ? expr : param)
                                                 //过滤空
                                                 .filter(StringUtils::hasText)
                                                 //合并参数，并用逗号分隔
@@ -574,30 +584,6 @@ public abstract class ExprUtils {
 
                                         //4、后包围
                                         , func.suffix())
-
-/*                            StringBuilder sb = new StringBuilder();
-
-                            for (String param : func.params()) {
-
-                                if (StringUtils.isEmpty(param)) {
-                                    continue;
-                                }
-
-                                if (sb.length() > 0) {
-                                    sb.append(" , ");
-                                }
-
-                                sb.append(Func.DEFAULT_PARAM.equals(param) ? expr : param);
-                            }
-
-                            //如果有参数值
-                            if (sb.length() > 0) {
-                                expr = sb.toString();
-                            }
-
-                            return func.value() + func.prefix() + expr + func.suffix();*/
-
-                        //  }
                         ,
                         (r1, r2) -> r2 //不是并行流的时候，这个表达式无意义
                 );
@@ -721,11 +707,12 @@ public abstract class ExprUtils {
 
             Object v = ObjectUtil.findValue(key, true, isThrowExWhenKeyNotFound, contexts);
 
-            if (v == null) {
-                throw new StatementBuildException(String.format("[{%s}] var {%s} not found on context", oldTxt, key));
-            }
+//            if (v == null) {
+//                throw new StatementBuildException(String.format("expr {%s} var {%s} not found or null value in context", oldTxt, key));
+//            }
 
-            return v.toString();
+//            允许返回null 字符串
+            return "" + v;
         });
 
         //替换字段名称

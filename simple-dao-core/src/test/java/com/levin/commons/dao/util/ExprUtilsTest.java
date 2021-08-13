@@ -1,5 +1,6 @@
 package com.levin.commons.dao.util;
 
+import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.E_Func;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.misc.Case;
@@ -21,7 +22,7 @@ class ExprUtilsTest {
         Map<String, Object> caseMap = MapUtils
                 .put(E_Case.column, (Object) "column_name")
                 .put(E_Case.condition, "")
-                .put(E_Case.elseExpr, Case.NULL_VALUE)
+                .put(E_Case.elseExpr, C.NULL_VALUE)
                 .build();
 
 
@@ -46,13 +47,13 @@ class ExprUtilsTest {
         Case aCase = (Case) ClassUtils.newAnnotation(Case.class, null, caseMap, false);
 
 
-        String initExpr = ExprUtils.genCaseExpr(null, "initExpr", aCase);
+        String initExpr = ExprUtils.genCaseExpr(null,null,null, "initExpr", aCase);
 
         caseMap.put(E_Case.column, "");
 
         aCase = (Case) ClassUtils.newAnnotation(Case.class, null, caseMap, false);
 
-        initExpr = ExprUtils.genCaseExpr(c -> true, "initExpr", aCase);
+        initExpr = ExprUtils.genCaseExpr(null,null,c -> true, "initExpr", aCase);
 
         System.out.println(initExpr);
 
@@ -64,7 +65,7 @@ class ExprUtilsTest {
         Map<String, Object> value = MapUtils
                 .put(E_Func.value, (Object) "Fun1")
                 .put(E_Func.prefix, "( ")
-                .put(E_Func.params, new String[]{Func.ORIGIN_EXPR, "param2"})
+                .put(E_Func.params, new String[]{C.ORIGIN_EXPR, "param2"})
                 .put(E_Func.suffix, " )")
                 .build();
 
@@ -79,7 +80,7 @@ class ExprUtilsTest {
         Func func3 = (Func) ClassUtils.newAnnotation(Func.class, null, value, false);
 
         value.put(E_Func.value, "Fun4");
-        value.put(E_Func.params, new String[]{Func.ORIGIN_EXPR});
+        value.put(E_Func.params, new String[]{C.ORIGIN_EXPR});
         Func func4 = (Func) ClassUtils.newAnnotation(Func.class, null, value, false);
 
         String funcExpr = ExprUtils.genFuncExpr(null, " time ", func1, func2, func3, func4);

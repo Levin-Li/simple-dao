@@ -7,6 +7,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -86,6 +88,8 @@ public class CodeGeneratorMojo extends BaseMojo {
      */
     @Parameter
     protected Map<String, Object> codeGenParams;
+
+    final ResourcePatternResolver resourcePatternResolver =new PathMatchingResourcePatternResolver();
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
@@ -185,6 +189,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.splitDir(splitDir);
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
+
+            getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
             //生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()

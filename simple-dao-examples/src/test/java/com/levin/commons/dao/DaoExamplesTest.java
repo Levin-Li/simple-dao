@@ -265,7 +265,7 @@ public class DaoExamplesTest {
 
             group.setScore(Math.abs(random.nextInt(100)));
 
-            dao.create(group);
+            group = dao.create(group);
 
             long uCount = 3 * gCount;
 
@@ -346,11 +346,11 @@ public class DaoExamplesTest {
 
         List<SimpleUserQO.QResult> list = dao.findByQueryObj(new SimpleUserQO());
 
-        Assert.isTrue(list.size()>0,"空");
-        Assert.notNull(list.get(0).getName(),"空");
-        Assert.notNull(list.get(0).getScore(),"空");
+        Assert.isTrue(list.size() > 0, "空");
+        Assert.notNull(list.get(0).getName(), "空");
+        Assert.notNull(list.get(0).getScore(), "空");
 
-      Object  byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
+        Object byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
 
@@ -396,6 +396,19 @@ public class DaoExamplesTest {
         // System.out.println(byQueryObj1);
 
         assert byQueryObj1.size() > 0;
+
+    }
+
+    @Test
+    public void testTableJoin4() {
+
+        List<User > byQueryObj1 = dao.findByQueryObj(new TableJoin4());
+
+        // System.out.println(byQueryObj1);
+
+        assert byQueryObj1.size() > 0;
+
+        assert byQueryObj1.get(0) instanceof User;
 
     }
 
@@ -857,6 +870,8 @@ public class DaoExamplesTest {
         List<GroupJoinFetchDTO> byQueryObj = dao.findByQueryObj(GroupJoinFetchDTO.class, new GroupJoinFetchDTO());
 
         Object user = byQueryObj.get(0);
+
+        List byQueryObjs = dao.findByQueryObj(null, new GroupJoinFetchDTO());
 
         System.out.println(byQueryObj);
     }
@@ -1457,7 +1472,7 @@ public class DaoExamplesTest {
 
         EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
 
-        int n = dao.updateTo(E_User.ENTITY_NAME, "u")
+        int n = dao.updateTo(E_User.E_ENTITY_NAME, "u")
                 .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
                 .set(E_User.lastUpdateTime, new Date())
                 .or()

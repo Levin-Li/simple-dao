@@ -29,7 +29,8 @@ public @interface Fetch {
     }
 
     /**
-     * 需要被拷贝目标属性名称
+     * 抓取的属性名称
+     *
      * <p>
      * 被注解的字段值，将从目标对象的拷贝，当 value 有指定值时，将拷贝 value 指定的属性值。
      * <p>
@@ -49,20 +50,23 @@ public @interface Fetch {
      *
      *
      * <p>
-     * 当 onlyForQueryObject 为 false 时，这个属性会被关联抓取
+     * 当 isBindToField 为 false 时，这个属性会被关联抓取
      */
     String value() default "";
 
 
     /**
-     * 默认对查询对象会产生 JPA 的 join fetch 指令，对结果对象需要特别 把 onlyForQueryObject 设置为 false 才会生成join fetch 指令。
+     * 是否绑定到当前字段
+     * <p>
+     * false 不绑定到字段，只是设置抓取
      *
      * @return
      */
-    boolean onlyForQueryObject() default true;
+    boolean isBindToField() default true;
 
     /**
      * 需要连接抓取的属性列表
+     *
      * <p>
      * use value
      * <p>

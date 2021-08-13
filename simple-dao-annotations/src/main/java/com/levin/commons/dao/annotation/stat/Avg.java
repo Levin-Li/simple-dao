@@ -183,6 +183,8 @@ public @interface Avg {
      * 别名
      * 整个表达后的别名
      *
+     * 如果为 "NULL" 值，则没有别名
+     *
      * @return
      */
     String alias() default "";

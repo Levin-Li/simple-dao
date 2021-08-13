@@ -48,7 +48,7 @@ public final class ServiceModelCodeGenerator {
     private static final Logger logger = LoggerFactory.getLogger(ServiceModelCodeGenerator.class);
 
     public static final String DEL_EVT_FTL = "del_evt.ftl";
-    public static final String EDIT_EVT_FTL = "edit_evt.ftl";
+    public static final String UPDATE_EVT_FTL = "update_evt.ftl";
     public static final String QUERY_EVT_FTL = "query_evt.ftl";
     public static final String SERVICE_FTL = "service.ftl";
     public static final String SERVICE_IMPL_FTL = "service_impl.ftl";
@@ -217,6 +217,12 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
                 + File.separator + "resources" + File.separator + "application.yml");
 
+        genFileByTemplate("testcase/shell/startup.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "shell" + File.separator + "startup.sh");
+
+        genFileByTemplate("testcase/shell/shutdown.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+                + File.separator + "resources" + File.separator + "shell" + File.separator + "shutdown.sh");
+
         //替换成 test
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
@@ -256,9 +262,34 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
 
-        fileName = "ModuleWebMvcConfigurer.java";
+
+        fileName = String.join(File.separator, "config", "ModuleWebMvcConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), "config", fileName));
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "config","ModuleWebControllerAdvice.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "config","ModuleSwaggerConfigurer.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "config","ModuleVariableResolverConfigurer.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+        fileName = String.join(File.separator, "config","ModuleWebSecurityConfigurer.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+
+        fileName = String.join(File.separator, "aspect","ModuleWebControllerAspect.java");
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
         String pkgDir = serviceDir + File.separator
@@ -267,12 +298,11 @@ public final class ServiceModelCodeGenerator {
 
         String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
 
-
-        genFileByTemplate("ServicePlugin.ftl", params, prefix + "Plugin.java");
+        genFileByTemplate("ModulePlugin.ftl", params, pkgDir + "ModulePlugin.java");
         genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
         genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
 
-        genFileByTemplate("SpringConfiguration.ftl", params, prefix + "SpringConfiguration.java");
+        genFileByTemplate("ModuleStarterConfiguration.ftl", params, pkgDir + "ModuleStarterConfiguration.java");
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
@@ -539,7 +569,9 @@ public final class ServiceModelCodeGenerator {
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
-        Map<String, Object> params = MapUtils.put(threadContext.getAll(true)).build();
+        Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
+                .put("modulePackageName",modulePackageName())
+                .build();
 
         buildInfo(entityClass, fields, serviceDir, params);
 
@@ -620,7 +652,7 @@ public final class ServiceModelCodeGenerator {
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
-       // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
+        // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
         final String pkgName = servicePackage() + ".req";
 
@@ -629,8 +661,8 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        genCode(entityClass, EDIT_EVT_FTL, fields, srcDir,
-                pkgName, "Edit" + entityClass.getSimpleName() + "Req", mapConsumer);
+        genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
+                pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,

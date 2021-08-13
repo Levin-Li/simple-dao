@@ -55,6 +55,10 @@ public @interface C {
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
     String NOT_NULL = "NOT_EMPTY";
 
+    /**
+     * 空值
+     */
+    String NULL_VALUE = "NULL";
 
     /**
      * 原表达式
@@ -90,6 +94,8 @@ public @interface C {
 
     /**
      * 字段归属的域，通常是表的别名
+     * <p>
+     * 如果为 "NULL" 值，则忽略这个值
      *
      * @return
      */
@@ -230,6 +236,13 @@ public @interface C {
 
 
     /**
+     * 强行设置字段表达式
+     *
+     * @return
+     */
+    String fieldExpr() default "";
+
+    /**
      * 子查询或是表达式
      * <p>
      * 如果配置这个属性，将覆盖原有的占位符表达式
@@ -241,6 +254,16 @@ public @interface C {
 
     String paramExpr() default "";
 
+    /**
+     * 对当前字段转换成字符串的模板
+     * <p>
+     * 通常是 group by 时间字段时使用
+     * <p>
+     * 支持格式 y m d h m s 代表年 月 日 时 分 秒
+     *
+     * @return
+     */
+    String toCharPattern() default "";
 
     /**
      * 数据类型转换模板

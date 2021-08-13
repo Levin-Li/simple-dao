@@ -1,6 +1,6 @@
 package ${packageName};
 
-
+import static ${modulePackageName}.ModuleOption.*;
 import ${entityClassPackage}.*;
 import ${entityClassName};
 
@@ -52,7 +52,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +83,9 @@ public class ${className} {
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};
 
+<#if pkField?exists>
     private ${pkField.typeName} ${pkField.name};
+</#if>
 
     @Before
     public void before() throws Exception {
@@ -98,40 +100,26 @@ public class ${className} {
     public void create${entityName}Test() {
 
         Create${entityName}Req req = new Create${entityName}Req();
+
 <#list fields as field>
     <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefValue && !field.jpaEntity) >
         <#if field.name!="id">
-             req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
+            // req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
         </#if>
 
     </#if>
 </#list>
 
-        ApiResp<${pkField.typeName}> resp = ${serviceName?uncap_first}.create(req);
+<#if pkField?exists>
+       ${pkField.typeName} ${pkField.name}  = ${serviceName?uncap_first}.create(req);
 
-        log.debug("创建${desc}->" + resp);
+        log.debug("新增${desc}->" + ${pkField.name});
 
-        ${pkField.name} = resp.getData();
-        Assert.assertTrue(resp.isSuccessful());
+        Assert.assertTrue(${pkField.name} != null);
+<#else>
+        Assert.assertTrue(${serviceName?uncap_first}.create(req));
+</#if>
 
-    }
-
-    @Test
-    public void edit${entityName}Test() {
-
-        Edit${entityName}Req req = new Edit${entityName}Req();
-        req.set${pkField.name?cap_first}(${pkField.name});
-<#list fields as field>
-    <#if !field.notUpdate && field.testValue?? && field.baseType>
-        req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
-    </#if>
-</#list>
-
-        ApiResp resp = ${serviceName?uncap_first}.edit(req);
-
-        log.debug("修改${desc}->" + resp);
-
-        Assert.assertTrue(resp.isSuccessful());
     }
 
 
@@ -139,14 +127,15 @@ public class ${className} {
     public void query${entityName}Test() {
 
         Query${entityName}Req req = new Query${entityName}Req();
+
 <#list fields as field>
     <#if field.typeName=='Date'>
-        //req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
-        //req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
+        // req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
+        // req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
     <#elseif !field.jpaEntity && field.baseType>
-        req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
+        // req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
     <#elseif field.lazy!>
-        req.setLoad${field.name?cap_first}(true);//加载${field.desc}
+        // req.setLoad${field.name?cap_first}(true);//加载${field.desc}
     </#if>
 </#list>
 
@@ -158,15 +147,41 @@ public class ${className} {
     }
 
     @Test
+    public void update${entityName}Test() {
+
+         Update${entityName}Req req = new Update${entityName}Req();
+
+    <#if pkField?exists>
+         req.set${pkField.name?cap_first}(${pkField.name});
+    </#if>
+
+
+    <#list fields as field>
+        <#if !field.notUpdate && field.testValue?? && field.baseType>
+           // req.set${field.name?cap_first}(${field.testValue});//${field.desc} ${field.required?string('必填','')}
+        </#if>
+    </#list>
+
+          int resp = ${serviceName?uncap_first}.update(req);
+
+          log.debug("更新${desc}-> " + resp);
+
+          Assert.assertTrue(resp > 0);
+    }
+
+    @Test
     public void delete${entityName}Test() {
 
         Delete${entityName}Req req = new Delete${entityName}Req();
+
+    <#if pkField?exists>
         req.set${pkField.name?cap_first}(${pkField.name});
+    </#if>
 
-        ApiResp resp = ${serviceName?uncap_first}.delete(req);
+        int n = ${serviceName?uncap_first}.delete(req);
 
-        log.debug("删除${desc}->" + resp);
+        log.debug("删除${desc}->" + n);
 
-        Assert.assertTrue(resp.isSuccessful());
+        Assert.assertTrue(n > 0);
     }
 }

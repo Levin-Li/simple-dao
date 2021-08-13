@@ -66,3 +66,6 @@ logging:
     root: info
     com.levin: trace
 
+
+swagger:
+  enabled: true

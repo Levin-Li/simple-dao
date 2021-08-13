@@ -1,6 +1,10 @@
 package ${modulePackageName}.config;
 
+import static ${modulePackageName}.ModuleOption.*;
+import ${modulePackageName}.*;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -12,11 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
 
-import ${modulePackageName}.*;
 
-
-@Configuration("${modulePackageName}.config.ModuleWebMvcConfigurer")
+@Configuration(PLUGIN_PREFIX + "ModuleWebMvcConfigurer")
 @Slf4j
+@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
 
@@ -32,7 +35,7 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
             if (isCorsPreflightRequest
                     && HttpMethod.OPTIONS.toString().equals(request.getMethod())
-                    && request.getRequestURI().startsWith("/" + ModuleOption.API_PATH)) {
+                    && request.getRequestURI().startsWith("/" + API_PATH)) {
 
                 //跨域预检请求
                 //Access-Control-Max-Age: <delta-seconds>
@@ -74,18 +77,18 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
 
-        registry.addResourceHandler("/" + ModuleOption.ADMIN_PATH + "/**")
-                .addResourceLocations("classpath:/public/" + ModuleOption.ADMIN_PATH);
+        registry.addResourceHandler("/" + ADMIN_PATH + "/**")
+                .addResourceLocations("classpath:/public/" + ADMIN_PATH);
 
-        registry.addResourceHandler("/" + ModuleOption.H5_PATH + "/**")
-                .addResourceLocations("classpath:/public/" + ModuleOption.H5_PATH);
+        registry.addResourceHandler("/" + H5_PATH + "/**")
+                .addResourceLocations("classpath:/public/" + H5_PATH);
 
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
 
-        registry.addMapping("/" + ModuleOption.API_PATH + "/**")
+        registry.addMapping("/" + API_PATH + "/**")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("*")

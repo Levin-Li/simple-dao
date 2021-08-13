@@ -20,6 +20,7 @@ import javax.persistence.Id;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
+@Schema(description = "部门")
 public class Group
         extends AbstractTreeObject<Long, Group>
         implements StatefulObject<String> {

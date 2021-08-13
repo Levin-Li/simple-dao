@@ -4,6 +4,7 @@ package com.levin.commons.dao.annotation.select;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.Case;
+import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -46,6 +47,14 @@ public @interface Select {
      */
 //    Op op() default Op.Select;
 
+
+    /**
+     * 强行设置字段表达式
+     *
+     * @return
+     */
+    String fieldExpr() default "";
+
     /**
      * 查询字段名称，默认为字段的属性名称
      * <p>
@@ -55,6 +64,12 @@ public @interface Select {
      */
     String value() default "";
 
+    /**
+     * 统计字段的排序
+     *
+     * @return
+     */
+    OrderBy[] orderBy() default {};
 
     /**
      * aving 操作
@@ -165,23 +180,11 @@ public @interface Select {
     /**
      * 字段归属的域，通常是表的别名
      *
-     * @return
-     */
-    String domain() default "";
-
-    /**
-     * 子查询表达式
-     * <p>
-     * <p/>
-     * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
-     * <p>
-     * <p>
-     * 被注解的字段，
-     * 如果是是数组，列表，如果
+     * 如果为 "NULL" 值，则忽略这个值
      *
      * @return
      */
-    //String paramExpr() default "";
+    String domain() default "";
 
 
     /**
@@ -196,6 +199,8 @@ public @interface Select {
      * 别名
      * 整个表达后的别名
      * 默认为字段名
+     *
+     * 如果为 "NULL" 值，则没有别名
      *
      * @return
      */

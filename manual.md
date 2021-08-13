@@ -27,7 +27,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.29.RELEASE</version>
+            <version>2.2.30-SNAPSHOT</version>
         </dependency>
         
        
@@ -45,7 +45,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.29.RELEASE</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.30-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -578,13 +578,13 @@
 
 #### 3.1 Dao核心接口
 
-*    1-[SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
+*    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
-*    2-[SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
+*    2 - [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
 
-*    3-[UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
+*    3 - [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
 
-*    4-[DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
+*    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
 
 ##### 3.1.1 SimpleDao 常用方法
@@ -1374,7 +1374,7 @@
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.29.RELEASE</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.30-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
               
         

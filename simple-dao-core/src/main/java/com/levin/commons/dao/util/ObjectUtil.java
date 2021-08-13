@@ -23,6 +23,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Predicate;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -35,11 +36,13 @@ public abstract class ObjectUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectUtil.class);
 
-
     public static final GenericConversionService conversionService = new DefaultFormattingConversionService();
 
     private static final AnnotationFormatterFactory<DateTimeFormat> dateFormatterFactory = new DateTimeFormatAnnotationFormatterFactory();
+
     private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
+
+    public static final ThreadLocal<List<Predicate<String>>> fetchPropertiesFilters = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -75,6 +78,16 @@ public abstract class ObjectUtil {
         return copy(source, targetType, -1, ignoreProperties);
     }
 
+
+    /**
+     * @param source
+     * @param targetType
+     * @param maxCopyDeep
+     * @param ignoreProperties
+     * @param <T>
+     * @return
+     * @throws RuntimeException
+     */
     public static <T> T copy(Object source, Class<T> targetType, int maxCopyDeep, String... ignoreProperties) throws RuntimeException {
         return copy(source, null, targetType, maxCopyDeep, ignoreProperties);
     }
@@ -90,10 +103,11 @@ public abstract class ObjectUtil {
             return target == null ? rValue : target;
 
         } catch (Exception e) {
-            if (e instanceof RuntimeException)
+            if (e instanceof RuntimeException) {
                 throw ((RuntimeException) e);
-            else
+            } else {
                 throw new RuntimeException(e);
+            }
         }
     }
 
@@ -432,8 +446,9 @@ public abstract class ObjectUtil {
 
         for (String ignoreProperty : ignoreProperties) {
 
-            if (!hasText(ignoreProperty))
+            if (!hasText(ignoreProperty)) {
                 continue;
+            }
 
             if (path.equals(ignoreProperty)
                     || ignoreProperty.equals(path + "*")) {
@@ -447,8 +462,9 @@ public abstract class ObjectUtil {
             if (fieldType != null && !BeanUtils.isSimpleProperty(fieldType)) {
                 if (ignoreProperty.equals("{*}")
                         || ignoreProperty.equals(path + ".{*}")
-                        || ignoreProperty.equals(path + String.format(".{%s}", fieldType.getName())))
+                        || ignoreProperty.equals(path + String.format(".{%s}", fieldType.getName()))) {
                     return true;
+                }
             }
 
             if (ignoreProperty.startsWith("spel:")) {
@@ -624,8 +640,9 @@ public abstract class ObjectUtil {
 
     private static boolean hasGenerics(ResolvableType resolvableType) {
 
-        if (resolvableType == null)
+        if (resolvableType == null) {
             return false;
+        }
 
         return resolvableType.hasGenerics()
                 || (resolvableType.isArray() && resolvableType.getComponentType().hasGenerics());
@@ -638,8 +655,9 @@ public abstract class ObjectUtil {
 
     private static ResolvableType getCollectionEleType(ResolvableType resolvableType) {
 
-        if (resolvableType.isArray())
+        if (resolvableType.isArray()) {
             return resolvableType.getComponentType();
+        }
 
         return resolvableType.hasGenerics() ? resolvableType.getGeneric(0) : null;
     }
@@ -674,16 +692,18 @@ public abstract class ObjectUtil {
             , Stack objectStack, int invokeDeep, int maxCopyDeep
             , String... ignoreProperties) throws Exception {
 
-        if (source == null)
+        if (source == null) {
             return null;
+        }
 
         if (targetType == null
                 && target != null) {
             targetType = (Class<T>) target.getClass();
         }
 
-        if (targetType == null)
+        if (targetType == null) {
             throw new IllegalArgumentException("targetType and target is null");
+        }
 
         ///////////////////////////////////////////////////////////////////
         final ResolvableType myResolvableType = ResolvableType.forType(targetType, ownerResolvableType);
@@ -750,8 +770,9 @@ public abstract class ObjectUtil {
 
         } else if (targetType.isArray() || Collection.class.isAssignableFrom(targetType)) {
 
-            if (source instanceof CharSequence)
+            if (source instanceof CharSequence) {
                 source = source.toString().split(",");
+            }
 
             //可以考虑自动，转化单个对象为数组
             Collection elements = tryToGetElements(source);
@@ -864,8 +885,9 @@ public abstract class ObjectUtil {
 //                    || !Modifier.isPublic(targetType.getModifiers())
                     || Modifier.isAbstract(targetType.getModifiers())) {
 
-                if (!objectStack.empty())
+                if (!objectStack.empty()) {
                     objectStack.pop();
+                }
 
                 return (T) source;
             }
@@ -886,20 +908,34 @@ public abstract class ObjectUtil {
 
                 String propertyName = field.getName();
 
-
                 //拷贝属性的转换
                 Desc desc = field.getAnnotation(Desc.class);
-
                 if (desc != null && hasText(desc.code())) {
                     propertyName = desc.code();
                 }
 
                 Fetch fetch = field.getAnnotation(Fetch.class);
-                if (fetch != null && hasText(fetch.value())) {
-                    propertyName = fetch.value();
+
+                if (fetch != null) {
+
+                    propertyName = hasText(fetch.value()) ? fetch.value() : propertyName;
+
+                    String key = field.getDeclaringClass().getName() + "|" + propertyName;
+
+                    //如果绑定到字段，并且没有抓取，则忽略该字段
+                    if (fetch.isBindToField()
+                            && Optional.ofNullable(fetchPropertiesFilters.get())
+                            .orElse(Collections.emptyList())
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .noneMatch(predicate -> predicate.test(key))) {
+
+                        continue;
+                    }
                 }
 
                 int fieldMaxCopyDeep = maxCopyDeep;
+
                 String[] fieldIgnoreProperties = ignoreProperties;
 
                 DeepCopy deepCopy = field.getAnnotation(DeepCopy.class);
@@ -944,8 +980,9 @@ public abstract class ObjectUtil {
 
                 if (value == null) {
                     //优化处理，直接返回
-                    if (!isSimpleType)
+                    if (!isSimpleType) {
                         field.set(target, null);
+                    }
                 } else if (isSimpleType) { //  || BeanUtils.isSimpleValueType(value.getClass())
                     //优化处理，直接返回
                     field.set(target, convert(value, fieldType));

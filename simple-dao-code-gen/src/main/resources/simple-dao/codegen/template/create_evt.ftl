@@ -1,5 +1,7 @@
 package ${packageName};
 
+<#--import static ${modulePackageName}.ModuleOption.*;-->
+
 <#--import com.oak.api.model.ApiBaseReq;-->
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -33,16 +35,16 @@ import ${entityClassPackage}.*;
 
 
 /**
- *  创建${desc}
+ *  新增${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "创建${desc}")
+@Schema(description = "新增${desc}")
 @Data
 @Accessors(chain = true)
 @ToString
-<#--@EqualsAndHashCode(callSuper = true)-->
+//@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants
-@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
@@ -67,20 +69,36 @@ public class ${className} implements ServiceReq {
     //保存之前初始化数据
 <#list fields as field>
     <#if field.name == 'sn' && field.typeName == 'String'>
-        String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+        if(getSn() == null){
+         String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
          setSn(sn);
+        }
     </#if>
     <#if field.name == 'addTime'>
+        if(getAddTime() == null){
          setAddTime(new Date());
+        }
+    </#if>
+    <#if field.name == 'occurTime'>
+        if(getOccurTime() == null){
+        setOccurTime(new Date());
+        }
     </#if>
     <#if field.name == 'createTime'>
+        if(getCreateTime() == null){
          setCreateTime(new Date());
+        }
     </#if>
     <#if field.name == 'updateTime'>
-          //setUpdateTime(new Date());
+        if(getUpdateTime() == null){
+          setUpdateTime(new Date());
+        }
+
     </#if>
     <#if field.name == 'lastUpdateTime'>
-         //setLastUpdateTime(new Date());
+        if(getLastUpdateTime() == null){
+         setLastUpdateTime(new Date());
+        }
     </#if>
 </#list>
 
