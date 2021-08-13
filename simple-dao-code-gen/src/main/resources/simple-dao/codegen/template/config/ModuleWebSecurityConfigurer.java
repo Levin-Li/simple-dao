@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.firewall.*;
 
 //参考文章： https://blog.csdn.net/u012702547/article/details/106800446/
 
@@ -37,6 +38,14 @@ public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 //                .build();
 //    }
 
+    @Bean
+    HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        firewall.setAllowUrlEncodedDoubleSlash(true);
+        firewall.setAllowUrlEncodedPercent(true);
+        firewall.setAllowUrlEncodedPeriod(true);
+        return firewall;
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {

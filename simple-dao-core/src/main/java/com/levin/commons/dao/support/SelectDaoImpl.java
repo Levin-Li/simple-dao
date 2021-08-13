@@ -610,6 +610,11 @@ public class SelectDaoImpl<T>
 
         if ((opAnnotation instanceof Fetch)) {
 
+            if (isNative()) {
+                logger.warn("native query can't support [Fetch] annotation, it will be ignore");
+                return;
+            }
+
             Fetch fetch = (Fetch) opAnnotation;
 
             if (fetch.isBindToField()
@@ -1233,6 +1238,11 @@ public class SelectDaoImpl<T>
         }
 
         this.resultType = targetType;
+
+        if (isNative()) {
+            logger.warn("native query can't support [Fetch] annotation, it will be ignore");
+            return;
+        }
 
         ReflectionUtils.doWithFields(targetType, field -> {
 

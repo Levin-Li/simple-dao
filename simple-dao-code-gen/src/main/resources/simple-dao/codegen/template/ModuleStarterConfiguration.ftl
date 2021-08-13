@@ -39,14 +39,14 @@ public class ModuleStarterConfiguration {
         return variableResolverManager -> {
 
             //加入全局变量
-            variableResolverManager.addVariableResolverByCtx(false,
+            variableResolverManager.add(
                     MapUtils.putFirst(ModuleOption.ID+"_x1", "x1_value")
                             .put(ModuleOption.ID+"_x2", "x2_value")
                             .build());
 
             //@todo 增加自定义变量解析器
             //加入
-            variableResolverManager.addVariableResolvers(false, new VariableResolver() {
+            variableResolverManager.add( new VariableResolver() {
                 @Override
                 public <T> ValueHolder<T> resolve(String key, T oldValue, boolean required, Class<?>... classes) throws VariableNotFoundException {
 

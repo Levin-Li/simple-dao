@@ -14,6 +14,7 @@ import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.utils.MapUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.Date;
@@ -40,6 +41,21 @@ public class SimpleSubQueryDTO {
     @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
     Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
     //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+
+
+    @Schema(description = "昵称")
+    @Where(paramExpr =  "memberId"
+            + " in ( select m.uid from user m where m.nickName = ${:_val} )")
+    private String nickName ="1aaa";
+
+    @Schema(description = "账号")
+    @Where(paramExpr = "memberId"
+            + " in ( select m.uid from user m where m.memberAccount = ${:_val} )")
+    private String memberAccount ="2aaa";
+
+    @Where(paramExpr = "memberId"
+            + " in ( select m.uid from user m where m.mobilePhone = ${:_val} )")
+    private String receiverPhone="3ccc";
 
 
     //生成的语句
