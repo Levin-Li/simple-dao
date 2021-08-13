@@ -32,163 +32,302 @@
         
        
    
-### 1 Dao组件核心接口
+### 1 快速上手
 
-*    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
+#### 1.1 一键代码生成
 
-*    2 - [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
+  如果文档中的图片不能显示，请访问 [https://gitee.com/Levin-Li/simple-dao](https://gitee.com/Levin-Li/simple-dao) 查看。
+   
+##### 1.1.1 添加生成插件
+   
+   建立一个空Maven项目，在 pom.xml 文件中加入以下内容
+     
+    <properties>
 
-*    3 - [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
+        <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
+        <levin.simple-dao.version>2.2.30-SNAPSHOT</levin.simple-dao.version> 
+        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
+        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
-*    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
-       
-### 2 Dao组件使用方式
+    </properties>
+  
+    <repositories> 
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository> 
+    </repositories>
 
-#### 2.1 方式1 - 使用通用Dao（推荐）
+    <pluginRepositories>
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>${levin.simple-dao.groupId}</groupId>
+                <artifactId>simple-dao-codegen</artifactId>
+                <version>${levin.simple-dao.version}</version>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>${levin.service-support.groupId}</groupId>
+                        <artifactId>service-support</artifactId>
+                        <version>${levin.service-support.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
  
-##### 2.1.1 使用SimpleDao
+        </plugins>
+    </build>
 
-   在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
 
-   使用示例：
+##### 1.1.2 生成项目模板文件和示例文件
 
+   在 IDEA 的 Maven 操作面板上双击插件的 gen-project-template 生成模板文件。
+   
+   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-1.png)
+   
+   插件将会生成一个示例模块，生成成功后，请刷新项目。
+   
+     
+##### 1.1.3 编译项目
+
+   在生成好的实体模块上编译项目。
+    
+   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-2.png)
+
+##### 1.1.4 生成代码
+
+   在生成好的实体模块上，双击插件的 gen-code 开始生成代码。
+   
+   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-3.png)    
+    
+   代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码。
+         
+##### 1.1.5 启动程序和查看运行结果
+   
+   在Maven操作面板上刷新项目，然后启动项目。
+    
+   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-4.png)     
+           
+   项目启动成功，点击控制台的链接查看运行结果。    
+   
+   ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-5.png)    
+   
+   So Easy!   
+           
+#### 1.2 定义DTO及注解
+
+     /**
+      * 数据传输对象(兼查询对象，通过注解产生SQL语句)
+      */
+    @Data
+    @TargetOption(entityClass = TestEntity.class)
+    public class TestEntityStatDto {
+           
+        @Min
+        Long minScore; //当minScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 minScore -> score
+        
+        @Max
+        Long maxScore;
+    
+        @Avg
+        Long avgScore;
+    
+        @Count
+        Long countScore;
+    
+        @GroupBy
+        @NotIn
+        String[] state = {"A", "B", "C"}; 
+    
+        @Contains
+        String name = "test"; 
+    }
+   
+  测试用例入口类 [DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java) 
+  
+  DTO用例类 [TestEntityStatDto](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TestEntityStatDto.java) 
+  
+  其它DTO用例参考：[Dto注解](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto) 
+   
+
+#### 1.3 配置JPA实体扫描 & 执行查询
+
+  a) 在boot启动类上配置实体扫描注解
+   
+      @EntityScan({"com.levin.commons.dao","com.xxx.xxx.entities"})
+  
+        
+  b) 执行查询
+  
       @Autowired
       SimpleDao dao;
+      
+      dao.findByQueryObj(TestEntityStatDto.class,new TestEntityStatDto());
 
-      SelectDao selectDao = dao.selectFrom("t_table_name","alias");
+   以上代码将生成并执行以下SQL：
 
-      List queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
-
-##### 2.1.1 动态创建 SelectDao 、UpdateDao、DeleteDao
-
-    //查询DAO
-    SelectDao dao = dao.selectFrom(Group.class);
-    dao.find()
-
-    //更新DAO
-    UpdateDao dao = dao.updateTo(Group.class);
-    dao.update()
-
-    //删除DAO
-    DeleteDao dao = dao.deleteFrom(Group.class)
-    dao.delete()
-
-#### 2.2 方式2 - 自定义DAO
-
-##### 2.2.1 自定义DAO接口
-
-   接口DAO案例：
-
-    
-    @EntityRepository("用户DAO") //DAO 自动扫描注解
-    @TargetEntity(entityClass = User.class)  //DAO默认操作目标注解
-    public interface UserDao {
-
-        List<User> find(@Eq Long id, @Like String name,
-                        @Gt Integer score, Paging paging);
-
-        @QueryRequest(joinFetchSetAttrs = {"group"})
-        User findOne(@Eq Long id, @Like String name,
-                     @Eq String category, Paging paging);
-
-        @UpdateRequest
-        int update(@Eq Long id, @UpdateColumn String name);
-
-        @DeleteRequest
-        int delete(@OR @Eq Long id, String name);
-
-    }
-
-接口DAO定义好后，直接在需要的服务类中直接通过Spring注入
-
-         @Autowired
-         UserDao userDao;
-
-         userDao.delete(...)
-
-
-   **特别说明：**
-   需要在JDK1.8中编译，并增加编译参数：-parameters ，保留方法的参数名称。
-   在 pom.xml 文件中加入以下配置：
-
-       <plugin>
-           <artifactId>maven-compiler-plugin</artifactId>
-           <inherited>true</inherited>
-           <configuration>
-               <!-- 在编译时表留方法的参数名称-->
-               <parameters>true</parameters>
-           </configuration>
-       </plugin>
-
-
-##### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
-
-   DAO抽象类案例：
-
-   
-    @EntityRepository("组DAO") //DAO 自动扫描注解 
-    @TargetEntity(entityClass = Group.class) //DAO默认操作目标注解
-    public abstract class GroupDao {
- 
-        @QueryRequest
-        public Group findOne(@OR @Eq Long id, @Like String name,
-                             @Eq String category, Paging paging) {
-
-            //获取查询结果的关键点：RepositoryFactoryBean.getProxyInvokeResult()
-            Group result = RepositoryFactoryBean.getProxyInvokeResult();
- 
-             //...处理其它逻辑
-            return (Group) result;
-        }
-
-        @QueryRequest
-        public List<Group> find(@OR @Eq Long id, @Like String name,
-                                @Eq String category, Paging paging) {
-
-            List<Group> groups = RepositoryFactoryBean.getProxyInvokeResult();
-
-            //...处理其它逻辑 
-            return groups;
-        }
-
-        @UpdateRequest
-        public int update(@Eq Long id, @UpdateColumn String name) {
-
-            Integer r = RepositoryFactoryBean.getProxyInvokeResult();
-
-            //...处理其它逻辑
-
-            return r != null ? r : 0;
-        }
+       Select 
+       Min( score ) , 
+       Max( score ) , 
+       Avg( score ) , 
+       Count( 1 ) , 
+       state  
+       From com.levin.commons.dao.domain.support.TestEntity     
+       Where 
+       state NOT IN (  ?1 , ?2 , ?3  ) 
+       AND name LIKE '%' ||  ?4  || '%'  
+       Group By  state
   
-    }
-
-抽象DAO定义好后，直接在需要的服务类中直接通过Spring注入
-
-    @Autowired
-    GroupDao groupDao;
-
-    //使用Dao
-     groupDao.find() ...
-           
-##### 2.2.3 启用扫描  
-
-     //设置 EntityRepository 注解的扫描范围        
-     @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
-                     , basePackages = {"com.xxx.dao.."})
-                     
-     //启用组件扫描                
-     @EnableProxyBean(registerTypes = EntityRepository.class)                
-
-#### 3 分页查询支持
-
-   分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
+#### 1.4 多表连接查询
+  
+##### 1.4.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
+   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)，会自动找实体对象之间的关联字段。
+   对象 User 中有 Group类型的字段，但有多个Group类型的字段时，需要手动指定关联的字段
+   
+      //查询对象，和结果对象
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(
+              entityClass = User.class, //主表
+              alias = E_User.ALIAS, //主表别名
+              resultClass = TableJoinStatDTO.class, //结果类
+              safeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
+              //连接表
+              joinOptions = {
+                      @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
+              })
+      public class TableJoinStatDTO {
+      
+          //统计部门人数，并且排序
+          @Count(havingOp = Op.Gt, orderBy = @OrderBy)
+          Integer userCnt = 5;
+      
+          //统计部门总得分
+          @Sum
+          Long sumScore;
+      
+          //统计部门平均分，并且排序
+          @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
+          Long avgScore = 20L;
+      
+          //按部门分组统计，结果排序
+          @GroupBy(domain = E_Group.ALIAS, value = E_Group.name,orderBy = @OrderBy())
+          String groupName;
+      
+      }
+       
+        //执行查询，并把查询结果放在TableJoinStatDTO对象中
+       List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO());
+       
+       //生成的语句
+       Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  
+       From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     
+       Group By  g.name 
+       Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  
+       Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
+       
+       
+##### 1.4.2 多表关联查询-用 JoinOption 注解  [TableJoin3](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
+       
+   以下 @TargetOption 注解部分，手动指定关联的别名和关联的字段，joinTargetAlias = E_User.ALIAS , joinTargetColumn = E_User.group。
         
-     //使用示例
-     PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
+       @Data
+       @Accessors(chain = true)
+       @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
+               joinOptions = {
+               @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
+                       alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
+       })
+       public class TableJoin3 {
+       
+           @Select(domain = E_User.ALIAS, value = E_User.id, isDistinct = true)
+           @Gt(value = E_User.id, domain = E_User.ALIAS)
+           Long uid = 1l;
+       
+           @Select(value = E_Group.id, domain = E_Group.ALIAS)
+           @Gte(domain = E_Group.ALIAS,value = E_Group.id)
+           Long gid;
+       
+           @Select
+           String name;
+       
+           @Select(domain = E_Group.ALIAS, value = E_Group.name)
+           String groupName;
+       
+       }
+          
+          
+          
+##### 1.4.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
    
-   分页查询请求，分页查询参数通过PageOption注解获取，组件默认分页类如下：
+   注解代码 @TargetOption( tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" )
+      
+       
+       @Data
+       @Accessors(chain = true)
+       @TargetOption(
+               tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" ,
+       //        fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
+               )
+       public class FromStatementDTO {
+       
+           @Select(value = "u.id", isDistinct = true)
+           @Gt(value = E_User.id, domain = "u")
+           Long uid = 1l;
+       
+           @Select(value = E_Group.id, domain = "g")
+           @Gte("g.id")
+           Long gid;
+       
+           @Select(domain = "u")
+           String name;
+       
+           @Select(domain = "g", value = E_Group.name)
+           String groupName;
+       
+       } 
+       
+       
+##### 1.4.4 多表关联查询-笛卡儿积（ @SimpleJoinOption 注解）
+
+       代码的方式
+       
+         List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
+                      .join(true, Group.class, E_Group.ALIAS)
+                      .select(true, "u")
+                      .where("u.group.id = g.id ")
+                      .isNotNull(E_User.id)
+                      .gt(E_User.score, 5)
+                      .limit(0, 20)
+                      .find();
+                      
+            
+                            
+
+
+#### 1.5 分页查询支持
+   
+   方法1： 查询结果和总记录数            
+   
+     //使用示例
+     PagingData<TableJoinDTO> resp = dao.findPagingDataByQueryObj(new TableJoinDTO() , new SimplePaging().setRequireTotals(true));
+   
+       
+   方法2： 查询结果和总记录数
+       
+       dao.findTotalsAndResultList(Object... queryObjs);
+   
+   
+   分页查询请求，分页查询参数通过PageOption注解获取
    
      @Data
      @Accessors(chain = true)
@@ -260,35 +399,267 @@
           public PagingData() {
           }
       
-      } 
-      
- 
+      }
+
+
+### 2 组件使用方式
+
+#### 2.1 直接使用通用Dao（推荐）
+
+##### 2.1.1 使用SimpleDao
+
+   在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
+
+   使用示例：
+
+      @Autowired
+      SimpleDao dao;
+
+      SelectDao selectDao = dao.selectFrom("t_table_name","alias");
+
+      List queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
+
+##### 2.1.1 使用SelectDao 、UpdateDao、DeleteDao
+
+    //查询DAO
+    SelectDao dao = dao.selectFrom(Group.class);
+    dao.find()
+
+    //更新DAO
+    UpdateDao dao = dao.updateTo(Group.class);
+    dao.update()
+
+    //删除DAO
+    DeleteDao dao = dao.deleteFrom(Group.class)
+    dao.delete()
+
+#### 2.2 自定义DAO接口或是DAO类(不推荐，建议在服务类中直接使用SimpleDao)
+
+##### 2.2.1 自定义DAO接口
+
+   接口DAO案例：
+
+    //DAO 自动扫描注解
+    @EntityRepository("用户DAO")
+
+    //DAO默认操作目标注解
+    @TargetEntity(entityClass = User.class, alias = "u"
+            , fixedCondition = "u.enable = true", defaultOrderBy = "u.orderCode desc")
+
+    public interface UserDao {
+
+        List<User> find(@Eq Long id, @Like String name,
+                        @Gt Integer score, Paging paging);
+
+        @QueryRequest(joinFetchSetAttrs = {"group"})
+        User findOne(@Eq Long id, @Like String name,
+                     @Eq String category, Paging paging);
+
+        @UpdateRequest
+        int update(@Eq Long id, @UpdateColumn String name);
+
+        @DeleteRequest
+        int delete(@OR @Eq Long id, String name);
+
+    }
+
+接口DAO定义好后，直接在需要的服务类中直接通过Spring注入
+
+         @Autowired
+         UserDao userDao;
+
+         userDao.delete(...)
+
+
+   **特别说明：**
+   需要在JDK1.8中编译，并增加编译参数：-parameters ，保留方法的参数名称。
+   在 pom.xml 文件中加入以下配置：
+
+       <plugin>
+           <artifactId>maven-compiler-plugin</artifactId>
+           <inherited>true</inherited>
+           <configuration>
+               <!-- 在编译时表留方法的参数名称-->
+               <parameters>true</parameters>
+           </configuration>
+       </plugin>
+
+
+##### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
+
+   DAO抽象类案例：
+
+    //DAO 自动扫描注解
+    @EntityRepository("组DAO")
+
+    //DAO默认操作目标注解
+    @TargetEntity(entityClass = Group.class, fixedCondition = "enable = true", defaultOrderBy = "orderCode desc")
+    public abstract class GroupDao {
+
+        @Autowired
+        private SimpleDao dao;
+
+        @QueryRequest
+        public Group findOne(@OR @Eq Long id, @Like String name,
+                             @Eq String category, Paging paging) {
+
+            //获取查询结果的关键点：RepositoryFactoryBean.getProxyInvokeResult()
+            Group result = RepositoryFactoryBean.getProxyInvokeResult();
+
+            System.out.println(result);
+
+            return (Group) result;
+        }
+
+        @QueryRequest
+        public List<Group> find(@OR @Eq Long id, @Like String name,
+                                @Eq String category, Paging paging) {
+
+            List<Group> groups = RepositoryFactoryBean.getProxyInvokeResult();
+
+            //...处理其它逻辑
+
+            System.out.println(groups);
+
+            return groups;
+        }
+
+        @UpdateRequest
+        public int update(@Eq Long id, @UpdateColumn String name) {
+
+            Integer r = RepositoryFactoryBean.getProxyInvokeResult();
+
+            //...处理其它逻辑
+
+            return r != null ? r : 0;
+        }
+
+        //没有注解方法将无效，如果调用RepositoryFactoryBean.getProxyInvokeResult(); 将会生产异常
+        public Object noAnnoMethod(@Eq Long id, @UpdateColumn String name) {
+
+            Object r = RepositoryFactoryBean.getProxyInvokeResult();
+
+            return r;
+        }
+
+        @QueryRequest
+        public Group findOneAndRepeatGetResult(@OR @Eq Long id, @Like String name,
+                                               @Eq String category, Paging paging) {
+
+            Object result = RepositoryFactoryBean.getProxyInvokeResult();
+
+            System.out.println(result);
+
+            RepositoryFactoryBean.getProxyInvokeResult();
+
+            return (Group) result;
+        }
+    }
+
+抽象DAO定义好后，直接在需要的服务类中直接通过Spring注入
+
+    @Autowired
+    GroupDao groupDao;
+
+    //使用Dao
+     groupDao.find() ...
+           
+##### 2.2.3 设置扫描包名 & 启用扫描  
+
+     //设置 EntityRepository 注解的扫描范围        
+     @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
+                     , basePackages = {"com. levin. commons . dao.."})
+                     
+     //启用组件扫描                
+     @EnableProxyBean(registerTypes = EntityRepository.class)                
+
+
+### 3 组件接口及注解
+
+#### 3.1 Dao核心接口
+
+*    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
+
+*    2 - [SelectDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SelectDao.java)
+
+*    3 - [UpdateDao](./simple-dao-core/src/main/java/com/levin/commons/dao/UpdateDao.java)
+
+*    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
+       
+
+##### 3.1.1 SimpleDao 常用方法
+
+            /**
+             * 创建一个指定类型的查询对象dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
+          
+          
+            /**
+             * 创建一个指定类型的更新dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+            
+            
+            
+            /**
+             * 创建一个指定类型的删除dao
+             *
+             * @param clazz 实体类，不允许为null
+             * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+             * @param <T>
+             * @return
+             * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+             */
+            <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+       
+        
+       
+
+#### 3.2 注解的语句生成规则
+
+  操作枚举类：[com.levin.commons.dao.annotation.Op](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/Op.java)，定义了常见的 sql 表达式。
+  
+
+  语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
+
+
 ### 4 简单查询
     
-   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
+   查询注解 主要再 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
    
    注意若果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
 
    DTO类字段定义示例：
 
        @Desc("店铺id")
-       @Eq
-       Long storeId;
+        Long storeId;
 
        @Desc("店铺名称")
        @Eq
-       String storeName;
+        String storeName;
 
        @Desc("店铺所在区域")
-       String storeArea;
+        String storeArea;
 
        @Desc("店铺状态")
-       @Eq
-       StoreStatus storeStatus;
+        StoreStatus storeStatus;
 
        @Desc("店铺库存预警")
        @Ignore // 生成的语句忽略该字段
-       Boolean storageAlarm;
+        Boolean storageAlarm;
 
        @Desc("商品分类id")
        @Contains
@@ -343,7 +714,7 @@
              END) AS scoreLevel   
            From com.levin.commons.dao.domain.User u 
     
-#### 4.1.2 简单工具类支持
+#### 4.1.2 简单类支持
 
         String ql = new Case().column("status")
                 .when("'A'", "0")
@@ -374,71 +745,7 @@
             
             //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
              
-### 4.3 列选择和列更新
 
-  选择查询注解：
-
-          @Select
-          String field;
-
-  产生的语句：
-
-         select field from ...
-
-
-  更新注解：
-
-         @Update
-         protected Date lastUpdateTime = new Date();
-
-  产生的语句
-
-         set lastUpdateTime = ?
-         
-  
- @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
- 
-       @Schema(description = "增量更新设备数据")
-       @Data 
-       @NoArgsConstructor 
-       @ToString
-       @Accessors(chain = true)
-       @FieldNameConstants
-       @TargetOption(entityClass = Device.class, alias = E_Device.ALIAS)
-       //默认更新注解
-       //防止出现负数逻辑
-       @Update(paramExpr = "${_name} + (CASE WHEN ( ${_name} + ${_val} ) >= 0 THEN ${_val} ELSE 0 END)"
-               , condition = " #_val != null && #_val != 0")
-       public class IncrementEditDeviceReq extends BaseServiceReq {
-       
-           private static final long serialVersionUID = 362651129L;
-       
-           @Schema(description = "id")
-           @NotNull
-           @Eq(require = true)
-           private Long id;
-       
-           @Schema(description = "实时运行告警数（0为未告警，n为告警条数")
-           private Integer runAlarmCnt;
-       
-           @Schema(description = "状态告警数（0：无告警，n为告警条数)")
-           private Integer statusAlarmCnt;
-       
-           @Schema(description = "合同告警数（含有租金、押金、合同告警条数）")
-           private Integer contractAlarmCnt;
-       
-           public IncrementEditDeviceReq(Long id) {
-               this.id = id;
-           }
-       
-           @PostConstruct
-           public void preUpdate() {
-               //更新之前初始化数据
-           }
-       
-       }
-        
-         
 ### 5 统计查询
 
    统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
@@ -505,135 +812,31 @@
            @Select(domain = E_Group.ALIAS, value = E_Group.name)
            String groupName;
        
-       }               
-       
-              
-### 6 多表查询最佳实践
+       }                      
+      
 
-#### 6.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
-   
-   注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)，会自动找实体对象之间的关联字段。
-   对象 User 中有 Group类型的字段，但有多个Group类型的字段时，需要手动指定关联的字段
-   
-      //查询对象，和结果对象
-      @Data
-      @Accessors(chain = true)
-      @TargetOption(
-              entityClass = User.class, //主表
-              alias = E_User.ALIAS, //主表别名
-              resultClass = TableJoinStatDTO.class, //结果类
-              safeMode = false, //是否安全模式，安全模式时无法执行无条件的查询
-              //连接表
-              joinOptions = {
-                      @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)  //连接的表，和别名
-              })
-      public class TableJoinStatDTO {
-      
-          //统计部门人数，并且排序
-          @Count(havingOp = Op.Gt, orderBy = @OrderBy)
-          Integer userCnt = 5;
-      
-          //统计部门总得分
-          @Sum
-          Long sumScore;
-      
-          //统计部门平均分，并且排序
-          @Avg(havingOp = Op.Gt, orderBy = @OrderBy,alias = "avg")
-          Long avgScore = 20L;
-      
-          //按部门分组统计，结果排序
-          @GroupBy(domain = E_Group.ALIAS, value = E_Group.name,orderBy = @OrderBy())
-          String groupName;
-      
-      }
-       
-        //执行查询，并把查询结果放在TableJoinStatDTO对象中
-       List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO());
-       
-       //生成的语句
-       Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  
-       From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     
-       Group By  g.name 
-       Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  
-       Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
-       
-       
-#### 6.2 多表关联查询-用 JoinOption 注解  [TableJoin3](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
-       
-   以下 @TargetOption 注解部分，手动指定关联的别名和关联的字段，joinTargetAlias = E_User.ALIAS , joinTargetColumn = E_User.group。
-        
-       @Data
-       @Accessors(chain = true)
-       @TargetOption(tableName = E_User.CLASS_NAME,alias = E_User.ALIAS,
-               joinOptions = {
-               @JoinOption(tableOrStatement = E_Group.CLASS_NAME,
-                       alias = E_Group.ALIAS,joinColumn = E_Group.id,joinTargetAlias = E_User.ALIAS,joinTargetColumn = E_User.group)
-       })
-       public class TableJoin3 {
-       
-           @Select(domain = E_User.ALIAS, value = E_User.id, isDistinct = true)
-           @Gt(value = E_User.id, domain = E_User.ALIAS)
-           Long uid = 1l;
-       
-           @Select(value = E_Group.id, domain = E_Group.ALIAS)
-           @Gte(domain = E_Group.ALIAS,value = E_Group.id)
-           Long gid;
-       
-           @Select
-           String name;
-       
-           @Select(domain = E_Group.ALIAS, value = E_Group.name)
-           String groupName;
-       
-       }
-          
-          
-          
-#### 6.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
-   
-   注解代码 @TargetOption( tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" )
-      
-       
-       @Data
-       @Accessors(chain = true)
-       @TargetOption(
-               tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" ,
-       //        fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
-               )
-       public class FromStatementDTO {
-       
-           @Select(value = "u.id", isDistinct = true)
-           @Gt(value = E_User.id, domain = "u")
-           Long uid = 1l;
-       
-           @Select(value = E_Group.id, domain = "g")
-           @Gte("g.id")
-           Long gid;
-       
-           @Select(domain = "u")
-           String name;
-       
-           @Select(domain = "g", value = E_Group.name)
-           String groupName;
-       
-       } 
-       
-       
-#### 6.4 多表关联查询-笛卡儿积
+### 6 列选择和列更新
 
-       可以用@SimpleJoinOption注解方式，也可以直接代码方式，如下：
-       
-         List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
-                      .join(true, Group.class, E_Group.ALIAS)
-                      .select(true, "u")
-                      .where("u.group.id = g.id ")
-                      .isNotNull(E_User.id)
-                      .gt(E_User.score, 5)
-                      .limit(0, 20)
-                      .find();
-                      
-            
-                                  
+  选择查询注解：
+
+          @Select
+          String field;
+
+  产生的语句：
+
+      select field from ...
+
+
+  更新注解：
+
+         @Update
+         protected Date lastUpdateTime = new Date();
+
+  产生的语句
+
+         set lastUpdateTime = ?
+
+
 ### 7 复杂查询(逻辑嵌套)
 
    逻辑注解支持
@@ -668,12 +871,14 @@
       and ( createTime < ? or  scores Between ? and ? )
       and description like ?
 
+
   Dao 方法支持
     
      //逻辑嵌套
      dao.selectFrom("table").and().or().and().end().end().end();
 
 ### 8 子查询
+ 
 
 #### 8.1 手动指定子查询语句
 
@@ -1145,52 +1350,16 @@
   
    逻辑删除后，dao 可以通过 filterLogicDeletedData 来设定是否要过滤逻辑删除的数据，默认是过滤逻辑删除的记录。
    
-    dao.selectFrom(TestEntity.class)
+   dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
                   
                                
-#### 12.2 DTO 数据初始化
- 
-   有标记 javax.annotation.PostConstruct 注解的Dto对象方法，将会在查询之前被执行。
+#### 12.2 PostConstruct 注解支持
+
+   有标记 javax.annotation.PostConstruct 注解的方法，将会在查询之前被执行。
    可以做些初始化的事情，比如初始化时间。
    
-     class UserDto{
-     
-       String name;
-       
-       Date createTime;
-       
-       Date updateTime;
-       
-       @PostConstruct
-       public void init(){
-          createTime = new Date();
-       }
-       
-       //更新之前执行
-        @PreUpdate
-        public void preUpdate(){
-            updateTime = new Date();
-        }
-         
-       //持久化之前执行
-       @PrePersist
-       public void prePersist(){
-          createTime = new Date();
-       }              
-     
-     }
-   
-     
-   
-#### 12.3 注解的语句生成规则
-
-  操作枚举类：[com.levin.commons.dao.annotation.Op](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/Op.java)，定义了常见的 sql 表达式。
-  
-
-  语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
-
                
        
 ### 13 代码生成
