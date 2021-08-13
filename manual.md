@@ -263,7 +263,7 @@
       } 
       
  
-### 4 简单查询
+### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
    
@@ -437,7 +437,12 @@
            }
        
        }
-        
+ 
+
+### 4.4 动态变量
+
+   变量在注解中会经常使用，具体参考 【10.4】章节。
+   
          
 ### 5 统计查询
 
@@ -841,7 +846,7 @@
        
       
         @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
-        Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
+        Map<String, Object> params = MapUtils.putFirst("p1", "9999").put("p2", 2).put("fun", "sum").build();
         
        / /以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
        
