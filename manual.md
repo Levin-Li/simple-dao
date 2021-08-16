@@ -32,7 +32,13 @@
         
        
    
-### 1 Dao组件核心接口
+### 1 Dao组件注解核心接口
+
+Dao 类逻辑框图，如下图所示。
+
+   ![类逻辑框图](./public/dao-core.png)   
+   
+主要以下4个核心接口：
 
 *    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
@@ -265,7 +271,9 @@
  
 ### 4 基础查询
     
-   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
+   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
+   
+   ![类逻辑框图](./public/dao-annotation.jpg)     
    
    注意若果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
 
