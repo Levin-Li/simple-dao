@@ -76,7 +76,7 @@ public class ${className} {
      * @param req   Create${entityName}Evt
      * @return ApiResp
      */
-    @PutMapping("/create")
+    @PostMapping("/create")
     @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "新增${desc}(${entityName})")
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
@@ -99,7 +99,7 @@ public class ${className} {
     */
     @GetMapping("/{id}")
     @Operation(tags = {"${desc}"}, summary = "查看详情${desc}", description = "查看详情${desc}(${entityName})")
-    public ApiResp<${entityName}Info> detail(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 </#if>
@@ -107,7 +107,7 @@ public class ${className} {
     /**
      * 更新
      */
-     @PostMapping("/update")
+     @PutMapping("/update")
      @Operation(tags = {"${desc}"}, summary = "更新${desc}", description = "更新${desc}(${entityName})")
      public ApiResp<Void> update(Update${entityName}Req req) {
          return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
