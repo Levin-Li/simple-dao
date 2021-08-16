@@ -98,7 +98,7 @@ public class ${className} {
     * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{id}")
-    @Operation(tags = {"${desc}"}, summary = "查看详情${desc}", description = "查看详情${desc}(${entityName})")
+    @Operation(tags = {"${desc}"}, summary = "查看${desc}", description = "查看${desc}(${entityName})")
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
