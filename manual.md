@@ -32,7 +32,13 @@
         
        
    
-### 1 Dao组件核心接口
+### 1 Dao组件注解核心接口
+
+Dao 类逻辑框图，如下图所示。
+
+   ![类逻辑框图](./public/dao-core.png)   
+   
+主要以下4个核心接口：
 
 *    1 - [SimpleDao](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 
@@ -263,9 +269,11 @@
       } 
       
  
-### 4 简单查询
+### 4 基础查询
     
-   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符。 
+   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
+   
+   ![类逻辑框图](./public/dao-annotation.jpg)     
    
    注意若果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
 
@@ -437,7 +445,12 @@
            }
        
        }
-        
+ 
+
+### 4.4 动态变量
+
+   变量在注解中会经常使用，具体参考 【10.4】章节。
+   
          
 ### 5 统计查询
 
@@ -841,7 +854,7 @@
        
       
         @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
-        Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
+        Map<String, Object> params = MapUtils.putFirst("p1", "9999").put("p2", 2).put("fun", "sum").build();
         
        / /以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
        
