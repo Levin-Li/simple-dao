@@ -49,7 +49,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
-    @Bean("${modulePackageName}")
+    @Bean("${modulePackageName}.Docket")
     //默认激活的 profile
     @Profile({"dev", "test", "local"})
     public Docket docket() {

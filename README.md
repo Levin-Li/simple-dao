@@ -205,7 +205,7 @@
      
    支付宝 微信   
    
-   ![支付宝](./public/zfb.jpg) ![微信](./public/wx.jpg)   
+  ![支付宝+微信](./public/pay2.png)   
       
 
 #### 5 联系作者

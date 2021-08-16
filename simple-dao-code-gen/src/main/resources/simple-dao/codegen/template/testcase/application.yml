@@ -1,9 +1,12 @@
-
 #Auto gen by simple-dao-codegen ${.now}
 
 spring:
   application:
     name: example-server
+
+  #环境配置
+  profiles:
+    active: local # 本地环境
 
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -45,7 +48,14 @@ spring:
         #模块表名前缀映射类，重要
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
 
+  #      MYSQL 配置选项
+  #      properties:
+  #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
+  #        hibernate.id.new_generator_mappings: false
 
+  #        hibernate.dialect.storage_engine: innodb
+
+  #线程池配置
   task:
     execution:
       pool:
@@ -55,17 +65,12 @@ spring:
       pool:
         size: 30
 
-#      MYSQL 配置选项
-#      properties:
-#        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
-#        hibernate.id.new_generator_mappings: false
-
-#        hibernate.dialect.storage_engine: innodb
+#日志配置
 logging:
   level:
     root: info
     com.levin: trace
 
-
+#swagger配置
 swagger:
   enabled: true
