@@ -4,6 +4,8 @@ package ${packageName};
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.*;
+
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.*;
@@ -26,6 +28,13 @@ public interface ${className} {
     boolean create(Create${entityName}Req req);
 </#if>
 
+    @Schema(description = "批量新增${desc}")
+<#if pkField?exists>
+    List<${pkField.typeName}> batchCreate(List<Create${entityName}Req> reqList);
+<#else>
+    List<Boolean> batchCreate(List<Create${entityName}Req> reqList);
+</#if>
+
 <#if pkField?exists>
     @Schema(description = "通过ID找回${desc}")
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
@@ -33,6 +42,9 @@ public interface ${className} {
 
     @Schema(description = "更新${desc}")
     int update(Update${entityName}Req req);
+
+    @Schema(description = "批量更新${desc}")
+    List<Integer> batchUpdate(List<Update${entityName}Req> reqList);
 
     @Schema(description = "删除${desc}")
     int delete(Delete${entityName}Req req);

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.*;
 import javax.validation.*;
-
+import java.util.*;
 
 import javax.servlet.http.*;
 
@@ -73,7 +73,7 @@ public class ${className} {
     /**
      * 新增
      *
-     * @param req   Create${entityName}Evt
+     * @param req Create${entityName}Evt
      * @return ApiResp
      */
     @PostMapping("/create")
@@ -90,6 +90,21 @@ public class ${className} {
     </#if>
     }
 
+    /**
+     * 批量新增
+     *
+     * @param reqList List<Create${entityName}Evt>
+     * @return ApiResp
+     */
+    @PostMapping("/batchCreate")
+    @Operation(tags = {"${desc}"}, summary = "批量新增${desc}", description = "批量新增${desc}(${entityName})")
+<#if pkField?exists>
+    public ApiResp<List<${pkField.typeName}>> batchCreate(List<Create${entityName}Req> reqList) {
+<#else>
+    public ApiResp<List<Boolean>> batchCreate(List<Create${entityName}Req> reqList) {
+</#if>
+        return ApiResp.ok(${serviceName?uncap_first}.batchCreate(reqList));
+    }
 
 <#if pkField?exists>
     /**
@@ -111,6 +126,15 @@ public class ${className} {
      @Operation(tags = {"${desc}"}, summary = "更新${desc}", description = "更新${desc}(${entityName})")
      public ApiResp<Void> update(Update${entityName}Req req) {
          return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
+    }
+
+    /**
+     * 批量更新
+     */
+     @PutMapping("/batchUpdate")
+     @Operation(tags = {"${desc}"}, summary = "批量更新${desc}", description = "批量更新${desc}(${entityName})")
+     public ApiResp<List<Integer>> batchUpdate(List<Update${entityName}Req> reqList) {
+        return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
     }
 
     /**

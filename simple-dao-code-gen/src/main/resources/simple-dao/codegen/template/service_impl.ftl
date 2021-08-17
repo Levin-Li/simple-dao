@@ -6,8 +6,10 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 
+import java.util.*;
+import java.util.stream.*;
+import org.springframework.transaction.annotation.*;
 import org.springframework.util.*;
-import java.util.Date;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.*;
@@ -74,17 +76,28 @@ public class ${className} implements ${serviceName} {
     </#list>
         ${entityName} entity = simpleDao.create(req);
 <#if pkField?exists>
-         return entity.get${pkField.name?cap_first}();
+        return entity.get${pkField.name?cap_first}();
 <#else>
-         return entity != null;
+        return entity != null;
 </#if>
+    }
+
+    @Schema(description = "批量新增${desc}")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+<#if pkField?exists>
+    public List<${pkField.typeName}> batchCreate(List<Create${entityName}Req> reqList){
+    <#else>
+    public List<Boolean> batchCreate(List<Create${entityName}Req> reqList){
+</#if>
+        return reqList.stream().map(this::create).collect(Collectors.toList());
     }
 
 <#if pkField?exists>
     @Schema(description = "通过ID查找${desc}")
     @Override
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-    return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
+        return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
 </#if>
 
@@ -92,6 +105,13 @@ public class ${className} implements ${serviceName} {
     @Override
     public int update(Update${entityName}Req req) {
         return simpleDao.updateByQueryObj(req);
+    }
+
+    @Schema(description = "批量更新${desc}")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public List<Integer> batchUpdate(List<Update${entityName}Req> reqList){
+        return reqList.stream().map(this::update).collect(Collectors.toList());
     }
 
     @Schema(description = "删除${desc}")
@@ -103,7 +123,6 @@ public class ${className} implements ${serviceName} {
     @Schema(description = "分页查找${desc}")
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
-      return simpleDao.findPagingDataByQueryObj(req, paging);
+        return simpleDao.findPagingDataByQueryObj(req, paging);
     }
-
 }
