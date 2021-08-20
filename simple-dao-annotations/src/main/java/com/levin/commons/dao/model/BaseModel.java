@@ -1,8 +1,7 @@
-package com.levin.commons.dao;
+package com.levin.commons.dao.model;
 
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -69,25 +68,5 @@ public class BaseModel implements Serializable {
 
 
     TargetModel targetModel;
-
-
-    @Data
-    @Builder
-    @Accessors(chain = true, fluent = true)
-    public static class TargetModel {
-
-        Object rootBean;
-
-        Object fieldOrMethod;
-
-        Annotation[] varAnnotations;
-
-        String name;
-
-        Class<?> varType;
-
-        Object value;
-
-    }
 
 }
