@@ -30,7 +30,6 @@ import org.springframework.util.StringUtils;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -2261,24 +2260,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return true;
         }
 
+        expr = expr.trim();
+
         //优化性能
-        if (C.NOT_NULL.equalsIgnoreCase(expr)) {
-
-            if (value == null) {
-                return false;
-            } else if (value instanceof CharSequence) {
-                return (((CharSequence) value).toString().trim().length() > 0);
-            } else if (value.getClass().isArray()) {
-                return (Array.getLength(value) > 0);
-            } else if (value instanceof Collection) {
-                return (((Collection) value).size() > 0);
-            } else if (value instanceof Map) {
-                return (((Map) value).size() > 0);
-            }
-
-            return true;
+        if (C.NOT_EMPTY.equals(expr) || expr.equals("#" + C.NOT_EMPTY)) {
+            return ExprUtils.isNotEmpty(value);
+        } else if (expr.contains("#" + C.NOT_EMPTY)) {
+            contexts.add(MapUtils.put(C.NOT_EMPTY, ExprUtils.isNotEmpty(value)).build());
         }
-
 
         try {
             return ExprUtils.evalSpEL(root, expr, contexts);

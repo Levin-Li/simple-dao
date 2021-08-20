@@ -53,7 +53,9 @@ public @interface C {
      * 如果是数组或是集合或是 Map 也不是空
      */
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+    @Deprecated
     String NOT_NULL = "NOT_EMPTY";
+    String NOT_EMPTY = "NOT_EMPTY";
 
     /**
      * 空值
@@ -154,7 +156,7 @@ public @interface C {
      *
      * @return
      */
-    String condition() default NOT_NULL;
+    String condition() default NOT_EMPTY;
 
 
     /**

@@ -101,7 +101,7 @@ public @interface Update {
      *
      * @return
      */
-    String condition() default C.NOT_NULL;
+    String condition() default C.NOT_EMPTY;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值

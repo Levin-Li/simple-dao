@@ -739,7 +739,7 @@ public abstract class ExprUtils {
         Optional.ofNullable(contexts).ifPresent(
                 maps -> {
                     maps.stream().filter(Objects::nonNull)
-                            .forEachOrdered(map -> ((StandardEvaluationContext) ctx).setVariables((Map<String, Object>) map));
+                            .forEachOrdered(map -> (  ctx).setVariables((Map<String, Object>) map));
                 }
         );
 
@@ -956,6 +956,29 @@ public abstract class ExprUtils {
                 && !(type == Void.class || type == void.class);
     }
 
+
+    /**
+     * 是否非空 null 或是空字符串
+     *
+     * @param value
+     * @return
+     */
+    public static boolean isNotEmpty(Object value) {
+
+        if (value == null) {
+            return false;
+        } else if (value instanceof CharSequence) {
+            return (((CharSequence) value).toString().trim().length() > 0);
+        } else if (value.getClass().isArray()) {
+            return (Array.getLength(value) > 0);
+        } else if (value instanceof Collection) {
+            return (((Collection) value).size() > 0);
+        } else if (value instanceof Map) {
+            return (((Map) value).size() > 0);
+        }
+
+        return true;
+    }
 
     /**
      * 自动生成连接语句
