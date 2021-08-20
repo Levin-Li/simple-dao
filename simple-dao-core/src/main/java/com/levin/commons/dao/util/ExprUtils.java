@@ -9,7 +9,9 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
+import com.levin.commons.service.support.SpringContextHolder;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -92,13 +94,15 @@ public abstract class ExprUtils {
                                  boolean complexType, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
-                                 //    Consumer<String> fieldExprConsumer,
+                                 @NotNull Function<String, String> domainFunc,
                                  @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
                                  Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
 
+        final String domain = domainFunc != null ? domainFunc.apply(c.domain()) : c.domain();
+
         //优先使用 fieldExpr
-        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(c.domain(), name);
+        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(domain, name);
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -126,7 +130,7 @@ public abstract class ExprUtils {
 
         if (isFieldExpand) {
             //如果字段表达式中有CASE 函数
-            fieldExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, fieldExpr, c.fieldCases());
+            fieldExpr = genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, fieldExpr, c.fieldCases());
 
             //如果字段表达式中有函数，用函数包围
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
@@ -165,7 +169,7 @@ public abstract class ExprUtils {
                 hasDynamicExpr = true;
 
             } else if (isExistsOp
-                    && !isNotEmptyAnnotation(aroundColumnPrefixFunc, ctxEvalFunc, c, op)
+                    && !isNotEmptyAnnotation(domain, aroundColumnPrefixFunc, ctxEvalFunc, c, op)
                     && holder.value instanceof CharSequence) {
 
                 //如果是 Exist 操作，并且没有配置
@@ -266,7 +270,7 @@ public abstract class ExprUtils {
 
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
-            paramExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());
+            paramExpr = genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());
             paramExpr = genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs());
         }
 
@@ -330,7 +334,7 @@ public abstract class ExprUtils {
         //===================================以下部分替换文本========================================
 
         return surroundNotExpr(c, replace(ql, contexts, true,
-                column -> aroundColumnPrefixFunc.apply(c.domain(), column), null).trim());
+                column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
     }
 
     /**
@@ -462,15 +466,15 @@ public abstract class ExprUtils {
      * @param op
      * @return
      */
-    public static boolean isNotEmptyAnnotation(@NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> ctxEvalFunc, C c, Op op) {
+    public static boolean isNotEmptyAnnotation(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> ctxEvalFunc, C c, Op op) {
 
         if (op == null) {
             op = c.op();
         }
 
-        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.fieldCases()) : "";
+        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, "", c.fieldCases()) : "";
 
-        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.paramCases()) : "";
+        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, "", c.paramCases()) : "";
 
         fieldExpr = op.isNeedFieldExpr() ? genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs()) : fieldExpr;
 
@@ -525,11 +529,12 @@ public abstract class ExprUtils {
      * ELSE '其他'
      * END
      *
+     * @param domain
      * @param expr
      * @param cases
      * @return
      */
-    public static String genCaseExpr(C c, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+    public static String genCaseExpr(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
 
         return Stream.of(cases)
                 //过滤条件匹配的 case
@@ -540,7 +545,7 @@ public abstract class ExprUtils {
                         String.join(" ", "CASE",
                                 //如果原值替换变量
                                 C.ORIGIN_EXPR.equals(aCase.column()) ? expr :
-                                        (aroundColumnPrefixFunc == null ? aCase.column() : aroundColumnPrefixFunc.apply(c != null ? c.domain() : null, aCase.column())),
+                                        (aroundColumnPrefixFunc == null ? aCase.column() : aroundColumnPrefixFunc.apply(domain, aCase.column())),
                                 Stream.of(aCase.whenOptions())
                                         .map(when -> String.join(" ", "WHEN", when.whenExpr(), "THEN", when.thenExpr()))
                                         .collect(Collectors.joining(" "))
@@ -739,13 +744,13 @@ public abstract class ExprUtils {
         Optional.ofNullable(contexts).ifPresent(
                 maps -> {
                     maps.stream().filter(Objects::nonNull)
-                            .forEachOrdered(map -> (  ctx).setVariables((Map<String, Object>) map));
+                            .forEachOrdered(map -> (ctx).setVariables((Map<String, Object>) map));
                 }
         );
 
-        // ctx.setBeanResolver();
-
-        // ExpressionParser parser = new SpelExpressionParser();
+        if (SpringContextHolder.getBeanFactory() != null) {
+            ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+        }
 
         return (T) spelExpressionParser.parseExpression(expression).getValue(ctx);
 

@@ -47,13 +47,13 @@ class ExprUtilsTest {
         Case aCase = (Case) ClassUtils.newAnnotation(Case.class, null, caseMap, false);
 
 
-        String initExpr = ExprUtils.genCaseExpr(null,null,null, "initExpr", aCase);
+        String initExpr = ExprUtils.genCaseExpr(null, null, null, "initExpr", aCase);
 
         caseMap.put(E_Case.column, "");
 
         aCase = (Case) ClassUtils.newAnnotation(Case.class, null, caseMap, false);
 
-        initExpr = ExprUtils.genCaseExpr(null,null,c -> true, "initExpr", aCase);
+        initExpr = ExprUtils.genCaseExpr(null, null, c -> true, "initExpr", aCase);
 
         System.out.println(initExpr);
 

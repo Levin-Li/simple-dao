@@ -34,7 +34,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -133,6 +135,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     private boolean autoAppendOperationCondition = true;
 
+    private static final ThreadLocal<BiFunction<String, Map<String, Object>[], Object>> elEvalFuncThreadLocal = new ThreadLocal<>();
 
     protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
 
@@ -930,11 +933,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return "";
         }
 
+
         //去除空格
         column = column.trim();
 
         boolean hasDomain = hasText(domain);
-
 
         //关键逻辑点
         //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
@@ -1384,6 +1387,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 field.setAccessible(true);
 
                 try {
+
                     if (attrCallback != null) {
 
                         boolean isContinue = attrCallback.onAction(queryValueObj
@@ -1611,44 +1615,91 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
-        //如果是包括忽略注解，则直接忽略
-        if (isIgnore(varAnnotations)) {
-            return;
-        }
-        //校验数据
-        verifyGroupValidation(bean, name, value, findFirstMatched(varAnnotations, Validator.class));
-
-        //支持多个注解
-        List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
-
-        logicAnnotations.stream()
-                .forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
-        //可以多次逻辑组
         try {
 
-            //如果是忽略的类型
-            if (attrType != null && attrType.isAnnotationPresent(Ignore.class)) {
+//            BaseModel.TargetModel.builder()
+//                    .fieldOrMethod(fieldOrMethod)
+//                    .rootBean(bean)
+//                    .varType(attrType)
+//                    .name(name)
+//                    .varAnnotations(varAnnotations)
+//                    .value(value)
+//                    .build();
+
+            //设置脚本执行功能函数
+            elEvalFuncThreadLocal.set((expr, ctxs) -> evalExpr(bean, value, name, expr, null, ctxs));
+
+            //如果是包括忽略注解，则直接忽略
+            if (isIgnore(varAnnotations)) {
                 return;
             }
 
-            //当前节点是否有效
-            if (!whereExprRootNode.currentNode().isValid()) {
-                return;
-            }
+            //校验数据
+            verifyGroupValidation(bean, name, value, findFirstMatched(varAnnotations, Validator.class));
 
-            processAttr(bean, fieldOrMethod, varAnnotations, name, attrType, value);
+            //支持多个注解
+            List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+
+            logicAnnotations.stream()
+                    .forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+            //可以多次逻辑组
+            try {
+
+                //如果是忽略的类型
+                if (attrType != null && attrType.isAnnotationPresent(Ignore.class)) {
+                    return;
+                }
+
+                //当前节点是否有效
+                if (!whereExprRootNode.currentNode().isValid()) {
+                    return;
+                }
+
+                processAttr(bean, fieldOrMethod, varAnnotations, name, attrType, value);
+
+            } finally {
+
+                //部分自动关闭
+                logicAnnotations.stream()
+                        .filter(this::isLogicGroupAutoClose)
+                        .forEach(logicAnnotation -> end());
+
+                endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
+
+            }
+            //结束逻辑分组
 
         } finally {
-
-            //部分自动关闭
-            logicAnnotations.stream()
-                    .filter(this::isLogicGroupAutoClose)
-                    .forEach(logicAnnotation -> end());
-
-            endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
-
+            elEvalFuncThreadLocal.set(null);
         }
-        //结束逻辑分组
+    }
+
+    /**
+     * 表达式扩展或是替换
+     *
+     * @param expr
+     * @return
+     */
+    public static String evalText(String expr, Map<String, Object>... exMaps) {
+
+        BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
+
+        if (func == null) {
+            return expr;
+        }
+
+        if (!hasText(expr)) {
+            return expr;
+        }
+
+        if (expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
+
+            expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
+
+            return (String) func.apply(expr, exMaps);
+        }
+
+        return expr;
     }
 
     boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
@@ -1992,9 +2043,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    public void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
-                                  PrimitiveValue primitiveValue, Annotation opAnnotation,
-                                  BiConsumer<String, ValueHolder<? extends Object>> consumer) {
+    protected void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
+                                     PrimitiveValue primitiveValue, Annotation opAnnotation,
+                                     BiConsumer<String, ValueHolder<? extends Object>> consumer) {
 
         boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
 
@@ -2071,18 +2122,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         List<Map<String, ?>> fieldCtxs = this.buildContextValues(holder.root, holder.value, name);
 
-        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(c.domain(), name), holder, getParamPlaceholder(),
+        Function<String, String> domainFunc = (domain) -> evalStringExpr(holder.root, holder.value, name, domain, fieldCtxs);
+
+        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(domainFunc.apply(c.domain()), name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
-                expr -> evalTrueExpr(holder.root, holder.value, expr, fieldCtxs),
+                expr -> evalTrueExpr(holder.root, holder.value, name, expr, fieldCtxs),
 
-                // (fieldExpr) -> tryAppendOrderBy(fieldExpr, opAnno),
+                domainFunc,
 
                 //字段别名和转换回调 求值回调
                 this::aroundColumnPrefix,
 
                 this::buildSubQuery, fieldCtxs);
-
     }
 
     protected String getText(String text, String prefix, String suffix, String defaultV) {
@@ -2248,10 +2300,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
-        return evalTrueExpr(root, value, expr, buildContextValues(root, value, name));
+        return evalTrueExpr(root, value, name, expr, buildContextValues(root, value, name));
     }
 
-    protected boolean evalTrueExpr(Object root, Object value, String expr, List<Map<String, ? extends Object>> contexts) {
+
+    protected boolean evalTrueExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> contexts) {
 
         /**
          * 默认是无条件限制
@@ -2265,14 +2318,67 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //优化性能
         if (C.NOT_EMPTY.equals(expr) || expr.equals("#" + C.NOT_EMPTY)) {
             return ExprUtils.isNotEmpty(value);
-        } else if (expr.contains("#" + C.NOT_EMPTY)) {
-            contexts.add(MapUtils.put(C.NOT_EMPTY, ExprUtils.isNotEmpty(value)).build());
         }
 
+        return evalExpr(root, value, name, expr, contexts);
+    }
+
+    /**
+     * 表达式求值
+     *
+     * @param root
+     * @param value
+     * @param name
+     * @param expr
+     * @param <T>
+     * @return
+     */
+    protected String evalStringExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
+
+        if (!hasText(expr)) {
+            return expr;
+        }
+
+        if (expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
+
+            expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
+
+            return evalExpr(root, value, name, expr, baseContexts, exMaps);
+        }
+
+        return expr;
+    }
+
+    /**
+     * 表达式求值
+     *
+     * @param root
+     * @param value
+     * @param name
+     * @param expr
+     * @param <T>
+     * @return
+     */
+    protected <T> T evalExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
+
         try {
-            return ExprUtils.evalSpEL(root, expr, contexts);
+
+            if (baseContexts == null) {
+                baseContexts = buildContextValues(root, value, name);
+            }
+
+            if (exMaps != null) {
+                for (Map<String, ?> exMap : exMaps) {
+                    if (exMap != null) {
+                        baseContexts.add(exMap);
+                    }
+                }
+            }
+
+            return ExprUtils.evalSpEL(root, expr, baseContexts);
+
         } catch (Exception e) {
-            throw new StatementBuildException("boolean expression [" + expr + "] eval fail," + e.getMessage(), e);
+            throw new StatementBuildException(name + " expression [" + expr + "] eval fail," + e.getMessage(), e);
         }
     }
 
@@ -2321,7 +2427,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         return QueryAnnotationUtil.getFieldType(aliasMap.get(domain), name);
-
     }
 
 
@@ -2360,6 +2465,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         contextValues.add(MapUtils
                 .put("_val", value)
+                .put(C.NOT_EMPTY, ExprUtils.isNotEmpty(value))
                 .put("_this", root)
                 .put("_name", fieldName)
                 .put("_isSelect", (this instanceof SelectDao))

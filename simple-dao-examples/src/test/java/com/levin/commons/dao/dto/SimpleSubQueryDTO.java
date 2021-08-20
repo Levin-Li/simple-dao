@@ -43,21 +43,6 @@ public class SimpleSubQueryDTO {
     //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
 
 
-    @Schema(description = "昵称")
-    @Where(paramExpr =  "memberId"
-            + " in ( select m.uid from user m where m.nickName = ${:_val} )")
-    private String nickName ="1aaa";
-
-    @Schema(description = "账号")
-    @Where(paramExpr = "memberId"
-            + " in ( select m.uid from user m where m.memberAccount = ${:_val} )")
-    private String memberAccount ="2aaa";
-
-    @Where(paramExpr = "memberId"
-            + " in ( select m.uid from user m where m.mobilePhone = ${:_val} )")
-    private String receiverPhone="3ccc";
-
-
     //生成的语句
     //Select  (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt  ,
     //        (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ?1 ) AS taskSum

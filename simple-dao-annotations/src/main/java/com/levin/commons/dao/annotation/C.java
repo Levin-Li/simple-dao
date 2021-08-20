@@ -98,6 +98,9 @@ public @interface C {
      * 字段归属的域，通常是表的别名
      * <p>
      * 如果为 "NULL" 值，则忽略这个值
+     * <p>
+     * 该字段支持 spel 表达式，使用 SPEL_PREFIX 做为前缀时
+     * 支持
      *
      * @return
      */

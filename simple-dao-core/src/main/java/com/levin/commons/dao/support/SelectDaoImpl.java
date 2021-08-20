@@ -581,7 +581,10 @@ public class SelectDaoImpl<T>
 
         if ((opAnnotation instanceof OrderBy)) {
             OrderBy orderBy = (OrderBy) opAnnotation;
-            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(orderBy.domain(), name), orderBy.type()));
+
+            String domain = evalText(orderBy.domain());
+
+            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type()));
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
 //            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
             if (value instanceof String) {
@@ -617,20 +620,23 @@ public class SelectDaoImpl<T>
 
             Fetch fetch = (Fetch) opAnnotation;
 
+            String domain = evalText(fetch.domain());
+
             if (fetch.isBindToField()
                     && fetch.joinType() != Fetch.JoinType.None
                     && fieldOrMethod instanceof Field) {
 
                 String attrName = hasText(fetch.value()) ? fetch.value() : ((Field) fieldOrMethod).getName();
 
-                joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
+
+                joinFetch(true, domain, fetch.joinType(), attrName);
 
                 attrFetchList.put(((Field) fieldOrMethod).getDeclaringClass().getName() + "|" + attrName, true);
 
             }
 
             //增加集合抓取
-            joinFetch(false, fetch.domain(), fetch.joinType(), fetch.attrs());
+            joinFetch(false, domain, fetch.joinType(), fetch.attrs());
 
         }
 
@@ -831,7 +837,7 @@ public class SelectDaoImpl<T>
 
                 String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
-                expr = hasText(orderBy.value()) ? aroundColumnPrefix(orderBy.domain(), orderBy.value()) : expr;
+                expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalText(orderBy.domain()), orderBy.value()) : expr;
 
                 if (hasText(expr)) {
                     addOrderBy(expr, orderBy.order(), orderBy.type());
@@ -1267,7 +1273,6 @@ public class SelectDaoImpl<T>
 
                 }, field -> field.isAnnotationPresent(Fetch.class)
         );
-
 
     }
 

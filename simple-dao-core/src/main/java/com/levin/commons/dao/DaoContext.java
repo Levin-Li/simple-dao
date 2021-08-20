@@ -75,5 +75,4 @@ public abstract class DaoContext {
 
     private static final String AUTO_FLUSH_AND_CLEAR_CACHE = DaoContext.class.getName() + ".AUTO_FLUSH_AND_CLEAR_CACHE";
 
-
 }
