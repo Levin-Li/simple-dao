@@ -9,6 +9,7 @@
  
    目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    
+   说重点，组件的Maven插件可以双击生成代码哦。
 
    组件逻辑架构如下图：   
    
@@ -82,7 +83,6 @@
           Having Avg(score) > 80 and Sum(score) > 260
    
    2） 服务层
-      服务层方法就一行代码。 
        
         @Service
         public class ExamStatService {
@@ -113,7 +113,7 @@
         
      }
      
-   完成啦，用 postman 测试以一下。这个是组件的简单应用，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。  
+   大功告成，用 postman 测试以一下。这个是组件的简单应用，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。  
         
  
 ### 2 快速上手
