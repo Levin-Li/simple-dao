@@ -19,14 +19,14 @@
 
    实体类定义
    
-      //学生考试成绩表
+      //实体类 对应 学生考试成绩表
       
       @Entity(name = "exam_log")
       @Data
       @Accessors(chain = true)
       @FieldNameConstants 
       public class ExamLog{
-      
+     
          @Id
          @GeneratedValue
          private Long id;
@@ -44,15 +44,17 @@
              
       }
       
-   查询统计需求： 找出语数英三科考试中总分超过260分，学科平均分高于80，学生姓名中包含特定字符的学生姓名、总分、平均分。
+   需求：
+   查询并统计出语数英三科考试中总分超过260分，学科平均分高于80，学生姓名中包含特定字符的学生姓名、总分、平均分。
  
+   解决方案：
+   
    1）定义查询对象
   
-       /**
-        * 数据传输对象(兼查询对象，通过注解产生SQL语句)
-        */
+   数据传输对象(兼查询对象，通过注解产生SQL语句)
+    
       @Data
-      @TargetOption(entityClass = ExamLog.class, resultClass = ExamStatDto.class)
+      @TargetOption(entityClass = /* 目标类 */ ExamLog.class , resultClass = /* 结果类 */ ExamStatDto.class)
       public class ExamStatDto {
       
           @Sum(having=Op.Gt)
@@ -68,26 +70,50 @@
           @GroupBy
           String studentName = "李"; 
       }
+      
+       以上Dto等效的SQL语句如下：
+       
+          Select 
+          studentName ,  Avg(score) ,  Sum(score) 
+          From exam_log 
+          Where 
+          subject IN ("语文", "数学", "英语")  AND studentName LIKE '%李%'  
+          Group By studentName
+          Having Avg(score) > 80 and Sum(score) > 260
    
-   2） 查询结果集
+   2） 服务层
+      服务层方法就一行代码。 
+       
+        @Service
+        public class ExamStatService {
         
          @Autowired
-         SimpleDao dao;
+         SimpleDao dao; //通用 Dao
          
-         //查询并返回结果
- 
-         List<ExamStatDto> result =  dao.findByQueryObj(new ExamStatDto());   
- 
-         以上查询等效的SQL语句如下：
-   
-            Select 
-            studentName ,  Avg(score) ,  Sum(score) 
-            From exam_log 
-            Where 
-            subject IN ("语文", "数学", "英语")  AND studentName LIKE '%李%'  
-            Group By studentName
-            Having Avg(score) > 80 and Sum(score) > 260
-            
+         public List<ExamStatDto> stat(ExamStatDto statDto){
+           //一行代码，就一行！！！
+           //查询结果自动绑定到 ExamStatDto对象。
+           return dao.findByQueryObj(statDto);
+         }
+         
+       }
+         
+   3）控制器 
+     
+     @RestController
+     public class ExamStatController{
+     
+        @Autowired
+        ExamStatService examStatService;
+        
+        @GetMapping("/exam_stat")
+        public ApiResp<ExamStatDto> stat(ExamStatDto statDto){
+            return ApiResp.ok(examStatService.stat(statDto));
+        }
+        
+     }
+     
+   4) 完成啦，这个还是简单的，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。       
  
 ### 2 快速上手
 
