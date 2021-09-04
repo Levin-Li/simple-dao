@@ -24,6 +24,7 @@ import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
+import static ${modulePackageName}.ModuleOption.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -47,6 +48,8 @@ import ${servicePackageName}.info.*;
 @Slf4j @Valid
 public class ${className} {
 
+    private static final String ENTITY_NAME ="${desc}";
+
     //请求级别变量
     @Autowired
     HttpServletResponse httpResponse;
@@ -65,7 +68,7 @@ public class ${className} {
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(tags = {"${desc}"}, summary = "分页查找${desc}", description = "分页查找${desc}(${entityName})")
+    @Operation(tags = {ENTITY_NAME}, summary = "分页查找" + ENTITY_NAME)
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
@@ -76,17 +79,17 @@ public class ${className} {
      * @param req Create${entityName}Evt
      * @return ApiResp
      */
-    @PostMapping("/create")
-    @Operation(tags = {"${desc}"}, summary = "新增${desc}", description = "新增${desc}(${entityName})")
+    @PostMapping
+    @Operation(tags = {ENTITY_NAME}, summary = "新增" + ENTITY_NAME)
 <#if pkField?exists>
-    public ApiResp<${pkField.typeName}> create(Create${entityName}Req req) {
+    public ApiResp<${pkField.typeName}> create(@RequestBody Create${entityName}Req req) {
 <#else>
-    public ApiResp<Boolean> create(Create${entityName}Req req) {
+    public ApiResp<Boolean> create(@RequestBody Create${entityName}Req req) {
 </#if>
    <#if pkField?exists>
         return ApiResp.ok(${serviceName?uncap_first}.create(req));
     <#else>
-        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error("新增${desc}失败");
+        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error("新增" + ENTITY_NAME + "失败");
     </#if>
     }
 
@@ -97,11 +100,11 @@ public class ${className} {
      * @return ApiResp
      */
     @PostMapping("/batchCreate")
-    @Operation(tags = {"${desc}"}, summary = "批量新增${desc}", description = "批量新增${desc}(${entityName})")
+    @Operation(tags = {ENTITY_NAME}, summary = "批量新增" + ENTITY_NAME)
 <#if pkField?exists>
-    public ApiResp<List<${pkField.typeName}>> batchCreate(List<Create${entityName}Req> reqList) {
+    public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 <#else>
-    public ApiResp<List<Boolean>> batchCreate(List<Create${entityName}Req> reqList) {
+    public ApiResp<List<Boolean>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 </#if>
         return ApiResp.ok(${serviceName?uncap_first}.batchCreate(reqList));
     }
@@ -112,39 +115,49 @@ public class ${className} {
     *
     * @param ${pkField.name} ${pkField.typeName}
     */
-    @GetMapping("/{id}")
-    @Operation(tags = {"${desc}"}, summary = "查看${desc}", description = "查看${desc}(${entityName})")
+    @GetMapping("/{${pkField.name}}")
+    @Operation(tags = {ENTITY_NAME}, summary = "通过ID找回" + ENTITY_NAME)
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-        return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
+         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 </#if>
 
     /**
      * 更新
+     * @param ${pkField.name} ${pkField.typeName}
      */
-     @PutMapping("/update")
-     @Operation(tags = {"${desc}"}, summary = "更新${desc}", description = "更新${desc}(${entityName})")
-     public ApiResp<Void> update(Update${entityName}Req req) {
-         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error("更新${desc}失败");
+     @PutMapping({"" , "/{${pkField.name}}"})
+     @Operation(tags = {ENTITY_NAME}, summary = "更新" + ENTITY_NAME)
+     public ApiResp<Void> update(@PathVariable ${pkField.typeName} ${pkField.name} , @RequestBody Update${entityName}Req req) {
+         //路径参数优先使用
+         if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
+         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error("更新" + ENTITY_NAME + "失败");
     }
 
     /**
      * 批量更新
      */
      @PutMapping("/batchUpdate")
-     @Operation(tags = {"${desc}"}, summary = "批量更新${desc}", description = "批量更新${desc}(${entityName})")
-     public ApiResp<List<Integer>> batchUpdate(List<Update${entityName}Req> reqList) {
+     @Operation(tags = {ENTITY_NAME}, summary = "批量更新" + ENTITY_NAME)
+     public ApiResp<List<Integer>> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
     }
 
     /**
      * 删除
+     * @param ${pkField.name} ${pkField.typeName}
      */
-    @DeleteMapping("/delete")
-    @Operation(tags = {"${desc}"}, summary = "删除${desc}", description = "删除${desc}(${entityName})")
-    public ApiResp<Void> delete(Delete${entityName}Req req) {
-        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error("删除${desc}失败");
+    @DeleteMapping({"" , "/{${pkField.name}}"})
+    @Operation(tags = {ENTITY_NAME}, summary = "删除" + ENTITY_NAME)
+    public ApiResp<Void> delete(@PathVariable ${pkField.typeName} ${pkField.name} , Delete${entityName}Req req) {
+        //路径参数优先使用
+        if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
+        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error("删除" + ENTITY_NAME + "失败");
     }
 
+    protected boolean isNotEmpty(Object value) {
+        return value != null
+        && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
+    }
 
 }

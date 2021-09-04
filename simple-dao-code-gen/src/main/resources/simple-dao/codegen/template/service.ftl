@@ -2,7 +2,7 @@ package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.*;
 
 import java.util.*;
 
@@ -21,14 +21,16 @@ import ${packageName}.info.*;
  */
 public interface ${className} {
 
-    @Schema(description = "新增${desc}")
+    String ENTITY_NAME ="${desc}";
+
+    @Operation(tags = {ENTITY_NAME}, summary = "新增" + ENTITY_NAME)
 <#if pkField?exists>
     ${pkField.typeName} create(Create${entityName}Req req);
 <#else>
     boolean create(Create${entityName}Req req);
 </#if>
 
-    @Schema(description = "批量新增${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "批量新增" + ENTITY_NAME)
 <#if pkField?exists>
     List<${pkField.typeName}> batchCreate(List<Create${entityName}Req> reqList);
 <#else>
@@ -36,20 +38,20 @@ public interface ${className} {
 </#if>
 
 <#if pkField?exists>
-    @Schema(description = "通过ID找回${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "通过ID找回" + ENTITY_NAME)
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 </#if>
 
-    @Schema(description = "更新${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "更新" + ENTITY_NAME)
     int update(Update${entityName}Req req);
 
-    @Schema(description = "批量更新${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "批量更新" + ENTITY_NAME)
     List<Integer> batchUpdate(List<Update${entityName}Req> reqList);
 
-    @Schema(description = "删除${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "删除" + ENTITY_NAME)
     int delete(Delete${entityName}Req req);
 
-    @Schema(description = "分页查找${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "分页查找" + ENTITY_NAME)
     PagingData<${entityName}Info> query(Query${entityName}Req req , Paging paging);
 
 }

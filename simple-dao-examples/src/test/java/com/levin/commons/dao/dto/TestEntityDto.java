@@ -18,6 +18,8 @@ public class TestEntityDto {
     @CList({@C(op = Op.StartsWith),@C(op = Op.IsNull)})
     String name="test";
 
+    // c.name like ? or c.name is null or c.phone like ? or c.nickName like
+
 
     @Like(paramFuncs = @Func( prefix = "'%#' || ",suffix = " || '#%'"))
     @Contains(paramFuncs = @Func( prefix = "'#' || ",suffix = " || '%'"))

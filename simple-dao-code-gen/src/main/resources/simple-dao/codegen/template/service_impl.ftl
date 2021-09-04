@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -57,7 +57,7 @@ public class ${className} implements ${serviceName} {
     @Autowired
     private SimpleDao simpleDao;
 
-    @Schema(description = "新增${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "新增" + ENTITY_NAME)
     @Override
 <#if pkField?exists>
     public ${pkField.typeName} create(Create${entityName}Req req){
@@ -82,7 +82,7 @@ public class ${className} implements ${serviceName} {
 </#if>
     }
 
-    @Schema(description = "批量新增${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "批量新增" + ENTITY_NAME)
     @Transactional(rollbackFor = Exception.class)
     @Override
 <#if pkField?exists>
@@ -94,33 +94,33 @@ public class ${className} implements ${serviceName} {
     }
 
 <#if pkField?exists>
-    @Schema(description = "通过ID查找${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "通过ID找回" + ENTITY_NAME)
     @Override
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
 </#if>
 
-    @Schema(description = "更新${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "更新" + ENTITY_NAME)
     @Override
     public int update(Update${entityName}Req req) {
         return simpleDao.updateByQueryObj(req);
     }
 
-    @Schema(description = "批量更新${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "批量更新" + ENTITY_NAME)
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<Integer> batchUpdate(List<Update${entityName}Req> reqList){
         return reqList.stream().map(this::update).collect(Collectors.toList());
     }
 
-    @Schema(description = "删除${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "删除" + ENTITY_NAME)
     @Override
     public int delete(Delete${entityName}Req req) {
         return simpleDao.deleteByQueryObj(req);
     }
 
-    @Schema(description = "分页查找${desc}")
+    @Operation(tags = {ENTITY_NAME}, summary = "分页查找" + ENTITY_NAME)
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
         return simpleDao.findPagingDataByQueryObj(req, paging);

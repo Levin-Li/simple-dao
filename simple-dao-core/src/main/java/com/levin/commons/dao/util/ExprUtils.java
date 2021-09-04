@@ -973,7 +973,8 @@ public abstract class ExprUtils {
         if (value == null) {
             return false;
         } else if (value instanceof CharSequence) {
-            return (((CharSequence) value).toString().trim().length() > 0);
+//            return (((CharSequence) value).toString().trim().length() > 0);
+            return hasText((CharSequence) value);
         } else if (value.getClass().isArray()) {
             return (Array.getLength(value) > 0);
         } else if (value instanceof Collection) {
