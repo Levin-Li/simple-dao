@@ -1,4 +1,4 @@
-package com.levin.commons.dao.codegen.plugins;
+package com.levin.commons.plugins;
 
 
 import com.levin.commons.service.support.ContextHolder;
@@ -55,13 +55,13 @@ public abstract class BaseMojo extends AbstractMojo {
     protected MavenProjectHelper projectHelper;
 
     @Component
-    private ArtifactResolver artifactResolver;
+    protected ArtifactResolver artifactResolver;
 
     @Component
-    private DependencyResolver dependencyResolver;
+    protected DependencyResolver dependencyResolver;
 
     @Component
-    private RepositoryManager repositoryManager;
+    protected RepositoryManager repositoryManager;
 
     /**
      * 为 true 跳过插件的执行
@@ -73,7 +73,7 @@ public abstract class BaseMojo extends AbstractMojo {
      * 插件仅在构建命令启动的模块中执行
      */
     @Parameter
-    private boolean onlyExecutionRoot = true;
+    protected boolean onlyExecutionRoot = true;
 
     /**
      * 是否打印异常
@@ -145,6 +145,7 @@ public abstract class BaseMojo extends AbstractMojo {
      * 线程变量
      */
     protected static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
+
 
     private final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 
@@ -218,7 +219,6 @@ public abstract class BaseMojo extends AbstractMojo {
             }
 
         }
-
 
         if (filePaths != null) {
 
@@ -426,18 +426,11 @@ public abstract class BaseMojo extends AbstractMojo {
 
         if (allowList == null
                 || allowList.length == 0
-                || allowName == null
-                || allowName.trim().length() == 0) {
+                || !StringUtils.hasText(allowName)) {
             return true;
         }
 
-        for (String allow : allowList) {
-            if (allowName.equals(allow)) {
-                return true;
-            }
-        }
-
-        return false;
+        return Arrays.asList(allowList).contains(allowName);
     }
 
 

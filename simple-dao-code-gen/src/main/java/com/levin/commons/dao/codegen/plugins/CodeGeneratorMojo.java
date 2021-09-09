@@ -1,6 +1,7 @@
 package com.levin.commons.dao.codegen.plugins;
 
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
+import com.levin.commons.plugins.BaseMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;

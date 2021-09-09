@@ -1,5 +1,6 @@
-package com.levin.commons.dao.codegen.plugins;
+package com.levin.commons.plugins.simple;
 
+import com.levin.commons.plugins.BaseMojo;
 import com.trilead.ssh2.ChannelCondition;
 import com.trilead.ssh2.Connection;
 import org.apache.maven.plugin.MojoExecutionException;

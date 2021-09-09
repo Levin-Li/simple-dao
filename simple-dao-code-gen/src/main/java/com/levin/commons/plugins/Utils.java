@@ -1,4 +1,4 @@
-package com.levin.commons.dao.codegen.plugins;
+package com.levin.commons.plugins;
 
 import com.trilead.ssh2.Connection;
 import groovy.lang.GroovyShell;

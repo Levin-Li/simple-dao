@@ -1,4 +1,4 @@
-package com.levin.commons.dao.codegen.plugins;
+package com.levin.commons.plugins;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
