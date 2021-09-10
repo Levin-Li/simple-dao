@@ -1,4 +1,5 @@
 <#noparse>
+
 #!/bin/bash
 
 execDir=`pwd`
@@ -9,38 +10,58 @@ cd $shellDir
 
 shellDir=`pwd`
 
-appJars = `ls *.jar`
+appJars=`ls *.jar`
 
 mkdir -p "resources/public"
 
+tempFile=`date +%s`
+
 pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+
+content=""
 
 if [ -z $pids ]; then
 
-   read -p "is need startup parameter?[y/n]" -t 5 needParam
+   read -p "是否需要启动密码?[y/n]" -t 7 needParam
 
-   param = "`date +%s`"
+   if [ "${needParam}" = "y" ]; then
 
-   if [ "y" = needParam]; then
-
-      echo "请输入启动参数(先按回车再按 CTRL+C结束输入):"
-      echo "Please input startup parameter(press enter and ^C over):"
-
+      echo "请输入启动密码:"
       #主要用于输入密码，但不会在命令行历史记录出现
-      cat <&0 >param
+      head -n 1 <&0 > ${tempFile}
 
    fi
 
-   echo "[$shellDir/$0] program startup ..."
+   #如果有文件
+   if [ -f ${tempFile} ]; then
+       content=`cat ${tempFile}`
+   fi
+
+   #如果文件有内容
+   if [ -n "${content}" ]; then
+       content=" -DpwdFile=${tempFile} -XX:+DisableAttachMechanism -javaagent:${appJars} "
+   fi
+
+   echo "[$shellDir/$0] ${appJars} ${tempFile} startup ..."
 
    # -XX:+DisableAttachMechanism 禁止调试
-   nohup java -Dwork.dir=${shellDir} -server -XX:+DisableAttachMechanism -javaagent:${appJars} -DpwdFile=${param} -Dloader.path=resources,biz-libs,third-libs -jar *.jar 2>&1 &
+   nohup java -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar *.jar 2>&1 &
 
    sleep 5s
 
-   echo "#param:$$" > param
+   #覆盖临时文件
+   echo "#param:$$" > ${tempFile}
 
-   rm -fr param
+   #删除临时文件
+   rm -fr ${tempFile}
+
+   ps -ef | grep java | grep "$shellDir"
+
+   #如果是人工交互，顺便查看启动过程
+   if [ -n "${needParam}" ]; then
+       #查看日志
+       tail -f *.out
+   fi
 
 else
 
@@ -48,8 +69,5 @@ else
    ps -ef | grep java | grep "$shellDir"
 
 fi
-
-#回到原目录
-#cd $execDir
 
 </#noparse>
