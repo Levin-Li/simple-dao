@@ -2,6 +2,7 @@ package com.levin.commons.plugins.javaagent;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.jar.JarFile;
@@ -14,6 +15,8 @@ import java.util.jar.JarFile;
 public class JavaAgent {
 
     private static Instrumentation instrumentation;
+
+    private static final String DISABLE_DEBUG_OPTION = "-XX:+DisableAttachMechanism";
 
     public static Instrumentation getInstrumentation() {
         return instrumentation;
@@ -85,6 +88,14 @@ public class JavaAgent {
 
         //有密码才加入处理
         if (pwd != null && pwd.trim().length() > 0) {
+            //如果有密码，则确保禁止调试
+            boolean disableDebug = ManagementFactory.getRuntimeMXBean().getInputArguments().contains(DISABLE_DEBUG_OPTION);
+
+            if (!disableDebug) {
+                System.out.println("启动参数有误，请检查参数是否包含:" + DISABLE_DEBUG_OPTION);
+                System.exit(1);
+            }
+
             instrumentation.addTransformer(new ClassTransformer(pwd.toCharArray()));
         }
     }
@@ -128,6 +139,14 @@ public class JavaAgent {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+
+        System.out.println(System.getProperties());
+
+
+        System.out.println();
     }
 
 }
