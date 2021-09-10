@@ -308,16 +308,36 @@
 
         <plugins>
 
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>${maven-jar-plugin.addMavenDescriptor}</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>
 
+
                 <configuration>
                     <skip>${simple-dao-codegen.skip}</skip>
                     <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+
                 </configuration>
+
+                <executions>
+                    <execution>
+                        <id>encrypt-repackage</id>
+                        <goals>
+                            <goal>encrypt-class</goal>
+                        </goals>
+                    </execution>
+                </executions>
 
                 <dependencies>
                     <dependency>

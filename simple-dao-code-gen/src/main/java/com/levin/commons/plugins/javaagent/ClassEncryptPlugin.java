@@ -1,20 +1,21 @@
 package com.levin.commons.plugins.javaagent;
 
 import com.levin.commons.plugins.BaseMojo;
-import javassist.*;
-import javassist.bytecode.*;
-import javassist.compiler.CompileError;
-import javassist.compiler.Javac;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.springframework.asm.*;
+import org.springframework.cglib.core.Constants;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -22,16 +23,22 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.CRC32;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import static com.levin.commons.plugins.javaagent.ClassTransformer.META_INF_CLASSES;
+import static org.springframework.asm.Opcodes.*;
 
 /**
  * 加密jar/war文件的maven插件
  *
  * @author roseboy
  */
-@Mojo(name = "class-encrypt", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "encrypt-class", defaultPhase = LifecyclePhase.PACKAGE)
 public class ClassEncryptPlugin extends BaseMojo {
+
+    public static final String MANIFEST = "META-INF/MANIFEST.MF";
 
     /**
      * 加密密码文件
@@ -39,6 +46,11 @@ public class ClassEncryptPlugin extends BaseMojo {
     @Parameter
     String pwdFile;
 
+    /**
+     * 类加密密码，pwdFile参数优先
+     */
+    @Parameter
+    String pwd;
 
     /**
      * 包含的包，如果没指定，默认包则整个jar的类
@@ -54,12 +66,17 @@ public class ClassEncryptPlugin extends BaseMojo {
 
     {
         onlyExecutionRoot = false;
+        isPrintException = true;
         pwdFile = "class-encrypt-password.txt";
         allowPackageTypes = new String[]{"jar", "war", "ear"};
     }
 
 
     public static File findFile(MavenProject project, String name) {
+
+        if (!StringUtils.hasText(name)) {
+            return null;
+        }
 
         File file = null;
 
@@ -79,64 +96,66 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         if (!StringUtils.hasText(pwdFile)) {
             logger.warn("pwdFile is not set");
-            return;
         }
 
         File pwdFile = findFile(mavenProject, this.pwdFile);
 
-        String pwd = FileUtils.readFileToString(pwdFile, Charset.forName("UTF-8"));
+        if (pwdFile != null) {
+            pwd = FileUtils.readFileToString(pwdFile, Charset.forName("UTF-8"));
+            getLog().info("从" + pwdFile + "读取密码进行加密...");
+        }
 
         if (!StringUtils.hasText(pwd)) {
-            logger.warn("pwdFile {} is empty", pwdFile.getAbsolutePath());
+            logger.warn("password not set , ignore.");
             return;
         }
 
         Build build = mavenProject.getBuild();
 
-        String buildName = build.getFinalName();
-
-        String outputDirectory = build.getOutputDirectory();
-
-        getLog().info(" " + buildName + " --> " + outputDirectory);
-
-        build.getResources().stream()
-                .forEach(resource -> getLog().info("" + resource.getDirectory() + " " + resource.getIncludes()));
-
-//                <groupId>org.springframework.boot</groupId>
-//                <artifactId>spring-boot-maven-plugin</artifactId>
-
-
         boolean hasSpringBootPlugin = mavenProject.getBuildPlugins().stream().anyMatch(plugin ->
                 "org.springframework.boot".equals(plugin.getGroupId()) && "spring-boot-maven-plugin".equals(plugin.getArtifactId()));
 
+        File buildFile = new File(build.getDirectory(), build.getFinalName() + "." + mavenProject.getPackaging());
 
-        File outFile = new File(build.getDirectory(), build.getFinalName() + "." + mavenProject.getPackaging());
-
-        File oldFile = new File(outFile.getParentFile(), outFile.getName() + ".old");
-
-        if (outFile.renameTo(oldFile) || !oldFile.exists()) {
-            logger.error("文件修改名字 " + outFile + " -> " + oldFile + " 失败");
+        if (!buildFile.exists()) {
+            logger.error("文件" + buildFile + "不存在");
             return;
         }
 
-        JarFile oldJarFile = new JarFile(oldFile);
+        JarFile buildFileJar = new JarFile(buildFile);
 
-        JarEntry jarEntry = oldJarFile.getJarEntry("BOOT-INF/classes");
+        JarEntry testEntry = buildFileJar.getJarEntry(ClassTransformer.class.getName().replace(".", "/") + ".class");
 
-        if (jarEntry == null) {
-            jarEntry = oldJarFile.getJarEntry("WEB-INF/classes");
+        if (testEntry != null && !testEntry.isDirectory()) {
+            logger.error("文件" + buildFile + "已经加密");
+            return;
         }
 
-        String path = (jarEntry != null && jarEntry.isDirectory()) ? jarEntry.getName() + "/" : null;
+        JarEntry jarEntry = buildFileJar.getJarEntry("BOOT-INF/classes");
+
+        if (jarEntry == null) {
+            jarEntry = buildFileJar.getJarEntry("WEB-INF/classes");
+        }
+
+        String path = (jarEntry != null && jarEntry.isDirectory()) ? jarEntry.getName() : "";
 
         //解压缩
-        Manifest manifest = oldJarFile.getManifest();
+        Manifest manifest = buildFileJar.getManifest();
 
-        manifest.getMainAttributes().put("Premain-Class", JavaAgent.class.getName());
+        manifest.getMainAttributes().putValue("Premain-Class", JavaAgent.class.getName());
+        manifest.getMainAttributes().putValue("Agent-Class", JavaAgent.class.getName());
 
-        JarOutputStream newJarOutFile = new JarOutputStream(new FileOutputStream(outFile), manifest);
+        File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
 
-        Enumeration<JarEntry> entries = oldJarFile.entries();
+        JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(encryptOutFile), manifest);
+
+        //
+        writeClassToJar(jarOutputStream, "", JavaAgent.class, ClassTransformer.class);
+
+        Enumeration<JarEntry> entries = buildFileJar.entries();
+
+
+        byte[] emptyArray = new byte[0];
 
         while (entries.hasMoreElements()) {
 
@@ -144,35 +163,253 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             String name = entry.getName();
 
-            if (path != null && name.startsWith(path)) {
+            if (MANIFEST.equals(name)) {
+                continue;
+            }
+
+            if (name.startsWith(path)) {
                 name = name.substring(path.length());
             }
 
             name = name.replace("/", ".");
 
+            byte[] fileContent = entry.getSize() > 0 ? IOUtils.readFully(buildFileJar.getInputStream(entry), (int) entry.getSize()) : emptyArray;
+
+            boolean isChange = false;
+
+           // getLog().info("Path:" + path + " " + entry.getName());
+
             if (entry.getName().endsWith(".class")
+                    && entry.getName().startsWith(path)
+                    && !entry.isDirectory()
                     && isInclude(name)
                     && !isExclude(name)) {
-                //加密
-                byte[] classByteCode = ClassTransformer.encryptByAes128(entry.getExtra(), pwd);
+
+                //获取类名的md5
+                name = name.substring(0, name.length() - 6);
+
+                String resKey = ClassTransformer.getMd5(name);
+
+                jarOutputStream.putNextEntry(new JarEntry(META_INF_CLASSES + resKey));
+                byte[] encryptData = ClassTransformer.encryptByAes128(fileContent, pwd);
+                jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                entry.setExtra(rewriteAllMethods(ClassPool.getDefault(), name));
+                fileContent = clearMethodBody(fileContent, resKey, encryptData);
 
-                JarEntry ze = new JarEntry(META_INF_CLASSES + name);
-                ze.setExtra(classByteCode);
+                isChange = true;
 
-                newJarOutFile.putNextEntry(ze);
+                getLog().info("加密类文件 " + entry.getName() + " -- > " + name + " 原大小： " + entry.getSize() + " , 加密后的大小：" + encryptData.length + " , 方法清空后的大小：" + fileContent.length);
             }
 
-            //写到一个新文件
-            newJarOutFile.putNextEntry(entry);
+            JarEntry entry2 = isChange ? new JarEntry(entry.getName()) : new JarEntry(entry);
+
+            //如果被改变
+            if (isChange) {
+                boolean compressed = entry.getMethod() == JarEntry.DEFLATED || entry.getSize() > entry.getCompressedSize();
+                //spring boot 不允许 jar , zip 进行二次压缩
+                entry2.setMethod(compressed ? JarEntry.DEFLATED : JarEntry.STORED);
+
+                //如果不压缩，CRC32 重新计算
+                if (!compressed) {
+                    entry2.setSize(fileContent.length);
+                    CRC32 crc32 = new CRC32();
+                    crc32.update(fileContent);
+                    entry2.setCrc(crc32.getValue());
+                }
+
+                entry2.setTime(entry.getTime());
+
+            }
+
+            jarOutputStream.putNextEntry(entry2);
+            jarOutputStream.write(fileContent);
+
         }
 
-        newJarOutFile.flush();
-        newJarOutFile.finish();
-        newJarOutFile.close();
+        jarOutputStream.finish();
+        jarOutputStream.flush();
+        jarOutputStream.close();
 
+        buildFileJar.close();
+
+        rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
+
+        //变更名字
+        rename(encryptOutFile, buildFile);
+    }
+
+
+    @SneakyThrows
+    protected static void rename(File oldFile, File newFile) {
+
+        int n = 0;
+
+        while (n++ < 100) {
+
+            newFile.delete();
+
+            boolean ok = !newFile.exists() && oldFile.renameTo(newFile) && !oldFile.exists();
+            if (!ok) {
+                Thread.sleep(100);
+            } else {
+                break;
+            }
+        }
+
+        if (oldFile.exists() || !newFile.exists()) {
+            throw new RuntimeException(oldFile + " can't rename to " + newFile);
+        }
+
+    }
+
+
+    @SneakyThrows
+    protected void writeClassToJar(ZipOutputStream outputStream, String path, Class... classes) {
+
+        for (Class clazz : classes) {
+
+            String fn = path + clazz.getName().replace(".", "/") + ".class";
+
+            outputStream.putNextEntry(new JarEntry(fn));
+
+            IOUtils.copy(clazz.getClassLoader().getResourceAsStream(fn), outputStream);
+        }
+
+    }
+
+
+    /**
+     * 清除方法体
+     *
+     * @param data
+     * @return
+     */
+    protected byte[] clearMethodBody(byte[] data, String fieldName, byte[] fieldData) {
+
+        ClassReader reader = new ClassReader(data);
+
+//        JVM 的执行模型。我们都知道，Java 代码是运行在线程中的，每条线程都拥有属于自己的运行栈，栈是由一个或多个帧组成的，也叫栈帧（StackFrame）。每个栈帧代表一个方法调用：每当线程调用一个Java方法时，JVM就会在该线程对应的栈中压入一个帧；当执行这个方法时，它使用这个帧来存储参数、局部变量、中间运算结果等等；当方法执行结束（无论是正常返回还是抛异常）时，该栈帧就会弹出，然后继续运行下一个栈帧（栈顶栈帧）的方法调用。
+//        栈帧由三部分组成：局部变量表、操作数栈、帧数据区。
+
+
+        // 2. 创建 ClassWriter 对象，将操作之后的字节码的字节数组回写
+//        ClassWriter的构造函数需要传入一个 flag，其含义为：
+//        ClassWriter(0)：表示 ASM 不会自动自动帮你计算栈帧和局部变量表和操作数栈大小。
+//        ClassWriter(ClassWriter.COMPUTE_MAXS)：表示 ASM 会自动帮你计算局部变量表和操作数栈的大小，但是你还是需要调用visitMaxs方法，但是可以使用任意参数，因为它们会被忽略。带有这个标识，对于栈帧大小，还是需要你手动计算。
+//        ClassWriter(ClassWriter.COMPUTE_FRAMES)：表示 ASM 会自动帮你计算所有的内容。你不必去调用visitFrame，但是你还是需要调用visitMaxs方法（参数可任意设置，同样会被忽略）。
+//        使用这些标识很方便，但是会带来一些性能上的损失：COMPUTE_MAXS标识会使ClassWriter慢10%，COMPUTE_FRAMES标识会使ClassWriter慢2倍，
+        final ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
+
+        final ClassVisitor visitor = new ClassVisitor(Constants.ASM_API, writer) {
+            @Override
+            public MethodVisitor visitMethod(int access, final String name, String descriptor, String signature, String[] exceptions) {
+
+                //返回 MethodWriter
+                final MethodVisitor mWriter = writer.visitMethod(access, name, descriptor, signature, exceptions);
+
+                final MethodVisitor methodVisitor = new MethodVisitor(Constants.ASM_API, mWriter) {
+
+                    @Override
+                    public void visitCode() {
+
+                        //如果不是类的构造方法
+                        if (!name.equalsIgnoreCase("<init>")
+                                && !name.equalsIgnoreCase("<cinit>")) {
+
+                            //清空方法
+                            this.mv = null;
+
+                            // getLog().info(name + " -> " + descriptor + " -> " + signature);
+
+                            //写入空操作
+                            //调用静态方法抛出异常
+                            //  mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ClassTransformer.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+
+                            Type returnType = Type.getReturnType(descriptor);
+
+                            int typeSort = returnType.getSort();
+
+                            int returnOp = Opcodes.IRETURN;
+
+                            if (typeSort == Type.VOID) {
+                                returnOp = Opcodes.RETURN;
+                            } else if (typeSort == Type.BOOLEAN) {
+//                                ireturn、lreturn、freturn、dreturn、areturn
+                                //lreturn和dreturn,操作数栈中弹出两位
+                                mWriter.visitLdcInsn(Boolean.FALSE);
+                            } else if (typeSort == Type.BYTE) {
+                                mWriter.visitLdcInsn((byte) 0);
+                            } else if (typeSort == Type.SHORT) {
+                                mWriter.visitLdcInsn((short) 0);
+                            } else if (typeSort == Type.CHAR) {
+                                mWriter.visitLdcInsn('0');
+                            } else if (typeSort == Type.INT) {
+                                mWriter.visitLdcInsn(0);
+                            } else if (typeSort == Type.LONG) {
+                                mWriter.visitLdcInsn(0L);
+                                returnOp = Opcodes.LRETURN;
+                            } else if (typeSort == Type.FLOAT) {
+                                mWriter.visitLdcInsn(0.0F);
+                                returnOp = FRETURN;
+                            } else if (typeSort == Type.DOUBLE) {
+                                mWriter.visitLdcInsn(0.0D);
+                                returnOp = DRETURN;
+                            } else if (typeSort >= Type.ARRAY) {
+                                //对象类型
+                                mWriter.visitInsn(ACONST_NULL);
+                                returnOp = ARETURN;
+                            }
+
+                            mWriter.visitInsn(returnOp);//返回
+
+                            mWriter.visitMaxs(1, 1);//设置局部表量表和操作数栈大小
+                        }
+                    }
+
+                    @Override
+                    public void visitEnd() {
+                        //方法结束，恢复写入内容
+                        this.mv = mWriter;
+                        super.visitEnd();
+                    }
+                };
+
+                return methodVisitor;
+            }
+        };
+
+        // 4. 将 ClassVisitor 对象传入 ClassReader 中
+        reader.accept(visitor, ClassReader.EXPAND_FRAMES);
+
+        FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
+
+        fieldVisitor.visitEnd();
+
+        return writer.toByteArray();
+    }
+
+    @SneakyThrows
+    protected void unzipClass(File file, String startPrefix, File unzipDir) {
+
+        ZipFile zipFile = new ZipFile(file);
+
+        FileUtils.deleteDirectory(unzipDir);
+
+        unzipDir.delete();
+
+        unzipDir.mkdirs();
+
+        zipFile.stream()
+                .filter(zipEntry -> zipEntry.getName().startsWith(startPrefix))
+                .filter(zipEntry -> zipEntry.getName().endsWith(".class"))
+                .forEach(zipEntry -> {
+                    try {
+                        FileUtils.copyToFile(zipFile.getInputStream(zipEntry), new File(unzipDir, zipEntry.getName().substring(startPrefix.length())));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
 
@@ -192,96 +429,4 @@ public class ClassEncryptPlugin extends BaseMojo {
         return Arrays.stream(includePackages).anyMatch(className::startsWith);
     }
 
-    /**
-     * 清空方法
-     *
-     * @param pool      javassist的ClassPool
-     * @param classname 要修改的class全名
-     * @return 返回方法体的字节
-     */
-    public static byte[] rewriteAllMethods(ClassPool pool, String classname) {
-        String name = null;
-        try {
-            CtClass cc = pool.getCtClass(classname);
-            CtMethod[] methods = cc.getDeclaredMethods();
-
-            for (CtMethod m : methods) {
-                name = m.getName();
-                //不是构造方法，在当前类，不是父lei
-                if (!m.getName().contains("<") && m.getLongName().startsWith(cc.getName())) {
-                    //m.setBody(null);//清空方法体
-                    CodeAttribute ca = m.getMethodInfo().getCodeAttribute();
-                    //接口的ca就是null,方法体本来就是空的就是-79
-                    if (ca != null && ca.getCodeLength() != 1 && ca.getCode()[0] != -79) {
-                        setBodyKeepParamInfos(m, null, true);
-                        if ("void".equalsIgnoreCase(m.getReturnType().getName())
-                                && m.getLongName().endsWith(".main(java.lang.String[])")
-                                && m.getMethodInfo().getAccessFlags() == 9) {
-                            m.insertBefore("System.out.println(\"\\nStartup failed, invalid password.\\n\");");
-                        }
-                    }
-
-                }
-            }
-            return cc.toBytecode();
-        } catch (Exception e) {
-            throw new RuntimeException("[" + classname + "(" + name + ")]" + e.getMessage());
-        }
-    }
-
-    /**
-     * 修改方法体，并且保留参数信息
-     *
-     * @param m       javassist的方法
-     * @param src     java代码
-     * @param rebuild 是否重新构建
-     * @throws CannotCompileException 编译异常
-     */
-    public static void setBodyKeepParamInfos(CtMethod m, String src, boolean rebuild) throws CannotCompileException {
-
-        CtClass cc = m.getDeclaringClass();
-
-        if (cc.isFrozen()) {
-            throw new RuntimeException(cc.getName() + " class is frozen");
-        }
-
-        CodeAttribute ca = m.getMethodInfo().getCodeAttribute();
-
-        if (ca == null) {
-            throw new CannotCompileException("no method body");
-        } else {
-            CodeIterator iterator = ca.iterator();
-            Javac jv = new Javac(cc);
-
-            try {
-                int nvars = jv.recordParams(m.getParameterTypes(), Modifier.isStatic(m.getModifiers()));
-                jv.recordParamNames(ca, nvars);
-                jv.recordLocalVariables(ca, 0);
-                jv.recordReturnType(Descriptor.getReturnType(m.getMethodInfo().getDescriptor(), cc.getClassPool()), false);
-                //jv.compileStmnt(src);
-                //Bytecode b = jv.getBytecode();
-                Bytecode b = jv.compileBody(m, src);
-                int stack = b.getMaxStack();
-                int locals = b.getMaxLocals();
-                if (stack > ca.getMaxStack()) {
-                    ca.setMaxStack(stack);
-                }
-
-                if (locals > ca.getMaxLocals()) {
-                    ca.setMaxLocals(locals);
-                }
-                int pos = iterator.insertEx(b.get());
-                iterator.insert(b.getExceptionTable(), pos);
-                if (rebuild) {
-                    m.getMethodInfo().rebuildStackMapIf6(cc.getClassPool(), cc.getClassFile2());
-                }
-            } catch (NotFoundException var12) {
-                throw new CannotCompileException(var12);
-            } catch (CompileError var13) {
-                throw new CannotCompileException(var13);
-            } catch (BadBytecode var14) {
-                throw new CannotCompileException(var14);
-            }
-        }
-    }
 }

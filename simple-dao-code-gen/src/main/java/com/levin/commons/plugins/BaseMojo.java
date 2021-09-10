@@ -191,32 +191,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
             }
 
-            Map<String, Artifact> artifactMap = new LinkedHashMap<>();
-
-            for (Artifact artifact : mavenProject.getArtifacts()) {
-
-                String key = artifact.getGroupId()
-                        + ":" + artifact.getArtifactId()
-                        + (artifact.hasClassifier() ? ":" + artifact.getClassifier() : "");
-
-                if (artifactMap.containsKey(key)) {
-                    logger.error(" ****  " + mavenProject.getArtifact() + " 的依赖中包含冲突的构件：" + artifact + " <---> " + artifactMap.get(key));
-                } else {
-                    artifactMap.put(key, artifact);
-                }
-
-                if (artifact.isResolved() && artifact.getFile() != null) {
-
-                    try {
-                        urlList.add(artifact.getFile().toURI().toURL());
-                    } catch (MalformedURLException e) {
-                        logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact + " --> path: " + artifact.getFile());
-                    }
-
-                } else {
-                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
-                }
-            }
+            getClasspaths(urlList);
 
         }
 
@@ -241,6 +216,38 @@ public abstract class BaseMojo extends AbstractMojo {
             logger.info(" **** 本次加载到类路径的依赖包: " + urlList);
         }
 
+    }
+
+    protected List<URL> getClasspaths(List<URL> urlList) {
+
+        Map<String, Artifact> artifactMap = new LinkedHashMap<>();
+
+        for (Artifact artifact : mavenProject.getArtifacts()) {
+
+            String key = artifact.getGroupId()
+                    + ":" + artifact.getArtifactId()
+                    + (artifact.hasClassifier() ? ":" + artifact.getClassifier() : "");
+
+            if (artifactMap.containsKey(key)) {
+                logger.error(" ****  " + mavenProject.getArtifact() + " 的依赖中包含冲突的构件：" + artifact + " <---> " + artifactMap.get(key));
+            } else {
+                artifactMap.put(key, artifact);
+            }
+
+            if (artifact.isResolved() && artifact.getFile() != null) {
+
+                try {
+                    urlList.add(artifact.getFile().toURI().toURL());
+                } catch (MalformedURLException e) {
+                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact + " --> path: " + artifact.getFile());
+                }
+
+            } else {
+                logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
+            }
+        }
+
+        return urlList;
     }
 
     protected final String getInvokeMethodName() {

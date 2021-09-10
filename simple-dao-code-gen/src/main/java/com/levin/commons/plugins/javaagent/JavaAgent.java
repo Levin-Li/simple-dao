@@ -1,9 +1,6 @@
 package com.levin.commons.plugins.javaagent;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -84,16 +81,18 @@ public class JavaAgent {
         }
 
         //系统参数种获取文件
-        instrumentation.addTransformer(new ClassTransformer(readPwd()));
+        String pwd = readPwd();
 
+        //有密码才加入处理
+        if (pwd != null && pwd.trim().length() > 0) {
+            instrumentation.addTransformer(new ClassTransformer(pwd.toCharArray()));
+        }
     }
 
     /**
      * @return
      */
-    private static char[] readPwd() {
-
-        char[] pwd = new char[0];
+    private static String readPwd() {
 
         try {
             String pwdFile = System.getProperty("pwdFile", ".java_agent/.pwdFile.txt");
@@ -101,20 +100,34 @@ public class JavaAgent {
             File file = new File(pwdFile);
 
             if (file.exists() && file.length() > 0) {
-
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("utf-8")));
                 try {
-                    pwd = bufferedReader.readLine().toCharArray();
+                    return bufferedReader.readLine();
                 } finally {
                     bufferedReader.close();
-                    file.delete();
+                    update(file);
                 }
+            } else {
+                System.err.println(file.getAbsolutePath() + " not exists or empty.");
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
 
-        return pwd;
+        return null;
+    }
+
+    private static void update(File file) {
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            try {
+                out.write("this password file read ok.".getBytes(Charset.forName("utf-8")));
+            } finally {
+                out.close();
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
 }

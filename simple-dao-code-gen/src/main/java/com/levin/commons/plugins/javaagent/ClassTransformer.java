@@ -9,8 +9,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.instrument.ClassFileTransformer;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -27,10 +31,11 @@ public class ClassTransformer implements ClassFileTransformer {
 
     public static final String UTF_8 = "UTF-8";
 
-    //
-    private char[] pwd;
+    public static final String META_INF_CLASSES = "META-INF/.cache_cls_data/";
 
-    public static final String META_INF_CLASSES = "META-INF/.classes/";
+    private static final Map<String, String> md5Caches = new ConcurrentHashMap<>();
+
+    private char[] pwd;
 
     /**
      * 构造方法
@@ -44,7 +49,7 @@ public class ClassTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) {
 
-        if (className == null || domain == null || loader == null) {
+        if (className == null || loader == null || pwd == null || pwd.length == 0) {
             return classBuffer;
         }
 
@@ -53,16 +58,61 @@ public class ClassTransformer implements ClassFileTransformer {
 
         className = className.replace("/", ".").replace("\\", ".");
 
-        //如果资源不存在
-        InputStream inputStream = loader.getResourceAsStream(META_INF_CLASSES + className + ".class");
+        String resName = getMd5(className);
 
+        // System.out.println(new String(pwd) + " , " + className + " --> classBeingRedefined:" + classBeingRedefined + " ,domain = " + domain);
+
+        InputStream inputStream = loader.getResourceAsStream(META_INF_CLASSES + resName);
+
+        //如果资源存在
         if (inputStream != null) {
-            classBuffer = decryptByAes128(readAndClose(inputStream), new String(pwd));
+            try {
+                //从字段读取内容
+//                classBuffer = decryptByAes128((byte[]) classBeingRedefined.getDeclaredField(className).get(null), new String(pwd));
+                classBuffer = decryptByAes128(readAndClose(inputStream), new String(pwd));
+
+            } catch (Throwable ex) {
+                ex.printStackTrace();
+            } finally {
+                close(inputStream);
+            }
         }
 
         return classBuffer;
     }
 
+    private void close(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SneakyThrows
+    public static String getMd5(final String data) {
+
+        String md5 = md5Caches.get(data);
+
+        if (md5 == null) {
+
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            byte[] digest = messageDigest.digest(data.getBytes(Charset.forName("UTF-8")));
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (byte aByte : digest) {
+                stringBuilder.append(Integer.toHexString(0xFF & aByte));
+            }
+
+            if (stringBuilder.length() > 0) {
+                md5 = "C" + stringBuilder.toString();
+                md5Caches.put(data, md5);
+            }
+        }
+
+        return md5;
+    }
 
     @SneakyThrows
     public static byte[] readAndClose(InputStream inputStream) {
@@ -198,22 +248,8 @@ public class ClassTransformer implements ClassFileTransformer {
         return null;
     }
 
-
-    public static void main(String[] args) throws Exception {
-
-        byte[] data = "我是中国人，我来自福建省，在台湾的的对岸。".getBytes("UTF-8");
-
-        String key = "我是中国人，我来自福建省，在台湾的的对岸。";
-
-        data = encryptByAes128(data, key);
-
-        data = decryptByAes128(data, key);
-
-        String info = new String(data, "UTF-8");
-
-        System.out.println(info);
-
+    public static void checkSecurity() {
+        throw new SecurityException("not permission");
     }
-
 
 }
