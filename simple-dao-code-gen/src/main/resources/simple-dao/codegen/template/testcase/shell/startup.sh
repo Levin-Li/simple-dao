@@ -9,6 +9,8 @@ cd $shellDir
 
 shellDir=`pwd`
 
+appJars = `ls *.jar`
+
 mkdir -p "resources/public"
 
 pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
@@ -32,7 +34,7 @@ if [ -z $pids ]; then
    echo "[$shellDir/$0] program startup ..."
 
    # -XX:+DisableAttachMechanism 禁止调试
-   nohup java -Dwork.dir=${shellDir} -server -Dsp=${param} -XX:+DisableAttachMechanism -Dloader.path=resources,biz-libs,third-libs -jar *.jar 2>&1 &
+   nohup java -Dwork.dir=${shellDir} -server -XX:+DisableAttachMechanism -javaagent:${appJars} -DpwdFile=${param} -Dloader.path=resources,biz-libs,third-libs -jar *.jar 2>&1 &
 
    sleep 5s
 
