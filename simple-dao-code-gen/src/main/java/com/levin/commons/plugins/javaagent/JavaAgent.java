@@ -94,9 +94,10 @@ public class JavaAgent {
             if (!disableDebug) {
                 System.out.println("启动参数有误，请检查参数是否包含:" + DISABLE_DEBUG_OPTION);
                 System.exit(1);
+            } else {
+                instrumentation.addTransformer(new ClassTransformer(pwd.toCharArray()));
             }
 
-            instrumentation.addTransformer(new ClassTransformer(pwd.toCharArray()));
         }
     }
 
