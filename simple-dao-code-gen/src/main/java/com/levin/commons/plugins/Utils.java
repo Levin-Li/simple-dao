@@ -16,11 +16,14 @@ import java.util.Map;
 
 public abstract class Utils {
 
+
+
     public static boolean isMatch(AntPathMatcher matcher, String path, String... patterns) {
 
         if (patterns == null
-                || patterns.length == 0)
+                || patterns.length == 0) {
             return false;
+        }
 
         for (String pattern : patterns) {
 
@@ -177,5 +180,4 @@ public abstract class Utils {
 
         return conn;
     }
-
 }

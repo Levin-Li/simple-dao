@@ -1,4 +1,4 @@
-package com.levin.commons.plugins.javaagent;
+package com.levin.commons.plugins.jni;
 
 import com.levin.commons.plugins.BaseMojo;
 import lombok.SneakyThrows;
@@ -14,9 +14,10 @@ import org.springframework.cglib.core.Constants;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -24,10 +25,8 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.CRC32;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import static com.levin.commons.plugins.javaagent.ClassTransformer.META_INF_CLASSES;
 import static org.springframework.asm.Opcodes.*;
 
 /**
@@ -124,7 +123,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         JarFile buildFileJar = new JarFile(buildFile);
 
-        JarEntry testEntry = buildFileJar.getJarEntry(ClassTransformer.class.getName().replace(".", "/") + ".class");
+        JarEntry testEntry = buildFileJar.getJarEntry(SimpleClassFileTransformer.class.getName().replace(".", "/") + ".class");
 
         if (testEntry != null && !testEntry.isDirectory()) {
             logger.error("文件" + buildFile + "已经加密");
@@ -144,13 +143,16 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         manifest.getMainAttributes().putValue("Premain-Class", JavaAgent.class.getName());
         manifest.getMainAttributes().putValue("Agent-Class", JavaAgent.class.getName());
+        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + false);
+        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + false);
+
 
         File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
 
         JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(encryptOutFile), manifest);
 
         //
-        writeClassToJar(jarOutputStream, "", JavaAgent.class, ClassTransformer.class);
+        writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleClassFileTransformer.class);
 
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
@@ -177,7 +179,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             boolean isChange = false;
 
-           // getLog().info("Path:" + path + " " + entry.getName());
+            // getLog().info("Path:" + path + " " + entry.getName());
 
             if (entry.getName().endsWith(".class")
                     && entry.getName().startsWith(path)
@@ -188,14 +190,16 @@ public class ClassEncryptPlugin extends BaseMojo {
                 //获取类名的md5
                 name = name.substring(0, name.length() - 6);
 
-                String resKey = ClassTransformer.getMd5(name);
+                String resPath = HookAgent.getClassResPath(name);
 
-                jarOutputStream.putNextEntry(new JarEntry(META_INF_CLASSES + resKey));
-                byte[] encryptData = ClassTransformer.encryptByAes128(fileContent, pwd);
+                jarOutputStream.putNextEntry(new JarEntry(resPath));
+
+                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_PWD2, fileContent);
+
                 jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = clearMethodBody(fileContent, resKey, encryptData);
+                fileContent = clearMethodBody(fileContent, null, encryptData);
 
                 isChange = true;
 
@@ -227,6 +231,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         }
 
+        jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
+        jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_PWD, JniHelper.loadData(HookAgent.class)));
+
         jarOutputStream.finish();
         jarOutputStream.flush();
         jarOutputStream.close();
@@ -237,6 +244,48 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         //变更名字
         rename(encryptOutFile, buildFile);
+
+        getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
+
+    }
+
+
+    @SneakyThrows
+    protected byte[] sha256Hash(File file) {
+
+//        MD5
+//        SHA-1
+//        SHA-256
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+
+        byte[] buf = new byte[8192];
+
+        try {
+            int n = -1;
+            while ((n = fileInputStream.read(buf)) > -1) {
+                if (n > 0) {
+                    messageDigest.digest(buf, 0, n);
+                }
+            }
+        } finally {
+            fileInputStream.close();
+        }
+
+        return messageDigest.digest();
+    }
+
+
+    protected static String toHexStr(byte[] data) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (byte aByte : data) {
+            stringBuilder.append(Integer.toHexString(0xFF & aByte));
+        }
+
+        return stringBuilder.toString();
     }
 
 
@@ -382,34 +431,12 @@ public class ClassEncryptPlugin extends BaseMojo {
         // 4. 将 ClassVisitor 对象传入 ClassReader 中
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 
-        FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
-
-        fieldVisitor.visitEnd();
+        if (hasContent(fieldName)) {
+            FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
+            fieldVisitor.visitEnd();
+        }
 
         return writer.toByteArray();
-    }
-
-    @SneakyThrows
-    protected void unzipClass(File file, String startPrefix, File unzipDir) {
-
-        ZipFile zipFile = new ZipFile(file);
-
-        FileUtils.deleteDirectory(unzipDir);
-
-        unzipDir.delete();
-
-        unzipDir.mkdirs();
-
-        zipFile.stream()
-                .filter(zipEntry -> zipEntry.getName().startsWith(startPrefix))
-                .filter(zipEntry -> zipEntry.getName().endsWith(".class"))
-                .forEach(zipEntry -> {
-                    try {
-                        FileUtils.copyToFile(zipFile.getInputStream(zipEntry), new File(unzipDir, zipEntry.getName().substring(startPrefix.length())));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
     }
 
 

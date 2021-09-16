@@ -1,9 +1,8 @@
-package com.levin.commons.plugins.javaagent;
+package com.levin.commons.plugins.jni;
 
-import java.io.*;
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.jar.JarFile;
 
@@ -24,6 +23,14 @@ public class JavaAgent {
 
 //    public static void premain(String agentArgs, Instrumentation inst);[1]
 //    public static void premain(String agentArgs);[2]
+
+
+//    The JVM Tool Interface (JVMTI) 是一个由JVM提供的用于开发针对Java程序开发与监控工具的编程接口，通过JVMTI接口（Native API）可以创建代理程序（Agent）以监视和控制 Java 应用程序，包括剖析、调试、监控、分析线程等。
+//jvmtiEventClassFileLoadHook ClassFileLoadHook;
+//    /*   55 : Class Load */
+//    jvmtiEventClassLoad ClassLoad;
+//    /*   56 : Class Prepare */
+//    jvmtiEventClassPrepare ClassPrepare;
 
     /**
      * man方法执行前调用
@@ -83,11 +90,16 @@ public class JavaAgent {
                     });
         }
 
-        //系统参数种获取文件
-        String pwd = readPwd();
+        String fileName = agentArgs;
+
+        if (fileName == null || fileName.trim().length() == 0) {
+            fileName = ".java_agent/.pwdFile.txt";
+        }
+
+        File file = new File(fileName);
 
         //有密码才加入处理
-        if (pwd != null && pwd.trim().length() > 0) {
+        if (file.exists() && file.length() > 0) {
             //如果有密码，则确保禁止调试
             boolean disableDebug = ManagementFactory.getRuntimeMXBean().getInputArguments().contains(DISABLE_DEBUG_OPTION);
 
@@ -95,59 +107,12 @@ public class JavaAgent {
                 System.out.println("启动参数有误，请检查参数是否包含:" + DISABLE_DEBUG_OPTION);
                 System.exit(1);
             } else {
-                instrumentation.addTransformer(new ClassTransformer(pwd.toCharArray()));
+                instrumentation.addTransformer(new SimpleClassFileTransformer(), true);
             }
+        } else {
 
         }
     }
 
-    /**
-     * @return
-     */
-    private static String readPwd() {
-
-        try {
-            String pwdFile = System.getProperty("pwdFile", ".java_agent/.pwdFile.txt");
-
-            File file = new File(pwdFile);
-
-            if (file.exists() && file.length() > 0) {
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("utf-8")));
-                try {
-                    return bufferedReader.readLine();
-                } finally {
-                    bufferedReader.close();
-                    update(file);
-                }
-            } else {
-                System.err.println(file.getAbsolutePath() + " not exists or empty.");
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private static void update(File file) {
-        try {
-            FileOutputStream out = new FileOutputStream(file);
-            try {
-                out.write("this password file read ok.".getBytes(Charset.forName("utf-8")));
-            } finally {
-                out.close();
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void main(String[] args) {
-
-        System.out.println(System.getProperties());
-
-
-        System.out.println();
-    }
 
 }
