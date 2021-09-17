@@ -16,8 +16,9 @@ public abstract class HookAgent {
     private static final String AGENT_LIB_PREFIX = "-agentlib:";
     private static final String AGENT_PATH_PREFIX = "-agentpath:";
 
-    public static final String DEFAULT_PWD ="09_HO#$%&^@OK_21";
-    public static final String DEFAULT_PWD2 ="#$%&^@OK_2109_HO";
+    public static final String DEFAULT_KEY = "09_HO#$%&^@OK_21";
+
+    public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
     private HookAgent() {
     }
@@ -31,7 +32,6 @@ public abstract class HookAgent {
     }
 
     public static boolean isEnvEnable() {
-
 
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
 

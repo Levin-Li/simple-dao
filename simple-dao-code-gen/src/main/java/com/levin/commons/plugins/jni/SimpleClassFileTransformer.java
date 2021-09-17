@@ -26,9 +26,9 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
     public native static byte[] decryptAes(String pwd, byte[] data);
 
-    public native static byte[] transform1(String pwd, byte[] data);
+    public native static byte[] transform1(String random, byte[] data);
 
-    public native static byte[] transform2(String pwd, byte[] data);
+    public native static byte[] transform2(String random, byte[] data);
 
     @Override
     public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;

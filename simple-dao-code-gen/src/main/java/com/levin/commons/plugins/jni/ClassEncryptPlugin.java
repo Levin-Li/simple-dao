@@ -194,7 +194,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 jarOutputStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_PWD2, fileContent);
+                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, fileContent);
 
                 jarOutputStream.write(encryptData);
 
@@ -232,7 +232,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
 
         jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
-        jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_PWD, JniHelper.loadData(HookAgent.class)));
+        jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
 
         jarOutputStream.finish();
         jarOutputStream.flush();
