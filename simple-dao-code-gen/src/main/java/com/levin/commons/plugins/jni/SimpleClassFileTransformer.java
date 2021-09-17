@@ -22,15 +22,27 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
         System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
     }
 
+    protected native static void setPwd(String pwd, String pwdFileName);
+
+    protected native static byte[] transform1(String random, byte[] data);
+
+    protected native static byte[] transform2(String random, byte[] data);
+
     public native static byte[] encryptAes(String pwd, byte[] data);
 
     public native static byte[] decryptAes(String pwd, byte[] data);
 
-    public native static byte[] transform1(String random, byte[] data);
-
-    public native static byte[] transform2(String random, byte[] data);
 
     @Override
     public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;
+
+
+    public static void main(String[] args) {
+
+        byte[] data = transform1("", "dasflasflasdfjal;sfa".getBytes());
+
+        data = transform2("", "dasflasflasdfjal;sfa".getBytes());
+
+    }
 
 }

@@ -66,7 +66,7 @@ public class ClassEncryptPlugin extends BaseMojo {
     {
         onlyExecutionRoot = false;
         isPrintException = true;
-        pwdFile = "class-encrypt-password.txt";
+        pwdFile = ".java_agent/.pwdFile.txt";
         allowPackageTypes = new String[]{"jar", "war", "ear"};
     }
 
@@ -108,6 +108,9 @@ public class ClassEncryptPlugin extends BaseMojo {
             logger.warn("password not set , ignore.");
             return;
         }
+
+        //设置加密密码
+        SimpleClassFileTransformer.setPwd(pwd, this.pwdFile);
 
         Build build = mavenProject.getBuild();
 
