@@ -81,7 +81,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
      * @return
      * @throws ClassNotFoundException
      */
-    private native Class<?> findClassByNative(ClassLoader loader, String name) throws ClassNotFoundException;
+    protected native Class<?> findClassByNative(ClassLoader loader, String name) throws ClassNotFoundException;
 
     public static void main(String[] args) {
 

@@ -4,9 +4,6 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
-import java.security.ProtectionDomain;
 
 import static com.levin.commons.plugins.jni.SimpleLoaderAndTransformer.*;
 
@@ -27,7 +24,7 @@ public class SimpleLoaderAndTransformerTest {
     @SneakyThrows
     public static void main(String[] args) {
 
-        final SimpleLoaderAndTransformerTest transformer = new SimpleLoaderAndTransformerTest();
+        final SimpleLoaderAndTransformer transformer = new SimpleLoaderAndTransformer();
 
         String info = "我是中国人，我来自福建福州。";
 
@@ -53,12 +50,22 @@ public class SimpleLoaderAndTransformerTest {
             data = FileUtils.readFileToByteArray(file);
         }
 
+
         byte[] tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);
 
         FileUtils.writeByteArrayToFile(new File("SimpleClassFileTransformer.class"), tempD);
 
-      //  byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
+        byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
+
+
+        Class<?> aClass = transformer.findClass("java.lang.String");
+
+        try {
+            aClass = transformer.findClass("info.c.ass.ccc");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);
