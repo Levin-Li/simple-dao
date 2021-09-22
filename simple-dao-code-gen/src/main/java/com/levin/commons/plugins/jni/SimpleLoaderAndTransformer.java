@@ -19,8 +19,13 @@ import java.security.ProtectionDomain;
 public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFileTransformer {
 
     static {
+
+       // System.loadLibrary("HookAgent");
+
         System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
+
     }
+
 
     protected SimpleLoaderAndTransformer(ClassLoader parent) {
         super(parent);
@@ -48,9 +53,4 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
     @Override
     protected native Class<?> findClass(String name) throws ClassNotFoundException;
 
-    public static void main(String[] args) {
-
-        SimpleLoaderAndTransformer loader = new SimpleLoaderAndTransformer();
-
-    }
 }

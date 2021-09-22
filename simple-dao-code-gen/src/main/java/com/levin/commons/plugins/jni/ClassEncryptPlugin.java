@@ -147,8 +147,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         manifest.getMainAttributes().putValue("Premain-Class", JavaAgent.class.getName());
         manifest.getMainAttributes().putValue("Agent-Class", JavaAgent.class.getName());
-        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + false);
-        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + false);
+        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + true);
+        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + true);
 
 
         File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
@@ -231,10 +231,10 @@ public class ClassEncryptPlugin extends BaseMojo {
                 entry2.setTime(entry.getTime());
             }
 
-            if (!isChange) {
+//            if (!isChange) {
                 jarOutputStream.putNextEntry(entry2);
                 jarOutputStream.write(fileContent);
-            }
+//            }
 
         }
 
