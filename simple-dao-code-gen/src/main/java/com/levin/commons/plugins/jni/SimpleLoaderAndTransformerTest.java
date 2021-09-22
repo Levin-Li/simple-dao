@@ -50,6 +50,7 @@ public class SimpleLoaderAndTransformerTest {
             data = FileUtils.readFileToByteArray(file);
         }
 
+        FileUtils.writeByteArrayToFile(new File("MANIFEST.INF"), transform1("", JniHelper.loadData(HookAgent.class)));
 
         byte[] tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);
@@ -58,12 +59,9 @@ public class SimpleLoaderAndTransformerTest {
 
         byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
 
-
-        Class<?> aClass = transformer.findClass("java.lang.String");
-
         try {
-            aClass = transformer.findClass("info.c.ass.ccc");
-        } catch (Exception e) {
+            Class<?> aClass = transformer.findClass(HookAgent.class.getName());
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 

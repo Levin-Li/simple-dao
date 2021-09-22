@@ -22,16 +22,12 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
         System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
     }
 
-    private final ClassLoader proxy;
-
     protected SimpleLoaderAndTransformer(ClassLoader parent) {
-        super(null);
-        proxy = parent != null ? parent : getSystemClassLoader();
+        super(parent);
     }
 
     protected SimpleLoaderAndTransformer() {
-        super(null);
-        proxy = getSystemClassLoader();
+        super(Thread.currentThread().getContextClassLoader());
     }
 
     protected native static void setPwd(String pwd, String pwdFileName);
@@ -50,38 +46,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
     public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;
 
     @Override
-    protected final Class<?> findClass(String name) throws ClassNotFoundException {
-
-        Class<?> c = null;
-
-        try {
-            //先找本地
-            c = findClassByNative(getClass().getClassLoader(), name);
-
-            if (c != null) {
-                return c;
-            }
-
-        } catch (ClassNotFoundException e) {
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        c = proxy != null ? proxy.loadClass(name) : null;
-
-        if (c != null) {
-            return c;
-        }
-
-        throw new ClassNotFoundException(name);
-    }
-
-    /**
-     * @param name
-     * @return
-     * @throws ClassNotFoundException
-     */
-    protected native Class<?> findClassByNative(ClassLoader loader, String name) throws ClassNotFoundException;
+    protected native Class<?> findClass(String name) throws ClassNotFoundException;
 
     public static void main(String[] args) {
 
