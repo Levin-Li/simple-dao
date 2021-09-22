@@ -23,6 +23,16 @@ public abstract class HookAgent {
     private HookAgent() {
     }
 
+    public static void checkSecurity() {
+        throw new SecurityException("unsafe");
+    }
+
+
+    public static void premain() {
+
+    }
+
+
     public static byte[] loadClassData(String className) {
         return JniHelper.loadResource(getClassResPath(className));
     }
@@ -72,6 +82,13 @@ public abstract class HookAgent {
         //不允许同时大于 0
 
         return !(agentCnt > 0 && javaAgentJars.size() > 0);
+    }
+
+    static {
+        if (!isEnvEnable() && SimpleClassFileTransformer.getEnvType() == 1) {
+            System.out.println("env type error");
+            System.exit(-1);
+        }
     }
 
 }

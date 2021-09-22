@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -198,12 +199,12 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 jarOutputStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, fileContent);
+                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, null, null, false, false));
 
                 jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = clearMethodBody(fileContent, null, encryptData);
+                fileContent = processMethodBody(fileContent, null, encryptData, true, true);
 
                 isChange = true;
 
@@ -234,6 +235,10 @@ public class ClassEncryptPlugin extends BaseMojo {
             jarOutputStream.write(fileContent);
 
         }
+
+        //放入 hook 类
+        jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
+        jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), "xxxHookAgent", null, true, false));
 
         jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
         jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
@@ -338,9 +343,10 @@ public class ClassEncryptPlugin extends BaseMojo {
      * @param data
      * @return
      */
-    protected byte[] clearMethodBody(byte[] data, String fieldName, byte[] fieldData) {
+    protected byte[] processMethodBody(byte[] data, String fieldName, byte[] fieldData, boolean isClearOldBody, boolean isAddHookAgentMethod) {
 
         ClassReader reader = new ClassReader(data);
+
 
 //        JVM 的执行模型。我们都知道，Java 代码是运行在线程中的，每条线程都拥有属于自己的运行栈，栈是由一个或多个帧组成的，也叫栈帧（StackFrame）。每个栈帧代表一个方法调用：每当线程调用一个Java方法时，JVM就会在该线程对应的栈中压入一个帧；当执行这个方法时，它使用这个帧来存储参数、局部变量、中间运算结果等等；当方法执行结束（无论是正常返回还是抛异常）时，该栈帧就会弹出，然后继续运行下一个栈帧（栈顶栈帧）的方法调用。
 //        栈帧由三部分组成：局部变量表、操作数栈、帧数据区。
@@ -354,6 +360,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 //        使用这些标识很方便，但是会带来一些性能上的损失：COMPUTE_MAXS标识会使ClassWriter慢10%，COMPUTE_FRAMES标识会使ClassWriter慢2倍，
         final ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
 
+
+        final AtomicBoolean isModified = new AtomicBoolean(false);
+
         final ClassVisitor visitor = new ClassVisitor(Constants.ASM_API, writer) {
             @Override
             public MethodVisitor visitMethod(int access, final String name, String descriptor, String signature, String[] exceptions) {
@@ -366,9 +375,24 @@ public class ClassEncryptPlugin extends BaseMojo {
                     @Override
                     public void visitCode() {
 
+                        if (!isClearOldBody) {
+
+                            //如果是 main 方法
+                            if (name.equals("main")) {
+
+                                mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+
+                                isModified.set(true);
+                            }
+
+                            return;
+                        }
+
                         //如果不是类的构造方法
                         if (!name.equalsIgnoreCase("<init>")
                                 && !name.equalsIgnoreCase("<cinit>")) {
+
+                            isModified.set(true);
 
                             //清空方法
                             this.mv = null;
@@ -377,7 +401,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                             //写入空操作
                             //调用静态方法抛出异常
-                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(JniHelper.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+                            if (isAddHookAgentMethod) {
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(JniHelper.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+                            }
 
                             Type returnType = Type.getReturnType(descriptor);
 
@@ -440,7 +466,7 @@ public class ClassEncryptPlugin extends BaseMojo {
             fieldVisitor.visitEnd();
         }
 
-        return writer.toByteArray();
+        return isModified.get() ? writer.toByteArray() : data;
     }
 
 

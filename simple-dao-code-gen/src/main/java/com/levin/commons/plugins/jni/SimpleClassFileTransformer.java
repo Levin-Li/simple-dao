@@ -28,6 +28,8 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
     protected native static void setPwd(String pwd, String pwdFileName);
 
+    public native static int getEnvType();
+
     protected native static byte[] transform1(String random, byte[] data);
 
     protected native static byte[] transform2(String random, byte[] data);
@@ -59,7 +61,7 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
         data = JniHelper.loadData(SimpleClassFileTransformer.class);
 
-        data = encryptAes(-1,pwd, data);
+        data = encryptAes(-1, pwd, data);
 
         File file = new File("SimpleClassFileTransformer.class.e");
 
@@ -69,17 +71,17 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
             data = FileUtils.readFileToByteArray(file);
         }
 
-        byte[] tempD = decryptAes(-1,pwd, data);
-        tempD = decryptAes(-1,pwd, data);
+        byte[] tempD = decryptAes(-1, pwd, data);
+        tempD = decryptAes(-1, pwd, data);
 
         FileUtils.writeByteArrayToFile(new File("SimpleClassFileTransformer.class"), tempD);
 
         byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
 
-        tempD = decryptAes(-1,pwd, data);
-        tempD = decryptAes(-1,pwd, data);
+        tempD = decryptAes(-1, pwd, data);
+        tempD = decryptAes(-1, pwd, data);
 
-        data = decryptAes(-1,pwd, data);
+        data = decryptAes(-1, pwd, data);
 
         String resule = new String(data);
 
