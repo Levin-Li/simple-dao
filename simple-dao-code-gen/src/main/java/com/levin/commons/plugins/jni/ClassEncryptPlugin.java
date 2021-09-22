@@ -384,7 +384,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                                 isModified.set(true);
 
-                                getLog().info("*** 类 " + className + "  " + name + "方法 增加代码");
+                                getLog().info("*** 类 " + className + "  " + name + "方法增加代码。");
                             }
 
                             return;
