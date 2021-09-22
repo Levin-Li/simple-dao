@@ -46,25 +46,21 @@ public abstract class HookAgent {
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
 
         if (!inputArguments.contains(DISABLE_DEBUG_OPTION)) {
-            System.out.println("" + DISABLE_DEBUG_OPTION + " arg must be exists.");
-            return false;
-        }
-
-        if (inputArguments.stream()
-                .anyMatch(arg -> arg.startsWith(AGENT_LIB_PREFIX))) {
-            System.out.println("not allow " + AGENT_LIB_PREFIX + " arg.");
+            System.err.println("arg " + DISABLE_DEBUG_OPTION + " must be exists.");
             return false;
         }
 
         long agentCnt = inputArguments.stream()
-                .filter(arg -> arg.startsWith(AGENT_PATH_PREFIX)).count();
+                .filter(arg -> arg.startsWith(AGENT_LIB_PREFIX) || arg.startsWith(AGENT_PATH_PREFIX))
+                .count();
 
         if (agentCnt > 1) {
-            System.out.println("only allow " + AGENT_PATH_PREFIX + " arg once.");
+            System.err.println("jvmti agent only one appearance is allowed.");
             return false;
         }
 
-        List<File> javaAgentJars = inputArguments.stream().filter(arg -> arg.startsWith(JAVA_AGENT_PREFIX))
+        List<File> javaAgentJars = inputArguments.stream()
+                .filter(arg -> arg.startsWith(JAVA_AGENT_PREFIX))
                 .map(arg -> {
                     arg = arg.substring(JAVA_AGENT_PREFIX.length());
                     int idx = arg.indexOf("=");
@@ -76,17 +72,18 @@ public abstract class HookAgent {
                 .collect(Collectors.toList());
 
         if (javaAgentJars.size() > 1) {
-            System.out.println("only allow " + JAVA_AGENT_PREFIX + " arg once.");
+            System.err.println("java agent only one appearance is allowed.");
+            return false;
         }
 
-        //不允许同时大于 0
-
-        return !(agentCnt > 0 && javaAgentJars.size() > 0);
+        //不允许同时存在
+        return (agentCnt + javaAgentJars.size()) < 2;
     }
 
     static {
-        if (!isEnvEnable() && SimpleLoaderAndTransformer.getEnvType() == 1) {
-            System.out.println("env type error");
+        if (!isEnvEnable()
+                && SimpleLoaderAndTransformer.getEnvType() == 1) {
+            System.err.println("env type error");
             System.exit(-1);
         }
     }

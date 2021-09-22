@@ -251,10 +251,10 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         buildFileJar.close();
 
-//        rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
+        rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
 //
 //        变更名字
-//        rename(encryptOutFile, buildFile);
+        rename(encryptOutFile, buildFile);
 
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
 
