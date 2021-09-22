@@ -199,12 +199,12 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 jarOutputStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, null, null, false, false));
+                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, false));
 
                 jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = processMethodBody(fileContent, null, encryptData, true, true);
+                fileContent = processMethodBody(fileContent, name, true, true);
 
                 isChange = true;
 
@@ -238,7 +238,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         //放入 hook 类
         jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
-        jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), "xxxHookAgent", null, true, false));
+        jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, false));
 
         jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
         jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
@@ -343,7 +343,7 @@ public class ClassEncryptPlugin extends BaseMojo {
      * @param data
      * @return
      */
-    protected byte[] processMethodBody(byte[] data, String fieldName, byte[] fieldData, boolean isClearOldBody, boolean isAddHookAgentMethod) {
+    protected byte[] processMethodBody(byte[] data, String className, boolean isClearOldBody, boolean isAddHookAgentMethod) {
 
         ClassReader reader = new ClassReader(data);
 
@@ -380,9 +380,11 @@ public class ClassEncryptPlugin extends BaseMojo {
                             //如果是 main 方法
                             if (name.equals("main")) {
 
-                                mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
                                 isModified.set(true);
+
+                                getLog().info("*** 类 " + className + "  " + name + "方法 增加代码");
                             }
 
                             return;
@@ -460,11 +462,11 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         // 4. 将 ClassVisitor 对象传入 ClassReader 中
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
-
-        if (hasContent(fieldName)) {
-            FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
-            fieldVisitor.visitEnd();
-        }
+//
+//        if (hasContent(fieldName)) {
+//            FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
+//            fieldVisitor.visitEnd();
+//        }
 
         return isModified.get() ? writer.toByteArray() : data;
     }
