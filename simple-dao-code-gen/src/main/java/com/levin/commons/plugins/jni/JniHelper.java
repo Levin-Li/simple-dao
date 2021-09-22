@@ -18,8 +18,11 @@ public abstract class JniHelper {
 
     public static final String UTF_8 = "UTF-8";
 
-
     private JniHelper() {
+    }
+
+    public static void checkSecurity() {
+        throw new SecurityException("unsafe");
     }
 
     public static ClassLoader getCurrentThreadClassLoader() {

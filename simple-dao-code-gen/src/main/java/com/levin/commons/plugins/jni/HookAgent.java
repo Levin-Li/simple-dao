@@ -28,7 +28,7 @@ public abstract class HookAgent {
     }
 
     public static String getClassResPath(String className) {
-        return (META_INF_CLASSES + JniHelper.md5(new StringBuilder("C" + className.replace('/', '.') + ".dat").reverse().toString()));
+        return (META_INF_CLASSES + JniHelper.md5(new StringBuilder("C" + className.replace('/', '.')).toString()) + ".dat");
     }
 
     public static boolean isEnvEnable() {

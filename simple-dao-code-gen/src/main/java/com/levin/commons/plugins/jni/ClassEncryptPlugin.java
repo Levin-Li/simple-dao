@@ -159,6 +159,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
+        //检测如果有 main 函数，则不加密，但是加入代码
 
         byte[] emptyArray = new byte[0];
 
@@ -376,7 +377,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                             //写入空操作
                             //调用静态方法抛出异常
-                            //  mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ClassTransformer.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(JniHelper.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
                             Type returnType = Type.getReturnType(descriptor);
 

@@ -1,5 +1,9 @@
 package com.levin.commons.plugins.jni;
 
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
@@ -28,20 +32,62 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
     protected native static byte[] transform2(String random, byte[] data);
 
-    public native static byte[] encryptAes(String pwd, byte[] data);
+    public native static byte[] encryptAes(int bits, String pwd, byte[] data);
 
-    public native static byte[] decryptAes(String pwd, byte[] data);
-
+    public native static byte[] decryptAes(int bits, String pwd, byte[] data);
 
     @Override
     public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;
 
 
+    @SneakyThrows
     public static void main(String[] args) {
 
-        byte[] data = transform1("", "dasflasflasdfjal;sfa".getBytes());
+        final SimpleClassFileTransformer transformer = new SimpleClassFileTransformer();
 
-        data = transform2("", "dasflasflasdfjal;sfa".getBytes());
+        String info = "我是中国人，我来自福建福州。";
+
+//        info ="this is test data";
+
+        byte[] data = info.getBytes();
+
+        String pwd = "我是-密码-我是密码-我是密码-我是密码-我是密码-我是密码";
+//          pwd = "我码-";
+//          pwd = "1234567890123456";
+
+        setPwd(pwd, "");
+
+        data = JniHelper.loadData(SimpleClassFileTransformer.class);
+
+        data = encryptAes(-1,pwd, data);
+
+        File file = new File("SimpleClassFileTransformer.class.e");
+
+        if (!file.exists()) {
+            FileUtils.writeByteArrayToFile(file, data);
+        } else {
+            data = FileUtils.readFileToByteArray(file);
+        }
+
+        byte[] tempD = decryptAes(-1,pwd, data);
+        tempD = decryptAes(-1,pwd, data);
+
+        FileUtils.writeByteArrayToFile(new File("SimpleClassFileTransformer.class"), tempD);
+
+        byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
+
+        tempD = decryptAes(-1,pwd, data);
+        tempD = decryptAes(-1,pwd, data);
+
+        data = decryptAes(-1,pwd, data);
+
+        String resule = new String(data);
+
+        System.out.println("decrypt result : " + info.equals(resule));
+
+        data = transform1(pwd, data);
+
+        data = transform2(pwd, data);
 
     }
 
