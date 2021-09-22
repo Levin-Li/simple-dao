@@ -107,8 +107,8 @@ public class JavaAgent {
                 System.out.println("启动参数有误，请检查参数是否包含:" + DISABLE_DEBUG_OPTION);
                 System.exit(1);
             } else {
-                SimpleClassFileTransformer.setPwd("", fileName);
-                instrumentation.addTransformer(new SimpleClassFileTransformer());
+                SimpleLoaderAndTransformer.setPwd("", fileName);
+                instrumentation.addTransformer(new SimpleLoaderAndTransformer());
             }
         } else {
 

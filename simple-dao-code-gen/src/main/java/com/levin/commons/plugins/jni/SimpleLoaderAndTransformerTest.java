@@ -8,6 +8,8 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
+import static com.levin.commons.plugins.jni.SimpleLoaderAndTransformer.*;
+
 
 /**
  * AgentTransformer
@@ -20,32 +22,12 @@ import java.security.ProtectionDomain;
  *
  * @author roseboy
  */
-public class SimpleClassFileTransformer implements ClassFileTransformer {
-
-    static {
-        System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
-    }
-
-    protected native static void setPwd(String pwd, String pwdFileName);
-
-    public native static int getEnvType();
-
-    protected native static byte[] transform1(String random, byte[] data);
-
-    protected native static byte[] transform2(String random, byte[] data);
-
-    public native static byte[] encryptAes(int bits, String pwd, byte[] data);
-
-    public native static byte[] decryptAes(int bits, String pwd, byte[] data);
-
-    @Override
-    public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;
-
+public class SimpleLoaderAndTransformerTest {
 
     @SneakyThrows
     public static void main(String[] args) {
 
-        final SimpleClassFileTransformer transformer = new SimpleClassFileTransformer();
+        final SimpleLoaderAndTransformerTest transformer = new SimpleLoaderAndTransformerTest();
 
         String info = "我是中国人，我来自福建福州。";
 
@@ -59,7 +41,7 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
         setPwd(pwd, "");
 
-        data = JniHelper.loadData(SimpleClassFileTransformer.class);
+        data = JniHelper.loadData(SimpleLoaderAndTransformerTest.class);
 
         data = encryptAes(-1, pwd, data);
 
@@ -76,7 +58,7 @@ public class SimpleClassFileTransformer implements ClassFileTransformer {
 
         FileUtils.writeByteArrayToFile(new File("SimpleClassFileTransformer.class"), tempD);
 
-        byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
+      //  byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
 
         tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);

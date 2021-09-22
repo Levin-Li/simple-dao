@@ -111,7 +111,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
 
         //设置加密密码
-        SimpleClassFileTransformer.setPwd(pwd, this.pwdFile);
+        SimpleLoaderAndTransformer.setPwd(pwd, this.pwdFile);
 
         Build build = mavenProject.getBuild();
 
@@ -127,7 +127,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         JarFile buildFileJar = new JarFile(buildFile);
 
-        JarEntry testEntry = buildFileJar.getJarEntry(SimpleClassFileTransformer.class.getName().replace(".", "/") + ".class");
+        JarEntry testEntry = buildFileJar.getJarEntry(SimpleLoaderAndTransformer.class.getName().replace(".", "/") + ".class");
 
         if (testEntry != null && !testEntry.isDirectory()) {
             logger.error("文件" + buildFile + "已经加密");
@@ -156,7 +156,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(encryptOutFile), manifest);
 
         //
-        writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleClassFileTransformer.class);
+        writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleLoaderAndTransformer.class);
 
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
@@ -186,6 +186,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             // getLog().info("Path:" + path + " " + entry.getName());
 
+
             if (entry.getName().endsWith(".class")
                     && entry.getName().startsWith(path)
                     && !entry.isDirectory()
@@ -199,7 +200,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 jarOutputStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleClassFileTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, false));
+                byte[] encryptData = SimpleLoaderAndTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, false));
 
                 jarOutputStream.write(encryptData);
 
@@ -228,11 +229,12 @@ public class ClassEncryptPlugin extends BaseMojo {
                 }
 
                 entry2.setTime(entry.getTime());
-
             }
 
-            jarOutputStream.putNextEntry(entry2);
-            jarOutputStream.write(fileContent);
+            if (!isChange) {
+                jarOutputStream.putNextEntry(entry2);
+                jarOutputStream.write(fileContent);
+            }
 
         }
 
@@ -241,7 +243,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, false));
 
         jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
-        jarOutputStream.write(SimpleClassFileTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
+        jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
 
         jarOutputStream.finish();
         jarOutputStream.flush();
@@ -249,10 +251,10 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         buildFileJar.close();
 
-        rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
-
-        //变更名字
-        rename(encryptOutFile, buildFile);
+//        rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
+//
+//        变更名字
+//        rename(encryptOutFile, buildFile);
 
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
 

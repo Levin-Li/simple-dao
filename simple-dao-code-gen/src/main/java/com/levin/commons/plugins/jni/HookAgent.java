@@ -85,7 +85,7 @@ public abstract class HookAgent {
     }
 
     static {
-        if (!isEnvEnable() && SimpleClassFileTransformer.getEnvType() == 1) {
+        if (!isEnvEnable() && SimpleLoaderAndTransformer.getEnvType() == 1) {
             System.out.println("env type error");
             System.exit(-1);
         }
