@@ -28,6 +28,8 @@ import java.util.jar.Manifest;
 import java.util.zip.CRC32;
 import java.util.zip.ZipOutputStream;
 
+import static org.springframework.asm.Opcodes.ACONST_NULL;
+
 
 /**
  * 加密jar/war文件的maven插件
@@ -428,8 +430,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 || (methodName.startsWith("access$") && methodName.length() > "access$".length())
                                 || methodName.equalsIgnoreCase("<init>")
                                 || methodName.equalsIgnoreCase("<cinit>")
-                                || methodName.equalsIgnoreCase("<clinit>")
-                                || methodName.equals("{}")) {
+                                || methodName.equalsIgnoreCase("<clinit>")) {
 
                             //   isModified.set(true);
                             //   this.mv = null;
@@ -444,11 +445,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                             //写入空操作
                             //调用静态方法抛出异常
-                            if (isAddHookAgentMethod) {
+                            if (isAddHookAgentMethod && false) {
 
                                 Type[] argumentTypes = Type.getArgumentTypes(descriptor);
-
-
 //                                ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
 
                                 //静态方法从 0 开始
@@ -468,21 +467,20 @@ public class ClassEncryptPlugin extends BaseMojo {
                                     index += argumentType.getSize();
                                 }
 
-                                //执行方法
+                                //执行自己方法
                                 mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
 
                                 //返回
                                 mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
 
                             } else {
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.','/'), "checkSecurity", "()V", false);
 
-//                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName(), "checkSecurity", "()V", false);
-
-//                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
-//
+                                setDefaultValue(mWriter, returnType);
+                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
                             }
 
-                           // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
+                            // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
 
                             mWriter.visitMaxs(15, 15);//设置局部表量表和操作数栈大小
                         }
@@ -509,6 +507,35 @@ public class ClassEncryptPlugin extends BaseMojo {
 //        }
 
         return isModified.get() ? writer.toByteArray() : data;
+    }
+
+    public void setDefaultValue(MethodVisitor mWriter, Type returnType) {
+
+        int typeSort = returnType.getSort();
+
+        if (typeSort == Type.VOID) {
+        } else if (typeSort == Type.BOOLEAN) {
+//       ireturn、lreturn、freturn、dreturn、areturn
+            //lreturn和dreturn,操作数栈中弹出两位
+            mWriter.visitLdcInsn(Boolean.FALSE);
+        } else if (typeSort == Type.BYTE) {
+            mWriter.visitLdcInsn((byte) 0);
+        } else if (typeSort == Type.SHORT) {
+            mWriter.visitLdcInsn((short) 0);
+        } else if (typeSort == Type.CHAR) {
+            mWriter.visitLdcInsn('0');
+        } else if (typeSort == Type.INT) {
+            mWriter.visitLdcInsn(0);
+        } else if (typeSort == Type.LONG) {
+            mWriter.visitLdcInsn(0L);
+        } else if (typeSort == Type.FLOAT) {
+            mWriter.visitLdcInsn(0.0F);
+        } else if (typeSort == Type.DOUBLE) {
+            mWriter.visitLdcInsn(0.0D);
+        } else if (typeSort >= Type.ARRAY) {
+            //对象类型
+            mWriter.visitInsn(ACONST_NULL);
+        }
     }
 
 

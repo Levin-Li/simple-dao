@@ -29,9 +29,7 @@ public abstract class HookAgent {
 
 
     public static void premain() {
-
-        System.out.println("***HookAgent*** Work Dir : "+new File(".").getAbsolutePath());
-
+        System.out.println("***HookAgent*** Work Dir : " + new File(".").getAbsolutePath());
     }
 
 
@@ -83,8 +81,7 @@ public abstract class HookAgent {
     }
 
     static {
-        if (!isEnvEnable()
-                && SimpleLoaderAndTransformer.getEnvType() == 1) {
+        if (SimpleLoaderAndTransformer.getEnvType() == 1 && !isEnvEnable()) {
             System.err.println("env type error");
             System.exit(-1);
         }
