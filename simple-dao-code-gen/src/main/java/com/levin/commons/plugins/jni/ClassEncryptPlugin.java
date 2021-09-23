@@ -404,8 +404,8 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 && isStatic
                                 && returnType.getSort() == Type.VOID;
 
-
                         if (!isClearOldBody) {
+
                             if (isMain) {
                                 mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
@@ -418,14 +418,17 @@ public class ClassEncryptPlugin extends BaseMojo {
                         }
 
                         if (isMain) {
+                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
                             return;
                         }
 
+                        StringBuilder buf = new StringBuilder();
 
                         if (!StringUtils.hasText(methodName)
                                 || (methodName.startsWith("access$") && methodName.length() > "access$".length())
                                 || methodName.equalsIgnoreCase("<init>")
                                 || methodName.equalsIgnoreCase("<cinit>")
+                                || methodName.equalsIgnoreCase("<clinit>")
                                 || methodName.equals("{}")) {
 
                             //   isModified.set(true);
@@ -445,7 +448,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                                 Type[] argumentTypes = Type.getArgumentTypes(descriptor);
 
-                                StringBuilder buf = new StringBuilder();
+
 //                                ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
 
                                 //静态方法从 0 开始
@@ -465,17 +468,23 @@ public class ClassEncryptPlugin extends BaseMojo {
                                     index += argumentType.getSize();
                                 }
 
-                                // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
-
                                 //执行方法
                                 mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
 
                                 //返回
                                 mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
 
+                            } else {
+
+//                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName(), "checkSecurity", "()V", false);
+
+//                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
+//
                             }
 
-                            //  mWriter.visitMaxs(7, 7);//设置局部表量表和操作数栈大小
+                           // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
+
+                            mWriter.visitMaxs(15, 15);//设置局部表量表和操作数栈大小
                         }
                     }
 
