@@ -17,7 +17,6 @@ import java.util.Map;
 public abstract class Utils {
 
 
-
     public static boolean isMatch(AntPathMatcher matcher, String path, String... patterns) {
 
         if (patterns == null
@@ -180,4 +179,20 @@ public abstract class Utils {
 
         return conn;
     }
+
+
+    public static void main(String arg) {
+        Integer.parseInt(arg);
+    }
+
+    public String getInfo(double arg) {
+        return "" + arg;
+    }
+
+    public Long main2(double arg, int code, String arg2, Utils obj) {
+        super.toString();
+        getInfo(arg);
+        return Long.parseLong(arg2, code);
+    }
+
 }

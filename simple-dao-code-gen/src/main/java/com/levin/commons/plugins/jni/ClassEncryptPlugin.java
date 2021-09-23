@@ -28,7 +28,6 @@ import java.util.jar.Manifest;
 import java.util.zip.CRC32;
 import java.util.zip.ZipOutputStream;
 
-import static org.springframework.asm.Opcodes.*;
 
 /**
  * 加密jar/war文件的maven插件
@@ -205,7 +204,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                 jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = processMethodBody(fileContent, name, true, false);
+                fileContent = processMethodBody(fileContent, name, true, true);
 
                 isChange = true;
 
@@ -232,8 +231,8 @@ public class ClassEncryptPlugin extends BaseMojo {
             }
 
 //            if (!isChange) {
-                jarOutputStream.putNextEntry(entry2);
-                jarOutputStream.write(fileContent);
+            jarOutputStream.putNextEntry(entry2);
+            jarOutputStream.write(fileContent);
 //            }
 
         }
@@ -345,7 +344,7 @@ public class ClassEncryptPlugin extends BaseMojo {
      * @param data
      * @return
      */
-    protected byte[] processMethodBody(byte[] data, String className, boolean isClearOldBody, boolean isAddHookAgentMethod) {
+    protected byte[] processMethodBody(byte[] data, final String className, boolean isClearOldBody, boolean isAddHookAgentMethod) {
 
         ClassReader reader = new ClassReader(data);
 
@@ -365,88 +364,114 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         final AtomicBoolean isModified = new AtomicBoolean(false);
 
+        final AtomicBoolean isInterface = new AtomicBoolean(false);
+
         final ClassVisitor visitor = new ClassVisitor(Constants.ASM_API, writer) {
+
             @Override
-            public MethodVisitor visitMethod(int access, final String name, String descriptor, String signature, String[] exceptions) {
+            public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+                isInterface.set((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE);
+                super.visit(version, access, name, signature, superName, interfaces);
+            }
+
+            @Override
+            public MethodVisitor visitMethod(int access, final String methodName, String descriptor, String signature, String[] exceptions) {
 
                 //返回 MethodWriter
-                final MethodVisitor mWriter = writer.visitMethod(access, name, descriptor, signature, exceptions);
+                final MethodVisitor mWriter = writer.visitMethod(access, methodName, descriptor, signature, exceptions);
 
                 final MethodVisitor methodVisitor = new MethodVisitor(Constants.ASM_API, mWriter) {
 
                     @Override
+                    public void visitParameter(String name, int access) {
+                        super.visitParameter(name, access);
+                    }
+
+                    @Override
                     public void visitCode() {
+
+                        Type returnType = Type.getReturnType(descriptor);
+                        boolean isStatic = (access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC;
+
+                        //如果是接口
+                        if (isInterface.get()) {
+                            super.visitCode();
+                            return;
+                        }
+
 
                         if (!isClearOldBody) {
 
                             //如果是 main 方法
-                            if (name.equals("main")) {
+                            if (methodName.equals("main")
+                                    && isStatic
+                                    && returnType.getSort() == Type.VOID) {
 
                                 mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
                                 isModified.set(true);
 
-                                getLog().info("*** 类 " + className + "  " + name + "方法增加代码。");
+                                getLog().info("*** 类 " + className + "  " + methodName + "方法增加代码。");
                             }
 
                             return;
                         }
 
-                        //如果不是类的构造方法
-                        if (!name.equalsIgnoreCase("<init>")
-                                && !name.equalsIgnoreCase("<cinit>")) {
+
+                        if (!StringUtils.hasText(methodName)
+                                || (methodName.startsWith("access$") && methodName.length() > "access$".length())
+                                || methodName.equalsIgnoreCase("<init>")
+                                || methodName.equalsIgnoreCase("<cinit>")
+                                || methodName.equals("{}")) {
+
+                            //   isModified.set(true);
+                            //   this.mv = null;
+                            //   mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
+
+                        } else {
 
                             isModified.set(true);
 
                             //清空方法
                             this.mv = null;
 
-                            // getLog().info(name + " -> " + descriptor + " -> " + signature);
-
                             //写入空操作
                             //调用静态方法抛出异常
                             if (isAddHookAgentMethod) {
-                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(JniHelper.class), "checkSecurity", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+
+                                Type[] argumentTypes = Type.getArgumentTypes(descriptor);
+
+                                StringBuilder buf = new StringBuilder();
+//                                ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
+
+                                //静态方法从 0 开始
+                                int index = 0;
+
+                                if (!isStatic) {
+                                    mWriter.visitVarInsn(Opcodes.ALOAD, index++);
+                                }
+
+                                for (Type argumentType : argumentTypes) {
+
+                                    mWriter.visitVarInsn(argumentType.getOpcode(Opcodes.ILOAD), index);
+
+                                    buf.append(index).append(".").append(argumentType.getClassName()).append(",");
+
+                                    //参数
+                                    index += argumentType.getSize();
+                                }
+
+                                // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
+
+                                //执行方法
+                                mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
+
+                                //返回
+                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
+
                             }
 
-                            Type returnType = Type.getReturnType(descriptor);
-
-                            int typeSort = returnType.getSort();
-
-                            int returnOp = Opcodes.IRETURN;
-
-                            if (typeSort == Type.VOID) {
-                                returnOp = Opcodes.RETURN;
-                            } else if (typeSort == Type.BOOLEAN) {
-//                                ireturn、lreturn、freturn、dreturn、areturn
-                                //lreturn和dreturn,操作数栈中弹出两位
-                                mWriter.visitLdcInsn(Boolean.FALSE);
-                            } else if (typeSort == Type.BYTE) {
-                                mWriter.visitLdcInsn((byte) 0);
-                            } else if (typeSort == Type.SHORT) {
-                                mWriter.visitLdcInsn((short) 0);
-                            } else if (typeSort == Type.CHAR) {
-                                mWriter.visitLdcInsn('0');
-                            } else if (typeSort == Type.INT) {
-                                mWriter.visitLdcInsn(0);
-                            } else if (typeSort == Type.LONG) {
-                                mWriter.visitLdcInsn(0L);
-                                returnOp = Opcodes.LRETURN;
-                            } else if (typeSort == Type.FLOAT) {
-                                mWriter.visitLdcInsn(0.0F);
-                                returnOp = FRETURN;
-                            } else if (typeSort == Type.DOUBLE) {
-                                mWriter.visitLdcInsn(0.0D);
-                                returnOp = DRETURN;
-                            } else if (typeSort >= Type.ARRAY) {
-                                //对象类型
-                                mWriter.visitInsn(ACONST_NULL);
-                                returnOp = ARETURN;
-                            }
-
-                            mWriter.visitInsn(returnOp);//返回
-
-                            mWriter.visitMaxs(1, 1);//设置局部表量表和操作数栈大小
+                            //  mWriter.visitMaxs(7, 7);//设置局部表量表和操作数栈大小
                         }
                     }
 
