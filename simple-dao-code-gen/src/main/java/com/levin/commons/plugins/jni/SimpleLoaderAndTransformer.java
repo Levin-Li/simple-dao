@@ -20,7 +20,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
 
     static {
 
-       // System.loadLibrary("HookAgent");
+        // System.loadLibrary("HookAgent");
 
         System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
 
@@ -39,9 +39,9 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
 
     public native static int getEnvType();
 
-    protected native static byte[] transform1(String random, byte[] data);
+    protected native static byte[] transform1(String pwd, byte[] data);
 
-    protected native static byte[] transform2(String random, byte[] data);
+    protected native static byte[] transform2(String pwd, byte[] data);
 
     public native static byte[] encryptAes(int bits, String pwd, byte[] data);
 
