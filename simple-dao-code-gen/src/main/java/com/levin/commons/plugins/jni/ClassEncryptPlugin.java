@@ -205,7 +205,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                 jarOutputStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = processMethodBody(fileContent, name, true, true);
+                fileContent = processMethodBody(fileContent, name, true, false);
 
                 isChange = true;
 

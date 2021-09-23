@@ -30,6 +30,8 @@ public abstract class HookAgent {
 
     public static void premain() {
 
+        System.out.println("***HookAgent*** Work Dir : "+new File(".").getAbsolutePath());
+
     }
 
 
