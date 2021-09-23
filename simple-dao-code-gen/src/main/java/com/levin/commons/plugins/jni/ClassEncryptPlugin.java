@@ -399,21 +399,25 @@ public class ClassEncryptPlugin extends BaseMojo {
                             return;
                         }
 
+                        //如果是 main 方法
+                        boolean isMain = methodName.equals("main")
+                                && isStatic
+                                && returnType.getSort() == Type.VOID;
+
 
                         if (!isClearOldBody) {
-
-                            //如果是 main 方法
-                            if (methodName.equals("main")
-                                    && isStatic
-                                    && returnType.getSort() == Type.VOID) {
-
+                            if (isMain) {
                                 mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
                                 isModified.set(true);
-
                                 getLog().info("*** 类 " + className + "  " + methodName + "方法增加代码。");
+
                             }
 
+                            return;
+                        }
+
+                        if (isMain) {
                             return;
                         }
 
