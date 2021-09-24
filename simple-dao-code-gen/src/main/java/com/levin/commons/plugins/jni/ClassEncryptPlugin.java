@@ -58,13 +58,13 @@ public class ClassEncryptPlugin extends BaseMojo {
      * 包含的包，如果没指定，默认包则整个jar的类
      */
     @Parameter
-    String[] includePackages;
+    String[] includePackages = {};
 
     /**
      * 排除的包名
      */
     @Parameter
-    String[] excludePackages;
+    String[] excludePackages = {};
 
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
@@ -197,7 +197,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             boolean isChange = false;
 
-          //  getLog().info(name + " isExclude: " + isExclude(name) + " isInclude: " + isInclude(name));
+            //  getLog().info(name + " isExclude: " + isExclude(name) + " isInclude: " + isInclude(name));
 
             if (entry.getName().endsWith(".class")
                     && entry.getName().startsWith(path)
@@ -404,9 +404,10 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                         Type returnType = Type.getReturnType(descriptor);
                         boolean isStatic = (access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC;
+                        boolean isAbstract = (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT;
 
-                        //如果是接口
-                        if (isInterface.get()) {
+                        //如果是抽象方法
+                        if (isAbstract) {
                             super.visitCode();
                             return;
                         }
@@ -477,7 +478,13 @@ public class ClassEncryptPlugin extends BaseMojo {
                                     index += argumentType.getSize();
                                 }
 
-                                //执行自己方法
+//                                invokestatic：该指令用于调用静态方法，即使用 static 关键字修饰的方法；
+//                                invokespecial：该指令用于三种场景：调用实例构造方法，调用私有方法（即private关键字修饰的方法）和父类方法（即super关键字调用的方法）；
+//                                invokeinterface：该指令用于调用接口方法，在运行时再确定一个实现此接口的对象；
+//                                invokevirtual：该指令用于调用虚方法（就是除了上述三种情况之外的方法）；通常是子类的方法，还未实现的抽象方法
+//                                invokedynamic：在运行时动态解析出调用点限定符所引用的方法之后，调用该方法；在JDK1.7中推出，主要用于支持JVM上的动态脚本语言（如Groovy，Jython等）。
+//
+//                                //执行自己方法
                                 mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
 
                                 //返回
