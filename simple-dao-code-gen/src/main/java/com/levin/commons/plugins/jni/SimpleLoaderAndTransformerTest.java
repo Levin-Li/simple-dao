@@ -2,6 +2,7 @@ package com.levin.commons.plugins.jni;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.File;
 
@@ -23,6 +24,11 @@ public class SimpleLoaderAndTransformerTest {
 
     @SneakyThrows
     public static void main(String[] args) {
+
+
+        AntPathMatcher matcher = new AntPathMatcher();
+
+        boolean match = matcher.match("**.req.**", "com.levin.reaq.AEntity");
 
         final SimpleLoaderAndTransformer transformer = new SimpleLoaderAndTransformer();
 

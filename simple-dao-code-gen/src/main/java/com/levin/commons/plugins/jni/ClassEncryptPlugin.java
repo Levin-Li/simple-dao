@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.springframework.asm.*;
 import org.springframework.cglib.core.Constants;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -65,11 +66,16 @@ public class ClassEncryptPlugin extends BaseMojo {
     @Parameter
     String[] excludePackages;
 
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
     {
         onlyExecutionRoot = false;
         isPrintException = true;
         pwdFile = ".java_agent/.pwdFile.txt";
         allowPackageTypes = new String[]{"jar", "war", "ear"};
+
+        antPathMatcher.setCachePatterns(true);
+
     }
 
 
@@ -163,6 +169,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         //检测如果有 main 函数，则不加密，但是加入代码
 
+        getLog().info("***  includePackages:" + Arrays.asList(includePackages) + " , excludePackages:" + Arrays.asList(excludePackages));
+
         byte[] emptyArray = new byte[0];
 
         while (entries.hasMoreElements()) {
@@ -181,21 +189,23 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             name = name.replace("/", ".");
 
+            if (name.endsWith(".class")) {
+                name = name.substring(0, name.length() - 6);
+            }
+
             byte[] fileContent = entry.getSize() > 0 ? IOUtils.readFully(buildFileJar.getInputStream(entry), (int) entry.getSize()) : emptyArray;
 
             boolean isChange = false;
 
-            // getLog().info("Path:" + path + " " + entry.getName());
-
+          //  getLog().info(name + " isExclude: " + isExclude(name) + " isInclude: " + isInclude(name));
 
             if (entry.getName().endsWith(".class")
                     && entry.getName().startsWith(path)
                     && !entry.isDirectory()
-                    && isInclude(name)
-                    && !isExclude(name)) {
+                    && !isExclude(name)
+                    && isInclude(name)) {
 
                 //获取类名的md5
-                name = name.substring(0, name.length() - 6);
 
                 String resPath = HookAgent.getClassResPath(name);
 
@@ -474,7 +484,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
 
                             } else {
-                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.','/'), "checkSecurity", "()V", false);
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
 
                                 setDefaultValue(mWriter, returnType);
                                 mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
@@ -538,21 +548,25 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
     }
 
-
-    protected boolean isInclude(String className) {
-        if (includePackages == null
-                || includePackages.length > 1) {
-            return true;
-        }
-        return Arrays.stream(includePackages).anyMatch(className::startsWith);
+    protected boolean isInclude(String str) {
+        return isMatched(str, true, includePackages);
     }
 
-    protected boolean isExclude(String className) {
-        if (excludePackages == null
-                || excludePackages.length > 1) {
-            return false;
-        }
-        return Arrays.stream(includePackages).anyMatch(className::startsWith);
+    protected boolean isExclude(String str) {
+        return isMatched(str, false, excludePackages);
     }
+
+    protected boolean isMatched(String str, boolean defaultValue, String... patterns) {
+
+        if (patterns == null
+                || patterns.length == 0) {
+            return defaultValue;
+        }
+
+        return Arrays.stream(patterns)
+                .filter(StringUtils::hasText)
+                .anyMatch(pattern -> antPathMatcher.match(pattern, str));
+    }
+
 
 }
