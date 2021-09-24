@@ -5,6 +5,7 @@ import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
@@ -161,7 +162,8 @@ public abstract class BaseMojo extends AbstractMojo {
      * @return
      * @throws ClassNotFoundException
      */
-    public synchronized Class loadClass(String className) throws ClassNotFoundException {
+    @SneakyThrows
+    public synchronized Class loadClass(String className) {
 
         addClasspath();
 

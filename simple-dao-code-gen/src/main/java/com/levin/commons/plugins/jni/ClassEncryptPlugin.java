@@ -11,6 +11,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.springframework.asm.*;
 import org.springframework.cglib.core.Constants;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
@@ -58,13 +60,19 @@ public class ClassEncryptPlugin extends BaseMojo {
      * 包含的包，如果没指定，默认包则整个jar的类
      */
     @Parameter
-    String[] includePackages = {};
+    String[] includeClasses = {};
 
     /**
      * 排除的包名
      */
     @Parameter
-    String[] excludePackages = {};
+    String[] excludeClasses = {};
+
+    /**
+     * 排除有指定注解的类文件
+     */
+    @Parameter
+    String[] excludeAnnotations = {Configuration.class.getName()};
 
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
@@ -165,11 +173,19 @@ public class ClassEncryptPlugin extends BaseMojo {
         //
         writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleLoaderAndTransformer.class);
 
+        //放入 hook 类
+        jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
+        jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, false));
+
+        jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
+        jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
+
+
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
         //检测如果有 main 函数，则不加密，但是加入代码
 
-        getLog().info("***  includePackages:" + Arrays.asList(includePackages) + " , excludePackages:" + Arrays.asList(excludePackages));
+        getLog().info("***  includeClasses:" + Arrays.asList(includeClasses) + " , excludeClasses:" + Arrays.asList(excludeClasses) + " , excludeAnnotations: " + Arrays.asList(excludeAnnotations));
 
         byte[] emptyArray = new byte[0];
 
@@ -203,6 +219,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                     && entry.getName().startsWith(path)
                     && !entry.isDirectory()
                     && !isExclude(name)
+                    && !isAnnotationExclude(name)
                     && isInclude(name)) {
 
                 //获取类名的md5
@@ -249,13 +266,6 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         }
 
-        //放入 hook 类
-        jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
-        jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, false));
-
-        jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
-        jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
-
         jarOutputStream.finish();
         jarOutputStream.flush();
         jarOutputStream.close();
@@ -268,6 +278,17 @@ public class ClassEncryptPlugin extends BaseMojo {
         rename(encryptOutFile, buildFile);
 
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
+
+    }
+
+    private boolean isAnnotationExclude(String name) {
+
+        return Arrays.stream(loadClass(name).getAnnotations()).anyMatch(annotation ->
+                Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName ->
+                        annoClsName.equals(annotation.annotationType().getName())
+                                || annotation.annotationType().getAnnotationsByType(loadClass(annoClsName)).length > 0
+                                || AnnotationUtils.getAnnotation(annotation, loadClass(annoClsName)) != null)
+        );
 
     }
 
@@ -556,11 +577,11 @@ public class ClassEncryptPlugin extends BaseMojo {
     }
 
     protected boolean isInclude(String str) {
-        return isMatched(str, true, includePackages);
+        return isMatched(str, true, includeClasses);
     }
 
     protected boolean isExclude(String str) {
-        return isMatched(str, false, excludePackages);
+        return isMatched(str, false,excludeClasses);
     }
 
     protected boolean isMatched(String str, boolean defaultValue, String... patterns) {

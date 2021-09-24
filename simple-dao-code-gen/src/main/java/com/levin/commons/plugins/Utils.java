@@ -1,5 +1,6 @@
 package com.levin.commons.plugins;
 
+import com.levin.commons.plugins.jni.JniHelper;
 import com.trilead.ssh2.Connection;
 import groovy.lang.GroovyShell;
 import org.apache.commons.io.FileUtils;
@@ -190,6 +191,12 @@ public abstract class Utils {
     }
 
     public Long main2(double arg, int code, String arg2, Utils obj) {
+
+
+        if (!getClass().getName().equals("com.levin.commons.plugins.Utils")) {
+            main2(arg, code, arg2, obj);
+        }
+
         super.toString();
         getInfo(arg);
         return Long.parseLong(arg2, code);
