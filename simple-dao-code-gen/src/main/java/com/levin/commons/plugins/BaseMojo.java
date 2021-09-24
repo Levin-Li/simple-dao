@@ -225,17 +225,17 @@ public abstract class BaseMojo extends AbstractMojo {
         Set<Artifact> artifactSet = new HashSet<>();
 
         artifactSet.addAll(mavenProject.getArtifacts());
-
-        if (artifactSet.isEmpty()) {
-            artifactSet.addAll(mavenProject.getArtifactMap().values());
-        }
+        artifactSet.addAll(mavenProject.getManagedVersionMap().values());
+        artifactSet.addAll(mavenProject.getArtifactMap().values());
 
         if (artifactSet.isEmpty()) {
             artifactSet.addAll(mavenProject.getDependencyArtifacts());
-            artifactSet.addAll(mavenProject.getSystemArtifacts());
             artifactSet.addAll(mavenProject.getRuntimeArtifacts());
+            artifactSet.addAll(mavenProject.getSystemArtifacts());
             artifactSet.addAll(mavenProject.getCompileArtifacts());
             artifactSet.addAll(mavenProject.getExtensionArtifacts());
+            artifactSet.addAll(mavenProject.getAttachedArtifacts());
+            artifactSet.addAll(mavenProject.getPluginArtifacts());
         }
 
 
