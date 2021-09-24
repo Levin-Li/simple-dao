@@ -235,7 +235,6 @@ public abstract class BaseMojo extends AbstractMojo {
             artifactSet.addAll(mavenProject.getCompileArtifacts());
             artifactSet.addAll(mavenProject.getExtensionArtifacts());
             artifactSet.addAll(mavenProject.getAttachedArtifacts());
-            artifactSet.addAll(mavenProject.getPluginArtifacts());
         }
 
 
@@ -251,12 +250,11 @@ public abstract class BaseMojo extends AbstractMojo {
                 artifactMap.put(key, artifact);
             }
 
-            if (artifact.isResolved() && artifact.getFile() != null) {
-
+            if (artifact.getFile() != null) {
                 try {
                     urlList.add(artifact.getFile().toURI().toURL());
                 } catch (MalformedURLException e) {
-                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact + " --> path: " + artifact.getFile());
+                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包文件不可用 --> " + artifact + " --> path: " + artifact.getFile());
                 }
 
             } else {
