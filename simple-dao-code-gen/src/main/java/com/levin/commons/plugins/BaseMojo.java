@@ -35,6 +35,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * 可以用 _project.xxxx 来访问插件的属性
@@ -142,6 +143,13 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter
     protected boolean independentPluginClassLoader = false;
 
+
+    /**
+     * 插件类加载器，需要加载的Scopes
+     */
+    @Parameter
+    protected String[] dependenciesScopes = {Artifact.SCOPE_RUNTIME};
+
     /**
      * 线程变量
      */
@@ -218,27 +226,70 @@ public abstract class BaseMojo extends AbstractMojo {
 
     }
 
+    @SneakyThrows
     protected List<URL> getClasspaths(List<URL> urlList) {
+
+        List<String> runtimeClasspathElements = mavenProject.getRuntimeClasspathElements();
+
+        getLog().info("getRuntimeClasspathElements :" + runtimeClasspathElements);
+
+        if (runtimeClasspathElements != null && runtimeClasspathElements.size() > 0) {
+
+            runtimeClasspathElements.parallelStream().forEachOrdered((file) -> {
+                try {
+                    urlList.add(new File(file).toURI().toURL());
+                } catch (MalformedURLException e) {
+                }
+            });
+
+            // return urlList;
+        }
 
         Map<String, Artifact> artifactMap = new LinkedHashMap<>();
 
         Set<Artifact> artifactSet = new HashSet<>();
 
         artifactSet.addAll(mavenProject.getArtifacts());
-        artifactSet.addAll(mavenProject.getManagedVersionMap().values());
         artifactSet.addAll(mavenProject.getArtifactMap().values());
 
         if (artifactSet.isEmpty()) {
+            artifactSet.addAll(mavenProject.getManagedVersionMap().values());
+            getLog().info("classpath use ManagedVersionMap :" + mavenProject.getManagedVersionMap());
+        }
+
+        if (artifactSet.isEmpty()) {
+
             artifactSet.addAll(mavenProject.getDependencyArtifacts());
             artifactSet.addAll(mavenProject.getRuntimeArtifacts());
             artifactSet.addAll(mavenProject.getSystemArtifacts());
             artifactSet.addAll(mavenProject.getCompileArtifacts());
             artifactSet.addAll(mavenProject.getExtensionArtifacts());
             artifactSet.addAll(mavenProject.getAttachedArtifacts());
+
+            getLog().info("classpath use getDependencyArtifacts getCompileArtifacts getSystemArtifacts getRuntimeArtifacts  :" + artifactSet);
+
         }
 
+        getLog().info("getDependencies :" + mavenProject.getDependencies());
+
+        List<String> desList = mavenProject.getDependencies()
+                .parallelStream().map(d -> d.getGroupId() + ":" + d.getArtifactId() + ":" + d.getClassifier())
+                .collect(Collectors.toList());
 
         for (Artifact artifact : artifactSet) {
+
+            if (!desList.contains(artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getClassifier())) {
+                getLog().info("*** 忽略[" + artifact.getScope() + "] " + artifact);
+                continue;
+            }
+
+            if (artifact.getFile() == null) {
+                getLog().debug("*** 处理未解决的依赖 " + artifact);
+                try {
+                    artifact = artifactResolver.resolveArtifact(mavenSession.getProjectBuildingRequest(), artifact).getArtifact();
+                } catch (Exception e) {
+                }
+            }
 
             String key = artifact.getGroupId()
                     + ":" + artifact.getArtifactId()
