@@ -281,15 +281,19 @@ public class ClassEncryptPlugin extends BaseMojo {
 
     }
 
+    @SneakyThrows
     private boolean isAnnotationExclude(String name) {
-
-        return Arrays.stream(loadClass(name).getAnnotations()).anyMatch(annotation ->
-                Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName ->
-                        annoClsName.equals(annotation.annotationType().getName())
-                                || annotation.annotationType().getAnnotationsByType(loadClass(annoClsName)).length > 0
-                                || AnnotationUtils.getAnnotation(annotation, loadClass(annoClsName)) != null)
-        );
-
+        try {
+            return Arrays.stream(loadClass(name).getAnnotations()).anyMatch(annotation ->
+                    Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName ->
+                            annoClsName.equals(annotation.annotationType().getName())
+                                    || annotation.annotationType().getAnnotationsByType(loadClass(annoClsName)).length > 0
+                                    || AnnotationUtils.getAnnotation(annotation, loadClass(annoClsName)) != null)
+            );
+        } catch (Throwable e) {
+            getLog().error(e);
+            throw e;
+        }
     }
 
 
@@ -581,7 +585,7 @@ public class ClassEncryptPlugin extends BaseMojo {
     }
 
     protected boolean isExclude(String str) {
-        return isMatched(str, false,excludeClasses);
+        return isMatched(str, false, excludeClasses);
     }
 
     protected boolean isMatched(String str, boolean defaultValue, String... patterns) {

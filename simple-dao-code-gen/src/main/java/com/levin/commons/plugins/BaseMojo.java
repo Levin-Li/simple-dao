@@ -186,7 +186,6 @@ public abstract class BaseMojo extends AbstractMojo {
         List<URL> urlList = new ArrayList<>(50);
 
         if (pluginClassLoader == null) {
-
             try {
                 urlList.add(new File(mavenProject.getBuild().getOutputDirectory()).toURI().toURL());
             } catch (MalformedURLException e) {
@@ -194,7 +193,6 @@ public abstract class BaseMojo extends AbstractMojo {
             }
 
             getClasspaths(urlList);
-
         }
 
         if (filePaths != null) {
@@ -215,7 +213,7 @@ public abstract class BaseMojo extends AbstractMojo {
 
             pluginClassLoader = new URLClassLoader(urlList.toArray(new URL[urlList.size()]), parent);
 
-            logger.info(" **** 本次加载到类路径的依赖包: " + urlList);
+            logger.info(" **** 插件类加载器加载类路径的依赖包: " + urlList);
         }
 
     }
@@ -224,7 +222,19 @@ public abstract class BaseMojo extends AbstractMojo {
 
         Map<String, Artifact> artifactMap = new LinkedHashMap<>();
 
-        for (Artifact artifact : mavenProject.getArtifacts()) {
+        Set<Artifact> artifactSet = new HashSet<>();
+
+        artifactSet.addAll(mavenProject.getArtifacts());
+
+        if (artifactSet.isEmpty()) {
+            artifactSet.addAll(mavenProject.getDependencyArtifacts());
+        }
+
+        if (artifactSet.isEmpty()) {
+            artifactSet.addAll(mavenProject.getArtifactMap().values());
+        }
+
+        for (Artifact artifact : artifactSet) {
 
             String key = artifact.getGroupId()
                     + ":" + artifact.getArtifactId()
@@ -247,6 +257,10 @@ public abstract class BaseMojo extends AbstractMojo {
             } else {
                 logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
             }
+        }
+
+        if (urlList.isEmpty()) {
+            logger.warn("*** 当前模块没有获取到依赖列表。");
         }
 
         return urlList;
