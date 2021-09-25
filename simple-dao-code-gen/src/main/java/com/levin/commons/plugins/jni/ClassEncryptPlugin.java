@@ -47,7 +47,7 @@ public class ClassEncryptPlugin extends BaseMojo {
      * 加密密码文件
      */
     @Parameter
-    String pwdFile;
+    String pwdFilePath;
 
     /**
      * 类加密密码，pwdFile参数优先
@@ -76,9 +76,7 @@ public class ClassEncryptPlugin extends BaseMojo {
     {
         onlyExecutionRoot = false;
         isPrintException = true;
-        pwdFile = ".java_agent/.pwdFile.txt";
         allowPackageTypes = new String[]{"jar", "war", "ear"};
-
     }
 
 
@@ -104,11 +102,12 @@ public class ClassEncryptPlugin extends BaseMojo {
     @Override
     protected void executeMojo() throws Exception {
 
-        if (!StringUtils.hasText(pwdFile)) {
-            logger.warn("pwdFile is not set");
+        if (!StringUtils.hasText(pwdFilePath)) {
+            pwdFilePath = ".java_agent/.pwdFile.txt";
+            logger.warn("密码文件没有指定 , 默认为" + pwdFilePath);
         }
 
-        File pwdFile = findFile(mavenProject, this.pwdFile);
+        File pwdFile = findFile(mavenProject, this.pwdFilePath);
 
         if (pwdFile != null) {
             pwd = FileUtils.readFileToString(pwdFile, Charset.forName("UTF-8"));
@@ -116,12 +115,12 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
 
         if (!StringUtils.hasText(pwd)) {
-            logger.warn("password not set , ignore.");
+            logger.warn("加密打包密码没有设置，您可以在" + pwdFile + "配置密码");
             return;
         }
 
         //设置加密密码
-        SimpleLoaderAndTransformer.setPwd(pwd, this.pwdFile);
+        SimpleLoaderAndTransformer.setPwd(pwd, this.pwdFilePath);
 
         Build build = mavenProject.getBuild();
 
@@ -216,7 +215,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                     && !entry.isDirectory()
                     && !isExclude(name)
                     && !isAnnotation(name)
-                    && !isAnnotationExclude(name)
+                    && !isExcludeByAnnotation(name)
                     && isInclude(name)) {
 
                 //获取类名的md5
@@ -253,10 +252,10 @@ public class ClassEncryptPlugin extends BaseMojo {
                     entry2.setCrc(crc32.getValue());
                 }
                 entry2.setTime(entry.getTime());
-            } else if (entry.getName().endsWith(".class")) {
+            } else if (entry.getName().endsWith(".class") && isExcludeByAnnotation(name)) {
                 //如果是类文件
-//                entry2 = new JarEntry(entry.getName());
-//                fileContent = processMethodBody(fileContent, name, false, false);
+                entry2 = new JarEntry(entry.getName());
+                fileContent = processMethodBody(fileContent, name, false, false);
             }
 
 //            if (!isChange) {
@@ -287,7 +286,7 @@ public class ClassEncryptPlugin extends BaseMojo {
     }
 
     @SneakyThrows
-    private boolean isAnnotationExclude(String name) {
+    private boolean isExcludeByAnnotation(String name) {
 
         //https://blog.csdn.net/qq_22845447/article/details/83210559
 //    AnnotationUtils.getAnnotation
