@@ -26,6 +26,9 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
 
     }
 
+    protected static final int JNI = 1;
+    protected static final int AGENT = 2;
+
 
     protected SimpleLoaderAndTransformer(ClassLoader parent) {
         super(parent);
@@ -37,7 +40,16 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
 
     protected native static void setPwd(String pwd, String pwdFileName);
 
-    public native static int getEnvType();
+    /**
+     * 获取环境类型
+     * <p>
+     * 0、未定义
+     * 1、JNI
+     * 2、Agent
+     *
+     * @return
+     */
+    protected native static int getEnvType();
 
     protected native static byte[] transform1(String pwd, byte[] data);
 

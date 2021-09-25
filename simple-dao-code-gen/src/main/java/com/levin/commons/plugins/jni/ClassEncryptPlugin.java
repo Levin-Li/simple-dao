@@ -18,7 +18,6 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -69,10 +68,10 @@ public class ClassEncryptPlugin extends BaseMojo {
     String[] excludeClasses = {};
 
     /**
-     * 排除有指定注解的类文件
+     * 排除有指定注解的类
      */
     @Parameter
-    String[] excludeAnnotations = {Configuration.class.getName()};
+    String[] excludeClassesByAnnotations = {Configuration.class.getName()};
 
     {
         onlyExecutionRoot = false;
@@ -180,9 +179,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         //检测如果有 main 函数，则不加密，但是加入代码
 
-        getLog().info("***  includeClasses:" + Arrays.asList(includeClasses)
-                + " , excludeClasses:" + Arrays.asList(excludeClasses)
-                + " , excludeAnnotations: " + Arrays.asList(excludeAnnotations));
+        getLog().info("***  includeClasses: " + Arrays.asList(includeClasses)
+                + " , excludeClasses: " + Arrays.asList(excludeClasses)
+                + " , excludeClassesByAnnotations: " + Arrays.asList(excludeClassesByAnnotations));
 
         byte[] emptyArray = new byte[0];
 
@@ -253,8 +252,11 @@ public class ClassEncryptPlugin extends BaseMojo {
                     crc32.update(fileContent);
                     entry2.setCrc(crc32.getValue());
                 }
-
                 entry2.setTime(entry.getTime());
+            } else if (entry.getName().endsWith(".class")) {
+                //如果是类文件
+                entry2 = new JarEntry(entry.getName());
+                fileContent = processMethodBody(fileContent, name, false, false);
             }
 
 //            if (!isChange) {
@@ -305,7 +307,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         try {
             Class aClass = loadClass(name);
-            return Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName -> {
+            return Arrays.stream(excludeClassesByAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName -> {
 //                        Class<? extends Annotation> annoClass = loadClass(annoClsName);
 //                                return  AnnotatedElementUtils.(aClass, annoClsName);
                         return AnnotationUtils.findAnnotation(aClass, loadClass(annoClsName)) != null;
@@ -404,8 +406,11 @@ public class ClassEncryptPlugin extends BaseMojo {
      */
     protected byte[] processMethodBody(byte[] data, final String className, boolean isClearOldBody, boolean isAddHookAgentMethod) {
 
-        ClassReader reader = new ClassReader(data);
+        if (data == null || data.length == 0) {
+            return data;
+        }
 
+        ClassReader reader = new ClassReader(data);
 
 //        JVM 的执行模型。我们都知道，Java 代码是运行在线程中的，每条线程都拥有属于自己的运行栈，栈是由一个或多个帧组成的，也叫栈帧（StackFrame）。每个栈帧代表一个方法调用：每当线程调用一个Java方法时，JVM就会在该线程对应的栈中压入一个帧；当执行这个方法时，它使用这个帧来存储参数、局部变量、中间运算结果等等；当方法执行结束（无论是正常返回还是抛异常）时，该栈帧就会弹出，然后继续运行下一个栈帧（栈顶栈帧）的方法调用。
 //        栈帧由三部分组成：局部变量表、操作数栈、帧数据区。
@@ -453,100 +458,45 @@ public class ClassEncryptPlugin extends BaseMojo {
                         boolean isAbstract = (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT;
 
                         //如果是抽象方法
-                        if (isAbstract) {
-                            super.visitCode();
-                            return;
-                        }
-
-                        //如果是 main 方法
-                        boolean isMain = methodName.equals("main")
-                                && isStatic
-                                && returnType.getSort() == Type.VOID;
-
-                        if (!isClearOldBody) {
-
-                            if (isMain) {
-                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
-
-                                isModified.set(true);
-                                getLog().info("*** 类 " + className + "  " + methodName + "方法增加代码。");
-
-                            }
-
-                            return;
-                        }
-
-                        if (isMain) {
-                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, HookAgent.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
-                            return;
-                        }
-
-                        StringBuilder buf = new StringBuilder();
-
-                        if (!StringUtils.hasText(methodName)
+                        if (isAbstract
+                                || !StringUtils.hasText(methodName)
                                 || (methodName.startsWith("access$") && methodName.length() > "access$".length())
                                 || methodName.equalsIgnoreCase("<init>")
                                 || methodName.equalsIgnoreCase("<cinit>")
                                 || methodName.equalsIgnoreCase("<clinit>")) {
 
-                            //   isModified.set(true);
-                            //   this.mv = null;
-                            //   mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
-
-                        } else {
-
-                            isModified.set(true);
-
-                            //清空方法
-                            this.mv = null;
-
-                            //写入空操作
-                            //调用静态方法抛出异常
-                            if (isAddHookAgentMethod && false) {
-
-                                Type[] argumentTypes = Type.getArgumentTypes(descriptor);
-//                                ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
-
-                                //静态方法从 0 开始
-                                int index = 0;
-
-                                if (!isStatic) {
-                                    mWriter.visitVarInsn(Opcodes.ALOAD, index++);
-                                }
-
-                                for (Type argumentType : argumentTypes) {
-
-                                    mWriter.visitVarInsn(argumentType.getOpcode(Opcodes.ILOAD), index);
-
-                                    buf.append(index).append(".").append(argumentType.getClassName()).append(",");
-
-                                    //参数
-                                    index += argumentType.getSize();
-                                }
-
-//                                invokestatic：该指令用于调用静态方法，即使用 static 关键字修饰的方法；
-//                                invokespecial：该指令用于三种场景：调用实例构造方法，调用私有方法（即private关键字修饰的方法）和父类方法（即super关键字调用的方法）；
-//                                invokeinterface：该指令用于调用接口方法，在运行时再确定一个实现此接口的对象；
-//                                invokevirtual：该指令用于调用虚方法（就是除了上述三种情况之外的方法）；通常是子类的方法，还未实现的抽象方法
-//                                invokedynamic：在运行时动态解析出调用点限定符所引用的方法之后，调用该方法；在JDK1.7中推出，主要用于支持JVM上的动态脚本语言（如Groovy，Jython等）。
-//
-//                                //执行自己方法
-                                mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
-
-                                //返回
-                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
-
-                            } else {
-                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
-
-                                setDefaultValue(mWriter, returnType);
-                                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
-                            }
-
-                            // getLog().info(className + "." + methodName + " isStatic:" + isStatic + " params:" + buf);
-
-                            mWriter.visitMaxs(15, 15);//设置局部表量表和操作数栈大小
+                            return;
                         }
+
+                        if (isClearOldBody) {
+                            this.mv = null;
+                        }
+
+                        //如果是 main 方法
+                        boolean isMain = methodName.equals("main")
+                                && isStatic
+                                && descriptor.equals(Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType((new String[0]).getClass())));
+
+                        if (isMain) {
+                            isModified.set(true);
+                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HookAgent.class), "premain", Type.getMethodDescriptor(Type.VOID_TYPE), false);
+                            getLog().info("*** 类 " + className + "  " + methodName + "方法增加代码。");
+                        }
+
+                        if (isAddHookAgentMethod) {
+                            isModified.set(true);
+                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, HookAgent.class.getName().replace('.', '/'), "checkEnv", "()V", false);
+                        }
+
+                        if (isClearOldBody) {
+                            isModified.set(true);
+                            //增加返回处理
+                            setDefaultValue(mWriter, returnType);
+                            mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
+                        }
+
+                        mWriter.visitMaxs(15, 15);//设置局部表量表和操作数栈大小
+
                     }
 
                     @Override
@@ -559,11 +509,56 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 return methodVisitor;
             }
+
+            /**
+             * 调用 super 方法
+             * @param returnType
+             * @param descriptor
+             * @param mWriter
+             * @param methodName
+             */
+            private void addCallSuper(int access, Type returnType, String descriptor, MethodVisitor mWriter, String
+                    methodName) {
+
+                boolean isStatic = (access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC;
+
+                Type[] argumentTypes = Type.getArgumentTypes(descriptor);
+//                                ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
+
+                //静态方法从 0 开始
+                int index = 0;
+//
+                if (!isStatic) {
+                    //如果不是静态方法，加载 this 对象
+                    mWriter.visitVarInsn(Opcodes.ALOAD, index++);
+                }
+
+                StringBuilder params = new StringBuilder();
+                //加载参数
+                for (Type argumentType : argumentTypes) {
+                    mWriter.visitVarInsn(argumentType.getOpcode(Opcodes.ILOAD), index);
+                    params.append(index).append(".").append(argumentType.getClassName()).append(",");
+                    //参数
+                    index += argumentType.getSize();
+                }
+
+//                                invokestatic：该指令用于调用静态方法，即使用 static 关键字修饰的方法；
+//                                invokespecial：该指令用于三种场景：调用实例构造方法，调用私有方法（即private关键字修饰的方法）和父类方法（即super关键字调用的方法）；
+//                                invokeinterface：该指令用于调用接口方法，在运行时再确定一个实现此接口的对象；
+//                                invokevirtual：该指令用于调用虚方法（就是除了上述三种情况之外的方法）；通常是子类的方法，还未实现的抽象方法
+//                                invokedynamic：在运行时动态解析出调用点限定符所引用的方法之后，调用该方法；在JDK1.7中推出，主要用于支持JVM上的动态脚本语言（如Groovy，Jython等）。
+//
+//              //执行自己方法
+                mWriter.visitMethodInsn(isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL, className.replace('.', '/'), methodName, descriptor, isInterface.get());
+
+//              //返回
+                mWriter.visitInsn(returnType.getOpcode(Opcodes.IRETURN));
+            }
         };
 
         // 4. 将 ClassVisitor 对象传入 ClassReader 中
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
-//
+
 //        if (hasContent(fieldName)) {
 //            FieldVisitor fieldVisitor = writer.visitField(ACC_PRIVATE + ACC_STATIC + ACC_FINAL, fieldName, Type.getDescriptor(byte[].class), null, null);
 //            fieldVisitor.visitEnd();

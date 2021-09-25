@@ -23,15 +23,17 @@ public abstract class HookAgent {
     private HookAgent() {
     }
 
-    public static void checkSecurity() {
-        throw new SecurityException("unsafe");
+    public static void checkEnv() {
+        if (SimpleLoaderAndTransformer.getEnvType() != SimpleLoaderAndTransformer.AGENT
+                && !isEnvEnable()) {
+            System.err.println("env type error");
+            System.exit(-1);
+        }
     }
-
 
     public static void premain() {
         System.out.println("***HookAgent*** Work Dir : " + new File(".").getAbsolutePath());
     }
-
 
     public static byte[] loadClassData(String className) {
         return JniHelper.loadResource(getClassResPath(className));
@@ -41,7 +43,7 @@ public abstract class HookAgent {
         return (META_INF_CLASSES + JniHelper.md5(new StringBuilder("C" + className.replace('/', '.')).toString()) + ".dat");
     }
 
-    public static boolean isEnvEnable() {
+    private static boolean isEnvEnable() {
 
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
 
@@ -81,10 +83,7 @@ public abstract class HookAgent {
     }
 
     static {
-        if (SimpleLoaderAndTransformer.getEnvType() == 1 && !isEnvEnable()) {
-            System.err.println("env type error");
-            System.exit(-1);
-        }
+       checkEnv();
     }
 
 }
