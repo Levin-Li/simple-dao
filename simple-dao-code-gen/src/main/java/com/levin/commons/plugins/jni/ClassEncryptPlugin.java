@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -285,12 +286,30 @@ public class ClassEncryptPlugin extends BaseMojo {
 
     @SneakyThrows
     private boolean isAnnotationExclude(String name) {
+
+        //https://blog.csdn.net/qq_22845447/article/details/83210559
+//    AnnotationUtils.getAnnotation
+//　　从提供的AnnotatedElement获取annotationType的单个Annotation，其中注解在AnnotatedElement上存在或元存在。请注意，此方法仅支持单级元注解。要支持任意级别的元注解，请使用findAnnotation（AnnotatedElement，Class）。　　
+//
+//　　AnnotationUtils.findAnnotation
+//　　在提供的AnnotatedElement上查找annotationType的单个Annotation。如果注解不直接出现在提供的元素上，则将搜索元注解。
+//
+//　　AnnotatedElementUtils.isAnnotated
+//　　确定在提供的AnnotatedElement上或指定元素上方的注解层次结构中是否存在指定annotationType的注解。如果此方法返回true，则getMergedAnnotationAttributes方法将返回非null值。
+//
+//　　AnnotatedElementUtils.hasAnnotation
+//　　确定指定的annotationType的注解是否在提供的AnnotatedElement上或在指定元素上方的注解层次结构中可用。如果此方法返回true，则findMergedAnnotationAttributes方法将返回非null值。
+//
+//　　AnnotatedElementUtils.getMergedAnnotation
+//　　在提供的元素上方的注解层次结构中获取指定注解类型的第一个注解，将注解的属性与注解层次结构的较低级别中的注解的匹配属性合并，并将结果合成回指定注解类型的注解。完全支持@AliasFor语义，包括单个注解和注解层次结构。此方法委托给getMergedAnnotationAttributes（AnnotatedElement，Class）和AnnotationUtils.synthesizeAnnotation（Map，Class，AnnotatedElement）。
+
         try {
-            return Arrays.stream(loadClass(name).getAnnotations()).anyMatch(annotation ->
-                    Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName ->
-                            annoClsName.equals(annotation.annotationType().getName())
-                                    || annotation.annotationType().getAnnotationsByType(loadClass(annoClsName)).length > 0
-                                    || AnnotationUtils.getAnnotation(annotation, loadClass(annoClsName)) != null)
+            Class aClass = loadClass(name);
+            return Arrays.stream(excludeAnnotations).filter(StringUtils::hasText).anyMatch(annoClsName -> {
+//                        Class<? extends Annotation> annoClass = loadClass(annoClsName);
+//                                return  AnnotatedElementUtils.(aClass, annoClsName);
+                        return AnnotationUtils.findAnnotation(aClass, loadClass(annoClsName)) != null;
+                    }
             );
         } catch (Throwable e) {
             getLog().error(e);
@@ -596,7 +615,6 @@ public class ClassEncryptPlugin extends BaseMojo {
                 || patterns.length == 0) {
             return defaultValue;
         }
-
         return Arrays.stream(patterns)
                 .filter(StringUtils::hasText)
                 .anyMatch(pattern -> antPathMatcher.match(pattern, str));
