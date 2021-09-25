@@ -36,7 +36,6 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * 可以用 _project.xxxx 来访问插件的属性
@@ -249,6 +248,13 @@ public abstract class BaseMojo extends AbstractMojo {
                 + (StringUtils.hasText(d.getClassifier()) ? (":" + d.getClassifier()) : "");
     }
 
+    /**
+     * 递归获取项目的依赖库
+     *
+     * @param dependenciesMap
+     * @param node
+     * @return
+     */
     MultiValueMap<String, org.eclipse.aether.artifact.Artifact> getDependencies(MultiValueMap<String, org.eclipse.aether.artifact.Artifact> dependenciesMap, DependencyNode node) {
 
         synchronized (this) {
@@ -258,13 +264,10 @@ public abstract class BaseMojo extends AbstractMojo {
         }
 
         if (node != null) {
-
             for (DependencyNode child : node.getChildren()) {
                 getDependencies(dependenciesMap, child);
             }
-
             dependenciesMap.add(toString(node.getArtifact()), node.getArtifact());
-
         }
 
         return dependenciesMap;
@@ -272,16 +275,25 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     @SneakyThrows
+    public MultiValueMap<String, org.eclipse.aether.artifact.Artifact> getDependencies() {
+
+        DependencyResolutionResult resolutionResult
+                = dependenciesResolver.resolve(new DefaultDependencyResolutionRequest(mavenSession.getCurrentProject(), mavenSession.getRepositorySession()));
+
+        return getDependencies(null, resolutionResult.getDependencyGraph());
+
+    }
+
+
+    @SneakyThrows
     protected List<URL> getClasspaths(List<URL> urlList) {
 
-        DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(new DefaultDependencyResolutionRequest(mavenSession.getCurrentProject(), mavenSession.getRepositorySession()));
-
-        MultiValueMap<String, org.eclipse.aether.artifact.Artifact> multiValueMap = getDependencies(null, resolutionResult.getDependencyGraph());
+        MultiValueMap<String, org.eclipse.aether.artifact.Artifact> multiValueMap = getDependencies();
 
         getLog().info(" *** dependenciesResolver getDependencies: " + multiValueMap);
         getLog().info("***          mavenProject getDependencies: " + mavenProject.getDependencies());
 
-        Map<String, Artifact> artifactMap = new LinkedHashMap<>();
+/*
 
         Set<Artifact> artifactSet = new HashSet<>();
 
@@ -307,11 +319,14 @@ public abstract class BaseMojo extends AbstractMojo {
 
             getLog().info("classpath use getCompileArtifacts getSystemArtifacts getRuntimeArtifacts :" + artifactSet);
         }
+*/
 
-
+/*
         List<String> desList = mavenProject.getDependencies()
                 .parallelStream().map(BaseMojo::toString)
                 .collect(Collectors.toList());
+
+        Map<String, Artifact> artifactMap = new LinkedHashMap<>();
 
         for (Artifact artifact : artifactSet) {
 
@@ -340,25 +355,23 @@ public abstract class BaseMojo extends AbstractMojo {
                     logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
                 }
             }
-        }
+        }*/
 
 
         for (String key : multiValueMap.keySet()) {
 
             List<org.eclipse.aether.artifact.Artifact> artifacts = multiValueMap.get(key);
 
-            Artifact artifact = artifactMap.get(key);
+            // Artifact artifact = artifactMap.get(key);
 
             if (artifacts == null || artifacts.isEmpty()) {
                 continue;
-            } else if (artifacts.size() > 1 || artifact != null) {
-                getLog().warn("构件版本冲突：" + key + " --> " + artifacts + " " + artifact);
+            } else if (artifacts.size() > 1) {
+                getLog().warn("构件版本冲突：" + key + " --> " + artifacts);
             }
 
             try {
-                if (artifact == null) {
-                    urlList.add(artifacts.get(0).getFile().toURI().toURL());
-                }
+                urlList.add(artifacts.get(0).getFile().toURI().toURL());
             } catch (Throwable e) {
                 getLog().error("加入 " + key + " 失败" + e.getMessage());
             }

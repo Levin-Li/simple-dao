@@ -13,7 +13,6 @@ import org.springframework.asm.*;
 import org.springframework.cglib.core.Constants;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -176,12 +175,13 @@ public class ClassEncryptPlugin extends BaseMojo {
         jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
         jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
 
-
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
         //检测如果有 main 函数，则不加密，但是加入代码
 
-        getLog().info("***  includeClasses:" + Arrays.asList(includeClasses) + " , excludeClasses:" + Arrays.asList(excludeClasses) + " , excludeAnnotations: " + Arrays.asList(excludeAnnotations));
+        getLog().info("***  includeClasses:" + Arrays.asList(includeClasses)
+                + " , excludeClasses:" + Arrays.asList(excludeClasses)
+                + " , excludeAnnotations: " + Arrays.asList(excludeAnnotations));
 
         byte[] emptyArray = new byte[0];
 
@@ -215,6 +215,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                     && entry.getName().startsWith(path)
                     && !entry.isDirectory()
                     && !isExclude(name)
+                    && !isAnnotation(name)
                     && !isAnnotationExclude(name)
                     && isInclude(name)) {
 
@@ -275,6 +276,11 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
 
+    }
+
+    private boolean isAnnotation(String name) {
+        Class aClass = loadClass(name);
+        return aClass.isAnnotation();
     }
 
     @SneakyThrows
@@ -452,7 +458,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                         }
 
                         if (isMain) {
-                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, JniHelper.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
+                            mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, HookAgent.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
                             return;
                         }
 
