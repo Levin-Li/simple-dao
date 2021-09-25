@@ -255,8 +255,8 @@ public class ClassEncryptPlugin extends BaseMojo {
                 entry2.setTime(entry.getTime());
             } else if (entry.getName().endsWith(".class")) {
                 //如果是类文件
-                entry2 = new JarEntry(entry.getName());
-                fileContent = processMethodBody(fileContent, name, false, false);
+//                entry2 = new JarEntry(entry.getName());
+//                fileContent = processMethodBody(fileContent, name, false, false);
             }
 
 //            if (!isChange) {

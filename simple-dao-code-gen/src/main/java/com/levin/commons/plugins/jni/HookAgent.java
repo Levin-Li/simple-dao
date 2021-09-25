@@ -36,7 +36,7 @@ public abstract class HookAgent {
     }
 
     public static byte[] loadClassData(String className) {
-        return JniHelper.loadResource(getClassResPath(className));
+        return JniHelper.loadResource(null, getClassResPath(className));
     }
 
     public static String getClassResPath(String className) {
@@ -83,7 +83,7 @@ public abstract class HookAgent {
     }
 
     static {
-       checkEnv();
+        checkEnv();
     }
 
 }

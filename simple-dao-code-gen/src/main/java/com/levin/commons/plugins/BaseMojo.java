@@ -138,7 +138,7 @@ public abstract class BaseMojo extends AbstractMojo {
      * 插件的类加载器是否是独立
      */
     @Parameter
-    protected boolean independentPluginClassLoader = false;
+    protected boolean independentPluginClassLoader = true;
 
     /**
      * 插件类加载器，需要加载的Scopes
@@ -178,38 +178,36 @@ public abstract class BaseMojo extends AbstractMojo {
     @SneakyThrows
     public synchronized Class loadClass(String className) {
 
-        addClasspath();
+        URLClassLoader classLoader = getClassLoader();
 
-        return (pluginClassLoader == null) ? getClass().getClassLoader().loadClass(className)
-                : pluginClassLoader.loadClass(className);
+        return (classLoader == null) ? getClass().getClassLoader().loadClass(className)
+                : classLoader.loadClass(className);
     }
 
-    public ClassLoader getClassLoader() {
-        addClasspath();
-        return pluginClassLoader;
+    public URLClassLoader getClassLoader(String... filePaths) {
+        return getClassLoader(Arrays.asList(filePaths));
     }
 
-
-    public synchronized void addClasspath(String... filePaths) {
-        addClasspath(Arrays.asList(filePaths));
-    }
-
-    public synchronized void addClasspath(List<String> filePaths) {
+    /**
+     * @param filePaths
+     * @return
+     */
+    public synchronized URLClassLoader getClassLoader(List<String> filePaths) {
 
         List<URL> urlList = new ArrayList<>(50);
 
         if (pluginClassLoader == null) {
+
             try {
                 urlList.add(new File(mavenProject.getBuild().getOutputDirectory()).toURI().toURL());
             } catch (MalformedURLException e) {
-
             }
 
-            getClasspaths(urlList);
+            //首次默认加入类路径
+            getMavenProjectClasspaths(urlList);
         }
 
         if (filePaths != null) {
-
             for (String filePath : filePaths) {
                 try {
                     urlList.add(new File(filePath).toURI().toURL());
@@ -220,15 +218,16 @@ public abstract class BaseMojo extends AbstractMojo {
         }
 
         if (urlList.size() > 0) {
-
             //是否要独立的类加载器
+            //运行多次继承
             ClassLoader parent = (pluginClassLoader != null || independentPluginClassLoader) ? pluginClassLoader : getClass().getClassLoader();
 
             pluginClassLoader = new URLClassLoader(urlList.toArray(new URL[urlList.size()]), parent);
 
-            logger.info(" **** 插件类加载器加载类路径的依赖包: " + urlList);
+            logger.info(" **** 创建新的类加载器 ，类路径的依赖包: " + urlList);
         }
 
+        return pluginClassLoader;
     }
 
 
@@ -263,6 +262,7 @@ public abstract class BaseMojo extends AbstractMojo {
             }
         }
 
+        //递归获取依赖库
         if (node != null) {
             for (DependencyNode child : node.getChildren()) {
                 getDependencies(dependenciesMap, child);
@@ -281,17 +281,16 @@ public abstract class BaseMojo extends AbstractMojo {
                 = dependenciesResolver.resolve(new DefaultDependencyResolutionRequest(mavenSession.getCurrentProject(), mavenSession.getRepositorySession()));
 
         return getDependencies(null, resolutionResult.getDependencyGraph());
-
     }
 
 
     @SneakyThrows
-    protected List<URL> getClasspaths(List<URL> urlList) {
+    protected List<URL> getMavenProjectClasspaths(List<URL> urlList) {
 
         MultiValueMap<String, org.eclipse.aether.artifact.Artifact> multiValueMap = getDependencies();
 
-        getLog().info(" *** dependenciesResolver getDependencies: " + multiValueMap);
-        getLog().info("***          mavenProject getDependencies: " + mavenProject.getDependencies());
+        getLog().info("*** dependenciesResolver getDependencies: " + multiValueMap);
+        getLog().info("***         mavenProject getDependencies: " + mavenProject.getDependencies());
 
 /*
 
@@ -455,7 +454,11 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
         try {
+
+            Thread.currentThread().setContextClassLoader(getClassLoader());
+
             executeMojo();
+
         } catch (MojoExecutionException e) {
             printException(e);
             throw e;

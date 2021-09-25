@@ -44,7 +44,7 @@ public class SimpleLoaderAndTransformerTest {
 
         setPwd(pwd, "");
 
-        data = JniHelper.loadData(SimpleLoaderAndTransformerTest.class);
+        data = JniHelper.loadData(null,SimpleLoaderAndTransformerTest.class);
 
         data = encryptAes(-1, pwd, data);
 
@@ -56,7 +56,7 @@ public class SimpleLoaderAndTransformerTest {
             data = FileUtils.readFileToByteArray(file);
         }
 
-        FileUtils.writeByteArrayToFile(new File("MANIFEST.INF"), transform1("", JniHelper.loadData(HookAgent.class)));
+        FileUtils.writeByteArrayToFile(new File("MANIFEST.INF"), transform1("", JniHelper.loadData(null,HookAgent.class)));
 
         byte[] tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);

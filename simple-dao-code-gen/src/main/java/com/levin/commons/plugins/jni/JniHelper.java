@@ -5,7 +5,8 @@ import lombok.SneakyThrows;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -33,12 +34,17 @@ public abstract class JniHelper {
      * @param resName
      * @return
      */
-    public static byte[] loadResource(String resName) {
-        return readAndClose(getCurrentThreadClassLoader().getResourceAsStream(resName));
+    public static byte[] loadResource(ClassLoader loader, String resName) {
+        return readAndClose(loader != null ? loader.getResourceAsStream(resName)
+                : getCurrentThreadClassLoader().getResourceAsStream(resName));
+    }
+
+    public static byte[] loadData(ClassLoader loader, Class clazz) {
+        return loadResource(loader, clazz.getName().replace('.', '/') + ".class");
     }
 
     public static byte[] loadData(Class clazz) {
-        return loadResource(clazz.getName().replace('.', '/') + ".class");
+        return loadData(clazz.getClassLoader(), clazz);
     }
 
     @SneakyThrows
