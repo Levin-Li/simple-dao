@@ -10,19 +10,20 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
-import org.apache.maven.shared.transfer.dependencies.resolve.DependencyResolver;
-import org.apache.maven.shared.transfer.repository.RepositoryManager;
+import org.apache.maven.project.*;
 import org.codehaus.plexus.util.AbstractScanner;
+import org.eclipse.aether.graph.DependencyNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -57,13 +58,10 @@ public abstract class BaseMojo extends AbstractMojo {
     protected MavenProjectHelper projectHelper;
 
     @Component
-    protected ArtifactResolver artifactResolver;
+    protected ProjectBuildingHelper projectBuildingHelper;
 
     @Component
-    protected DependencyResolver dependencyResolver;
-
-    @Component
-    protected RepositoryManager repositoryManager;
+    ProjectDependenciesResolver dependenciesResolver;
 
     /**
      * 为 true 跳过插件的执行
@@ -143,12 +141,20 @@ public abstract class BaseMojo extends AbstractMojo {
     @Parameter
     protected boolean independentPluginClassLoader = false;
 
+    /**
+     * 插件类加载器，需要加载的Scopes
+     */
+    @Parameter
+    protected String[] dependenciesScopes = {};
 
     /**
      * 插件类加载器，需要加载的Scopes
      */
     @Parameter
-    protected String[] dependenciesScopes = {Artifact.SCOPE_RUNTIME};
+    protected String[] includeArtifacts = {};
+
+
+    protected final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     /**
      * 线程变量
@@ -226,91 +232,137 @@ public abstract class BaseMojo extends AbstractMojo {
 
     }
 
+
+    static String toString(Artifact d) {
+        return d.getGroupId() + ":" + d.getArtifactId()
+                + (StringUtils.hasText(d.getClassifier()) ? (":" + d.getClassifier()) : "");
+    }
+
+    static String toString(Dependency d) {
+        return d.getGroupId() + ":" + d.getArtifactId()
+                + (StringUtils.hasText(d.getClassifier()) ? (":" + d.getClassifier()) : "");
+    }
+
+
+    static String toString(org.eclipse.aether.artifact.Artifact d) {
+        return d.getGroupId() + ":" + d.getArtifactId()
+                + (StringUtils.hasText(d.getClassifier()) ? (":" + d.getClassifier()) : "");
+    }
+
+    MultiValueMap<String, org.eclipse.aether.artifact.Artifact> getDependencies(MultiValueMap<String, org.eclipse.aether.artifact.Artifact> dependenciesMap, DependencyNode node) {
+
+        synchronized (this) {
+            if (dependenciesMap == null) {
+                dependenciesMap = new LinkedMultiValueMap();
+            }
+        }
+
+        if (node != null) {
+
+            for (DependencyNode child : node.getChildren()) {
+                getDependencies(dependenciesMap, child);
+            }
+
+            dependenciesMap.add(toString(node.getArtifact()), node.getArtifact());
+
+        }
+
+        return dependenciesMap;
+    }
+
+
     @SneakyThrows
     protected List<URL> getClasspaths(List<URL> urlList) {
 
-        List<String> runtimeClasspathElements = mavenProject.getRuntimeClasspathElements();
+        DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(new DefaultDependencyResolutionRequest(mavenSession.getCurrentProject(), mavenSession.getRepositorySession()));
 
-        getLog().info("getRuntimeClasspathElements :" + runtimeClasspathElements);
+        MultiValueMap<String, org.eclipse.aether.artifact.Artifact> multiValueMap = getDependencies(null, resolutionResult.getDependencyGraph());
 
-        if (runtimeClasspathElements != null && runtimeClasspathElements.size() > 0) {
-
-            runtimeClasspathElements.parallelStream().forEachOrdered((file) -> {
-                try {
-                    urlList.add(new File(file).toURI().toURL());
-                } catch (MalformedURLException e) {
-                }
-            });
-
-            // return urlList;
-        }
+        getLog().info(" *** dependenciesResolver getDependencies: " + multiValueMap);
+        getLog().info("***          mavenProject getDependencies: " + mavenProject.getDependencies());
 
         Map<String, Artifact> artifactMap = new LinkedHashMap<>();
 
         Set<Artifact> artifactSet = new HashSet<>();
 
         artifactSet.addAll(mavenProject.getArtifacts());
-        artifactSet.addAll(mavenProject.getArtifactMap().values());
 
         if (artifactSet.isEmpty()) {
-            artifactSet.addAll(mavenProject.getManagedVersionMap().values());
-            getLog().info("classpath use ManagedVersionMap :" + mavenProject.getManagedVersionMap());
+            artifactSet.addAll(mavenProject.getArtifactMap().values());
+            getLog().info("classpath use getArtifactMap :" + mavenProject.getArtifactMap());
+        }
+
+        if (artifactSet.isEmpty()) {
+            artifactSet.addAll(mavenProject.getDependencyArtifacts());
+            getLog().info("classpath use getDependencyArtifacts :" + artifactSet);
         }
 
         if (artifactSet.isEmpty()) {
 
-            artifactSet.addAll(mavenProject.getDependencyArtifacts());
             artifactSet.addAll(mavenProject.getRuntimeArtifacts());
             artifactSet.addAll(mavenProject.getSystemArtifacts());
             artifactSet.addAll(mavenProject.getCompileArtifacts());
             artifactSet.addAll(mavenProject.getExtensionArtifacts());
             artifactSet.addAll(mavenProject.getAttachedArtifacts());
 
-            getLog().info("classpath use getDependencyArtifacts getCompileArtifacts getSystemArtifacts getRuntimeArtifacts  :" + artifactSet);
-
+            getLog().info("classpath use getCompileArtifacts getSystemArtifacts getRuntimeArtifacts :" + artifactSet);
         }
 
-        getLog().info("getDependencies :" + mavenProject.getDependencies());
 
         List<String> desList = mavenProject.getDependencies()
-                .parallelStream().map(d -> d.getGroupId() + ":" + d.getArtifactId() + ":" + d.getClassifier())
+                .parallelStream().map(BaseMojo::toString)
                 .collect(Collectors.toList());
 
         for (Artifact artifact : artifactSet) {
 
-            if (!desList.contains(artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getClassifier())) {
+            String artifactKey = toString(artifact);
+
+            boolean isDirectDepend = desList.contains(artifactKey);
+
+            //如果不是依赖库，也不是
+            if (!isDirectDepend
+                    && !Arrays.stream(includeArtifacts)
+                    .filter(StringUtils::hasText)
+                    .anyMatch(str -> antPathMatcher.match(str, artifactKey))) {
                 getLog().info("*** 忽略[" + artifact.getScope() + "] " + artifact);
                 continue;
             }
 
-            if (artifact.getFile() == null) {
-                getLog().debug("*** 处理未解决的依赖 " + artifact);
-                try {
-                    artifact = artifactResolver.resolveArtifact(mavenSession.getProjectBuildingRequest(), artifact).getArtifact();
-                } catch (Exception e) {
+            if (!artifactMap.containsKey(artifactKey)) {
+                if (artifact.getFile() != null) {
+                    try {
+                        urlList.add(artifact.getFile().toURI().toURL());
+                        artifactMap.put(artifactKey, artifact);
+                    } catch (MalformedURLException e) {
+                        logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包文件不可用 --> " + artifact + " --> path: " + artifact.getFile());
+                    }
+                } else {
+                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
                 }
             }
+        }
 
-            String key = artifact.getGroupId()
-                    + ":" + artifact.getArtifactId()
-                    + (artifact.hasClassifier() ? ":" + artifact.getClassifier() : "");
 
-            if (artifactMap.containsKey(key)) {
-                logger.error(" ****  " + mavenProject.getArtifact() + " 的依赖中包含冲突的构件：" + artifact + " <---> " + artifactMap.get(key));
-            } else {
-                artifactMap.put(key, artifact);
+        for (String key : multiValueMap.keySet()) {
+
+            List<org.eclipse.aether.artifact.Artifact> artifacts = multiValueMap.get(key);
+
+            Artifact artifact = artifactMap.get(key);
+
+            if (artifacts == null || artifacts.isEmpty()) {
+                continue;
+            } else if (artifacts.size() > 1 || artifact != null) {
+                getLog().warn("构件版本冲突：" + key + " --> " + artifacts + " " + artifact);
             }
 
-            if (artifact.getFile() != null) {
-                try {
-                    urlList.add(artifact.getFile().toURI().toURL());
-                } catch (MalformedURLException e) {
-                    logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包文件不可用 --> " + artifact + " --> path: " + artifact.getFile());
+            try {
+                if (artifact == null) {
+                    urlList.add(artifacts.get(0).getFile().toURI().toURL());
                 }
-
-            } else {
-                logger.warn(" ****  " + mavenProject.getArtifact() + " 依赖包不可用 --> " + artifact);
+            } catch (Throwable e) {
+                getLog().error("加入 " + key + " 失败" + e.getMessage());
             }
+
         }
 
         if (urlList.isEmpty()) {
@@ -456,7 +508,6 @@ public abstract class BaseMojo extends AbstractMojo {
         getLog().info("*** " + getBaseInfo() + " [_project]可用子变量：" + projectParams.keySet());
 
     }
-
 
     Script getScript(String scriptTxt, Map<String, Object>... ctxs) {
 
@@ -682,5 +733,6 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     abstract protected void executeMojo() throws Exception;
+
 
 }

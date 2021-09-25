@@ -74,15 +74,11 @@ public class ClassEncryptPlugin extends BaseMojo {
     @Parameter
     String[] excludeAnnotations = {Configuration.class.getName()};
 
-    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
-
     {
         onlyExecutionRoot = false;
         isPrintException = true;
         pwdFile = ".java_agent/.pwdFile.txt";
         allowPackageTypes = new String[]{"jar", "war", "ear"};
-
-        antPathMatcher.setCachePatterns(true);
 
     }
 

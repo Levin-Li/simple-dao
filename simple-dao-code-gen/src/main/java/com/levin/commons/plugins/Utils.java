@@ -1,12 +1,8 @@
 package com.levin.commons.plugins;
 
-import com.levin.commons.plugins.jni.JniHelper;
-import com.trilead.ssh2.Connection;
 import groovy.lang.GroovyShell;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.plexus.util.AbstractScanner;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -16,30 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 
 public abstract class Utils {
-
-
-    public static boolean isMatch(AntPathMatcher matcher, String path, String... patterns) {
-
-        if (patterns == null
-                || patterns.length == 0) {
-            return false;
-        }
-
-        for (String pattern : patterns) {
-
-            if (matcher == null && AbstractScanner.match(pattern, path)) {
-                return true;
-            }
-
-            if (matcher != null && matcher.match(pattern, path)) {
-                return true;
-            }
-        }
-
-        return false;
-
-    }
-
 
     /**
      * 执行 groovy 脚本
@@ -148,58 +120,6 @@ public abstract class Utils {
         byte[] content = IOUtils.toByteArray(ResourceUtils.getURL(groovyFile));
 
         return new String[]{new String(content, encoding), groovyFile};
-    }
-
-
-    /**
-     * @param host
-     * @param port
-     * @param username
-     * @param password
-     * @param pemPrivateKey
-     * @return
-     * @throws IOException
-     */
-    public static Connection connect(String host, int port, String username, String password, String pemPrivateKey) throws IOException {
-
-        Connection conn = new Connection(host, port);
-
-        conn.connect();
-
-        if ((password != null)) {
-            if (pemPrivateKey != null && pemPrivateKey.trim().length() > 0)
-                conn.authenticateWithPublicKey(username, pemPrivateKey.toCharArray(), password);
-            else
-                conn.authenticateWithPassword(username, password);
-        } else
-            conn.authenticateWithNone(username);
-
-        conn.getConnectionInfo();
-
-        conn.sendIgnorePacket();
-
-        return conn;
-    }
-
-
-    public static void main(String arg) {
-        Integer.parseInt(arg);
-    }
-
-    public String getInfo(double arg) {
-        return "" + arg;
-    }
-
-    public Long main2(double arg, int code, String arg2, Utils obj) {
-
-
-        if (!getClass().getName().equals("com.levin.commons.plugins.Utils")) {
-            main2(arg, code, arg2, obj);
-        }
-
-        super.toString();
-        getInfo(arg);
-        return Long.parseLong(arg2, code);
     }
 
 }
