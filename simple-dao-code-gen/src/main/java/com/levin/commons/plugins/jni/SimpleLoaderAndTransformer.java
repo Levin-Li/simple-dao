@@ -34,14 +34,14 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
 
         String fileName = LIB_PREFIX + LIB_NAME;
 
-        String osName = System.getProperty("os.name", "").toLowerCase();
+        String osName = System.getProperty("os.name", "").toLowerCase().replace(" ", "");
 
         if (osName.contains("linux".toLowerCase())) {
             fileName = "linux/" + fileName + ".so";
         } else if (osName.contains("windows".toLowerCase())) {
             fileName = "windows/" + fileName + ".dll";
-        } else if (osName.contains("Mac OS".toLowerCase())) {
-            fileName = "macos/" + fileName + ".dylib";
+        } else if (osName.contains("MacOSX".toLowerCase())) {
+            fileName = "macosx/" + fileName + ".dylib";
         } else {
             System.loadLibrary(LIB_NAME);
         }
@@ -65,8 +65,14 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
         //创建目录
         outLibFile.getParentFile().mkdirs();
 
+        int n = 200;
+        while (outLibFile.exists() && n-- > 0) {
+            outLibFile.delete();
+        }
+
         FileUtils.writeByteArrayToFile(outLibFile, data);
 
+        outLibFile.setLastModified(System.currentTimeMillis());
         outLibFile.setExecutable(true);
 
         if (outLibFile.exists()) {

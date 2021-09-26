@@ -2,7 +2,6 @@ package com.levin.commons.plugins.jni;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import org.springframework.util.AntPathMatcher;
 
 import java.io.File;
 
@@ -22,15 +21,21 @@ import static com.levin.commons.plugins.jni.SimpleLoaderAndTransformer.*;
  */
 public class SimpleLoaderAndTransformerTest {
 
+
     @SneakyThrows
     public static void main(String[] args) {
 
+        int n = 10000;
 
-        System.out.println(System.getProperty("os.name"));
+        while (n-- > 0) {
+            main2(args);
+        }
 
-        AntPathMatcher matcher = new AntPathMatcher();
+    }
 
-        boolean match = matcher.match("**.req.**", "com.levin.reaq.AEntity");
+
+    @SneakyThrows
+    public static void main2(String[] args) {
 
         final SimpleLoaderAndTransformer transformer = new SimpleLoaderAndTransformer();
 
@@ -46,19 +51,9 @@ public class SimpleLoaderAndTransformerTest {
 
         setPwd(pwd, "");
 
-        data = JniHelper.loadData(null,SimpleLoaderAndTransformerTest.class);
-
         data = encryptAes(-1, pwd, data);
 
-        File file = new File("SimpleClassFileTransformer.class.e");
-
-        if (!file.exists()) {
-            FileUtils.writeByteArrayToFile(file, data);
-        } else {
-            data = FileUtils.readFileToByteArray(file);
-        }
-
-        FileUtils.writeByteArrayToFile(new File("MANIFEST.INF"), transform1("", JniHelper.loadData(null,HookAgent.class)));
+        FileUtils.writeByteArrayToFile(new File("MANIFEST.INF"), transform1("", JniHelper.loadData(null, HookAgent.class)));
 
         byte[] tempD = decryptAes(-1, pwd, data);
         tempD = decryptAes(-1, pwd, data);
@@ -68,9 +63,9 @@ public class SimpleLoaderAndTransformerTest {
         byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
 
         try {
-            Class<?> aClass = transformer.findClass(HookAgent.class.getName());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+              Class<?> aClass = transformer.findClass(HookAgent.class.getName());
+        } catch (Exception e) {
+            System.out.println(e);
         }
 
         tempD = decryptAes(-1, pwd, data);
@@ -82,9 +77,9 @@ public class SimpleLoaderAndTransformerTest {
 
         System.out.println("decrypt result : " + info.equals(resule));
 
-        data = transform1(pwd, data);
+        transform1(pwd, data);
 
-        data = transform2(pwd, data);
+        transform2(pwd, data);
 
     }
 
