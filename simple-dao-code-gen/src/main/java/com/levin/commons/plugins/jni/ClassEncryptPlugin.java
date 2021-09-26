@@ -111,11 +111,12 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         if (pwdFile != null) {
             pwd = FileUtils.readFileToString(pwdFile, Charset.forName("UTF-8"));
+            this.pwdFilePath = pwdFile.getAbsolutePath();
             getLog().info("从" + pwdFile + "读取密码进行加密...");
         }
 
         if (!StringUtils.hasText(pwd)) {
-            logger.warn("加密打包密码没有设置，您可以在" + pwdFile + "配置密码");
+            logger.warn("加密打包密码没有设置，您可以在" + this.pwdFilePath + "配置密码");
             return;
         }
 

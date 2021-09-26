@@ -1,5 +1,9 @@
 package com.levin.commons.plugins.jni;
 
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
@@ -19,10 +23,56 @@ import java.security.ProtectionDomain;
 public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFileTransformer {
 
     static {
+        loadLib();
+    }
 
-        // System.loadLibrary("HookAgent");
+    private static final String LIB_NAME = "HookAgent";
+    private static final String LIB_PREFIX = "lib";
 
-        System.load("/Users/llw/open_source/JniHelpers/build/src/HookAgent/cpp/libHookAgent.dylib");
+    @SneakyThrows
+    private static void loadLib() {
+
+        String fileName = LIB_PREFIX + LIB_NAME;
+
+        String osName = System.getProperty("os.name", "").toLowerCase();
+
+        if (osName.contains("linux".toLowerCase())) {
+            fileName = "linux/" + fileName + ".so";
+        } else if (osName.contains("windows".toLowerCase())) {
+            fileName = "windows/" + fileName + ".dll";
+        } else if (osName.contains("Mac OS".toLowerCase())) {
+            fileName = "macos/" + fileName + ".dylib";
+        } else {
+            System.loadLibrary(LIB_NAME);
+        }
+
+        if (!fileName.contains("/")
+                || !fileName.contains(".")) {
+            return;
+        }
+
+        fileName = LIB_PREFIX + "/" + LIB_NAME + "/" + fileName;
+
+        byte[] data = JniHelper.loadResource(SimpleLoaderAndTransformer.class.getClassLoader(), fileName);
+
+        if (data == null) {
+            return;
+        }
+
+        //隐藏目录
+        File outLibFile = new File("." + fileName);
+
+        //创建目录
+        outLibFile.getParentFile().mkdirs();
+
+        FileUtils.writeByteArrayToFile(outLibFile, data);
+
+        outLibFile.setExecutable(true);
+
+        if (outLibFile.exists()) {
+            //加载文件
+            System.load(outLibFile.getCanonicalPath());
+        }
 
     }
 

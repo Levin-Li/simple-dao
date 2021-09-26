@@ -26,6 +26,8 @@ public class SimpleLoaderAndTransformerTest {
     public static void main(String[] args) {
 
 
+        System.out.println(System.getProperty("os.name"));
+
         AntPathMatcher matcher = new AntPathMatcher();
 
         boolean match = matcher.match("**.req.**", "com.levin.reaq.AEntity");

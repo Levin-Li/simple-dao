@@ -39,7 +39,7 @@ if [ -z $pids ]; then
 
    #如果文件有内容
    if [ -n "${content}" ]; then
-       content=" -DpwdFile=${tempFile} -XX:+DisableAttachMechanism -javaagent:${appJars} "
+       content=" -agentlib:HookAgent=${tempFile} -XX:+DisableAttachMechanism"
    fi
 
    echo "[$shellDir/$0] ${appJars} ${tempFile} startup ..."
@@ -50,7 +50,7 @@ if [ -z $pids ]; then
    sleep 5s
 
    #覆盖临时文件
-   echo "#param:$$" > ${tempFile}
+   echo "#INVALID_PWD:#param:$$" > ${tempFile}
 
    #删除临时文件
    rm -fr ${tempFile}
