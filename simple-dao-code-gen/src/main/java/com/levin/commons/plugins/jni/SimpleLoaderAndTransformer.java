@@ -55,6 +55,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
         byte[] data = JniHelper.loadResource(SimpleLoaderAndTransformer.class.getClassLoader(), fileName);
 
         if (data == null) {
+            //System.err.println("Warning:");
             return;
         }
 
