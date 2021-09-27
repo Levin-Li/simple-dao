@@ -1,13 +1,13 @@
 package com.levin.commons.plugins.jni;
 
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -76,7 +76,7 @@ public abstract class JniHelper {
             }
 
             try {
-                FileUtils.writeByteArrayToFile(file, data);
+                writeByteArrayToFile(file, data);
                 ok = true;
             } catch (Exception e) {
 
@@ -85,6 +85,25 @@ public abstract class JniHelper {
 
         return file.exists() && ok;
     }
+
+    @SneakyThrows
+    public static void writeByteArrayToFile(File file, byte[] data) {
+
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+        try {
+            fileOutputStream.write(data);
+            fileOutputStream.flush();
+        } finally {
+            try {
+                fileOutputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 
     @SneakyThrows
     public static String md5(final String data) {

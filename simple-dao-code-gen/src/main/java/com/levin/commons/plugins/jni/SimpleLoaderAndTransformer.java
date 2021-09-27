@@ -1,7 +1,6 @@
 package com.levin.commons.plugins.jni;
 
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
@@ -70,7 +69,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
             outLibFile.delete();
         }
 
-        FileUtils.writeByteArrayToFile(outLibFile, data);
+        JniHelper.writeByteArrayToFile(outLibFile, data);
 
         outLibFile.setLastModified(System.currentTimeMillis());
         outLibFile.setExecutable(true);
