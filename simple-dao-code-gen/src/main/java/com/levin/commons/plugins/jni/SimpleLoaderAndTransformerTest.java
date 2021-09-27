@@ -41,6 +41,9 @@ public class SimpleLoaderAndTransformerTest {
 
         String info = "我是中国人，我来自福建福州。";
 
+
+        int env = SimpleLoaderAndTransformer.getEnvType();
+
 //        info ="this is test data";
 
         byte[] data = info.getBytes();

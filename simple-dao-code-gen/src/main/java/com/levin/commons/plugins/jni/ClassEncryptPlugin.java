@@ -304,6 +304,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         }
 
+        copyRes(StringUtils.hasText(mainClass),jarOutputStream);
+
         jarOutputStream.finish();
         jarOutputStream.flush();
         jarOutputStream.close();
@@ -315,13 +317,13 @@ public class ClassEncryptPlugin extends BaseMojo {
 //        变更名字
         rename(encryptOutFile, buildFile);
 
-        copyRes(StringUtils.hasText(mainClass));
 
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
 
     }
 
-    private void copyRes(boolean copyNativeLib) {
+    @SneakyThrows
+    private void copyRes(boolean copyNativeLib, JarOutputStream jarOutputStream) {
 
         //拷贝资源
         Optional.ofNullable(copyResToFile)
@@ -343,6 +345,9 @@ public class ClassEncryptPlugin extends BaseMojo {
             };
 
             for (String nativeLib : nativeLibs) {
+
+                jarOutputStream.putNextEntry(new JarEntry(nativeLib));
+                jarOutputStream.write(JniHelper.loadResource(getClass().getClassLoader(), nativeLib));
 
                 String outFile = copyNativeLibToDir + "/" + nativeLib.substring(nativeLib.lastIndexOf("/"));
 
