@@ -20,8 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -73,10 +72,22 @@ public class ClassEncryptPlugin extends BaseMojo {
     @Parameter
     String[] excludeClassesByAnnotations = {Configuration.class.getName()};
 
+    /**
+     * 拷贝资源到指定的目标
+     */
+    @Parameter
+    Map<String, String> copyResToFile = new LinkedHashMap<>();
+
+    /**
+     * 拷贝动态链接库到指定位置，没有指定则不拷贝
+     */
+    @Parameter(defaultValue = "${project.build.directory}/third-libs")
+    String copyNativeLibToDir;
+
     {
         onlyExecutionRoot = false;
         isPrintException = true;
-        allowPackageTypes = new String[]{"jar", "war", "ear"};
+        allowPackageTypes = new String[]{"jar", "war", "ear", "aar", "zip"};
     }
 
 
@@ -144,22 +155,41 @@ public class ClassEncryptPlugin extends BaseMojo {
             return;
         }
 
-        JarEntry jarEntry = buildFileJar.getJarEntry("BOOT-INF/classes");
+        Manifest manifest = buildFileJar.getManifest();
+        // Manifest 样例
+//        Manifest-Version: 1.0
+//        Implementation-Title: superbag-testcase
+//        Implementation-Version: 1.0.0-SNAPSHOT
+//        Agent-Class: com.levin.commons.plugins.jni.JavaAgent
+//        Can-Redefine-Classes: true
+//        Spring-Boot-Version: 2.3.5.RELEASE
+//        Main-Class: org.springframework.boot.loader.PropertiesLauncher
+//        Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+//        Premain-Class: com.levin.commons.plugins.jni.JavaAgent
+//        Start-Class: com.vma.superbag.Application
+//        Spring-Boot-Classes: BOOT-INF/classes/
+//                Can-Retransform-Classes: true
+//        Spring-Boot-Lib: BOOT-INF/lib/
+//                Build-Jdk-Spec: 1.8
+//        Created-By: Maven Jar Plugin 3.2.0
 
-        if (jarEntry == null) {
-            jarEntry = buildFileJar.getJarEntry("WEB-INF/classes");
+        JarEntry jarClassPath = buildFileJar.getJarEntry((String) manifest.getMainAttributes().getOrDefault("Spring-Boot-Classes", "BOOT-INF/classes"));
+
+        if (jarClassPath == null) {
+            jarClassPath = buildFileJar.getJarEntry("WEB-INF/classes");
         }
 
-        String path = (jarEntry != null && jarEntry.isDirectory()) ? jarEntry.getName() : "";
+        String path = (jarClassPath != null && jarClassPath.isDirectory()) ? jarClassPath.getName() : "";
 
-        //解压缩
-        Manifest manifest = buildFileJar.getManifest();
+
+        String mainClass = manifest.getMainAttributes().getValue("Main-Class");
+        String startClass = manifest.getMainAttributes().getValue("Start-Class");
 
         manifest.getMainAttributes().putValue("Premain-Class", JavaAgent.class.getName());
         manifest.getMainAttributes().putValue("Agent-Class", JavaAgent.class.getName());
-        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + true);
-        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + true);
 
+        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + false);
+        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + false);
 
         File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
 
@@ -205,15 +235,22 @@ public class ClassEncryptPlugin extends BaseMojo {
                 name = name.substring(0, name.length() - 6);
             }
 
+            //是否是有效的类文件
+            boolean isClassFile = entry.getName().endsWith(".class")
+                    && entry.getName().startsWith(path)
+                    && !entry.isDirectory();
+
+            //是否是主类
+            boolean isMainClass = isClassFile && (name.equals(mainClass) || name.equals(startClass));
+
             byte[] fileContent = entry.getSize() > 0 ? IOUtils.readFully(buildFileJar.getInputStream(entry), (int) entry.getSize()) : emptyArray;
 
             boolean isChange = false;
 
             //  getLog().info(name + " isExclude: " + isExclude(name) + " isInclude: " + isInclude(name));
 
-            if (entry.getName().endsWith(".class")
-                    && entry.getName().startsWith(path)
-                    && !entry.isDirectory()
+            if (isClassFile
+                    && !isMainClass //主启动类不加密
                     && !isExclude(name)
                     && !isAnnotation(name)
                     && !isExcludeByAnnotation(name)
@@ -253,8 +290,9 @@ public class ClassEncryptPlugin extends BaseMojo {
                     entry2.setCrc(crc32.getValue());
                 }
                 entry2.setTime(entry.getTime());
-            } else if (entry.getName().endsWith(".class") && isExcludeByAnnotation(name)) {
-                //如果是类文件
+            } else if (isClassFile
+                    && (isMainClass || isExcludeByAnnotation(name))) {
+                //如果主类，或是 被排除的特定类
                 entry2 = new JarEntry(entry.getName());
                 fileContent = processMethodBody(fileContent, name, false, false);
             }
@@ -273,12 +311,46 @@ public class ClassEncryptPlugin extends BaseMojo {
         buildFileJar.close();
 
         rename(buildFile, new File(buildFile.getAbsolutePath() + ".old"));
-//
+
 //        变更名字
         rename(encryptOutFile, buildFile);
 
+        copyRes(StringUtils.hasText(mainClass));
+
         getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
 
+    }
+
+    private void copyRes(boolean copyNativeLib) {
+
+        //拷贝资源
+        Optional.ofNullable(copyResToFile)
+                .orElse(Collections.emptyMap()).forEach((k, v) -> {
+
+            boolean ok = JniHelper.copyResToFile(getClass().getClassLoader(), k, v)
+                    || JniHelper.copyResToFile(getClassLoader(), k, v);
+
+            getLog().info("copy res " + k + " --> " + v + " " + ok);
+
+        });
+
+        if (copyNativeLib && StringUtils.hasText(copyNativeLibToDir)) {
+
+            String[] nativeLibs = {
+                    "lib/HookAgent/linux/libHookAgent.so",
+                    "lib/HookAgent/macosx/libHookAgent.dylib",
+                    "lib/HookAgent/windows/libHookAgent.dll",
+            };
+
+            for (String nativeLib : nativeLibs) {
+
+                String outFile = copyNativeLibToDir + "/" + nativeLib.substring(nativeLib.lastIndexOf("/"));
+
+                boolean ok = JniHelper.copyResToFile(getClass().getClassLoader(), nativeLib, outFile);
+
+                getLog().info("copy native lib " + nativeLib + " --> " + outFile + " " + ok);
+            }
+        }
     }
 
     private boolean isAnnotation(String name) {

@@ -1,11 +1,13 @@
 package com.levin.commons.plugins.jni;
 
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -45,6 +47,43 @@ public abstract class JniHelper {
 
     public static byte[] loadData(Class clazz) {
         return loadData(clazz.getClassLoader(), clazz);
+    }
+
+    /**
+     * @param loader
+     * @param resName
+     * @param outFile
+     * @return
+     */
+    public static boolean copyResToFile(ClassLoader loader, String resName, String outFile) {
+
+        File file = new File(outFile);
+
+        boolean ok = false;
+
+        byte[] data = loadResource(loader, resName);
+
+
+        if (data != null) {
+
+            if (file.exists()) {
+                int n = 100;
+                while (file.exists() && n-- > 0) {
+                    file.delete();
+                }
+            } else {
+                file.getParentFile().mkdirs();
+            }
+
+            try {
+                FileUtils.writeByteArrayToFile(file, data);
+                ok = true;
+            } catch (Exception e) {
+
+            }
+        }
+
+        return file.exists() && ok;
     }
 
     @SneakyThrows
