@@ -304,7 +304,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         }
 
-        copyRes(StringUtils.hasText(mainClass),jarOutputStream);
+        copyRes(StringUtils.hasText(mainClass), jarOutputStream);
 
         jarOutputStream.finish();
         jarOutputStream.flush();
@@ -346,8 +346,13 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             for (String nativeLib : nativeLibs) {
 
-                jarOutputStream.putNextEntry(new JarEntry(nativeLib));
-                jarOutputStream.write(JniHelper.loadResource(getClass().getClassLoader(), nativeLib));
+
+                byte[] data = JniHelper.loadResource(getClass().getClassLoader(), nativeLib);
+
+                if (data != null) {
+                    jarOutputStream.putNextEntry(new JarEntry(nativeLib));
+                    jarOutputStream.write(data);
+                }
 
                 String outFile = copyNativeLibToDir + "/" + nativeLib.substring(nativeLib.lastIndexOf("/"));
 
