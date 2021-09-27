@@ -6,6 +6,9 @@ import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 本类会被加密
+ */
 public abstract class HookAgent {
 
     public static final String META_INF_CLASSES = "META-INF/.cache_data/";
@@ -21,6 +24,14 @@ public abstract class HookAgent {
     public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
     private HookAgent() {
+
+    }
+
+    /**
+     * 其它地方有引用，别删
+     */
+    public static void checkSecurity() {
+        //nothing to do
     }
 
     public static void checkEnv() {

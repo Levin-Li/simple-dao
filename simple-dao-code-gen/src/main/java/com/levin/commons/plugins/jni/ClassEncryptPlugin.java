@@ -529,6 +529,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                         boolean isStatic = (access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC;
                         boolean isAbstract = (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT;
 
+
                         //如果是抽象方法
                         if (isAbstract
                                 || !StringUtils.hasText(methodName)
@@ -536,6 +537,13 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 || methodName.equalsIgnoreCase("<init>")
                                 || methodName.equalsIgnoreCase("<cinit>")
                                 || methodName.equalsIgnoreCase("<clinit>")) {
+
+
+                            if (methodName.equalsIgnoreCase("<clinit>")) {
+                                //在类构造方法中加入语句
+                                isModified.set(true);
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, HookAgent.class.getName().replace('.', '/'), "checkSecurity", "()V", false);
+                            }
 
                             return;
                         }
