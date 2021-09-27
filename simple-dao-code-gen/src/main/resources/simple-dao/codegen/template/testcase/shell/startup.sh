@@ -1,5 +1,4 @@
 <#noparse>
-
 #!/bin/bash
 
 execDir=`pwd`
@@ -37,15 +36,26 @@ if [ -z $pids ]; then
        content=`cat ${tempFile}`
    fi
 
-   #如果文件有内容
-   if [ -n "${content}" ]; then
-       content=" -agentlib:HookAgent=${tempFile} -XX:+DisableAttachMechanism"
+   extName=`uname`
+
+   if [ "${extName}" = "Linux" ]; then
+       extName="so"
    fi
 
-   echo "[$shellDir/$0] ${appJars} ${tempFile} startup ..."
+   if [ "${extName}" = "Darwin" ]; then
+       extName="dylib"
+   fi
 
-   # -XX:+DisableAttachMechanism 禁止调试
-   nohup java -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar *.jar 2>&1 &
+   #如果文件有内容
+   if [ -n "${content}" ]; then
+       content=" -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism"
+   fi
+
+   startCmd="java -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+
+   echo "应用启动命令：${startCmd}"
+
+   nohup ${startCmd}  2>&1 &
 
    sleep 5s
 
