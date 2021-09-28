@@ -78,6 +78,11 @@ public abstract class HookAgent {
             File file = new File(getRootPath(url.toString()));
 
             fileHashcode = (file.exists() && file.isFile()) ? toHexStr(getFileSHA256Hashcode(file)) : "";
+
+            if (isPrintLog()) {
+                System.out.println(file.getName() + " hash code: " + fileHashcode);
+            }
+
         }
 
         if (SimpleLoaderAndTransformer.getEnvType(fileHashcode) == SimpleLoaderAndTransformer.AGENT
