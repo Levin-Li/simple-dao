@@ -262,12 +262,12 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 newJarFileOutStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleLoaderAndTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, false));
+                byte[] encryptData = SimpleLoaderAndTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, true));
 
                 newJarFileOutStream.write(encryptData);
 
                 //旧文件清空方法
-                fileContent = processMethodBody(fileContent, name, true, true);
+                fileContent = processMethodBody(fileContent, name, true, false);
 
                 isChange = true;
 
@@ -498,7 +498,7 @@ public class ClassEncryptPlugin extends BaseMojo {
      * @param data
      * @return
      */
-    protected byte[] processMethodBody(byte[] data, final String className, boolean isClearOldBody, boolean isAddHookAgentMethod) {
+    protected byte[] processMethodBody(byte[] data, final String className, boolean isClearOldBody, boolean isEncrypt) {
 
         if (data == null || data.length == 0) {
             return data;
@@ -566,8 +566,16 @@ public class ClassEncryptPlugin extends BaseMojo {
                                     && !className.equals(hookClassName)) {
                                 //在类构造方法中加入语句
                                 isModified.set(true);
+
+
+                                String invokeMethodName = isClearOldBody ? "unsafeClassInit" : "classInit";
+
+                                if (isEncrypt) {
+                                    invokeMethodName = "checkEnv";
+                                }
+
                                 mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, hookClassName,
-                                        isClearOldBody ? "unsafeClassInit" : "checkEnv", "()V", false);
+                                        invokeMethodName, "()V", false);
                             }
 
                             return;

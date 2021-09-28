@@ -27,6 +27,12 @@ public abstract class HookAgent {
     }
 
 
+    public static void classInit() {
+        //nothing to do
+        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+        System.out.println("*** class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+    }
+
     public static void unsafeClassInit() {
         //nothing to do
         StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
@@ -37,7 +43,7 @@ public abstract class HookAgent {
     public static void checkEnv() {
 
         StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
-        System.out.println("*** class init *** " +invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        System.out.println("*** check env and class init *** " +invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
 
         if (SimpleLoaderAndTransformer.getEnvType() != SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
