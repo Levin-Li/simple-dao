@@ -246,7 +246,7 @@ public class ClassEncryptPlugin extends BaseMojo {
             boolean isChange = false;
 
             if (isClassFile) {
-                getLog().info("process class " + name + " --> " + entry.getName() + "...");
+              //  getLog().info("process class " + name + " --> " + entry.getName() + "...");
             }
 
             if (isClassFile
