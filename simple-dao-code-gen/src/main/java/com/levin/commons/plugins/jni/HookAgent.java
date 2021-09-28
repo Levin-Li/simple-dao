@@ -28,8 +28,9 @@ public abstract class HookAgent {
 
     public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
-
     private static Boolean isPrintLog = null;
+
+    private static String fileHashcode = null;
 
     private HookAgent() {
     }
@@ -68,15 +69,18 @@ public abstract class HookAgent {
             System.out.println("*** check env and class init *** " + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
         }
 
-        //获取文件路径
-        URL url = HookAgent.class.getClassLoader().getResource(HookAgent.class.getName().replace(".", "/") + ".class");
+        if (fileHashcode == null
+                || fileHashcode.trim().length() == 0) {
+            //获取文件路径
+            URL url = HookAgent.class.getClassLoader().getResource(HookAgent.class.getName().replace(".", "/") + ".class");
 
-        //获取文件哈希值
-        File file = new File(getRootPath(url.toString()));
+            //获取文件哈希值
+            File file = new File(getRootPath(url.toString()));
 
-        String sha256Hashcode = (file.exists() && file.isFile()) ? toHexStr(getFileSHA256Hashcode(file)) : "";
+            fileHashcode = (file.exists() && file.isFile()) ? toHexStr(getFileSHA256Hashcode(file)) : "";
+        }
 
-        if (SimpleLoaderAndTransformer.getEnvType(sha256Hashcode) == SimpleLoaderAndTransformer.AGENT
+        if (SimpleLoaderAndTransformer.getEnvType(fileHashcode) == SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
             System.err.println("Running env error.");
             System.exit(-1);
