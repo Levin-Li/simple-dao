@@ -24,22 +24,27 @@ public abstract class HookAgent {
     public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
     private HookAgent() {
-
     }
 
-    /**
-     * 其它地方有引用，别删
-     */
-    public static void checkSecurity() {
+
+    public static void unsafeClassInit() {
         //nothing to do
+        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+        System.out.println("*** unsafe class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
     }
+
 
     public static void checkEnv() {
+
+        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+        System.out.println("*** class init *** " +invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+
         if (SimpleLoaderAndTransformer.getEnvType() != SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
             System.err.println("env type error");
             System.exit(-1);
         }
+
     }
 
     public static void premain() {
