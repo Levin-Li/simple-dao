@@ -150,9 +150,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         Manifest manifest = buildFileJar.getManifest();
 
-        final String encryptFlag = "META-INF/" + JniHelper.md5("encrypt_hook_class=" + HookAgent.class.getName()) + ".dat";
-
-        if (buildFileJar.getJarEntry(encryptFlag) != null) {
+        if (manifest.getMainAttributes().getValue(MF_CRYPT_TIME) != null) {
             logger.error("文件" + buildFile + "已经加密");
             buildFileJar.close();
             return;
@@ -203,9 +201,6 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
 
         final JarOutputStream newJarFileOutStream = new JarOutputStream(new FileOutputStream(encryptOutFile), manifest);
-
-        newJarFileOutStream.putNextEntry(new JarEntry(encryptFlag));
-        newJarFileOutStream.write(("" + System.currentTimeMillis()).getBytes("UTF-8"));
 
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
@@ -417,7 +412,6 @@ public class ClassEncryptPlugin extends BaseMojo {
             throw e;
         }
     }
-
 
 
     @SneakyThrows
