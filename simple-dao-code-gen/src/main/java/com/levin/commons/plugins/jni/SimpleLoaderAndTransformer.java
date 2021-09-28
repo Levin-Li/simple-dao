@@ -105,7 +105,7 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
      *
      * @return
      */
-    protected native static int getEnvType();
+    protected native static int getEnvType(String key);
 
     protected native static byte[] transform1(String pwd, byte[] data);
 

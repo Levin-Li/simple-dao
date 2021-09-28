@@ -16,10 +16,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
@@ -324,7 +322,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         rename(encryptOutFile, buildFile);
 
 
-        getLog().info("" + buildFile + "  sha256 --> " + toHexStr(sha256Hash(buildFile)));
+        getLog().info("" + buildFile + "  sha256 --> " + HookAgent.toHexStr(HookAgent.getFileSHA256Hashcode(buildFile)));
 
     }
 
@@ -420,44 +418,6 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
     }
 
-
-    @SneakyThrows
-    protected byte[] sha256Hash(File file) {
-
-//        MD5
-//        SHA-1
-//        SHA-256
-        FileInputStream fileInputStream = new FileInputStream(file);
-
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-
-        byte[] buf = new byte[8192];
-
-        try {
-            int n = -1;
-            while ((n = fileInputStream.read(buf)) > -1) {
-                if (n > 0) {
-                    messageDigest.digest(buf, 0, n);
-                }
-            }
-        } finally {
-            fileInputStream.close();
-        }
-
-        return messageDigest.digest();
-    }
-
-
-    protected static String toHexStr(byte[] data) {
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (byte aByte : data) {
-            stringBuilder.append(Integer.toHexString(0xFF & aByte));
-        }
-
-        return stringBuilder.toString();
-    }
 
 
     @SneakyThrows

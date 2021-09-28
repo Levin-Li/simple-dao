@@ -41,8 +41,7 @@ public class SimpleLoaderAndTransformerTest {
 
         String info = "我是中国人，我来自福建福州。";
 
-
-        int env = SimpleLoaderAndTransformer.getEnvType();
+        System.out.println( JniHelper.md5("sfdalsfja;fdja;f;a"));
 
 //        info ="this is test data";
 

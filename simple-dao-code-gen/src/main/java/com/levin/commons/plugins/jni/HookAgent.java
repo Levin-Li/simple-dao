@@ -1,8 +1,13 @@
 package com.levin.commons.plugins.jni;
 
 
+import lombok.SneakyThrows;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
+import java.net.URL;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +68,13 @@ public abstract class HookAgent {
             System.out.println("*** check env and class init *** " + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
         }
 
-        if (SimpleLoaderAndTransformer.getEnvType() != SimpleLoaderAndTransformer.AGENT
+        //获取文件路径
+        URL url = HookAgent.class.getClassLoader().getResource(HookAgent.class.getName().replace(".", "/") + ".class");
+
+        //获取文件哈希值
+        String sha256Hashcode = toHexStr(getFileSHA256Hashcode(new File(getRootPath(url.toString()))));
+
+        if (SimpleLoaderAndTransformer.getEnvType(sha256Hashcode) != SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
             System.err.println("Running env error.");
             System.exit(-1);
@@ -80,6 +91,45 @@ public abstract class HookAgent {
 
     public static String getClassResPath(String className) {
         return (META_INF_CLASSES + JniHelper.md5(new StringBuilder("C" + className.replace('/', '.')).toString()) + ".dat");
+    }
+
+
+    @SneakyThrows
+    public static byte[] getFileSHA256Hashcode(File file) {
+
+//        MD5
+//        SHA-1
+//        SHA-256
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+
+        byte[] buf = new byte[8192];
+
+        try {
+            int n = -1;
+            while ((n = fileInputStream.read(buf)) > -1) {
+                if (n > 0) {
+                    messageDigest.digest(buf, 0, n);
+                }
+            }
+        } finally {
+            fileInputStream.close();
+        }
+
+        return messageDigest.digest();
+    }
+
+
+    public static String toHexStr(byte[] data) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (byte aByte : data) {
+            stringBuilder.append(Integer.toHexString(0xFF & aByte));
+        }
+
+        return stringBuilder.toString();
     }
 
     private static boolean isEnvEnable() {
@@ -119,6 +169,47 @@ public abstract class HookAgent {
 
         //不允许同时存在
         return (agentCnt + javaAgentJars.size()) < 2;
+    }
+
+
+    /**
+     * 获取class运行的classes目录或所在的jar包目录
+     *
+     * @return 路径字符串
+     */
+    public static String getRootPath(String path) {
+
+        if (path.startsWith("jar:") || path.startsWith("war:")) {
+            path = path.substring(4);
+        }
+
+        if (path.startsWith("file:")) {
+            path = path.substring(5);
+        }
+
+        //没解压的war包
+        if (path.contains("*")) {
+            return path.substring(0, path.indexOf("*"));
+        }
+
+        //war包解压后的WEB-INF
+        else if (path.contains("WEB-INF")) {
+            return path.substring(0, path.indexOf("WEB-INF"));
+        }
+        //jar
+        else if (path.contains("!")) {
+            return path.substring(0, path.indexOf("!"));
+        }
+        //普通jar/war
+        else if (path.endsWith(".jar") || path.endsWith(".war")) {
+            return path;
+        }
+        //no
+        else if (path.contains("/classes/")) {
+            return path.substring(0, path.indexOf("/classes/") + 9);
+        }
+
+        return null;
     }
 
     static {
