@@ -118,6 +118,7 @@ public abstract class JniHelper {
             stringBuilder.append(Integer.toHexString(0xFF & aByte));
         }
 
+
         return stringBuilder.toString();
     }
 

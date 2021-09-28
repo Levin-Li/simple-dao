@@ -25,6 +25,10 @@ public class SimpleLoaderAndTransformerTest {
     @SneakyThrows
     public static void main(String[] args) {
 
+        byte[] bytes = JniHelper.loadResource(null, "lib/HookAgent/macosx/libHookAgent.dylib");
+
+        int replace = HookAgent.replace(bytes, "f4c8996fb92427ae41e4649b934ca495991b7852b855".getBytes("utf-8"), "12345678901234567890123456789012345678901234".getBytes("utf-8"));
+
         int n = 10000;
 
         while (n-- > 0) {
@@ -41,7 +45,7 @@ public class SimpleLoaderAndTransformerTest {
 
         String info = "我是中国人，我来自福建福州。";
 
-        System.out.println( JniHelper.md5("sfdalsfja;fdja;f;a"));
+        System.out.println(JniHelper.md5("sfdalsfja;fdja;f;a"));
 
 //        info ="this is test data";
 
@@ -65,7 +69,7 @@ public class SimpleLoaderAndTransformerTest {
         byte[] transformResult = transformer.transform(null, "aaaa", null, null, data);
 
         try {
-              Class<?> aClass = transformer.findClass(HookAgent.class.getName());
+            Class<?> aClass = transformer.findClass(HookAgent.class.getName());
         } catch (Exception e) {
             System.out.println(e);
         }

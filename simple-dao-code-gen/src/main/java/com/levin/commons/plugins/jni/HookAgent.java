@@ -72,9 +72,11 @@ public abstract class HookAgent {
         URL url = HookAgent.class.getClassLoader().getResource(HookAgent.class.getName().replace(".", "/") + ".class");
 
         //获取文件哈希值
-        String sha256Hashcode = toHexStr(getFileSHA256Hashcode(new File(getRootPath(url.toString()))));
+        File file = new File(getRootPath(url.toString()));
 
-        if (SimpleLoaderAndTransformer.getEnvType(sha256Hashcode) != SimpleLoaderAndTransformer.AGENT
+        String sha256Hashcode = (file.exists() && file.isFile()) ? toHexStr(getFileSHA256Hashcode(file)) : "";
+
+        if (SimpleLoaderAndTransformer.getEnvType(sha256Hashcode) == SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
             System.err.println("Running env error.");
             System.exit(-1);
@@ -130,6 +132,44 @@ public abstract class HookAgent {
         }
 
         return stringBuilder.toString();
+    }
+
+    public static int replace(byte[] data, byte[] target, byte[] replacement) {
+
+        if (target.length != replacement.length
+                || data.length < target.length) {
+            return 0;
+        }
+
+        int count = 0;
+
+        for (int i = 0; i < data.length; i++) {
+
+            //如果长度不够
+            if (data.length - i < data.length) {
+                break;
+            }
+
+            int j = 0;
+
+            for (; j < target.length; j++) {
+                if (data[i + j] != target[j]) {
+                    break;
+                }
+            }
+
+            //匹配成功
+            if (j >= target.length) {
+                count++;
+                //替换内容
+                for (byte n : replacement) {
+                    data[i++] = n;
+                }
+            }
+
+        }
+
+        return count;
     }
 
     private static boolean isEnvEnable() {
