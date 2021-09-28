@@ -23,34 +23,51 @@ public abstract class HookAgent {
 
     public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
+
+    private static Boolean isPrintLog = null;
+
     private HookAgent() {
     }
 
 
+    private static boolean isPrintLog() {
+
+        if (isPrintLog == null) {
+            isPrintLog = "true".equalsIgnoreCase(System.getProperty("PrintHookAgentLog", "false").trim());
+        }
+
+        return isPrintLog;
+    }
+
     public static void classInit() {
         //nothing to do
-        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
-        System.out.println("*** class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        if (isPrintLog()) {
+            StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+            System.out.println("*** class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        }
     }
 
     public static void unsafeClassInit() {
-        //nothing to do
-        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
-        System.out.println("*** unsafe class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        if (isPrintLog()) {
+            //nothing to do
+            StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+            System.out.println("*** unsafe class init ***" + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        }
     }
 
 
     public static void checkEnv() {
 
-        StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
-        System.out.println("*** check env and class init *** " +invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        if (isPrintLog()) {
+            StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
+            System.out.println("*** check env and class init *** " + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+        }
 
         if (SimpleLoaderAndTransformer.getEnvType() != SimpleLoaderAndTransformer.AGENT
                 && !isEnvEnable()) {
-            System.err.println("env type error");
+            System.err.println("Running env error.");
             System.exit(-1);
         }
-
     }
 
     public static void premain() {
