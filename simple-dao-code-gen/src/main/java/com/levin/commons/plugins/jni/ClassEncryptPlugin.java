@@ -152,13 +152,16 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         Manifest manifest = buildFileJar.getManifest();
 
-        if (manifest.getMainAttributes().getValue(MF_CRYPT_TIME) != null) {
+        final String encryptFlag = "META-INF/" + JniHelper.md5("encrypt_hook_class=" + HookAgent.class.getName()) + ".dat";
+
+        if (buildFileJar.getJarEntry(encryptFlag) != null) {
             logger.error("文件" + buildFile + "已经加密");
             buildFileJar.close();
             return;
         }
 
-        // Manifest 样例
+
+//        Manifest 样例
 //        Manifest-Version: 1.0
 //        Implementation-Title: superbag-testcase
 //        Implementation-Version: 1.0.0-SNAPSHOT
@@ -170,9 +173,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 //        Premain-Class: com.levin.commons.plugins.jni.JavaAgent
 //        Start-Class: com.vma.superbag.Application
 //        Spring-Boot-Classes: BOOT-INF/classes/
-//                Can-Retransform-Classes: true
+//        Can-Retransform-Classes: true
 //        Spring-Boot-Lib: BOOT-INF/lib/
-//                Build-Jdk-Spec: 1.8
+//        Build-Jdk-Spec: 1.8
 //        Created-By: Maven Jar Plugin 3.2.0
 
         JarEntry jarClassPath = buildFileJar.getJarEntry((String) manifest.getMainAttributes().getOrDefault("Spring-Boot-Classes", "BOOT-INF/classes"));
@@ -202,6 +205,9 @@ public class ClassEncryptPlugin extends BaseMojo {
         }
 
         final JarOutputStream newJarFileOutStream = new JarOutputStream(new FileOutputStream(encryptOutFile), manifest);
+
+        newJarFileOutStream.putNextEntry(new JarEntry(encryptFlag));
+        newJarFileOutStream.write(("" + System.currentTimeMillis()).getBytes("UTF-8"));
 
         Enumeration<JarEntry> entries = buildFileJar.entries();
 
@@ -246,7 +252,7 @@ public class ClassEncryptPlugin extends BaseMojo {
             boolean isChange = false;
 
             if (isClassFile) {
-              //  getLog().info("process class " + name + " --> " + entry.getName() + "...");
+                //  getLog().info("process class " + name + " --> " + entry.getName() + "...");
             }
 
             if (isClassFile
@@ -330,8 +336,9 @@ public class ClassEncryptPlugin extends BaseMojo {
             writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleLoaderAndTransformer.class);
             //放入 hook 类
             jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
-            jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, false));
+            jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, true));
 
+            //固定名称，故意混淆名称
             jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
             jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
 
