@@ -7,14 +7,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * 本类会被加密
  */
 public abstract class HookAgent {
+
+    //加密资源列表
+    public static final String MF_ENCRYPT_RES_LIST = "META-INF/MANIFEST.ERL";
+
+    public static final String UTF8 = "utf-8";
 
     public static final String META_INF_CLASSES = "META-INF/.cache_data/";
 
@@ -32,7 +38,73 @@ public abstract class HookAgent {
 
     private static String fileHashcode = null;
 
+    private static SortedSet<String> encryptedList = null;
+
     private HookAgent() {
+    }
+
+    /**
+     * 快速确认资源是否存在
+     *
+     * @param loader
+     * @param resName
+     * @return
+     */
+    public static byte[] loadEncryptedRes(ClassLoader loader, String resName) {
+
+        if (loader == null) {
+            loader = Thread.currentThread().getContextClassLoader();
+        }
+
+        if (loader == null) {
+            loader = HookAgent.class.getClassLoader();
+        }
+
+        synchronized (MF_ENCRYPT_RES_LIST) {
+            if (encryptedList == null) {
+
+                Enumeration<URL> resources = null;
+
+                try {
+                    resources = loader.getResources(MF_ENCRYPT_RES_LIST);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+
+                encryptedList = new TreeSet<>();
+
+                while (resources.hasMoreElements()) {
+                    try {
+                        URL url = resources.nextElement();
+
+                        if (isPrintLog()) {
+                            System.out.println("load list res:" + url);
+                        }
+
+                        String[] resList = new String(JniHelper.readAndClose(url.openStream()), Charset.forName(UTF8)).split("\\n");
+
+                        Arrays.stream(resList)
+                                .filter(str -> str != null && str.trim().length() > 0)
+                                .forEachOrdered(encryptedList::add);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (isPrintLog()) {
+                    System.out.println("encryptedList:" + encryptedList);
+                }
+            }
+        }
+
+        if (encryptedList == null
+                || !encryptedList.contains(resName)) {
+            return null;
+        }
+
+        return JniHelper.loadResource(loader, resName);
+
     }
 
 
@@ -101,9 +173,8 @@ public abstract class HookAgent {
     }
 
     public static String getClassResPath(String className) {
-        return (META_INF_CLASSES + JniHelper.md5(new StringBuilder("C" + className.replace('/', '.')).toString()) + ".dat");
+        return (META_INF_CLASSES + JniHelper.md5("C" + className.replace('/', '.')) + ".dat");
     }
-
 
     @SneakyThrows
     public static byte[] getFileSHA256Hashcode(File file) {

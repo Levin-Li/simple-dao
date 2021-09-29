@@ -38,8 +38,6 @@ import static org.springframework.asm.Opcodes.ACONST_NULL;
 @Mojo(name = "encrypt-class", defaultPhase = LifecyclePhase.PACKAGE)
 public class ClassEncryptPlugin extends BaseMojo {
 
-    private static final String MF_CRYPT_TIME = "Levin-Encrypt-Time";
-
     public static final String MANIFEST = "META-INF/MANIFEST.MF";
 
     /**
@@ -150,8 +148,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         Manifest manifest = buildFileJar.getManifest();
 
-        if (manifest.getMainAttributes().getValue(MF_CRYPT_TIME) != null) {
-            logger.error("文件" + buildFile + "已经加密");
+        if (buildFileJar.getJarEntry(HookAgent.MF_ENCRYPT_RES_LIST) != null) {
+            logger.error("构件文件" + buildFile + "已经加密");
             buildFileJar.close();
             return;
         }
@@ -180,6 +178,8 @@ public class ClassEncryptPlugin extends BaseMojo {
             jarClassPath = buildFileJar.getJarEntry("WEB-INF/classes");
         }
 
+        final StringBuilder encryptedClassesList = new StringBuilder();
+
         String path = (jarClassPath != null && jarClassPath.isDirectory()) ? jarClassPath.getName() : "";
 
 
@@ -191,7 +191,6 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + false);
         manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + false);
-        manifest.getMainAttributes().putValue(MF_CRYPT_TIME, "" + System.currentTimeMillis());
 
         File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
 
@@ -265,6 +264,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 newJarFileOutStream.write(encryptData);
 
+                //加入清单
+                encryptedClassesList.append(resPath).append("\n");
+
                 //旧文件清空方法
                 fileContent = processMethodBody(fileContent, name, true, false);
 
@@ -303,6 +305,11 @@ public class ClassEncryptPlugin extends BaseMojo {
 
         }
 
+        //写入清单文件
+        newJarFileOutStream.putNextEntry(new JarEntry(HookAgent.MF_ENCRYPT_RES_LIST));
+        newJarFileOutStream.write(encryptedClassesList.toString().getBytes(Charset.forName(HookAgent.UTF8)));
+
+        //拷贝资源
         copyRes(StringUtils.hasText(mainClass), newJarFileOutStream);
 
         newJarFileOutStream.finish();
@@ -522,12 +529,10 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 || methodName.equalsIgnoreCase("<cinit>")
                                 || methodName.equalsIgnoreCase("<clinit>")) {
 
-
                             if (methodName.equalsIgnoreCase("<clinit>")
                                     && !className.equals(hookClassName)) {
                                 //在类构造方法中加入语句
                                 isModified.set(true);
-
 
                                 String invokeMethodName = isClearOldBody ? "unsafeClassInit" : "classInit";
 
