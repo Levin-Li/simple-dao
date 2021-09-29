@@ -291,8 +291,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                     entry2.setCrc(crc32.getValue());
                 }
                 entry2.setTime(entry.getTime());
-            } else if (isClassFile
-                    && (isMainClass || isExcludeByAnnotation(name))) {
+            } else if (isMainClass || (isClassFile && isExcludeByAnnotation(name))) {
                 //如果主类，或是 被排除的特定类
                 entry2 = new JarEntry(entry.getName());
                 fileContent = processMethodBody(fileContent, name, false, false);
