@@ -20,12 +20,8 @@ import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
+import java.util.jar.*;
 import java.util.zip.CRC32;
-import java.util.zip.ZipOutputStream;
 
 import static org.springframework.asm.Opcodes.ACONST_NULL;
 
@@ -38,7 +34,6 @@ import static org.springframework.asm.Opcodes.ACONST_NULL;
 @Mojo(name = "encrypt-class", defaultPhase = LifecyclePhase.PACKAGE)
 public class ClassEncryptPlugin extends BaseMojo {
 
-    public static final String MANIFEST = "META-INF/MANIFEST.MF";
 
     /**
      * 加密密码文件
@@ -172,7 +167,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 //        Build-Jdk-Spec: 1.8
 //        Created-By: Maven Jar Plugin 3.2.0
 
-        JarEntry jarClassPath = buildFileJar.getJarEntry((String) manifest.getMainAttributes().getOrDefault("Spring-Boot-Classes", "BOOT-INF/classes"));
+        Attributes mainAttributes = manifest.getMainAttributes();
+
+        JarEntry jarClassPath = buildFileJar.getJarEntry((String) mainAttributes.getOrDefault("Spring-Boot-Classes", "BOOT-INF/classes"));
 
         if (jarClassPath == null) {
             jarClassPath = buildFileJar.getJarEntry("WEB-INF/classes");
@@ -183,14 +180,24 @@ public class ClassEncryptPlugin extends BaseMojo {
         String path = (jarClassPath != null && jarClassPath.isDirectory()) ? jarClassPath.getName() : "";
 
 
-        String mainClass = manifest.getMainAttributes().getValue("Main-Class");
-        String startClass = manifest.getMainAttributes().getValue("Start-Class");
+        String mainClass = mainAttributes.getValue("Main-Class");
+        String startClass = mainAttributes.getValue("Start-Class");
 
-        manifest.getMainAttributes().putValue("Premain-Class", JavaAgent.class.getName());
-        manifest.getMainAttributes().putValue("Agent-Class", JavaAgent.class.getName());
+        //替换启动类
+        if (StringUtils.hasText(startClass)) {
+            mainAttributes.putValue("Start-Class", HookAgent.class.getName());
+            mainAttributes.putValue(HookAgent.MANIFEST_FINAL_MAIN_CLASS, startClass);
+        } else if (StringUtils.hasText(mainClass)) {
+            //替换启动类
+            mainAttributes.putValue("Main-Class", HookAgent.class.getName());
+            mainAttributes.putValue(HookAgent.MANIFEST_FINAL_MAIN_CLASS, mainClass);
+        }
 
-        manifest.getMainAttributes().putValue("Can-Redefine-Classes", "" + false);
-        manifest.getMainAttributes().putValue("Can-Retransform-Classes", "" + false);
+        mainAttributes.putValue("Premain-Class", JavaAgent.class.getName());
+        mainAttributes.putValue("Agent-Class", JavaAgent.class.getName());
+
+        mainAttributes.putValue("Can-Redefine-Classes", "" + false);
+        mainAttributes.putValue("Can-Retransform-Classes", "" + false);
 
         File encryptOutFile = new File(buildFile.getParentFile(), "Encrypt-" + buildFile.getName());
 
@@ -217,7 +224,7 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             String name = entry.getName();
 
-            if (MANIFEST.equals(name)) {
+            if (HookAgent.MANIFEST.equals(name)) {
                 continue;
             }
 
@@ -225,7 +232,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                 name = name.substring(path.length());
             }
 
-            name = name.replace("/", ".");
+            name = name.replace('/', '.');
 
             if (name.endsWith(".class")) {
                 name = name.substring(0, name.length() - 6);
@@ -264,8 +271,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 newJarFileOutStream.write(encryptData);
 
-                //加入清单
-                encryptedClassesList.append(resPath).append("\n");
+                //加入类名md5
+                encryptedClassesList.append(JniHelper.md5("CLS_"+name)).append("\n");
 
                 //旧文件清空方法
                 fileContent = processMethodBody(fileContent, name, true, false);
@@ -293,8 +300,8 @@ public class ClassEncryptPlugin extends BaseMojo {
                 entry2.setTime(entry.getTime());
             } else if (isMainClass || (isClassFile && isExcludeByAnnotation(name))) {
                 //如果主类，或是 被排除的特定类
-                entry2 = new JarEntry(entry.getName());
-                fileContent = processMethodBody(fileContent, name, false, false);
+//                entry2 = new JarEntry(entry.getName());
+//                fileContent = processMethodBody(fileContent, name, false, false);
             }
 
 //            if (!isChange) {
@@ -309,7 +316,7 @@ public class ClassEncryptPlugin extends BaseMojo {
         newJarFileOutStream.write(encryptedClassesList.toString().getBytes(Charset.forName(HookAgent.UTF8)));
 
         //拷贝资源
-        copyRes(StringUtils.hasText(mainClass), newJarFileOutStream);
+        copyRes(StringUtils.hasText(mainClass), path, newJarFileOutStream);
 
         newJarFileOutStream.finish();
         newJarFileOutStream.flush();
@@ -328,13 +335,13 @@ public class ClassEncryptPlugin extends BaseMojo {
     }
 
     @SneakyThrows
-    private void copyRes(boolean copyNativeLib, JarOutputStream jarOutputStream) {
+    private void copyRes(boolean copyNativeLib, String path, JarOutputStream jarOutputStream) {
 
         if (copyNativeLib) {
 
-            writeClassToJar(jarOutputStream, "", JniHelper.class, JavaAgent.class, SimpleLoaderAndTransformer.class);
+            writeClassToJar(jarOutputStream, path, JniHelper.class, JavaAgent.class, SimpleLoaderAndTransformer.class);
             //放入 hook 类
-            jarOutputStream.putNextEntry(new JarEntry(HookAgent.class.getName().replace('.', '/') + ".class"));
+            jarOutputStream.putNextEntry(new JarEntry(path + HookAgent.class.getName().replace('.', '/') + ".class"));
             jarOutputStream.write(processMethodBody(JniHelper.loadData(HookAgent.class), HookAgent.class.getName(), true, true));
 
             //固定名称，故意混淆名称
@@ -445,15 +452,21 @@ public class ClassEncryptPlugin extends BaseMojo {
 
 
     @SneakyThrows
-    protected void writeClassToJar(ZipOutputStream outputStream, String path, Class... classes) {
+    protected void writeClassToJar(JarOutputStream outputStream, String path, Class... classes) {
 
         for (Class clazz : classes) {
 
-            String fn = path + clazz.getName().replace(".", "/") + ".class";
+            String fn = clazz.getName().replace(".", "/") + ".class";
 
-            outputStream.putNextEntry(new JarEntry(fn));
+            outputStream.putNextEntry(new JarEntry(path + fn));
 
-            IOUtils.copy(clazz.getClassLoader().getResourceAsStream(fn), outputStream);
+            byte[] data = JniHelper.loadData(clazz.getClassLoader(), clazz);
+
+            if (data == null || data.length == 0) {
+                throw new IllegalAccessException(clazz + " res " + fn + " no content.");
+            }
+
+            outputStream.write(data);
         }
 
     }
@@ -519,7 +532,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                         boolean isAbstract = (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT;
 
                         //如果是抽象方法
-                        String hookClassName = HookAgent.class.getName().replace('.', '/');
+                        //String hookClassName = ;
 
                         if (isAbstract
                                 || !StringUtils.hasText(methodName)
@@ -529,7 +542,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                                 || methodName.equalsIgnoreCase("<clinit>")) {
 
                             if (methodName.equalsIgnoreCase("<clinit>")
-                                    && !className.equals(hookClassName)) {
+                                    && !className.replace('/', '.').equals(HookAgent.class.getName())) {
                                 //在类构造方法中加入语句
                                 isModified.set(true);
 
@@ -539,7 +552,7 @@ public class ClassEncryptPlugin extends BaseMojo {
                                     invokeMethodName = "checkEnv";
                                 }
 
-                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, hookClassName,
+                                mWriter.visitMethodInsn(Opcodes.INVOKESTATIC, HookAgent.class.getName().replace('.', '/'),
                                         invokeMethodName, "()V", false);
                             }
 

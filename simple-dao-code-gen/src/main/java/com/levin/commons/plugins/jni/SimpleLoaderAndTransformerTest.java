@@ -25,6 +25,13 @@ public class SimpleLoaderAndTransformerTest {
     @SneakyThrows
     public static void main(String[] args) {
 
+
+       String key = "C" + "com.vma.superbag.services.w7coreperformance.W7CorePerformanceServiceImpl";
+
+         key = "META-INF/.cache_data/" + JniHelper.md5(key) + ".dat";
+
+        System.out.println(key);
+
         byte[] bytes = JniHelper.loadResource(null, "lib/HookAgent/macosx/libHookAgent.dylib");
 
         int replace = HookAgent.replace(bytes, "f4c8996fb92427ae41e4649b934ca495991b7852b855".getBytes("utf-8"), "12345678901234567890123456789012345678901234".getBytes("utf-8"));

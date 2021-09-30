@@ -144,7 +144,8 @@ public abstract class JniHelper {
                     outputStream.write(buf, 0, n);
                 }
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+            outputStream = null;
             ex.printStackTrace();
         } finally {
             try {
@@ -154,7 +155,7 @@ public abstract class JniHelper {
             }
         }
 
-        return outputStream.toByteArray();
+        return outputStream != null ? outputStream.toByteArray() : null;
     }
 
 

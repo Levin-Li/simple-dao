@@ -20,6 +20,10 @@ public abstract class HookAgent {
     //加密资源列表
     public static final String MF_ENCRYPT_RES_LIST = "META-INF/MANIFEST.ERL";
 
+    public static final String MANIFEST_FINAL_MAIN_CLASS = "Final-Main-Class";
+
+    public static final String MANIFEST = "META-INF/MANIFEST.MF";
+
     public static final String UTF8 = "utf-8";
 
     public static final String META_INF_CLASSES = "META-INF/.cache_data/";
@@ -39,18 +43,72 @@ public abstract class HookAgent {
     private static String fileHashcode = null;
 
     private static SortedSet<String> encryptedList = null;
+    private static Map<String, String> manifest = null;
+
 
     private HookAgent() {
     }
+
+
+    @SneakyThrows
+    public static void main(String[] args) {
+
+        if (args == null) {
+            args = new String[0];
+        }
+
+        String clsName = getManifest().get(MANIFEST_FINAL_MAIN_CLASS);
+
+        if (clsName == null || clsName.trim().length() == 0) {
+            throw new IllegalAccessException("main class no specified.");
+        }
+
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
+        Class<?> mainClass = loader.loadClass(clsName);
+
+        //启动主类
+        mainClass.getMethod("main", args.getClass()).invoke(null, (Object) args);
+    }
+
+    public static Map<String, String> getManifest() {
+
+        synchronized (MANIFEST) {
+            if (manifest == null) {
+                manifest = new LinkedHashMap<>();
+                String[] items = new String(JniHelper.loadResource(HookAgent.class.getClassLoader(), MANIFEST), Charset.forName(UTF8)).split("\\n");
+
+                for (String item : items) {
+                    int idx = item.indexOf(':');
+                    if (idx > 0) {
+                        manifest.put(item.substring(0, idx).trim(), item.substring(idx + 1).trim());
+                    }
+                }
+            }
+        }
+
+        return manifest;
+    }
+
 
     /**
      * 快速确认资源是否存在
      *
      * @param loader
-     * @param resName
+     * @param className
      * @return
      */
-    public static byte[] loadEncryptedRes(ClassLoader loader, String resName) {
+    public static byte[] loadEncryptedRes(ClassLoader loader, String className) {
+
+//        Throwable ex = new Throwable();
+//
+//        //防止递归调用
+//        for (StackTraceElement element : ex.getStackTrace()) {
+//            if (HookAgent.class.getName().equals(element.getClassName())
+//                    && "loadEncryptedRes".equals(element.getMethodName())) {
+//                return null;
+//            }
+//        }
 
         if (loader == null) {
             loader = Thread.currentThread().getContextClassLoader();
@@ -60,7 +118,9 @@ public abstract class HookAgent {
             loader = HookAgent.class.getClassLoader();
         }
 
+
         synchronized (MF_ENCRYPT_RES_LIST) {
+
             if (encryptedList == null) {
 
                 Enumeration<URL> resources = null;
@@ -87,6 +147,7 @@ public abstract class HookAgent {
                         Arrays.stream(resList)
                                 .filter(str -> str != null && str.trim().length() > 0)
                                 .forEachOrdered(encryptedList::add);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -98,13 +159,16 @@ public abstract class HookAgent {
             }
         }
 
+        final String resPath = getClassResPath(className);
+
+        final String key = JniHelper.md5("CLS_"+className.replace('/', '.'));
+
         if (encryptedList == null
-                || !encryptedList.contains(resName)) {
+                || !encryptedList.contains(key)) {
             return null;
         }
 
-        return JniHelper.loadResource(loader, resName);
-
+        return JniHelper.loadResource(loader, resPath);
     }
 
 
@@ -138,7 +202,7 @@ public abstract class HookAgent {
 
         if (isPrintLog()) {
             StackTraceElement invokeThisMethodStackTrace = (new Exception()).getStackTrace()[1];
-            System.out.println("*** check env and class init *** " + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
+            System.out.println(HookAgent.class.getClassLoader().getClass().getName() + " *** check env and class init *** " + invokeThisMethodStackTrace.getClassName() + "." + invokeThisMethodStackTrace.getMethodName() + " invoke ...");
         }
 
         if (fileHashcode == null
@@ -154,7 +218,6 @@ public abstract class HookAgent {
             if (isPrintLog()) {
                 System.out.println(file.getName() + " hash code: " + fileHashcode);
             }
-
         }
 
         if (SimpleLoaderAndTransformer.getEnvType(fileHashcode) == SimpleLoaderAndTransformer.AGENT
@@ -173,7 +236,7 @@ public abstract class HookAgent {
     }
 
     public static String getClassResPath(String className) {
-        return (META_INF_CLASSES + JniHelper.md5("C" + className.replace('/', '.')) + ".dat");
+        return (META_INF_CLASSES + JniHelper.md5("RES_" + className.replace('/', '.')) + ".dat");
     }
 
     @SneakyThrows
