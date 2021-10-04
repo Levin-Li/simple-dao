@@ -90,7 +90,6 @@ public abstract class HookAgent {
         return manifest;
     }
 
-
     /**
      * 快速确认资源是否存在
      *
@@ -98,7 +97,7 @@ public abstract class HookAgent {
      * @param className
      * @return
      */
-    public static byte[] loadEncryptedRes(ClassLoader loader, String className) {
+    public static byte[] loadEncryptedClass(ClassLoader loader, String className) {
 
 //        Throwable ex = new Throwable();
 //
@@ -161,7 +160,7 @@ public abstract class HookAgent {
 
         final String resPath = getClassResPath(className);
 
-        final String key = JniHelper.md5("CLS_"+className.replace('/', '.'));
+        final String key = JniHelper.md5("CLS_" + className.replace('/', '.'));
 
         if (encryptedList == null
                 || !encryptedList.contains(key)) {
@@ -169,6 +168,7 @@ public abstract class HookAgent {
         }
 
         return JniHelper.loadResource(loader, resPath);
+
     }
 
 
@@ -241,7 +241,6 @@ public abstract class HookAgent {
 
     @SneakyThrows
     public static byte[] getFileSHA256Hashcode(File file) {
-
 //        MD5
 //        SHA-1
 //        SHA-256

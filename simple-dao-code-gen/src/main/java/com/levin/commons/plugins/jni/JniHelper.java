@@ -115,9 +115,10 @@ public abstract class JniHelper {
         StringBuilder stringBuilder = new StringBuilder();
 
         for (byte aByte : digest) {
-            stringBuilder.append(Integer.toHexString(0xFF & aByte));
+            String hex = Integer.toHexString(0xFF & aByte);
+            //补零
+            stringBuilder.append(hex.length() < 2 ? "0" : "").append(hex);
         }
-
 
         return stringBuilder.toString();
     }

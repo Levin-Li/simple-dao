@@ -107,17 +107,65 @@ public class SimpleLoaderAndTransformer extends ClassLoader implements ClassFile
      */
     protected native static int getEnvType(String key);
 
+    /**
+     * 转换数据，通常是解密
+     *
+     * @param pwd
+     * @param data
+     * @return
+     */
     protected native static byte[] transform1(String pwd, byte[] data);
 
+    /**
+     * 转换数据，通常是加密
+     *
+     * @param pwd
+     * @param data
+     * @return
+     */
     protected native static byte[] transform2(String pwd, byte[] data);
 
+    /**
+     * 加密
+     *
+     * @param bits
+     * @param pwd
+     * @param data
+     * @return
+     */
     public native static byte[] encryptAes(int bits, String pwd, byte[] data);
 
+    /**
+     * 解密
+     *
+     * @param bits
+     * @param pwd
+     * @param data
+     * @return
+     */
     public native static byte[] decryptAes(int bits, String pwd, byte[] data);
 
+    /**
+     * 使用预设密码 进行 128 aes 解密
+     *
+     * @param loader
+     * @param className
+     * @param classBeingRedefined
+     * @param domain
+     * @param classBuffer
+     * @return
+     * @throws IllegalClassFormatException
+     */
     @Override
     public native byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain domain, byte[] classBuffer) throws IllegalClassFormatException;
 
+    /**
+     * 类加载器，加载类
+     *
+     * @param name
+     * @return
+     * @throws ClassNotFoundException
+     */
     @Override
     protected native Class<?> findClass(String name) throws ClassNotFoundException;
 
