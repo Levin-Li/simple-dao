@@ -51,7 +51,7 @@ if [ -z $pids ]; then
        content=" -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism"
    fi
 
-   startCmd="java -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+   startCmd="java -server -Dwork.dir=${shellDir} -DPrintHookAgentLog=true ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
 
    echo "应用启动命令：${startCmd}"
 

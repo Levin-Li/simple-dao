@@ -90,7 +90,10 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter
     protected Map<String, Object> codeGenParams;
 
-    final ResourcePatternResolver resourcePatternResolver =new PathMatchingResourcePatternResolver();
+
+    {
+        independentPluginClassLoader = false;
+    }
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {

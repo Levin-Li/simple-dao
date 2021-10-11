@@ -76,6 +76,9 @@ public final class ServiceModelCodeGenerator {
         notUpdateNames.add("lastUpdateTime");
         notUpdateNames.add("sn");
     }
+    {
+
+    }
 
 
     private static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
@@ -268,26 +271,26 @@ public final class ServiceModelCodeGenerator {
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleWebControllerAdvice.java");
+        fileName = String.join(File.separator, "config", "ModuleWebControllerAdvice.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleSwaggerConfigurer.java");
+        fileName = String.join(File.separator, "config", "ModuleSwaggerConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleVariableResolverConfigurer.java");
+        fileName = String.join(File.separator, "config", "ModuleVariableResolverConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
-        fileName = String.join(File.separator, "config","ModuleWebSecurityConfigurer.java");
+        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "aspect","ModuleWebControllerAspect.java");
+        fileName = String.join(File.separator, "aspect", "ModuleWebControllerAspect.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
@@ -354,9 +357,9 @@ public final class ServiceModelCodeGenerator {
 
         final int suffixLen = ".class".length();
 
-        // logger.info("Files:" + FileUtils.listFiles(file, null, true));
+        // logger.info("Files:" + FileUtils.listFiles(file, new String[]{"class"}, true));
 
-        List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
+        final List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
                 .stream().filter(File::isFile)
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
@@ -369,7 +372,8 @@ public final class ServiceModelCodeGenerator {
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
-                }).filter(clazz -> clazz.getAnnotation(Entity.class) != null)
+                })
+                .filter(clazz -> clazz.isAnnotationPresent(javax.persistence.Entity.class))
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
@@ -570,7 +574,7 @@ public final class ServiceModelCodeGenerator {
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
 
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
-                .put("modulePackageName",modulePackageName())
+                .put("modulePackageName", modulePackageName())
                 .build();
 
         buildInfo(entityClass, fields, serviceDir, params);
