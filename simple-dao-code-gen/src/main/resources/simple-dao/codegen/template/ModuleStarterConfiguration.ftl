@@ -39,10 +39,10 @@ public class ModuleStarterConfiguration {
         return variableResolverManager -> {
 
             //加入全局变量
-            variableResolverManager.add(
-                    MapUtils.putFirst(ModuleOption.ID+"_x1", "x1_value")
-                            .put(ModuleOption.ID+"_x2", "x2_value")
-                            .build());
+            // variableResolverManager.add(
+            //         MapUtils.putFirst(ModuleOption.ID+"_x1", "x1_value")
+            //                 .put(ModuleOption.ID+"_x2", "x2_value")
+            //                 .build());
 
             //@todo 增加自定义变量解析器
             //加入
@@ -54,9 +54,12 @@ public class ModuleStarterConfiguration {
                         return ValueHolder.notValue();
                     }
 
-                    return (ValueHolder<T>) new ValueHolder<>()
-                            .setValue(environment.getProperty(key.substring(4)))
-                            .setHasValue(environment.containsProperty(key));
+                      key = key.substring(4);
+
+                      return (ValueHolder<T>) new ValueHolder<>()
+                          .setValue(environment.getProperty(key))
+                          .setHasValue(environment.containsProperty(key));
+
                 }
             });
         };
