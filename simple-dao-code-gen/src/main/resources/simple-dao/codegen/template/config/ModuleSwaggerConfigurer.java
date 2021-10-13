@@ -49,7 +49,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
-    @Bean("${modulePackageName}.Docket")
+    @Bean(PLUGIN_PREFIX + "Docket")
     //默认激活的 profile
     @Profile({"dev", "test", "local"})
     public Docket docket() {
@@ -70,7 +70,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
         return new ApiInfoBuilder()
                 .title("插件[" + ModuleOption.ID +"]接口文档")
                 .description("插件[" + ModuleOption.ID + "]接口文档")
-                .contact(new Contact("levin", "https://github.com/Levin-Li/simple-dao", "99668980@qq.com"))
+                .contact(new Contact("Levin", "https://github.com/Levin-Li/simple-dao", "99668980@qq.com"))
                 .version(ModuleOption.VERSION)
                 .build();
     }
