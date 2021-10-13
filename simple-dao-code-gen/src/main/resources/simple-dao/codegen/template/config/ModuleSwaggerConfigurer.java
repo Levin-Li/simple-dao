@@ -29,6 +29,8 @@ import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
+import java.util.stream.Stream;
+
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 
@@ -82,9 +84,12 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        registry.addResourceHandler("/**/swagger-ui/**/*", "/**/springfox-swagger-ui/**/*")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
-
+        Stream.of("/**/swagger-ui/**/*", "/**/springfox-swagger-ui/**/*")
+                .filter(p -> !registry.hasMappingForPattern(p))
+                .forEachOrdered(pathPattern ->
+                        registry.addResourceHandler(pathPattern)
+                                .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
+                );
     }
 
 }

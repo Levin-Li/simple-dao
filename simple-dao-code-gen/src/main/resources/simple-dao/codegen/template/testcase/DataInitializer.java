@@ -132,7 +132,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
         boolean haveSwagger = org.springframework.util.ClassUtils.isPresent("springfox.documentation.spring.web.plugins.Docket", getClass().getClassLoader());
 
         if (haveSwagger) {
-            if (applicationContext.getBeanProvider(springfox.documentation.spring.web.plugins.Docket.class).getIfAvailable(() -> null) != null) {
+            if (applicationContext.getBeanProvider(springfox.documentation.spring.web.plugins.Docket.class).stream().findAny().isPresent()) {
                 log.info("***** API文档： http://" + rootUrl + "swagger-ui/index.html");
             } else {
                 log.warn("***** 当前项目没有配置 Swagger docket.");

@@ -192,16 +192,15 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
 
-            //模块包名hashcode
-            //用于部分
-            codeGenParams.put("moduleNameHashCode", Math.abs(modulePackageName.hashCode()));
 
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
-            //生成代码
+
+            //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
                     , outputDirectory, controllerDir, serviceDir, codeGenParams);
 
+            //2、生成辅助文件
             if (splitDir) { //尝试生成Pom 文件
 
                 ServiceModelCodeGenerator.tryGenTestcase(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
@@ -211,7 +210,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                 ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, controllerDir, serviceDir, adminUiDir, codeGenParams);
             }
 
-            //生成
+            //3、生成
             ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, codeGenParams);
 
         } catch (Exception e) {

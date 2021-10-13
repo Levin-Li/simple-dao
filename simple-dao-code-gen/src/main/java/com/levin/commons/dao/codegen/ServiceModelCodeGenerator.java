@@ -76,6 +76,7 @@ public final class ServiceModelCodeGenerator {
         notUpdateNames.add("lastUpdateTime");
         notUpdateNames.add("sn");
     }
+
     {
 
     }
@@ -421,8 +422,12 @@ public final class ServiceModelCodeGenerator {
             moduleName(moduleName);
         }
 
-        logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
+        logger.info(mavenProject.getArtifactId() + " *** 开始代码生成 modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
 
+
+        if (genParams != null) {
+            genParams.put("moduleNameHashCode", Math.abs(modulePackageName().hashCode()));
+        }
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {

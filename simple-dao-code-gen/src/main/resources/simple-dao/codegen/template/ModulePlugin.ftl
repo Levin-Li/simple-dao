@@ -59,7 +59,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @PostConstruct
     public void init() {
-       log.info("init...");
+       log.info("plugin init...");
     }
 
     @Override

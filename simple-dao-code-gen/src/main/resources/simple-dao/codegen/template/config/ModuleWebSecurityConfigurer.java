@@ -26,7 +26,7 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
-public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
+public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {
 
 
 //    @Bean
@@ -50,10 +50,15 @@ public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         return firewall;
     }
 
-    @Override
+//    @Override
     protected void configure(HttpSecurity http) throws Exception {
 
         log.debug("config HttpSecurity");
+
+    }
+
+    @Override
+    public void init(WebSecurity webSecurity) throws Exception {
 
     }
 
