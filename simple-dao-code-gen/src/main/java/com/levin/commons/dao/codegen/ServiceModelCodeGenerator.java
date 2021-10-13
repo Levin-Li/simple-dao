@@ -424,9 +424,8 @@ public final class ServiceModelCodeGenerator {
 
         logger.info(mavenProject.getArtifactId() + " *** 开始代码生成 modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
 
-
         if (genParams != null) {
-            genParams.put("moduleNameHashCode", Math.abs(modulePackageName().hashCode()));
+            genParams.put("moduleNameHashCode", "" + Math.abs(modulePackageName().hashCode()));
         }
 
         ///////////////////////////////////////////////
