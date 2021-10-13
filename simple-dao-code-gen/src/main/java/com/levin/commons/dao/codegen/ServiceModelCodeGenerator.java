@@ -261,6 +261,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
+
         String fileName = "index.html";
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));

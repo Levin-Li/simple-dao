@@ -5,6 +5,7 @@ import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,13 +15,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.*;
 import org.springframework.security.web.firewall.*;
 
 //参考文章： https://blog.csdn.net/u012702547/article/details/106800446/
 
-
 @Configuration(PLUGIN_PREFIX + "ModuleWebSecurityConfigurer")
-//@Order(101)
+@Order(${moduleNameHashCode})
 @Slf4j
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
@@ -29,6 +30,7 @@ public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
 
 //    @Bean
+//    @ConditionalOnMissingBean
 //    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 //        return http
 //                .antMatcher("/**")
@@ -39,6 +41,7 @@ public class ModuleWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 //    }
 
     @Bean
+    @ConditionalOnMissingBean
     HttpFirewall httpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
         firewall.setAllowUrlEncodedDoubleSlash(true);
