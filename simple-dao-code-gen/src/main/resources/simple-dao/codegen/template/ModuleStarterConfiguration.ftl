@@ -30,11 +30,11 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 <#--public class ${camelStyleModuleName}SpringConfiguration {-->
 public class ModuleStarterConfiguration {
 
-
     @Autowired
     Environment environment;
 
-    @Bean
+    //默认不启用
+    //@Bean
     public VariableResolverConfigurer variableResolverConfigurer() {
         return variableResolverManager -> {
 

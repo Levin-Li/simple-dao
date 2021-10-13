@@ -115,7 +115,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
 
     void initData() {
 
-        log.info("应用 ActiveProfiles:" + Arrays.asList(environment.getActiveProfiles()) + " , 工作目录：[" + new File(".").getAbsolutePath() + "]" + " , 数据库URL：[" + dataSourceProperties.getUrl() + "]");
+        log.info("***** ActiveProfiles:" + Arrays.asList(environment.getActiveProfiles()) + " , 工作目录：[" + new File(".").getAbsolutePath() + "]" + " , 数据库URL：[" + dataSourceProperties.getUrl() + "]");
 
         String host = Optional.ofNullable(serverProperties.getAddress()).orElse(InetAddress.getLoopbackAddress()).getHostAddress();
 
