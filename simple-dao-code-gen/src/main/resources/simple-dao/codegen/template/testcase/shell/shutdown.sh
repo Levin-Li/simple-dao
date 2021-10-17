@@ -1,5 +1,4 @@
-<#noparse>
-#!/bin/bash
+<#noparse>#!/bin/bash
 
 execDir=`pwd`
 
@@ -28,5 +27,4 @@ else
    kill $pids
 
 fi
-
 </#noparse>
