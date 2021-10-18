@@ -32,7 +32,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date lastUpdateTime;
 
-//    @OrderBy
+    //@OrderBy
     @Schema(description = "排序代码")
     protected Integer orderCode;
 
@@ -55,6 +55,17 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
             createTime = new Date();
         }
 
+        if (orderCode == null) {
+            orderCode = 100;
+        }
+
+        if (editable == null) {
+            editable = true;
+        }
+
+        if (enable == null) {
+            enable = true;
+        }
     }
 
     @PreUpdate
