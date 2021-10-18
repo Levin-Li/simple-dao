@@ -2,6 +2,7 @@ package com.levin.commons.dao.domain;
 
 /**
  * 有归属组织的对象
+ * @author llw
  */
 public interface OrganizedObject<ORG_ID> {
 

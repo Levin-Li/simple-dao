@@ -5,6 +5,11 @@ package com.levin.commons.dao.domain;
  */
 public interface EditableObject {
 
+    /**
+     * 是否可编辑
+     *
+     * @return
+     */
     boolean isEditable();
 
 }
