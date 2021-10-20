@@ -61,7 +61,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected javax.validation.Validator validator;
 
-
     //////////////////////////////////////////////////////////
     protected Class<T> entityClass;
 
@@ -105,7 +104,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected boolean filterLogicDeletedData = true;
 
-    transient MiniDao dao;
+    private transient MiniDao dao;
 
     /**
      * 别名缓存
@@ -137,9 +136,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     private static final ThreadLocal<BiFunction<String, Map<String, Object>[], Object>> elEvalFuncThreadLocal = new ThreadLocal<>();
 
-    protected ConditionBuilderImpl(MiniDao dao, boolean isNative) {
+    protected ConditionBuilderImpl(MiniDao miniDao, boolean isNative) {
 
-        this.dao = dao;
+        dao = miniDao;
         this.nativeQL = (isNative);
         this.entityClass = null;
         this.tableName = null;
@@ -147,13 +146,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-    public ConditionBuilderImpl(MiniDao dao, boolean isNative, Class<T> entityClass, String alias) {
+    public ConditionBuilderImpl(MiniDao miniDao, boolean isNative, Class<T> entityClass, String alias) {
 
         if (entityClass == null) {
             throw new IllegalArgumentException("entityClass is null");
         }
 
-        this.dao = dao;
+        dao = miniDao;
         this.entityClass = entityClass;
         this.tableName = null;
         this.nativeQL = (isNative);
@@ -161,12 +160,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-    public ConditionBuilderImpl(MiniDao dao, boolean isNative, String tableName, String alias) {
+    public ConditionBuilderImpl(MiniDao miniDao, boolean isNative, String tableName, String alias) {
 
         if (tableName == null) {
             throw new IllegalArgumentException("tableName is null");
         }
-        this.dao = dao;
+        dao = miniDao;
         this.entityClass = null;
         setTableName(tableName);
         this.nativeQL = (isNative);
@@ -2330,7 +2329,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param value
      * @param name
      * @param expr
-     * @param <T>
      * @return
      */
     protected String evalStringExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {

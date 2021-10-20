@@ -6,13 +6,16 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
+import javax.persistence.Index;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 import java.io.Serializable;
 
 @MappedSuperclass
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
+
 public abstract class AbstractMultiTenantObject<ID extends Serializable>
         extends AbstractBaseEntityObject<ID>
         implements MultiTenantObject<ID> {
