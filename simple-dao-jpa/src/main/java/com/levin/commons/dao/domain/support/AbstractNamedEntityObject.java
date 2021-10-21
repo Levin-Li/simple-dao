@@ -18,9 +18,9 @@ import java.io.Serializable;
 @Accessors(chain = true)
 @Desc("命名对象")
 @FieldNameConstants
-@Table(indexes = {
-        @Index(columnList = AbstractNamedEntityObject.Fields.name),
-})
+//@Table(indexes = {
+//        @Index(columnList = AbstractNamedEntityObject.Fields.name),
+//})
 public abstract class AbstractNamedEntityObject<ID extends Serializable>
         extends AbstractBaseEntityObject<ID>
         implements NamedEntityObject<ID> {

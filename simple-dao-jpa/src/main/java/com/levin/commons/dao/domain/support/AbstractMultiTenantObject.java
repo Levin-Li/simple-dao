@@ -15,7 +15,6 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-
 public abstract class AbstractMultiTenantObject<ID extends Serializable>
         extends AbstractBaseEntityObject<ID>
         implements MultiTenantObject<ID> {

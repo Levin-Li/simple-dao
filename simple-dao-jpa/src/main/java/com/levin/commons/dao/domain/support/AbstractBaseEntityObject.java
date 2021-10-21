@@ -14,13 +14,13 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-@Table(indexes = {
-        @Index(columnList = AbstractBaseEntityObject.Fields.creator),
-        @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-        @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
-        @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-        @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-})
+//@Table(indexes = {
+//        @Index(columnList = AbstractBaseEntityObject.Fields.creator),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.enable),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
+//})
 public abstract class AbstractBaseEntityObject<ID extends Serializable>
         implements BaseEntityObject<ID> {
 

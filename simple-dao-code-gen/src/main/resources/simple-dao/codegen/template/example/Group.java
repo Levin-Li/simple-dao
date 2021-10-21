@@ -35,26 +35,4 @@ public class Group
     @Schema(description = "类别")
     String category;
 
-
-    public Group(String name, Long parentId) {
-        super(name, parentId);
-    }
-
-    public Group() {
-    }
-
-    public Group(Long id, String name) {
-        super(name, null);
-        this.id = id;
-    }
-
-    public Group(String name) {
-        super(name, null);
-    }
-
-
-    @Override
-    public String toString() {
-        return name + "[" + state + "]";
-    }
 }
