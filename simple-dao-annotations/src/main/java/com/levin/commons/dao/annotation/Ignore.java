@@ -22,6 +22,11 @@ public @interface Ignore {
      */
     String value() default "";
 
+    /**
+     *
+     * @return
+     */
+    Scope scope() default Scope.Default;
 
     /**
      * 忽略的动作，默认忽略全部
@@ -31,6 +36,14 @@ public @interface Ignore {
      */
     Action action() default Action.ALL;
 
+
+    enum Scope{
+        Package,
+        Type,
+        Field,
+        Method,
+        Default,
+    }
 
     enum Action {
         ALL,

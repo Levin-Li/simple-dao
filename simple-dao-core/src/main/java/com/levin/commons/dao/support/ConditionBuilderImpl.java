@@ -104,7 +104,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected boolean filterLogicDeletedData = true;
 
-    private transient MiniDao dao;
+    protected transient MiniDao dao;
 
     /**
      * 别名缓存

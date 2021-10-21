@@ -27,6 +27,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "创建者")
+    @Column(length = 512)
     protected String creator;
 
     @Schema(description = "创建时间")
@@ -34,7 +35,7 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createTime;
 
-    @Schema(description = "最后更新时间")
+    @Schema(description = "更新时间")
     @Column
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date lastUpdateTime;
@@ -45,14 +46,14 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
 
     @Schema(description = "是否允许")
     @Column(nullable = false)
-    protected Boolean enable = true;
+    protected Boolean enable;
 
     @Schema(description = "是否可编辑")
     @Column(nullable = false)
-    protected Boolean editable = true;
+    protected Boolean editable;
 
     @Schema(description = "备注")
-    @Column(length = 1000)
+    @Column(length = 1800)
     protected String remark;
 
     @PrePersist

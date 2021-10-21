@@ -28,7 +28,7 @@ public abstract class AbstractNamedEntityObject<ID extends Serializable>
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "名称")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 512)
     protected String name;
 
 
