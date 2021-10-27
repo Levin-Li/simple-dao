@@ -49,11 +49,11 @@ public class PagingData<T> implements PageableData<T>, Serializable {
 
 
     @Ignore
-    @Schema(description = "扩展数据")
+    @Schema(description = "分页Token")
     String pageToken;
 
     @Ignore
-    @Schema(description = "扩展数据")
+    @Schema(description = "是否有更多")
     boolean hasMore;
 
     @Override
