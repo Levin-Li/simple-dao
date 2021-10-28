@@ -87,13 +87,13 @@ public class ${className} implements ServiceReq {
     <#if field.name == 'updateTime'>
 
         if(getUpdateTime() == null){
-        setUpdateTime(new Date());
+            setUpdateTime(new Date());
         }
     </#if>
     <#if field.name == 'lastUpdateTime'>
 
         if(getLastUpdateTime() == null){
-        setLastUpdateTime(new Date());
+            setLastUpdateTime(new Date());
         }
     </#if>
 </#list>

@@ -72,8 +72,11 @@ public final class ServiceModelCodeGenerator {
 //        collectionsTypes.add(Map.class);
 
         notUpdateNames.add("addTime");
-        notUpdateNames.add("updateTime");
-        notUpdateNames.add("lastUpdateTime");
+        notUpdateNames.add("createTime");
+
+//        notUpdateNames.add("updateTime");
+//        notUpdateNames.add("lastUpdateTime");
+
         notUpdateNames.add("sn");
     }
 
