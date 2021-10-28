@@ -23,7 +23,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     //dao
     @Autowired
-    SimpleDaoRepository simpleDaoRepository;
+    private SimpleDaoRepository simpleDaoRepository;
 
     @Autowired
     private SimpleDao simpleDao;
@@ -32,21 +32,15 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     private PluginManager pluginManager;
 
-    @Override
-    public List<DataItem> getDataItems() {
-        //@todo
-        return Collections.emptyList();
-    }
 
     @Override
-    public List<MenuItem> getMenuItems() {
-        //@todo
-        return Collections.emptyList();
+    public ResLoader getResLoader() {
+        //@todo 返回资源加载器
+        return null;
     }
 
     @Override
     public boolean onEvent(Object... objects) {
-
        //log.debug(getDescription() + " onEvent " + Arrays.asList(objects));
         //@todo
        return false;
@@ -64,7 +58,6 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Override
     public void destroy() throws PluginException {
-
     }
 
     @Override
@@ -77,9 +70,5 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
         return "插件" + pid;
     }
 
-    @Override
-    public String getDescription() {
-        return getName();
-    }
 
 } // end class
