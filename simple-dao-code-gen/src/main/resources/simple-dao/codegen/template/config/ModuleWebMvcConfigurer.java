@@ -100,6 +100,22 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
         //处理 OPTIONS 200 请求
         //CORS预检请求处理
         registry.addInterceptor(new CorsOptionsInterceptor());
+
+        //https://sa-token.dev33.cn/
+        // 注册路由拦截器，自定义认证规则
+//        registry.addInterceptor(new SaRouteInterceptor((req, res, handler)->{
+//            // 根据路由划分模块，不同模块不同鉴权
+//            SaRouter.match("/user/**", r -> StpUtil.checkPermission("user"));
+//            SaRouter.match("/admin/**", r -> StpUtil.checkPermission("admin"));
+//            SaRouter.match("/goods/**", r -> StpUtil.checkPermission("goods"));
+//            SaRouter.match("/orders/**", r -> StpUtil.checkPermission("orders"));
+//            SaRouter.match("/notice/**", r -> StpUtil.checkPermission("notice"));
+//            SaRouter.match("/comment/**", r -> StpUtil.checkPermission("comment"));
+//        })).addPathPatterns("/**");
+
+
+//        registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns(API_PATH + "/**");
+
     }
 
     @Override

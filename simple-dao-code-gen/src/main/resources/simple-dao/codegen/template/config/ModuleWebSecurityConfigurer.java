@@ -20,8 +20,9 @@ import org.springframework.security.web.firewall.*;
 
 //参考文章： https://blog.csdn.net/u012702547/article/details/106800446/
 
-@Configuration(PLUGIN_PREFIX + "ModuleWebSecurityConfigurer")
-@Order(${moduleNameHashCode})
+//默认不开启
+//@Configuration(PLUGIN_PREFIX + "ModuleWebSecurityConfigurer")
+//@Order(${moduleNameHashCode})
 @Slf4j
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
