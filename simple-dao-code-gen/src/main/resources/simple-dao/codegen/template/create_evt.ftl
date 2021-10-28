@@ -66,38 +66,33 @@ public class ${className} implements ServiceReq {
 
     @PostConstruct
     public void prePersist() {
-    //保存之前初始化数据
+
+       //@todo 保存之前初始化数据
+
 <#list fields as field>
     <#if field.name == 'sn' && field.typeName == 'String'>
+
         if(getSn() == null){
-         String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-         setSn(sn);
+            String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+            setSn(sn);
         }
     </#if>
     <#if field.name == 'addTime'>
+
         if(getAddTime() == null){
-         setAddTime(new Date());
+            setAddTime(new Date());
         }
     </#if>
     <#if field.name == 'occurTime'>
+
         if(getOccurTime() == null){
-        setOccurTime(new Date());
+            setOccurTime(new Date());
         }
     </#if>
     <#if field.name == 'createTime'>
-        if(getCreateTime() == null){
-         setCreateTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'updateTime'>
-        if(getUpdateTime() == null){
-          setUpdateTime(new Date());
-        }
 
-    </#if>
-    <#if field.name == 'lastUpdateTime'>
-        if(getLastUpdateTime() == null){
-         setLastUpdateTime(new Date());
+        if(getCreateTime() == null){
+            setCreateTime(new Date());
         }
     </#if>
 </#list>

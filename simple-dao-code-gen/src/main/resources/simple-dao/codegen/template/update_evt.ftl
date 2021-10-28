@@ -82,8 +82,21 @@ public class ${className} implements ServiceReq {
 </#if>
     @PostConstruct
     public void preUpdate() {
-    //更新之前初始化数据
+        //@todo 更新之前初始化数据
+<#list fields as field>
+    <#if field.name == 'updateTime'>
 
+        if(getUpdateTime() == null){
+        setUpdateTime(new Date());
+        }
+    </#if>
+    <#if field.name == 'lastUpdateTime'>
+
+        if(getLastUpdateTime() == null){
+        setLastUpdateTime(new Date());
+        }
+    </#if>
+</#list>
     }
 
 }
