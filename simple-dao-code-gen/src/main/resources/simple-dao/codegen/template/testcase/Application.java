@@ -2,7 +2,7 @@ package ${modulePackageName};
 
 import com.levin.commons.service.support.*;
 import org.springframework.core.env.*;
-
+import org.springframework.beans.factory.annotation.*;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.plugin.support.PluginManagerImpl;
 import lombok.extern.slf4j.Slf4j;

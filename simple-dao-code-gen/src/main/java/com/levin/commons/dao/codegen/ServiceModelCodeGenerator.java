@@ -127,12 +127,11 @@ public final class ServiceModelCodeGenerator {
         params.put("moduleType", "service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
+       /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
+
         modules.add(pomFile.getParentFile().getName());
 
         params.put("services", MapUtils.put(key, params.get(key)).build());
-
-
-/////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
@@ -143,12 +142,11 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
+        //////////////////////////测试模块//////////////////////////////////////////
 
         modules.add(pomFile.getParentFile().getName());
 
         params.put("controller", MapUtils.put(key, params.get(key)).build());
-
-        //////////////////////////测试模块//////////////////////////////////////////
 
         pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 

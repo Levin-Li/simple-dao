@@ -43,60 +43,27 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
-
-       <#else>
-
-           <dependency>
-               <groupId>org.springframework.boot</groupId>
-               <artifactId>spring-boot-starter-security</artifactId>
-               <scope>provided</scope>
-           </dependency>
-
         </#if>
-
         <#if services??>
             <dependency>
                 <artifactId>${services.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
-
         </#if>
-
-
         <#if controller??>
             <dependency>
                 <artifactId>${controller.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-aop</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
         </#if>
 
-        <#if moduleType?? && moduleType == 'service'>
+        <#if moduleType?? && (moduleType == 'service' || moduleType == 'controller')>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-aop</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
                 <scope>provided</scope>
             </dependency>
 
@@ -107,6 +74,21 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+        </#if>
+
+        <#if moduleType?? && (moduleType == 'service')>
+            <#-- service -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <groupId>com.h2database</groupId>
@@ -128,21 +110,13 @@
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-aop</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-cache</artifactId>
                 <scope>provided</scope>
             </dependency>
-
-
         </#if>
 
         <#if moduleType?? && moduleType == 'controller' >
-
+            <#-- api spring-boot-starter-web -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
@@ -152,18 +126,6 @@
             <dependency>
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-boot-starter</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-aop</artifactId>
                 <scope>provided</scope>
             </dependency>
 
@@ -220,7 +182,6 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-configuration-processor</artifactId>
-
             </dependency>
 
             <dependency>
