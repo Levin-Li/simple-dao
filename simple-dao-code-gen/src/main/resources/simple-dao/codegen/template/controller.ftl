@@ -1,7 +1,5 @@
 package ${packageName};
 
-import static ${modulePackageName}.ModuleOption.*;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +16,7 @@ import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 import javax.validation.constraints.*;
 
+import ${modulePackageName}.controller.*;
 import ${modulePackageName}.*;
 import ${entityClassPackage}.*;
 import ${servicePackageName}.*;
@@ -46,17 +45,9 @@ import static ${modulePackageName}.ModuleOption.*;
 
 @Tag(name = "${desc}", description = "${desc}管理")
 @Slf4j @Valid
-public class ${className} {
+public class ${className} extends BaseController{
 
     private static final String ENTITY_NAME ="${desc}";
-
-    //请求级别变量
-    @Autowired
-    HttpServletResponse httpResponse;
-
-    //请求级别变量
-    @Autowired
-    HttpServletRequest httpRequest;
 
     @Autowired
     ${serviceName} ${serviceName?uncap_first};
@@ -154,10 +145,4 @@ public class ${className} {
         if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
         return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error("删除" + ENTITY_NAME + "失败");
     }
-
-    protected boolean isNotEmpty(Object value) {
-        return value != null
-        && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
-    }
-
 }

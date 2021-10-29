@@ -133,7 +133,7 @@ public final class ServiceModelCodeGenerator {
         params.put("moduleType", "service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
-       /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         modules.add(pomFile.getParentFile().getName());
 
@@ -433,10 +433,20 @@ public final class ServiceModelCodeGenerator {
         }
 
         ///////////////////////////////////////////////
+
+        genFileByTemplate("BaseController.java",
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + "controller" + File.separatorChar + "BaseController.java");
+
+        genFileByTemplate("BaseService.java",
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + "services" + File.separatorChar + "BaseService.java");
+
+        ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
-
             entityClassList(clazz);
-
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
             try {
                 genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
@@ -444,7 +454,7 @@ public final class ServiceModelCodeGenerator {
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
             }
         }
-
+        ///////////////////////////////////////////////
 
     }
 
@@ -730,6 +740,7 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
 
+
     }
 
 
@@ -852,6 +863,10 @@ public final class ServiceModelCodeGenerator {
         }
 
         file.getParentFile().mkdirs();
+
+        //文件名
+        params.put("fileName", file.getName());
+        params.put("templateFileName", template);
 
         Writer hWriter = new OutputStreamWriter(new FileOutputStream(fileName), "utf-8");
 

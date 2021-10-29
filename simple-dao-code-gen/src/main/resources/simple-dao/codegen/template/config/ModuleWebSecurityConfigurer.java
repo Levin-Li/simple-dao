@@ -1,22 +1,15 @@
-package ${modulePackageName}.config;
-
-import static ${modulePackageName}.ModuleOption.*;
-import ${modulePackageName}.*;
+package $
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.*;
-import org.springframework.security.web.firewall.*;
+
+{modulePackageName}.config;
+        {modulePackageName}.ModuleOption.*;
+        {modulePackageName}.*;
 
 //参考文章： https://blog.csdn.net/u012702547/article/details/106800446/
 
@@ -27,7 +20,7 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
-public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {
+public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity> {
 
 
 //    @Bean
@@ -51,7 +44,7 @@ public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSec
         return firewall;
     }
 
-//    @Override
+    //    @Override
     protected void configure(HttpSecurity http) throws Exception {
 
         log.debug("config HttpSecurity");
@@ -72,10 +65,10 @@ public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSec
                 "/swagger-ui/**/*",
                 "/springfox-swagger-ui/**/*",
                 "/swagger-resources/**",
-                "/" + ADMIN_PATH + "**",
-                "/" + H5_PATH + "**",
-                "/" + API_PATH + "auth/**",
-                "/" + API_PATH + "weixin/**"
+                ADMIN_UI_PATH + "**",
+                H5_UI_PATH + "**",
+                API_PATH + "auth/**",
+                API_PATH + "weixin/**"
         );
 
         log.debug("config WebSecurity");

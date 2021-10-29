@@ -77,14 +77,11 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
 
-        registry.addResourceHandler(ADMIN_PATH + "**")
-                .addResourceLocations("classpath:public" + ADMIN_PATH);
+        registry.addResourceHandler(ADMIN_UI_PATH + "**")
+                .addResourceLocations("classpath:public" + ADMIN_UI_PATH);
 
-        registry.addResourceHandler(H5_PATH + "**")
-                .addResourceLocations("classpath:public" + H5_PATH);
-
-        registry.addResourceHandler(H5_PATH + "**")
-                .addResourceLocations("classpath:public" + H5_PATH);
+        registry.addResourceHandler(H5_UI_PATH + "**")
+                .addResourceLocations("classpath:public" + H5_UI_PATH);
     }
 
     @Override
