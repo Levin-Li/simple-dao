@@ -37,9 +37,9 @@ import ${imp};
 @Accessors(chain = true)
 @NoArgsConstructor
 <#if pkField?exists>
-@EqualsAndHashCode(of = {"" + E_${entityName}.${pkField.name}})
+@EqualsAndHashCode(of = {"${pkField.name}"})
 </#if>
-@ToString(exclude = {<#list fields as field><#if field.lazy>"" + E_${entityName}.${field.name}<#if field?has_next>,</#if></#if></#list>})
+@ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
 public class ${className} implements Serializable {
 

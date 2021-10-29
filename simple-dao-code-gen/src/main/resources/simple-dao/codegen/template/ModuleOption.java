@@ -23,12 +23,12 @@ public interface ModuleOption {
     /**
      * module prefix
      */
-    String ID_PREFIX = ID +".";
+    String ID_PREFIX = ID + ".";
 
     /**
      * module prefix
      */
-    String PLUGIN_PREFIX =  "plugin."  + ID_PREFIX;
+    String PLUGIN_PREFIX = "plugin." + ID_PREFIX;
 
 
     /**
@@ -38,9 +38,9 @@ public interface ModuleOption {
 
     /**
      * base path
-     * 注意路径必须以 / 结尾
+     * 注意路径必须以 / 开头和结尾
      */
-    String BASE_PATH = ID + "/" + VERSION + "/";
+    String BASE_PATH = "/" + ID + "/" + VERSION + "/";
 
     /**
      * api path
