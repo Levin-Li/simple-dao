@@ -1,6 +1,7 @@
 package com.levin.commons.dao.domain.support;
 
 
+import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.domain.EntityObject;
 import com.levin.commons.dao.domain.TemplateObject;
 import com.levin.commons.service.domain.Desc;
@@ -25,7 +26,7 @@ public abstract class AbstractTemplateObject<ID extends Serializable, TEMPLATE e
 
     @Schema(description = "应用的模板")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = AbstractTemplateObject.Fields.templateId, insertable = false, updatable = false)
+    @JoinColumn(name = "templateId", insertable = false, updatable = false)
     protected TEMPLATE usedTemplate;
 
     @Schema(description = "模板ID")

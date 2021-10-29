@@ -1,5 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
+import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.domain.BaseEntityObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

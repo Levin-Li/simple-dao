@@ -27,12 +27,12 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = AbstractTreeObject.Fields.parentId, insertable = false, updatable = false)
+    @JoinColumn(name = "parentId", insertable = false, updatable = false)
     protected T parent;
 
     @Schema(description = "子节点")
-    @OneToMany(mappedBy = AbstractTreeObject.Fields.parent, cascade = CascadeType.REMOVE)
-    @OrderBy(value = AbstractBaseEntityObject.Fields.orderCode + " ASC , " + AbstractNamedEntityObject.Fields.name + " ASC ")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
+    @OrderBy(value = " orderCode ASC , name ASC ")
     //@Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 
