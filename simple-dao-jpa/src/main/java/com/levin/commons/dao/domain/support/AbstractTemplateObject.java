@@ -25,7 +25,7 @@ public abstract class AbstractTemplateObject<ID extends Serializable, TEMPLATE e
 
     @Schema(description = "应用的模板")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = E_AbstractTemplateObject.templateId, insertable = false, updatable = false)
+    @JoinColumn(name = AbstractTemplateObject.Fields.templateId, insertable = false, updatable = false)
     protected TEMPLATE usedTemplate;
 
     @Schema(description = "模板ID")
