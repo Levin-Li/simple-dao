@@ -56,7 +56,7 @@ public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = "${pkField.desc}")
+    @Schema(description = "${pkField.desc}" , required = true)
     @NotNull
     @Eq(require = true)
     private ${pkField.typeName} ${pkField.name};
@@ -66,7 +66,7 @@ public class ${className} implements ServiceReq {
     <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
     <#if !(annotation?string)?contains("@NotNull")>
-    ${annotation}
+    //${annotation}
     </#if>
     </#list>
     @Schema(description = "${field.desc}")
