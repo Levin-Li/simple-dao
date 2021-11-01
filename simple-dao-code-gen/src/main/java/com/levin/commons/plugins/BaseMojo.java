@@ -370,9 +370,14 @@ public abstract class BaseMojo extends AbstractMojo {
             }
 
             try {
-                urlList.add(artifacts.get(0).getFile().toURI().toURL());
+                File file = artifacts.get(0).getFile();
+                if (file == null) {
+                    getLog().warn("加入构件库[" + key + "] 失败, 文件不存在");
+                } else {
+                    urlList.add(file.toURI().toURL());
+                }
             } catch (Throwable e) {
-                getLog().error("加入 " + key + " 失败" + e.getMessage());
+                getLog().error("加入构件库[" + key + "] 失败，" + e.getMessage());
             }
 
         }

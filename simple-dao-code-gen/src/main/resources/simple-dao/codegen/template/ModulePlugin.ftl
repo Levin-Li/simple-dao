@@ -3,6 +3,7 @@ package ${modulePackageName};
 import static ${modulePackageName}.ModuleOption.*;
 
 import com.levin.commons.dao.*;
+import com.levin.commons.rbac.*;
 import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.plugin.*;
 import lombok.extern.slf4j.Slf4j;
