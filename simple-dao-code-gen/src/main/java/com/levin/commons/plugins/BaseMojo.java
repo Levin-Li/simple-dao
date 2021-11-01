@@ -372,7 +372,7 @@ public abstract class BaseMojo extends AbstractMojo {
             try {
                 urlList.add(artifacts.get(0).getFile().toURI().toURL());
             } catch (Throwable e) {
-                getLog().error("加入 " + key + " 失败" + e.getMessage());
+                getLog().error("加入依赖构件[" + key + "]失败" + e.getMessage());
             }
 
         }
