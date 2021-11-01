@@ -22,9 +22,9 @@ import java.io.Serializable;
 //@Table(indexes = {
 //        @Index(columnList = AbstractNamedEntityObject.Fields.name),
 //})
-public abstract class AbstractNamedEntityObject<ID extends Serializable>
-        extends AbstractBaseEntityObject<ID>
-        implements NamedEntityObject<ID> {
+public abstract class AbstractNamedEntityObject
+        extends AbstractBaseEntityObject
+        implements NamedEntityObject {
 
     private static final long serialVersionUID = -123456789L;
 

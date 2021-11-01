@@ -16,25 +16,25 @@ import java.util.Set;
 @Accessors(chain = true)
 @FieldNameConstants
 @MappedSuperclass
-public abstract class AbstractTreeObject<ID extends Serializable, T extends Identifiable<ID>>
-        extends AbstractNamedEntityObject<ID>
-        implements TreeObject<ID, T>, Serializable {
+public abstract class AbstractTreeObject<P extends Identifiable, C extends Identifiable>
+        extends AbstractNamedEntityObject
+        implements TreeObject<P, C>, Serializable {
 
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "父ID")
-    protected ID parentId;
+    protected Serializable parentId;
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parentId", insertable = false, updatable = false)
-    protected T parent;
+    protected P parent;
 
     @Schema(description = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
-    @OrderBy(value = " orderCode ASC , name ASC ")
+    @OrderBy(value = " orderCode ASC , name  ASC ")
     //@Fetch(value = FetchMode.JOIN)
-    protected Set<T> children;
+    protected Set<C> children;
 
     @Schema(description = "id路径， 使用|包围，如|1|3|15|")
     @Column(length = 1800)
@@ -43,12 +43,12 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     protected AbstractTreeObject() {
     }
 
-    protected AbstractTreeObject(ID parentId, String name) {
+    protected AbstractTreeObject(Serializable parentId, String name) {
         this.parentId = parentId;
         this.name = name;
     }
 
-    public void setParent(T parent) {
+    public void setParent(P parent) {
 
         if (parent == null) {
             this.parent = null;

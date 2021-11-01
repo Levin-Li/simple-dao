@@ -22,8 +22,8 @@ import javax.persistence.Id;
 @FieldNameConstants
 @EntityOption(disableActions = {EntityOption.Action.LogicalDelete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
 public class TestEntity
-        extends AbstractTreeObject<Long, TestEntity>
-        implements StatefulObject<String> {
+        extends AbstractTreeObject<TestEntity, TestEntity>
+        implements StatefulObject {
 
     @Id
     @GeneratedValue

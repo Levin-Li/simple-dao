@@ -22,8 +22,8 @@ import java.util.Date;
 //        @Index(columnList = AbstractBaseEntityObject.Fields.enable),
 //        @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
 //})
-public abstract class AbstractBaseEntityObject<ID extends Serializable>
-        implements BaseEntityObject<ID> {
+public abstract class AbstractBaseEntityObject
+        implements BaseEntityObject {
 
     private static final long serialVersionUID = -123456789L;
 

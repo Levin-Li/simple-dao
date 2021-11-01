@@ -18,8 +18,8 @@ import javax.persistence.Id;
 @Accessors(chain = true)
 @FieldNameConstants
 public class Group
-        extends AbstractTreeObject<Long, Group>
-        implements StatefulObject<String> {
+        extends AbstractTreeObject<Group, Group>
+        implements StatefulObject {
 
     @Id
     @GeneratedValue
@@ -36,10 +36,6 @@ public class Group
     @Desc("分数")
     Integer score;
 
-
-    public Group(String name, Long parentId) {
-        super(name, parentId);
-    }
 
     public Group() {
     }
