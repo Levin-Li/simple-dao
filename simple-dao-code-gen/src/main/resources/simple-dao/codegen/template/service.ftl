@@ -15,11 +15,13 @@ import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
 
-import static ${modulePackageName}.*;
+import ${modulePackageName}.*;
+import ${modulePackageName}.entities.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
+
 /**
- *  ${desc}服务
+ *  ${desc}-服务接口
  *  @author Auto gen by simple-dao-codegen ${.now}
  */
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)

@@ -43,7 +43,7 @@ import ${field.infoClassName};
 ////////////////////////////////////
 
 /**
- *  ${desc}服务实现
+ *  ${desc}-服务实现
  *
  *@author auto gen by simple-dao-codegen ${.now}
  *

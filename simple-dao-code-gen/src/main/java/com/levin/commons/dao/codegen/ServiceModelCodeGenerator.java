@@ -705,22 +705,21 @@ public final class ServiceModelCodeGenerator {
 
         final String serviceName = entityClass.getSimpleName() + "Service";
 
-        genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName);
+        final Consumer<Map<String, Object>> setVars = params -> {
+            params.put("servicePackageName", pkgName);
+            params.put("serviceName", serviceName);
+            params.putAll(paramsMap);
+            params.put("isService", true);
+        };
 
+        genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName, setVars);
 
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
         serviceClassNameList(serviceName);
 
-        genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
-                , params -> {
-                    params.put("servicePackageName", pkgName);
-                    params.put("serviceName", serviceName);
-                    params.putAll(paramsMap);
-                    params.put("isService", true);
-                });
-
+        genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl", setVars);
 
     }
 
@@ -734,12 +733,10 @@ public final class ServiceModelCodeGenerator {
             params.put("isController", true);
         };
 
-
         //加入控制器类
         controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
-
 
     }
 
@@ -807,6 +804,8 @@ public final class ServiceModelCodeGenerator {
                 : entityClass.getSimpleName();
 
         Map<String, Object> params = new LinkedHashMap<>();
+
+        params.put("modulePackageName", modulePackageName());
 
         params.put("entityClassPackage", entityClass.getPackage().getName());
         params.put("entityClassName", entityClass.getName());
