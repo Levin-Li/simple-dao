@@ -15,7 +15,7 @@ import javax.persistence.*;
  * <p>
  * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name =TableOption.PREFIX +  "exam_users")
+@Entity(name =EntityOption.PREFIX +  "exam_users")
 @Data
 @Accessors(chain = true)
 @ToString(exclude = "group")

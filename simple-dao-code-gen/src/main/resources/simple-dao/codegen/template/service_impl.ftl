@@ -1,6 +1,7 @@
 package ${packageName};
 
 import static ${modulePackageName}.ModuleOption.*;
+import static ${entityClassPackage}.EntityOption.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.tags.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -52,12 +54,13 @@ import ${field.infoClassName};
 @Service(PLUGIN_PREFIX + "${serviceName}")
 @Slf4j
 //@Validated
+@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 public class ${className} implements ${serviceName} {
 
     @Autowired
     private SimpleDao simpleDao;
 
-    @Operation(tags = {ENTITY_NAME}, summary = "新增" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = CREATE_ACTION + ENTITY_NAME)
     @Override
 <#if pkField?exists>
     public ${pkField.typeName} create(Create${entityName}Req req){
@@ -82,7 +85,7 @@ public class ${className} implements ${serviceName} {
 </#if>
     }
 
-    @Operation(tags = {ENTITY_NAME}, summary = "批量新增" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = BATCH_CREATE_ACTION + ENTITY_NAME)
     @Transactional(rollbackFor = Exception.class)
     @Override
 <#if pkField?exists>
@@ -94,33 +97,33 @@ public class ${className} implements ${serviceName} {
     }
 
 <#if pkField?exists>
-    @Operation(tags = {ENTITY_NAME}, summary = "通过ID找回" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = VIEW_DETAIL_ACTION + ENTITY_NAME)
     @Override
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
 </#if>
 
-    @Operation(tags = {ENTITY_NAME}, summary = "更新" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = UPDATE_ACTION + ENTITY_NAME)
     @Override
     public int update(Update${entityName}Req req) {
         return simpleDao.updateByQueryObj(req);
     }
 
-    @Operation(tags = {ENTITY_NAME}, summary = "批量更新" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = BATCH_UPDATE_ACTION + ENTITY_NAME)
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<Integer> batchUpdate(List<Update${entityName}Req> reqList){
         return reqList.stream().map(this::update).collect(Collectors.toList());
     }
 
-    @Operation(tags = {ENTITY_NAME}, summary = "删除" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = DELETE_ACTION + ENTITY_NAME)
     @Override
     public int delete(Delete${entityName}Req req) {
         return simpleDao.deleteByQueryObj(req);
     }
 
-    @Operation(tags = {ENTITY_NAME}, summary = "分页查找" + ENTITY_NAME)
+    @Operation(tags = {ENTITY_NAME}, summary = QUERY_ACTION + ENTITY_NAME)
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
         return simpleDao.findPagingDataByQueryObj(req, paging);
