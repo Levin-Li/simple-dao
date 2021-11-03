@@ -50,7 +50,7 @@ import static ${entityClassPackage}.EntityConst.*;
 @Valid
 public class ${className} extends BaseController{
 
-    private static final String ENTITY_NAME = E_${entityName}.BIZ_NAME;
+    private static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
     @Autowired
     ${serviceName} ${serviceName?uncap_first};
@@ -62,7 +62,7 @@ public class ${className} extends BaseController{
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(tags = {ENTITY_NAME}, summary = QUERY_ACTION + ENTITY_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION + BIZ_NAME)
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
@@ -74,7 +74,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping
-    @Operation(tags = {ENTITY_NAME}, summary = CREATE_ACTION + ENTITY_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION + BIZ_NAME)
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(@RequestBody Create${entityName}Req req) {
 <#else>
@@ -83,7 +83,7 @@ public class ${className} extends BaseController{
    <#if pkField?exists>
         return ApiResp.ok(${serviceName?uncap_first}.create(req));
     <#else>
-        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error(CREATE_ACTION + ENTITY_NAME + "失败");
+        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error(CREATE_ACTION + BIZ_NAME + "失败");
     </#if>
     }
 
@@ -94,7 +94,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping("/batchCreate")
-    @Operation(tags = {ENTITY_NAME}, summary = BATCH_CREATE_ACTION + ENTITY_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION + BIZ_NAME)
 <#if pkField?exists>
     public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 <#else>
@@ -110,7 +110,7 @@ public class ${className} extends BaseController{
     * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{${pkField.name}}")
-    @Operation(tags = {ENTITY_NAME}, summary = VIEW_DETAIL_ACTION + ENTITY_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION + BIZ_NAME)
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
          return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
@@ -121,18 +121,18 @@ public class ${className} extends BaseController{
      * @param ${pkField.name} ${pkField.typeName}
      */
      @PutMapping({"" , "/{${pkField.name}}"})
-     @Operation(tags = {ENTITY_NAME}, summary = UPDATE_ACTION + ENTITY_NAME)
+     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + BIZ_NAME)
      public ApiResp<Void> update(@PathVariable ${pkField.typeName} ${pkField.name} , @RequestBody Update${entityName}Req req) {
          //路径参数优先使用
          if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
-         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + ENTITY_NAME + "失败");
+         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
      * 批量更新
      */
      @PutMapping("/batchUpdate")
-     @Operation(tags = {ENTITY_NAME}, summary = BATCH_UPDATE_ACTION + ENTITY_NAME)
+     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION + BIZ_NAME)
      public ApiResp<List<Integer>> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
     }
@@ -142,10 +142,10 @@ public class ${className} extends BaseController{
      * @param ${pkField.name} ${pkField.typeName}
      */
     @DeleteMapping({"" , "/{${pkField.name}}"})
-    @Operation(tags = {ENTITY_NAME}, summary = DELETE_ACTION + ENTITY_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
     public ApiResp<Void> delete(@PathVariable ${pkField.typeName} ${pkField.name} , Delete${entityName}Req req) {
         //路径参数优先使用
         if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
-        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + ENTITY_NAME + "失败");
+        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
     }
 }
