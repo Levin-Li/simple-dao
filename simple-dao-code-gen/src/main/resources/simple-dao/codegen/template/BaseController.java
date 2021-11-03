@@ -32,6 +32,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  * @author lilw
  */
 @Slf4j
+//默认需要权限访问
 @ResAuthorize(domain = ID, type = TYPE_NAME)
 public abstract class BaseController {
 

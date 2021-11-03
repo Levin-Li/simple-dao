@@ -44,7 +44,7 @@ import static ${entityClassPackage}.EntityConst.*;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "${className}", havingValue = "false", matchIfMissing = true)
 @RequestMapping(API_PATH + "${entityName?lower_case}")
 //默认需要权限访问
-@ResAuthorize(domain = ID, type = TYPE_NAME)
+//@ResAuthorize(domain = ID, type = TYPE_NAME)
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Slf4j
 @Valid
