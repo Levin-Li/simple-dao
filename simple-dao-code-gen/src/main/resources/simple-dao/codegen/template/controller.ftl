@@ -24,7 +24,7 @@ import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
 import static ${modulePackageName}.ModuleOption.*;
-import static ${entityClassPackage}.EntityOption.*;
+import static ${entityClassPackage}.EntityConst.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -43,7 +43,8 @@ import static ${entityClassPackage}.EntityOption.*;
 @RestController(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "${className}", havingValue = "false", matchIfMissing = true)
 @RequestMapping(API_PATH + "${entityName?lower_case}")
-
+//默认需要权限访问
+@ResAuthorize(domain = ID, type = TYPE_NAME)
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Slf4j
 @Valid

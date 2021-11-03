@@ -5,25 +5,26 @@ package ${CLASS_PACKAGE_NAME};
  * <p>
  * eg.
  * <p>
- * //@Entity(name = EntityOption.PREFIX + "exam_tasks")
- * //@Table(name = EntityOption.PREFIX + "exam_tasks")
+ * //@Entity(name = EntityConst.PREFIX + "exam_tasks")
+ * //@Table(name = EntityConst.PREFIX + "exam_tasks")
  * //Auto gen by simple-dao-codegen ${now}
  */
-public interface EntityOption {
+public interface EntityConst {
 
     /**
      * JPA/Hibernate table name prefix
      */
     String PREFIX = "${modulePackageName}-";
 
-
-    String MAINTAIN_ACTION = "管理";
+    /**
+     *
+     */
+    String TYPE_NAME = "实体";
 
     /**
      *
      */
-    String CREATE_ACTION = "新增";
-    String BATCH_CREATE_ACTION = "批量新增";
+    String MAINTAIN_ACTION = "管理";
 
     /**
      *
@@ -38,6 +39,12 @@ public interface EntityOption {
     /**
      *
      */
+    String CREATE_ACTION = "新增";
+    String BATCH_CREATE_ACTION = "批量新增";
+
+    /**
+     *
+     */
     String UPDATE_ACTION = "更新";
     String BATCH_UPDATE_ACTION = "批量更新";
 
@@ -47,4 +54,4 @@ public interface EntityOption {
     String DELETE_ACTION = "删除";
     String BATCH_DELETE_ACTION = "批量删除";
 
-}
+ }

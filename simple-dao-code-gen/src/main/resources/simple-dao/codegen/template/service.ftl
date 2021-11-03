@@ -15,7 +15,7 @@ import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
 
-import static ${entityClassPackage}.EntityOption.*;
+import static ${entityClassPackage}.EntityConst.*;
 
 /**
  *  ${desc}服务

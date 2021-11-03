@@ -1,9 +1,10 @@
 package ${modulePackageName}.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.levin.commons.rbac.*;
+import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.tags.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.*;
@@ -20,6 +21,7 @@ import javax.validation.constraints.*;
 import ${modulePackageName}.*;
 
 import static ${modulePackageName}.ModuleOption.*;
+import static ${entityClassPackage}.EntityConst.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -30,6 +32,7 @@ import static ${modulePackageName}.ModuleOption.*;
  * @author lilw
  */
 @Slf4j
+@ResAuthorize(domain = ID, type = TYPE_NAME)
 public abstract class BaseController {
 
     @Resource

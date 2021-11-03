@@ -14,7 +14,7 @@ import javax.persistence.*;
  * <p>
  * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name =EntityOption.PREFIX +  "exam_tasks")
+@Entity(name =EntityConst.PREFIX +  "exam_tasks")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
