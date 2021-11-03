@@ -24,7 +24,7 @@ import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
 import static ${modulePackageName}.ModuleOption.*;
-import static ${entityClassPackage}.EntityConst.*;
+import static ${modulePackageName}.entities.EntityConst.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
