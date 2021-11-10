@@ -60,16 +60,16 @@ public class ${className} implements ServiceReq {
 
     @Schema(description = "${pkField.desc}集合")
     @In(E_${entityName}.${pkField.name})
-    @Validator(expr = "${pkField.name} != null || ( ${pkField.name}s != null &&  ${pkField.name}s.length > 0)" , promptInfo = "删除${desc}必须指定ID")
-    private ${pkField.typeName}[] ${pkField.name}s;
+    @Validator(expr = "${pkField.name} != null || ( ${pkField.name}List != null &&  ${pkField.name}List.length > 0)" , promptInfo = "删除${desc}必须指定ID")
+    private ${pkField.typeName}[] ${pkField.name}List;
 
 
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 
-    public ${className}(${pkField.typeName}... ${pkField.name}s) {
-        this.${pkField.name}s = ${pkField.name}s;
+    public ${className}(${pkField.typeName}... ${pkField.name}List) {
+        this.${pkField.name}List = ${pkField.name}List;
     }
 </#if>
 }

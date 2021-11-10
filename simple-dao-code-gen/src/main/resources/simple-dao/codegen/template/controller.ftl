@@ -118,13 +118,11 @@ public class ${className} extends BaseController{
 
     /**
      * 更新
-     * @param ${pkField.name} ${pkField.typeName}
+     * @param req Update${entityName}Req
      */
-     @PutMapping({"" , "/{${pkField.name}}"})
+     @PutMapping({""})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + BIZ_NAME)
-     public ApiResp<Void> update(@PathVariable(required = false) ${pkField.typeName} ${pkField.name} , @RequestBody Update${entityName}Req req) {
-         //路径参数优先使用
-         if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
+     public ApiResp<Void> update(@RequestBody Update${entityName}Req req) {
          return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + BIZ_NAME + "失败");
     }
 
@@ -141,11 +139,22 @@ public class ${className} extends BaseController{
      * 删除
      * @param ${pkField.name} ${pkField.typeName}
      */
-    @DeleteMapping({"" , "/{${pkField.name}}"})
+    @DeleteMapping({"/{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
-    public ApiResp<Void> delete(@PathVariable(required = false) ${pkField.typeName} ${pkField.name} , Delete${entityName}Req req) {
-        //路径参数优先使用
-        if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
-        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
+    public ApiResp<Void> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
+        return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name})) > 0
+                                                ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
     }
+
+    /**
+     * 批量删除
+     * @param ${pkField.name}List ${pkField.typeName}[]
+     */
+    @DeleteMapping({"/batchDelete"})
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
+    public ApiResp<Void> batchDelete(@NotNull ${pkField.typeName}[] ${pkField.name}List) {
+        return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)) > 0
+                                                    ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
+    }  
+
 }
