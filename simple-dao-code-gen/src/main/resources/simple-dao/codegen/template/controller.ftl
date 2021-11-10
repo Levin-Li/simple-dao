@@ -151,7 +151,7 @@ public class ${className} extends BaseController{
      * @param ${pkField.name}List ${pkField.typeName}[]
      */
     @DeleteMapping({"/batchDelete"})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION + BIZ_NAME)
     public ApiResp<Void> batchDelete(@NotNull ${pkField.typeName}[] ${pkField.name}List) {
         return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)) > 0
                                                     ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
