@@ -122,7 +122,7 @@ public class ${className} extends BaseController{
      */
      @PutMapping({"" , "/{${pkField.name}}"})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + BIZ_NAME)
-     public ApiResp<Void> update(@PathVariable ${pkField.typeName} ${pkField.name} , @RequestBody Update${entityName}Req req) {
+     public ApiResp<Void> update(@PathVariable(required = false) ${pkField.typeName} ${pkField.name} , @RequestBody Update${entityName}Req req) {
          //路径参数优先使用
          if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
          return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + BIZ_NAME + "失败");
@@ -143,7 +143,7 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"" , "/{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
-    public ApiResp<Void> delete(@PathVariable ${pkField.typeName} ${pkField.name} , Delete${entityName}Req req) {
+    public ApiResp<Void> delete(@PathVariable(required = false) ${pkField.typeName} ${pkField.name} , Delete${entityName}Req req) {
         //路径参数优先使用
         if (isNotEmpty(${pkField.name})) { req.set${pkField.name?cap_first}(${pkField.name}); }
         return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
