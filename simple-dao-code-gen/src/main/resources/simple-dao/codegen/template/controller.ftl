@@ -148,7 +148,7 @@ public class ${className} extends BaseController{
 
     /**
      * 批量删除
-     * @param ${pkField.name}List ${pkField.typeName}[]
+     * @param req Delete${entityName}Req
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION + BIZ_NAME)
