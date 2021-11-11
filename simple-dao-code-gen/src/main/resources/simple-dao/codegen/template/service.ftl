@@ -58,7 +58,7 @@ public interface ${className} {
 
     //尽量不用调用批量删除，会导致缓存清空
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION + BIZ_NAME)
-    @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true),
+    @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true)
     List<Integer> batchUpdate(List<Update${entityName}Req> reqList);
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
