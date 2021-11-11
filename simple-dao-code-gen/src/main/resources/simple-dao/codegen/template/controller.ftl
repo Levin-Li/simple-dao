@@ -152,9 +152,9 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION + BIZ_NAME)
-    public ApiResp<Void> batchDelete(@NotNull ${pkField.typeName}[] ${pkField.name}List) {
-        return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)) > 0
-                                                    ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
+    public ApiResp<Void> batchDelete(@NotNull Delete${entityName}Req req) {
+        //new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)
+        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
     }  
 
 }

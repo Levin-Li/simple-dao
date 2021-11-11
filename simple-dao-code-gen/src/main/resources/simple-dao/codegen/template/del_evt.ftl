@@ -55,9 +55,11 @@ public class ${className} implements ServiceReq {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = "${pkField.desc}")
+    @OR
+    @Schema(description = "${pkField.desc}" , hidden = true)
     private ${pkField.typeName} ${pkField.name};
 
+    @END
     @Schema(description = "${pkField.desc}集合")
     @In(E_${entityName}.${pkField.name})
     @Validator(expr = "${pkField.name} != null || ( ${pkField.name}List != null &&  ${pkField.name}List.length > 0)" , promptInfo = "删除${desc}必须指定ID")
