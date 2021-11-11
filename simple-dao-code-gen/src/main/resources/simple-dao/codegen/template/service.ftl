@@ -26,7 +26,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  */
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 
-@CacheConfig(cacheNames = {ModuleOption.ID})
+@CacheConfig(cacheNames = {ModuleOption.ID_PREFIX + E_${entityName}.SIMPLE_CLASS_NAME})
 public interface ${className} {
 
     String BIZ_NAME = E_${entityName}.BIZ_NAME;
@@ -56,11 +56,16 @@ public interface ${className} {
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_User.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     int update(Update${entityName}Req req);
 
+    //尽量不用调用批量删除，会导致缓存清空
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION + BIZ_NAME)
+    @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true),
     List<Integer> batchUpdate(List<Update${entityName}Req> reqList);
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
-    @CacheEvict(condition = "#req.${pkField.name} != null", key = E_User.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    @Caching(evict = {  //尽量不用调用批量删除，会导致缓存清空
+        @CacheEvict(condition = "#req.${pkField.name} != null", key = E_User.CACHE_KEY_PREFIX + "#req.${pkField.name}"),
+        @CacheEvict(condition = "#req.${pkField.name}List != null && #req.${pkField.name}List.length > 0", allEntries = true),
+    })
     int delete(Delete${entityName}Req req);
 
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION + BIZ_NAME)
