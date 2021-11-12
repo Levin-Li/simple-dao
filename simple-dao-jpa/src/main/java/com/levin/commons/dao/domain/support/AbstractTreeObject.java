@@ -16,25 +16,25 @@ import java.util.Set;
 @Accessors(chain = true)
 @FieldNameConstants
 @MappedSuperclass
-public abstract class AbstractTreeObject<P extends Identifiable, C extends Identifiable>
+public abstract class AbstractTreeObject<ID extends Serializable, T extends Identifiable>
         extends AbstractNamedEntityObject
-        implements TreeObject<P, C>, Serializable {
+        implements TreeObject<T, T>, Serializable {
 
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "父ID")
-    protected Serializable parentId;
+    protected ID parentId;
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parentId", insertable = false, updatable = false)
-    protected P parent;
+    protected T parent;
 
     @Schema(description = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
     @OrderBy(value = " orderCode ASC , name  ASC ")
     //@Fetch(value = FetchMode.JOIN)
-    protected Set<C> children;
+    protected Set<T> children;
 
     @Schema(description = "id路径， 使用|包围，如|1|3|15|")
     @Column(length = 1800)
@@ -43,12 +43,12 @@ public abstract class AbstractTreeObject<P extends Identifiable, C extends Ident
     protected AbstractTreeObject() {
     }
 
-    protected AbstractTreeObject(Serializable parentId, String name) {
+    protected AbstractTreeObject(ID parentId, String name) {
         this.parentId = parentId;
         this.name = name;
     }
 
-    public void setParent(P parent) {
+    public void setParent(T parent) {
 
         if (parent == null) {
             this.parent = null;
