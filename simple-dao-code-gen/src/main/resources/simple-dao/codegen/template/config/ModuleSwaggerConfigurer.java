@@ -6,6 +6,7 @@ import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
 
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @Slf4j
+@ConditionalOnClass({Docket.class})
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleSwaggerConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
