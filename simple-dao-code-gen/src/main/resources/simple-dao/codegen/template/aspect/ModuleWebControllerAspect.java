@@ -16,10 +16,12 @@ import org.aspectj.lang.reflect.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.*;
 
 import java.lang.reflect.Method;
@@ -32,16 +34,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
-    @Autowired
+
+    @Resource
+    ApplicationContext context;
+
+    @Resource
     VariableInjector variableInjector;
 
-    @Autowired
+    @Resource
     VariableResolverManager variableResolverManager;
 
-    @Autowired
+    @Resource
     HttpServletRequest request;
 
-    @Autowired
+    @Resource
     HttpServletResponse response;
 
     @Value("${r"$"}{" + PLUGIN_PREFIX + "logHttp:true}")
