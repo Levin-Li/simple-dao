@@ -49,9 +49,18 @@ public class ModuleWebControllerAspect {
 
     final AtomicBoolean enableHttpLog = new AtomicBoolean(false);
 
+    /**
+     * 存储本模块的变量解析器
+     */
+    private List<VariableResolver> resolverList = null;
+
     @PostConstruct
     void init() {
-        enableHttpLog.set(enableLog);
+
+        this.enableHttpLog.set(enableLog);
+
+        //只找出本模块的解析器
+        this.resolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
     }
 
     /**
@@ -107,6 +116,7 @@ public class ModuleWebControllerAspect {
                     .filter(Objects::nonNull)
                     .forEachOrdered(arg -> {
                         variableInjector.injectByVariableResolver(arg
+                                , () -> resolverList
                                 , () -> variableResolverManager.getVariableResolvers());
                     });
         });
