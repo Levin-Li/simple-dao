@@ -62,7 +62,7 @@ public class ${className} extends BaseController{
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
@@ -74,7 +74,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping
-    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(@RequestBody Create${entityName}Req req) {
 <#else>
@@ -94,7 +94,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping("/batchCreate")
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION)
 <#if pkField?exists>
     public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 <#else>
@@ -110,7 +110,7 @@ public class ${className} extends BaseController{
     * @param ${pkField.name} ${pkField.typeName}
     */
     @GetMapping("/{${pkField.name}}")
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
          return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
@@ -121,7 +121,7 @@ public class ${className} extends BaseController{
      * @param req Update${entityName}Req
      */
      @PutMapping({""})
-     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + BIZ_NAME)
+     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
      public ApiResp<Void> update(@RequestBody Update${entityName}Req req) {
          return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + BIZ_NAME + "失败");
     }
@@ -130,7 +130,7 @@ public class ${className} extends BaseController{
      * 批量更新
      */
      @PutMapping("/batchUpdate")
-     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION + BIZ_NAME)
+     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
      public ApiResp<List<Integer>> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
     }
@@ -140,7 +140,7 @@ public class ${className} extends BaseController{
      * @param ${pkField.name} ${pkField.typeName}
      */
     @DeleteMapping({"/{${pkField.name}}"})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     public ApiResp<Void> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
         return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name})) > 0
                                                 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
@@ -151,7 +151,7 @@ public class ${className} extends BaseController{
      * @param req Delete${entityName}Req
      */
     @DeleteMapping({"/batchDelete"})
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
     public ApiResp<Void> batchDelete(@NotNull Delete${entityName}Req req) {
         //new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)
         return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
