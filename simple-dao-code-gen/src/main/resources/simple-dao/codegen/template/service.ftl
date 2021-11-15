@@ -48,12 +48,12 @@ public interface ${className} {
 <#if pkField?exists>
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     //Srping 4.3提供了一个sync参数。是当缓存失效后，为了避免多个请求打到数据库,系统做了一个并发控制优化，同时只有一个线程会去数据库取数据其它线程会被阻塞。
-    @Cacheable(sync = false, condition = "#${pkField.name} != null", unless = "#result == null ", key = E_User.CACHE_KEY_PREFIX + "#${pkField.name}")
+    @Cacheable(sync = false, condition = "#${pkField.name} != null", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 </#if>
 
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
-    @CacheEvict(condition = "#req.${pkField.name} != null", key = E_User.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     int update(Update${entityName}Req req);
 
     //尽量不用调用批量删除，会导致缓存清空
@@ -63,7 +63,7 @@ public interface ${className} {
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     @Caching(evict = {  //尽量不用调用批量删除，会导致缓存清空
-        @CacheEvict(condition = "#req.${pkField.name} != null", key = E_User.CACHE_KEY_PREFIX + "#req.${pkField.name}"),
+        @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}"),
         @CacheEvict(condition = "#req.${pkField.name}List != null && #req.${pkField.name}List.length > 0", allEntries = true),
     })
     int delete(Delete${entityName}Req req);
