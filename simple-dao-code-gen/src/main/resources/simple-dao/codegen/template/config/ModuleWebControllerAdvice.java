@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,6 +34,7 @@ import java.text.SimpleDateFormat;
  */
 @Slf4j
 @Component(PLUGIN_PREFIX + "ModuleWebControllerAdvice")
+@ConditionalOnMissingBean(name = {PLUGIN_PREFIX + "ModuleWebControllerAdvice"})
 @RestControllerAdvice(PACKAGE_NAME)
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAdvice", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAdvice {
@@ -74,5 +76,28 @@ public class ModuleWebControllerAdvice {
 //        logger.error("application error", e);
 //        return result;
 //    }
+
+
+    @ExceptionHandler({AccessDeniedException.class,})
+    public ApiResp onAccessDeniedException(Exception e) {
+        return ApiResp.error(2, "访问异常：" + e.getMessage()).setHttpStatusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class})
+    public ApiResp onParameterException(Exception e) {
+        return ApiResp.error(9, "请求参数异常：" + e.getMessage()).setHttpStatusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @ExceptionHandler(ServiceException.class)
+    public ApiResp onServiceException(Exception e) {
+        return ApiResp.error(10, "服务异常：" +e.getMessage()).setHttpStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
+    @ExceptionHandler(Exception.class)
+    public ApiResp onUnknownException(Exception e) {
+        return ApiResp.error(99, e.getMessage()).setHttpStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
 
 }
