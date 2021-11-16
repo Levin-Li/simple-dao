@@ -129,6 +129,12 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-spring-boot-starter</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'testcase' >
@@ -162,6 +168,11 @@
             <dependency>
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-boot-starter</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-spring-boot-starter</artifactId>
             </dependency>
 
             <dependency>
