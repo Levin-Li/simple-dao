@@ -57,13 +57,13 @@ public class ${className} implements ServiceReq  {
 <#list fields as field>
 
     <#if field.typeName == 'Date'>
-    @Schema(description = "最小${field.desc}")
-    @Gte(E_${entityName}.${field.name})
-    private ${field.typeName} min${field.name?cap_first};
+    @Schema(description = "大于等于${field.desc}")
+    @Gte
+    private ${field.typeName} gte${field.name?cap_first};
 
-    @Schema(description = "最大${field.desc}")
-    @Lte(E_${entityName}.${field.name})
-    private ${field.typeName} max${field.name?cap_first};
+    @Schema(description = "小于等于${field.desc}")
+    @Lte
+    private ${field.typeName} lte${field.name?cap_first};
 
     <#elseif field.baseType>
     @Schema(description = "${field.desc}")

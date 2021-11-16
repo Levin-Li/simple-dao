@@ -130,8 +130,8 @@ public class ${className} {
 
 <#list fields as field>
     <#if field.typeName=='Date'>
-        // req.setMin${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
-        // req.setMax${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
+        // req.setGte${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
+        // req.setLte${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
     <#elseif !field.jpaEntity && field.baseType>
         // req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
     <#elseif field.lazy!>
