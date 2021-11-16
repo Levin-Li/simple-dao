@@ -47,18 +47,26 @@ public class PagingData<T> implements PageableData<T>, Serializable {
     @Schema(description = "扩展数据")
     Map<String, Object> extra;
 
-
     @Ignore
     @Schema(description = "分页Token")
     String pageToken;
 
-    @Ignore
-    @Schema(description = "是否有更多")
-    boolean hasMore;
+//    @Ignore
+//    @Schema(description = "是否有更多")
+//    boolean hasMore;
+
+    /**
+     * java bean 规范，boolean 变量 用 is 做为前缀
+     *
+     * @return
+     */
+    public boolean isHasMore() {
+        return (pageSize != null && items != null && items.size() >= pageSize);
+    }
 
     @Override
     public boolean hasMore() {
-        return hasMore || (pageSize != null && items != null && items.size() >= pageSize);
+        return isHasMore();
     }
 
     @Transient
