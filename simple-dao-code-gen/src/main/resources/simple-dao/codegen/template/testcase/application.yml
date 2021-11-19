@@ -41,6 +41,7 @@ spring:
     show-sql: false
     generate-ddl: true
     database: H2
+    #关闭视图事务，避免jpa 出现 N + 1 查询
     open-in-view: false
     hibernate:
       ddl-auto: update

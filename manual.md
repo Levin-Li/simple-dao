@@ -1027,7 +1027,26 @@ Dao 类逻辑框图，如下图所示。
        String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
         
     
-### 11  避免 N + 1 查询         
+### 11  避免 N + 1 查询        
+
+
+#### 前置提示
+
+   禁用spring boot 视图事务，设置 open-in-view: false，如下：
+
+      jpa:
+        show-sql: false
+        generate-ddl: true
+        database: H2
+        #关闭视图事务，避免jpa 出现 N + 1 查询
+        open-in-view: false
+        hibernate:
+          ddl-auto: update
+          naming:
+            #模块表名前缀映射类，重要
+            physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
+   
+          
 
 #### 11.1 通过实体配置立刻抓取
 
@@ -1063,20 +1082,20 @@ Dao 类逻辑框图，如下图所示。
 #### 11.3 通过注解抓取
   
    查询对象和结果对象都可以增加抓取注解，通过 [Fetch](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/misc/Fetch.java) 注解实现。
-   注意：如果在结果对象上使用这个注解，需要设置注解的 onlyForQueryObject 为 false，才会生效。
+   注意：如果在结果对象上使用这个注解，需要设置注解的 isBindToField 为 false，才会生效。
   
   
         @Data
         @Accessors(chain = true)
         public class UserInfo {
       
-            @Fetch //设置立刻抓取 避免 N+1 查询 ，没有设置 onlyForQueryObject = false 该注解无效 
+            @Fetch //设置立刻抓取 避免 N+1 查询 ，没有设置 isBindToField = true 该注解无效 
             Group group;
         
-            @Fetch(value = "group.name" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.name" ,isBindToField = true ) //设置立刻抓取 避免 N+1 查询 
             String groupName;
         
-            @Fetch(value = "group.children" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.children" ,isBindToField = true ) //设置立刻抓取 避免 N+1 查询 
             Collection<Group> parentChildren;
         
         }      

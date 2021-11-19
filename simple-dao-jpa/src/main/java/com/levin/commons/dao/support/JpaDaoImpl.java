@@ -505,7 +505,7 @@ public class JpaDaoImpl
 //        }
 //    }
 
-    protected <E> E tryConvertToEntityObject(Object entityOrDto,boolean isInitPrePersistMethod) {
+    protected <E> E tryConvertToEntityObject(Object entityOrDto, boolean isInitPrePersistMethod) {
 
         if (entityOrDto == null) {
             throw new PersistenceException("persist object is null");
@@ -523,10 +523,14 @@ public class JpaDaoImpl
                 //执行初始化方法
                 com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
 
-                if(isInitPrePersistMethod) {
+                if (isInitPrePersistMethod) {
                     //执行初始化方法
                     com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
                 }
+
+//                if (countByQueryObj(entityOrDto) > 0) {
+//                    throw new org.springframework.dao.DataIntegrityViolationException("数据已经存在");
+//                }
 
                 entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
             }
@@ -541,7 +545,7 @@ public class JpaDaoImpl
     @Transactional
     public <E> E create(Object entityOrDto) {
 
-        E entity = tryConvertToEntityObject(entityOrDto,true);
+        E entity = tryConvertToEntityObject(entityOrDto, true);
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
@@ -567,7 +571,7 @@ public class JpaDaoImpl
     @Transactional
     public <E> E save(Object entityOrDto) {
 
-        E entity = tryConvertToEntityObject(entityOrDto,true);
+        E entity = tryConvertToEntityObject(entityOrDto, true);
 
         EntityManager em = getEntityManager();
 
