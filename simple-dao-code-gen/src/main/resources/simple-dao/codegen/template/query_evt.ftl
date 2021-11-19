@@ -74,7 +74,7 @@ public class ${className} implements ServiceReq  {
     private ${field.typeName} ${field.name}Contains;
     </#if>
     <#elseif field.lazy!>
-    @Schema(description = "加载${field.desc}")
+    @Schema(description = "是否加载${field.desc}")
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     private Boolean load${field.name?cap_first};
     </#if>
