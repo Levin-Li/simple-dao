@@ -291,9 +291,9 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
-        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+//        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
+//        genFileByTemplate(fileName, params, String.join(File.separator,
+//                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
         fileName = String.join(File.separator, "aspect", "ModuleWebControllerAspect.java");

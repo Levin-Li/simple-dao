@@ -74,11 +74,13 @@
                 <scope>provided</scope>
             </dependency>
 
+            <#--
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-security</artifactId>
                 <scope>provided</scope>
             </dependency>
+            -->
 
         </#if>
 
@@ -236,10 +238,12 @@
                 <scope>test</scope>
             </dependency>
 
+        <#--
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-security</artifactId>
             </dependency>
+            -->
 
         </#if>
 
