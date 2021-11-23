@@ -20,46 +20,6 @@ import org.springframework.web.servlet.config.annotation.*;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
-    static class CorsOptionsInterceptor implements HandlerInterceptor {
-        @Override
-        public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
-            // 如果是OPTIONS
-            //Preflighted requests in CORS
-            boolean isCorsPreflightRequest =
-                    StringUtils.hasText(request.getHeader("Access-Control-Request-Method"))
-                            || StringUtils.hasText(request.getHeader("Access-Control-Request-Headers"));
-
-            if (isCorsPreflightRequest
-                    && HttpMethod.OPTIONS.toString().equals(request.getMethod())
-                    && request.getRequestURI().startsWith(API_PATH)) {
-
-                //跨域预检请求
-                //Access-Control-Max-Age: <delta-seconds>
-                //https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
-
-                response.setHeader("Access-Control-Allow-Credentials", "true");
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Expose-Headers", "*");
-                response.setHeader("Access-Control-Allow-Headers", "*");
-                response.setHeader("Access-Control-Allow-Methods", "*");
-
-                //Access-Control-Max-Age: <delta-seconds>
-                //一周的时间
-                response.setHeader("Access-Control-Max-Age", "" + 7 * 24 * 3600);
-
-                response.setStatus(HttpStatus.NO_CONTENT.value());
-
-                log.debug("跨域配置method:{}, requestURI:{}", request.getMethod(), request.getRequestURI());
-
-                return false;
-
-            }
-
-            return true;
-        }
-    }
-
     /**
      * 配置静态访问资源
      * spring boot 默认的{ "classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/" };
@@ -93,9 +53,6 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        //处理 OPTIONS 200 请求
-        //CORS预检请求处理
-        registry.addInterceptor(new CorsOptionsInterceptor());
 
         //https://sa-token.dev33.cn/
         // 注册路由拦截器，自定义认证规则
