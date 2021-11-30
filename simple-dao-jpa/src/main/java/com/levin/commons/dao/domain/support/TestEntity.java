@@ -6,6 +6,7 @@ import com.levin.commons.dao.domain.OrderableObject;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
@@ -18,6 +19,7 @@ import javax.persistence.Id;
 //@DynamicInsert
 //@DynamicUpdate
 @Data
+@EqualsAndHashCode(of = {E_TestEntity.id})
 @Accessors(chain = true)
 @FieldNameConstants
 @EntityOption(disableActions = {EntityOption.Action.LogicalDelete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
