@@ -137,14 +137,23 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
         boolean haveSwagger = org.springframework.util.ClassUtils.isPresent(docketClsName, getClass().getClassLoader());
 
         if (haveSwagger) {
+
             if (applicationContext.getBeanProvider(Class.forName(docketClsName)).stream().findAny().isPresent()) {
-                log.info("***** API文档： http://" + rootUrl + "/swagger-ui/index.html");
+
+                log.info("***** Swagger API文档： http://" + rootUrl + "/swagger-ui/index.html");
+
+                boolean haveKnife4j = org.springframework.util.ClassUtils.isPresent("com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j", getClass().getClassLoader());
+
+                if (haveKnife4j) {
+                    log.info("***** Knife4j API文档： http://" + rootUrl + "doc.html");
+                }
+
             } else {
                 log.warn("***** 当前项目没有配置 Swagger docket.");
                 getControllerUrls(rootUrl, true);
             }
         } else {
-            log.info("***** 当前项目没有引入 Swagger 组件，建议引入[io.springfox:springfox-boot-starter]组件");
+            log.info("***** 当前项目没有引入 Swagger 组件，建议引入[io.springfox:springfox-boot-starter] 或 [com.github.xiaoymin:knife4j-spring-boot-starter] 组件.");
             getControllerUrls(rootUrl, true);
         }
 
