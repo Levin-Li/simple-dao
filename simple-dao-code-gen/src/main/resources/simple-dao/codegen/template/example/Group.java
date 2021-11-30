@@ -1,7 +1,7 @@
 package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
-import com.levin.commons.dao.domain.support.AbstractTreeObject;
+import com.levin.commons.dao.domain.support.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -34,8 +34,7 @@ import javax.persistence.*;
 )
 
 public class Group
-        extends AbstractTreeObject<Long, Group>
-        implements StatefulObject<String> {
+        extends AbstractTreeObject<Long, Group> {
 
     @Id
     @GeneratedValue

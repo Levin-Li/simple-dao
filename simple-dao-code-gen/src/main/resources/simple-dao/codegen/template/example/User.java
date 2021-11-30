@@ -1,7 +1,7 @@
 package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
-import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
+import com.levin.commons.dao.domain.support.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.ToString;
@@ -36,8 +36,7 @@ import javax.persistence.*;
         }
 )
 public class User
-        extends AbstractNamedEntityObject<Long>
-        implements StatefulObject<String> {
+        extends AbstractNamedEntityObject {
 
     @Id
     @GeneratedValue
@@ -50,8 +49,8 @@ public class User
     Long groupId;
 
     @Schema(description = "组织")
-    @ManyToOne(fetch = FetchType.LAZY , insertable = false, updatable = false)
-    @JoinColumn(name = "groupId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "groupId" , insertable = false, updatable = false)
     Group group;
 
     @Schema(description = "职业")
