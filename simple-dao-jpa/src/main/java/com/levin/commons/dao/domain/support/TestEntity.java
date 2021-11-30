@@ -19,7 +19,7 @@ import javax.persistence.Id;
 //@DynamicInsert
 //@DynamicUpdate
 @Data
-@EqualsAndHashCode(of = {E_TestEntity.id})
+@EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
 @EntityOption(disableActions = {EntityOption.Action.LogicalDelete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
