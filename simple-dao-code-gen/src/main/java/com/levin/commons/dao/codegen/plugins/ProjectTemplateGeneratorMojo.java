@@ -92,6 +92,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("modulePackageName", modulePackageName)
                             .put("now", new Date().toString());
 
+            copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
             copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
             copyAndReplace(false, resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
