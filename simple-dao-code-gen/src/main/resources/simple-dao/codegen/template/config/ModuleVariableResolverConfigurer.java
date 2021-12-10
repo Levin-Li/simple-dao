@@ -80,7 +80,7 @@ public class ModuleVariableResolverConfigurer
      */
     @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
     @Order(2)
-    VariableResolver moduleDefaultModuleVariableResolver() {
+    VariableResolver defaultModuleVariableResolver() {
         return new VariableResolver.MapVariableResolver(this::getModuleContextVars);
     }
 

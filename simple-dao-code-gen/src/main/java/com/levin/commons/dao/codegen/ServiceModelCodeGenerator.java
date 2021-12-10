@@ -55,7 +55,9 @@ public final class ServiceModelCodeGenerator {
     public static final String CREATE_EVT_FTL = "create_evt.ftl";
     public static final String INFO_FTL = "info.ftl";
     public static final String CONTROLLER_FTL = "controller.ftl";
+
     public static final String POM_XML_FTL = "pom.xml.ftl";
+
 
 //    private static Set<Class> baseTypes = new HashSet<>();
 
@@ -115,6 +117,10 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
+
+        String template = "模块开发说明.md";
+
+        genFileByTemplate(template, params, mavenProject.getBasedir().getAbsolutePath() + File.separator + template);
 
         final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
