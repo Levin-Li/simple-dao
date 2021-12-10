@@ -117,10 +117,9 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
-
         String template = "模块开发说明.md";
 
-        genFileByTemplate(template, params, mavenProject.getBasedir().getAbsolutePath() + File.separator + template);
+        genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
 
         final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
