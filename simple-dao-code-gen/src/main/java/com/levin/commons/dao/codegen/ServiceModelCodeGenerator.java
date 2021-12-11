@@ -870,7 +870,7 @@ public final class ServiceModelCodeGenerator {
 
         //文件名
         params.put("fileName", file.getName());
-        params.put("templateFileName", template);
+        params.put("templateFileName", template.replace("\\", "/"));
 
         Writer hWriter = new OutputStreamWriter(new FileOutputStream(fileName), "utf-8");
 
@@ -1199,6 +1199,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static Template getTemplate(String templatePath) throws IOException {
+
+        //freemark 模板路径只支持正斜杠
+        templatePath = templatePath.replace("\\", "/").replace("//", "/");
+
         //创建一个合适的Configuration对象
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         DefaultObjectWrapper objectWrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28).build();
