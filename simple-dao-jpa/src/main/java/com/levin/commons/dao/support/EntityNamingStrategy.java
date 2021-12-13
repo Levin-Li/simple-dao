@@ -1,5 +1,6 @@
 package com.levin.commons.dao.support;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 表名和字段名命名策略
  */
+@Slf4j
 public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
 
     private final static Map<String, String> prefixMapping = new ConcurrentHashMap<>();
@@ -29,6 +31,7 @@ public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
         if (mappings != null) {
             for (Map<String, String> mapping : mappings) {
                 if (mapping != null) {
+                    log.info("Add table prefix mapping : {}", mapping);
                     prefixMapping.putAll(mapping);
                 }
             }
