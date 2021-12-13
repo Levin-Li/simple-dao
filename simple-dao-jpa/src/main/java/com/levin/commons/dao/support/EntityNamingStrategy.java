@@ -30,8 +30,8 @@ public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
 
         if (mappings != null) {
             for (Map<String, String> mapping : mappings) {
-                if (mapping != null) {
-                    log.info("Add table prefix mapping : {}", mapping);
+                if (mapping != null && !mapping.isEmpty()) {
+                    log.info("Add table prefix mapping : {} .", mapping);
                     prefixMapping.putAll(mapping);
                 }
             }

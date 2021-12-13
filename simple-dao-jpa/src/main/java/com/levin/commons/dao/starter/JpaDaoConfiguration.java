@@ -166,6 +166,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
 
         if (StringUtils.hasText(nameMappings)) {
 
+            log.info("*** {} : {}", TABLE_NAME_PREFIX_MAPPINGS, nameMappings);
+
             Arrays.stream(nameMappings.split(","))
                     .filter(StringUtils::hasText)
                     .map(it -> it.split("="))

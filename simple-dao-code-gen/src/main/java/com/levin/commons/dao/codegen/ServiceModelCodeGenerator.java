@@ -385,6 +385,7 @@ public final class ServiceModelCodeGenerator {
                     }
                 })
                 .filter(clazz -> clazz.isAnnotationPresent(javax.persistence.Entity.class))
+                .filter(clazz -> !clazz.isAnnotationPresent(Ignore.class))
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
@@ -451,8 +452,11 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
+
             entityClassList(clazz);
+
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
+
             try {
                 genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
             } catch (Exception e) {
