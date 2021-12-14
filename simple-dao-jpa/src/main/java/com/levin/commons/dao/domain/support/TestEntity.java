@@ -22,9 +22,9 @@ import javax.persistence.Id;
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
-@EntityOption(disableActions = {EntityOption.Action.LogicalDelete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
+@EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
 public class TestEntity
-        extends AbstractTreeObject<TestEntity, TestEntity>
+        extends AbstractTreeObject<Long, TestEntity>
         implements StatefulObject {
 
     @Id
