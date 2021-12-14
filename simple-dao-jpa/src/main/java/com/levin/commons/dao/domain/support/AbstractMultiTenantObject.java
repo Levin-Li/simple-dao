@@ -25,7 +25,7 @@ import javax.persistence.MappedSuperclass;
 @Schema(description = "抽象租户实体")
 
 @MappedSuperclass
-public abstract class AbstractMultiTenantEntity
+public abstract class AbstractMultiTenantObject
         extends AbstractBaseEntityObject
         implements MultiTenantObject {
 
