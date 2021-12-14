@@ -28,7 +28,7 @@ public abstract class AbstractBaseEntityObject
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "创建者")
-    @Column(length = 512)
+    @Column(length = 128)
     protected String creator;
 
     @Schema(description = "创建时间")
@@ -54,7 +54,7 @@ public abstract class AbstractBaseEntityObject
     protected Boolean editable;
 
     @Schema(description = "备注")
-    @Column(length = 1800)
+    @Column(length = 512)
     protected String remark;
 
     @PrePersist
