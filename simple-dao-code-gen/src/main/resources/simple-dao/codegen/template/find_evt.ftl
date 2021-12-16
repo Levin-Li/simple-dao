@@ -25,6 +25,7 @@ import ${entityClassName};
 
 import ${entityClassPackage}.*;
 
+import ${modulePackageName}.services.commons.req.*;
 
 ////////////////////////////////////
 //自动导入列表
@@ -49,7 +50,7 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
-public class ${className} implements ServiceReq {
+public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>

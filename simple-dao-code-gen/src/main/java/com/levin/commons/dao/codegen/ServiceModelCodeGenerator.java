@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.Like;
+import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.SecurityDomain;
@@ -54,7 +55,7 @@ public final class ServiceModelCodeGenerator {
     public static final String SERVICE_IMPL_FTL = "service_impl.ftl";
     public static final String CREATE_EVT_FTL = "create_evt.ftl";
     public static final String INFO_FTL = "info.ftl";
-    public static final String CONTROLLER_FTL = "controller.ftl";
+    public static final String CONTROLLER_FTL = "controller/controller.ftl";
 
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
@@ -440,15 +441,29 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
 
-        genFileByTemplate("BaseController.java",
+        genFileByTemplate("controller/BaseController.java",
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
                         + "controller" + File.separatorChar + "BaseController.java");
 
-        genFileByTemplate("BaseService.java",
+        genFileByTemplate("services/BaseService.java",
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
                         + "services" + File.separatorChar + "BaseService.java");
+
+        String fn = String.join(File.separator, "services", "commons", "req", "BaseReq.java");
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
+
+        fn = String.join(File.separator, "services", "commons", "req", "MultiTenantReq.java");
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
@@ -603,6 +618,7 @@ public final class ServiceModelCodeGenerator {
 
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
+                .put("isMultiTenantObject", MultiTenantObject.class.isAssignableFrom(entityClass))
                 .build();
 
         buildInfo(entityClass, fields, serviceDir, params);
@@ -674,11 +690,16 @@ public final class ServiceModelCodeGenerator {
         }
     }
 
-    private static void buildInfo(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> params) throws Exception {
+    private static void buildInfo(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+
+        final Consumer<Map<String, Object>> mapConsumer = (map) -> {
+            map.putAll(paramsMap);
+            map.put("fields", fields);
+        };
 
         genCode(entityClass, INFO_FTL, fields, srcDir,
                 servicePackage() + ".info",
-                entityClass.getSimpleName() + "Info");
+                entityClass.getSimpleName() + "Info", mapConsumer);
 
     }
 
@@ -688,7 +709,11 @@ public final class ServiceModelCodeGenerator {
 
         final String pkgName = servicePackage() + ".req";
 
-        final Consumer<Map<String, Object>> mapConsumer = (map) -> map.put("fields", fields);
+        final Consumer<Map<String, Object>> mapConsumer = (map) -> {
+            map.putAll(paramsMap);
+            map.put("servicePackageName", servicePackage());
+            map.put("fields", fields);
+        };
 
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
@@ -698,13 +723,11 @@ public final class ServiceModelCodeGenerator {
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
-                pkgName, "Delete" + entityClass.getSimpleName() + "Req");
+                pkgName, "Delete" + entityClass.getSimpleName() + "Req",mapConsumer);
 
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
-                pkgName, "Query" + entityClass.getSimpleName() + "Req", params -> {
-                    params.put("servicePackageName", servicePackage());
-                });
+                pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
     }
 
 

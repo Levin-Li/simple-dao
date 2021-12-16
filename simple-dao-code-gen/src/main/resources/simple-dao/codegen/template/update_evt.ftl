@@ -26,6 +26,7 @@ import java.util.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
 
+import ${modulePackageName}.services.commons.req.*;
 
 ////////////////////////////////////
 //自动导入列表
@@ -51,7 +52,7 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 //默认更新注解
 @Update
-public class ${className} implements ServiceReq {
+public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

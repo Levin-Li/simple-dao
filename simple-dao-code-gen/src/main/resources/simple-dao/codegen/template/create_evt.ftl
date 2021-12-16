@@ -25,7 +25,7 @@ import com.levin.commons.dao.annotation.misc.*;
 
 
 import ${entityClassPackage}.*;
-
+import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 //自动导入列表
 <#list importList as imp>
@@ -48,7 +48,7 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
-public class ${className} implements ServiceReq {
+public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

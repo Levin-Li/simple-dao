@@ -24,10 +24,6 @@ import java.util.concurrent.Executor;
 import ${clazz.name};
 </#list>
 
-<#list serviceClassList as clazzName>
-import ${clazzName};
-</#list>
-
 @Component(PLUGIN_PREFIX + "ModuleDataInitializer")
 @Slf4j
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
@@ -39,11 +35,6 @@ public class ModuleDataInitializer implements ApplicationContextAware, Applicati
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    <#list serviceClassNameList as serviceName>
-    @Autowired
-    ${serviceName} ${serviceName?uncap_first};
-
-    </#list>
 
     private ApplicationContext applicationContext;
 
