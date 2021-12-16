@@ -28,10 +28,6 @@ import java.util.*;
  */
 @Schema(description = "基本查询对象")
 @Data
-@NoArgsConstructor
-@Builder
-//@EqualsAndHashCode(callSuper = true)
-@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 public abstract class BaseReq implements ServiceReq  {

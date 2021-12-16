@@ -20,9 +20,6 @@ import lombok.experimental.FieldNameConstants;
  */
 @Schema(description = "多租户查询对象")
 @Data
-@NoArgsConstructor
-@Builder
-@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 public abstract class MultiTenantReq
