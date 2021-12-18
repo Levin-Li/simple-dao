@@ -3,6 +3,7 @@ package com.levin.commons.dao.codegen;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.Like;
 import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.SecurityDomain;
@@ -936,6 +937,7 @@ public final class ServiceModelCodeGenerator {
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
+        boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
 
         // Field.setAccessible(declaredFields, true);
 
@@ -969,6 +971,13 @@ public final class ServiceModelCodeGenerator {
                     && field.getName().equals("tenantId")) {
                 //多租户字段
                 logger.info("*** " + entityClass + " 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
+                continue;
+            }
+
+            if (isOrganizedObject
+                    && field.getName().equals("orgId")) {
+                //多租户字段
+                logger.info("*** " + entityClass + " 忽略组织字段 orgId : " + field + " --> " + fieldType);
                 continue;
             }
 

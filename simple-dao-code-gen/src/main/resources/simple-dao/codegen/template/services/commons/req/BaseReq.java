@@ -1,6 +1,8 @@
 package ${modulePackageName}.services.commons.req;
 
 
+import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.service.support.InjectConsts;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.dao.*;
@@ -30,7 +32,10 @@ import java.util.*;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public abstract class BaseReq implements ServiceReq  {
+public abstract class BaseReq implements OrganizedObject , ServiceReq  {
 
+    @Schema(description = "组织ID" , hidden = true)
+    @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
+    String orgId;
 
 }

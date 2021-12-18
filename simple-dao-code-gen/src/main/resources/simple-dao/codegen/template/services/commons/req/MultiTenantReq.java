@@ -24,14 +24,10 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 public abstract class MultiTenantReq
         extends BaseReq
-        implements MultiTenantObject, OrganizedObject {
+        implements MultiTenantObject {
 
-    @Schema(description = "租户ID")
+    @Schema(description = "租户ID" , hidden = true)
     @InjectVar(InjectConsts.TENANT_ID)
     String tenantId;
-
-    @Schema(description = "组织ID")
-    @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
-    String orgId;
 
 }
