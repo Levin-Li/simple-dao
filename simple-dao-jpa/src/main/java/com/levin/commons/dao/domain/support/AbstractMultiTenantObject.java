@@ -31,6 +31,6 @@ public abstract class AbstractMultiTenantObject
 
     @Schema(description = "租户ID")
     @Column(nullable = false)
-    String tenantId;
+    protected String tenantId;
 
 }

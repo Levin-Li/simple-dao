@@ -36,6 +36,6 @@ public abstract class BaseReq implements OrganizedObject , ServiceReq  {
 
     @Schema(description = "组织ID" , hidden = true)
     @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
-    String orgId;
+    protected String orgId;
 
 }
