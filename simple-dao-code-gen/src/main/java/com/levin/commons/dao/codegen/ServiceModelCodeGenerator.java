@@ -723,7 +723,7 @@ public final class ServiceModelCodeGenerator {
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
-                pkgName, "Delete" + entityClass.getSimpleName() + "Req",mapConsumer);
+                pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
@@ -935,6 +935,8 @@ public final class ServiceModelCodeGenerator {
         //  System.out.println("found " + clzss + " : " + field);
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
 
+        boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
+
         // Field.setAccessible(declaredFields, true);
 
         for (Field field : declaredFields) {
@@ -960,6 +962,13 @@ public final class ServiceModelCodeGenerator {
             if (Map.class.isAssignableFrom(fieldType)) {
                 //暂不支持Map
                 logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
+                continue;
+            }
+
+            if (isMultiTenantObject
+                    && field.getName().equals("tenantId")) {
+                //多租户字段
+                logger.info("*** " + entityClass + " 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1150,6 +1159,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             list.add(fieldModel);
+
         }
         return list;
     }

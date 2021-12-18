@@ -528,7 +528,7 @@ Dao 类逻辑框图，如下图所示。
        }               
        
               
-### 6 多表查询最佳实践
+### 6 多表关联查询最佳实践
 
 #### 6.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
@@ -702,9 +702,8 @@ Dao 类逻辑框图，如下图所示。
           @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
           public class SimpleSubQueryDTO {
           
-              Paging paging = new PagingQueryReq(1, 20);
-          
-          
+              Paging paging = new PagingQueryReq(1, 20); 
+         
               @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
               @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
           
