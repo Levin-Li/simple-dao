@@ -186,7 +186,7 @@ Dao 类逻辑框图，如下图所示。
      //启用组件扫描                
      @EnableProxyBean(registerTypes = EntityRepository.class)                
 
-#### 3 分页查询支持
+### 3 分页查询支持
 
    分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
    
@@ -302,9 +302,9 @@ Dao 类逻辑框图，如下图所示。
        @Contains
        String classId;
 
-### 4.1 CASE 语句支持
+#### 4.1 CASE 语句支持
 
-#### 4.1.1 注解支持
+##### 4.1.1 注解支持
   
       @Data
       @Accessors(chain = true)
@@ -358,7 +358,7 @@ Dao 类逻辑框图，如下图所示。
              END) AS scoreLevel   
            From com.levin.commons.dao.domain.User u 
     
-#### 4.1.2 简单工具类支持
+##### 4.1.2 简单工具类支持
 
         String ql = new Case().column("status")
                 .when("'A'", "0")
@@ -370,7 +370,7 @@ Dao 类逻辑框图，如下图所示。
         ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
     
  
-### 4.2 函数的支持（@Func注解实现）     
+#### 4.2 函数的支持（@Func注解实现）     
            
            class XXX {
             @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
@@ -389,7 +389,7 @@ Dao 类逻辑框图，如下图所示。
             
             //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
              
-### 4.3 列选择和列更新
+#### 4.3 列选择和列更新
 
   选择查询注解：
 
@@ -454,7 +454,7 @@ Dao 类逻辑框图，如下图所示。
        }
  
 
-### 4.4 动态变量
+#### 4.4 动态变量
 
    变量在注解中会经常使用，具体参考 【10.4】章节。
    
