@@ -191,83 +191,10 @@ Dao 类逻辑框图，如下图所示。
 
    分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
    
-        
+       
      //使用示例
      PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
    
-   分页查询请求，分页查询参数通过PageOption注解获取，组件默认分页类如下：
-   
-     @Data
-     @Accessors(chain = true)
-     //@Builder
-     @FieldNameConstants
-     @NoArgsConstructor
-     @AllArgsConstructor
-     public class SimplePaging
-             implements Paging, Serializable {
-     
-         @Ignore
-         @Schema(description = "是否查询总记录数")
-         boolean requireTotals = false;
-     
-         @Ignore
-         @Schema(description = "是否查询结果集")
-         boolean requireResultList = true;
-     
-         @Ignore
-         @Schema(description = "页面索引")
-         int pageIndex = 1;
-     
-         @Ignore
-         @Schema(description = "页面大小")
-         int pageSize = 20;
-         
-     }
-   
-       
-   分页查询结果类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
-   通过 PageOption 注解自动把查询结果注入到返回对象中。
-   
-      @Data
-      @Accessors(chain = true)
-      //@Builder
-      @FieldNameConstants
-      public class PagingData<T> implements Serializable {
-      
-          @Ignore
-          @Schema(description = "总记录数")
-          @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
-          long totals = -1;
-      
-          @Ignore
-          @Schema(description = "页面编号")
-          @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
-          int pageIndex = -1;
-      
-          @Ignore
-          @Schema(description = "分页大小")
-          @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
-          int pageSize = -1;
-      
-          @Ignore
-          @Schema(description = "数据集")
-          @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-          List<T> records;
-      
-          @Transient
-          public T getFirst() {
-              return isEmpty() ? null : records.get(0);
-          }
-      
-          @Transient
-          public boolean isEmpty() {
-              return records == null || records.isEmpty();
-          }
-      
-          public PagingData() {
-          }
-      
-      } 
       
  
 ### 4 基础查询
