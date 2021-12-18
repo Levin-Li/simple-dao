@@ -41,9 +41,11 @@ public @interface CtxVar {
     String value() default "";
 
     /**
-     * 是否是注入，上下文变量  -->  字段值
+     * 是否是注入
+     *
+     * true， 把上下文变量赋值到字段值
      * <p>
-     * false 表示是 字段值  -->  上下文变量
+     * false, 把字段值放入上下文中
      *
      * @return
      */
@@ -51,7 +53,7 @@ public @interface CtxVar {
 
 
     /**
-     * 是否强制覆盖
+     * 是否强制覆盖原值，否表示在非null的时候不覆盖
      * <p>
      * 默认强制覆盖
      *
