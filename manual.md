@@ -12,6 +12,7 @@
    测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
    
 ### 二进制发布
+
    [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
    
    二进制文件发布在[jitpack.io](https://jitpack.io/#Levin-Li/simple-dao)
@@ -32,7 +33,7 @@
         
        
    
-### 1 Dao组件注解核心接口
+### 1  组件注解核心接口
 
 Dao 类逻辑框图，如下图所示。
 
@@ -48,7 +49,7 @@ Dao 类逻辑框图，如下图所示。
 
 *    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
-### 2 Dao组件使用方式
+### 2  组件使用方式
 
 #### 2.1 方式1 - 使用通用Dao（推荐）
  
@@ -528,7 +529,7 @@ Dao 类逻辑框图，如下图所示。
        }               
        
               
-### 6 多表关联查询最佳实践
+### 6 多表关联查询
 
 #### 6.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
