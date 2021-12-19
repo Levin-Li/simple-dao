@@ -642,6 +642,12 @@ public class SelectDaoImpl<T>
 
     }
 
+    /**
+     * @param opAnnotation
+     * @param expr
+     * @param holder
+     * @param opParamValue
+     */
     protected void tryAppendHaving(Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
 
         Op op = ClassUtils.getValue(opAnnotation, "havingOp", false);
@@ -710,7 +716,7 @@ public class SelectDaoImpl<T>
 
                 // ORDER BY 也不能使用别名
 
-                tryAppendOrderBy(expr, newAlias, opAnnotation);
+                tryAppendOrderBy(bean, name, holder.value, expr, newAlias, opAnnotation);
 
                 expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
 
@@ -767,13 +773,12 @@ public class SelectDaoImpl<T>
                 //SELECT子句
                 //ORDER BY子句
                 groupBy(oldExpr, holder.value);
-
             }
 
             tryAppendHaving(opAnnotation, oldExpr, holder, value);
 
             // ORDER BY 也不能使用别名
-            tryAppendOrderBy(oldExpr, newAlias, opAnnotation);
+            tryAppendOrderBy(bean, name, holder.value, oldExpr, newAlias, opAnnotation);
 
             select(expr, holder.value);
 
@@ -815,15 +820,15 @@ public class SelectDaoImpl<T>
     }
 
     //    @Override
-    protected void tryAppendOrderBy(String expr, String newAlias, Annotation opAnnotation) {
+    protected void tryAppendOrderBy(Object root, String name, Object value, String expr, String newAlias, Annotation opAnnotation) {
 
         OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
 
-        appendOrderBy(expr, newAlias, orderByList);
+        appendOrderBy(root, name, value, expr, newAlias, orderByList);
 
     }
 
-    protected SelectDao<T> appendOrderBy(final String oldExpr, final String newAlias, OrderBy... orderByList) {
+    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, final String oldExpr, final String newAlias, OrderBy... orderByList) {
 
         if (orderByList != null) {
 
@@ -831,7 +836,8 @@ public class SelectDaoImpl<T>
 
                 OrderBy orderBy = orderByList[i];
 
-                if (orderBy == null) {
+                if (orderBy == null
+                        || !isValid(orderBy, root, name, value)) {
                     continue;
                 }
 
