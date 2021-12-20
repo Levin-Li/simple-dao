@@ -32,10 +32,13 @@ import java.util.*;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public abstract class BaseReq implements OrganizedObject , ServiceReq  {
+public abstract class BaseReq
+        implements
+//        OrganizedObject ,
+        ServiceReq  {
 
-    @Schema(description = "组织ID" , hidden = true)
-    @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
-    protected String orgId;
+//    @Schema(description = "组织ID" , hidden = true)
+//    @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
+//    protected String orgId;
 
 }
