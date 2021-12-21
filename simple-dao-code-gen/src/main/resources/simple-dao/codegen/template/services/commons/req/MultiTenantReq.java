@@ -1,5 +1,6 @@
 package ${modulePackageName}.services.commons.req;
 
+import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.InjectVar;
@@ -28,6 +29,7 @@ public abstract class MultiTenantReq
 
     @Schema(description = "租户ID" , hidden = true)
     @InjectVar(InjectConsts.TENANT_ID)
+    @Eq(require = true)
     protected String tenantId;
 
 }
