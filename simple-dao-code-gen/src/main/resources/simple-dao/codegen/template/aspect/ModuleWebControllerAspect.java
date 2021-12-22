@@ -58,7 +58,7 @@ public class ModuleWebControllerAspect {
     /**
      * 存储本模块的变量解析器
      */
-    private List<VariableResolver> resolverList = null;
+    private List<VariableResolver> moduleResolverList = null;
 
     @PostConstruct
     void init() {
@@ -66,7 +66,7 @@ public class ModuleWebControllerAspect {
         this.enableHttpLog.set(enableLog);
 
         //只找出本模块的解析器
-        this.resolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
+        this.moduleResolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
     }
 
     /**
@@ -113,16 +113,13 @@ public class ModuleWebControllerAspect {
         if (StringUtils.hasText(headerValue)) {
             enableHttpLog.set(Boolean.TRUE.toString().equalsIgnoreCase(headerValue));
         }
-
-        //加入线程级别的http请求解析器，线程级别解析器会被优先使用
-        //httpRequestInfoResolver;
-
+        
         Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
             Arrays.stream(args)
                     .filter(Objects::nonNull)
                     .forEachOrdered(arg -> {
                         variableInjector.injectByVariableResolver(arg
-                                , () -> resolverList
+                                , () -> moduleResolverList
                                 , () -> variableResolverManager.getVariableResolvers());
                     });
         });
