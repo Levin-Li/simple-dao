@@ -23,6 +23,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "父ID")
+    @Column(length = 128)
     protected ID parentId;
 
     @Schema(description = "父对象")

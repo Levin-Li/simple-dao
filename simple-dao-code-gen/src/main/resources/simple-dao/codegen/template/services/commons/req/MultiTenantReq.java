@@ -29,7 +29,7 @@ public abstract class MultiTenantReq
 
     @Schema(description = "租户ID" , hidden = true)
     @InjectVar(InjectConsts.TENANT_ID)
-    @Eq(require = true)
+    @Eq
     protected String tenantId;
 
 }
