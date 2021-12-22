@@ -48,6 +48,9 @@ public interface ${className} {
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 </#if>
 
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    ${entityName}Info findOne(Query${entityName}Req req);
+
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
     int update(Update${entityName}Req req);
 

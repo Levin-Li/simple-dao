@@ -110,6 +110,13 @@ public class ${className} implements ${serviceName} {
     }
 </#if>
 
+
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findOne(Query${entityName}Req req){
+        return simpleDao.findOneByQueryObj(req);
+    }
+
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
     @Override
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")    
