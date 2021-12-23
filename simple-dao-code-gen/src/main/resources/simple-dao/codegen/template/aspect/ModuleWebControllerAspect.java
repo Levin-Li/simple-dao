@@ -67,6 +67,8 @@ public class ModuleWebControllerAspect {
 
         //只找出本模块的解析器
         this.moduleResolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
+
+        log.info("init...");
     }
 
     /**

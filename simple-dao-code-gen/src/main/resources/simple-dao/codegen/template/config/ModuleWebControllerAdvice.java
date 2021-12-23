@@ -16,6 +16,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.persistence.PersistenceException;
 import javax.servlet.ServletException;
@@ -42,6 +43,11 @@ public class ModuleWebControllerAdvice {
 
     @Resource
     HttpServletRequest request;
+
+    @PostConstruct
+    void init() {
+        log.info("init...");
+    }
 
 //    // 这里@ModelAttribute("loginUserInfo")标注的modelAttribute()方法表示会在Controller方法之前
 //    // 执行，返回当前登录用户的UserDetails对象

@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.*;
 import java.util.*;
 
@@ -23,6 +24,11 @@ import java.util.*;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleVariableResolverConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleVariableResolverConfigurer
         implements VariableResolverConfigurer {
+
+    @PostConstruct
+    void init() {
+        log.info("init...");
+    }
 
     /**
      * 配置全局的变量

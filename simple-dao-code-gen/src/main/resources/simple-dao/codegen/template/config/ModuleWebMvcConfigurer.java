@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
@@ -19,6 +20,12 @@ import org.springframework.web.servlet.config.annotation.*;
 @Slf4j
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
+
+
+    @PostConstruct
+    void init() {
+        log.info("init...");
+    }
 
     /**
      * 配置静态访问资源

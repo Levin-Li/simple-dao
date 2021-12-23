@@ -30,6 +30,7 @@ import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
+import javax.annotation.PostConstruct;
 import java.util.stream.Stream;
 
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -52,6 +53,11 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
      */
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
+
+    @PostConstruct
+    void init() {
+        log.info("init...");
+    }
 
     @Bean(PLUGIN_PREFIX + "Docket")
     //默认激活的 profile
