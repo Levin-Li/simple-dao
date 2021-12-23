@@ -274,6 +274,11 @@ public abstract class BaseMojo extends AbstractMojo {
     }
 
 
+    /**
+     * 递归获取依赖库
+     *
+     * @return
+     */
     @SneakyThrows
     public MultiValueMap<String, org.eclipse.aether.artifact.Artifact> getDependencies() {
 
@@ -289,8 +294,9 @@ public abstract class BaseMojo extends AbstractMojo {
 
         MultiValueMap<String, org.eclipse.aether.artifact.Artifact> multiValueMap = getDependencies();
 
-        getLog().info("*** dependenciesResolver getDependencies: " + multiValueMap);
-        getLog().info("***         mavenProject getDependencies: " + mavenProject.getDependencies());
+        getLog().info("***通过组件[ProjectDependenciesResolver.resolve()]递归获取的依赖库: " + multiValueMap.values());
+
+        getLog().info("***直接通过[mavenProject.getDependencies()]获得的依赖库: " + mavenProject.getDependencies());
 
 /*
 
@@ -356,6 +362,7 @@ public abstract class BaseMojo extends AbstractMojo {
             }
         }*/
 
+        //注意忽略
 
         for (String key : multiValueMap.keySet()) {
 
