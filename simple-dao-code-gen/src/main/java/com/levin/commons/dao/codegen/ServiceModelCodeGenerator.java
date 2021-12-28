@@ -79,16 +79,12 @@ public final class ServiceModelCodeGenerator {
         notUpdateNames.add("creator");
         notUpdateNames.add("createBy");
         notUpdateNames.add("createTime");
-        notUpdateNames.add("createTime");
+        notUpdateNames.add("createDate");
 
 //        notUpdateNames.add("updateTime");
 //        notUpdateNames.add("lastUpdateTime");
 
         notUpdateNames.add("sn");
-    }
-
-    {
-
     }
 
 
@@ -615,14 +611,19 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
-
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
                 .put("isMultiTenantObject", MultiTenantObject.class.isAssignableFrom(entityClass))
+                .put("isOrganizedObject", OrganizedObject.class.isAssignableFrom(entityClass))
                 .build();
 
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false);
+
+        //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
+
+        //请求对象会忽略继承的属性
+        fields = buildFieldModel(entityClass, entityMapping, true);
 
         buildEvt(entityClass, fields, serviceDir, params);
 
@@ -638,7 +639,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false);
 
         fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -923,7 +924,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
 
         Object obj = entityClass.newInstance();
 
@@ -967,14 +968,16 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            if (isMultiTenantObject
+            if (ignoreSpecificField
+                    && isMultiTenantObject
                     && field.getName().equals("tenantId")) {
                 //多租户字段
                 logger.info("*** " + entityClass + " 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
                 continue;
             }
 
-            if (isOrganizedObject
+            if (ignoreSpecificField
+                    && isOrganizedObject
                     && field.getName().equals("orgId")) {
                 //多租户字段
                 logger.info("*** " + entityClass + " 忽略组织字段 orgId : " + field + " --> " + fieldType);
@@ -1129,7 +1132,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setAnnotations(annotations);
 
-//            if (excess) {
+//            if (ignoreSpecificField) {
 //                buildExpandInfo(entityClass, fieldModel);
 //            }
 

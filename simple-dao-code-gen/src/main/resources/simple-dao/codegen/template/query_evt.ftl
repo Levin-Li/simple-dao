@@ -18,6 +18,7 @@ import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
 import javax.validation.constraints.*;
+import javax.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -87,4 +88,10 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
         this.${pkField.name} = ${pkField.name};
     }
 </#if>
+
+    @PostConstruct
+    public void preQuery() {
+        //@todo 查询之前初始化数据
+    }
+
 }

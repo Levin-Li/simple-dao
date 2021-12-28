@@ -32,4 +32,9 @@ public abstract class MultiTenantReq
     @Eq
     protected String tenantId;
 
+    public <T extends MultiTenantReq> T setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+        return (T) this;
+    }
+
 }

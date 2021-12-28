@@ -74,4 +74,10 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
         this.${pkField.name}List = ${pkField.name}List;
     }
 </#if>
+
+    @PostConstruct
+    public void preDelete() {
+        //@todo 删除之前初始化数据
+    }
+
 }
