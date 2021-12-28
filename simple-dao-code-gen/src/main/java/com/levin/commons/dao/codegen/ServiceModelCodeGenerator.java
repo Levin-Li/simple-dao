@@ -430,7 +430,7 @@ public final class ServiceModelCodeGenerator {
             moduleName(moduleName);
         }
 
-        logger.info(mavenProject.getArtifactId() + " *** 开始代码生成 modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
+        logger.info(" *** 开始代码生成 *** 当前Pom模块: {} , modulePackageName = {} , moduleName = {}" ,mavenProject.getArtifactId(),modulePackageName(),moduleName());
 
         if (genParams != null) {
             genParams.put("moduleNameHashCode", "" + Math.abs(modulePackageName().hashCode()));
@@ -891,7 +891,7 @@ public final class ServiceModelCodeGenerator {
         File file = new File(fileName);
 
         if (file.exists()) {
-            logger.debug("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，不覆盖。");
+            logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，不覆盖。");
             return;
         }
 
