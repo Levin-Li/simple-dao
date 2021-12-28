@@ -16,6 +16,7 @@ import com.levin.commons.dao.annotation.order.*;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
+import javax.annotation.*;
 import javax.validation.constraints.*;
 
 import lombok.*;
