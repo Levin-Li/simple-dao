@@ -891,7 +891,7 @@ public final class ServiceModelCodeGenerator {
         File file = new File(fileName);
 
         if (file.exists()) {
-            logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，不覆盖。");
+            logger.debug("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，不覆盖。");
             return;
         }
 
@@ -1323,7 +1323,7 @@ public final class ServiceModelCodeGenerator {
                 //如果是类中类
                 Class declaringClass = type.getDeclaringClass();
                 if (declaringClass != null) {
-                    logger.info("add import " + type + ",DeclaringClass :" + declaringClass);
+                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
                     imports.add(declaringClass.getName() + ".*");
                 } else {
                     imports.add(type.getName());
