@@ -110,13 +110,6 @@ public class ${className} implements ${serviceName} {
     }
 </#if>
 
-
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-    @Override
-    public ${entityName}Info findOne(Query${entityName}Req req){
-        return simpleDao.findOneByQueryObj(req);
-    }
-
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
     @Override
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")    
@@ -134,7 +127,8 @@ public class ${className} implements ${serviceName} {
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     @Override
-    @Caching(evict = {  //尽量不用调用批量删除，会导致缓存清空
+    @Caching(evict = {
+         //尽量不用调用批量删除，会导致缓存清空
         @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}"),
         @CacheEvict(condition = "#req.${pkField.name}List != null && #req.${pkField.name}List.length > 0", allEntries = true),
     })                    
@@ -146,5 +140,11 @@ public class ${className} implements ${serviceName} {
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
         return simpleDao.findPagingDataByQueryObj(req, paging);
+    }
+
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findOne(Query${entityName}Req req){
+        return simpleDao.findOneByQueryObj(req);
     }
 }
