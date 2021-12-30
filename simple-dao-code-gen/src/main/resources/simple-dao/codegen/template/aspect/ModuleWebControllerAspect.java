@@ -109,7 +109,9 @@ public class ModuleWebControllerAspect {
     @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public void injectVar(JoinPoint joinPoint) {
 
-        log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
+        if(log.isDebugEnabled()) {
+            log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
+        }
 
         String headerValue = request.getHeader(PLUGIN_PREFIX + "logHttp");
         if (StringUtils.hasText(headerValue)) {
@@ -135,7 +137,7 @@ public class ModuleWebControllerAspect {
     @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        if (!enableHttpLog.get()) {
+        if (!enableHttpLog.get() || !log.isDebugEnabled()) {
             return joinPoint.proceed(joinPoint.getArgs());
         }
 
