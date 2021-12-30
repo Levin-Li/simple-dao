@@ -50,7 +50,8 @@ if [ -z $pids ]; then
        content="  -DPrintHookAgentLog=true -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism "
    fi
 
-   startCmd="java -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+   #jenkins 部署时的问题 https://wiki.jenkins.io/display/JENKINS/ProcessTreeKiller
+   startCmd="java -Dhudson.util.ProcessTree.disable=true -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
 
    echo "应用启动命令：${startCmd}"
 
