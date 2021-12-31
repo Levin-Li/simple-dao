@@ -20,6 +20,8 @@ else
 
    ps -ef | grep java | grep `pwd`
 
+   tempPid=$pids
+
    for n in {1..30};do
 
       echo "*** $n *** start kill program $pids ..."
@@ -31,6 +33,7 @@ else
       pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
 
       if [ -z $pids ]; then
+         echo "program ${tempPid} stopped."
          exit
       fi
 

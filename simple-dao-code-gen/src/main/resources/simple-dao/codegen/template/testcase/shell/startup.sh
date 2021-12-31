@@ -20,11 +20,12 @@ content=""
 
 if [ -z $pids ]; then
 
-   read -p "是否需要启动密码?[y/n]" -t 7 needParam
+#   read -p "是否需要启动密码?[y/n]" -t 7 needParam
 
    if [ "${needParam}" = "y" ]; then
 
-      echo "请输入启动密码:"
+#      echo "请输入启动密码:"
+      echo "Please input startup password:"
       #主要用于输入密码，但不会在命令行历史记录出现
       head -n 1 <&0 > ${tempFile}
 
@@ -50,14 +51,24 @@ if [ -z $pids ]; then
        content="  -DPrintHookAgentLog=true -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism "
    fi
 
+   JAVA_CMD=`which ${JAVA_HOME}/bin/java`
+
+   if [ -z "${JAVA_CMD}" ]; then
+       JAVA_CMD=`which java`
+       echo "***Warning*** JAVA_HOME env var not found，will be use ${JAVA_CMD}"
+   fi
+
+   if [ -z "${JAVA_CMD}" ]; then
+       echo "***Error*** java cmd not found"
+   fi
+
+   START_CMD="${JAVA_CMD} -Dhudson.util.ProcessTree.disable=true -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+
+   echo "Startup cmd line：${START_CMD}"
+
    export JENKINS_NODE_COOKIE=dontKillMe
 
-   #jenkins 部署时的问题 https://wiki.jenkins.io/display/JENKINS/ProcessTreeKiller
-   startCmd="java -Dhudson.util.ProcessTree.disable=true -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
-
-   echo "应用启动命令：${startCmd}"
-
-   nohup ${startCmd}  2>&1 &
+   nohup ${START_CMD}  2>&1 &
 
    sleep 5s
 
@@ -81,5 +92,6 @@ else
    ps -ef | grep java | grep "$shellDir"
 
 fi
+
 
 </#noparse>
