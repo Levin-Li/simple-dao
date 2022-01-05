@@ -66,7 +66,11 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     //    this.${pkField.name} = ${pkField.name};
     //}
 
-    public String getCacheId() {
+    /**
+     * 获取缓存ID
+     */
+    @Schema(description = "缓存ID-内部使用" , hidden = true)
+    public final String getCacheId() {
 
         String cid = ${pkField.name}.toString() + "" ${isMultiTenantObject ? string(' + tenantId.toString()','')};
 

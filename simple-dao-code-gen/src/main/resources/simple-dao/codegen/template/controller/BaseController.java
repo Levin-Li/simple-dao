@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.*;
+import org.springframework.context.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.*;
@@ -42,6 +43,11 @@ public abstract class BaseController {
     @Resource
     protected HttpServletResponse httpResponse;
 
+    @Resource
+    protected ApplicationContext applicationContext;
+
+    protected Object selfProxy = null;
+
     public final String getModuleId() {
         return ModuleOption.ID;
     }
@@ -51,4 +57,12 @@ public abstract class BaseController {
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
 
+    protected <T> T getSelfProxy(Class<T> type) {
+
+        if (selfProxy == null) {
+            selfProxy = applicationContext.getBean(type);
+        }
+
+        return (T) selfProxy;
+    }
 }

@@ -128,7 +128,7 @@ public class ${className} extends BaseController{
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
 
-         return retrieve(new Query${entityName}ByIdReq().set${pkField.name?cap_first}(${pkField.name}));
+         return getSelfProxy(getClass()).retrieve(new Query${entityName}ByIdReq().set${pkField.name?cap_first}(${pkField.name}));
 
          //return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
@@ -161,7 +161,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({"/{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     public ApiResp<Integer> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-        return batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
+        return getSelfProxy(getClass()).batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
 
     /**
