@@ -49,13 +49,15 @@ public final class ServiceModelCodeGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceModelCodeGenerator.class);
 
-    public static final String DEL_EVT_FTL = "del_evt.ftl";
-    public static final String UPDATE_EVT_FTL = "update_evt.ftl";
-    public static final String QUERY_EVT_FTL = "query_evt.ftl";
-    public static final String SERVICE_FTL = "service.ftl";
-    public static final String SERVICE_IMPL_FTL = "service_impl.ftl";
-    public static final String CREATE_EVT_FTL = "create_evt.ftl";
-    public static final String INFO_FTL = "info.ftl";
+    public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
+    public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
+    public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
+    public static final String ID_QUERY_EVT_FTL = "services/req/id_query_req.ftl";
+
+    public static final String SERVICE_FTL = "services/service.ftl";
+    public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
+    public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
+    public static final String INFO_FTL = "services/info/info.ftl";
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
 
     public static final String POM_XML_FTL = "pom.xml.ftl";
@@ -430,7 +432,7 @@ public final class ServiceModelCodeGenerator {
             moduleName(moduleName);
         }
 
-        logger.info(" *** 开始代码生成 *** 当前Pom模块: {} , modulePackageName = {} , moduleName = {}" ,mavenProject.getArtifactId(),modulePackageName(),moduleName());
+        logger.info(" *** 开始代码生成 *** 当前Pom模块: {} , modulePackageName = {} , moduleName = {}", mavenProject.getArtifactId(), modulePackageName(), moduleName());
 
         if (genParams != null) {
             genParams.put("moduleNameHashCode", "" + Math.abs(modulePackageName().hashCode()));
@@ -727,9 +729,14 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
                 pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
 
+        //ID查询
+        genCode(entityClass, ID_QUERY_EVT_FTL, fields, srcDir,
+                pkgName, "Query" + entityClass.getSimpleName() + "ByIdReq", mapConsumer);
+
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
                 pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
     }
 
 
@@ -809,7 +816,7 @@ public final class ServiceModelCodeGenerator {
      * @param callbacks
      * @throws Exception
      */
-    private static void genCode(Class entityClass, String template, List<FieldModel> fields, String srcDir,
+    private static void genCode(Class entityClass, final String template, List<FieldModel> fields, String srcDir,
                                 String classPackageName, String className, Consumer<Map<String, Object>>... callbacks) throws Exception {
 
         //去除
@@ -886,7 +893,7 @@ public final class ServiceModelCodeGenerator {
         return null;
     }
 
-    private static void genFileByTemplate(String template, Map<String, Object> params, String fileName) throws Exception {
+    private static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
         File file = new File(fileName);
 
@@ -1177,6 +1184,7 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
+
         return ClassUtils.isPrimitiveOrWrapper(type)
                 || CharSequence.class.isAssignableFrom(type)
                 || type.isEnum()
@@ -1192,13 +1200,19 @@ public final class ServiceModelCodeGenerator {
         if (fieldName == null || obj == null) {
             return null;
         }
+
         Field field = ReflectionUtils.findField(obj.getClass(), fieldName);
+
         assert field != null;
+
         Object value = ReflectionUtils.getField(field, obj);
+
         if (value == null) {
             return null;
         }
+
         return value.toString();
+
     }
 
     private static void buildExpandInfo(Class entityClass, FieldModel fieldModel) {

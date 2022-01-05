@@ -109,6 +109,13 @@ public class ${className} implements ${serviceName} {
         Assert.notNull(${pkField.name}, BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findOneByQueryObj(new Query${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
     }
+
+    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    @Override
+    @Cacheable(condition = "#req.getCacheId() != null", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.getCacheId()")
+    public ${entityName}Info findById(Query${entityName}ByIdReq req) {
+        return simpleDao.findOneByQueryObj(req);
+    }
 </#if>
 
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)

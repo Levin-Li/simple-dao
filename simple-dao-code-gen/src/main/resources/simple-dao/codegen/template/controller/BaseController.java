@@ -50,4 +50,5 @@ public abstract class BaseController {
         return value != null
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
+
 }

@@ -107,12 +107,15 @@ public class ${className} extends BaseController{
     /**
     * 查看详情
     *
-    * @param ${pkField.name} ${pkField.typeName}
+    * @param req Query${entityName}ByIdReq
     */
     @GetMapping("/{${pkField.name}}")
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
-    public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-         return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
+    public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull Query${entityName}ByIdReq req) {
+
+         return ApiResp.ok(${serviceName?uncap_first}.findById(req));
+
+         //return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
 </#if>
 
@@ -139,12 +142,12 @@ public class ${className} extends BaseController{
      * 删除
      * @param ${pkField.name} ${pkField.typeName}
      */
-    @DeleteMapping({"/{${pkField.name}}"})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
-    public ApiResp<Void> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-        return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name})) > 0
-                                                ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
-    }
+    //@DeleteMapping({"/{${pkField.name}}"})
+    //@Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
+    //public ApiResp<Void> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
+    //    return ${serviceName?uncap_first}.delete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name})) > 0
+    //                                            ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
+    //}
 
     /**
      * 批量删除

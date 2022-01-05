@@ -236,7 +236,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     DeepCopier getDeepCopier();
 
-
     /**
      * 获取事务管理器
      *

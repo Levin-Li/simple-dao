@@ -46,6 +46,9 @@ public interface ${className} {
 <#if pkField?exists>
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
+
+    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    ${entityName}Info findById(Query${entityName}ByIdReq req);
 </#if>
 
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
