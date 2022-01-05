@@ -109,9 +109,9 @@ public class ${className} extends BaseController{
     *
     * @param req Query${entityName}ByIdReq
     */
-    @GetMapping("/{${pkField.name}}")
+    @GetMapping("/retrieve")
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
-    public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull Query${entityName}ByIdReq req) {
+    public ApiResp<${entityName}Info> retrieve(@NotNull Query${entityName}ByIdReq req) {
 
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
 
@@ -155,9 +155,12 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
-    public ApiResp<Void> batchDelete(@NotNull Delete${entityName}Req req) {
+    public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         //new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)
-        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
+
+        int n = ${serviceName?uncap_first}.delete(req);
+
+        return  n > 0 ? ApiResp.ok(n) : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
     }  
 
 }
