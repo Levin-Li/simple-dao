@@ -68,7 +68,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
 
     public String getCacheId() {
 
-        String cid = id.toString() + "" ${isMultiTenantObject ? string(' + tenantId.toString()','')};
+        String cid = ${pkField.name}.toString() + "" ${isMultiTenantObject ? string(' + tenantId.toString()','')};
 
         return cid.trim().length() > 0 ? cid : null;
 
