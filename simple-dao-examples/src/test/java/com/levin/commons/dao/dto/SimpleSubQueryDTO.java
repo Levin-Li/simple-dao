@@ -30,7 +30,8 @@ public class SimpleSubQueryDTO {
     @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
     @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
 
-    @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875" , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+    @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875"
+            , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
     int taskCnt = 1;
 
     @Ignore
@@ -38,8 +39,14 @@ public class SimpleSubQueryDTO {
 
     // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
 
-    @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
-    Map<String, Object> params = MapUtils.put("p1", (Object) "9999").put("p2", 2).put("fun", "sum").build();
+    @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME
+            + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}",
+            alias = "taskSum")
+    Map<String, Object> params = MapUtils
+            .put("p1", (Object) "9999")
+            .put("p2", 2)
+            .put("fun", "sum")
+            .build();
     //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
 
 

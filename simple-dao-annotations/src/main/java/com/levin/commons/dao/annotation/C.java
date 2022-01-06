@@ -3,6 +3,7 @@ package com.levin.commons.dao.annotation;
 
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.misc.Case;
+import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -85,14 +86,6 @@ public @interface C {
      * @return
      */
     Op op() default Op.Eq;
-
-
-    /**
-     * 字段的排序
-     *
-     * @return
-     */
-//    OrderBy[] orderBy() default {};
 
     /**
      * 字段归属的域，通常是表的别名

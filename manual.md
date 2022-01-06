@@ -233,7 +233,7 @@ Dao 类逻辑框图，如下图所示。
 
 #### 4.1 列选择和列更新
 
-  选择查询注解：
+##### 4.1.1 列选择
 
           @Select
           String field;
@@ -241,7 +241,58 @@ Dao 类逻辑框图，如下图所示。
   产生的语句：
 
          select field from ...
+         
+         
+  使用例子：
+  
+        @Data
+        @Accessors(chain = true)
+        @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 100)
+        public class GroupSelectDTO {
+        
+            //如果字段名中有小数点这个字符，需要强制指定别名
+            @Select(domain = E_Group.ALIAS, value = "parent.name")
+            String parentName;
+        
+            @Select(distinct = true, orderBy = @OrderBy)
+            String name;
+            
+        }       
 
+
+  复杂例子：
+  
+                        
+        @Data
+        @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
+        public class SimpleSubQueryDTO {
+    
+        //分页
+        Paging paging = new PagingQueryReq(1, 20);
+    
+        @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875"
+                , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+        int taskCnt = 1;
+        
+        // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
+    
+    
+        @Ignore
+        Integer taskSum = 9876;
+    
+        @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME
+                + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}",
+                alias = "taskSum")
+        Map<String, Object> params = MapUtils
+                .put("p1", (Object) "9999")
+                .put("p2", 2)
+                .put("fun", "sum")
+                .build();
+        //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+     
+        }
+ 
+##### 4.1.1 列更新
 
   更新注解：
 
@@ -252,6 +303,27 @@ Dao 类逻辑框图，如下图所示。
 
          set lastUpdateTime = ?
          
+         
+  使用例子1：字段加一       
+  
+              
+         @Update(paramExpr = "${_name} + 1")
+         Integer alarmCnt;
+         
+         //以上生成的语句
+         // set alarmCnt = alarmCnt + 1
+         
+  使用例子2：字段加参数值       
+   
+         @Update(paramExpr = "${_name} + ${:_val}")
+         Integer alarmCnt = 5 ;
+         
+         //以上生成的语句
+         // set alarmCnt = alarmCnt + ?    
+         
+         
+           
+                      
   
  @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
  

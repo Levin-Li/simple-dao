@@ -13,13 +13,7 @@ public class TestPluginConfiguration implements PluginConfigurer {
     @Override
     public void configPlugin(PluginManager pluginManager) {
 
-        pluginManager.installPlugin(newPlugin(), true);
     }
 
 
-    @Bean
-    Plugin newPlugin() {
-        return new TestPlugin() {
-        };
-    }
 }

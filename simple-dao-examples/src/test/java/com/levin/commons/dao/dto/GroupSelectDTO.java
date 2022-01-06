@@ -22,5 +22,4 @@ public class GroupSelectDTO {
     @Select
     String name;
 
-
 }

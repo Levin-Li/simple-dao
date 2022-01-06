@@ -261,7 +261,7 @@ public class DaoExamplesTest {
 
             group.setState(states[Math.abs(random.nextInt()) % states.length]);
             group.setCategory(categories[Math.abs(random.nextInt()) % categories.length]);
-            group.setType(types[Math.abs(random.nextInt()) % categories.length]);
+          //  group.setType(types[Math.abs(random.nextInt()) % categories.length]);
 
             group.setScore(Math.abs(random.nextInt(100)));
 

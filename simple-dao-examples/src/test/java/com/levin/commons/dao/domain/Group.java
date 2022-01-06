@@ -18,7 +18,7 @@ import javax.persistence.Id;
 @Accessors(chain = true)
 @FieldNameConstants
 public class Group
-        extends AbstractTreeObject<Group, Group>
+        extends AbstractTreeObject<Long, Group>
         implements StatefulObject {
 
     @Id
@@ -40,18 +40,22 @@ public class Group
     public Group() {
     }
 
+    public Group(String name, Long parentId) {
+        super(parentId, name);
+    }
+
     public Group(Long id, String name) {
-        super(name, null);
+        super(null, name);
         this.id = id;
     }
 
     public Group(String name) {
-        super(name, null);
+        super(null, name);
     }
 
 
     @Override
     public String toString() {
-        return   name + "[" + state+"]";
+        return name + "[" + state + "]";
     }
 }

@@ -322,7 +322,6 @@ public abstract class ExprUtils {
         //
         if (paramValues.isEmpty()) {
             //关键逻辑如果没有替换参数出现，则原有的参数保存不变
-
             holder.value = Collections.emptyList();
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
