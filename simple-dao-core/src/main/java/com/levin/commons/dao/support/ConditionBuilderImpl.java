@@ -807,11 +807,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         this.tableName = tableName;
 
         if (!hasEntityClass()) {
-            ExprUtils.tryLoadClass(tableName, clazz -> {
-                this.entityClass = clazz;
+
+            this.entityClass = (Class<T>) dao.getEntityClass(tableName.trim());
+
+            if (entityClass != null) {
                 //如果表名是类名，做个自动转换
                 this.tableName = getTableNameByAnnotation(entityClass);
-            });
+            }
         }
 
         return (CB) this;

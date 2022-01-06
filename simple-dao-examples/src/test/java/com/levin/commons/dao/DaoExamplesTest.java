@@ -133,12 +133,12 @@ public class DaoExamplesTest {
     @Before
     public void initTestEntity() throws Exception {
 
-        dao.deleteFrom(TestEntity.class)
+        int n = dao.deleteFrom(TestEntity.class)
                 .disableSafeMode()
                 .delete();
 
 
-        int n = 0;
+        n = 0;
 
         String[] categories = {"C1", "C2", "C3", "C4"};
         String[] states = {"S1", "S2", "S3", "S4"};

@@ -23,7 +23,7 @@ public class TestEntityDto {
 
     @Like(paramFuncs = @Func( prefix = "'%#' || ",suffix = " || '#%'"))
     @Contains(paramFuncs = @Func( prefix = "'#' || ",suffix = " || '%'"))
-     String type="T1";
+     String category="T1";
 
 
     @SimpleOrderBy(condition = "state.length > 0")

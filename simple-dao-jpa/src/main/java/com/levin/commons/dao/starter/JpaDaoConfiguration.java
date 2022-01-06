@@ -14,6 +14,8 @@ import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.EntityNamingStrategy;
 import com.levin.commons.dao.support.JpaDaoImpl;
+import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.utils.MapUtils;
@@ -52,6 +54,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Configuration
 
@@ -178,13 +181,22 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             log.info("*** you can config like [spring.jpa.properties.{} : com.xxx.base=xxx_base,com.xxx.biz=xxx_biz] to set table name prefix mapping.", TABLE_NAME_PREFIX_MAPPINGS);
         }
 
-        EntityNamingStrategy.setPrefixMapping(builder.build());
-
         try {
             initTableComments();
         } catch (Exception e) {
             log.warn("update table comments error ", e);
         }
+
+
+        EntityNamingStrategy.setPrefixMapping(builder.build());
+
+        JpaDao jpaDao = newJpaDao();
+
+        //
+        QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
+                .getEntities().parallelStream()
+                .map(entityType -> entityType.getBindableJavaType())
+                .collect(Collectors.toList()), jpaDao::getTableName);
 
     }
 

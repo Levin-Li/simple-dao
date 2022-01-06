@@ -15,11 +15,11 @@ import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -32,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.Function;
 
 import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
@@ -114,6 +115,7 @@ public abstract class QueryAnnotationUtil {
     private static final Locker cacheEntityOptionMapLocker = Locker.build();
 
     public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
+    public static final Map<String, Class<?>> tableNameMappingCaches = new ConcurrentReferenceHashMap<>();
 
 
     /**
@@ -250,12 +252,39 @@ public abstract class QueryAnnotationUtil {
         return fieldMap.getOrDefault(fieldName, fieldName);
     }
 
+
+    public static Class<?> getEntityClassByTableName(String tableName) {
+        return tableNameMappingCaches.get(tableName);
+    }
+
+    /**
+     * @param entityClasses
+     * @param nameConvert
+     */
+    public static void addEntityClassMapping(Collection<Class<?>> entityClasses, Function<Class<?>, String> nameConvert) {
+
+        Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
+            entityClassList.parallelStream().filter(Objects::nonNull).forEach(cls -> {
+
+                tableNameMappingCaches.put(cls.getName(), cls);
+
+                String name = nameConvert.apply(cls);
+
+                if (StringUtils.hasText(name)) {
+                    tableNameMappingCaches.put(name, cls);
+                }
+
+            });
+        });
+    }
+
     /**
      * 获取表名
      *
      * @param entityClassName
      * @return
      */
+    @SneakyThrows
     public static String getTableNameByEntityClassName(String entityClassName) {
 
         String name = entityTableNameCaches.get(entityClassName);
@@ -265,7 +294,7 @@ public abstract class QueryAnnotationUtil {
         }
 
         //通过类加载
-        return getTableNameByAnnotation(ClassUtils.resolveClassName(entityClassName, Thread.currentThread().getContextClassLoader()));
+        return getTableNameByAnnotation(Thread.currentThread().getContextClassLoader().loadClass(entityClassName));
     }
 
     /**
@@ -274,7 +303,7 @@ public abstract class QueryAnnotationUtil {
      * @param entityClass
      * @return
      */
-    public static String getTableNameByAnnotation(Class entityClass) {
+    public static String getTableNameByAnnotation(Class<?> entityClass) {
 
         if (entityClass == null) {
             return null;
@@ -286,12 +315,12 @@ public abstract class QueryAnnotationUtil {
             return name;
         }
 
-        name = Optional.ofNullable((Table) entityClass.getAnnotation(Table.class))
+        name = Optional.ofNullable(entityClass.getAnnotation(Table.class))
                 .filter((t) -> hasText(t.name()))
                 .map(Table::name)
                 .orElse(
                         //否则取实体名
-                        Optional.ofNullable((Entity) entityClass.getAnnotation(Entity.class))
+                        Optional.ofNullable(entityClass.getAnnotation(Entity.class))
                                 .filter(t -> hasText(t.name()))
                                 .map(Entity::name).orElse(
                                 //否则取类名
