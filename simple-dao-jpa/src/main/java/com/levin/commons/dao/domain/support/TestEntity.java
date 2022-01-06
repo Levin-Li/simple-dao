@@ -22,7 +22,7 @@ import javax.persistence.Id;
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
-@EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteFieldName = "state", logicalDeleteValue = "deleted")
+@EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteFieldName = "isDeleted", logicalDeleteValue = "deleted")
 public class TestEntity
         extends AbstractTreeObject<Long, TestEntity>
         implements StatefulObject {
@@ -30,6 +30,10 @@ public class TestEntity
     @Id
     @GeneratedValue
     private Long id;
+
+    @Desc("删除状态")
+    @Column(nullable = false)
+    String isDeleted = "false";
 
     @Desc("状态")
     @Column(nullable = false)

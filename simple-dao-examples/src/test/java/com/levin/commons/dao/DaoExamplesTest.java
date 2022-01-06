@@ -180,10 +180,7 @@ public class DaoExamplesTest {
         n = n - dao.updateTo(TestEntity.class, "e")
                 .set(E_TestEntity.name, "updateName")
                 .in(E_TestEntity.state, "S2", "S4")
-                .notIn(E_TestEntity.category, "C1", "C4")
-                .eq(E_TestEntity.editable, true)
                 .update();
-
 
         count = dao.selectFrom("simple_dao_test_entity")
                 .startsWith(E_TestEntity.name, "test")
@@ -197,7 +194,7 @@ public class DaoExamplesTest {
                 .startsWith(E_TestEntity.name, "test")
                 .count();
 
-        Assert.isTrue(count == n, "查询数量错误3");
+        Assert.isTrue(count == n, "查询数量错误4");
 
     }
 
@@ -261,7 +258,7 @@ public class DaoExamplesTest {
 
             group.setState(states[Math.abs(random.nextInt()) % states.length]);
             group.setCategory(categories[Math.abs(random.nextInt()) % categories.length]);
-          //  group.setType(types[Math.abs(random.nextInt()) % categories.length]);
+            //  group.setType(types[Math.abs(random.nextInt()) % categories.length]);
 
             group.setScore(Math.abs(random.nextInt(100)));
 
@@ -402,7 +399,7 @@ public class DaoExamplesTest {
     @Test
     public void testTableJoin4() {
 
-        List<User > byQueryObj1 = dao.findByQueryObj(new TableJoin4());
+        List<User> byQueryObj1 = dao.findByQueryObj(new TableJoin4());
 
         // System.out.println(byQueryObj1);
 
