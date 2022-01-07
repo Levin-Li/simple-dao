@@ -27,6 +27,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -75,7 +76,6 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
-
     @PersistenceContext
     private EntityManager defaultEntityManager;
 
@@ -86,7 +86,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     private JpaProperties jpaProperties;
 
     @Resource
-    DataSourceProperties dataSourceProperties;
+    private HibernateProperties hibernateProperties;
+
+    @Resource
+    private DataSourceProperties dataSourceProperties;
 
     public static final String ENABLE_ALTER_TABLE_COMMENT = "enable_alter_table_comment";
 
@@ -175,9 +178,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     @SneakyThrows
     void init() {
 
-        JpaDao jpaDao = context.getBean(JpaDao.class);
+        String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
 
-        if ((jpaDao.getNamingStrategy() instanceof EntityNamingStrategy)) {
+        if (StringUtils.hasText(physicalStrategy)
+                && EntityNamingStrategy.class.isAssignableFrom(Thread.currentThread().getContextClassLoader().loadClass(physicalStrategy.trim()))) {
 
             String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
 
@@ -199,6 +203,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
             EntityNamingStrategy.setPrefixMapping(builder.build());
 
+            JpaDao jpaDao = context.getBean(JpaDao.class);
+
             //增加表名和类名的映射
             QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
                     .getEntities().parallelStream()
@@ -208,7 +214,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
             log.info("*** Entity class and table name mapping init ok. Mappings:" + QueryAnnotationUtil.tableNameMappingEntityClassCaches);
 
         } else {
+
             log.warn("*** Jpa naming strategy not config, you'd better config physical-strategy: " + EntityNamingStrategy.class.getName());
+
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////
