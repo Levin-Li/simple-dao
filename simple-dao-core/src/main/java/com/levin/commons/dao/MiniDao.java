@@ -59,7 +59,7 @@ public interface MiniDao {
 
 
     /**
-     * 通过表名获取实体名称
+     * 通过表名获取实体类
      *
      * @param tableName
      * @return
@@ -69,7 +69,7 @@ public interface MiniDao {
     }
 
     /**
-     * 获取表名称
+     * 通过类名获取表名称
      *
      * @param entityClass
      * @return
@@ -79,7 +79,7 @@ public interface MiniDao {
     }
 
     /**
-     * 获取表名称
+     * 通过类名获取表名称
      *
      * @param entityClassName
      * @return

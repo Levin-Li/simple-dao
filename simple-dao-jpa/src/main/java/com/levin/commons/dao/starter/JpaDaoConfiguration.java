@@ -14,7 +14,6 @@ import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.EntityNamingStrategy;
 import com.levin.commons.dao.support.JpaDaoImpl;
-import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
@@ -31,15 +30,16 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 @EntityScan({"com.levin.commons.dao.domain.support"})
 
 @Slf4j
-public class JpaDaoConfiguration implements ApplicationContextAware {
+public class JpaDaoConfiguration implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
 
 //    @DynamicInsert和@DynamicUpdate
@@ -158,9 +158,21 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         this.context = applicationContext;
     }
 
+    /**
+     * Handle an application event.
+     *
+     * @param event the event to respond to
+     */
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+
+        if (event.getApplicationContext() == this.context) {
+            init();
+        }
+
+    }
 
     @SneakyThrows
-    @PostConstruct
     void init() {
 
         String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
@@ -181,22 +193,25 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             log.info("*** you can config like [spring.jpa.properties.{} : com.xxx.base=xxx_base,com.xxx.biz=xxx_biz] to set table name prefix mapping.", TABLE_NAME_PREFIX_MAPPINGS);
         }
 
+
+        EntityNamingStrategy.setPrefixMapping(builder.build());
+
+        JpaDao jpaDao = context.getBean(JpaDao.class);
+
+        //增加表名和类名的映射
+        QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
+                .getEntities().parallelStream()
+                .map(entityType -> entityType.getBindableJavaType())
+                .collect(Collectors.toList()), jpaDao::getTableName);
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+
         try {
             initTableComments();
         } catch (Exception e) {
             log.warn("update table comments error ", e);
         }
 
-
-        EntityNamingStrategy.setPrefixMapping(builder.build());
-
-        JpaDao jpaDao = newJpaDao();
-
-        //
-        QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
-                .getEntities().parallelStream()
-                .map(entityType -> entityType.getBindableJavaType())
-                .collect(Collectors.toList()), jpaDao::getTableName);
 
     }
 
@@ -216,7 +231,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             columnDefinitions.putAll(loadTableColumnDefinitionsByDefault());
         }
 
-        JpaDao simpleDao = newJpaDao();
+        JpaDao simpleDao = context.getBean(JpaDao.class);
 
         PhysicalNamingStrategy namingStrategy = simpleDao.getNamingStrategy();
 
