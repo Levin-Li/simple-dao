@@ -175,34 +175,39 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     @SneakyThrows
     void init() {
 
-        String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
-
-        final MapUtils.Builder<String, String> builder = MapUtils.put();
-
-        if (StringUtils.hasText(nameMappings)) {
-
-            log.info("*** {} : {}", TABLE_NAME_PREFIX_MAPPINGS, nameMappings);
-
-            Arrays.stream(nameMappings.split(","))
-                    .filter(StringUtils::hasText)
-                    .map(it -> it.split("="))
-                    .filter(it -> it.length == 2)
-                    .filter(it -> StringUtils.hasText(it[0]) && StringUtils.hasText(it[1]))
-                    .forEachOrdered(it -> builder.put(StringUtils.trimAllWhitespace(it[0]), StringUtils.trimAllWhitespace(it[1])));
-        } else {
-            log.info("*** you can config like [spring.jpa.properties.{} : com.xxx.base=xxx_base,com.xxx.biz=xxx_biz] to set table name prefix mapping.", TABLE_NAME_PREFIX_MAPPINGS);
-        }
-
-
-        EntityNamingStrategy.setPrefixMapping(builder.build());
-
         JpaDao jpaDao = context.getBean(JpaDao.class);
 
-        //增加表名和类名的映射
-        QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
-                .getEntities().parallelStream()
-                .map(entityType -> entityType.getBindableJavaType())
-                .collect(Collectors.toList()), jpaDao::getTableName);
+        if (jpaDao.getNamingStrategy() instanceof EntityNamingStrategy) {
+
+            String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
+
+            final MapUtils.Builder<String, String> builder = MapUtils.put();
+
+            if (StringUtils.hasText(nameMappings)) {
+
+                log.info("*** {} : {}", TABLE_NAME_PREFIX_MAPPINGS, nameMappings);
+
+                Arrays.stream(nameMappings.split(","))
+                        .filter(StringUtils::hasText)
+                        .map(it -> it.split("="))
+                        .filter(it -> it.length == 2)
+                        .filter(it -> StringUtils.hasText(it[0]) && StringUtils.hasText(it[1]))
+                        .forEachOrdered(it -> builder.put(StringUtils.trimAllWhitespace(it[0]), StringUtils.trimAllWhitespace(it[1])));
+            } else {
+                log.info("*** you can config like [spring.jpa.properties.{} : com.xxx.base=xxx_base,com.xxx.biz=xxx_biz] to set table name prefix mapping.", TABLE_NAME_PREFIX_MAPPINGS);
+            }
+
+            EntityNamingStrategy.setPrefixMapping(builder.build());
+
+            //增加表名和类名的映射
+            QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
+                    .getEntities().parallelStream()
+                    .map(entityType -> entityType.getBindableJavaType())
+                    .collect(Collectors.toList()), jpaDao::getTableName);
+
+        } else {
+            log.warn("*** Jpa naming strategy not config, you'd better config physical-strategy: " + EntityNamingStrategy.class.getName());
+        }
 
         ///////////////////////////////////////////////////////////////////////////////////////
 
