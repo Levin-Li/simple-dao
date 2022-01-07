@@ -177,7 +177,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
         JpaDao jpaDao = context.getBean(JpaDao.class);
 
-        if (!(jpaDao.getNamingStrategy() instanceof EntityNamingStrategy)) {
+        if ((jpaDao.getNamingStrategy() instanceof EntityNamingStrategy)) {
 
             String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
 
