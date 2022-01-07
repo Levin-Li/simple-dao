@@ -115,8 +115,7 @@ public abstract class QueryAnnotationUtil {
     private static final Locker cacheEntityOptionMapLocker = Locker.build();
 
     public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
-    public static final Map<String, Class<?>> tableNameMappingCaches = new ConcurrentReferenceHashMap<>();
-
+    public static final Map<String, Class<?>> tableNameMappingEntityClassCaches = new ConcurrentReferenceHashMap<>();
 
     /**
      * 实体类字段名和数据库字段名映射关系
@@ -254,7 +253,7 @@ public abstract class QueryAnnotationUtil {
 
 
     public static Class<?> getEntityClassByTableName(String tableName) {
-        return tableNameMappingCaches.get(tableName);
+        return tableNameMappingEntityClassCaches.get(tableName);
     }
 
     /**
@@ -266,12 +265,12 @@ public abstract class QueryAnnotationUtil {
         Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
             entityClassList.parallelStream().filter(Objects::nonNull).forEach(cls -> {
 
-                tableNameMappingCaches.put(cls.getName(), cls);
+                tableNameMappingEntityClassCaches.put(cls.getName(), cls);
 
                 String name = nameConvert.apply(cls);
 
                 if (StringUtils.hasText(name)) {
-                    tableNameMappingCaches.put(name, cls);
+                    tableNameMappingEntityClassCaches.put(name, cls);
                 }
 
             });

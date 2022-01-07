@@ -177,7 +177,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
         JpaDao jpaDao = context.getBean(JpaDao.class);
 
-        if (jpaDao.getNamingStrategy() instanceof EntityNamingStrategy) {
+        if (!(jpaDao.getNamingStrategy() instanceof EntityNamingStrategy)) {
 
             String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
 
@@ -204,6 +204,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
                     .getEntities().parallelStream()
                     .map(entityType -> entityType.getBindableJavaType())
                     .collect(Collectors.toList()), jpaDao::getTableName);
+
+            log.info("*** Entity class and table name mapping init ok. Mappings:" + QueryAnnotationUtil.tableNameMappingEntityClassCaches);
 
         } else {
             log.warn("*** Jpa naming strategy not config, you'd better config physical-strategy: " + EntityNamingStrategy.class.getName());
