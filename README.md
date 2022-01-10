@@ -18,44 +18,73 @@
     
 ### 1 使用预览
 
-   实体类（和表模型一一对应）
+   实体类
    
-      //实体类 对应 学生考试成绩表
-      
-      @Entity(name = "exam_log")
+      //1、学生表
+      @Entity(name = "student")
       @Data
       @Accessors(chain = true)
       @FieldNameConstants 
-      public class ExamLog{
+      public class Student{
      
          @Id
          @GeneratedValue
          private Long id;
          
          //学生姓名 
-         String studentName;
-         
-         //学科
-         String subject;
-         
-         //成绩分数
-         Integer score;
-
-         ... 
-             
+         String name;  
+         ...  
       }
       
+       //2、考试成绩表
+       @Entity(name = "exam_log")
+       @Data
+       @Accessors(chain = true)
+       @FieldNameConstants 
+       public class ExamLog{
+      
+          @Id
+          @GeneratedValue
+          private Long id;
+          
+          //学生ID 
+          Long studentId;
+          
+          //学科
+          String subject;
+          
+          //成绩分数
+          Integer score;
+ 
+          ... 
+             
+       }     
+      
    需求：
-   查询并统计出语数英三科考试中总分超过xx分，学科平均分高于xx分，学生姓名中包含特定字符的学生姓名、总分、平均分。
+   
+   查询并统计出语数英三科考试中总分超过260分，学科平均分高于80分，学生姓名中包含特定字符的学生姓名、总分、平均分。
  
    解决方案：
    
-   1）定义查询对象
+   1）定义查询对象（表连接）
   
    数据传输对象(兼查询对象，通过注解产生SQL语句)
     
       @Data
-      @TargetOption(entityClass = /* 目标类 */ ExamLog.class , resultClass = /* 结果类 */ ExamStatDto.class)
+      @TargetOption(
+      
+      entityClass =ExamLog.class ,  /* 目标类 */ 
+      
+      alias = E_ExamLog.ALIAS, // 主表别名
+      
+      resultClass = ExamStatDto.class,  /* 结果类 */
+      
+      //表连接
+      joinOptions = {
+            @JoinOption(entityClass = Student.class, alias = E_Student.ALIAS, joinTargetColumn = E_ExamLog.studentId )  //连接的表
+            //可以再连接表2 
+         } 
+      )
       public class ExamStatDto {
       
           @Sum(having=Op.Gt)
@@ -65,22 +94,23 @@
           Long avgScore = 80L; //当avgScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 avgScore -> score
 
           @In
-          String[] subject = {"语文", "数学", "英语"}; 
-      
-          @Contains //学生名字中包含'李'字
-          @GroupBy
-          String studentName = "李"; 
+          String[] subject = {"语文", "数学", "英语"};  
+        
+          @Contains(domain = E_Student.ALIAS) // 过滤出学生名字中包含'李'字
+          @GroupBy(domain = E_Student.ALIAS)  // 按名字分组
+          String name = "李"; 
+          
       }
       
        以上Dto等效的SQL语句如下：
        
           Select 
-          studentName ,  Avg(score) ,  Sum(score) 
-          From exam_log 
+            s.name ,  Avg(e.score) ,  Sum(e.score) 
+          From exam_log e Left Join student s on  s.id = e.studentId
           Where 
-          subject IN ("语文", "数学", "英语")  AND studentName LIKE '%李%'  
-          Group By studentName
-          Having Avg(score) > 80 and Sum(score) > 260
+            e.subject IN ("语文", "数学", "英语")  AND s.name LIKE '%李%'  
+          Group By s.name
+          Having Avg(e.score) > 80 and Sum(e.score) > 260
    
    2） 服务层
        
@@ -113,7 +143,7 @@
         
      }
      
-   大功告成，用 postman 测试以一下。这个是组件的简单应用，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。  
+   大功告成，用 postman 测试以一下。这个是组件的多表统计应用，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。  
         
  
 ### 2 快速上手
