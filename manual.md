@@ -196,7 +196,6 @@ Dao 类逻辑框图，如下图所示。
      PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
    
       
- 
 ### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
@@ -229,6 +228,10 @@ Dao 类逻辑框图，如下图所示。
        @Desc("商品分类id")
        @Contains
        String classId;
+       
+       //迭代出现多个StartsWith
+       @CList({@C(op = Op.StartsWith)})
+       List<String> name = Arrays.asList("Test", "LLW");
 
 
 #### 4.1 列选择和列更新
@@ -306,7 +309,7 @@ Dao 类逻辑框图，如下图所示。
          
   使用例子1：字段加一       
   
-              
+             
          @Update(paramExpr = "${_name} + 1")
          Integer alarmCnt;
          
@@ -319,12 +322,8 @@ Dao 类逻辑框图，如下图所示。
          Integer alarmCnt = 5 ;
          
          //以上生成的语句
-         // set alarmCnt = alarmCnt + ?    
-         
-         
-           
-                      
-  
+         // set alarmCnt = alarmCnt + ?     
+                     
  @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
  
        @Schema(description = "增量更新设备数据")

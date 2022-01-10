@@ -15,12 +15,16 @@ import java.lang.annotation.*;
 public @interface CList {
 
     /**
+     * 注解集合
+     *
      * @return
      */
     C[] value() default {};
 
     /**
      * 是否迭代
+     * <p>
+     * 根据字段值类型，当为数组或是集合对象时，自动展开，迭代注解
      *
      * @return
      */

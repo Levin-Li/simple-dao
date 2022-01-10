@@ -18,7 +18,6 @@ public class TestCListDto {
 
     @OR
     @CList({@C(op = Op.StartsWith)})
-    @In
     List<String> name = Arrays.asList("Test", "LLW");
 
 }
