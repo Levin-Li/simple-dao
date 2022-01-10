@@ -57,18 +57,29 @@ public interface MiniDao {
         return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
 
+
     /**
-     * 获取表名称
+     * 通过表名获取实体类
+     *
+     * @param tableName
+     * @return
+     */
+    default Class<?> getEntityClass(String tableName) {
+        return QueryAnnotationUtil.getEntityClassByTableName(tableName);
+    }
+
+    /**
+     * 通过类名获取表名称
      *
      * @param entityClass
      * @return
      */
-    default String getTableName(Class entityClass) {
+    default String getTableName(Class<?> entityClass) {
         return getNamingStrategy().toPhysicalTableName(QueryAnnotationUtil.getTableNameByAnnotation(entityClass), null);
     }
 
     /**
-     * 获取表名称
+     * 通过类名获取表名称
      *
      * @param entityClassName
      * @return

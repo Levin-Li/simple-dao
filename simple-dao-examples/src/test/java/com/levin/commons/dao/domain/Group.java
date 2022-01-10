@@ -19,7 +19,7 @@ import javax.persistence.Id;
 @FieldNameConstants
 public class Group
         extends AbstractTreeObject<Long, Group>
-        implements StatefulObject<String> {
+        implements StatefulObject {
 
     @Id
     @GeneratedValue
@@ -37,25 +37,25 @@ public class Group
     Integer score;
 
 
-    public Group(String name, Long parentId) {
-        super(name, parentId);
-    }
-
     public Group() {
     }
 
+    public Group(String name, Long parentId) {
+        super(parentId, name);
+    }
+
     public Group(Long id, String name) {
-        super(name, null);
+        super(null, name);
         this.id = id;
     }
 
     public Group(String name) {
-        super(name, null);
+        super(null, name);
     }
 
 
     @Override
     public String toString() {
-        return   name + "[" + state+"]";
+        return name + "[" + state + "]";
     }
 }

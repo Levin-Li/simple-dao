@@ -19,8 +19,8 @@ import javax.persistence.*;
 @ToString(exclude = "group")
 @FieldNameConstants
 public class User
-        extends AbstractNamedEntityObject<Long>
-        implements StatefulObject<String> {
+        extends AbstractNamedEntityObject
+        implements StatefulObject  {
 
     @Id
     @GeneratedValue

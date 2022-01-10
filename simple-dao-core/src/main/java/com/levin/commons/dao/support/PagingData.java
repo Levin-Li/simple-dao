@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.annotation.Ignore;
+import com.levin.commons.service.domain.PageableData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,40 +21,64 @@ import java.util.Map;
 @Accessors(chain = true)
 //@Builder
 @FieldNameConstants
-public class PagingData<T> implements Serializable {
+public class PagingData<T> implements PageableData<T>, Serializable {
 
     @Ignore
     @Schema(description = "总记录数")
     @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
-    long totals = -1;
+    Long totals = -1L;
 
     @Ignore
     @Schema(description = "页面编号")
     @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
-    int pageIndex = -1;
+    Integer pageIndex = -1;
 
     @Ignore
     @Schema(description = "分页大小")
     @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
-    int pageSize = -1;
+    Integer pageSize = -1;
 
     @Ignore
     @Schema(description = "数据集")
     @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-    List<T> records;
+    List<T> items;
 
     @Ignore
     @Schema(description = "扩展数据")
     Map<String, Object> extra;
 
-    @Transient
-    public T getFirst() {
-        return isEmpty() ? null : records.get(0);
+    @Ignore
+    @Schema(description = "分页Token")
+    String pageToken;
+
+//    @Ignore
+//    @Schema(description = "是否有更多")
+//    boolean hasMore;
+
+    /**
+     * java bean 规范，boolean 变量 用 is 做为前缀
+     *
+     * @return
+     */
+    public boolean isHasMore() {
+        return (pageSize != null && items != null && items.size() >= pageSize);
+    }
+
+    @Override
+    public boolean hasMore() {
+        return isHasMore();
     }
 
     @Transient
+    @Override
+    public T getFirst() {
+        return isEmpty() ? null : items.get(0);
+    }
+
+    @Transient
+    @Override
     public boolean isEmpty() {
-        return records == null || records.isEmpty();
+        return items == null || items.isEmpty();
     }
 
     public PagingData() {

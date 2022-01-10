@@ -2,6 +2,8 @@ package com.levin.commons.dao.codegen;
 
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.Like;
+import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.SecurityDomain;
@@ -47,15 +49,19 @@ public final class ServiceModelCodeGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceModelCodeGenerator.class);
 
-    public static final String DEL_EVT_FTL = "del_evt.ftl";
-    public static final String UPDATE_EVT_FTL = "update_evt.ftl";
-    public static final String QUERY_EVT_FTL = "query_evt.ftl";
-    public static final String SERVICE_FTL = "service.ftl";
-    public static final String SERVICE_IMPL_FTL = "service_impl.ftl";
-    public static final String CREATE_EVT_FTL = "create_evt.ftl";
-    public static final String INFO_FTL = "info.ftl";
-    public static final String CONTROLLER_FTL = "controller.ftl";
+    public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
+    public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
+    public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
+    public static final String ID_QUERY_EVT_FTL = "services/req/id_query_req.ftl";
+
+    public static final String SERVICE_FTL = "services/service.ftl";
+    public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
+    public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
+    public static final String INFO_FTL = "services/info/info.ftl";
+    public static final String CONTROLLER_FTL = "controller/controller.ftl";
+
     public static final String POM_XML_FTL = "pom.xml.ftl";
+
 
 //    private static Set<Class> baseTypes = new HashSet<>();
 
@@ -72,8 +78,14 @@ public final class ServiceModelCodeGenerator {
 //        collectionsTypes.add(Map.class);
 
         notUpdateNames.add("addTime");
-        notUpdateNames.add("updateTime");
-        notUpdateNames.add("lastUpdateTime");
+        notUpdateNames.add("creator");
+        notUpdateNames.add("createBy");
+        notUpdateNames.add("createTime");
+        notUpdateNames.add("createDate");
+
+//        notUpdateNames.add("updateTime");
+//        notUpdateNames.add("lastUpdateTime");
+
         notUpdateNames.add("sn");
     }
 
@@ -105,6 +117,9 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
+        String template = "模块开发说明.md";
+
+        genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
 
         final String key = "artifactId";
         final List<String> modules = new ArrayList<>(2);
@@ -123,12 +138,11 @@ public final class ServiceModelCodeGenerator {
         params.put("moduleType", "service");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
+        /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
+
         modules.add(pomFile.getParentFile().getName());
 
         params.put("services", MapUtils.put(key, params.get(key)).build());
-
-
-/////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         pomFile = new File(controllerDir, "../../../pom.xml").getCanonicalFile();
 
@@ -139,12 +153,11 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
+        //////////////////////////测试模块//////////////////////////////////////////
 
         modules.add(pomFile.getParentFile().getName());
 
         params.put("controller", MapUtils.put(key, params.get(key)).build());
-
-        //////////////////////////测试模块//////////////////////////////////////////
 
         pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
 
@@ -258,6 +271,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
+
         String fileName = "index.html";
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
@@ -268,26 +282,26 @@ public final class ServiceModelCodeGenerator {
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleWebControllerAdvice.java");
+        fileName = String.join(File.separator, "config", "ModuleWebControllerAdvice.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleSwaggerConfigurer.java");
+        fileName = String.join(File.separator, "config", "ModuleSwaggerConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "config","ModuleVariableResolverConfigurer.java");
+        fileName = String.join(File.separator, "config", "ModuleVariableResolverConfigurer.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
-        fileName = String.join(File.separator, "config","ModuleWebSecurityConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+//        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
+//        genFileByTemplate(fileName, params, String.join(File.separator,
+//                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
 
-        fileName = String.join(File.separator, "aspect","ModuleWebControllerAspect.java");
+        fileName = String.join(File.separator, "aspect", "ModuleWebControllerAspect.java");
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
 
@@ -354,9 +368,9 @@ public final class ServiceModelCodeGenerator {
 
         final int suffixLen = ".class".length();
 
-        // logger.info("Files:" + FileUtils.listFiles(file, null, true));
+        // logger.info("Files:" + FileUtils.listFiles(file, new String[]{"class"}, true));
 
-        List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
+        final List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
                 .stream().filter(File::isFile)
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
@@ -369,7 +383,9 @@ public final class ServiceModelCodeGenerator {
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
-                }).filter(clazz -> clazz.getAnnotation(Entity.class) != null)
+                })
+                .filter(clazz -> clazz.isAnnotationPresent(javax.persistence.Entity.class))
+                .filter(clazz -> !clazz.isAnnotationPresent(Ignore.class))
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
@@ -416,8 +432,37 @@ public final class ServiceModelCodeGenerator {
             moduleName(moduleName);
         }
 
-        logger.info(mavenProject.getArtifactId() + " *** modulePackageName = " + modulePackageName() + " , moduleName = " + moduleName());
+        logger.info(" *** 开始代码生成 *** 当前Pom模块: {} , modulePackageName = {} , moduleName = {}", mavenProject.getArtifactId(), modulePackageName(), moduleName());
 
+        if (genParams != null) {
+            genParams.put("moduleNameHashCode", "" + Math.abs(modulePackageName().hashCode()));
+        }
+
+        ///////////////////////////////////////////////
+
+        genFileByTemplate("controller/BaseController.java",
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + "controller" + File.separatorChar + "BaseController.java");
+
+        genFileByTemplate("services/BaseService.java",
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + "services" + File.separatorChar + "BaseService.java");
+
+        String fn = String.join(File.separator, "services", "commons", "req", "BaseReq.java");
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
+
+        fn = String.join(File.separator, "services", "commons", "req", "MultiTenantReq.java");
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
 
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
@@ -425,13 +470,14 @@ public final class ServiceModelCodeGenerator {
             entityClassList(clazz);
 
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
+
             try {
                 genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
             } catch (Exception e) {
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
             }
         }
-
+        ///////////////////////////////////////////////
 
     }
 
@@ -567,13 +613,19 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
-
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
-                .put("modulePackageName",modulePackageName())
+                .put("modulePackageName", modulePackageName())
+                .put("isMultiTenantObject", MultiTenantObject.class.isAssignableFrom(entityClass))
+                .put("isOrganizedObject", OrganizedObject.class.isAssignableFrom(entityClass))
                 .build();
 
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false);
+
+        //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
+
+        //请求对象会忽略继承的属性
+        fields = buildFieldModel(entityClass, entityMapping, true);
 
         buildEvt(entityClass, fields, serviceDir, params);
 
@@ -589,7 +641,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true);
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false);
 
         fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -642,11 +694,16 @@ public final class ServiceModelCodeGenerator {
         }
     }
 
-    private static void buildInfo(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> params) throws Exception {
+    private static void buildInfo(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+
+        final Consumer<Map<String, Object>> mapConsumer = (map) -> {
+            map.putAll(paramsMap);
+            map.put("fields", fields);
+        };
 
         genCode(entityClass, INFO_FTL, fields, srcDir,
                 servicePackage() + ".info",
-                entityClass.getSimpleName() + "Info");
+                entityClass.getSimpleName() + "Info", mapConsumer);
 
     }
 
@@ -656,7 +713,11 @@ public final class ServiceModelCodeGenerator {
 
         final String pkgName = servicePackage() + ".req";
 
-        final Consumer<Map<String, Object>> mapConsumer = (map) -> map.put("fields", fields);
+        final Consumer<Map<String, Object>> mapConsumer = (map) -> {
+            map.putAll(paramsMap);
+            map.put("servicePackageName", servicePackage());
+            map.put("fields", fields);
+        };
 
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
@@ -666,13 +727,16 @@ public final class ServiceModelCodeGenerator {
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
-                pkgName, "Delete" + entityClass.getSimpleName() + "Req");
+                pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        //ID查询
+        genCode(entityClass, ID_QUERY_EVT_FTL, fields, srcDir,
+                pkgName, "Query" + entityClass.getSimpleName() + "ByIdReq", mapConsumer);
 
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
-                pkgName, "Query" + entityClass.getSimpleName() + "Req", params -> {
-                    params.put("servicePackageName", servicePackage());
-                });
+                pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
     }
 
 
@@ -682,22 +746,21 @@ public final class ServiceModelCodeGenerator {
 
         final String serviceName = entityClass.getSimpleName() + "Service";
 
-        genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName);
+        final Consumer<Map<String, Object>> setVars = params -> {
+            params.put("servicePackageName", pkgName);
+            params.put("serviceName", serviceName);
+            params.putAll(paramsMap);
+            params.put("isService", true);
+        };
 
+        genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName, setVars);
 
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
         serviceClassNameList(serviceName);
 
-        genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl"
-                , params -> {
-                    params.put("servicePackageName", pkgName);
-                    params.put("serviceName", serviceName);
-                    params.putAll(paramsMap);
-                    params.put("isService", true);
-                });
-
+        genCode(entityClass, SERVICE_IMPL_FTL, fields, srcDir, pkgName, serviceName + "Impl", setVars);
 
     }
 
@@ -710,7 +773,6 @@ public final class ServiceModelCodeGenerator {
             params.putAll(paramsMap);
             params.put("isController", true);
         };
-
 
         //加入控制器类
         controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
@@ -754,7 +816,7 @@ public final class ServiceModelCodeGenerator {
      * @param callbacks
      * @throws Exception
      */
-    private static void genCode(Class entityClass, String template, List<FieldModel> fields, String srcDir,
+    private static void genCode(Class entityClass, final String template, List<FieldModel> fields, String srcDir,
                                 String classPackageName, String className, Consumer<Map<String, Object>>... callbacks) throws Exception {
 
         //去除
@@ -783,6 +845,8 @@ public final class ServiceModelCodeGenerator {
                 : entityClass.getSimpleName();
 
         Map<String, Object> params = new LinkedHashMap<>();
+
+        params.put("modulePackageName", modulePackageName());
 
         params.put("entityClassPackage", entityClass.getPackage().getName());
         params.put("entityClassName", entityClass.getName());
@@ -829,7 +893,7 @@ public final class ServiceModelCodeGenerator {
         return null;
     }
 
-    private static void genFileByTemplate(String template, Map<String, Object> params, String fileName) throws Exception {
+    private static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
         File file = new File(fileName);
 
@@ -839,6 +903,10 @@ public final class ServiceModelCodeGenerator {
         }
 
         file.getParentFile().mkdirs();
+
+        //文件名
+        params.put("fileName", file.getName());
+        params.put("templateFileName", template.replace("\\", "/"));
 
         Writer hWriter = new OutputStreamWriter(new FileOutputStream(fileName), "utf-8");
 
@@ -863,7 +931,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean excess/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
 
         Object obj = entityClass.newInstance();
 
@@ -875,6 +943,9 @@ public final class ServiceModelCodeGenerator {
 
         //  System.out.println("found " + clzss + " : " + field);
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
+
+        boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
+        boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
 
         // Field.setAccessible(declaredFields, true);
 
@@ -901,6 +972,22 @@ public final class ServiceModelCodeGenerator {
             if (Map.class.isAssignableFrom(fieldType)) {
                 //暂不支持Map
                 logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
+                continue;
+            }
+
+            if (ignoreSpecificField
+                    && isMultiTenantObject
+                    && field.getName().equals("tenantId")) {
+                //多租户字段
+                logger.info("*** " + entityClass + " 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
+                continue;
+            }
+
+            if (ignoreSpecificField
+                    && isOrganizedObject
+                    && field.getName().equals("orgId")) {
+                //多租户字段
+                logger.info("*** " + entityClass + " 忽略组织字段 orgId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1052,7 +1139,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setAnnotations(annotations);
 
-//            if (excess) {
+//            if (ignoreSpecificField) {
 //                buildExpandInfo(entityClass, fieldModel);
 //            }
 
@@ -1091,11 +1178,13 @@ public final class ServiceModelCodeGenerator {
             }
 
             list.add(fieldModel);
+
         }
         return list;
     }
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
+
         return ClassUtils.isPrimitiveOrWrapper(type)
                 || CharSequence.class.isAssignableFrom(type)
                 || type.isEnum()
@@ -1111,13 +1200,19 @@ public final class ServiceModelCodeGenerator {
         if (fieldName == null || obj == null) {
             return null;
         }
+
         Field field = ReflectionUtils.findField(obj.getClass(), fieldName);
+
         assert field != null;
+
         Object value = ReflectionUtils.getField(field, obj);
+
         if (value == null) {
             return null;
         }
+
         return value.toString();
+
     }
 
     private static void buildExpandInfo(Class entityClass, FieldModel fieldModel) {
@@ -1167,6 +1262,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static Template getTemplate(String templatePath) throws IOException {
+
+        //freemark 模板路径只支持正斜杠
+        templatePath = templatePath.replace("\\", "/").replace("//", "/");
+
         //创建一个合适的Configuration对象
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         DefaultObjectWrapper objectWrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28).build();
@@ -1238,7 +1337,7 @@ public final class ServiceModelCodeGenerator {
                 //如果是类中类
                 Class declaringClass = type.getDeclaringClass();
                 if (declaringClass != null) {
-                    logger.info("add import " + type + ",DeclaringClass :" + declaringClass);
+                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
                     imports.add(declaringClass.getName() + ".*");
                 } else {
                     imports.add(type.getName());

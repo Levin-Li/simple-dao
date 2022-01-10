@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  *
  * 抓取集合属性
  *
- * 该注解主要应用于查询对象，结果对象也可以使用，但必须 设置 onlyForQueryObject 为 false.
+ * 该注解主要应用于查询对象，结果对象也可以使用，但必须 设置 isBindToField 为 true.
  *
  *
  * @author llw
@@ -94,6 +94,8 @@ public @interface Fetch {
 
 
     /**
+     * 暂时仅对查询对象有效，注解在结果对象上时，该属性无效
+     * <p>
      * 生效表达式
      * <p>
      * 目前支持 SpEL

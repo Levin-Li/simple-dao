@@ -1,5 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
+import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.domain.BaseEntityObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -14,12 +15,20 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public abstract class AbstractBaseEntityObject<ID extends Serializable>
-        implements BaseEntityObject<ID> {
+//@Table(indexes = {
+//        @Index(columnList = AbstractBaseEntityObject.Fields.creator),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.enable),
+//        @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
+//})
+public abstract class AbstractBaseEntityObject
+        implements BaseEntityObject {
 
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "创建者")
+    @Column(length = 128)
     protected String creator;
 
     @Schema(description = "创建时间")
@@ -27,25 +36,25 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createTime;
 
-    @Schema(description = "最后更新时间")
+    @Schema(description = "更新时间")
     @Column
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date lastUpdateTime;
 
-//    @OrderBy
+    //@OrderBy
     @Schema(description = "排序代码")
     protected Integer orderCode;
 
     @Schema(description = "是否允许")
     @Column(nullable = false)
-    protected Boolean enable = true;
+    protected Boolean enable;
 
     @Schema(description = "是否可编辑")
     @Column(nullable = false)
-    protected Boolean editable = true;
+    protected Boolean editable;
 
     @Schema(description = "备注")
-    @Column(length = 1000)
+    @Column(length = 512)
     protected String remark;
 
     @PrePersist
@@ -55,6 +64,17 @@ public abstract class AbstractBaseEntityObject<ID extends Serializable>
             createTime = new Date();
         }
 
+        if (orderCode == null) {
+            orderCode = 100;
+        }
+
+        if (editable == null) {
+            editable = true;
+        }
+
+        if (enable == null) {
+            enable = true;
+        }
     }
 
     @PreUpdate

@@ -82,6 +82,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     *
+     * 增加连接语句
+     *
      * 在有必要的情况下，增加连接查询条件
      * <p/>
      * 关联 (join)
@@ -142,6 +145,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
     /**
      * 笛卡儿积
+     * 自然连接
+     *
      *
      * @param isAppend
      * @param targetClass
@@ -153,6 +158,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
     /**
      * 笛卡儿积
+     * 自然连接
      *
      * @param isAppend
      * @param joinOptions
@@ -161,7 +167,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions);
 
     /**
-     * join
+     * 增加连接
      *
      * @param isAppend
      * @param joinOptions
@@ -170,6 +176,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions);
 
     /**
+     *
+     * 增加连接
+     *
      * @param isAppend
      * @param joinType
      * @param entityClass
@@ -193,6 +202,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> joinFetch(String... setAttrs);
 
     /**
+     * 连接抓取
      * @param isAppend
      * @param setAttrs
      * @return

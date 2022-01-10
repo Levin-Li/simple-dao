@@ -16,8 +16,8 @@ import javax.persistence.*;
 @Accessors(chain = true)
 @FieldNameConstants
 public class Task
-        extends AbstractNamedEntityObject<Long>
-        implements StatefulObject<String> {
+        extends AbstractNamedEntityObject
+        implements StatefulObject  {
 
     @Id
     @GeneratedValue

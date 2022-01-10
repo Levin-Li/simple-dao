@@ -12,6 +12,7 @@
    测试用例类 [com.levin.commons.dao.DaoExamplesTest](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)  
    
 ### 二进制发布
+
    [![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
    
    二进制文件发布在[jitpack.io](https://jitpack.io/#Levin-Li/simple-dao)
@@ -27,12 +28,12 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.31.RELEASE</version>
+            <version>2.2.32-SNAPSHOT</version>
         </dependency>
         
        
    
-### 1 Dao组件注解核心接口
+### 1  组件注解核心接口
 
 Dao 类逻辑框图，如下图所示。
 
@@ -48,7 +49,7 @@ Dao 类逻辑框图，如下图所示。
 
 *    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
-### 2 Dao组件使用方式
+### 2  组件使用方式
 
 #### 2.1 方式1 - 使用通用Dao（推荐）
  
@@ -186,89 +187,15 @@ Dao 类逻辑框图，如下图所示。
      //启用组件扫描                
      @EnableProxyBean(registerTypes = EntityRepository.class)                
 
-#### 3 分页查询支持
+### 3 分页查询支持
 
    分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
    
-        
+       
      //使用示例
      PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
    
-   分页查询请求，分页查询参数通过PageOption注解获取，组件默认分页类如下：
-   
-     @Data
-     @Accessors(chain = true)
-     //@Builder
-     @FieldNameConstants
-     @NoArgsConstructor
-     @AllArgsConstructor
-     public class SimplePaging
-             implements Paging, Serializable {
-     
-         @Ignore
-         @Schema(description = "是否查询总记录数")
-         boolean requireTotals = false;
-     
-         @Ignore
-         @Schema(description = "是否查询结果集")
-         boolean requireResultList = true;
-     
-         @Ignore
-         @Schema(description = "页面索引")
-         int pageIndex = 1;
-     
-         @Ignore
-         @Schema(description = "页面大小")
-         int pageSize = 20;
-         
-     }
-   
-       
-   分页查询结果类 [PagingData](./simple-dao-core/src/main/java/com/levin/commons/dao/support/PagingData.java) 
-   通过 PageOption 注解自动把查询结果注入到返回对象中。
-   
-      @Data
-      @Accessors(chain = true)
-      //@Builder
-      @FieldNameConstants
-      public class PagingData<T> implements Serializable {
       
-          @Ignore
-          @Schema(description = "总记录数")
-          @PageOption(value = PageOption.Type.RequireTotals, remark = "查询结果会自动注入这个字段")
-          long totals = -1;
-      
-          @Ignore
-          @Schema(description = "页面编号")
-          @PageOption(value = PageOption.Type.PageIndex, remark = "通过注解设置分页索引")
-          int pageIndex = -1;
-      
-          @Ignore
-          @Schema(description = "分页大小")
-          @PageOption(value = PageOption.Type.PageSize, remark = "通过注解设置分页大小")
-          int pageSize = -1;
-      
-          @Ignore
-          @Schema(description = "数据集")
-          @PageOption(value = PageOption.Type.RequireResultList, remark = "查询结果会自动注入这个字段")
-          List<T> records;
-      
-          @Transient
-          public T getFirst() {
-              return isEmpty() ? null : records.get(0);
-          }
-      
-          @Transient
-          public boolean isEmpty() {
-              return records == null || records.isEmpty();
-          }
-      
-          public PagingData() {
-          }
-      
-      } 
-      
- 
 ### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
@@ -301,90 +228,15 @@ Dao 类逻辑框图，如下图所示。
        @Desc("商品分类id")
        @Contains
        String classId;
+       
+       //迭代出现多个StartsWith
+       @CList({@C(op = Op.StartsWith,value = "name")})
+       List<String> nameList = Arrays.asList("Test", "LLW");
 
-### 4.1 CASE 语句支持
 
-#### 4.1.1 注解支持
-  
-      @Data
-      @Accessors(chain = true)
-      @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
-      public class CaseTestDto {
-      
-          @C
-          @CList({@C(op = Op.StartsWith)})
-          @Select
-          String name;
-      
-          // states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
-      
-          @Select(value = E_User.score, fieldCases = {
-                  @Case(value = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
-                          @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
-                          , @Case.When(whenExpr = "score > 85", thenExpr = "2")
-                          , @Case.When(whenExpr = "score > 60", thenExpr = "3")
-                          , @Case.When(whenExpr = "score > 30", thenExpr = "4")
-                  })
-      
-                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", whenOptions = {
-                  @Case.When(whenExpr = "'正常'", thenExpr = "1")
-                  , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
-                  , @Case.When(whenExpr = "'审请中'", thenExpr = "3")
-                  , @Case.When(whenExpr = "'已删除'", thenExpr = "4")
-          })
-          })
-          int scoreLevel = 1;
-      
-          @Ignore
-          boolean queryState = false;
-          
-      }
-     
-     //以上注解将生成以下语句
-     
-      //Select  (u.name) AS name  ,  
-           (CASE  
-             WHEN u.score > 95 AND u.lastUpdateTime is null THEN 1 
-             WHEN score > 85 THEN 2 WHEN score > 60 THEN 3 
-             WHEN score > 30 THEN 4 
-             ELSE 5 
-             END) AS scoreLevel   
-           From com.levin.commons.dao.domain.User u 
-    
-#### 4.1.2 简单工具类支持
+#### 4.1 列选择和列更新
 
-        String ql = new Case().column("status")
-                .when("'A'", "0")
-                .when("'B'", "1")
-                .elseExpr("2")
-                .toString();
-                    
-        //语句            
-        ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
-    
- 
-### 4.2 函数的支持（@Func注解实现）     
-           
-           class XXX {
-            @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
-            protected Date createTime = new Date();
-            
-            @Ignore
-            String format ="'yyyy-MM-DD'";
-            
-            ...
-            
-            }
-            //字符串类型的 createTime 字段
-            //以上注解将生成语句： DATE_FORMAT(createTime,'yyyy-MM-DD') < ?  ,  参数为 new Date()
-            
-            // Func.ORIGIN_EXPR 代表原表达式
-            
-            //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
-             
-### 4.3 列选择和列更新
-
-  选择查询注解：
+##### 4.1.1 列选择
 
           @Select
           String field;
@@ -392,7 +244,58 @@ Dao 类逻辑框图，如下图所示。
   产生的语句：
 
          select field from ...
+         
+         
+  使用例子：
+  
+        @Data
+        @Accessors(chain = true)
+        @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 100)
+        public class GroupSelectDTO {
+        
+            //如果字段名中有小数点这个字符，需要强制指定别名
+            @Select(domain = E_Group.ALIAS, value = "parent.name")
+            String parentName;
+        
+            @Select(distinct = true, orderBy = @OrderBy)
+            String name;
+            
+        }       
 
+
+  复杂例子：
+  
+                        
+        @Data
+        @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
+        public class SimpleSubQueryDTO {
+    
+        //分页
+        Paging paging = new PagingQueryReq(1, 20);
+    
+        @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875"
+                , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+        int taskCnt = 1;
+        
+        // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
+    
+    
+        @Ignore
+        Integer taskSum = 9876;
+    
+        @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME
+                + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}",
+                alias = "taskSum")
+        Map<String, Object> params = MapUtils
+                .put("p1", (Object) "9999")
+                .put("p2", 2)
+                .put("fun", "sum")
+                .build();
+        //以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+     
+        }
+ 
+##### 4.1.1 列更新
 
   更新注解：
 
@@ -403,7 +306,24 @@ Dao 类逻辑框图，如下图所示。
 
          set lastUpdateTime = ?
          
+         
+  使用例子1：字段加一       
   
+             
+         @Update(paramExpr = "${_name} + 1")
+         Integer alarmCnt;
+         
+         //以上生成的语句
+         // set alarmCnt = alarmCnt + 1
+         
+  使用例子2：字段加参数值       
+   
+         @Update(paramExpr = "${_name} + ${:_val}")
+         Integer alarmCnt = 5 ;
+         
+         //以上生成的语句
+         // set alarmCnt = alarmCnt + ?     
+                     
  @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
  
        @Schema(description = "增量更新设备数据")
@@ -447,9 +367,257 @@ Dao 类逻辑框图，如下图所示。
        }
  
 
-### 4.4 动态变量
+#### 4.2 CASE 语句支持
 
-   变量在注解中会经常使用，具体参考 【10.4】章节。
+##### 4.2.1 注解支持
+  
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(isNative = true, entityClass = User.class, alias = E_User.ALIAS, maxResults = 20)
+      public class CaseTestDto {
+      
+          @C
+          @CList({@C(op = Op.StartsWith)})
+          @Select
+          String name;
+      
+          // states = {"正常", "已取消", "审请中", "已删除", "已冻结"};
+      
+          @Select(value = E_User.score, fieldCases = {
+          
+                  // case 1 的条件 #_val == 1
+                  
+                  @Case(value = "", elseExpr = "5", condition = "#_val == 1", 
+                  whenOptions = {
+                            @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
+                          , @Case.When(whenExpr = "score > 85", thenExpr = "2")
+                          , @Case.When(whenExpr = "score > 60", thenExpr = "3")
+                          , @Case.When(whenExpr = "score > 30", thenExpr = "4")
+                  })
+      
+                    // case 2 的条件 #_val == 2 && queryState
+                    
+                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", 
+                      whenOptions = {
+                        @Case.When(whenExpr = "'正常'", thenExpr = "1")
+                      , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
+                      , @Case.When(whenExpr = "'审请中'", thenExpr = "3")
+                      , @Case.When(whenExpr = "'已删除'", thenExpr = "4")
+                      })
+          })
+          int scoreLevel = 1;
+      
+          @Ignore
+          boolean queryState = false;
+          
+      }
+     
+     //以上注解将生成以下语句
+     
+      //Select  (u.name) AS name  ,  
+           (CASE  
+             WHEN u.score > 95 AND u.lastUpdateTime is null THEN 1 
+             WHEN score > 85 THEN 2 WHEN score > 60 THEN 3 
+             WHEN score > 30 THEN 4 
+             ELSE 5 
+             END) AS scoreLevel   
+           From com.levin.commons.dao.domain.User u 
+    
+##### 4.2.2 简单工具类支持
+
+        String ql = new Case().column("status")
+                .when("'A'", "0")
+                .when("'B'", "1")
+                .elseExpr("2")
+                .toString();
+                    
+        //语句            
+        ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
+    
+ 
+#### 4.3 函数的支持（@Func注解实现）     
+           
+           class XXX {
+            @Lt(fieldFuncs = @Func(value = "DATE_FORMAT",params = {Func.ORIGIN_EXPR,"${format}"}))
+            protected Date createTime = new Date();
+            
+            @Ignore
+            String format ="'yyyy-MM-DD'";
+            
+            ...
+            
+            }
+            //字符串类型的 createTime 字段
+            //以上注解将生成语句： DATE_FORMAT(createTime,'yyyy-MM-DD') < ?  ,  参数为 new Date()
+            
+            // Func.ORIGIN_EXPR 代表原表达式
+            
+            //定义多个函数时，后面的函数会覆盖前面的函数 ，但可以通过 Func.ORIGIN_EXPR 实现嵌套，后面嵌套前面的函数。
+             
+
+#### 4.4 查询上下文 & 变量
+
+   在一次查询的过程中，Dao会保持一个上下文，查询对象的所有字段值都会放入上下文中，也可以通过 @CtxVar 注解设置上下文。上下文重的变量主要在 condition 条件中使用。
+   
+##### 4.4.1  查询上下文
+
+     上下文列表（越后面优先级越高）：
+     
+        1、DaoContext.getGlobalContext(); //全局上下文
+        
+        2、DaoContext.getThreadContext(); //线程上下文
+        
+        3、dao.selectFrom(User.class).setContext(); //dao 实例上下文
+        
+        4、查询对象字段上下文
+        
+##### 4.4.2 变量
+        
+   默认变量-1：
+
+       _val 表示被注解字段的值
+    
+       _this 表示DTO对象
+    
+       _name 表示被注解字段的字段名
+    
+       _isSelect 表示当前是否是SelectDao
+    
+       _isUpdate 表示当前是否是UpdateDao
+    
+       _isDelete 表示当前是否是DeleteDao
+       
+       
+       使用例子：
+       @Eq(condition="#_val != null") // 变量 #_val 的值为 "Echo"
+       String name = "Echo";     
+  
+   默认变量-2：查询对象的字段名做为变量名
+   
+   例：
+   
+       class QueryObj{
+         
+         @GroupBy(condition = "isGroupByName") // 变量 isGroupByName 是当前类的字段
+         String name;
+         
+         @Sum
+         Integer sumScore;
+         
+         boolean isGroupByName = true; 
+         
+       }
+
+   默认变量-3：通过 [CtxVar](./simple-dao-annotations/src/main/java/com/levin/commons/dao/CtxVar.java)   注解增加变量。
+   
+   通常用于跨类的变量传递，通过 CtxVar 注解配置。 
+   
+      @Data
+      @Accessors(chain = true)
+      @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleUserQO.QResult.class)
+      public class SimpleUserQO {
+      
+          @Data
+          @NoArgsConstructor
+          public static class QResult {
+      
+              @Select
+              String name;
+      
+              @Select
+              Integer score;
+      
+              //有条件的查询状态信息,变量huo
+              @Select(condition = "isQueryStatus")
+              String status;
+          }
+       
+     
+          @Lt
+          protected Date createTime = new Date();
+      
+          @Ignore
+          String format = "YYYY-MM-DD";
+      
+          @Ignore
+          @CtxVar //把 isQueryStatus 变量注入到当前上下文中
+          boolean isQueryStatus = true;
+      
+      } 
+      
+##### 4.4.3 变量的使用方式
+   
+###### 4.4.3.1 文本替换   
+
+   字段变量的替换
+   
+   为了兼容 原生查询和 JPA 查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
+   
+      F$:score > 95 AND F$:u.lastUpdateTime
+      
+      以上表达式当原生查询时语句被替换成：u.score > 95 AND u.last_update_time
+      当使用 JPA 查询时语句被替换成：u.score > 95 AND u.lastUpdateTime
+      
+      没有指定别名的字段，自动加上别名。
+      
+  替换变量
+  
+      SQL查询参数匹配样式：${:paramName}  如下: 
+       
+          t.score +  ${:val}    替换后的语句 -->     t.score +  :?
+          
+      
+      文本替换样式：${paramName}   如下：
+      
+       t.score +  ${val}    替换后的语句 -->     t.score +  123 
+       
+       @Avg(value = "score",t.score +  ${val}")  --> 表达式会被替换为 t.score + 10
+       Map<String,Object> params = [val:10]
+       
+      
+        @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
+        Map<String, Object> params = MapUtils.putFirst("p1", "9999").put("p2", 2).put("fun", "sum").build();
+        
+       / /以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
+       
+      
+     主要区别是冒号，加了冒号表示替换成参数。
+     
+###### 4.4.3.2 Spel 表达式
+
+   例如：在 condition 属性上示 SPEL表达式，默认变量名前面需要加 # 号，如下
+  
+        @Eq(condition="#_val != null") //_val 变量名前要加#号
+        String name = "Echo";
+        
+        @Gt(condition="#_val != null") //_val 变量名前要加#号
+        Integer age = 18;
+           
+   例如：组校验，基于 SPEL 实现跨字段的参数验证，通过 @Validator 注解实现。
+   
+     public class DeleteCustomerReq extends BaseTreeQueryReq implements ServiceReq {
+     
+         private static final long serialVersionUID = -350965260L;
+     
+         @Schema(description = "ID")
+         private Long id;
+     
+         @Schema(description = "ID集合")
+         @In(E_Customer.id)
+         @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
+         private Long[] ids;
+         
+         //删除客户信息表必须指定ID或是 ID 列表
+     
+         public DeleteCustomerReq(Long id) {
+             this.id = id;
+         }
+     
+         public DeleteCustomerReq(Long... ids) {
+             this.ids = ids;
+         }
+     
+     }
    
          
 ### 5 统计查询
@@ -521,7 +689,7 @@ Dao 类逻辑框图，如下图所示。
        }               
        
               
-### 6 多表查询最佳实践
+### 6 多表关联查询
 
 #### 6.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
@@ -695,9 +863,8 @@ Dao 类逻辑框图，如下图所示。
           @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
           public class SimpleSubQueryDTO {
           
-              Paging paging = new PagingQueryReq(1, 20);
-          
-          
+              Paging paging = new PagingQueryReq(1, 20); 
+         
               @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
               @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
           
@@ -833,148 +1000,11 @@ Dao 类逻辑框图，如下图所示。
       @Eq(condition="")
       String name = "Echo";
 
-#### 10.4 变量上下文(重要)
-
-  SPEL 中可以使用，任意的查询语句中也都可以使用
-  
- 
-  替换变量
-  
-      SQL查询参数匹配样式：${:paramName}  如下: 
-       
-          t.score +  ${:val}    替换后的语句 -->     t.score +  :?
-          
-      
-      文本替换样式：${paramName}   如下：
-      
-       t.score +  ${val}    替换后的语句 -->     t.score +  123 
-       
-       @Avg(value = "score",t.score +  ${val}")  --> 表达式会被替换为 t.score + 10
-       Map<String,Object> params = [val:10]
-       
-      
-        @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}", alias = "taskSum")
-        Map<String, Object> params = MapUtils.putFirst("p1", "9999").put("p2", 2).put("fun", "sum").build();
-        
-       / /以上字段生成语句： (select sum(score) from com.levin.commons.dao.domain.Task   where  user = u.id and 2 !=  ? ) AS taskSum
-       
-      
-     主要区别是冒号，加了冒号表示替换成参数。
-     
-   
-  默认变量-1：
-
-       _val 表示被注解字段的值
-    
-       _this 表示DTO对象
-    
-       _name 表示被注解字段的字段名
-    
-       _isSelect 表示当前是否是SelectDao
-    
-       _isUpdate 表示当前是否是UpdateDao
-    
-       _isDelete 表示当前是否是DeleteDao
-       
-       
-  在 condition 属性上示 SPEL表达式，默认变量名前面需要加 # 号，如下
-  
-        @Eq(condition="#_val != null") //_val 变量名前要加#号
-        String name = "Echo";
-  
-
-   默认变量-2：查询对象的字段名做为变量名
-
-
-   默认变量-3：通过 [CtxVar](./simple-dao-annotations/src/main/java/com/levin/commons/dao/CtxVar.java)   注解增加变量。
-   
-   通常用于跨类的变量传递，通过 CtxVar 注解配置。 
-   
-      @Data
-      @Accessors(chain = true)
-      @TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleUserQO.QResult.class)
-      public class SimpleUserQO {
-      
-          @Data
-          @NoArgsConstructor
-          public static class QResult {
-      
-              @Select
-              String name;
-      
-              @Select
-              Integer score;
-      
-              //有条件的查询状态信息,变量huo
-              @Select(condition = "isQueryStatus")
-              String status;
-          }
-       
-     
-          @Lt
-          protected Date createTime = new Date();
-      
-          @Ignore
-          String format = "YYYY-MM-DD";
-      
-          @Ignore
-          @CtxVar //把 isQueryStatus 变量注入到当前上下文中
-          boolean isQueryStatus = true;
-      
-      } 
-      
-   
-   字段变量的替换
-   为了兼容 原生查询和 JPA 查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
-   
-      F$:score > 95 AND F$:u.lastUpdateTime
-      
-      以上表达式当原生查询时语句被替换成：u.score > 95 AND u.last_update_time
-      当使用 JPA 查询时语句被替换成：u.score > 95 AND u.lastUpdateTime
-      
-      没有指定别名的字段，自动加上别名。
- 
-   上下文列表（越后面优先级越高）：
-   
-      DaoContext.getGlobalContext(); //全局上下文
-      
-      DaoContext.getThreadContext(); //线程上下文
-      
-      dao.selectFrom(User.class).setContext(); //dao 实例上下文
-      
-      //参数上下文
-      
-      
-   组校验，基于 SPEL 实现跨字段的参数验证，通过 @Validator 注解实现。
-   
-     public class DeleteCustomerReq extends BaseTreeQueryReq implements ServiceReq {
-     
-         private static final long serialVersionUID = -350965260L;
-     
-         @Schema(description = "ID")
-         private Long id;
-     
-         @Schema(description = "ID集合")
-         @In(E_Customer.id)
-         @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
-         private Long[] ids;
-         
-         //删除客户信息表必须指定ID或是 ID 列表
-     
-         public DeleteCustomerReq(Long id) {
-             this.id = id;
-         }
-     
-         public DeleteCustomerReq(Long... ids) {
-             this.ids = ids;
-         }
-     
-     }
     
  
-#### 10.5 字段值自动转换
+#### 10.4 字段值自动转换
 
-##### 10.5.1 查询结果对象值转换  
+##### 10.4.1 查询结果对象值转换  
  
    组件集成Spring的值转换功能，如果可以把字符串转换成数组，把字符串转换成日期、数值等。
    日期类型转换使用 Spring 的注解 DateTimeFormat 
@@ -1000,7 +1030,7 @@ Dao 类逻辑框图，如下图所示。
       
       }
       
-##### 10.5.2 查询对象值转换   
+##### 10.4.2 查询对象值转换   
    
    把 DTO 对象的值转换成数据库查询需要的值类型
     
@@ -1020,7 +1050,26 @@ Dao 类逻辑框图，如下图所示。
        String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
         
     
-### 11  避免 N + 1 查询         
+### 11  避免 N + 1 查询        
+
+
+#### 前置提示
+
+   禁用spring boot 视图事务，设置 open-in-view: false，如下：
+
+      jpa:
+        show-sql: false
+        generate-ddl: true
+        database: H2
+        #关闭视图事务，避免jpa 出现 N + 1 查询
+        open-in-view: false
+        hibernate:
+          ddl-auto: update
+          naming:
+            #模块表名前缀映射类，重要
+            physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
+   
+          
 
 #### 11.1 通过实体配置立刻抓取
 
@@ -1056,20 +1105,20 @@ Dao 类逻辑框图，如下图所示。
 #### 11.3 通过注解抓取
   
    查询对象和结果对象都可以增加抓取注解，通过 [Fetch](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/misc/Fetch.java) 注解实现。
-   注意：如果在结果对象上使用这个注解，需要设置注解的 onlyForQueryObject 为 false，才会生效。
+   注意：如果在结果对象上使用这个注解，需要设置注解的 isBindToField 为 false，才会生效。
   
   
         @Data
         @Accessors(chain = true)
         public class UserInfo {
       
-            @Fetch //设置立刻抓取 避免 N+1 查询 ，没有设置 onlyForQueryObject = false 该注解无效 
+            @Fetch //设置立刻抓取 避免 N+1 查询 ，没有设置 isBindToField = true 该注解无效 
             Group group;
         
-            @Fetch(value = "group.name" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.name" ,isBindToField = true ) //设置立刻抓取 避免 N+1 查询 
             String groupName;
         
-            @Fetch(value = "group.children" ,onlyForQueryObject = false ) //设置立刻抓取 避免 N+1 查询 
+            @Fetch(value = "group.children" ,isBindToField = true ) //设置立刻抓取 避免 N+1 查询 
             Collection<Group> parentChildren;
         
         }      
@@ -1218,7 +1267,7 @@ Dao 类逻辑框图，如下图所示。
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.31.RELEASE</levin.simple-dao.version>
+             <levin.simple-dao.version>2.2.32-SNAPSHOT</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
               
         

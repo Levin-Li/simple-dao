@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -12,7 +13,9 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,6 +43,16 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     @Parameter
     private String modulePackageName = "";
 
+    /**
+     * springBootStarterParentVersion
+     * 默认  "2.3.5.RELEASE"
+     */
+    @Parameter
+    private String springBootStarterParentVersion = "2.3.5.RELEASE";
+
+    {
+        independentPluginClassLoader = false;
+    }
 
     @Override
     public void executeMojo() throws MojoExecutionException, MojoFailureException {
@@ -79,7 +92,8 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("modulePackageName", modulePackageName)
                             .put("now", new Date().toString());
 
-            copyAndReplace(false, resTemplateDir + "TableOption.java", new File(entitiesDir, "TableOption.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
             copyAndReplace(false, resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
             copyAndReplace(false, resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
@@ -151,7 +165,8 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
             String moduleName = hasSubModule ? this.subModuleName : entitiesModuleDir.getName();
 
             //如果是 root 项目
-            if (mavenProject.isExecutionRoot()) {
+            if (mavenProject.isExecutionRoot() && mavenProject.getParentFile() == null) {
+
                 //直接整个覆盖
                 mapBuilder.put("modules", hasText(moduleName) ? "<module>" + moduleName + "</module>\n" : "");
 
@@ -160,7 +175,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
                     mapBuilder.put("parent.groupId", "org.springframework.boot")
                             .put("parent.artifactId", "spring-boot-starter-parent")
-                            .put("parent.version", "2.3.5.RELEASE");
+                            .put("parent.version", springBootStarterParentVersion);
                 } else {
                     mapBuilder.put("parent.groupId", mavenProject.getParent().getGroupId())
                             .put("parent.artifactId", mavenProject.getParent().getArtifactId())

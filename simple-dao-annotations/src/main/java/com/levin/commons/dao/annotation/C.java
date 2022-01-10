@@ -41,7 +41,7 @@ import java.lang.annotation.*;
  * @author llw
  * @@since 2.1.0
  */
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -53,7 +53,9 @@ public @interface C {
      * 如果是数组或是集合或是 Map 也不是空
      */
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
+    @Deprecated
     String NOT_NULL = "NOT_EMPTY";
+    String NOT_EMPTY = "NOT_EMPTY";
 
     /**
      * 空值
@@ -84,18 +86,13 @@ public @interface C {
      */
     Op op() default Op.Eq;
 
-
-    /**
-     * 字段的排序
-     *
-     * @return
-     */
-//    OrderBy[] orderBy() default {};
-
     /**
      * 字段归属的域，通常是表的别名
      * <p>
      * 如果为 "NULL" 值，则忽略这个值
+     * <p>
+     * 该字段支持 spel 表达式，使用 SPEL_PREFIX 做为前缀时
+     * 支持
      *
      * @return
      */
@@ -154,7 +151,7 @@ public @interface C {
      *
      * @return
      */
-    String condition() default NOT_NULL;
+    String condition() default NOT_EMPTY;
 
 
     /**

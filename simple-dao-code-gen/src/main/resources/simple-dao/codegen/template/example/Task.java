@@ -1,9 +1,9 @@
 package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.domain.StatefulObject;
-import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
+import com.levin.commons.dao.domain.support.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
@@ -14,30 +14,42 @@ import javax.persistence.*;
  * <p>
  * Created by simple-dao-code-gen on ${now}.
  */
-@Entity(name =TableOption.PREFIX +  "exam_tasks")
+
 @Data
+@EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
 @Schema(description = "任务")
+
+@Entity(name =EntityConst.PREFIX +  "exam_tasks")
+
+@Table(
+        indexes = {
+                @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
+                @Index(columnList = AbstractBaseEntityObject.Fields.enable),
+                @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
+                @Index(columnList = AbstractBaseEntityObject.Fields.creator),
+                @Index(columnList = AbstractNamedEntityObject.Fields.name),
+        }
+)
+
 public class Task
-        extends AbstractNamedEntityObject<Long>
-        implements StatefulObject<String> {
+        extends AbstractNamedEntityObject {
 
     @Id
     @GeneratedValue
-    private Long id;
-
-    @Schema(description = "状态")
-    @Column
-    String state;
+    Long id;
 
     @Schema(description = "区域")
-    @Column
     String area;
 
+    @Schema(description = "用户ID")
+    @Column(nullable = false)
+    Long userId;
+
     @Schema(description = "用户")
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", insertable = false, updatable = false)
     User user;
 
     @Schema(description = "分数")

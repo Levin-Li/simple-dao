@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.plugin.PluginManager;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,9 +114,11 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
 
     }
 
+
+    @SneakyThrows
     void initData() {
 
-        log.info("应用 ActiveProfiles:" + Arrays.asList(environment.getActiveProfiles()) + " , 工作目录：[" + new File(".").getAbsolutePath() + "]" + " , 数据库URL：[" + dataSourceProperties.getUrl() + "]");
+        log.info("***** ActiveProfiles:" + Arrays.asList(environment.getActiveProfiles()) + " , 工作目录：[" + new File(".").getAbsolutePath() + "]" + " , 数据库URL：[" + dataSourceProperties.getUrl() + "]");
 
         String host = Optional.ofNullable(serverProperties.getAddress()).orElse(InetAddress.getLoopbackAddress()).getHostAddress();
 
@@ -129,22 +132,32 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
 
         log.info("***** 服务根路径： http://" + rootUrl);
 
-        boolean haveSwagger = org.springframework.util.ClassUtils.isPresent("springfox.documentation.spring.web.plugins.Docket", getClass().getClassLoader());
+        final String docketClsName = "springfox.documentation.spring.web.plugins.Docket";
+
+        boolean haveSwagger = org.springframework.util.ClassUtils.isPresent(docketClsName, getClass().getClassLoader());
 
         if (haveSwagger) {
-            if (applicationContext.getBeanProvider(springfox.documentation.spring.web.plugins.Docket.class).getIfAvailable(() -> null) != null) {
-                log.info("***** API文档： http://" + rootUrl + "swagger-ui/index.html");
+
+            if (applicationContext.getBeanProvider(Class.forName(docketClsName)).stream().findAny().isPresent()) {
+
+                log.info("***** Swagger API文档： http://" + rootUrl + "/swagger-ui/index.html");
+
+                boolean haveKnife4j = org.springframework.util.ClassUtils.isPresent("com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j", getClass().getClassLoader());
+
+                if (haveKnife4j) {
+                    log.info("***** Knife4j API文档： http://" + rootUrl + "doc.html");
+                }
+
             } else {
                 log.warn("***** 当前项目没有配置 Swagger docket.");
+                getControllerUrls(rootUrl, true);
             }
         } else {
-            log.info("***** 当前项目没有引入 Swagger 组件，建议引入[io.springfox:springfox-boot-starter]组件");
-
+            log.info("***** 当前项目没有引入 Swagger 组件，建议引入[io.springfox:springfox-boot-starter] 或 [com.github.xiaoymin:knife4j-spring-boot-starter] 组件.");
             getControllerUrls(rootUrl, true);
         }
 
     }
-
 
     /**
      * 获取所有控制器请求方法路径
@@ -166,7 +179,6 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
         for (RequestMappingInfo requestMappingInfo : handlerMethods.keySet()) {
 
             //1、获取控制器请求路径
-
             String controllerMappingUrl = Optional.ofNullable(requestMappingInfo.getPatternsCondition())
                     .map(PatternsRequestCondition::getPatterns)
                     .orElse(Collections.emptySet())
@@ -204,7 +216,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
                     .map(values -> values[0]).findFirst().orElse(methodMappingUrl);
 
             //3.获取方法注解
-            String url = rootUrl + controllerMappingUrl;
+            String url = rootUrl + "/" + controllerMappingUrl;
 
             url = "http://" + url.replace("//", "/");
 

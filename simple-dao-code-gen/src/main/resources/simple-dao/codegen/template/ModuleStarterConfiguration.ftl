@@ -30,36 +30,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 <#--public class ${camelStyleModuleName}SpringConfiguration {-->
 public class ModuleStarterConfiguration {
 
-
     @Autowired
     Environment environment;
 
-    @Bean
-    public VariableResolverConfigurer variableResolverConfigurer() {
-        return variableResolverManager -> {
-
-            //加入全局变量
-            variableResolverManager.add(
-                    MapUtils.putFirst(ModuleOption.ID+"_x1", "x1_value")
-                            .put(ModuleOption.ID+"_x2", "x2_value")
-                            .build());
-
-            //@todo 增加自定义变量解析器
-            //加入
-            variableResolverManager.add( new VariableResolver() {
-                @Override
-                public <T> ValueHolder<T> resolve(String key, T oldValue, boolean required, Class<?>... classes) throws VariableNotFoundException {
-
-                    if (!key.startsWith("env:")) {
-                        return ValueHolder.notValue();
-                    }
-
-                    return (ValueHolder<T>) new ValueHolder<>()
-                            .setValue(environment.getProperty(key.substring(4)))
-                            .setHasValue(environment.containsProperty(key));
-                }
-            });
-        };
-    }
 
 }

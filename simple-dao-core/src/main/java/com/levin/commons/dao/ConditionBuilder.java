@@ -48,7 +48,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T enableAutoAppendLimitStatement();
 
-
     /**
      * 禁用默认的更新和删除的条件
      *
@@ -217,7 +216,5 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @return this
      */
     T appendByAnnotations(Boolean isAppend, @NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes);
-
-    ///////////////////////////////////////////////////////////////////////////////
 
 }

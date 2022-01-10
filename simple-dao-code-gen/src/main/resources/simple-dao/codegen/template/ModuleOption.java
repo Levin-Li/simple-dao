@@ -23,13 +23,12 @@ public interface ModuleOption {
     /**
      * module prefix
      */
-    String ID_PREFIX = ID +".";
+    String ID_PREFIX = ID + ".";
 
     /**
      * module prefix
      */
-    String PLUGIN_PREFIX =  "plugin."  + ID_PREFIX;
-
+    String PLUGIN_PREFIX = "plugin." + ID_PREFIX;
 
     /**
      * version
@@ -38,9 +37,9 @@ public interface ModuleOption {
 
     /**
      * base path
-     * 注意路径必须以 / 结尾
+     * 注意路径必须以 / 开头和结尾
      */
-    String BASE_PATH = ID + "/" + VERSION + "/";
+    String BASE_PATH = "/" + ID + "/" + VERSION + "/";
 
     /**
      * api path
@@ -49,15 +48,27 @@ public interface ModuleOption {
     String API_PATH = BASE_PATH + "api/";
 
     /**
-     * admin path
+     * admin api path
      * 注意路径必须以 / 结尾
      */
-    String ADMIN_PATH = BASE_PATH + "admin/";
+    String ADMIN_API_PATH = API_PATH + "admin/";
 
     /**
-     * h5 path
+     * app/h5 api path
      * 注意路径必须以 / 结尾
      */
-    String H5_PATH = BASE_PATH + "h5/";
+    String APP_API_PATH = API_PATH + "app/";
+
+    /**
+     * admin ui path
+     * 注意路径必须以 / 结尾
+     */
+    String ADMIN_UI_PATH = BASE_PATH + "admin/";
+
+    /**
+     * h5 ui path
+     * 注意路径必须以 / 结尾
+     */
+    String H5_UI_PATH = BASE_PATH + "h5/";
 
 }

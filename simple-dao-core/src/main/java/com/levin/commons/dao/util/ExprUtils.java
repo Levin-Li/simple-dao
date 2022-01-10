@@ -9,7 +9,9 @@ import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
+import com.levin.commons.service.support.SpringContextHolder;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -26,7 +29,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +36,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
-import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
 
 public abstract class ExprUtils {
@@ -69,7 +70,7 @@ public abstract class ExprUtils {
      * 实体类缓存
      * 用于防止频繁出现类加载
      */
-    protected static final Map<String, Class> entityClassCaches = new ConcurrentReferenceHashMap<>();
+    protected static final Map<String, Class<?>> entityClassCaches = new ConcurrentReferenceHashMap<>();
     /**
      *
      */
@@ -92,13 +93,15 @@ public abstract class ExprUtils {
                                  boolean complexType, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
-                                 //    Consumer<String> fieldExprConsumer,
+                                 @NotNull Function<String, String> domainFunc,
                                  @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc,
                                  Function<ValueHolder, String> subQueryBuilder,
                                  List<Map<String, ? extends Object>> contexts) {
 
+        final String domain = domainFunc != null ? domainFunc.apply(c.domain()) : c.domain();
+
         //优先使用 fieldExpr
-        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(c.domain(), name);
+        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(domain, name);
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -126,7 +129,7 @@ public abstract class ExprUtils {
 
         if (isFieldExpand) {
             //如果字段表达式中有CASE 函数
-            fieldExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, fieldExpr, c.fieldCases());
+            fieldExpr = genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, fieldExpr, c.fieldCases());
 
             //如果字段表达式中有函数，用函数包围
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
@@ -165,7 +168,7 @@ public abstract class ExprUtils {
                 hasDynamicExpr = true;
 
             } else if (isExistsOp
-                    && !isNotEmptyAnnotation(aroundColumnPrefixFunc, ctxEvalFunc, c, op)
+                    && !isNotEmptyAnnotation(domain, aroundColumnPrefixFunc, ctxEvalFunc, c, op)
                     && holder.value instanceof CharSequence) {
 
                 //如果是 Exist 操作，并且没有配置
@@ -266,7 +269,7 @@ public abstract class ExprUtils {
 
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
-            paramExpr = genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());
+            paramExpr = genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());
             paramExpr = genFuncExpr(ctxEvalFunc, paramExpr, c.paramFuncs());
         }
 
@@ -318,7 +321,6 @@ public abstract class ExprUtils {
         //
         if (paramValues.isEmpty()) {
             //关键逻辑如果没有替换参数出现，则原有的参数保存不变
-
             holder.value = Collections.emptyList();
         } else if (paramValues.size() == 1) {
             holder.value = paramValues.get(0);
@@ -330,7 +332,7 @@ public abstract class ExprUtils {
         //===================================以下部分替换文本========================================
 
         return surroundNotExpr(c, replace(ql, contexts, true,
-                column -> aroundColumnPrefixFunc.apply(c.domain(), column), null).trim());
+                column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
     }
 
     /**
@@ -462,15 +464,15 @@ public abstract class ExprUtils {
      * @param op
      * @return
      */
-    public static boolean isNotEmptyAnnotation(@NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> ctxEvalFunc, C c, Op op) {
+    public static boolean isNotEmptyAnnotation(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> ctxEvalFunc, C c, Op op) {
 
         if (op == null) {
             op = c.op();
         }
 
-        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.fieldCases()) : "";
+        String fieldExpr = op.isNeedFieldExpr() ? genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, "", c.fieldCases()) : "";
 
-        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(c, aroundColumnPrefixFunc, ctxEvalFunc, "", c.paramCases()) : "";
+        String paramExpr = op.isNeedParamExpr() ? genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, "", c.paramCases()) : "";
 
         fieldExpr = op.isNeedFieldExpr() ? genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs()) : fieldExpr;
 
@@ -525,11 +527,12 @@ public abstract class ExprUtils {
      * ELSE '其他'
      * END
      *
+     * @param domain
      * @param expr
      * @param cases
      * @return
      */
-    public static String genCaseExpr(C c, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+    public static String genCaseExpr(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
 
         return Stream.of(cases)
                 //过滤条件匹配的 case
@@ -540,7 +543,7 @@ public abstract class ExprUtils {
                         String.join(" ", "CASE",
                                 //如果原值替换变量
                                 C.ORIGIN_EXPR.equals(aCase.column()) ? expr :
-                                        (aroundColumnPrefixFunc == null ? aCase.column() : aroundColumnPrefixFunc.apply(c != null ? c.domain() : null, aCase.column())),
+                                        (aroundColumnPrefixFunc == null ? aCase.column() : aroundColumnPrefixFunc.apply(domain, aCase.column())),
                                 Stream.of(aCase.whenOptions())
                                         .map(when -> String.join(" ", "WHEN", when.whenExpr(), "THEN", when.thenExpr()))
                                         .collect(Collectors.joining(" "))
@@ -739,13 +742,13 @@ public abstract class ExprUtils {
         Optional.ofNullable(contexts).ifPresent(
                 maps -> {
                     maps.stream().filter(Objects::nonNull)
-                            .forEachOrdered(map -> ((StandardEvaluationContext) ctx).setVariables((Map<String, Object>) map));
+                            .forEachOrdered(map -> (ctx).setVariables((Map<String, Object>) map));
                 }
         );
 
-        // ctx.setBeanResolver();
-
-        // ExpressionParser parser = new SpelExpressionParser();
+        if (SpringContextHolder.getBeanFactory() != null) {
+            ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+        }
 
         return (T) spelExpressionParser.parseExpression(expression).getValue(ctx);
 
@@ -895,59 +898,53 @@ public abstract class ExprUtils {
         return hasText(alias) && alias.trim().equals(result) ? "" : result;
     }
 
+    /**
+     * @param entityClasses
+     * @param nameConvert
+     */
+    public static void cacheEntityClass(Collection<Class> entityClasses, Function<String, String> nameConvert) {
+
+        Optional.ofNullable(entityClasses).ifPresent(list ->
+
+                list.parallelStream()
+                        .filter(Objects::nonNull)
+                        .filter(tempClass -> tempClass.isAnnotationPresent(Entity.class) || tempClass.isAnnotationPresent(MappedSuperclass.class))
+                        .forEach(tempClass -> {
+                            //
+                            entityClassCaches.put(tempClass.getName(), tempClass);
+
+                            String tableName = nameConvert.apply(getTableName(tempClass));
+
+                            if (StringUtils.hasText(tableName)) {
+                                entityClassCaches.put(tableName, tempClass);
+                            }
+                        })
+        );
+
+    }
 
     /**
-     * 加载类，第二次要快速失败
-     *
-     * @param className
-     * @param classConsumer
+     * @param entityClass
      * @return
      */
-    public static Class tryLoadClass(String className, Consumer<Class> classConsumer) {
+    public static String getTableName(Class<?> entityClass) {
 
+        Table table = entityClass.getAnnotation(Table.class);
 
-        Class entityClass = null;
+        if (table != null && StringUtils.hasText(table.name())) {
 
-        if (hasText(className)
-                && className.contains(".")
-                && !containsWhitespace(className)
-                && Character.isLetter(className.trim().charAt(0))
-                && className.matches("[\\w._$]+")) {
-
-            className = className.trim();
-
-            try {
-
-                Class tempClass = entityClassCaches.get(className);
-
-                if (tempClass == null
-                        && !entityClassCaches.containsKey(className)) {
-
-                    tempClass = Thread.currentThread().getContextClassLoader().loadClass(className.trim());
-
-                    entityClassCaches.put(className, tempClass);
-                }
-
-
-                if (tempClass != null && (tempClass.isAnnotationPresent(Entity.class)
-                        || tempClass.isAnnotationPresent(MappedSuperclass.class))) {
-
-                    entityClass = tempClass;
-                    //如果表名是类名，做个自动转换
-                    if (classConsumer != null) {
-                        classConsumer.accept(entityClass);
-                    }
-                    // this.tableName = getTableNameByAnnotation(entityClass);
-                }
-
-            } catch (ClassNotFoundException e) {
-                //放入 null 值，下次同样的加载可以快速失败
-                entityClassCaches.put(className, null);
-            }
+            return table.name();
         }
 
-        return entityClass;
+        Entity entity = entityClass.getAnnotation(Entity.class);
+
+        if (entity != null && StringUtils.hasText(entity.name())) {
+            return entity.name();
+        }
+
+        return null;
     }
+
 
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
 
@@ -956,6 +953,30 @@ public abstract class ExprUtils {
                 && !(type == Void.class || type == void.class);
     }
 
+
+    /**
+     * 是否非空 null 或是空字符串
+     *
+     * @param value
+     * @return
+     */
+    public static boolean isNotEmpty(Object value) {
+
+        if (value == null) {
+            return false;
+        } else if (value instanceof CharSequence) {
+//            return (((CharSequence) value).toString().trim().length() > 0);
+            return hasText((CharSequence) value);
+        } else if (value.getClass().isArray()) {
+            return (Array.getLength(value) > 0);
+        } else if (value instanceof Collection) {
+            return (((Collection) value).size() > 0);
+        } else if (value instanceof Map) {
+            return (((Map) value).size() > 0);
+        }
+
+        return true;
+    }
 
     /**
      * 自动生成连接语句
@@ -993,7 +1014,7 @@ public abstract class ExprUtils {
         }
 
         if (entityClass == null) {
-            entityClass = tryLoadClass(tableOrStatement, null);
+            entityClass = miniDao.getEntityClass(tableOrStatement);
         }
 
         Map<String, Class> aliasMap = new HashMap<>(joinOptions.length + 1);
@@ -1016,7 +1037,7 @@ public abstract class ExprUtils {
 
 
             if (joinEntityClass == null) {
-                joinEntityClass = tryLoadClass(joinOption.tableOrStatement(), null);
+                joinEntityClass = miniDao.getEntityClass(joinOption.tableOrStatement());
             }
 
             if (!hasText(selfAlias)) {

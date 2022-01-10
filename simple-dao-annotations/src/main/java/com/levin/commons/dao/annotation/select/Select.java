@@ -49,13 +49,6 @@ public @interface Select {
 
 
     /**
-     * 强行设置字段表达式
-     *
-     * @return
-     */
-    String fieldExpr() default "";
-
-    /**
      * 查询字段名称，默认为字段的属性名称
      * <p>
      * 对应数据库的字段名或是 Jpa 实体类的字段名
@@ -179,7 +172,7 @@ public @interface Select {
 
     /**
      * 字段归属的域，通常是表的别名
-     *
+     * <p>
      * 如果为 "NULL" 值，则忽略这个值
      *
      * @return
@@ -199,7 +192,7 @@ public @interface Select {
      * 别名
      * 整个表达后的别名
      * 默认为字段名
-     *
+     * <p>
      * 如果为 "NULL" 值，则没有别名
      *
      * @return

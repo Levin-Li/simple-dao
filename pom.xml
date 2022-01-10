@@ -17,11 +17,12 @@
 
     <properties>
 
-        <revision>2.2.31.RELEASE</revision>
+        <revision>2.3.1-SNAPSHOT</revision>
 
-        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.1.22-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
+<!--        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>-->
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -33,7 +34,7 @@
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
-        <!--        <hibernate.version>5.4.27.Final</hibernate.version> -->
+        <!-- <hibernate.version>5.4.27.Final</hibernate.version> -->
 
         <io.swagger.core.v3.version>2.1.2</io.swagger.core.v3.version>
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
@@ -175,6 +176,12 @@
                 <version>${com.alibaba.druid.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.oracle</groupId>
+                <artifactId>ojdbc6</artifactId>
+                <version>11.2.0.3</version>
+            </dependency>
+
         </dependencies>
 
     </dependencyManagement>
@@ -221,7 +228,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.6.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>

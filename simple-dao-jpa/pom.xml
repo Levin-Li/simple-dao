@@ -24,6 +24,17 @@
             <version>${project.version}</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>com.github.yitter</groupId>-->
+<!--            <artifactId>yitter-idgenerator</artifactId>-->
+<!--            <version>1.0.6</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>${levin.service-support.groupId}</groupId>
+            <artifactId>service-support</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>

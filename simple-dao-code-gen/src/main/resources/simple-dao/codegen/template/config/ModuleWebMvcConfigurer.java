@@ -11,11 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
-
 
 @Configuration(PLUGIN_PREFIX + "ModuleWebMvcConfigurer")
 @Slf4j
@@ -23,44 +22,9 @@ import org.springframework.web.servlet.config.annotation.*;
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
 
-    static class CorsOptionsInterceptor implements HandlerInterceptor {
-        @Override
-        public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
-            // 如果是OPTIONS
-            //Preflighted requests in CORS
-            boolean isCorsPreflightRequest =
-                    StringUtils.hasText(request.getHeader("Access-Control-Request-Method"))
-                            || StringUtils.hasText(request.getHeader("Access-Control-Request-Headers"));
-
-            if (isCorsPreflightRequest
-                    && HttpMethod.OPTIONS.toString().equals(request.getMethod())
-                    && request.getRequestURI().startsWith("/" + API_PATH)) {
-
-                //跨域预检请求
-                //Access-Control-Max-Age: <delta-seconds>
-                //https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
-
-                response.setHeader("Access-Control-Allow-Credentials", "true");
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Expose-Headers", "*");
-                response.setHeader("Access-Control-Allow-Headers", "*");
-                response.setHeader("Access-Control-Allow-Methods", "*");
-
-                //Access-Control-Max-Age: <delta-seconds>
-                //一周的时间
-                response.setHeader("Access-Control-Max-Age", "" + 7 * 24 * 3600);
-
-                response.setStatus(HttpStatus.NO_CONTENT.value());
-
-                log.debug("跨域配置method:{}, requestURI:{}", request.getMethod(), request.getRequestURI());
-
-                return false;
-
-            }
-
-            return true;
-        }
+    @PostConstruct
+    void init() {
+        log.info("init...");
     }
 
     /**
@@ -77,18 +41,17 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
         //注意每个资源路径后面的路径加 / !!! 重要的事情说三遍
 
-        registry.addResourceHandler("/" + ADMIN_PATH + "/**")
-                .addResourceLocations("classpath:/public/" + ADMIN_PATH);
+        registry.addResourceHandler(ADMIN_UI_PATH + "**")
+                .addResourceLocations("classpath:public" + ADMIN_UI_PATH);
 
-        registry.addResourceHandler("/" + H5_PATH + "/**")
-                .addResourceLocations("classpath:/public/" + H5_PATH);
-
+        registry.addResourceHandler(H5_UI_PATH + "**")
+                .addResourceLocations("classpath:public" + H5_UI_PATH);
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
 
-        registry.addMapping("/" + API_PATH + "/**")
+        registry.addMapping(API_PATH + "**")
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("*")
@@ -97,9 +60,22 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        //处理 OPTIONS 200 请求
-        //CORS预检请求处理
-        registry.addInterceptor(new CorsOptionsInterceptor());
+
+        //https://sa-token.dev33.cn/
+        // 注册路由拦截器，自定义认证规则
+//        registry.addInterceptor(new SaRouteInterceptor((req, res, handler)->{
+//            // 根据路由划分模块，不同模块不同鉴权
+//            SaRouter.match("/user/**", r -> StpUtil.checkPermission("user"));
+//            SaRouter.match("/admin/**", r -> StpUtil.checkPermission("admin"));
+//            SaRouter.match("/goods/**", r -> StpUtil.checkPermission("goods"));
+//            SaRouter.match("/orders/**", r -> StpUtil.checkPermission("orders"));
+//            SaRouter.match("/notice/**", r -> StpUtil.checkPermission("notice"));
+//            SaRouter.match("/comment/**", r -> StpUtil.checkPermission("comment"));
+//        })).addPathPatterns("/**");
+
+
+//        registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns(API_PATH + "**");
+
     }
 
     @Override

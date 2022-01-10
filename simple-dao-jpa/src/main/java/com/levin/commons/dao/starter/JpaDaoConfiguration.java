@@ -12,31 +12,36 @@ import com.levin.commons.dao.PhysicalNamingStrategy;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
+import com.levin.commons.dao.support.EntityNamingStrategy;
 import com.levin.commons.dao.support.JpaDaoImpl;
+import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
+import com.levin.commons.utils.MapUtils;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -46,9 +51,11 @@ import javax.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
 import java.lang.reflect.AccessibleObject;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Configuration
 
@@ -61,29 +68,32 @@ import java.util.concurrent.ConcurrentHashMap;
 @EntityScan({"com.levin.commons.dao.domain.support"})
 
 @Slf4j
-public class JpaDaoConfiguration implements ApplicationContextAware {
+public class JpaDaoConfiguration implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
+
 
 //    @DynamicInsert和@DynamicUpdate
 
-
-    //    @Autowired
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
-    //    @Autowired
     @PersistenceContext
     private EntityManager defaultEntityManager;
 
-    @Autowired
+    @Resource
     private DataSource dataSource;
 
-    @Autowired
+    @Resource
     private JpaProperties jpaProperties;
 
-    @Autowired
-    DataSourceProperties dataSourceProperties;
+    @Resource
+    private HibernateProperties hibernateProperties;
 
-    public static final String CFG_KEY = "simpledao.alter_table_comment";
+    @Resource
+    private DataSourceProperties dataSourceProperties;
+
+    public static final String ENABLE_ALTER_TABLE_COMMENT = "enable_alter_table_comment";
+
+    public static final String TABLE_NAME_PREFIX_MAPPINGS = "table_name_prefix_mappings";
 
     @Bean
     @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
@@ -151,10 +161,65 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
         this.context = applicationContext;
     }
 
+    /**
+     * Handle an application event.
+     *
+     * @param event the event to respond to
+     */
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+
+        if (event.getApplicationContext() == this.context) {
+            init();
+        }
+
+    }
 
     @SneakyThrows
-    @PostConstruct
     void init() {
+
+        String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
+
+        if (StringUtils.hasText(physicalStrategy)
+                && EntityNamingStrategy.class.isAssignableFrom(Thread.currentThread().getContextClassLoader().loadClass(physicalStrategy.trim()))) {
+
+            String nameMappings = jpaProperties.getProperties().get(TABLE_NAME_PREFIX_MAPPINGS);
+
+            final MapUtils.Builder<String, String> builder = MapUtils.put();
+
+            if (StringUtils.hasText(nameMappings)) {
+
+                log.info("*** {} : {}", TABLE_NAME_PREFIX_MAPPINGS, nameMappings);
+
+                Arrays.stream(nameMappings.split(","))
+                        .filter(StringUtils::hasText)
+                        .map(it -> it.split("="))
+                        .filter(it -> it.length == 2)
+                        .filter(it -> StringUtils.hasText(it[0]) && StringUtils.hasText(it[1]))
+                        .forEachOrdered(it -> builder.put(StringUtils.trimAllWhitespace(it[0]), StringUtils.trimAllWhitespace(it[1])));
+            } else {
+                log.info("*** you can config like [spring.jpa.properties.{} : com.xxx.base=xxx_base,com.xxx.biz=xxx_biz] to set table name prefix mapping.", TABLE_NAME_PREFIX_MAPPINGS);
+            }
+
+            EntityNamingStrategy.setPrefixMapping(builder.build());
+
+            JpaDao jpaDao = context.getBean(JpaDao.class);
+
+            //增加表名和类名的映射
+            QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
+                    .getEntities().parallelStream()
+                    .map(entityType -> entityType.getBindableJavaType())
+                    .collect(Collectors.toList()), jpaDao::getTableName);
+
+            log.info("*** Entity class and table name mapping init ok. Mappings:" + QueryAnnotationUtil.tableNameMappingEntityClassCaches);
+
+        } else {
+
+            log.warn("*** Jpa naming strategy not config, you'd better config physical-strategy: " + EntityNamingStrategy.class.getName());
+
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////
 
         try {
             initTableComments();
@@ -162,15 +227,16 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             log.warn("update table comments error ", e);
         }
 
+
     }
 
     @SneakyThrows
     void initTableComments() {
 
-        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault(CFG_KEY, "false"));
+        boolean alterTableComment = "true".equalsIgnoreCase(jpaProperties.getProperties().getOrDefault(ENABLE_ALTER_TABLE_COMMENT, "false"));
 
         if (!alterTableComment) {
-            log.info("*** you can config [spring.jpa.properties.{} = true] to enable init table comments.", CFG_KEY);
+            log.info("*** you can config [spring.jpa.properties.{} = true] to enable init table comments.", ENABLE_ALTER_TABLE_COMMENT);
             return;
         }
 
@@ -180,7 +246,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware {
             columnDefinitions.putAll(loadTableColumnDefinitionsByDefault());
         }
 
-        JpaDao simpleDao = newJpaDao();
+        JpaDao simpleDao = context.getBean(JpaDao.class);
 
         PhysicalNamingStrategy namingStrategy = simpleDao.getNamingStrategy();
 

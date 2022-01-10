@@ -16,10 +16,12 @@ import org.aspectj.lang.reflect.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.*;
 
 import java.lang.reflect.Method;
@@ -32,16 +34,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
-    @Autowired
+
+    @Resource
+    ApplicationContext context;
+
+    @Resource
     VariableInjector variableInjector;
 
-    @Autowired
+    @Resource
     VariableResolverManager variableResolverManager;
 
-    @Autowired
+    @Resource
     HttpServletRequest request;
 
-    @Autowired
+    @Resource
     HttpServletResponse response;
 
     @Value("${r"$"}{" + PLUGIN_PREFIX + "logHttp:true}")
@@ -49,61 +55,21 @@ public class ModuleWebControllerAspect {
 
     final AtomicBoolean enableHttpLog = new AtomicBoolean(false);
 
+    /**
+     * 存储本模块的变量解析器
+     */
+    private List<VariableResolver> moduleResolverList = null;
 
     @PostConstruct
     void init() {
-        enableHttpLog.set(enableLog);
+
+        this.enableHttpLog.set(enableLog);
+
+        //只找出本模块的解析器
+        this.moduleResolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
+
+        log.info("init...");
     }
-
-    final VariableResolver httpRequestInfoResolver = new VariableResolver() {
-        @Override
-        public <T> ValueHolder<T> resolve(String name, T defaultValue, boolean throwEx, Class<?>... types) throws VariableNotFoundException {
-
-            String value = null;
-
-//            request.getRequestURL() 返回全路径
-//            request.getRequestURI() 返回除去host（域名或者ip）部分的路径
-//            request.getContextPath() 返回工程名部分，如果工程映射为/，此处返回则为空
-//            request.getServletPath() 返回除去host和工程名部分的路径
-
-//            request.getRequestURL() http://localhost:8080/jqueryLearn/resources/request.jsp
-//            request.getRequestURI() /jqueryLearn/resources/request.jsp
-//            request.getContextPath()/jqueryLearn
-//            request.getServletPath()/resources/request.jsp
-
-            if (InjectConsts.IP_ADDR.equalsIgnoreCase(name)) {
-
-                value = IPAddrUtils.try2GetUserRealIPAddr(request);
-
-            } else if (InjectConsts.URL_SERVERNAME.equalsIgnoreCase(name)) {
-
-                value = request.getServerName();
-
-            } else if (InjectConsts.USER_AGENT.equalsIgnoreCase(name)) {
-
-                value = request.getHeader("user-agent");
-
-            } else if (InjectConsts.URL.equalsIgnoreCase(name)) {
-
-                value = request.getRequestURL().toString();
-
-            } else if (InjectConsts.URL_SCHEME.equalsIgnoreCase(name)) {
-
-                value = request.getScheme();
-
-            } else if ("moduleId".equalsIgnoreCase(name)) {
-
-                value = ModuleOption.ID;
-
-            } else {
-                return ValueHolder.notValue();
-            }
-
-            return new ValueHolder()
-                    .setValue(value)
-                    .setHasValue(true);
-        }
-    };
 
     /**
      * 模块包
@@ -143,22 +109,21 @@ public class ModuleWebControllerAspect {
     @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public void injectVar(JoinPoint joinPoint) {
 
-        log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
+        if(log.isDebugEnabled()) {
+            log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
+        }
 
         String headerValue = request.getHeader(PLUGIN_PREFIX + "logHttp");
         if (StringUtils.hasText(headerValue)) {
             enableHttpLog.set(Boolean.TRUE.toString().equalsIgnoreCase(headerValue));
         }
-
-        //加入线程级别的http请求解析器，线程级别解析器会被优先使用
-        //httpRequestInfoResolver;
-
+        
         Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
             Arrays.stream(args)
                     .filter(Objects::nonNull)
                     .forEachOrdered(arg -> {
                         variableInjector.injectByVariableResolver(arg
-                                , () -> Arrays.asList(httpRequestInfoResolver)
+                                , () -> moduleResolverList
                                 , () -> variableResolverManager.getVariableResolvers());
                     });
         });
@@ -172,7 +137,7 @@ public class ModuleWebControllerAspect {
     @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        if (!enableHttpLog.get()) {
+        if (!enableHttpLog.get() || !log.isDebugEnabled()) {
             return joinPoint.proceed(joinPoint.getArgs());
         }
 

@@ -9,6 +9,7 @@
  
    目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    
+   说重点，组件的Maven插件可以双击生成代码哦。
 
    组件逻辑架构如下图：   
    
@@ -17,42 +18,73 @@
     
 ### 1 使用预览
 
-   实体类定义
+   实体类
    
-      //学生考试成绩表
-      
-      @Entity(name = "exam_log")
+      //1、学生表
+      @Entity(name = "student")
       @Data
       @Accessors(chain = true)
       @FieldNameConstants 
-      public class ExamLog{
-      
+      public class Student{
+     
          @Id
          @GeneratedValue
          private Long id;
          
          //学生姓名 
-         String studentName;
-         
-         //学科
-         String subject;
-         
-         //成绩分数
-         Integer score;
-
-         ... 
-             
+         String name;  
+         ...  
       }
       
-   查询统计需求： 找出语数英三科考试中总分超过260分，学科平均分高于80，学生姓名中包含特定字符的学生姓名、总分、平均分。
+       //2、考试成绩表
+       @Entity(name = "exam_log")
+       @Data
+       @Accessors(chain = true)
+       @FieldNameConstants 
+       public class ExamLog{
+      
+          @Id
+          @GeneratedValue
+          private Long id;
+          
+          //学生ID 
+          Long studentId;
+          
+          //学科
+          String subject;
+          
+          //成绩分数
+          Integer score;
  
-   1）定义查询对象
+          ... 
+             
+       }     
+      
+   需求：
+   
+   查询并统计出语数英三科考试中总分超过260分，学科平均分高于80分，学生姓名中包含特定字符的学生姓名、总分、平均分。
+ 
+   解决方案：
+   
+   1）定义查询对象（表连接）
   
-       /**
-        * 数据传输对象(兼查询对象，通过注解产生SQL语句)
-        */
+   数据传输对象(兼查询对象，通过注解产生SQL语句)
+    
       @Data
-      @TargetOption(entityClass = ExamLog.class, resultClass = ExamStatDto.class)
+      @TargetOption(
+      
+      entityClass =ExamLog.class ,  /* 目标类 */ 
+      
+      alias = E_ExamLog.ALIAS, // 主表别名
+      
+      resultClass = ExamStatDto.class,  /* 结果类 */
+      
+      //表连接
+      joinOptions = {
+            @JoinOption(entityClass = Student.class, alias = E_Student.ALIAS, joinTargetColumn = E_ExamLog.studentId )  //连接的表
+            //可以再连接表2 
+         } 
+      )
       public class ExamStatDto {
       
           @Sum(having=Op.Gt)
@@ -62,32 +94,57 @@
           Long avgScore = 80L; //当avgScore字段名在实体对象中不存在时，会尝试自动去除注解的名字 avgScore -> score
 
           @In
-          String[] subject = {"语文", "数学", "英语"}; 
-      
-          @Contains //学生名字中包含'李'字
-          @GroupBy
-          String studentName = "李"; 
+          String[] subject = {"语文", "数学", "英语"};  
+        
+          @Contains(domain = E_Student.ALIAS) // 过滤出学生名字中包含'李'字
+          @GroupBy(domain = E_Student.ALIAS)  // 按名字分组
+          String name = "李"; 
+          
       }
+      
+       以上Dto等效的SQL语句如下：
+       
+          Select 
+            s.name ,  Avg(e.score) ,  Sum(e.score) 
+          From exam_log e Left Join student s on  s.id = e.studentId
+          Where 
+            e.subject IN ("语文", "数学", "英语")  AND s.name LIKE '%李%'  
+          Group By s.name
+          Having Avg(e.score) > 80 and Sum(e.score) > 260
    
-   2） 查询结果集
+   2） 服务层
+       
+        @Service
+        public class ExamStatService {
         
          @Autowired
-         SimpleDao dao;
+         SimpleDao dao; //通用 Dao
          
-         //查询并返回结果
- 
-         List<ExamStatDto> result =  dao.findByQueryObj(new ExamStatDto());   
- 
-         以上查询等效的SQL语句如下：
-   
-            Select 
-            studentName ,  Avg(score) ,  Sum(score) 
-            From exam_log 
-            Where 
-            subject IN ("语文", "数学", "英语")  AND studentName LIKE '%李%'  
-            Group By studentName
-            Having Avg(score) > 80 and Sum(score) > 260
-            
+         public List<ExamStatDto> stat(ExamStatDto statDto){
+           //一行代码，就一行！！！
+           //查询结果自动绑定到 ExamStatDto对象。
+           return dao.findByQueryObj(statDto);
+         }
+         
+       }
+         
+   3）控制器 
+     
+     @RestController
+     public class ExamStatController{
+     
+        @Autowired
+        ExamStatService examStatService;
+        
+        @GetMapping("/exam_stat")
+        public ApiResp<ExamStatDto> stat(ExamStatDto statDto){
+            return ApiResp.ok(examStatService.stat(statDto));
+        }
+        
+     }
+     
+   大功告成，用 postman 测试以一下。这个是组件的多表统计应用，组件还支复杂逻辑嵌套，子查询对象嵌套，逻辑删除等。  
+        
  
 ### 2 快速上手
 
@@ -115,7 +172,7 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.2.31.RELEASE</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.2.32-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
 
@@ -196,19 +253,19 @@
         
         
 
-#### 3 用户手册
+### 3 用户手册
      
    其它请查看 [用户手册](./manual.md) 
    
 
-#### 4 鼓励一下
+### 4 鼓励一下
      
    支付宝 微信   
    
   ![支付宝+微信](./public/pay.png)   
       
 
-#### 5 联系作者
+### 5 联系作者
 
  邮箱：99668980@qq.com   
  

@@ -1,5 +1,4 @@
-<#noparse>
-#!/bin/bash
+<#noparse>#!/bin/bash
 
 execDir=`pwd`
 
@@ -21,12 +20,35 @@ else
 
    ps -ef | grep java | grep `pwd`
 
-   ps -ef | grep java | grep `pwd` | awk '{print $2}' | xargs kill
+   tempPid=$pids
 
-   echo "start kill program $pids"
+   for n in {1..30};do
 
-   kill $pids
+      echo "*** $n *** start kill program $pids ..."
 
+      kill $pids
+
+      sleep 1
+
+      pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+
+      if [ -z $pids ]; then
+         echo "program ${tempPid} stopped."
+         exit
+      fi
+
+   done
+
+fi
+
+##################强制停止进程#######################
+
+pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+
+if [ -n "$pids" ]; then
+   echo "***Warning*** kill -9 $pids ..."
+   kill -9 $pids
+   sleep 1
 fi
 
 </#noparse>

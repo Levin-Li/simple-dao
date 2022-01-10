@@ -84,7 +84,7 @@ public @interface NotExists {
      *
      * @return
      */
-    String condition() default C.NOT_NULL;
+    String condition() default C.NOT_EMPTY;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值
@@ -191,6 +191,5 @@ public @interface NotExists {
      * @return
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
-
 
 }

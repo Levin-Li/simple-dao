@@ -23,7 +23,7 @@
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.source.skip>true</maven.source.skip>
-        <simple-dao-codegen.skip>true</simple-dao-codegen.skip>
+        <simple-dao-codegen.skip>false</simple-dao-codegen.skip>
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
@@ -308,16 +308,36 @@
 
         <plugins>
 
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>${maven-jar-plugin.addMavenDescriptor}</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>
 
+
                 <configuration>
                     <skip>${simple-dao-codegen.skip}</skip>
                     <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+
                 </configuration>
+
+                <executions>
+                    <execution>
+                        <id>encrypt-repackage</id>
+                        <goals>
+                            <goal>encrypt-class</goal>
+                        </goals>
+                    </execution>
+                </executions>
 
                 <dependencies>
                     <dependency>

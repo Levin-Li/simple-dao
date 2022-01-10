@@ -122,10 +122,12 @@ public abstract class PagingQueryHelper {
             int index = paging.getPageIndex();
             setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
 
-            int size = paging.getPageIndex();
+            int size = paging.getPageSize();
             setValueByPageOption(pagingData, PageOption.Type.PageSize, true, field -> size);
 
             setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultList);
+
+
         }
 
         return (T) pagingData;
