@@ -1301,10 +1301,20 @@ public class DaoExamplesTest {
 
 
     @org.junit.Test
-    public void testCListAnno() throws Exception {
+    public void testCListAnno1() throws Exception {
 
 
-        List<TestEntity> objects = dao.findByQueryObj(TestEntity.class, new TestEntityDto());
+        List<TestEntity> objects = dao.findByQueryObj(  new TestEntityDto());
+
+        Assert.notNull(objects, "");
+
+    }
+
+
+    @org.junit.Test
+    public void testCListAnno2() throws Exception {
+
+        List<TestEntity> objects = dao.findByQueryObj(new TestCListDto());
 
         Assert.notNull(objects, "");
 

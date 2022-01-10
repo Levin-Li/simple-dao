@@ -3,7 +3,6 @@ package com.levin.commons.dao.annotation;
 
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.misc.Case;
-import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
@@ -42,7 +41,7 @@ import java.lang.annotation.*;
  * @author llw
  * @@since 2.1.0
  */
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited

@@ -33,12 +33,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -1769,7 +1769,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param varType
      * @param value
      */
-    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value) {
+    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, final Class<?> varType, Object value) {
 
 //        if (isIgnore(varAnnotations)) {
 //            return;
@@ -1781,11 +1781,38 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
+        final Map<Integer, Object> tempParams = new HashMap<>();
+
+        final boolean hasValue = value != null;
+
+        final boolean isIterable = hasValue && QueryAnnotationUtil.isIterable(value.getClass());
+        final boolean isArray = hasValue && QueryAnnotationUtil.isArray(value.getClass());
+
+
         final Consumer<Annotation> consumer = annotation -> {
             if (annotation instanceof CList) {
 
+                CList clist = (CList) annotation;
+
                 if (isValid(annotation, bean, name, value)) {
-                    daoAnnotations.addAll(Arrays.asList(((CList) annotation).value()));
+
+                    //如果是CList，并且是迭代条件
+                    if (clist.isIterative() && (isIterable || isArray)) {
+
+                        Object values = isArray ? Arrays.asList((Object[]) value) : value;
+
+                        for (Object paramValue : (Iterable<?>) values) {
+                            for (C c : clist.value()) {
+                                //放入临时参数
+                                tempParams.put(daoAnnotations.size(), paramValue);
+
+                                //放入注解
+                                daoAnnotations.add(c);
+                            }
+                        }
+                    } else {
+                        daoAnnotations.addAll(Arrays.asList(clist.value()));
+                    }
                 }
 
             } else if (annotation instanceof OrderByList) {
@@ -1840,23 +1867,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             } else {
 
-                //如果不是
-                boolean isIterable = value instanceof Iterable || value instanceof Map;
+                boolean isIterableOrMap = value instanceof Iterable || value instanceof Map;
 
                 //@todo 数据类型的支持
 
                 //如果是注解的复杂对象
-                if (complexType && !isNullOrEmptyTxt(value) && !isIterable) {
+                if (complexType && !isNullOrEmptyTxt(value) && !isIterableOrMap) {
                     reAppendByQueryObj(value);
                 } else if (complexType) {
                     logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
                 }
+
             }
         }
 
         //迭代注解
-        List<Annotation> annotationList = daoAnnotations.stream()
-                .filter(annotation -> isValid(annotation, bean, name, value)).collect(Collectors.toList());
+        final List<Annotation> annotationList = new ArrayList<>(daoAnnotations.size());
+
+        final AtomicInteger idxAtom = new AtomicInteger(0);
+
+        //临时参数2
+        final Map<Integer, Object> tempParams2 = new HashMap<>();
+
+        for (Annotation daoAnnotation : daoAnnotations) {
+
+            Object paramValue = tempParams.getOrDefault(idxAtom.getAndIncrement(), value);
+
+            if (isValid(daoAnnotation, bean, name, paramValue)) {
+
+                tempParams2.put(annotationList.size(), paramValue);
+
+                annotationList.add(daoAnnotation);
+            }
+
+        }
+
 
         Check check = findFirstMatched(varAnnotations, Check.class);
 
@@ -1870,10 +1915,22 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
         }
 
+
+        tempParams.clear();
+        //从 0 开始
+        idxAtom.set(0);
+
         annotationList.forEach(annotation -> {
+
+            //获取分拆后的参数
+            Object paramValue = tempParams2.getOrDefault(idxAtom.getAndIncrement(), value);
+
+            //如果
+            Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
+
             processAttrAnno(bean, fieldOrMethod, varAnnotations,
                     tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                    varType, value, annotation);
+                    newVarType, paramValue, annotation);
         });
 
     }

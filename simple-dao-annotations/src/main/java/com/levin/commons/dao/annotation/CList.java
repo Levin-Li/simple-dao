@@ -8,7 +8,7 @@ import java.lang.annotation.*;
  * @author llw
  * @@since 2.1.0
  */
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -19,8 +19,12 @@ public @interface CList {
      */
     C[] value() default {};
 
-
-
+    /**
+     * 是否迭代
+     *
+     * @return
+     */
+    boolean isIterative() default true;
 
     /**
      * 表达式，考虑支持Groovy和SpEL
