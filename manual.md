@@ -230,8 +230,8 @@ Dao 类逻辑框图，如下图所示。
        String classId;
        
        //迭代出现多个StartsWith
-       @CList({@C(op = Op.StartsWith)})
-       List<String> name = Arrays.asList("Test", "LLW");
+       @CList({@C(op = Op.StartsWith,value = "name")})
+       List<String> nameList = Arrays.asList("Test", "LLW");
 
 
 #### 4.1 列选择和列更新

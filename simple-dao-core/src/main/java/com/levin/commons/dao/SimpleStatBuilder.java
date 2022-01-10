@@ -4,7 +4,23 @@ package com.levin.commons.dao;
 import java.util.Map;
 
 /**
- * 简单条件构建器
+ * 简单统计构建器
+ * <p>
+ * <p>
+ * 使用例子：
+ * List<Map> g = dao.selectFrom(Group.class, "g")
+ * .join("left join " + User.class.getName() + " u on g.id = u.group.id")
+ * .join("left join " + Task.class.getName() + " t on u.id = t.user.id")
+ * .count("1", "cnt")
+ * .avg("t.score + ${v}", "ts", MapUtils.put("v", (Object) 5L).build())
+ * .avg("u.score", "us")
+ * .avg("g.score", "gs")
+ * .sum("t.score", "ts2")
+ * //                .where("u.name = :?","sss")
+ * .groupByAndSelect(E_Group.name, "groupName")
+ * //                .groupBy("g.name")
+ * .orderBy("ts2")
+ * .find(Map.class);
  *
  * @param <T>
  * @since 1.1.6
@@ -17,7 +33,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T count(String expr, String alias, Map<String,Object>... paramValues);
+    T count(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * @param expr
@@ -25,7 +41,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T avg(String expr, String alias, Map<String,Object>... paramValues);
+    T avg(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * @param expr
@@ -33,7 +49,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T sum(String expr, String alias, Map<String,Object>... paramValues);
+    T sum(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * @param expr
@@ -41,7 +57,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T max(String expr, String alias, Map<String,Object>... paramValues);
+    T max(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * @param expr
@@ -49,7 +65,7 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T min(String expr, String alias, Map<String,Object>... paramValues);
+    T min(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
      * <p>
@@ -60,6 +76,6 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @param paramValues
      * @return
      */
-    T groupByAndSelect(String expr, String alias, Map<String,Object>... paramValues);
+    T groupByAndSelect(String expr, String alias, Map<String, Object>... paramValues);
 
 }
