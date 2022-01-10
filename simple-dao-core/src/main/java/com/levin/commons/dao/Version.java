@@ -5,6 +5,6 @@ package com.levin.commons.dao;
  */
 public final class Version {
 
-    public static final String VERSION_CODE = "2.2.32";
+    public static final String VERSION_CODE = "2.3.1";
 
 }

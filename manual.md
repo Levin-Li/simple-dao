@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.2.32-SNAPSHOT</version>
+            <version>2.3.1.RELEASE</version>
         </dependency>
         
        
@@ -1267,7 +1267,7 @@ Dao 类逻辑框图，如下图所示。
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.2.32-SNAPSHOT</levin.simple-dao.version>
+             <levin.simple-dao.version>2.3.1.RELEASE</levin.simple-dao.version>
              <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
               
         
