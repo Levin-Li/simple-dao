@@ -263,7 +263,7 @@ public abstract class QueryAnnotationUtil {
     public static void addEntityClassMapping(Collection<Class<?>> entityClasses, Function<Class<?>, String> nameConvert) {
 
         Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
-            entityClassList.parallelStream().filter(Objects::nonNull).forEach(cls -> {
+            entityClassList.stream().filter(Objects::nonNull).forEach(cls -> {
 
                 tableNameMappingEntityClassCaches.put(cls.getName(), cls);
 

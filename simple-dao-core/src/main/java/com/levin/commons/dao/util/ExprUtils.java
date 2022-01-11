@@ -67,11 +67,6 @@ public abstract class ExprUtils {
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
     /**
-     * 实体类缓存
-     * 用于防止频繁出现类加载
-     */
-    protected static final Map<String, Class<?>> entityClassCaches = new ConcurrentReferenceHashMap<>();
-    /**
      *
      */
     private static final String COLUMN_REPLACE_PREFIX = "F$:";
@@ -898,30 +893,6 @@ public abstract class ExprUtils {
         return hasText(alias) && alias.trim().equals(result) ? "" : result;
     }
 
-    /**
-     * @param entityClasses
-     * @param nameConvert
-     */
-    public static void cacheEntityClass(Collection<Class> entityClasses, Function<String, String> nameConvert) {
-
-        Optional.ofNullable(entityClasses).ifPresent(list ->
-
-                list.parallelStream()
-                        .filter(Objects::nonNull)
-                        .filter(tempClass -> tempClass.isAnnotationPresent(Entity.class) || tempClass.isAnnotationPresent(MappedSuperclass.class))
-                        .forEach(tempClass -> {
-                            //
-                            entityClassCaches.put(tempClass.getName(), tempClass);
-
-                            String tableName = nameConvert.apply(getTableName(tempClass));
-
-                            if (StringUtils.hasText(tableName)) {
-                                entityClassCaches.put(tableName, tempClass);
-                            }
-                        })
-        );
-
-    }
 
     /**
      * @param entityClass

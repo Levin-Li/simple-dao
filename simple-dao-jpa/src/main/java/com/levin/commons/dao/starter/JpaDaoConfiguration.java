@@ -207,7 +207,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
             //增加表名和类名的映射
             QueryAnnotationUtil.addEntityClassMapping(entityManagerFactory.getMetamodel()
-                    .getEntities().parallelStream()
+                    .getEntities().stream()
                     .map(entityType -> entityType.getBindableJavaType())
                     .collect(Collectors.toList()), jpaDao::getTableName);
 

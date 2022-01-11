@@ -67,7 +67,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
                 }
             }
 
-            return (Collection<R>) pluginResList.parallelStream()
+            return (Collection<R>) pluginResList.stream()
                     .filter(res -> resType.equals(res.getType()))
                     .collect(Collectors.toList());
         }
