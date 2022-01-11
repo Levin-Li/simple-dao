@@ -16,6 +16,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.*;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.persistence.PersistenceException;
@@ -49,20 +52,29 @@ public class ModuleWebControllerAdvice {
         log.info("init...");
     }
 
+
+    /**
+     * // @InitBinder标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
+     * // 日期格式的字符串转换成Date对象
+     * @param binder
+     */
+    @InitBinder
+    protected void initBinder(WebDataBinder binder) {
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//        dateFormat.setLenient(false);
+//        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
+//        binder.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("MM-dd-yyyy"),false));
+    }
+
+
 //    // 这里@ModelAttribute("loginUserInfo")标注的modelAttribute()方法表示会在Controller方法之前
 //    // 执行，返回当前登录用户的UserDetails对象
 //    @ModelAttribute("loginUserInfo")
 //    public UserDetails modelAttribute() {
 //        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 //    }
-//    // @InitBinder标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
-//    // 日期格式的字符串转换成Date对象
-//    @InitBinder
-//    protected void initBinder(WebDataBinder binder) {
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-//        dateFormat.setLenient(false);
-//        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
-//    }
+
+
 //    // 这里表示Controller抛出的MethodArgumentNotValidException异常由这个方法处理
 //    @ExceptionHandler(MethodArgumentNotValidException.class)
 //    public Result exceptionHandler(MethodArgumentNotValidException e) {

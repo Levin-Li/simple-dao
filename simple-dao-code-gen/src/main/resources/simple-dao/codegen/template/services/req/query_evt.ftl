@@ -17,6 +17,8 @@ import com.levin.commons.dao.annotation.misc.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
+import org.springframework.format.annotation.*;
+
 import javax.validation.constraints.*;
 import javax.annotation.*;
 
@@ -59,6 +61,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 <#list fields as field>
 
     <#if field.typeName == 'Date'>
+    // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
     @Schema(description = "大于等于${field.desc}")
     @Gte
     private ${field.typeName} gte${field.name?cap_first};
