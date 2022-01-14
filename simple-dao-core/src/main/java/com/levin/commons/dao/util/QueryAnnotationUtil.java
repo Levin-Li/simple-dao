@@ -732,6 +732,10 @@ public abstract class QueryAnnotationUtil {
         return hasAnno;
     }
 
+    public static List<Field> getNonStaticFields(Class type) {
+        return tryGetFieldsFromCache(type, Modifier.STATIC);
+    }
+
     /**
      * 获取字段列表，以包括所有父对象的子段
      * <p>
@@ -740,13 +744,17 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static List<Field> getNonStaticFields(Class type) {
+    public static List<Field> tryGetFieldsFromCache(Class type, int excludeModifiers) {
+
+//        if (type == null) {
+//            return Collections.emptyList();
+//        }
 
         List<Field> fields = cacheFields.get(type.getName());
 
         if (fields == null) {
 
-            fields = getFields(type, Modifier.STATIC);
+            fields = getFields(type, excludeModifiers);
 
             //放入不可变的列表
             cacheFields.put(type.getName(), Collections.unmodifiableList(fields));
@@ -757,12 +765,12 @@ public abstract class QueryAnnotationUtil {
 
 
     /**
-     * 获取所有的字段，包括父类的字段
+     * 递归获取所有的字段，包括父类的字段
      *
      * @param type
      * @return
      */
-    static List<Field> getFields(Class type, int excludeModifiers) {
+    static synchronized List<Field> getFields(Class type, int excludeModifiers) {
 
         if (type == null
                 || isRootObjectType(type)
@@ -771,12 +779,17 @@ public abstract class QueryAnnotationUtil {
                 || isIgnore(type)) {
 
             return Collections.emptyList();
+
         }
 
+        List<Field> fields = new ArrayList<>(16);
 
-        List<Field> fields = new ArrayList<>(10);
+        //先加入父类的字段
+        Class superclass = type.getSuperclass();
 
-        fields.addAll(getFields(type.getSuperclass(), excludeModifiers));
+        if (superclass != null) {
+            fields.addAll(tryGetFieldsFromCache(superclass, excludeModifiers));
+        }
 
         for (Field field : type.getDeclaredFields()) {
             //如果不是被过滤的类型
@@ -786,6 +799,7 @@ public abstract class QueryAnnotationUtil {
         }
 
         return fields;
+
     }
 
 
