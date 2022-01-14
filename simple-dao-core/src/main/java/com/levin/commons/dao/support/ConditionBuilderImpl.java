@@ -1367,6 +1367,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //关键方法，必须保证返回的顺序是，父类字段优先出现，然后才是子类的字段
             List<Field> fields = QueryAnnotationUtil.getNonStaticFields(typeClass);
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
