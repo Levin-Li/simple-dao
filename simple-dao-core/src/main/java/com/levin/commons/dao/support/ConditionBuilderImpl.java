@@ -1785,9 +1785,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         final boolean hasValue = value != null;
 
-        final boolean isIterable = hasValue && QueryAnnotationUtil.isIterable(value.getClass());
-        final boolean isArray = hasValue && QueryAnnotationUtil.isArray(value.getClass());
+        final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType))
+                || (hasValue && QueryAnnotationUtil.isIterable(value.getClass()));
 
+        final boolean isArray = (varType != null && varType.isArray())
+                || (hasValue && QueryAnnotationUtil.isArray(value.getClass()));
 
         final Consumer<Annotation> consumer = annotation -> {
             if (annotation instanceof CList) {
@@ -1799,20 +1801,36 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     //如果是CList，并且是迭代条件
                     if (clist.isIterative() && (isIterable || isArray)) {
 
-                        Object values = isArray ? Arrays.asList((Object[]) value) : value;
+                        boolean isAdd = false;
 
-                        for (Object paramValue : (Iterable<?>) values) {
-                            for (C c : clist.value()) {
-                                //放入临时参数
-                                tempParams.put(daoAnnotations.size(), paramValue);
+                        if (value != null) {// 如果有值
 
-                                //放入注解
-                                daoAnnotations.add(c);
+                            Object values = isArray ? Arrays.asList((Object[]) value) : value;
+
+                            for (Object paramValue : (Iterable<?>) values) {
+
+                                for (C c : clist.value()) {
+                                    //放入临时参数
+                                    tempParams.put(daoAnnotations.size(), paramValue);
+
+                                    //放入注解
+                                    daoAnnotations.add(c);
+
+                                    isAdd = true;
+                                }
+
                             }
                         }
+
+                        //如果注解是必须的，但又没有符合的条件
+                        if (clist.require() && !isAdd) {
+                            throw new StatementBuildException("CList的迭代是必须的");
+                        }
+
                     } else {
                         daoAnnotations.addAll(Arrays.asList(clist.value()));
                     }
+
                 }
 
             } else if (annotation instanceof OrderByList) {
@@ -1899,9 +1917,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 annotationList.add(daoAnnotation);
             }
-
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////
 
         Check check = findFirstMatched(varAnnotations, Check.class);
 
