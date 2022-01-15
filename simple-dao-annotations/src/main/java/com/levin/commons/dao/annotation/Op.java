@@ -267,26 +267,6 @@ public enum Op
         init();
     }
 
-
-    Op(OperandType leftOperandType, String operator, String prefix, OperandType rightOperandType, String suffix) {
-        this.leftOperandType = leftOperandType;
-        this.rightOperandType = rightOperandType;
-        this.operator = operator;
-        this.prefix = prefix;
-        this.suffix = suffix;
-        init();
-    }
-
-    Op(OperandType leftOperandType, OperandType rightOperandType, boolean expandParamValue, String paramDelimiter, String operator, String prefix, String suffix) {
-        this.leftOperandType = leftOperandType;
-        this.rightOperandType = rightOperandType;
-        this.expandParamValue = expandParamValue;
-        this.paramDelimiter = paramDelimiter;
-        this.operator = operator;
-        this.prefix = prefix;
-        this.suffix = suffix;
-    }
-
     /**
      * 是否需要参数表达式
      *
@@ -361,6 +341,7 @@ public enum Op
 
         //最后生成后去除头尾空格
         return sb.toString().trim();
+
     }
 
 

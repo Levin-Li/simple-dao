@@ -4,6 +4,8 @@ import java.lang.annotation.*;
 
 /**
  * 语句注解集合
+ * <p>
+ * 本组件主要解决同一个字段，需要出现多个相同的注解的问题
  *
  * @author llw
  * @@since 2.1.0

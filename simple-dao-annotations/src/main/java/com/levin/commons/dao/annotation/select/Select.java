@@ -148,21 +148,6 @@ public @interface Select {
 
 
     /**
-     * 针对参数的函数列表
-     * <p>
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * 参数是指字段值或是子查询语句
-     * <p>
-     * 例如 func(:?)  把参数用函数包围
-     * func(select name from user where id = :userId) 把子查询用函数包围
-     *
-     * @return
-     */
-//    Func[] paramFuncs() default {};
-
-
-    /**
      * 对整个表达式的包围前缀
      *
      * @return

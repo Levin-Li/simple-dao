@@ -46,7 +46,6 @@ public @interface OrderBy {
      */
     boolean require() default false;
 
-
     /**
      * 表达式，考虑支持Groovy和SpEL
      * <p/>

@@ -60,23 +60,6 @@ public @interface Update {
      */
     String optimisticLocking() default "";
 
-    /**
-     * 是否是having 操作
-     * <p>
-     * 只针对查询有效
-     *
-     * @return
-     */
-//    boolean having() default false;
-
-
-    /**
-     * 是否用 NOT () 包围
-     *
-     * @return
-     */
-//    boolean not() default false;
-
 
     /**
      * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
@@ -84,7 +67,6 @@ public @interface Update {
      * @return
      */
     boolean require() default false;
-
 
     /**
      * 表达式，默认为SPEL
@@ -111,21 +93,6 @@ public @interface Update {
      * @return
      */
     boolean filterNullValue() default true;
-
-
-    /**
-     * 针对字段函数列表
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * func3(func2(func1(t.field)
-     *
-     * <p>
-     * <p>
-     * 如果是更新字段则忽略
-     *
-     * @return
-     */
-    // Func[] fieldFuncs() default {};
 
     /**
      * 右操作数（参数） Case 选项

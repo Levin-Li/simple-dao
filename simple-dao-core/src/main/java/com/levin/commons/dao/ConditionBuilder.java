@@ -162,11 +162,12 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @param args
      * @return
      */
-    T appendByMethodParams(Object bean, Method method, Object... args);
+    T appendByMethodParams(Object methodOwnerBean, Method method, Object... args);
 
 
     /**
      * 按文本表达式构建查询条件
+     * <p>
      * <p/>
      * 如：属性名Q_Not_Like_name  值 llw，表f示会生成查询条件 name not like '%llw%'
      * 注意时间的文本表达式："2016/07/16 23:59:07"
@@ -199,7 +200,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @param queryParams
      * @return
      */
-
+    @Deprecated
     T appendByEL(String paramPrefix, Map<String, Object>... queryParams);
 
     /**

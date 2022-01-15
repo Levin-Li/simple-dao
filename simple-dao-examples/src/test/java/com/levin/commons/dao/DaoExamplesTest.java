@@ -736,30 +736,16 @@ public class DaoExamplesTest {
     @Test
     public void testSimpleDao() {
 
-        try {
-            User user = simpleDaoRepository.findOne(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            List<User> users = simpleDaoRepository.find(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        User user = simpleDaoRepository.findOne(new UserDTO());
 
 
-        try {
-            int update = simpleDaoRepository.update(new UserUpdateDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<User> users = simpleDaoRepository.find(new UserDTO());
 
-        try {
-            int delete = simpleDaoRepository.delete(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        int update = simpleDaoRepository.update(new UserUpdateDTO());
+
+
+        int delete = simpleDaoRepository.delete(new UserDTO());
 
     }
 
@@ -1304,7 +1290,7 @@ public class DaoExamplesTest {
     public void testCListAnno1() throws Exception {
 
 
-        List<TestEntity> objects = dao.findByQueryObj(  new TestEntityDto());
+        List<TestEntity> objects = dao.findByQueryObj(new TestEntityDto());
 
         Assert.notNull(objects, "");
 

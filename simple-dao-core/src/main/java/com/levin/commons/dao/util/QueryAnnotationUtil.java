@@ -33,6 +33,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
@@ -371,6 +372,8 @@ public abstract class QueryAnnotationUtil {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * 递归抚平
+     *
      * @param valueList
      * @param paramValues
      * @return
@@ -386,8 +389,8 @@ public abstract class QueryAnnotationUtil {
         }
 
         for (Object paramValue : paramValues) {
-            if (paramValue instanceof Collection) {
-                for (Object pv : ((Collection) paramValue)) {
+            if (paramValue instanceof Iterable) {
+                for (Object pv : ((Iterable) paramValue)) {
                     flattenParams(valueList, pv);
                 }
             } else if (paramValue != null && paramValue.getClass().isArray()) {
@@ -535,6 +538,27 @@ public abstract class QueryAnnotationUtil {
         return result;
     }
 
+
+    public static Op getOp(Annotation opAnno) {
+
+        Op op = null;
+
+        try {
+            op = (Op) ReflectionUtils.findMethod(opAnno.annotationType(), E_C.op).invoke(opAnno);
+        } catch (Exception e) {
+        }
+
+        if (op == null) {
+
+            op = Stream.of(Op.values())
+                    .filter(o -> o.name().contentEquals(opAnno.annotationType().getSimpleName()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return op;
+    }
+
     /**
      * 获取属性名称
      *
@@ -567,7 +591,6 @@ public abstract class QueryAnnotationUtil {
         }
 
         String key = entityClass.getName() + "-" + opAnno.annotationType().getSimpleName() + "-" + name;
-
 
         newName = propertyNameMapCaches.getAndAutoPut(key, v -> true, () -> {
 
@@ -611,25 +634,32 @@ public abstract class QueryAnnotationUtil {
             return null;
         }
 
-        for (Annotation annotation : annotations) {
+        return (A) Stream.of(annotations)
+                .filter(Objects::nonNull)
+                .filter(a -> Stream.of(types).anyMatch(t -> t == a.annotationType()))
+                .findFirst()
+                .orElse(null);
 
-            if (annotation == null) {
-                continue;
-            }
+//        for (Annotation annotation : annotations) {
+//
+//            if (annotation == null) {
+//                continue;
+//            }
+//
+//            for (Class type : types) {
+//
+//                if (type == null) {
+//                    continue;
+//                }
+//
+//                if (annotation.annotationType() == type) {
+//                    return (A) annotation;
+//                }
+//            }
+//        }
+//
+//        return null;
 
-            for (Class type : types) {
-
-                if (type == null) {
-                    continue;
-                }
-
-                if (annotation.annotationType() == type) {
-                    return (A) annotation;
-                }
-            }
-        }
-
-        return null;
     }
 
 
@@ -640,7 +670,6 @@ public abstract class QueryAnnotationUtil {
         if (output == null) {
             output = new LinkedHashMap();
         }
-
 
         for (Map<K, V> source : sources) {
 
@@ -831,8 +860,10 @@ public abstract class QueryAnnotationUtil {
 
     /**
      * 判定复杂对象的方法
+     *
+     *
      * <p>
-     * 如果是数组，Map , List 等都不认为是复杂对象
+     * 如果是数组，Map , Iterable 等都不认为是复杂对象
      *
      * <p>
      * 关键方法
@@ -857,7 +888,8 @@ public abstract class QueryAnnotationUtil {
 
         return varType != null
                 && !QueryAnnotationUtil.isPrimitive(varType)
-                && !Object[].class.isAssignableFrom(varType)
+                && !varType.isArray()
+//                && !Object[].class.isAssignableFrom(varType)
                 && !Map.class.isAssignableFrom(varType) //并且不是 Map
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
                 && !varType.isAnnotationPresent(PrimitiveValue.class);
@@ -882,7 +914,7 @@ public abstract class QueryAnnotationUtil {
 
             int length = Array.getLength(value);
 
-            ArrayList list = new ArrayList(length);
+            List list = new ArrayList(length);
 
             for (int i = 0; i < length; i++) {
                 Object v = Array.get(value, i);
@@ -893,16 +925,18 @@ public abstract class QueryAnnotationUtil {
 
             return list;
 
-        } else if (value instanceof Collection) {
+        } else if (value instanceof Iterable) {
 
-            ArrayList list = new ArrayList(((Collection) value).size());
+            List list = new ArrayList();
 
-            for (Object v : (Collection) value) {
+            for (Object v : (Iterable) value) {
                 if (!isNull(v, isFilterEmptyString)) {
                     list.add(v);
                 }
             }
+
             return list;
+
         }
 
         return value;

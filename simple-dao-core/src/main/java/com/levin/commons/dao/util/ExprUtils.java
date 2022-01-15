@@ -20,7 +20,6 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
@@ -96,7 +95,7 @@ public abstract class ExprUtils {
         final String domain = domainFunc != null ? domainFunc.apply(c.domain()) : c.domain();
 
         //优先使用 fieldExpr
-        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(domain, name);
+        String fieldExpr = c.isAddAliasPrefixForValue() ? aroundColumnPrefixFunc.apply(domain, name) : name;
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}

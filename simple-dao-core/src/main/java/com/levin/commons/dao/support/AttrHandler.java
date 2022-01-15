@@ -3,10 +3,10 @@ package com.levin.commons.dao.support;
 import java.lang.annotation.Annotation;
 
 /**
- *
+ * 属性增强处理回调
  */
-
-public interface AttrCallback {
+@FunctionalInterface
+public interface AttrHandler {
 
     /**
      * 类的属性处理回调

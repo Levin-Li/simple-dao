@@ -100,14 +100,25 @@ public @interface C {
 
     /**
      * 查询字段名称，默认为字段的属性名称
+     *
      * <p>
      * 对应数据库的字段名或是 Jpa 实体类的字段名
      * <p>
      * 通常代表左操作数
+     * <p>
+     * 也就是代表字段
      *
      * @return
      */
     String value() default "";
+
+
+    /**
+     * 是否为 操作数（既字段） value 变量值 自动增加别名前缀
+     *
+     * @return
+     */
+    boolean isAddAliasPrefixForValue() default true;
 
 
     /**
@@ -231,14 +242,6 @@ public @interface C {
      */
     String surroundPrefix() default "";
 
-
-    /**
-     * 强行设置字段表达式
-     *
-     * @return
-     */
-    String fieldExpr() default "";
-
     /**
      * 子查询或是表达式
      * <p>
@@ -248,7 +251,6 @@ public @interface C {
      *
      * @return
      */
-
     String paramExpr() default "";
 
     /**

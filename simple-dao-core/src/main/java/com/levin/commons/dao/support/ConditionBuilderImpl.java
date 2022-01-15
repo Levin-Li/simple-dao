@@ -24,6 +24,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.StringUtils;
 
@@ -459,9 +460,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     @Override
-    public CB appendByMethodParams(Object bean, Method method, Object... args) {
+    public CB appendByMethodParams(Object methodOwnerBean, Method method, Object... args) {
 
-        walkMethod(bean, method, args);
+        walkMethod(methodOwnerBean, method, args);
 
         return (CB) this;
     }
@@ -934,7 +935,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return "";
         }
 
-
         //去除空格
         column = column.trim();
 
@@ -1183,7 +1183,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 //////////////////////////////////////////////
 
-    protected void beforeWalkMethod(Object bean, Method method, Object[] args) {
+    protected void beforeWalkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
         //优先
         setQueryOption(args);
@@ -1209,11 +1209,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected void afterWalkMethod(Object bean, Method method, Object[] args) {
+    protected void afterWalkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
     }
 
-    protected void walkMethod(Object bean, Method method, Object[] args) {
+    protected void walkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
         //如果是忽略的方法
         if (method.getAnnotation(Ignore.class) != null) {
@@ -1237,22 +1237,26 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
-        beforeWalkMethod(bean, method, args);
+        beforeWalkMethod(methodOwnerBean, method, args);
 
         for (int i = 0; i < parameterTypes.length; i++) {
 
             String pName = parameterNames[i];
 
             Annotation[] varAnnotations = parameterAnnotations[i];
-            Class<?> pType = ResolvableType.forMethodParameter(method, i).resolve(parameterTypes[i]);
+
+            //参数获取定义的数据类型
+            Class<?> pType = ResolvableType.forMethodParameter(method, i, methodOwnerBean != null ? methodOwnerBean.getClass() : null)
+                    .resolve(parameterTypes[i]);
+
             Object value = args[i];
 
-            processAttr(bean, method, pName, varAnnotations, pType, value);
+            processAttr(null, null, pName, varAnnotations, pType, value);
 
         }
 
         //之前之后
-        afterWalkMethod(bean, method, args);
+        afterWalkMethod(methodOwnerBean, method, args);
 
     }
 
@@ -1315,7 +1319,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      *
      * @param queryObjs
      */
-    public void walkObject(AttrCallback attrCallback, Object... queryObjs) {
+    public void walkObject(AttrHandler attrCallback, Object... queryObjs) {
 
         if (queryObjs == null) {
             return;
@@ -1389,7 +1393,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 field.setAccessible(true);
 
                 try {
-
                     if (attrCallback != null) {
 
                         boolean isContinue = attrCallback.onAction(queryValueObj
@@ -1499,7 +1502,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param queryParams
      * @return
      */
-
     public void walkMap(String paramPrefix, Map<String, Object>... queryParams) {
 
         if (queryParams == null) {
@@ -1599,7 +1601,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
+     * 核心方法
+     * <p>
+     * 第一层处理字段或是属性 关联的 组件集合
+     * <p>
+     * 本方法主要处理逻辑注解
+     * <p>
      * 处理单个属性或是方法参数的注解
+     *
      * <p>
      * <p>
      * 单个属性，多个注解的处理入口
@@ -1617,17 +1626,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
+        Assert.hasText(name, "name is empty");
+
         try {
-
-//            BaseModel.TargetModel.builder()
-//                    .fieldOrMethod(fieldOrMethod)
-//                    .rootBean(bean)
-//                    .varType(attrType)
-//                    .name(name)
-//                    .varAnnotations(varAnnotations)
-//                    .value(value)
-//                    .build();
-
             //设置脚本执行功能函数
             elEvalFuncThreadLocal.set((expr, ctxs) -> evalExpr(bean, value, name, expr, null, ctxs));
 
@@ -1770,7 +1771,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param varType
      * @param value
      */
-    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, final Class<?> varType, Object value) {
+    protected void processAttrOld(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, final Class<?> varType, Object value) {
 
 //        if (isIgnore(varAnnotations)) {
 //            return;
@@ -1951,6 +1952,119 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
                     newVarType, paramValue, annotation);
         });
+
+
+    }
+
+    /**
+     * 核心方法
+     * <p>
+     * 第二层处理字段或是属性 关联的 组件集合
+     * <p>
+     * 本方法主要对多个注解进行分解，根据数据类型进行分解
+     *
+     * @param bean
+     * @param fieldOrMethod
+     * @param varAnnotations
+     * @param name
+     * @param varType
+     * @param value
+     */
+    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
+
+//        if (isIgnore(varAnnotations)) {
+//            return;
+//        }
+
+        //如果没有类型，默认获取值的类型
+        if ((varType == null || varType == Object.class) && value != null) {
+            varType = value.getClass();
+        }
+
+        if (varType == null && value == null) {
+            logger.warn(" *** processAttr " + name + " varType is null and value is null.", new Exception());
+        }
+
+        final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType));
+        final boolean isArray = (varType != null && varType.isArray());
+
+        final List<Annotation> daoAnnotations = new ArrayList<>(5);
+
+        //合并组件的闭包
+        final Consumer<Annotation> addAnnotationConsumer = annotation -> {
+            if (annotation instanceof CList) {
+                CList clist = (CList) annotation;
+                if (isValid(annotation, bean, name, value)) {
+                    daoAnnotations.addAll(Arrays.asList(clist.value()));
+                }
+            } else if (annotation instanceof OrderByList) {
+                if (isValid(annotation, bean, name, value)) {
+                    daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
+                }
+            } else {
+                daoAnnotations.add(annotation);
+            }
+        };
+
+        //过滤字段级别注解
+        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(addAnnotationConsumer);
+
+        //如果字段没有注解，则尝试获取类上面的注解
+        if (daoAnnotations.isEmpty() && bean != null) {
+            //扫描类级别注解
+            findNeedProcessDaoAnnotations(fieldOrMethod, bean.getClass().getAnnotations()).forEach(addAnnotationConsumer);
+        }
+
+        //如果没有注解
+        if (daoAnnotations.isEmpty()) {
+
+            boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
+
+            if (complexType) {
+                //递归加入条件
+                reAppendByQueryObj(value);
+            } else {
+                //如果没有注解，不是复杂类型，则默认为等于查询
+                daoAnnotations.add(getAnnotation(Eq.class));
+            }
+
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////
+
+        for (Annotation annotation : daoAnnotations) {
+
+            String newName = tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name);
+
+            //如果是扩展参数的操作 或是 不是迭代类型
+            Op op = getOp(annotation);
+
+            if (value == null
+                    || op == null
+                    || (!isArray && !isIterable)
+                    || op.isExpandParamValue()
+                    || !op.isNeedParamExpr()) {
+
+                if (isValid(annotation, bean, name, value)) {
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
+                }
+
+            } else {
+                //可迭代参数
+                Iterable iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable) value;
+
+                for (Object paramValue : iterableData) {
+
+                    Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
+
+                    //迭代循环
+                    if (isValid(annotation, bean, name, paramValue)) {
+                        processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, newVarType, paramValue, annotation);
+                    }
+
+                }
+            }
+        }
 
     }
 
@@ -2149,7 +2263,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    protected String buildSubQuery(ValueHolder holder) {
+    protected String buildSubQuery(ValueHolder<?> holder) {
         return ExprUtils.buildSubQuery(holder, getDao(), isNative(), this.context);
     }
 
@@ -2163,7 +2277,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder holder) {
+    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder<?> holder) {
 
         C c = null;
 
@@ -2196,6 +2310,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
 
         }
+
 
         List<Map<String, ?>> fieldCtxs = this.buildContextValues(holder.root, holder.value, name);
 

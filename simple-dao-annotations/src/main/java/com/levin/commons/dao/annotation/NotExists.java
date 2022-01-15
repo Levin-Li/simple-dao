@@ -1,7 +1,5 @@
 package com.levin.commons.dao.annotation;
 
-import com.levin.commons.dao.annotation.misc.Case;
-
 import java.lang.annotation.*;
 
 /**
@@ -18,30 +16,12 @@ import java.lang.annotation.*;
 //不存在
 public @interface NotExists {
 
-
     /**
      *
      * 具体的变量替换，请参考 C 注解
      *
      *
      */
-
-    /**
-     * 操作
-     *
-     * @return
-     */
-//    Op op() default Op.Eq;
-
-    /**
-     * 查询字段名称，默认为字段的属性名称
-     * <p>
-     * 对应数据库的字段名或是 Jpa 实体类的字段名
-     *
-     * @return
-     */
-    String value() default "";
-
 
     /**
      * 是否是having 操作
@@ -85,68 +65,6 @@ public @interface NotExists {
      * @return
      */
     String condition() default C.NOT_EMPTY;
-
-    /**
-     * 是否过滤数组参数或是列表参数中的空值
-     * <p>
-     * 主要针对 In NotIn Between
-     *
-     * @return
-     */
-    boolean filterNullValue() default true;
-
-
-    /**
-     * 左操作数（字段） Case 选项
-     * 当存在多个时，只取第一个条件成立的 Case
-     *
-     * 注意该表达式比 fieldFuncs 更早求取
-     *
-     * @return
-     */
-//    Case[] fieldCases() default {};
-
-
-    /**
-     * 右操作数（参数） Case 选项
-     * 当存在多个时，只取第一个条件成立的 Case
-     * <p>
-     * 注意该表达式比 paramFuncs 更早求取
-     *
-     * @return
-     */
-    Case[] paramCases() default {};
-
-
-    /**
-     * 针对字段函数列表
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * func3(func2(func1(t.field)
-     *
-     * <p>
-     * <p>
-     * 如果是更新字段则忽略
-     *
-     * @return
-     */
-//    Func[] fieldFuncs() default {};
-
-
-    /**
-     * 针对参数的函数列表
-     * <p>
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * 参数是指字段值或是子查询语句
-     * <p>
-     * 例如 func(:?)  把参数用函数包围
-     * func(select name from user where id = :userId) 把子查询用函数包围
-     *
-     * @return
-     */
-    Func[] paramFuncs() default {};
-
 
     /**
      * 对整个表达式的包围前缀

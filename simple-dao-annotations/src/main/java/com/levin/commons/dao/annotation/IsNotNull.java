@@ -44,8 +44,6 @@ public @interface IsNotNull {
     String value() default "";
 
 
-
-
     /**
      * 是否是having 操作
      * <p>
@@ -89,15 +87,6 @@ public @interface IsNotNull {
      */
     String condition() default "";
 
-    /**
-     * 是否过滤数组参数或是列表参数中的空值
-     * <p>
-     * 主要针对 In NotIn Between
-     *
-     * @return
-     */
-    boolean filterNullValue() default true;
-
 
     /**
      * 左操作数（字段） Case 选项
@@ -108,17 +97,6 @@ public @interface IsNotNull {
      * @return
      */
     Case[] fieldCases() default {};
-
-
-    /**
-     * 右操作数（参数） Case 选项
-     * 当存在多个时，只取第一个条件成立的 Case
-     *
-     * 注意该表达式比 paramFuncs 更早求取
-     *
-     * @return
-     */
-//    Case[] paramCases() default {};
 
 
     /**
@@ -136,20 +114,6 @@ public @interface IsNotNull {
     Func[] fieldFuncs() default {};
 
 
-    /**
-     * 针对参数的函数列表
-     * <p>
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * 参数是指字段值或是子查询语句
-     * <p>
-     * 例如 func(:?)  把参数用函数包围
-     * func(select name from user where id = :userId) 把子查询用函数包围
-     *
-     * @return
-     */
-//    Func[] paramFuncs() default {};
-
 
     /**
      * 对整个表达式的包围前缀
@@ -158,27 +122,12 @@ public @interface IsNotNull {
      */
     String surroundPrefix() default "";
 
-
     /**
      * 字段归属的域，通常是表的别名
      *
      * @return
      */
     String domain() default "";
-
-    /**
-     * 子查询表达式
-     * <p>
-     * <p/>
-     * 如果子查询语句有配置，将会使被注解的字段值不会被做为语句生成部分
-     * <p>
-     * <p>
-     * 被注解的字段，
-     * 如果是是数组，列表，如果
-     *
-     * @return
-     */
-    String paramExpr() default "";
 
 
     /**
