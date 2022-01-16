@@ -61,23 +61,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     @Eq(require = true)
     @NotNull
     protected ${pkField.typeName} ${pkField.name};
-
-    //public ${className}(${pkField.typeName} ${pkField.name}) {
-    //    this.${pkField.name} = ${pkField.name};
-    //}
-
-    /**
-     * 获取缓存ID
-     */
-    @Schema(description = "缓存ID-内部使用" , hidden = true)
-    public final String getCacheId() {
-
-        String cid = ${pkField.name}.toString() + "" ${isMultiTenantObject ? string(' + tenantId.toString()','')};
-
-        return cid.trim().length() > 0 ? cid : null;
-
-    }
-
+    
 </#if>
 
     @PostConstruct

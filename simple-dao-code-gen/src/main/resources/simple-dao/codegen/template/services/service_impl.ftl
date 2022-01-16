@@ -114,7 +114,8 @@ public class ${className} implements ${serviceName} {
 
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     @Override
-    @Cacheable(condition = "#req.getCacheId() != null", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.getCacheId()")
+    //只更新缓存
+    @CachePut(unless = "#result == null" , condition = "#req.${pkField.name} != null" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     public ${entityName}Info findById(Query${entityName}ByIdReq req) {
         return simpleDao.findOneByQueryObj(req);
     }
@@ -130,7 +131,10 @@ public class ${className} implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
     @Transactional(rollbackFor = Exception.class)
     @Override
-    @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true)
+    @Caching(evict = {
+        //尽量不用调用批量删除，会导致缓存清空
+        @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true)
+    })
     public List<Integer> batchUpdate(List<Update${entityName}Req> reqList){
         return reqList.stream().map(this::update).collect(Collectors.toList());
     }
@@ -138,7 +142,7 @@ public class ${className} implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     @Override
     @Caching(evict = {
-         //尽量不用调用批量删除，会导致缓存清空
+        //尽量不用调用批量删除，会导致缓存清空
         @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}"),
         @CacheEvict(condition = "#req.${pkField.name}List != null && #req.${pkField.name}List.length > 0", allEntries = true),
     })                    
