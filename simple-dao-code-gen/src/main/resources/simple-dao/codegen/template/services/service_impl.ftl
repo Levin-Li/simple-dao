@@ -3,6 +3,8 @@ package ${packageName};
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
+
+
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
@@ -29,6 +31,7 @@ import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
 import ${modulePackageName}.*;
+import ${modulePackageName}.services.*;
 
 <#list fields as field>
     <#if (field.lzay)??>
@@ -61,10 +64,14 @@ import ${field.infoClassName};
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @CacheConfig(cacheNames = {ModuleOption.ID_PREFIX + E_${entityName}.SIMPLE_CLASS_NAME})
-public class ${className} implements ${serviceName} {
+public class ${className} extends BaseService implements ${serviceName} {
 
     @Autowired
     private SimpleDao simpleDao;
+
+    protected ${serviceName} getSelfProxy(){
+        return getSelfProxy(${serviceName}.class);
+    }
 
     @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
     @Override
@@ -131,12 +138,12 @@ public class ${className} implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
     @Transactional(rollbackFor = Exception.class)
     @Override
-    @Caching(evict = {
-        //尽量不用调用批量删除，会导致缓存清空
-        @CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true)
-    })
+    //@Caching(evict = {
+        //@CacheEvict(condition = "#reqList != null && #reqList.size() > 0", allEntries = true)
+    //})
     public List<Integer> batchUpdate(List<Update${entityName}Req> reqList){
-        return reqList.stream().map(this::update).collect(Collectors.toList());
+        //@Todo 优化批量提交
+        return reqList.stream().map(req -> getSelfProxy().update(req)).collect(Collectors.toList());
     }
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
@@ -161,4 +168,5 @@ public class ${className} implements ${serviceName} {
     public ${entityName}Info findOne(Query${entityName}Req req){
         return simpleDao.findOneByQueryObj(req);
     }
+
 }
