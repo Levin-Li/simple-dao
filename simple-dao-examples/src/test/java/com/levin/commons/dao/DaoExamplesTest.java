@@ -93,7 +93,6 @@ public class DaoExamplesTest {
     @Before
     public void injectCheck() throws Exception {
         Assert.notNull(dao, "通用DAO没有注入");
-        Assert.notNull(simpleDaoRepository, "simpleDao没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
 
@@ -729,22 +728,6 @@ public class DaoExamplesTest {
 
     }
 
-
-    @Test
-    public void testSimpleDao() {
-
-        User user = simpleDaoRepository.findOne(new UserDTO());
-
-
-        List<User> users = simpleDaoRepository.find(new UserDTO());
-
-
-        int update = simpleDaoRepository.update(new UserUpdateDTO());
-
-
-        int delete = simpleDaoRepository.delete(new UserDTO());
-
-    }
 
     @Test
     public void testTestEntityStatDto() {
