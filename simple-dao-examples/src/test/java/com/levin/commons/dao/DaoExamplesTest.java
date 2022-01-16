@@ -9,7 +9,6 @@ import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
-import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.dao.repository.UserDao;
 import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
@@ -53,8 +52,6 @@ public class DaoExamplesTest {
     @Autowired
     SimpleDao dao;
 
-    @Autowired(required = false)
-    SimpleDaoRepository simpleDaoRepository;
 
     @Autowired
     UserDao userDao;
