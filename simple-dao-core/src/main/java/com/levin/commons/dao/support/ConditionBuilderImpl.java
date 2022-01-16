@@ -2031,6 +2031,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////
+        Class<?> eleType = null;
+
+        if(isArray){
+          // eleType = varType.getComponentType();
+        }else if(isIterable){
+            // ResolvableType.forInstance(bean).getGenerics()
+        }
 
         for (Annotation annotation : daoAnnotations) {
 
@@ -2039,11 +2046,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             //如果是扩展参数的操作 或是 不是迭代类型
             Op op = getOp(annotation);
 
-            if (value == null
-                    || op == null
-                    || (!isArray && !isIterable)
-                    || op.isExpandParamValue()
-                    || !op.isNeedParamExpr()) {
+            if (
+                //空值直接忽略迭代
+                    value == null
+                            //如果没有操作 忽略迭代
+                            || op == null
+                            || (!isArray && !isIterable)
+                            //如果是扩展参数的操作，如 IN NotIn Between等
+                            || op.isExpandParamValue()
+                            //如果是不需要参的操作，如 IS NULL，IS NOT NULL
+                            || !op.isNeedParamExpr()) {
 
                 if (isValid(annotation, bean, name, value)) {
                     processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
@@ -2051,7 +2063,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             } else {
                 //可迭代参数
-                Iterable iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable) value;
+                Iterable<?> iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable<?>) value;
 
                 for (Object paramValue : iterableData) {
 
@@ -2073,7 +2085,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected Class tryGetEntityClass(Annotation annotation) {
+    protected Class<?> tryGetEntityClass(Annotation annotation) {
 
         String domainAlias = ClassUtils.getValue(annotation, E_C.domain, false);
 
