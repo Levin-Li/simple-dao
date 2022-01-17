@@ -1392,6 +1392,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 field.setAccessible(true);
 
+
+
                 try {
                     if (attrCallback != null) {
 

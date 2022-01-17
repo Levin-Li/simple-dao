@@ -1073,7 +1073,7 @@ public class SelectDaoImpl<T>
             //  resultClass = (Class<E>) Tuple.class;
         }
 
-        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
+        return dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
