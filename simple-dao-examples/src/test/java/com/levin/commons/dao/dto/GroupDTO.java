@@ -37,7 +37,7 @@ public class GroupDTO {
     String state = "A";
 
     @Eq
-    @Eq
+    @Eq(condition = "false")
     String category = "LL";
 
     @Ignore

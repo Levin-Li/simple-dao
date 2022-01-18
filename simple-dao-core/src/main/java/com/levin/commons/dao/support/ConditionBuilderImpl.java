@@ -1262,15 +1262,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-    /**
-     * 解析对象所有的属性，过滤并调用回调
-     *
-     * @param queryObjs
-     */
-    public void walkObject(Object... queryObjs) {
-        walkObject(null, queryObjs);
-    }
-
 
     /**
      * 展开嵌套对象
@@ -1321,7 +1312,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      *
      * @param queryObjs
      */
-    public void walkObject(AttrHandler attrCallback, Object... queryObjs) {
+    public void walkObject(Object... queryObjs) {
 
         if (queryObjs == null) {
             return;
@@ -1359,13 +1350,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             //没有回调时，表示本地调用
-            if (attrCallback == null) {
-                //尝试设置分页
-                setPaging(queryValueObj);
 
-                //尝试设置查询目标实体
-                setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
-            }
+            //尝试设置分页
+            setPaging(queryValueObj);
+
+            //尝试设置查询目标实体
+            setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
 
             //特别处理
             if (queryValueObj instanceof Map) {
@@ -1394,26 +1384,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 field.setAccessible(true);
 
-
                 try {
-                    if (attrCallback != null) {
 
-                        boolean isContinue = attrCallback.onAction(queryValueObj
-                                , field, field.getName(), field.getAnnotations()
-                                , fieldRealType,
-                                field.get(queryValueObj));
+                    processAttr(queryValueObj
+                            , field, field.getName(), field.getAnnotations()
+                            , fieldRealType, field.get(queryValueObj));
 
-                        //如果不再处理，则跳出字段处理
-                        if (!isContinue) {
-                            break;
-                        }
-
-                    } else {
-                        processAttr(queryValueObj
-                                , field, field.getName(), field.getAnnotations()
-                                , fieldRealType,
-                                field.get(queryValueObj));
-                    }
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);
                 }
