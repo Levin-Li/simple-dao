@@ -1085,7 +1085,7 @@ public final class ServiceModelCodeGenerator {
             ArrayList<String> annotations = new ArrayList<>();
 
             if (fieldModel.isRequired()) {
-                annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotNull" : "@NotBlank");
+                annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
             //
