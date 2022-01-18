@@ -26,6 +26,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.PreRemove;
@@ -34,12 +35,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -1393,7 +1394,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 field.setAccessible(true);
 
 
-
                 try {
                     if (attrCallback != null) {
 
@@ -1761,201 +1761,46 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
-     * 处理原子属性
-     * 关键处理方法
-     * <p/>
-     * 对每一个字段，对每一个注解循环处理
+     * 自动拆解注解集合，并提交消费
      *
-     * @param bean
-     * @param fieldOrMethod
-     * @param varAnnotations
-     * @param name
-     * @param varType
-     * @param value
+     * @param annotation
+     * @param consumer
+     * @return
      */
-    protected void processAttrOld(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, final Class<?> varType, Object value) {
+    protected boolean autoConsumerIfList(Annotation annotation, boolean isDoConsume, Consumer<Annotation> consumer) {
 
-//        if (isIgnore(varAnnotations)) {
-//            return;
-//        }
+        Class<? extends Annotation> annotationType = annotation.annotationType();
 
-        if (varType == null && value == null) {
-            logger.warn(" *** processAttr " + name + " varType is null and value is null.", new Exception());
+        if (!"List".contentEquals(annotationType.getSimpleName())
+                || !annotationType.getName().endsWith("$List")) {
+            return false;
         }
 
-        final List<Annotation> daoAnnotations = new ArrayList<>(5);
+        Method method = ReflectionUtils.findMethod(annotationType, "value");
 
-        final Map<Integer, Object> tempParams = new HashMap<>();
+        if (method == null) {
+            return false;
+        }
 
-        final boolean hasValue = value != null;
+        Class<?> returnType = method.getReturnType();
 
-        final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType))
-                || (hasValue && QueryAnnotationUtil.isIterable(value.getClass()));
+        if (!returnType.isArray()) {
+            return false;
+        }
 
-        final boolean isArray = (varType != null && varType.isArray())
-                || (hasValue && QueryAnnotationUtil.isArray(value.getClass()));
+        boolean equals = (returnType.getComponentType().getName() + "$List")
+                .contentEquals(annotationType.getName());
 
-        final Consumer<Annotation> consumer = annotation -> {
-            if (annotation instanceof CList) {
-
-                CList clist = (CList) annotation;
-
-                if (isValid(annotation, bean, name, value)) {
-
-                    //如果是CList，并且是迭代条件
-                    if (clist.isIterative() && (isIterable || isArray)) {
-
-                        boolean isAdd = false;
-
-                        if (value != null) {// 如果有值
-
-                            Object values = isArray ? Arrays.asList((Object[]) value) : value;
-
-                            for (Object paramValue : (Iterable<?>) values) {
-
-                                for (C c : clist.value()) {
-                                    //放入临时参数
-                                    tempParams.put(daoAnnotations.size(), paramValue);
-
-                                    //放入注解
-                                    daoAnnotations.add(c);
-
-                                    isAdd = true;
-                                }
-
-                            }
-                        }
-
-                        //如果注解是必须的，但又没有符合的条件
-                        if (clist.require() && !isAdd) {
-                            throw new StatementBuildException("CList的迭代是必须的");
-                        }
-
-                    } else {
-                        daoAnnotations.addAll(Arrays.asList(clist.value()));
-                    }
-
-                }
-
-            } else if (annotation instanceof OrderByList) {
-
-                if (isValid(annotation, bean, name, value)) {
-                    daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
-                }
-
-            } else {
-                daoAnnotations.add(annotation);
-            }
-        };
-
-        //过滤字段级别注解
-        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(consumer);
-
-        //如果没有注解
-        if (daoAnnotations.isEmpty()) {
-            //如果字段上没有需要处理的注解
-            //默认为 EQ
-
-            boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
-
-            if ((!complexType)) {
-
-                if (bean != null) {
-                    //扫描类级别注解
-                    findNeedProcessDaoAnnotations(null, bean.getClass().getAnnotations()).forEach(consumer);
-                }
-
-                //如果类上面也没有效注解，
-                if (daoAnnotations.isEmpty()) { // && !isNullOrEmptyTxt(value)
-
-                    //如果没有注解，不是复杂类型，则默认为等于查询
-                    Annotation opAnno = getAnnotation(Eq.class);
-
-                    Class tempValType = varType;
-
-                    if (tempValType == null && value != null) {
-                        tempValType = value.getClass();
-                    }
-
-                    //如果参数是一个可迭代对象，改为用 in
-                    if (tempValType != null
-                            && (Iterable.class.isAssignableFrom(tempValType) || tempValType.isArray())) {
-                        opAnno = getAnnotation(In.class);
-                    }
-
-                    daoAnnotations.add(opAnno);
-//                    processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
-                }
-
-            } else {
-
-                boolean isIterableOrMap = value instanceof Iterable || value instanceof Map;
-
-                //@todo 数据类型的支持
-
-                //如果是注解的复杂对象
-                if (complexType && !isNullOrEmptyTxt(value) && !isIterableOrMap) {
-                    reAppendByQueryObj(value);
-                } else if (complexType) {
-                    logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
-                }
-
+        if (equals
+                && isDoConsume
+                && consumer != null) {
+            Annotation[] result = (Annotation[]) ReflectionUtils.invokeMethod(method, annotation);
+            if (result != null) {
+                Stream.of(result).filter(Objects::nonNull).forEachOrdered(consumer);
             }
         }
 
-        //迭代注解
-        final List<Annotation> annotationList = new ArrayList<>(daoAnnotations.size());
-
-        final AtomicInteger idxAtom = new AtomicInteger(0);
-
-        //临时参数2
-        final Map<Integer, Object> tempParams2 = new HashMap<>();
-
-        for (Annotation daoAnnotation : daoAnnotations) {
-
-            Object paramValue = tempParams.getOrDefault(idxAtom.getAndIncrement(), value);
-
-            if (isValid(daoAnnotation, bean, name, paramValue)) {
-
-                tempParams2.put(annotationList.size(), paramValue);
-
-                annotationList.add(daoAnnotation);
-            }
-        }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////
-
-        Check check = findFirstMatched(varAnnotations, Check.class);
-
-        if (check != null) {
-            String pkgName = Eq.class.getPackage().getName();
-            if (annotationList.stream()
-                    .filter(annotation -> annotation.annotationType().getName().startsWith(pkgName))
-                    .count() < check.requireWhereCount()) {
-                throw new StatementBuildException(String.format("fieldOrMethod: %s, name:%s check fail , requireWhereCount >= %s ,remark:%s",
-                        fieldOrMethod, name, check.requireWhereCount(), check.remark()));
-            }
-        }
-
-
-        tempParams.clear();
-        //从 0 开始
-        idxAtom.set(0);
-
-        annotationList.forEach(annotation -> {
-
-            //获取分拆后的参数
-            Object paramValue = tempParams2.getOrDefault(idxAtom.getAndIncrement(), value);
-
-            //如果
-            Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
-
-            processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                    tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                    newVarType, paramValue, annotation);
-        });
-
-
+        return equals;
     }
 
     /**
@@ -2003,6 +1848,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 if (isValid(annotation, bean, name, value)) {
                     daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
                 }
+            } else if (autoConsumerIfList(annotation, isValid(annotation, bean, name, value), daoAnnotations::add)) {
+                //该if 条件不能去除
+                //自动加入
             } else {
                 daoAnnotations.add(annotation);
             }
@@ -2035,9 +1883,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         /////////////////////////////////////////////////////////////////////////////////////////////
         Class<?> eleType = null;
 
-        if(isArray){
-          // eleType = varType.getComponentType();
-        }else if(isIterable){
+        if (isArray) {
+            // eleType = varType.getComponentType();
+        } else if (isIterable) {
             // ResolvableType.forInstance(bean).getGenerics()
         }
 

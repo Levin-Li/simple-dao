@@ -41,6 +41,7 @@ import java.lang.annotation.*;
  * @author llw
  * @@since 2.1.0
  */
+@Repeatable(C.List.class)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -300,4 +301,36 @@ public @interface C {
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+         *
+         * @return
+         */
+        boolean require() default false;
+
+
+        /**
+         * 表达式，考虑支持Groovy和SpEL
+         * <p/>
+         * 当条件成立时，整个条件才会被加入
+         *
+         * @return
+         */
+        String condition() default "";
+
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        C[] value();
+    }
 }

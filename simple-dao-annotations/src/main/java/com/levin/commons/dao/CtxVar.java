@@ -22,8 +22,8 @@ import java.lang.annotation.*;
  * @since 2.2.27
  */
 
-
-@Target({ElementType.FIELD})
+@Repeatable(CtxVar.List.class)
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -42,7 +42,7 @@ public @interface CtxVar {
 
     /**
      * 是否是注入
-     *
+     * <p>
      * true， 把上下文变量赋值到字段值
      * <p>
      * false, 把字段值放入上下文中
@@ -78,4 +78,19 @@ public @interface CtxVar {
      */
     String remark() default "";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        CtxVar[] value();
+    }
 }

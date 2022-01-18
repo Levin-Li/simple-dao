@@ -962,7 +962,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
-            Class<?> fieldType = forField.resolve(field.getType());
+            final Class<?> fieldType = forField.resolve(field.getType());
 
 
             if (field.getType() != fieldType) {
@@ -1085,7 +1085,7 @@ public final class ServiceModelCodeGenerator {
             ArrayList<String> annotations = new ArrayList<>();
 
             if (fieldModel.isRequired()) {
-                annotations.add("@NotNull");
+                annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotNull" : "@NotBlank");
             }
 
             //

@@ -406,6 +406,17 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testGroupDTO() {
+
+        List<GroupInfo> list = dao.findByQueryObj(new GroupDTO());
+
+        System.out.println(list);
+
+    }
+
+
+
+    @Test
     public void testNativeTableJoinDTO() {
 
         List<NativeTableJoinDTO> byQueryObj = dao.findByQueryObj(NativeTableJoinDTO.class, new NativeTableJoinDTO());
@@ -429,7 +440,6 @@ public class DaoExamplesTest {
                 .when("'B'", "1")
                 .elseExpr("2")
                 .toString();
-
 
     }
 

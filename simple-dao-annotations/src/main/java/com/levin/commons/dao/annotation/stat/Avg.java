@@ -13,6 +13,7 @@ import java.lang.annotation.*;
  * @author llw
  * @version 2.0.0
  */
+@Repeatable(Avg.List.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -182,7 +183,7 @@ public @interface Avg {
     /**
      * 别名
      * 整个表达后的别名
-     *
+     * <p>
      * 如果为 "NULL" 值，则没有别名
      *
      * @return
@@ -196,4 +197,35 @@ public @interface Avg {
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+         *
+         * @return
+         */
+        boolean require() default false;
+
+        /**
+         * 表达式，考虑支持Groovy和SpEL
+         * <p/>
+         * 当条件成立时，整个条件才会被加入
+         *
+         * @return
+         */
+        String condition() default "";
+
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        Avg[] value();
+    }
 }
