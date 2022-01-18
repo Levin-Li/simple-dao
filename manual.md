@@ -929,6 +929,7 @@ Dao 类逻辑框图，如下图所示。
     
     
    简单排序注解 SimpleOrderBy 
+   一般情况下不建议使用，有SQL注入风险。
    
          @SimpleOrderBy(condition = "state.length > 0")
          String[] orderBy = {"state desc", "name asc"};

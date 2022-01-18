@@ -553,7 +553,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             processWhereCondition(null, null, expr, value, null, annotation);
 
         } else {
-            logger.debug("注解 " + name + " 对应的 参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, "\n"));
+            if (logger.isDebugEnabled()) {
+                logger.debug("注解 " + name + " 对应的 参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, " -> "));
+            }
         }
 
         return (CB) this;
