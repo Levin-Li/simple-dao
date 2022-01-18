@@ -26,7 +26,7 @@ public @interface OrderByList {
      *
      * @return
      */
-    OrderBy[] value() default {};
+    OrderBy[] value();
 
     /**
      * 表达式，考虑支持Groovy和SpEL

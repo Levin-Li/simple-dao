@@ -33,7 +33,7 @@ public class GroupDTO {
 
     Paging paging = new PagingQueryReq().setPageIndex(1).setPageSize(20);
 
-    @Eq.List(@Eq)
+    @Eq.List(value = @Eq, condition = "false")
     String state = "A";
 
     @Eq
@@ -45,7 +45,7 @@ public class GroupDTO {
 
     protected Boolean editable = true;
 
-//    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {C.ORIGIN_EXPR, "${:format}"}, condition = "true"))
+    //    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {C.ORIGIN_EXPR, "${:format}"}, condition = "true"))
     @Lt
     protected Date createTime = new Date();
 

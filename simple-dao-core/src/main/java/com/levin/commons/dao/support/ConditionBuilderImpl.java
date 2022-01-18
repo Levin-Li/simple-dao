@@ -35,6 +35,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -1837,8 +1838,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
+        final AtomicBoolean isNotDaoAnnotation = new AtomicBoolean(true);
+
         //合并组件的闭包
         final Consumer<Annotation> addAnnotationConsumer = annotation -> {
+
+            //
+            isNotDaoAnnotation.set(false);
+
             if (annotation instanceof CList) {
                 CList clist = (CList) annotation;
                 if (isValid(annotation, bean, name, value)) {
@@ -1860,13 +1867,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(addAnnotationConsumer);
 
         //如果字段没有注解，则尝试获取类上面的注解
-        if (daoAnnotations.isEmpty() && bean != null) {
+        if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty() && bean != null) {
             //扫描类级别注解
             findNeedProcessDaoAnnotations(fieldOrMethod, bean.getClass().getAnnotations()).forEach(addAnnotationConsumer);
         }
 
         //如果没有注解
-        if (daoAnnotations.isEmpty()) {
+        if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty()) {
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
