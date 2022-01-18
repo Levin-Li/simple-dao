@@ -15,6 +15,7 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
+import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,8 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 import java.lang.annotation.Annotation;
@@ -529,7 +532,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            throw new IllegalArgumentException("expr has no content");
 //        }
 
-        final Exception exception = new UnsupportedOperationException("");
+        final Exception exception = new UnsupportedOperationException(expr);
 
         String name = exception.getStackTrace()[callMethodDeep].getMethodName();
 
@@ -541,14 +544,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
-        if (annotation instanceof IsNotNull
-                || annotation instanceof IsNull
+        Op op = getOp(annotation);
+
+        if (op == null
+                || !op.isNeedParamExpr()
                 || !isNullOrEmptyTxt(value)) {
 
             processWhereCondition(null, null, expr, value, null, annotation);
 
         } else {
-            logger.warn("注解 " + name + "无法处理", exception);
+            logger.debug("注解 " + name + " 对应的 参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, "\n"));
         }
 
         return (CB) this;
@@ -2458,11 +2463,32 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     //@todo
     protected Class<?> getExpectFieldType(String domain, String name) {
 
+        Class<?> entityType = null;
+
         if (!hasText(domain)) {
-            return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
+            entityType = hasEntityClass() ? entityType : null;
+        } else {
+            entityType = aliasMap.get(domain);
         }
 
-        return QueryAnnotationUtil.getFieldType(aliasMap.get(domain), name);
+        return getFieldType(entityType, name, ((field, type) -> {
+            //如果是枚举，且是原生查询，需要转换为字符串或是整形
+            if (isNative()
+                    && type != null
+                    && type.isEnum()
+                    && field != null) {
+
+                Enumerated e = field.getAnnotation(Enumerated.class);
+
+                if (e == null || EnumType.ORDINAL.equals(e.value())) {
+                    type = Integer.class;
+                } else {
+                    type = String.class;
+                }
+            }
+            return type;
+        }));
+
     }
 
 

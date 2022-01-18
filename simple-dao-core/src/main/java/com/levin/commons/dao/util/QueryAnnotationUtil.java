@@ -32,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -472,6 +473,10 @@ public abstract class QueryAnnotationUtil {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Class<?> getFieldType(Class<?> type, String propertyName) {
+        return getFieldType(type, propertyName, null);
+    }
+
     /**
      * 获取一个对象属性的数据类型
      * <p/>
@@ -481,7 +486,7 @@ public abstract class QueryAnnotationUtil {
      * @param propertyName 支持复杂属性
      * @return
      */
-    public static Class getFieldType(Class<?> type, String propertyName) {
+    public static Class<?> getFieldType(Class<?> type, String propertyName, BiFunction<Field, Class<?>, Class<?>> biFunction) {
 
         if (type == null || !hasText(propertyName)) {
             return null;
@@ -489,12 +494,13 @@ public abstract class QueryAnnotationUtil {
 
         String[] names = propertyName.split("\\.");
 
-
         ResolvableType owner = null;
+
+        Field field = null;
 
         for (int i = 0; i < names.length; i++) {
 
-            Field field = ReflectionUtils.findField(type, names[i]);
+            field = ReflectionUtils.findField(type, names[i]);
 
             if (field == null) {
                 return null;
@@ -503,9 +509,10 @@ public abstract class QueryAnnotationUtil {
             owner = ResolvableType.forField(field, owner);
 
             type = owner.resolve(field.getType());
+
         }
 
-        return type;
+        return biFunction != null ? biFunction.apply(field, type) : type;
     }
 
 

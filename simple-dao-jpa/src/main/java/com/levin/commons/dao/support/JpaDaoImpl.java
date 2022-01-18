@@ -709,7 +709,7 @@ public class JpaDaoImpl
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
-        setParams(getParamStartIndex(isNative), query, paramValueList);
+        setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
@@ -958,7 +958,7 @@ public class JpaDaoImpl
 //        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
 //        query.setHint("org.hibernate.cacheMode", "REFRESH");
 
-        setParams(getParamStartIndex(isNative), query, paramValueList);
+        setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
@@ -1197,7 +1197,7 @@ public class JpaDaoImpl
         return query;
     }
 
-    private int setParams(int pIndex, Query query, List paramValueList) {
+    private int setParams(boolean isNative, int pIndex, Query query, List paramValueList) {
 
         Map<Object, Parameter> parameterMap = new LinkedHashMap<>();
 
@@ -1215,7 +1215,8 @@ public class JpaDaoImpl
                         //没有属性会抛出异常
                         Object value = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
-                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
+
+                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), value));
 
                     } catch (Exception e) {
 
@@ -1224,7 +1225,7 @@ public class JpaDaoImpl
 
             } else {
 
-                paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
+                paramValue = tryAutoConvertParamValue(isNative, parameterMap, pIndex, paramValue);
 
                 //尝试使用命名参数
                 if (parameterMap.containsKey("" + pIndex)) {
@@ -1238,10 +1239,11 @@ public class JpaDaoImpl
             }
         }
 
+
         return pIndex;
     }
 
-    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+    private Object tryAutoConvertParamValue(boolean isNative, Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
         //自动转换数据类型
         //@todo 观察，需要关注性能问题
         //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
@@ -1257,14 +1259,21 @@ public class JpaDaoImpl
         }
 
         try {
-            Class parameterType = parameter != null ? parameter.getParameterType() : null;
+            Class<?> parameterType = parameter != null ? parameter.getParameterType() : null;
 
-            if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
+            if (parameterType != null
+                    && !parameterType.equals(paramValue.getClass())) {
+
                 paramValue = ObjectUtil.convert(paramValue, parameterType);
             }
 
         } catch (Exception e) {
             logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
+        }
+
+        //关键点，如果是原生查询，枚举要转换城对应的
+        if (isNative && paramValue != null
+                && paramValue.getClass().isEnum()) {
         }
 
         return paramValue;
