@@ -2466,7 +2466,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         Class<?> entityType = null;
 
         if (!hasText(domain)) {
-            entityType = hasEntityClass() ? entityType : null;
+            entityType = hasEntityClass() ? entityClass : null;
         } else {
             entityType = aliasMap.get(domain);
         }

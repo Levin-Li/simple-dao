@@ -1272,9 +1272,9 @@ public class JpaDaoImpl
         }
 
         //关键点，如果是原生查询，枚举要转换城对应的
-        if (isNative && paramValue != null
-                && paramValue.getClass().isEnum()) {
-        }
+//        if (isNative && paramValue != null
+//                && paramValue.getClass().isEnum()) {
+//        }
 
         return paramValue;
     }
