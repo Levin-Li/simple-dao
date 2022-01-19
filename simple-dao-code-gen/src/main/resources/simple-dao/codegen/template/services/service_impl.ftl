@@ -45,7 +45,7 @@ import ${field.infoClassName};
 ////////////////////////////////////
 //自动导入列表
 <#list importList as imp>
-    import ${imp};
+import ${imp};
 </#list>
 ////////////////////////////////////
 

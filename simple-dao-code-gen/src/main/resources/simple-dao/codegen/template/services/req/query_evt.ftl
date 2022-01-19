@@ -62,11 +62,11 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
     <#if field.typeName == 'Date'>
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
-    @Schema(description = "大于等于${field.desc}")
+    @Schema(description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Gte
     private ${field.typeName} gte${field.name?cap_first};
 
-    @Schema(description = "小于等于${field.desc}")
+    @Schema(description = "小于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Lte
     private ${field.typeName} lte${field.name?cap_first};
 

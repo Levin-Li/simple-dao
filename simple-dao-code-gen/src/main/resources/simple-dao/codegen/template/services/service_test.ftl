@@ -10,10 +10,10 @@ import ${servicePackageName}.info.*;
 
 <#list fields as field>
     <#if (field.lzay)??>
-        import ${field.classType.package.name}.${field.classType.simpleName};
+import ${field.classType.package.name}.${field.classType.simpleName};
     </#if>
     <#if (field.infoClassName)??>
-        import ${field.infoClassName};
+import ${field.infoClassName};
     </#if>
 </#list>
 
