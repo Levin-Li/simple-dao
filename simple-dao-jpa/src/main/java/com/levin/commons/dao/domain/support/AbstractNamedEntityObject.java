@@ -1,5 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
+import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.NamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,16 +26,19 @@ public abstract class AbstractNamedEntityObject
     private static final long serialVersionUID = -123456789L;
 
     @Schema(description = "名称")
-    @Column(nullable = false, length = 512)
+    @Column(nullable = false, length = 128)
+    @Contains
     protected String name;
 
-    @Schema(description = "拼音名称-拼音首字母")
-    @Column(length = 512)
+    @Schema(description = "拼音，格式：全拼(简拼)")
+    @Column(length = 128)
+    @Contains
     protected String pinyinName;
 
     @Override
     public String toString() {
         return name;
     }
+
 
 }

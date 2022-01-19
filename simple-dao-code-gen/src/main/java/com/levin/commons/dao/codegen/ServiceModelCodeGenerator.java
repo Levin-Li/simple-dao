@@ -1,8 +1,11 @@
 package com.levin.commons.dao.codegen;
 
+import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.Like;
+import com.levin.commons.dao.annotation.StartsWith;
 import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.dao.domain.NamedObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
@@ -35,6 +38,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.MessageFormat;
@@ -1002,7 +1006,7 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setTypeName(fieldType.getSimpleName());
 
             fieldModel.setType(fieldType);
-            fieldModel.setSubType(subType);
+            fieldModel.setEleType(subType);
 
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
@@ -1054,7 +1058,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
-            fieldModel.setContains(field.isAnnotationPresent(Like.class));
+
             fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
@@ -1088,16 +1092,32 @@ public final class ServiceModelCodeGenerator {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
-            //
-            if (field.isAnnotationPresent(InjectVar.class)) {
-                annotations.add("@" + InjectVar.class.getSimpleName() + "");
-                fieldModel.addImport(InjectVar.class);
-            }
+            Consumer<List<Class<? extends Annotation>>> addAnnotation =
+                    classes -> classes.stream().filter(Objects::nonNull)
+                            //.filter(cls -> CharSequence.class.isAssignableFrom(fieldType))
+                            .filter(field::isAnnotationPresent)
+                            .forEachOrdered(
+                                    annotationClass -> {
+                                        annotations.add("@" + annotationClass.getSimpleName() + "");
+                                        fieldModel.addImport(annotationClass);
+                                    }
+                            );
 
-            if (field.isAnnotationPresent(SecurityDomain.class)) {
-                annotations.add("@" + SecurityDomain.class.getSimpleName());
-                fieldModel.addImport(SecurityDomain.class);
-            }
+
+            addAnnotation.accept(Arrays.asList(InjectVar.class, SecurityDomain.class));
+
+            Consumer<List<Class<? extends Annotation>>> addLikeAnnotation =
+                    classes -> classes.stream().filter(Objects::nonNull)
+                            //.filter(cls -> CharSequence.class.isAssignableFrom(fieldType))
+                            .filter(field::isAnnotationPresent)
+                            .forEachOrdered(
+                                    annotationClass -> {
+                                        fieldModel.setContains(true);
+                                        fieldModel.getExtras().put("nameSuffix", annotationClass.getSimpleName());
+                                    }
+                            );
+
+            addLikeAnnotation.accept(Arrays.asList(StartsWith.class, EndsWith.class, Contains.class));
 
             if (fieldModel.getType().equals(String.class)
                     && fieldModel.getLength() != -1
@@ -1112,6 +1132,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
             }
+
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
                 annotations.add("@Min(0)");
@@ -1137,7 +1158,7 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTestValue(field.getAnnotation(Max.class).value() + "");
             }
 
-            fieldModel.setAnnotations(annotations);
+            fieldModel.getAnnotations().addAll(annotations);
 
 //            if (ignoreSpecificField) {
 //                buildExpandInfo(entityClass, fieldModel);
@@ -1182,6 +1203,7 @@ public final class ServiceModelCodeGenerator {
         }
         return list;
     }
+
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
 
@@ -1306,11 +1328,14 @@ public final class ServiceModelCodeGenerator {
 
         String prefix;
 
+        //类的短名称
         private String typeName;
 
+        //字段类型
         private Class type;
 
-        private Class subType;
+        //对于集合类型的字段，元素的类型
+        private Class eleType;
 
         private Integer length = -1;
 
@@ -1318,34 +1343,11 @@ public final class ServiceModelCodeGenerator {
 
         private String descDetail;
 
-        private Set<String> imports = new LinkedHashSet<>();
+        private final Set<String> imports = new LinkedHashSet<>();
 
-        private List<String> annotations = new ArrayList<>();
+        private final Set<String> annotations = new HashSet<>();
 
-
-        public void addImport(Class type) {
-
-            if (type == null) {
-                return;
-            }
-
-            while (type.isArray()) {
-                type = type.getComponentType();
-            }
-
-            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
-                //如果是类中类
-                Class declaringClass = type.getDeclaringClass();
-                if (declaringClass != null) {
-                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
-                    imports.add(declaringClass.getName() + ".*");
-                } else {
-                    imports.add(type.getName());
-                }
-
-            }
-        }
-
+        private final Map<String, Object> extras = new HashMap<>();
 
         private boolean pk = false;//是否主键字段
 
@@ -1372,6 +1374,29 @@ public final class ServiceModelCodeGenerator {
         private String infoClassName;
 
         private String testValue;
+
+        public void addImport(Class type) {
+
+            if (type == null) {
+                return;
+            }
+
+            while (type.isArray()) {
+                type = type.getComponentType();
+            }
+
+            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
+                //如果是类中类
+                Class declaringClass = type.getDeclaringClass();
+                if (declaringClass != null) {
+                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
+                    imports.add(declaringClass.getName() + ".*");
+                } else {
+                    imports.add(type.getName());
+                }
+
+            }
+        }
 
     }
 

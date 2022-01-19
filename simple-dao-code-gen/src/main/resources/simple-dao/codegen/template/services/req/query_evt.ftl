@@ -74,9 +74,11 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Schema(description = "${field.desc}")
     private ${field.typeName} ${field.name};
     <#if field.contains>
-    @Schema(description = "${field.desc}")
-    @Contains(E_${entityName}.${field.name})
-    private ${field.typeName} ${field.name}Contains;
+    <#-- 模糊匹配 -->
+
+    @Schema(description = "模糊匹配 - ${field.desc}")
+    @${field.extras.nameSuffix}
+    private ${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     <#elseif field.lazy!>
     @Schema(description = "是否加载${field.desc}")
