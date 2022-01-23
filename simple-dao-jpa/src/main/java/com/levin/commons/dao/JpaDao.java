@@ -208,7 +208,6 @@ import javax.persistence.EntityManager;
 
 public interface JpaDao extends SimpleDao {
 
-
     /**
      * 默认的占位符,挂号里面不能有空格
      */

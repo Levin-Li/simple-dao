@@ -41,9 +41,6 @@ public class JdbcMiniDao implements MiniDao {
         insertOperations = new SimpleJdbcInsert(dataSource);
     }
 
-
-
-
     @Override
     public Object create(Object entity) {
 
@@ -69,7 +66,6 @@ public class JdbcMiniDao implements MiniDao {
 
     @Override
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
-
 
         statement = addLimit(start, count, statement);
 

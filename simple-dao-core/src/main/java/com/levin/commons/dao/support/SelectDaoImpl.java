@@ -1232,8 +1232,16 @@ public class SelectDaoImpl<T>
             return (E) data;
         }
 
-        return (E) copyProperties(data, targetType, maxCopyDeep, ignoreProperties);
+        //先拷贝变量
+        E e = (E) copy(data, targetType, maxCopyDeep, ignoreProperties);
 
+        //注入变量
+        getDao().injectVars(e, data, getContext());
+
+        //属性属性拷贝后，进行初始化
+        ClassUtils.invokePostConstructMethod(e);
+
+        return e;
     }
 
 
@@ -1309,19 +1317,13 @@ public class SelectDaoImpl<T>
 
     }
 
-
-    public <E> E copyProperties(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
+    public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
-            return (E) ObjectUtil.copyProperties(source, target, maxCopyDeep, ignoreProperties);
+            return (E) dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
             ObjectUtil.fetchPropertiesFilters.set(null);
         }
-    }
-
-    @Override
-    public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
-        return copyProperties(source, target, -1, ignoreProperties);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////

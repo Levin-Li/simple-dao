@@ -2,6 +2,8 @@ package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.JsonConverter;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -17,7 +19,7 @@ import javax.persistence.*;
 @FieldNameConstants
 public class Task
         extends AbstractNamedEntityObject
-        implements StatefulObject  {
+        implements StatefulObject {
 
     @Id
     @GeneratedValue
@@ -36,7 +38,11 @@ public class Task
     @Desc("任务等分")
     Integer score;
 
-
     String description;
+
+    @Desc("参与者列表，Json List")
+    @InjectVar(converter = JsonConverter.class)
+    @Lob
+    String actions;
 
 }

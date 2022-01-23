@@ -178,13 +178,7 @@ public class JpaDaoImpl
 
     private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
-    private static final DeepCopier deepCopier = new DeepCopier() {
-        @Override
-        public <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
-            return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
-        }
-    };
-
+    private final DeepCopier deepCopier = this::copy;
 
     private final String AUTO_FLUSH = getClass().getName() + ".session.flush_" + hashCode();
 
@@ -356,11 +350,6 @@ public class JpaDaoImpl
     }
 
     @Override
-    public <T> T copyProperties(Object source, Object target, int deep, String... ignoreProperties) {
-        return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
-    }
-
-    @Override
     public JpaDao setParamPlaceholder(String paramPlaceholder) {
 
         this.paramPlaceholder = paramPlaceholder;
@@ -370,7 +359,6 @@ public class JpaDaoImpl
 
     @Override
     public DeepCopier getDeepCopier() {
-
         return deepCopier;
     }
 
@@ -532,9 +520,18 @@ public class JpaDaoImpl
 //                    throw new org.springframework.dao.DataIntegrityViolationException("数据已经存在");
 //                }
 
-                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
-            }
+                Object old = entityOrDto;
 
+                // 1、先拷贝对象
+                entityOrDto = (E) copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+
+                //2、注入变量
+                injectVars(entityOrDto, old);
+
+                //新对象初始化参数
+                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
+
+            }
 
         }
 

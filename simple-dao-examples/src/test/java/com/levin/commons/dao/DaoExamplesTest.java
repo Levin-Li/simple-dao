@@ -4,6 +4,9 @@ import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
+import com.levin.commons.dao.dto.task.CreateTask;
+import com.levin.commons.dao.dto.task.QueryTaskReq;
+import com.levin.commons.dao.dto.task.TaskInfo;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
@@ -332,6 +335,30 @@ public class DaoExamplesTest {
 
 
     @Test
+    public void testDtoInject() {
+
+        Task task = dao.create(new CreateTask()
+                .setName("测试任务")
+                .setArea("福州")
+                .setState("新状态")
+                .setActions(Arrays.asList(12, 2, 3, 4, 55, 99))
+        );
+
+        Assert.hasText(task.getActions(), "字段转换错误1");
+
+        TaskInfo one = dao.selectFrom(Task.class)
+                .eq(E_Task.id, task.getId())
+                .findOne(TaskInfo.class);
+
+        Assert.notEmpty(one.getActions(), "字段转换错误2");
+
+        one = dao.findOneByQueryObj(new QueryTaskReq());
+
+        System.out.println(one);
+    }
+
+
+    @Test
     public void testSimpleUserQO() {
 
 
@@ -413,7 +440,6 @@ public class DaoExamplesTest {
         System.out.println(list);
 
     }
-
 
 
     @Test
@@ -961,7 +987,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())
                 .stream()
-                .map(g -> (dao.copyProperties(g, new Group(), 2)))
+                .map(g -> (dao.copy(g, new Group(), 2)))
                 .forEach(System.out::println)
 //                .findFirst()
 //                .ifPresent(System.out::println)

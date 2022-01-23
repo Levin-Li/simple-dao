@@ -82,9 +82,8 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     *
      * 增加连接语句
-     *
+     * <p>
      * 在有必要的情况下，增加连接查询条件
      * <p/>
      * 关联 (join)
@@ -147,7 +146,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * 笛卡儿积
      * 自然连接
      *
-     *
      * @param isAppend
      * @param targetClass
      * @param targetAlias
@@ -176,7 +174,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions);
 
     /**
-     *
      * 增加连接
      *
      * @param isAppend
@@ -203,6 +200,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
     /**
      * 连接抓取
+     *
      * @param isAppend
      * @param setAttrs
      * @return
@@ -424,18 +422,5 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @return alias
      */
     String getAlias();
-
-    /**
-     * 智能属性拷贝
-     *
-     * @param source
-     * @param target
-     * @param ignoreProperties 忽略目标对象的属性
-     *                         a.b.c.name* *号表示忽略以什么开头的属性
-     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
-     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
-     * @return
-     */
-    <E extends Object> E copyProperties(Object source, E target, String... ignoreProperties);
 
 }

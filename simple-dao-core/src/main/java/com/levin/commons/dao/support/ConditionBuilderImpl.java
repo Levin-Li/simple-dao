@@ -112,6 +112,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected transient MiniDao dao;
 
+
     /**
      * 别名缓存
      */
@@ -293,6 +294,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    /**
+     * 获取上下文
+     *
+     * @return
+     */
+    @Override
+    public Map<String, Object> getContext() {
+        return getLocalContext(true);
+    }
 
     /**
      * @return
