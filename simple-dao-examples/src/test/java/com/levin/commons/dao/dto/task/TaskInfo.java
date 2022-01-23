@@ -2,7 +2,7 @@ package com.levin.commons.dao.dto.task;
 
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.JsonConverter;
+import com.levin.commons.service.support.DefaultJsonConverter;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -23,7 +23,7 @@ public class TaskInfo {
     String area;
 
     @Desc("参与者列表，Json List")
-    @InjectVar(converter = JsonConverter.class)
+    @InjectVar(converter = DefaultJsonConverter.class)
     List<Integer> actions;
 
 }

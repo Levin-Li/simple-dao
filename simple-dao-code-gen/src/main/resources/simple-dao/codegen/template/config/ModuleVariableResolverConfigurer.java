@@ -12,6 +12,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.*;
 import java.util.*;
 
@@ -24,6 +25,9 @@ import java.util.*;
 @ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleVariableResolverConfigurer", havingValue = "false", matchIfMissing = true)
 public class ModuleVariableResolverConfigurer
         implements VariableResolverConfigurer {
+
+    @Resource
+    VariableInjector variableInjector;
 
     @PostConstruct
     void init() {
@@ -46,7 +50,9 @@ public class ModuleVariableResolverConfigurer
         //vrm.add(MapUtils.putFirst("静态变量", "静态变量").build());
 
         //全局动态变量，每次请求都会执行
-        vrm.add(new VariableResolver.MapVariableResolver(this::getGlobalContextVars));
+//        vrm.add(new VariableResolver.MapVariableResolver(this::getGlobalContextVars));
+
+        vrm.add(vrm.getVariableInjector().getVariableResolvers(this::getGlobalContextVars));
     }
 
 
@@ -55,7 +61,7 @@ public class ModuleVariableResolverConfigurer
      *
      * @return
      */
-    protected List<Map<String, Object>> getGlobalContextVars() {
+    protected List<Map<String, ?>> getGlobalContextVars() {
 
         //每次请求都会获取的变量
 
@@ -87,7 +93,7 @@ public class ModuleVariableResolverConfigurer
     @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
     @Order(2)
     VariableResolver defaultModuleVariableResolver() {
-        return new VariableResolver.MapVariableResolver(this::getModuleContextVars);
+        return variableInjector.newMapVariableResolver(this::getModuleContextVars);
     }
 
     /**
@@ -96,7 +102,7 @@ public class ModuleVariableResolverConfigurer
      * @return vars
      * @see ${modulePackageName}.aspect.ModuleWebControllerAspect#injectVar
      */
-    protected List<Map<String, Object>> getModuleContextVars() {
+    protected List<Map<String, ?>> getModuleContextVars() {
 
         //每次请求都会获取的变量
         //return Arrays.asList(MapUtils.putFirst(InjectConsts.ORG_ID, "123456789").build());
