@@ -190,12 +190,11 @@ Dao 类逻辑框图，如下图所示。
 ### 3 分页查询支持
 
    分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
-   
-       
+    
      //使用示例
      PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
    
-      
+   
 ### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
@@ -230,9 +229,36 @@ Dao 类逻辑框图，如下图所示。
        String classId;
        
        //迭代出现多个StartsWith
-       @CList({@C(op = Op.StartsWith,value = "name")})
+       @StartsWith("name")
        List<String> nameList = Arrays.asList("Test", "LLW");
 
+
+   持久化和查询结果的转换，通过 InjectVar 注解实现。
+   
+   查询结果的转换
+   
+          //案例1： 在数据库中存的是字符串，查询出来后自动转换成对象。
+          
+          Entity --> DTO
+          
+          @Desc("参与者列表，Json List")
+          @InjectVar(converter = DefaultJsonConverter.class)
+          List<Integer> actions; 
+          
+
+  持久化的转换
+       
+          //案例2： 在保存前是对象，持久化前自动转换成json字符串，存入数据库。
+          
+          DTO --> Entity 
+          
+          //Dto上的字段定义
+          List<Integer> actions;
+          
+          //实体上的注解定义
+          @InjectVar(converter = DefaultJsonConverter.class)
+          String actions;
+          
 
 #### 4.1 列选择和列更新
 
@@ -244,7 +270,7 @@ Dao 类逻辑框图，如下图所示。
   产生的语句：
 
          select field from ...
-         
+          
          
   使用例子：
   
