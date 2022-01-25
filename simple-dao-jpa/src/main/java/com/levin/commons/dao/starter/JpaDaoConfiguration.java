@@ -169,14 +169,17 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
 
+        log.info("JpaDaoConfiguration on ContextRefreshedEvent " + event);
+
         if (event.getApplicationContext() == this.context) {
             init();
         }
-
     }
 
     @SneakyThrows
     void init() {
+
+        log.info("JpaDaoConfiguration start init ...");
 
         String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
 

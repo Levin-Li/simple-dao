@@ -930,6 +930,15 @@ Dao 类逻辑框图，如下图所示。
         @In("status")
         DTO subQueryDTO = new DTO();
 
+            //子查询，并使用命名参数，命名参数从Map变量中取
+            @NotExists(paramExpr = "select '${_name}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
+        //            int minScore =5;
+            Map<String, Object> namedParams = new HashMap<>();
+        
+        
+            //子查询，子查询将从subQueryDTO查询对象中生成
+            @NotExists
+            SubQueryDTO subQueryDTO = new SubQueryDTO();
 
 ### 9 排序(OrderBy注解)
 
