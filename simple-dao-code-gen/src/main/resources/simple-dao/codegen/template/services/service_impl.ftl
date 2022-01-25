@@ -59,7 +59,7 @@ import ${imp};
 //@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
 @Service(PLUGIN_PREFIX + "${serviceName}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "${serviceName}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 @Slf4j
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)

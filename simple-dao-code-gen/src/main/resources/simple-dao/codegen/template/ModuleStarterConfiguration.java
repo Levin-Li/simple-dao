@@ -18,7 +18,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-@Configuration(PLUGIN_PREFIX + "ModuleStarterConfiguration")
+@Configuration(PLUGIN_PREFIX + "${className}")
 @Slf4j
 
 //spring data scan，jpa querydsl entity class ...
@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 @ComponentScan({PACKAGE_NAME})
 
 @ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
-<#--public class ${camelStyleModuleName}SpringConfiguration {-->
+
 public class ModuleStarterConfiguration {
 
     @Autowired

@@ -24,8 +24,7 @@ import java.util.stream.*;
 //模块插件
 
 @Slf4j
-@Component(PLUGIN_PREFIX + "ModulePlugin")
-<#--public class ${camelStyleModuleName}Plugin implements Plugin, PluginManagerAware {-->
+@Component(PLUGIN_PREFIX + "${className}")
 public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Resource

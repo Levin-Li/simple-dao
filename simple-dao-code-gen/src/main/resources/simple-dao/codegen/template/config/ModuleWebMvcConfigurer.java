@@ -16,9 +16,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
 
-@Configuration(PLUGIN_PREFIX + "ModuleWebMvcConfigurer")
 @Slf4j
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleWebMvcConfigurer")
+@Configuration(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
 

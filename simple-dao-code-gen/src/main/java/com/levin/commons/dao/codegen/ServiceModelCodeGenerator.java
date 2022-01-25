@@ -5,7 +5,6 @@ import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
 import com.levin.commons.dao.domain.MultiTenantObject;
-import com.levin.commons.dao.domain.NamedObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
@@ -18,10 +17,7 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
@@ -257,6 +253,22 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+    @SneakyThrows
+    public static void genJavaFile(String moduleDir, String templateDir, String className, Map<String, Object> params) {
+
+        String fileName = StringUtils.hasText(templateDir) ?
+                String.join(File.separator, templateDir, className + ".java")
+                : className + ".java";
+
+        params.put("className", className);
+
+        params.put("moduleDir", moduleDir);
+
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                moduleDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+    }
+
     /**
      * 生成 Spring boot auto stater 文件
      *
@@ -275,56 +287,28 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
-
         String fileName = "index.html";
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
 
+        //生成控制器配置文件
+        Arrays.asList("ModuleWebMvcConfigurer"
+                , "ModuleWebControllerAdvice"
+                , "ModuleSwaggerConfigurer"
+                , "ModuleVariableResolverConfigurer"
+        ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
-        fileName = String.join(File.separator, "config", "ModuleWebMvcConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+        genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
 
-
-        fileName = String.join(File.separator, "config", "ModuleWebControllerAdvice.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "config", "ModuleSwaggerConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "config", "ModuleVariableResolverConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-//        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
-//        genFileByTemplate(fileName, params, String.join(File.separator,
-//                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "aspect", "ModuleWebControllerAspect.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        String pkgDir = serviceDir + File.separator
-                + modulePackageName().replace('.', File.separatorChar)
-                + File.separator;
-
-        String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
-
-        genFileByTemplate("ModulePlugin.ftl", params, pkgDir + "ModulePlugin.java");
-        genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
-        genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
-
-        genFileByTemplate("ModuleStarterConfiguration.ftl", params, pkgDir + "ModuleStarterConfiguration.java");
+        //生成服务模块的文件
+        Arrays.asList("ModulePlugin"
+                , "ModuleOption"
+                , "ModuleDataInitializer"
+                , "ModuleStarterConfiguration"
+        ).forEach(className -> genJavaFile(serviceDir, "", className, params));
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
-
 
     }
 
@@ -448,6 +432,8 @@ public final class ServiceModelCodeGenerator {
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
                         + "controller" + File.separatorChar + "BaseController.java");
+
+
 
         genFileByTemplate("services/BaseService.java",
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
@@ -896,6 +882,7 @@ public final class ServiceModelCodeGenerator {
 
         return null;
     }
+
 
     private static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 

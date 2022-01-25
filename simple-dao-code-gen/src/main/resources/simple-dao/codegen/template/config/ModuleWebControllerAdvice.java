@@ -9,6 +9,7 @@ import com.levin.commons.service.exception.ServiceException;
 import com.levin.commons.utils.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -38,10 +39,9 @@ import java.text.SimpleDateFormat;
  * 可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping、@PostMapping， @GetMapping注解中。
  */
 @Slf4j
-@Component(PLUGIN_PREFIX + "ModuleWebControllerAdvice")
-//@ConditionalOnMissingBean(name = {PLUGIN_PREFIX + "ModuleWebControllerAdvice"})
+@Component(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 @RestControllerAdvice(PACKAGE_NAME)
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleWebControllerAdvice")
 public class ModuleWebControllerAdvice {
 
     @Resource

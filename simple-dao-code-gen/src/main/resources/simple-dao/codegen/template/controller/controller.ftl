@@ -41,12 +41,15 @@ import static ${modulePackageName}.entities.EntityConst.*;
 // @Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
 @RestController(PLUGIN_PREFIX + "${className}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "${className}")
 @RequestMapping(API_PATH + "${entityName?lower_case}")
+
+@Slf4j
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+
 //默认需要权限访问
 //@ResAuthorize(domain = ID, type = TYPE_NAME)
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
-@Slf4j
+
 @Valid
 public class ${className} extends BaseController{
 

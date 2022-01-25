@@ -24,9 +24,9 @@ import java.util.concurrent.Executor;
 import ${clazz.name};
 </#list>
 
-@Component(PLUGIN_PREFIX + "ModuleDataInitializer")
 @Slf4j
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleDataInitializer")
+@Component(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
