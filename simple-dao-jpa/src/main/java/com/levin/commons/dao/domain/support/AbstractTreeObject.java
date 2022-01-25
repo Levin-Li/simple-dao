@@ -1,8 +1,8 @@
 package com.levin.commons.dao.domain.support;
 
 
-import com.levin.commons.dao.domain.Identifiable;
 import com.levin.commons.dao.domain.TreeObject;
+import com.levin.commons.service.domain.Identifiable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
