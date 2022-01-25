@@ -26,7 +26,7 @@ import ${clazz.name};
 
 @Component(PLUGIN_PREFIX + "ModuleDataInitializer")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleDataInitializer")
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired

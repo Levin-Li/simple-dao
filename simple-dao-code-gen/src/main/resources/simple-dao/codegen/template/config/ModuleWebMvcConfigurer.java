@@ -18,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration(PLUGIN_PREFIX + "ModuleWebMvcConfigurer")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleWebMvcConfigurer")
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
 

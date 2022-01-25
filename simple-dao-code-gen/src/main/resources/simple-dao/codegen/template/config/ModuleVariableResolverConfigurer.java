@@ -22,7 +22,7 @@ import java.util.*;
  */
 @Configuration(PLUGIN_PREFIX + "ModuleVariableResolverConfigurer")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleVariableResolverConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleVariableResolverConfigurer")
 public class ModuleVariableResolverConfigurer
         implements VariableResolverConfigurer {
 

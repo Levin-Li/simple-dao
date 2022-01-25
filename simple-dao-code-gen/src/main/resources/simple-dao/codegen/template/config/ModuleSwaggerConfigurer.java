@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @Slf4j
 @ConditionalOnClass({Docket.class})
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleSwaggerConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleSwaggerConfigurer")
 public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
     /**

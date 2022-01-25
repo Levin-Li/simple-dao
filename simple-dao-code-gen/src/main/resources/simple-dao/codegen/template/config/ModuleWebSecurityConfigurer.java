@@ -28,7 +28,7 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
 @ConditionalOnClass({WebSecurityConfigurer.class})
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX , name = "ModuleWebSecurityConfigurer")
 public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {
 
 
