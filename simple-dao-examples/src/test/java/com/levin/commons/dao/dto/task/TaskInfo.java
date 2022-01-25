@@ -23,7 +23,7 @@ public class TaskInfo {
     String area;
 
     @Desc("参与者列表，Json List")
-    @InjectVar(converter = DefaultJsonConverter.class)
+    @InjectVar(converter = DefaultJsonConverter.class, expectBaseType = CharSequence.class, isRequired = "false")
     List<Integer> actions;
 
 }

@@ -344,6 +344,7 @@ public class DaoExamplesTest {
                 .setActions(Arrays.asList(12, 2, 3, 4, 55, 99))
         );
 
+
         Assert.hasText(task.getActions(), "字段转换错误1");
 
         TaskInfo one = dao.selectFrom(Task.class)
@@ -355,6 +356,7 @@ public class DaoExamplesTest {
         one = dao.findOneByQueryObj(new QueryTaskReq());
 
         System.out.println(one);
+
     }
 
 
@@ -548,7 +550,6 @@ public class DaoExamplesTest {
         UserInfo userInfo3 = dao.findOneByQueryObj(UserInfo.class, new QueryUserEvt().setId(userInfo2.getId()));
 
         Assert.isTrue(userInfo3.getScore() == userInfo2.getScore() + 5);
-
 
     }
 

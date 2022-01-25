@@ -1242,8 +1242,8 @@ public class SelectDaoImpl<T>
         ClassUtils.invokePostConstructMethod(e);
 
         return e;
-    }
 
+    }
 
     /**
      * 目的是防止 N + 1 查询
@@ -1339,7 +1339,6 @@ public class SelectDaoImpl<T>
             if (column.startsWith(prefix)) {
                 column = column.substring(prefix.length());
             }
-
         }
 
         return column;

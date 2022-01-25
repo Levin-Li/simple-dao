@@ -903,10 +903,10 @@ public abstract class ObjectUtil {
         //按字段复制
         for (Field field : fieldList) {
 
-            //注入字段不做处理
-            if (field.isAnnotationPresent(InjectVar.class)) {
-                continue;
-            }
+//            //注入字段不做处理
+//            if (field.isAnnotationPresent(InjectVar.class)) {
+//                continue;
+//            }
 
             String fieldPropertyPath = "";
 

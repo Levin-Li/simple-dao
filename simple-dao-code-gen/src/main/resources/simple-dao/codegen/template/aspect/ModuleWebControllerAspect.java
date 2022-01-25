@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -58,7 +59,7 @@ public class ModuleWebControllerAspect {
     /**
      * 存储本模块的变量解析器
      */
-    private List<VariableResolver> moduleResolverList = null;
+    private List<VariableResolver> moduleResolverList = new ArrayList<>(7);
 
     @PostConstruct
     void init() {
@@ -66,7 +67,8 @@ public class ModuleWebControllerAspect {
         this.enableHttpLog.set(enableLog);
 
         //只找出本模块的解析器
-        this.moduleResolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
+        this.moduleResolverList.addAll(SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX));
+        this.moduleResolverList.addAll(SpringContextHolder.findBeanByBeanName(context, ResolvableType.forClassWithGenerics(Iterable.class, VariableResolver.class).getType(), PLUGIN_PREFIX));
 
         log.info("init...");
     }
@@ -122,7 +124,7 @@ public class ModuleWebControllerAspect {
             Arrays.stream(args)
                     .filter(Objects::nonNull)
                     .forEachOrdered(arg -> {
-                        variableInjector.injectByVariableResolver(arg
+                        variableInjector.injectByVariableResolvers(arg
                                 , () -> moduleResolverList
                                 , () -> variableResolverManager.getVariableResolvers());
                     });

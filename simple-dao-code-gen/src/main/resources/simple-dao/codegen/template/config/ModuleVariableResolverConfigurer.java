@@ -50,9 +50,8 @@ public class ModuleVariableResolverConfigurer
         //vrm.add(MapUtils.putFirst("静态变量", "静态变量").build());
 
         //全局动态变量，每次请求都会执行
-//        vrm.add(new VariableResolver.MapVariableResolver(this::getGlobalContextVars));
 
-        vrm.add(vrm.getVariableInjector().getVariableResolvers(this::getGlobalContextVars));
+        vrm.add(VariableInjector.newSupportSpelAndGroovyResolvers(this::getGlobalContextVars));
     }
 
 
@@ -90,10 +89,10 @@ public class ModuleVariableResolverConfigurer
      *
      * @return VariableResolver
      */
-    @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
+    @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolverList")
     @Order(2)
-    VariableResolver defaultModuleVariableResolver() {
-        return variableInjector.newMapVariableResolver(this::getModuleContextVars);
+    List<VariableResolver> defaultModuleVariableResolver() {
+        return VariableInjector.newSupportSpelAndGroovyResolvers(this::getModuleContextVars);
     }
 
     /**
