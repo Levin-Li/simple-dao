@@ -68,7 +68,7 @@ public class ModuleWebControllerAspect {
 
         //只找出本模块的解析器
 
-        List<VariableResolver> resolvers = SpringContextHolder.findBeanByBeanName(context, ResolvableType.forClassWithGenerics(Iterable.class, VariableResolver.class).getType(), PLUGIN_PREFIX);
+        List<List<VariableResolver>> resolvers = SpringContextHolder.findBeanByBeanName(context, ResolvableType.forClassWithGenerics(Iterable.class, VariableResolver.class).getType(), PLUGIN_PREFIX);
 
         resolvers.forEach(moduleResolverList::addAll);
 
