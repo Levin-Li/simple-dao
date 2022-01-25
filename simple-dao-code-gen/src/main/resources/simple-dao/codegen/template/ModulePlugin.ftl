@@ -41,12 +41,12 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     private final ResLoader resLoader = new ResLoader() {
 
-        final List<Identifiable> types = new LinkedList<>();
+        final List<SimpleIdentifiable> types = new LinkedList<>();
 
         final List<Res> pluginResList = new LinkedList<>();
 
         @Override
-        public List<Identifiable> getResTypes() {
+        public List<SimpleIdentifiable> getResTypes() {
             synchronized (types) {
                 if (types.isEmpty()) {
                     types.addAll(RbacUtils.loadResTypeFromSpringCtx(context, getId(), null));
