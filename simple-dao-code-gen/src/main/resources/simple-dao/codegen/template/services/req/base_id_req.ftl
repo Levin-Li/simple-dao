@@ -22,7 +22,7 @@ import javax.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
-
+import ${servicePackageName}.info.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
 import ${modulePackageName}.services.commons.req.*;

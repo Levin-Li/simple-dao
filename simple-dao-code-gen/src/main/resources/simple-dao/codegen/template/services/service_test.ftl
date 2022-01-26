@@ -172,7 +172,7 @@ public class ${className} {
     @Test
     public void delete${entityName}Test() {
 
-        Delete${entityName}Req req = new Delete${entityName}Req();
+        ${entityName}IdReq req = new ${entityName}IdReq();
 
     <#if pkField?exists>
         req.set${pkField.name?cap_first}(${pkField.name});

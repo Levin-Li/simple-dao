@@ -641,7 +641,7 @@ public final class ServiceModelCodeGenerator {
         //切换实体类
         entityClass(entityClass);
 
-        genCode(entityClass, "service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
+        genCode(entityClass, "services/service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
                 , params -> {
                     params.put("servicePackageName", servicePackage());
                     params.put("serviceName", serviceName);
