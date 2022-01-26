@@ -523,7 +523,7 @@ public class JpaDaoImpl
                 Object old = entityOrDto;
 
                 // 1、先拷贝对象
-                entityOrDto = (E) copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
 
                 //2、注入变量
                 injectVars(entityOrDto, old);
@@ -565,7 +565,7 @@ public class JpaDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = {PersistenceException.class})
     public <E> E save(Object entityOrDto) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);

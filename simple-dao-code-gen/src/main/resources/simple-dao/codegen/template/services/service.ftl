@@ -48,18 +48,20 @@ public interface ${className} {
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
-    ${entityName}Info findById(Query${entityName}ByIdReq req);
+    ${entityName}Info findById(${entityName}IdReq req);
 </#if>
 
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
     int update(Update${entityName}Req req);
 
-    //尽量不用调用批量删除，会导致缓存清空
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
     List<Integer> batchUpdate(List<Update${entityName}Req> reqList);
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
-    int delete(Delete${entityName}Req req);
+    int delete(${entityName}IdReq req);
+
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
+    List<Integer> batchDelete(Delete${entityName}Req req);
 
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(Query${entityName}Req req , Paging paging);

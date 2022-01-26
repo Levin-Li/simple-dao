@@ -52,7 +52,7 @@ public final class ServiceModelCodeGenerator {
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
-    public static final String ID_QUERY_EVT_FTL = "services/req/id_query_req.ftl";
+    public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
@@ -434,7 +434,6 @@ public final class ServiceModelCodeGenerator {
                         + "controller" + File.separatorChar + "BaseController.java");
 
 
-
         genFileByTemplate("services/BaseService.java",
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
@@ -720,8 +719,8 @@ public final class ServiceModelCodeGenerator {
                 pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //ID查询
-        genCode(entityClass, ID_QUERY_EVT_FTL, fields, srcDir,
-                pkgName, "Query" + entityClass.getSimpleName() + "ByIdReq", mapConsumer);
+        genCode(entityClass, BASE_ID_EVT_FTL, fields, srcDir,
+                pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
 
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,

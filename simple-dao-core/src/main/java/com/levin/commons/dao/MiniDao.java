@@ -124,8 +124,8 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     @Override
-    default <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
-        return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
+    default <T> T copy(Object source, T target, int deep, String... ignoreProperties) {
+        return ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
     }
 
     /**

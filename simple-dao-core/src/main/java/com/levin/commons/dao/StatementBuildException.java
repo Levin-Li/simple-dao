@@ -21,11 +21,4 @@ public class StatementBuildException extends RuntimeException {
         super(message, cause);
     }
 
-    public StatementBuildException(Throwable cause) {
-        super(cause);
-    }
-
-    public StatementBuildException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
 }

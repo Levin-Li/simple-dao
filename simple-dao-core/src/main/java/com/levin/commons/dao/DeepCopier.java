@@ -19,7 +19,7 @@ public interface DeepCopier {
      *                         spel:...
      * @return
      */
-    <T> T copy(Object source, Object target, int deep, String... ignoreProperties);
+    <T> T copy(Object source, T target, int deep, String... ignoreProperties);
 
 
     /**
@@ -31,7 +31,7 @@ public interface DeepCopier {
      * @param <T>
      * @return
      */
-    default <T> T copy(Object source, Object target, String... ignoreProperties) {
+    default <T> T copy(Object source, T target, String... ignoreProperties) {
         return copy(source, target, -1, ignoreProperties);
     }
 }

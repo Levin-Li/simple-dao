@@ -41,7 +41,7 @@ import ${imp};
 @Data
 
 <#if pkField?exists>
-${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}//@AllArgsConstructor
 </#if>
 
 @NoArgsConstructor
@@ -56,24 +56,21 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @OR
-    @Schema(description = "${pkField.desc}" , hidden = true)
-    private ${pkField.typeName} ${pkField.name};
 
-    @END
     @Schema(description = "${pkField.desc}集合")
-    @In(E_${entityName}.${pkField.name})
-    @Validator(expr = "${pkField.name} != null || ( ${pkField.name}List != null &&  ${pkField.name}List.length > 0)" , promptInfo = "删除${desc}必须指定ID")
+    @In(value = E_${entityName}.${pkField.name}, require = true)
+    @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;
-
-
-    public ${className}(${pkField.typeName} ${pkField.name}) {
-        this.${pkField.name} = ${pkField.name};
-    }
 
     public ${className}(${pkField.typeName}... ${pkField.name}List) {
         this.${pkField.name}List = ${pkField.name}List;
     }
+
+    public ${className} set${pkField.name?cap_first}List(${pkField.typeName}... ${pkField.name}List) {
+        this.${pkField.name}List = ${pkField.name}List;
+        return this;
+    }
+
 </#if>
 
     @PostConstruct

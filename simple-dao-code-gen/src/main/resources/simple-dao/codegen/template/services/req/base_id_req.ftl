@@ -34,10 +34,11 @@ import ${imp};
 ////////////////////////////////////
 
 /**
-*  ID 查询${desc}
+*  ${desc} 主键通用请求
 *  //Auto gen by simple-dao-codegen ${.now}
 */
-@Schema(description = "ID 查询${desc}")
+
+@Schema(description = "${desc} 主键通用请求")
 @Data
 
 <#if pkField?exists>

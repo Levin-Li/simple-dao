@@ -54,7 +54,7 @@ public abstract class ObjectUtil {
      * @param ignoreProperties
      * @see @DeepCopy
      */
-    public static Object copyProperties(Object source, Object target, int deepLevel, String... ignoreProperties) {
+    public static <T> T copyProperties(Object source, T target, int deepLevel, String... ignoreProperties) {
 
         if (target instanceof Map) {
 
@@ -70,7 +70,7 @@ public abstract class ObjectUtil {
         //如果 target 是类型
         boolean isType = target instanceof Class;
 
-        return copy(source, (isType ? null : target), (isType ? (Class) target : null), deepLevel, ignoreProperties);
+        return (T) copy(source, (isType ? null : target), (isType ? (Class) target : null), deepLevel, ignoreProperties);
     }
 
 

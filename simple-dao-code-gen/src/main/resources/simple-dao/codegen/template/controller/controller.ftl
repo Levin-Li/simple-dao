@@ -115,7 +115,7 @@ public class ${className} extends BaseController{
     */
     @GetMapping("/retrieve")
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
-    public ApiResp<${entityName}Info> retrieve(@NotNull Query${entityName}ByIdReq req) {
+    public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req) {
 
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
 
@@ -131,7 +131,7 @@ public class ${className} extends BaseController{
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
 
-         return getSelfProxy(getClass()).retrieve(new Query${entityName}ByIdReq().set${pkField.name?cap_first}(${pkField.name}));
+         return getSelfProxy(getClass()).retrieve(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
 
          //return ApiResp.ok(${serviceName?uncap_first}.findById(${pkField.name}));
      }
@@ -164,7 +164,12 @@ public class ${className} extends BaseController{
     @DeleteMapping({"/{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     public ApiResp<Integer> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-        return getSelfProxy(getClass()).batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}(${pkField.name}));
+
+        List<Integer> ns = getSelfProxy(getClass())
+            .batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}))
+            .getData();
+
+        return ns != null && !ns.isEmpty() ? ApiResp.ok(ns.get(0)) : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
@@ -173,13 +178,8 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
-    public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
-
-        //new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}List)
-
-        int n = ${serviceName?uncap_first}.delete(req);
-
-        return  n > 0 ? ApiResp.ok(n) : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
-    }  
+    public ApiResp<List<Integer>> batchDelete(@NotNull Delete${entityName}Req req) {
+        return ApiResp.ok(${serviceName?uncap_first}.batchDelete(req));
+    }
 
 }
