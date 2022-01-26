@@ -51,7 +51,7 @@ import ${imp};
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
-@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
+@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')} {
 
 private static final long serialVersionUID = ${serialVersionUID}L;
