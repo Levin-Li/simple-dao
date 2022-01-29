@@ -30,10 +30,11 @@ import java.lang.annotation.*;
 public @interface CtxVar {
 
     /**
-     * 变量名字
-     * 默认为字段名
+     * 求值表达式
      * <p>
-     * 或是 Spel 表达式 {@link ExpressionType} SPEL_PREFIX
+     * 默认为 Spel 表达式 {@link ExpressionType} SPEL_PREFIX
+     * <p>
+     * 为空 表示取当前字段值
      *
      * @return
      * @See ExpressionType {@link ExpressionType}
@@ -41,21 +42,16 @@ public @interface CtxVar {
     String value() default "";
 
     /**
-     * 是否是注入
+     * 环境中的变量名称
      * <p>
-     * true， 把上下文变量赋值到字段值
-     * <p>
-     * false, 把字段值放入上下文中
+     * 默认当前字段名称
      *
      * @return
      */
-    boolean inject() default false;
-
+    String varName() default "";
 
     /**
-     * 是否强制覆盖原值，否表示在非null的时候不覆盖
-     * <p>
-     * 默认强制覆盖
+     * 是否强制覆盖旧的环境变量值
      *
      * @return
      */
@@ -63,6 +59,7 @@ public @interface CtxVar {
 
     /**
      * 注解生效条件
+     * <p>
      * SPEL 表达式
      * <p>
      * 默认没有条件

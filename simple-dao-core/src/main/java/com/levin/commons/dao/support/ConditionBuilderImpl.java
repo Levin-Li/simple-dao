@@ -1432,61 +1432,59 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             field.setAccessible(true);
 
-            CtxVar ctxVar = field.getAnnotation(CtxVar.class);
+            processCtxVar(queryValueObj, field, field.getAnnotation(CtxVar.class));
 
-            Object fieldValue = null;
+            CtxVar.List list = field.getAnnotation(CtxVar.List.class);
 
-            try {
-                fieldValue = field.get(queryValueObj);
-                if (ctxVar == null
-                        || !evalTrueExpr(queryValueObj, fieldValue, field.getName(), ctxVar.condition())) {
-                    continue;
-                }
-            } catch (IllegalAccessException e) {
-                throw new StatementBuildException(field + "条件过滤失败", e);
-            }
-
-            String name = ctxVar.value();
-
-            if (!StringUtils.hasText(name)) {
-                name = field.getName();
-            }
-
-            if (ctxVar.inject()) {
-
-                //如果是强制覆盖，或是原值为 null
-                if (ctxVar.forceOverride()
-                        || fieldValue == null) {
-                    try {
-
-                        List<Map<String, ?>> contexts = buildContextValues(queryValueObj, fieldValue, field.getName());
-
-                        boolean isSpel = name.toUpperCase().trim().startsWith(ExpressionType.SPEL_PREFIX);
-
-                        name = isSpel ? name.trim().substring(ExpressionType.SPEL_PREFIX.length()) : name;
-
-                        Object tmpValue = isSpel ? ExprUtils.evalSpEL(queryValueObj, name, contexts) : ObjectUtil.findValue(name, true, false, contexts);
-
-                        fieldValue = ObjectUtil.convert(tmpValue, field.getType());
-
-                        field.set(queryValueObj, fieldValue);
-
-                    } catch (IllegalAccessException e) {
-                        throw new StatementBuildException(field + "变量注入识别", e);
-                    }
-                }
-
-            } else {
-
-                Map<String, Object> localContext = getLocalContext(true);
-
-                //如果是强制覆盖 或是原有变量等于 null
-                if (ctxVar.forceOverride()
-                        || localContext.get(name) == null) {
-                    localContext.put(name, fieldValue);
+            if (list != null) {
+                for (CtxVar ctxVar : list.value()) {
+                    processCtxVar(queryValueObj, field, ctxVar);
                 }
             }
         }
+
+        //
+    }
+
+    private void processCtxVar(Object queryValueObj, Field field, CtxVar ctxVar) {
+
+        if (ctxVar == null || field == null) {
+            return;
+        }
+
+        Object exportValue = null;
+
+        try {
+            exportValue = field.get(queryValueObj);
+        } catch (IllegalAccessException e) {
+            throw new StatementBuildException(field + "条件过滤失败", e);
+        }
+
+        if (!evalTrueExpr(queryValueObj, exportValue, field.getName(), ctxVar.condition())) {
+            return;
+        }
+
+        String exportVarName = ctxVar.varName();
+
+        if (!StringUtils.hasText(exportVarName)) {
+            exportVarName = field.getName();
+        }
+
+        Map<String, Object> localContext = getLocalContext(true);
+
+        //如果不是强制覆盖 并且有变量
+        if (!ctxVar.forceOverride() && localContext.containsKey(exportVarName)) {
+            return;
+        }
+
+        String expr = ctxVar.value();
+
+        if (StringUtils.hasText(expr)) {
+            exportValue = ExprUtils.evalSpEL(queryValueObj, expr, buildContextValues(queryValueObj, exportValue, field.getName()));
+        }
+
+        localContext.put(exportVarName, exportValue);
+
     }
 
     /**
