@@ -145,7 +145,7 @@ public class DataInitializer implements ApplicationContextAware, ApplicationList
                 boolean haveKnife4j = org.springframework.util.ClassUtils.isPresent("com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j", getClass().getClassLoader());
 
                 if (haveKnife4j) {
-                    log.info("***** Knife4j API文档： http://" + rootUrl + "doc.html");
+                    log.info("***** Knife4j API文档： http://" + rootUrl + "/doc.html");
                 }
 
             } else {
