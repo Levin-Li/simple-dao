@@ -662,7 +662,7 @@ public class SelectDaoImpl<T>
         Annotation havingAnnotation = QueryAnnotationUtil.getAnnotation(op.name());
 
         if (havingAnnotation == null
-                || isValid(havingAnnotation, bean, name, opParamValue)) {
+                || !isValid(havingAnnotation, bean, name, opParamValue)) {
             //
             return;
         }
