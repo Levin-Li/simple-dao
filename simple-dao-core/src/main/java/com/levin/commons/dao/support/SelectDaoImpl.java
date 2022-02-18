@@ -454,7 +454,6 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> having(String havingStatement, Object... paramValues) {
-
         return having(true, havingStatement, paramValues);
     }
 
@@ -643,12 +642,14 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * @param bean
+     * @param name
      * @param opAnnotation
      * @param expr
      * @param holder
      * @param opParamValue
      */
-    protected void tryAppendHaving(Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
+    protected void tryAppendHaving(Object bean, String name, Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
 
         Op op = ClassUtils.getValue(opAnnotation, "havingOp", false);
 
@@ -658,16 +659,29 @@ public class SelectDaoImpl<T>
             return;
         }
 
+        Annotation havingAnnotation = QueryAnnotationUtil.getAnnotation(op.name());
+
+        if (havingAnnotation == null
+                || isValid(havingAnnotation, bean, name, opParamValue)) {
+            //
+            return;
+        }
+
         expr = op.gen(expr, getParamPlaceholder());
 
         if (Boolean.TRUE.equals(not)) {
             expr = " NOT(" + expr + ") ";
         }
 
-        if (holder != null) {
-            having(expr, holder.value, opParamValue);
+        if (op.isNeedParamExpr()) {
+            //
+            if (holder != null) {
+                having(expr, holder.value, opParamValue);
+            } else {
+                having(expr, opParamValue);
+            }
         } else {
-            having(expr, opParamValue);
+            having(expr);
         }
 
     }
@@ -708,7 +722,7 @@ public class SelectDaoImpl<T>
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
-                tryAppendHaving(opAnnotation, expr, holder, value);
+                tryAppendHaving(bean, name, opAnnotation, expr, holder, value);
 
                 String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
@@ -775,7 +789,7 @@ public class SelectDaoImpl<T>
                 groupBy(oldExpr, holder.value);
             }
 
-            tryAppendHaving(opAnnotation, oldExpr, holder, value);
+            tryAppendHaving(bean, name, opAnnotation, oldExpr, holder, value);
 
             // ORDER BY 也不能使用别名
             tryAppendOrderBy(bean, name, holder.value, oldExpr, newAlias, opAnnotation);

@@ -520,6 +520,9 @@ public abstract class QueryAnnotationUtil {
         return (T) allInstanceMap.get(type.getSimpleName());
     }
 
+    public static <T extends Annotation> T getAnnotation(String simpleName) {
+        return (T) allInstanceMap.get(simpleName);
+    }
 
     public static Annotation[] getAnnotations(Class<? extends Annotation>... types) {
 

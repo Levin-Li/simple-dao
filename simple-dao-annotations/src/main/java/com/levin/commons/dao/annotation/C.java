@@ -56,6 +56,7 @@ public @interface C {
 //    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
     @Deprecated
     String NOT_NULL = "NOT_EMPTY";
+
     String NOT_EMPTY = "NOT_EMPTY";
 
     /**
