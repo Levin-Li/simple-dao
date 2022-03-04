@@ -57,6 +57,15 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+    @Ignore
+    @Schema(description = "排序字段")
+    private String orderBy;
+
+    //@Ignore
+    @Schema(description = "排序方向-desc asc")
+    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
+    private String orderDir;
+
 <#list fields as field>
 
     <#if field.typeName == 'Date'>
