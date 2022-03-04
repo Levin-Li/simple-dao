@@ -1677,7 +1677,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr
      * @return
      */
-    public static String evalText(String expr, Map<String, Object>... exMaps) {
+    public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
         BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
 
@@ -2168,13 +2168,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
-
         }
-
 
         List<Map<String, ?>> fieldCtxs = this.buildContextValues(holder.root, holder.value, name);
 
-        Function<String, String> domainFunc = (domain) -> evalStringExpr(holder.root, holder.value, name, domain, fieldCtxs);
+        Function<String, String> domainFunc = (domain) -> tryEvalExprIfHasSeplExpr(holder.root, holder.value, name, domain, fieldCtxs);
 
         return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(domainFunc.apply(c.domain()), name), holder, getParamPlaceholder(),
 
@@ -2384,7 +2382,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr
      * @return
      */
-    protected String evalStringExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
+    protected String tryEvalExprIfHasSeplExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
 
         if (!hasText(expr)) {
             return expr;
@@ -2407,6 +2405,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param value
      * @param name
      * @param expr
+     * @param baseContexts 可以为空
+     * @param exMaps
      * @param <T>
      * @return
      */

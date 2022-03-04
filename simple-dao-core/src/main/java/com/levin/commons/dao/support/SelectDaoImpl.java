@@ -528,7 +528,6 @@ public class SelectDaoImpl<T>
     }
 
     /**
-     *
      * @param index
      * @param expr
      * @param type
@@ -578,17 +577,23 @@ public class SelectDaoImpl<T>
 
             OrderBy orderBy = (OrderBy) opAnnotation;
 
-            String domain = evalText(orderBy.domain());
+            String domain = evalTextByThreadLocal(orderBy.domain());
 
             addOrderBy(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type());
 
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
-            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
-            if (value instanceof String) {
-                addOrderBy(orderBy.order(), (String) value, null);
+
+            SimpleOrderBy simpleOrderBy = (SimpleOrderBy) opAnnotation;
+
+            if (StringUtils.hasText(simpleOrderBy.expr())) {
+
+                addOrderBy(simpleOrderBy.order(), evalExpr(bean, value, name, simpleOrderBy.expr(), null), null);
+
+            } else if (value instanceof String) {
+                addOrderBy(simpleOrderBy.order(), (String) value, null);
             } else if (value instanceof String[]) {
                 for (String expr : (String[]) value) {
-                    addOrderBy(orderBy.order(), expr, null);
+                    addOrderBy(simpleOrderBy.order(), expr, null);
                 }
             } else {
                 throw new StatementBuildException("SimpleOrderBy注解必须注释在字符串或是字符串数组字段上");
@@ -619,7 +624,7 @@ public class SelectDaoImpl<T>
 
             Fetch fetch = (Fetch) opAnnotation;
 
-            String domain = evalText(fetch.domain());
+            String domain = evalTextByThreadLocal(fetch.domain());
 
             if (fetch.isBindToField()
                     && fetch.joinType() != Fetch.JoinType.None
@@ -857,7 +862,7 @@ public class SelectDaoImpl<T>
 
                 String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
-                expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalText(orderBy.domain()), orderBy.value()) : expr;
+                expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalTextByThreadLocal(orderBy.domain()), orderBy.value()) : expr;
 
                 if (hasText(expr)) {
                     addOrderBy(orderBy.order(), expr, orderBy.type());

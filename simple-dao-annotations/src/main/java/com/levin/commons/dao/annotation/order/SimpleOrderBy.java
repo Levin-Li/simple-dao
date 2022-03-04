@@ -13,7 +13,7 @@ import java.lang.annotation.*;
  *
  * 被注解字段必须是字符串或是字符数组
  *
- * 强制排序
+ * 排序
  * eg:
  *      @SimpleOrderBy(condition = "state.length > 0")
  *      String[] orderBy = {"state desc", "name asc"};
@@ -21,10 +21,21 @@ import java.lang.annotation.*;
  *      @SimpleOrderBy(condition = "name != null")
  *      String orderBy2 = "score desc , category asc";
  *
+ *      @SimpleOrderBy(condition = "name != null", expr="score desc")
+ *      String orderBy2 = "score desc , category asc";
+ *
  * @author llw
  * @version 2.0.0
  */
 public @interface SimpleOrderBy {
+
+    /**
+     * 排序语句表达式
+     * SPEL 表达式
+     *
+     * @return
+     */
+    String expr() default "";
 
     /**
      * 表达式，考虑支持Groovy和SpEL

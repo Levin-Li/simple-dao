@@ -26,7 +26,6 @@ public @interface OrderBy {
 
     /**
      * 查询字段名称，默认为字段的属性名称
-     * 排序方式，可以用字段隔开
      *
      * @return
      */

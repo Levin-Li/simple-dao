@@ -94,7 +94,7 @@ public @interface C {
      * 如果为 "NULL" 值，则忽略这个值
      * <p>
      * 该字段支持 spel 表达式，使用 SPEL_PREFIX 做为前缀时
-     * 支持
+     * 支持动态前缀
      *
      * @return
      */
