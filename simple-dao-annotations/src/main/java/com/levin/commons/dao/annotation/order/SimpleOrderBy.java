@@ -56,4 +56,10 @@ public @interface SimpleOrderBy {
      */
     int order() default 0;
 
+    /**
+     * 描述信息
+     *
+     * @return
+     */
+    String remark() default "";
 }
