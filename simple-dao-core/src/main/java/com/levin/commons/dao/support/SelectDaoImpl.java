@@ -496,18 +496,13 @@ public class SelectDaoImpl<T>
         if (Boolean.TRUE.equals(isAppend)
                 && columnNames != null) {
             for (String column : columnNames) {
-                if (hasText(column)) {
-                    orderByColumns.add(new OrderByObj(column));
-                }
+                addOrderBy(0, column, null);
             }
         }
 
         return this;
     }
 
-    protected void addOrderBy(String expr, int index, OrderBy.Type type) {
-        orderByColumns.add(new OrderByObj(index, expr, type));
-    }
 
     /**
      * 增加排序字段
@@ -519,32 +514,33 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> orderBy(OrderBy.Type type, String... columnNames) {
 
-        if (columnNames == null || columnNames.length == 0) {
-            return this;
-        }
-
-        //自动增加别名
-        for (int i = 0; i < columnNames.length; i++) {
-            columnNames[i] = aroundColumnPrefix(columnNames[i]);
-        }
-
         if (type == null) {
             type = OrderBy.Type.Desc;
         }
 
-        //加上排序方式
-        for (int i = 0; i < columnNames.length; i++) {
-
-            if (hasText(columnNames[i])) {
-                columnNames[i] = columnNames[i] + " " + type.name();
+        if (columnNames != null) {
+            for (String columnName : columnNames) {
+                addOrderBy(0, aroundColumnPrefix(columnName), type);
             }
-
         }
-
-        orderBy(columnNames);
 
         return this;
     }
+
+    /**
+     *
+     * @param index
+     * @param expr
+     * @param type
+     */
+    protected void addOrderBy(int index, String expr, OrderBy.Type type) {
+
+        if (StringUtils.hasText(expr)) {
+            orderByColumns.add(new OrderByObj(index, expr, type));
+        }
+
+    }
+
 
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
@@ -579,17 +575,21 @@ public class SelectDaoImpl<T>
     protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         if ((opAnnotation instanceof OrderBy)) {
+
             OrderBy orderBy = (OrderBy) opAnnotation;
 
             String domain = evalText(orderBy.domain());
 
-            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type()));
+            addOrderBy(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type());
+
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
-//            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
+            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
             if (value instanceof String) {
-                orderBy((String) value);
+                addOrderBy(orderBy.order(), (String) value, null);
             } else if (value instanceof String[]) {
-                orderBy((String[]) value);
+                for (String expr : (String[]) value) {
+                    addOrderBy(orderBy.order(), expr, null);
+                }
             } else {
                 throw new StatementBuildException("SimpleOrderBy注解必须注释在字符串或是字符串数组字段上");
             }
@@ -860,7 +860,7 @@ public class SelectDaoImpl<T>
                 expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalText(orderBy.domain()), orderBy.value()) : expr;
 
                 if (hasText(expr)) {
-                    addOrderBy(expr, orderBy.order(), orderBy.type());
+                    addOrderBy(orderBy.order(), expr, orderBy.type());
                 }
             }
         }
