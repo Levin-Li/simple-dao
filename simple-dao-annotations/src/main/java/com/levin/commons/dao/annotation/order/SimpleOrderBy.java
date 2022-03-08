@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  *      String orderBy2 = "score desc , category asc";
  *
  *      @SimpleOrderBy(condition = "name != null", expr="score desc")
- *      String orderBy2 = "score desc , category asc";
+ *      String name = "";
  *
  * @author llw
  * @version 2.0.0
