@@ -304,6 +304,11 @@ public class DaoExamplesTest {
 
         }
 
+
+        List<String> names = dao.selectFrom(Group.class).select(E_Group.name).in(E_Group.id,Arrays.asList(1L,2L,3,4,5)).find();
+
+
+        System.out.println(names);
         //   Session session = entityManager.unwrap(Session.class);
 
         // session.isDirty();

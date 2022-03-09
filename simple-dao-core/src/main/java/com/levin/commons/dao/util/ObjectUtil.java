@@ -5,7 +5,6 @@ import com.levin.commons.dao.DeepCopy;
 import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
-import com.levin.commons.service.domain.InjectVar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
