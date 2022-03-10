@@ -1387,6 +1387,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             processCtxVar(queryValueObj, fields);
 
+            List<?> contexts = DaoContext.getContexts(queryValueObj);
+
             //开始处理字段
             for (Field field : fields) {
 
@@ -1403,9 +1405,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 try {
 
+                    com.levin.commons.service.support.ValueHolder<Object> valueHolder = dao.getInjectValue(queryValueObj, field, contexts);
+
+                    boolean hasValue = valueHolder != null && valueHolder.hasValue();
+
+                    Object value = hasValue ? valueHolder.get() : field.get(queryValueObj);
+
+                    if (hasValue) {
+                        fieldRealType = value.getClass();
+                    }
+
                     processAttr(queryValueObj
                             , field, field.getName(), field.getAnnotations()
-                            , fieldRealType, field.get(queryValueObj));
+                            , fieldRealType, value);
 
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);

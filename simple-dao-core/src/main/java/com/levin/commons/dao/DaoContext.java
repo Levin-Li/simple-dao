@@ -3,9 +3,11 @@ package com.levin.commons.dao;
 
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
+import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
 import org.springframework.util.Assert;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -18,7 +20,12 @@ import java.util.*;
 
 public abstract class DaoContext {
 
-    private static final VariableInjector defaultVariableInjector = SimpleVariableInjector.defaultSimpleVariableInjector;
+    private static final VariableInjector defaultVariableInjector = new SimpleVariableInjector() {
+        @Override
+        public String getInjectDomain() {
+            return "dao";
+        }
+    };
 
     private static final String VARIABLE_INJECTOR_KEY = VariableInjector.class.getName() + defaultVariableInjector.hashCode();
 
@@ -81,6 +88,30 @@ public abstract class DaoContext {
             return Collections.emptyList();
         }
 
+        List<?> contexts = getContexts(varSourceBeans);
+
+        return getVariableInjector().inject(targetBean, contexts);
+    }
+
+    /**
+     * 从变量来源注入变量到目标变量中
+     *
+     * @param targetBean
+     * @param contexts   变量来源，注意顺序
+     * @return
+     */
+    public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
+        return getVariableInjector().getInjectValue(targetBean, VariableInjector.newResolverBuilder().add(contexts).build(), field);
+    }
+
+    /**
+     * 获取上下文
+     *
+     * @param varSourceBeans
+     * @return
+     */
+    public static List<?> getContexts(Object... varSourceBeans) {
+
         Assert.notNull(varSourceBeans, "varSourceBeans is null");
 
         List<Object> contexts = new ArrayList<>(varSourceBeans.length + 2);
@@ -93,7 +124,7 @@ public abstract class DaoContext {
         //加上全局
         contexts.add(getGlobalContext());
 
-        return getVariableInjector().inject(targetBean, contexts);
+        return contexts;
     }
 
     /**

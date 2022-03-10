@@ -57,7 +57,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
     @Schema(description = "${field.desc}" ${field.required?string(', required = true', '')})
     <#list field.annotations as annotation>
-    ${annotation}
+    //${annotation}
     </#list>
     private ${field.typeName} ${field.name};
 

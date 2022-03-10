@@ -1089,9 +1089,9 @@ public final class ServiceModelCodeGenerator {
 
                                         if (GenericConverter.class != injectVar.converter()) {
                                             fieldModel.addImport(injectVar.converter());
-                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(converter = %s.class)", injectVar.converter().getSimpleName()));
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(domain = \"dao\", converter = %s.class)", injectVar.converter().getSimpleName()));
                                         } else {
-                                            annotations.add("@" + annotationClass.getSimpleName());
+                                            annotations.add("@" + annotationClass.getSimpleName() + "(domain = \"dao\")");
                                         }
 
                                         if (StringUtils.hasText(injectVar.expectTypeDesc())) {

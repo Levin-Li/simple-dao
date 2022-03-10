@@ -67,7 +67,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
     <#if !(annotation?string)?contains("@NotNull")>
-    //${annotation}
+    ${annotation}
     </#if>
     </#list>
     @Schema(description = "${field.desc}")

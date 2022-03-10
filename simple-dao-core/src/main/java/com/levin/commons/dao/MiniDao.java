@@ -2,8 +2,10 @@ package com.levin.commons.dao;
 
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.support.ValueHolder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 public interface MiniDao extends DeepCopier {
@@ -146,6 +148,16 @@ public interface MiniDao extends DeepCopier {
      */
     default List<String> injectVars(Object targetBean, Object... varSourceBeans) {
         return DaoContext.injectVars(targetBean, varSourceBeans);
+    }
+
+    /**
+     * 注入变量
+     *
+     * @param targetBean
+     * @return
+     */
+    default ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
+        return DaoContext.getInjectValue(targetBean, field, contexts);
     }
 
     /**

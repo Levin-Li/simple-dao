@@ -65,9 +65,13 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     //@Ignore
     @Schema(description = "排序方向-desc asc")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
-    private String orderDir;
+    private OrderBy.Type orderDir;
 
 <#list fields as field>
+
+    <#list field.annotations as annotation>
+    ${annotation}
+    </#list>
 
     <#if field.typeName == 'Date'>
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
