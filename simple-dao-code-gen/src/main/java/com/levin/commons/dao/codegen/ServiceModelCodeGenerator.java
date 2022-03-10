@@ -8,7 +8,6 @@ import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.domain.SecurityDomain;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
@@ -24,6 +23,7 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -1084,13 +1084,26 @@ public final class ServiceModelCodeGenerator {
                             .filter(field::isAnnotationPresent)
                             .forEachOrdered(
                                     annotationClass -> {
-                                        annotations.add("@" + annotationClass.getSimpleName() + "");
+
+                                        InjectVar injectVar = field.getAnnotation(InjectVar.class);
+
+                                        if (GenericConverter.class != injectVar.converter()) {
+                                            fieldModel.addImport(injectVar.converter());
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(converter = %s.class)", injectVar.converter().getSimpleName()));
+                                        } else {
+                                            annotations.add("@" + annotationClass.getSimpleName());
+                                        }
+
+                                        if (StringUtils.hasText(injectVar.expectTypeDesc())) {
+                                            fieldModel.typeName = injectVar.expectTypeDesc();
+                                        }
+
                                         fieldModel.addImport(annotationClass);
                                     }
                             );
 
 
-            addAnnotation.accept(Arrays.asList(InjectVar.class, SecurityDomain.class));
+            addAnnotation.accept(Arrays.asList(InjectVar.class));
 
             Consumer<List<Class<? extends Annotation>>> addLikeAnnotation =
                     classes -> classes.stream().filter(Objects::nonNull)
