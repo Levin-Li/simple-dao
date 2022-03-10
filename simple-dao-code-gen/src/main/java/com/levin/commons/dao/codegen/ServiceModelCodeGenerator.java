@@ -1095,7 +1095,25 @@ public final class ServiceModelCodeGenerator {
                                         }
 
                                         if (StringUtils.hasText(injectVar.expectTypeDesc())) {
+
                                             fieldModel.typeName = injectVar.expectTypeDesc();
+
+                                        } else if (injectVar.expectBaseType() != Void.class) {
+                                            //转换数据类型
+                                            fieldModel.addImport(injectVar.expectBaseType());
+
+                                            for (Class<?> aType : injectVar.expectGenericTypes()) {
+                                                fieldModel.addImport(aType);
+                                            }
+
+                                            fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
+
+                                            String sub = Arrays.stream(injectVar.expectGenericTypes()).map(Class::getSimpleName).collect(Collectors.joining(","));
+
+                                            if (StringUtils.hasText(sub)) {
+                                                fieldModel.typeName += "<" + sub + ">";
+                                            }
+                                            //转换数据类型
                                         }
 
                                         fieldModel.addImport(annotationClass);
