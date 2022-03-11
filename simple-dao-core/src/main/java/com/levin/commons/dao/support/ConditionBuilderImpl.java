@@ -1422,7 +1422,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         }
                     }
 
-
                     processAttr(queryValueObj
                             , field, name, field.getAnnotations()
                             , fieldRealType, value);
