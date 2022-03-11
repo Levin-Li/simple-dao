@@ -1411,12 +1411,20 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                     Object value = hasValue ? valueHolder.get() : field.get(queryValueObj);
 
+                    String name = field.getName();
+
                     if (hasValue) {
+
                         fieldRealType = value.getClass();
+
+                        if (StringUtils.hasText(valueHolder.getName())) {
+                            name = valueHolder.getName();
+                        }
                     }
 
+
                     processAttr(queryValueObj
-                            , field, field.getName(), field.getAnnotations()
+                            , field, name, field.getAnnotations()
                             , fieldRealType, value);
 
                 } catch (Exception e) {

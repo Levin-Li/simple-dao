@@ -70,7 +70,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 <#list fields as field>
 
     <#list field.annotations as annotation>
-    ${annotation}
+    //${annotation}
     </#list>
 
     <#if field.typeName == 'Date'>
