@@ -390,6 +390,20 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testFieldConvert(){
+
+
+        User user = dao.find(User.class, 1L);
+
+
+
+        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class);
+
+
+        System.out.println(userInfo);
+    }
+
+    @Test
     public void testJoinFetch() {
 
 

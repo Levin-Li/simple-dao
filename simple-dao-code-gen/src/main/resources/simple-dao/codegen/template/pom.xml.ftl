@@ -74,6 +74,12 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
             <#--
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -86,11 +92,7 @@
 
         <#if moduleType?? && (moduleType == 'service')>
             <#-- service -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
-                <scope>provided</scope>
-            </dependency>
+
 
             <dependency>
                 <groupId>com.h2database</groupId>

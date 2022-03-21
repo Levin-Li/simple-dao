@@ -1,12 +1,16 @@
 package ${CLASS_PACKAGE_NAME};
 
-import com.levin.commons.dao.domain.StatefulObject;
+import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.*;
 
 import javax.persistence.*;
 
@@ -52,6 +56,11 @@ public class User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "groupId" , insertable = false, updatable = false)
     Group group;
+
+    @Schema(description = "归属的虚拟组织")
+    @Contains
+    @InjectVar(expectTypeDesc = "List<String>", converter = PrimitiveArrayJsonConverter.class)
+    String belongOrgs;
 
     @Schema(description = "职业")
     String job;

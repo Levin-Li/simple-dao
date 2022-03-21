@@ -69,7 +69,7 @@ public class Application {
                  * @throws VariableNotFoundException 如果变量无法获取将抛出异常
                  */
                 @Override
-                public <T> ValueHolder<T> resolve(String name, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
+                public <T> ValueHolder<T> resolve(String key, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
 
                     if (!key.startsWith("env:")) {
                         return ValueHolder.notValue();

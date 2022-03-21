@@ -1,7 +1,11 @@
 package com.levin.commons.dao.domain;
 
+import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
@@ -44,5 +48,8 @@ public class User
 
     String description;
 
+    @Schema(description = "归属的虚拟组织")
+    @InjectVar(expectTypeDesc = "List<String>", converter = PrimitiveArrayJsonConverter.class)
+    String belongOrgList;
 
 }
