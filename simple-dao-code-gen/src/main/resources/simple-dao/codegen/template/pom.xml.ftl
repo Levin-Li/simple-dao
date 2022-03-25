@@ -43,6 +43,12 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-jpa</artifactId>
+                <scope>provided</scope>
+            </dependency>
         </#if>
         <#if services??>
             <dependency>
