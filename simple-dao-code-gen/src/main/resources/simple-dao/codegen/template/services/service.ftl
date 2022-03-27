@@ -44,9 +44,15 @@ public interface ${className} {
 </#if>
 
 <#if pkField?exists>
+    /**
+     * 通过主键查找记录，一般建议的服务内部调用，不要的控制器中调用
+     */
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 
+    /**
+    * 通过主键查找记录，同时可能注入其它条件，防止数据安全
+    */
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(${entityName}IdReq req);
 </#if>
