@@ -1415,7 +1415,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                     if (hasValue) {
 
-                        fieldRealType = value.getClass();
+                        fieldRealType = value != null ? value.getClass() : null;
 
                         if (StringUtils.hasText(valueHolder.getName())) {
                             name = valueHolder.getName();
