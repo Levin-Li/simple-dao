@@ -1415,7 +1415,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                     if (hasValue) {
 
-                        fieldRealType = value != null ? value.getClass() : null;
+                        fieldRealType = value != null ? value.getClass() : fieldRealType;
 
                         if (StringUtils.hasText(valueHolder.getName())) {
                             name = valueHolder.getName();
@@ -1840,7 +1840,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         if (varType == null && value == null) {
-            logger.warn(" *** processAttr " + name + " varType is null and value is null.", new Exception());
+            logger.warn(" *** processAttr " + name + " varType is null and value is null.");
         }
 
         final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType));
