@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  *  @author Auto gen by simple-dao-codegen ${.now}
  */
 
-@Component(PLUGIN_PREFIX + "${className}")
+@Component(PLUGIN_PREFIX + "AppDataInitializer")
 @Slf4j
 public class AppDataInitializer extends AbstractAppDataInitializer {
 
