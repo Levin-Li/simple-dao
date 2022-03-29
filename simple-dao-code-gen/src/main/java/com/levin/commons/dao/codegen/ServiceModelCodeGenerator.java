@@ -223,7 +223,7 @@ public final class ServiceModelCodeGenerator {
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
 
-        genFileByTemplate("testcase/DataInitializer.java", params, prefix + "DataInitializer.java");
+        genFileByTemplate("testcase/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
         genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
 

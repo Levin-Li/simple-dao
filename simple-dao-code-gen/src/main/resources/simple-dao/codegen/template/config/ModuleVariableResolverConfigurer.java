@@ -80,7 +80,7 @@ public class ModuleVariableResolverConfigurer
      *
      * @return HttpRequestInfoResolver
      */
-    @Bean(PLUGIN_PREFIX + "HttpRequestInfoResolver")
+    @Bean(HTTP_REQUEST_INFO_RESOLVER)
     @Order(1)
     HttpRequestInfoResolver moduleHttpRequestInfoResolver() {
         return new HttpRequestInfoResolver();

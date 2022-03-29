@@ -50,7 +50,7 @@ public class ModuleWebControllerAspect {
     @Resource
     HttpServletResponse response;
 
-    @Resource(name = PLUGIN_PREFIX + "HttpRequestInfoResolver")
+    @Resource(name = HTTP_REQUEST_INFO_RESOLVER)
     HttpRequestInfoResolver httpRequestInfoResolver;
 
 
