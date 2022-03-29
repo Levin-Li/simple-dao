@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
@@ -21,6 +22,14 @@ import org.springframework.web.servlet.config.annotation.*;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
+//    @Resource
+//    RbacService rbacService;
+//
+//    @Resource
+//    AuthService authService;
+//
+//    @Resource
+//    BizTenantService bizTenantService;
 
     @PostConstruct
     void init() {
@@ -73,8 +82,9 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //            SaRouter.match("/comment/**", r -> StpUtil.checkPermission("comment"));
 //        })).addPathPatterns("/**");
 
-
-//        registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns(API_PATH + "**");
+         //租户域名拦截器
+//        registry.addInterceptor(new DomainInterceptor((domain) -> bizTenantService.setCurrentTenantByDomain(domain))).addPathPatterns(API_PATH + "**");
+//        registry.addInterceptor(new AuthorizeAnnotationInterceptor(rbacService)).addPathPatterns(API_PATH + "**");
 
     }
 

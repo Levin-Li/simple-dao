@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
-
     @Resource
     ApplicationContext context;
 
