@@ -112,7 +112,7 @@ public class ModuleVariableResolverConfigurer
         //@todo 增加本模块的动态变量
 
         // 使用注入服务
-//        return injectVarService.getInjectVars();
+        //  return injectVarService.getInjectVars();
 
         return Collections.emptyList();
     }

@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,6 +31,9 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //
 //    @Resource
 //    BizTenantService bizTenantService;
+
+    @Value("${" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:}")
+    Boolean enableAuthorizeInterceptor = null;
 
     @PostConstruct
     void init() {
@@ -83,9 +87,16 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //        })).addPathPatterns("/**");
 
          //租户域名拦截器
-//        registry.addInterceptor(new DomainInterceptor((domain) -> bizTenantService.setCurrentTenantByDomain(domain))).addPathPatterns(API_PATH + "**");
-//        registry.addInterceptor(new AuthorizeAnnotationInterceptor(rbacService)).addPathPatterns(API_PATH + "**");
+        //如果没有强制禁用并且默认的认证服务没有被替换，或是强制启用
+        if (enableAuthorizeInterceptor == null || Boolean.TRUE.equals(enableAuthorizeInterceptor)) {
 
+            //建议开启
+//            registry.addInterceptor(new DomainInterceptor((domain) -> bizTenantService.setCurrentTenantByDomain(domain))).addPathPatterns(API_PATH + "**");
+//            registry.addInterceptor(new AuthorizeAnnotationInterceptor(rbacService)).addPathPatterns(API_PATH + "**");
+
+            log.info("模块认证拦截器[ {} ]已经启用 ，可以配置[{}enableAuthorizeInterceptor]禁用", API_PATH, PLUGIN_PREFIX);
+
+        }
     }
 
     @Override
