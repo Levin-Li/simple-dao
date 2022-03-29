@@ -28,7 +28,10 @@ public abstract class MultiTenantReq
         implements MultiTenantObject {
 
     @Schema(description = "租户ID" , hidden = true)
-    @InjectVar(InjectConsts.TENANT_ID)
+    @InjectVar(value = InjectConsts.TENANT_ID
+            , isOverride = InjectVar.SPEL_PREFIX + "!#user.isSuperAdmin()" // 如果不是超级管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + "!#user.isSuperAdmin()" // 如果不是超级管理员，那么值是必须的
+    )
     @Eq
     protected String tenantId;
 
