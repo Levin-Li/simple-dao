@@ -1,7 +1,9 @@
 package ${modulePackageName};
 
+import static ${modulePackageName}.ModuleOption.*;
 import com.levin.commons.service.support.AbstractAppDataInitializer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 /**
@@ -9,7 +11,7 @@ import org.springframework.stereotype.Component;
  *  @author Auto gen by simple-dao-codegen ${.now}
  */
 
-@Component
+@Component(PLUGIN_PREFIX + "${className}")
 @Slf4j
 public class AppDataInitializer extends AbstractAppDataInitializer {
 
