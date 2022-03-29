@@ -32,7 +32,8 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //    @Resource
 //    BizTenantService bizTenantService;
 
-    @Value("r"$"{" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:}")
+
+    @Value("${r"$"}{" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:}")
     Boolean enableAuthorizeInterceptor = null;
 
     @PostConstruct
