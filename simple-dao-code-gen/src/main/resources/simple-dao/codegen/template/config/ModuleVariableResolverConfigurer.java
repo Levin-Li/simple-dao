@@ -29,6 +29,9 @@ public class ModuleVariableResolverConfigurer
     @Resource
     VariableInjector variableInjector;
 
+//    @Resource
+//    InjectVarService injectVarService;
+
     @PostConstruct
     void init() {
         log.info("init...");
@@ -107,6 +110,9 @@ public class ModuleVariableResolverConfigurer
         //return Arrays.asList(MapUtils.putFirst(InjectConsts.ORG_ID, "123456789").build());
 
         //@todo 增加本模块的动态变量
+
+        // 使用注入服务
+//        return injectVarService.getInjectVars();
 
         return Collections.emptyList();
     }
