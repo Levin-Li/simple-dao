@@ -32,6 +32,7 @@
 
         <knife4j.version>2.0.9</knife4j.version>
         <swagger.version>3.0.0</swagger.version>
+        <swagger.enable>true</swagger.enable>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -96,6 +97,10 @@
 
         <profile>
             <id>01-跳过测试</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
             <properties>
                 <maven.test.skip>true</maven.test.skip>
             </properties>
@@ -114,6 +119,49 @@
             <id>03-上传JavaDoc到 Maven</id>
             <properties>
                 <maven.javadoc.skip>false</maven.javadoc.skip>
+            </properties>
+        </profile>
+
+
+        <profile>
+            <id>环境0-local</id>
+            <properties>
+                <spring.profiles.active>local</spring.profiles.active>
+                <logback.profiles.level>DEBUG</logback.profiles.level>
+                <logback.profiles.loghub.level>OFF</logback.profiles.loghub.level>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>环境1-dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <properties>
+                <spring.profiles.active>dev</spring.profiles.active>
+                <logback.profiles.level>DEBUG</logback.profiles.level>
+                <logback.profiles.loghub.level>OFF</logback.profiles.loghub.level>
+            </properties>
+
+        </profile>
+
+        <profile>
+            <id>环境2-test</id>
+            <properties>
+                <spring.profiles.active>test</spring.profiles.active>
+                <logback.profiles.level>DEBUG</logback.profiles.level>
+                <logback.profiles.loghub.level>ERROR</logback.profiles.loghub.level>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>环境3-prod</id>
+            <properties>
+                <spring.profiles.active>prod</spring.profiles.active>
+                <logback.profiles.level>INFO</logback.profiles.level>
+                <logback.profiles.loghub.level>ERROR</logback.profiles.loghub.level>
+                <swagger.enable>false</swagger.enable>
             </properties>
         </profile>
 
