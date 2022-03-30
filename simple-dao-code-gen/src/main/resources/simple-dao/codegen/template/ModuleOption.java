@@ -19,6 +19,10 @@ public interface ModuleOption {
      */
     String ID = PACKAGE_NAME;
 
+    /**
+     * module name
+     */
+    String NAME = "插件模块-" + ID;
 
     /**
      * module prefix

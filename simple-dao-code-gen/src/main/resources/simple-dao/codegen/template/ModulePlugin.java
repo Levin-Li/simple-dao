@@ -113,12 +113,12 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Override
     public String getId() {
-        return pid;
+        return ModuleOption.ID;
     }
 
     @Override
     public String getName() {
-        return "插件" + pid;
+        return ModuleOption.NAME;
     }
 
 
