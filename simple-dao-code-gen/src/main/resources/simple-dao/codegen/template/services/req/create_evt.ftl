@@ -53,15 +53,14 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-
     <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
     @Schema(description = "${field.desc}" ${field.required?string(', required = true', '')})
     <#list field.annotations as annotation>
     //${annotation}
     </#list>
     private ${field.typeName} ${field.name};
-
     </#if>
+
 </#list>
 
     @PostConstruct

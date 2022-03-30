@@ -116,9 +116,7 @@ public class ${className} extends BaseController{
     @GetMapping("")
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req) {
-
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
-
      }
 
     /**
@@ -129,9 +127,7 @@ public class ${className} extends BaseController{
     //@GetMapping("/{${pkField.name}}")
     //@Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     //public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-
     //     return getSelfProxy(getClass()).retrieve(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
-
     // }
 
 </#if>

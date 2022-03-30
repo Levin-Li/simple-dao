@@ -55,6 +55,8 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
+    private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
+
     @PostConstruct
     void init() {
         log.info("init...");
@@ -67,7 +69,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
         return new Docket(DocumentationType.OAS_30)
                 .apiInfo(apiInfo())
                 .enable(enabled)
-                .groupName(ModuleOption.NAME + "-" + ModuleOption.ID)
+                .groupName(GROUP_NAME)
                 .select()
                 //apis： 添加swagger接口提取范围
                 .apis(RequestHandlerSelectors.basePackage(PACKAGE_NAME))
@@ -79,13 +81,12 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("插件[" + ModuleOption.ID +"]接口文档")
-                .description("插件[" + ModuleOption.ID + "]接口文档")
+                .title("插件[" + GROUP_NAME + "]接口文档")
+                .description("插件[" + GROUP_NAME + "]接口文档")
                 .contact(new Contact("Levin", "https://github.com/Levin-Li/simple-dao", "99668980@qq.com"))
                 .version(ModuleOption.VERSION)
                 .build();
     }
-
 
     /**
      * 解决 swagger3   swagger-ui.html 404无法访问的问题

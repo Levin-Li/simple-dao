@@ -112,7 +112,6 @@ public class ModuleVariableResolverConfigurer
 
         // 使用注入服务
         //  return injectVarService.getInjectVars();
-
         return Collections.emptyList();
     }
 }
