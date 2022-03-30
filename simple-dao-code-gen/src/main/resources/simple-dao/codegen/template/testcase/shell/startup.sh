@@ -62,11 +62,9 @@ if [ -z $pids ]; then
        echo "***Error*** java cmd not found"
    fi
 
-   START_CMD="${JAVA_CMD} -Dhudson.util.ProcessTree.disable=true -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
 
    echo "Startup cmd line：${START_CMD}"
-
-   export JENKINS_NODE_COOKIE=dontKillMe
 
    nohup ${START_CMD}  2>&1 &
 
@@ -92,6 +90,5 @@ else
    ps -ef | grep java | grep "$shellDir"
 
 fi
-
 
 </#noparse>
