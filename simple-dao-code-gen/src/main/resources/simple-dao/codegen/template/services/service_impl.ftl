@@ -197,4 +197,11 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.findOneByQueryObj(req);
     }
 
+    @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION)
+    @Override
+    @CacheEvict(condition = "#${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
+    public boolean clearCache(${pkField.typeName} ${pkField.name}) {
+        return true;
+    }
+
 }
