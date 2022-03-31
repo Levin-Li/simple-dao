@@ -41,7 +41,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 // @Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
 @RestController(PLUGIN_PREFIX + "${className}")
-@RequestMapping(API_PATH + "${entityName?lower_case}")
+//@RequestMapping(API_PATH + "${entityName?lower_case}")
+@RequestMapping(API_PATH + "${entityName}")
 
 @Slf4j
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
