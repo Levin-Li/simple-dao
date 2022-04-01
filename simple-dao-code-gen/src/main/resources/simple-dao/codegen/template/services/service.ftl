@@ -45,13 +45,13 @@ public interface ${className} {
 
 <#if pkField?exists>
     /**
-     * 通过主键查找记录，一般建议的服务内部调用，不要的控制器中调用
+     * 通过主键查找记录，建议在服务内部调用，不要在控制器中调用
      */
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(${pkField.typeName} ${pkField.name});
 
     /**
-    * 通过主键查找记录，同时可能注入其它条件，防止数据安全
+    * 通过主键查找记录，同时可能注入其它过滤条件（如租户过滤，部门过滤，人员过滤），试图增加数据安全性
     */
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(${entityName}IdReq req);
@@ -75,6 +75,9 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     ${entityName}Info findOne(Query${entityName}Req req);
 
+    /**
+    * 清除缓存
+    */
     @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是主键ID")
     void clearCache(Object key);
 
