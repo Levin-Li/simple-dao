@@ -75,6 +75,6 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     ${entityName}Info findOne(Query${entityName}Req req);
 
-    @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION)
-    boolean clearCache(${pkField.typeName} ${pkField.name});
+    @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是ID")
+    void clearCache(String key);
 }
