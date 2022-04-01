@@ -199,7 +199,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Override
     @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
-    @CacheEvict(condition = "#key != null && key.toString().trim().length() > 0", key = E_${entityName}.CACHE_KEY_PREFIX + "#key")
+    @CacheEvict(condition = "#key != null && #key.toString().trim().length() > 0", key = E_${entityName}.CACHE_KEY_PREFIX + "#key")
     public void clearCache(Object key) {
     }
 
