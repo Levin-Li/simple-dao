@@ -159,7 +159,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({""})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
-        return ApiResp.ok(${serviceName?uncap_first}.delete(req));
+        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + " " + BIZ_NAME + "失败");
     }
 
      // /**
