@@ -138,12 +138,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
 
-        int n = simpleDao.updateByQueryObj(req);
-        if(n > 1){
-            throw new DaoSecurityException("非法的" + UPDATE_ACTION +"操作");
-        }
-        //Assert.isTrue(n > 0 , UPDATE_ACTION + BIZ_NAME + "失败");
-        return n;
+        return checkResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
@@ -166,12 +161,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
 
-        int n = simpleDao.deleteByQueryObj(req);
-        if(n > 1){
-            throw new DaoSecurityException("非法的" + DELETE_ACTION +"操作");
-        }
-        //Assert.isTrue(n > 0, DELETE_ACTION + BIZ_NAME + "失败");
-        return n;
+       return checkResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
@@ -208,4 +198,10 @@ public class ${className} extends BaseService implements ${serviceName} {
     public void clearCache(Object key) {
     }
 
+    protected int checkResult(int n, String action) {
+        if (n > 1) {
+            throw new DaoSecurityException("非法的" + action + "操作");
+        }
+        return n;
+    }
 }
