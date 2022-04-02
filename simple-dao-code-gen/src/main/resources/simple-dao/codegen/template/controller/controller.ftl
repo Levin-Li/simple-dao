@@ -108,7 +108,6 @@ public class ${className} extends BaseController{
     }
 
 <#if pkField?exists>
-
     /**
     * 查看详情
     *
@@ -119,18 +118,6 @@ public class ${className} extends BaseController{
     public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req) {
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
      }
-
-    /**
-    * 查看详情
-    *
-    * @param ${pkField.name} ${pkField.typeName}
-    */
-    //@GetMapping("/{${pkField.name}}")
-    //@Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
-    //public ApiResp<${entityName}Info> retrieve(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-    //     return getSelfProxy(getClass()).retrieve(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
-    // }
-
 </#if>
 
     /**
@@ -140,7 +127,12 @@ public class ${className} extends BaseController{
      @PutMapping({""})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req) {
-         return ApiResp.ok(${serviceName?uncap_first}.update(req));
+
+         int n = ${serviceName?uncap_first}.update(req);
+
+         Assert.isTrue(n > 0, UPDATE_ACTION + BIZ_NAME + "失败");
+
+         return ApiResp.ok(n);
     }
 
     /**
@@ -149,7 +141,12 @@ public class ${className} extends BaseController{
      @PutMapping("/batchUpdate")
      @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
-        return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
+
+        int n = ${serviceName?uncap_first}.batchUpdate(reqList);
+
+        Assert.isTrue(n > 0, BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
+
+        return ApiResp.ok(n);
     }
 
     /**
@@ -159,23 +156,13 @@ public class ${className} extends BaseController{
     @DeleteMapping({""})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
-        return ApiResp.ok(${serviceName?uncap_first}.delete(req));
-    }
 
-     // /**
-     // * 删除
-     // * @param ${pkField.name} ${pkField.typeName}
-     // */
-     // @DeleteMapping({"/{${pkField.name}}"})
-     // @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
-     // public ApiResp<Integer> delete(@PathVariable @NotNull ${pkField.typeName} ${pkField.name}) {
-     //
-     //   List<Integer> ns = getSelfProxy(getClass())
-     //       .batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}))
-     //       .getData();
-     //   
-     //       return ns != null && !ns.isEmpty() ? ApiResp.ok(ns.get(0)) : ApiResp.error(DELETE_ACTION + " " + BIZ_NAME + "失败");
-     //  }
+        int n = ${serviceName?uncap_first}.delete(req);
+
+        Assert.isTrue(n > 0, DELETE_ACTION + BIZ_NAME + "失败");
+
+        return ApiResp.ok(n);
+    }
 
     /**
      * 批量删除
@@ -184,7 +171,12 @@ public class ${className} extends BaseController{
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
-        return ApiResp.ok(${serviceName?uncap_first}.batchDelete(req));
+
+        int n = ${serviceName?uncap_first}.batchDelete(req);
+
+        Assert.isTrue(n > 0, BATCH_DELETE_ACTION + BIZ_NAME + "失败");
+
+        return ApiResp.ok(n);
     }
 
 }

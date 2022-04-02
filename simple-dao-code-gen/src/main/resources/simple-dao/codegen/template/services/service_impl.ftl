@@ -142,7 +142,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         if(n > 1){
             throw new DaoSecurityException("非法的" + UPDATE_ACTION +"操作");
         }
-        Assert.isTrue(n == 1, UPDATE_ACTION + BIZ_NAME + "失败");
+        //Assert.isTrue(n > 0 , UPDATE_ACTION + BIZ_NAME + "失败");
         return n;
     }
 
@@ -153,7 +153,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         //@Todo 优化批量提交
         int sum = reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n).sum();
 
-        Assert.isTrue(sum < 1, BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
+        //Assert.isTrue(sum > 0, BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
 
         return sum;
     }
@@ -170,7 +170,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         if(n > 1){
             throw new DaoSecurityException("非法的" + DELETE_ACTION +"操作");
         }
-        Assert.isTrue(n == 1, DELETE_ACTION + BIZ_NAME + "失败");
+        //Assert.isTrue(n > 0, DELETE_ACTION + BIZ_NAME + "失败");
         return n;
     }
 
@@ -185,7 +185,7 @@ public class ${className} extends BaseService implements ${serviceName} {
             .mapToInt(n -> n)
             .sum();
 
-        Assert.isTrue(sum < 1, BATCH_DELETE_ACTION + BIZ_NAME + "失败");
+        //Assert.isTrue(sum > 0, BATCH_DELETE_ACTION + BIZ_NAME + "失败");
 
         return sum;
     }
