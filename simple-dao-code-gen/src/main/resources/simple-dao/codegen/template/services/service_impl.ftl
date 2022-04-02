@@ -146,11 +146,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
-        int sum = reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n).sum();
-
-        //Assert.isTrue(sum > 0, BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
-
-        return sum;
+        return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n).sum();
     }
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
@@ -158,10 +154,8 @@ public class ${className} extends BaseService implements ${serviceName} {
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     public int delete(${entityName}IdReq req) {
-
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-
-       return checkResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
+        return checkResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
@@ -169,15 +163,11 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
-        int sum = Stream.of(req.get${pkField.name?cap_first}List())
+        return Stream.of(req.get${pkField.name?cap_first}List())
             .map(${pkField.name} -> simpleDao.copy(req, new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name})))
             .map(idReq -> getSelfProxy().delete(idReq))
             .mapToInt(n -> n)
             .sum();
-
-        //Assert.isTrue(sum > 0, BATCH_DELETE_ACTION + BIZ_NAME + "失败");
-
-        return sum;
     }
 
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
