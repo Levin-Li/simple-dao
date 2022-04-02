@@ -127,12 +127,7 @@ public class ${className} extends BaseController{
      @PutMapping({""})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req) {
-
-         int n = ${serviceName?uncap_first}.update(req);
-
-         Assert.isTrue(n > 0, UPDATE_ACTION + BIZ_NAME + "失败");
-
-         return ApiResp.ok(n);
+         return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
     }
 
     /**
@@ -141,12 +136,7 @@ public class ${className} extends BaseController{
      @PutMapping("/batchUpdate")
      @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
-
-        int n = ${serviceName?uncap_first}.batchUpdate(reqList);
-
-        Assert.isTrue(n > 0, BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
-
-        return ApiResp.ok(n);
+        return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION));
     }
 
     /**
@@ -156,12 +146,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({""})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
-
-        int n = ${serviceName?uncap_first}.delete(req);
-
-        Assert.isTrue(n > 0, DELETE_ACTION + BIZ_NAME + "失败");
-
-        return ApiResp.ok(n);
+        return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
     }
 
     /**
@@ -171,12 +156,17 @@ public class ${className} extends BaseController{
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
-
-        int n = ${serviceName?uncap_first}.batchDelete(req);
-
-        Assert.isTrue(n > 0, BATCH_DELETE_ACTION + BIZ_NAME + "失败");
-
-        return ApiResp.ok(n);
+        return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
     }
 
+    /**
+     * 检查结果
+     * @param n
+     * @param action
+     * @return
+     */
+    protected int checkResult(int n, String action) {
+        Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
+        return n;
+    }
 }
