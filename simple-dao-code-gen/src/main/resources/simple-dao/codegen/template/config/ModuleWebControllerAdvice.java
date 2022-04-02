@@ -102,6 +102,15 @@ public class ModuleWebControllerAdvice {
 //        return result;
 //    }
 
+    @ExceptionHandler({AccessDeniedException.class,})
+    public ApiResp onAccessDeniedException(Exception e) {
+
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+
+        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+                , e.getMessage());
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class, MissingServletRequestParameterException.class})
     public ApiResp onParameterException(Exception e) {
 
@@ -127,17 +136,13 @@ public class ModuleWebControllerAdvice {
 
     @ExceptionHandler(ServiceException.class)
     public ApiResp onServiceException(Exception e) {
+
+        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
                 , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
     }
-
-    @ExceptionHandler({AccessDeniedException.class,})
-    public ApiResp onAccessDeniedException(Exception e) {
-        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
-                ,   e.getMessage()) ;
-    }
-
 
     @ExceptionHandler({PersistenceException.class, SQLException.class})
     public ApiResp onPersistenceException(Exception e) {
@@ -161,6 +166,8 @@ public class ModuleWebControllerAdvice {
 
         log.error("发生 Web异常:" + request.getRequestURL(), e);
 
+        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
                 , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getPrintInfo(e));
@@ -174,10 +181,15 @@ public class ModuleWebControllerAdvice {
 
         //网络异常
         if(ExceptionUtils.getCauseByTypes(e,SocketException.class) != null){
+
+            response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+
             return (ApiResp) ApiResp.error(ServiceResp.ErrorType.ResourceError.getBaseErrorCode()
                     , e.getMessage())
                     .setDetailMsg(ExceptionUtils.getPrintInfo(e));
         }
+
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.UnknownError.getBaseErrorCode()
                 , e.getMessage())
