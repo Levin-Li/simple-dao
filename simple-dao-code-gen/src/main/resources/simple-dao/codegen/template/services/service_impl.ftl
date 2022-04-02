@@ -92,9 +92,11 @@ public class ${className} extends BaseService implements ${serviceName} {
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
         long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
+                .select(E_${entityName}.${field.name})
                 .eq(E_${entityName}.${field.name}, req.get${field.name?cap_first}())
                 .count();
         Assert.isTrue(${field.name}Cnt <= 0, () -> new EntityExistsException("${field.desc}已经存在"));
+
         </#if>
     </#list>
         ${entityName} entity = simpleDao.create(req);
