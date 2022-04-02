@@ -16,6 +16,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.*;
 
+import javax.annotation.*;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executor;

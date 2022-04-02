@@ -33,7 +33,7 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import javax.annotation.PostConstruct;
 import java.util.stream.Stream;
-
+import javax.annotation.*;
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 //Swagger3

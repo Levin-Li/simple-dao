@@ -9,6 +9,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 
+import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 import org.springframework.cache.annotation.*;
