@@ -2,6 +2,8 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.domain.BaseEntityObject;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.InjectConsts;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -29,6 +31,7 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(description = "创建者")
     @Column(length = 128)
+    @InjectVar(InjectConsts.USER_ID)
     protected String creator;
 
     @Schema(description = "创建时间")

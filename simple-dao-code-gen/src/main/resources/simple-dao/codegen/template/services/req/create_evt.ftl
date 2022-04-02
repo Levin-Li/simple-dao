@@ -54,10 +54,11 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#list fields as field>
     <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(description = "${field.desc}" ${field.baseEntityObject?string(', hide = true', '')} ${field.required?string(', required = true', '')})
+    @Schema(description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true', '')})
     <#list field.annotations as annotation>
-    ${field.baseEntityObject?string('//', '')}${annotation}
+    ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
+    ${(field.baseEntityField && field.name =='creator')?string('@InjectVar(InjectConsts.USER_ID)', '')}
     private ${field.typeName} ${field.name};
     </#if>
 

@@ -10,6 +10,7 @@ import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
+import com.levin.commons.service.support.InjectConsts;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -17,7 +18,10 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
@@ -25,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -986,7 +991,11 @@ public final class ServiceModelCodeGenerator {
 
             Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
-            FieldModel fieldModel = new FieldModel();
+            FieldModel fieldModel = new FieldModel(entityClass);
+
+            fieldModel.setField(field)
+                    .addImport(InjectVar.class)
+                    .addImport(InjectConsts.class);
             fieldModel.setName(field.getName());
             fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
 
@@ -1336,11 +1345,14 @@ public final class ServiceModelCodeGenerator {
 
 
     @Data
-    @NoArgsConstructor
     @EqualsAndHashCode(of = "name")
     @ToString()
     @Accessors(chain = true)
     public static class FieldModel {
+
+        final Class entityType;
+
+        Field field;
 
         private String name;
 
@@ -1393,14 +1405,23 @@ public final class ServiceModelCodeGenerator {
 
         private String testValue;
 
-        public boolean isBaseEntityObject() {
-            return BaseEntityObject.class.isAssignableFrom(type);
+        public FieldModel(Class entityType) {
+            Assert.notNull(entityType, "实体类型为空");
+            this.entityType = entityType;
         }
 
-        public void addImport(Class type) {
+        /**
+         * 是否是基本实体的字段
+         * @return
+         */
+        public boolean isBaseEntityField() {
+            return field.getDeclaringClass().getName().equals("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
+        }
+
+        public FieldModel addImport(Class type) {
 
             if (type == null) {
-                return;
+                return this;
             }
 
             while (type.isArray()) {
@@ -1418,6 +1439,8 @@ public final class ServiceModelCodeGenerator {
                 }
 
             }
+
+            return this;
         }
 
     }
