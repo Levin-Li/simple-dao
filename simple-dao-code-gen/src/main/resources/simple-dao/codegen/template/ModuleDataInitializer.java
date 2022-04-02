@@ -29,12 +29,11 @@ import ${clazz.name};
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
+    @Resource
     SimpleDao dao;
 
-    @Autowired
+    @Resource
     JdbcTemplate jdbcTemplate;
-
 
     private ApplicationContext applicationContext;
 

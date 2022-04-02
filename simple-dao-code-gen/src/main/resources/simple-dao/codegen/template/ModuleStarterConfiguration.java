@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 public class ModuleStarterConfiguration {
 
-    @Autowired
+    @Resource
     Environment environment;
 
 

@@ -30,7 +30,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
     @Resource
     ApplicationContext context;
 
-    @Autowired
+    @Resource
     SimpleDao simpleDao;
 
     final String pid = ModuleOption.ID;

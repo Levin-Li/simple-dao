@@ -27,7 +27,7 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    @Autowired
+    @Resource
     Environment environment;
 
     @Bean

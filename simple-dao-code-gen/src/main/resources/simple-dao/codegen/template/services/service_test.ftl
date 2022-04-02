@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
 public class ${className} {
 
 
-    @Autowired
+    @Resource
     private ${serviceName} ${serviceName?uncap_first};
 
 <#if pkField?exists>

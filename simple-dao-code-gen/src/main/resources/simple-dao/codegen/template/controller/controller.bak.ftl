@@ -55,7 +55,7 @@ public class ${className} extends BaseController{
 
     private static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    @Autowired
+    @Resource
     ${serviceName} ${serviceName?uncap_first};
 
     /**

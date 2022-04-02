@@ -53,7 +53,7 @@ import ${className};
  */
 public class TestCase {
 
-    @Autowired
+    @Resource
     SimpleDao simpleDao;
 
 
