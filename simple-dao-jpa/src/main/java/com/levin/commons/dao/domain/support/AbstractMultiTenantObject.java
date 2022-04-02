@@ -32,7 +32,7 @@ public abstract class AbstractMultiTenantObject
         implements MultiTenantObject {
 
     @Schema(description = "租户ID")
-    @Column(nullable = false)
+    @Column(length = 128)
     @InjectVar(InjectConsts.TENANT_ID)
     protected String tenantId;
 
