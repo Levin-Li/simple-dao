@@ -139,8 +139,8 @@ public class ${className} extends BaseController{
      */
      @PutMapping({""})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
-     public ApiResp<Void> update(@RequestBody Update${entityName}Req req) {
-         return ${serviceName?uncap_first}.update(req) > 0 ? ApiResp.ok() : ApiResp.error(UPDATE_ACTION + " " + BIZ_NAME + "失败");
+     public ApiResp<Integer> update(@RequestBody Update${entityName}Req req) {
+         return ApiResp.ok(${serviceName?uncap_first}.update(req));
     }
 
     /**
@@ -159,7 +159,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({""})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
-        return ${serviceName?uncap_first}.delete(req) > 0 ? ApiResp.ok() : ApiResp.error(DELETE_ACTION + " " + BIZ_NAME + "失败");
+        return ApiResp.ok(${serviceName?uncap_first}.delete(req));
     }
 
      // /**

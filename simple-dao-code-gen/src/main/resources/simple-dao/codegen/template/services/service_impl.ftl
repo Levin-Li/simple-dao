@@ -142,6 +142,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         if(n > 1){
             throw new DaoSecurityException("非法的" + UPDATE_ACTION +"操作");
         }
+        Assert.isTrue(n == 1, UPDATE_ACTION + BIZ_NAME + "失败");
         return n;
     }
 
