@@ -15,7 +15,7 @@ import java.util.stream.*;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
-import org.springframework.util.*;
+import org.springframework.util.StringUtils;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.*;
@@ -25,7 +25,12 @@ import org.springframework.stereotype.Service;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 import org.springframework.dao.*;
+
 import javax.persistence.PersistenceException;
+import cn.hutool.core.lang.*;
+import javax.persistence.EntityExistsException;
+import javax.persistence.PersistenceException;
+
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -77,6 +82,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
+    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     @Override
 <#if pkField?exists>
     public ${pkField.typeName} create(Create${entityName}Req req){
@@ -86,11 +92,9 @@ public class ${className} extends BaseService implements ${serviceName} {
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
         long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
-                .eq("${field.name}", req.get${field.name?cap_first}())
+                .eq(E_${entityName}.${field.name}, req.get${field.name?cap_first}())
                 .count();
-        if (${field.name}Cnt > 0) {
-            throw new EntityExistsException("${field.desc}已经存在");
-        }
+        Assert.isTrue(${field.name}Cnt <= 0, () -> new EntityExistsException("${field.desc}已经存在"));
         </#if>
     </#list>
         ${entityName} entity = simpleDao.create(req);
@@ -136,9 +140,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     public int update(Update${entityName}Req req) {
-
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-
         return checkResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
     }
 
