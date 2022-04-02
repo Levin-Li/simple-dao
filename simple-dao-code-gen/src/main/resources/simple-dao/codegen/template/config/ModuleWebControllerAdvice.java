@@ -25,7 +25,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.persistence.PersistenceException;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.*;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.sql.SQLException;
