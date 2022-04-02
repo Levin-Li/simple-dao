@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 import org.springframework.cache.annotation.*;
 import java.util.*;
+import javax.validation.constraints.*;
 
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
@@ -43,7 +44,7 @@ public interface ${className} {
 
     /**
      * 创建记录，返回主键ID列表
-     * @param req
+     * @param reqList
      * @return pkId 主键ID列表
      */
     @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION)
