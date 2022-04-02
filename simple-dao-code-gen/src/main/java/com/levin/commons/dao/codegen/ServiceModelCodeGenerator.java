@@ -4,6 +4,7 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.domain.BaseEntityObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
@@ -1391,6 +1392,10 @@ public final class ServiceModelCodeGenerator {
         private String infoClassName;
 
         private String testValue;
+
+        public boolean isBaseEntityObject() {
+            return BaseEntityObject.class.isAssignableFrom(type);
+        }
 
         public void addImport(Class type) {
 
