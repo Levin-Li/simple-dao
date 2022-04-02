@@ -50,11 +50,13 @@ public class ModuleWebControllerAdvice {
     @Resource
     HttpServletRequest request;
 
+    @Resource
+    HttpServletResponse response;
+
     @PostConstruct
     void init() {
         log.info("init...");
     }
-
 
     /**
      * // @InitBinder标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
