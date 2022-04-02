@@ -58,7 +58,9 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
-    ${(field.baseEntityField && field.name =='creator')?string('@InjectVar(InjectConsts.USER_ID)', '')}
+    <#if (field.baseEntityField && field.name =='creator')>
+    @InjectVar(InjectConsts.USER_ID)
+    </#if>
     private ${field.typeName} ${field.name};
     </#if>
 

@@ -4,7 +4,6 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
-import com.levin.commons.dao.domain.BaseEntityObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
@@ -1097,11 +1096,13 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
+                                        String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
+
                                         if (GenericConverter.class != injectVar.converter()) {
                                             fieldModel.addImport(injectVar.converter());
-                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(domain = \"dao\", converter = %s.class, isRequired = \"false\")", injectVar.converter().getSimpleName()));
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, converter = %s.class, isRequired = \"false\")", domain, injectVar.converter().getSimpleName()));
                                         } else {
-                                            annotations.add("@" + annotationClass.getSimpleName() + "(domain = \"dao\")");
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
                                         }
 
                                         if (StringUtils.hasText(injectVar.expectTypeDesc())) {
@@ -1412,6 +1413,7 @@ public final class ServiceModelCodeGenerator {
 
         /**
          * 是否是基本实体的字段
+         *
          * @return
          */
         public boolean isBaseEntityField() {
