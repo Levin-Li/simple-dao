@@ -148,7 +148,7 @@ public class ${className} extends BaseController{
      */
      @PutMapping("/batchUpdate")
      @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
-     public ApiResp<List<Integer>> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
+     public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(${serviceName?uncap_first}.batchUpdate(reqList));
     }
 
@@ -183,7 +183,7 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
-    public ApiResp<List<Integer>> batchDelete(@NotNull Delete${entityName}Req req) {
+    public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(${serviceName?uncap_first}.batchDelete(req));
     }
 

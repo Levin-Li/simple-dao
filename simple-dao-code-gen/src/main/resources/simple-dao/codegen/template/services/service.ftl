@@ -82,13 +82,13 @@ public interface ${className} {
     int update(@NotNull Update${entityName}Req req);
 
     /**
-     * 批量更新记录，并返回更新记录数集合
+     * 批量更新记录，并返回更新记录数
      *
      * @param reqList
-     * @return num 更新记录数集合
+     * @return num 更新记录数
      */
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
-    List<Integer> batchUpdate(@NotNull List<Update${entityName}Req> reqList);
+    int batchUpdate(@NotNull List<Update${entityName}Req> reqList);
 
     /**
      * 删除记录，并返回删除记录数
@@ -99,12 +99,12 @@ public interface ${className} {
     int delete(@NotNull ${entityName}IdReq req);
 
     /**
-     * 批量删除记录，并返回删除记录数集合
+     * 批量删除记录，并返回删除记录数
      * @param req
-     * @return num 删除记录数集合
+     * @return num 删除记录数
      */
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
-    List<Integer> batchDelete(@NotNull Delete${entityName}Req req);
+    int batchDelete(@NotNull Delete${entityName}Req req);
 
     /**
      * 查询记录
