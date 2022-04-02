@@ -60,13 +60,13 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     /**
      * tokenName Authorization
      */
-    @Value("${sa-token.token-name:}")
+    @Value("${r"${sa-token.token-name:}"}")
     private String tokenName = "Authorization";
 
     /**
      * 是否开启swagger
      */
-    @Value("${swagger.enabled:true}")
+    @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
