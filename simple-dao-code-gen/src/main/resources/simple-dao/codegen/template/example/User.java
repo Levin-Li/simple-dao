@@ -13,6 +13,7 @@ import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.*;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * 示例代码
@@ -40,7 +41,7 @@ import javax.persistence.*;
         }
 )
 public class User
-        extends AbstractNamedEntityObject {
+        extends AbstractNamedMultiTenantObject {
 
     @Id
     @GeneratedValue
@@ -59,7 +60,7 @@ public class User
 
     @Schema(description = "归属的虚拟组织")
     @Contains
-    @InjectVar(expectTypeDesc = "List<String>", converter = PrimitiveArrayJsonConverter.class)
+    @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class)
     String belongOrgs;
 
     @Schema(description = "职业")

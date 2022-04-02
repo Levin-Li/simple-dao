@@ -34,7 +34,7 @@ import javax.persistence.*;
 )
 
 public class Task
-        extends AbstractNamedEntityObject {
+        extends AbstractNamedMultiTenantObject {
 
     @Id
     @GeneratedValue
