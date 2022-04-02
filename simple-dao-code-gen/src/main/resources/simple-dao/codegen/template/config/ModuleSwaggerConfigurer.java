@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 
+import com.levin.commons.service.domain.SignatureReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,18 +21,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.builders.RequestParameterBuilder;
 import springfox.documentation.oas.annotations.EnableOpenApi;
+import springfox.documentation.schema.ScalarType;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.ParameterType;
+import springfox.documentation.service.RequestParameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.*;
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -49,9 +58,15 @@ import javax.annotation.*;
 public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
     /**
+     * tokenName Authorization
+     */
+    @Value("${sa-token.token-name:}")
+    private String tokenName = "Authorization";
+
+    /**
      * 是否开启swagger
      */
-    @Value("${r"${swagger.enabled:true}"}")
+    @Value("${swagger.enabled:true}")
     private boolean enabled;
 
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
@@ -63,7 +78,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 
     @Bean(PLUGIN_PREFIX + "Docket")
     //默认激活的 profile
-    //@Profile({"dev", "test", "local"})
+//    @Profile({"local", "dev", "test"})
     public Docket docket() {
         return new Docket(DocumentationType.OAS_30)
                 .apiInfo(apiInfo())
@@ -75,9 +90,62 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
                 //.apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
 //                .paths(path -> path.startsWith(API_PATH))
                 .paths(PathSelectors.any())
+                .build()
+                .globalRequestParameters(getGlobalRequestParameters());
+    }
+
+    /**
+     * 生成全局通用参数
+     *
+     * @return
+     */
+    private List<RequestParameter> getGlobalRequestParameters() {
+
+        List<RequestParameter> parameters = new ArrayList<>();
+
+        if (StringUtils.hasText(tokenName)) {
+            parameters.add(newParameter(tokenName, "全局认证token"));
+        }
+
+        parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
+//        parameters.add(newParameter(SignatureReq.Fields.appSecret, "应用密钥"));
+        parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
+//        parameters.add(newParameter(SignatureReq.Fields.nonceStr, "随机字符串"));
+//        parameters.add(newParameter(SignatureReq.Fields.timeStamp, "整数时间戳（秒）", true, ScalarType.LONG));
+
+        parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
+
+        return parameters;
+    }
+
+    private RequestParameter newParameter(String name, String description) {
+        return newParameter(name, description, true, null);
+    }
+
+    /**
+     * 新参数
+     *
+     * @param name
+     * @param description
+     * @param required
+     * @return
+     */
+    private RequestParameter newParameter(String name, String description, boolean required, ScalarType scalarType) {
+        return new RequestParameterBuilder()
+                .name(name)
+                .description(description)
+                .required(required)
+                .in(ParameterType.HEADER)
+                .query(q -> q.model(m -> m.scalarModel(scalarType == null ? ScalarType.STRING : scalarType)))
+                .required(required)
                 .build();
     }
 
+    /**
+     * api 信息
+     *
+     * @return
+     */
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("插件[" + GROUP_NAME + "]接口文档")
