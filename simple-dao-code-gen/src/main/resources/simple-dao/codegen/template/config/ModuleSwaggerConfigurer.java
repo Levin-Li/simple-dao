@@ -104,7 +104,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
         List<RequestParameter> parameters = new ArrayList<>();
 
         if (StringUtils.hasText(tokenName)) {
-            parameters.add(newParameter(tokenName, "全局认证token"));
+            parameters.add(newParameter(tokenName, "鉴权token，从登录接口获取"));
         }
 
         parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
@@ -112,7 +112,6 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
         parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
 //        parameters.add(newParameter(SignatureReq.Fields.nonceStr, "随机字符串"));
 //        parameters.add(newParameter(SignatureReq.Fields.timeStamp, "整数时间戳（秒）", true, ScalarType.LONG));
-
         parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
 
         return parameters;
@@ -136,8 +135,6 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
                 .description(description)
                 .required(required)
                 .in(ParameterType.HEADER)
-                .query(q -> q.model(m -> m.scalarModel(scalarType == null ? ScalarType.STRING : scalarType)))
-                .required(required)
                 .build();
     }
 
