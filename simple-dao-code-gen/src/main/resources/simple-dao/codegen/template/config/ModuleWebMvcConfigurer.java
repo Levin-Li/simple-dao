@@ -33,8 +33,8 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //    BizTenantService bizTenantService;
 
 
-    @Value("${r"$"}{" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:}")
-    Boolean enableAuthorizeInterceptor = null;
+    @Value("${r"$"}{" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:true}")
+    boolean enableAuthorizeInterceptor;
 
     @PostConstruct
     void init() {
@@ -89,8 +89,7 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
          //租户域名拦截器
         //如果没有强制禁用并且默认的认证服务没有被替换，或是强制启用
-        if (enableAuthorizeInterceptor == null || Boolean.TRUE.equals(enableAuthorizeInterceptor)) {
-
+        if (enableAuthorizeInterceptor) {
             //建议开启
 //            registry.addInterceptor(new DomainInterceptor((domain) -> bizTenantService.setCurrentTenantByDomain(domain))).addPathPatterns(API_PATH + "**");
 //            registry.addInterceptor(new AuthorizeAnnotationInterceptor(rbacService)).addPathPatterns(API_PATH + "**");
