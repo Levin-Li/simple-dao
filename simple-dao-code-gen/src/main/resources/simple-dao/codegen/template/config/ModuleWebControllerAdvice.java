@@ -104,6 +104,25 @@ public class ModuleWebControllerAdvice {
 //        return result;
 //    }
 
+
+//    @ExceptionHandler({NotLoginException.class,})
+//    public ApiResp onNotLoginException(Exception e) {
+//
+//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//
+//        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+//                , "未登录：" + e.getMessage());
+//    }
+//
+//    @ExceptionHandler({SaTokenException.class,})
+//    public ApiResp onSaTokenException(Exception e) {
+//
+//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//
+//        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+//                , "认证异常：" + e.getMessage());
+//    }
+
     @ExceptionHandler({AccessDeniedException.class,})
     public ApiResp onAccessDeniedException(Exception e) {
 

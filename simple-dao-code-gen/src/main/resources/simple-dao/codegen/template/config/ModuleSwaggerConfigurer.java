@@ -69,6 +69,9 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
+    //@Value("${r"$"}{" + PLUGIN_PREFIX + "BizTenantService.enableApiSign:false}")
+    boolean enableApiSign = false;
+
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
 
     @PostConstruct
@@ -107,14 +110,17 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
             parameters.add(newParameter(tokenName, "鉴权token，从登录接口获取"));
         }
 
-        parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
+        if (enableApiSign) {
+
+            parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
 //        parameters.add(newParameter(SignatureReq.Fields.appSecret, "应用密钥"));
-        parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
+            parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
 //        parameters.add(newParameter(SignatureReq.Fields.nonceStr, "随机字符串"));
 
 //        parameters.add(newParameter(SignatureReq.Fields.timeStamp, "整数时间戳（秒）", true, ScalarType.LONG));
 
-        parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
+            parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
+        }
 
         return parameters;
     }
