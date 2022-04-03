@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.*;
+import cn.hutool.core.lang.Assert;
 import javax.validation.*;
 import java.util.*;
 import javax.annotation.*;
