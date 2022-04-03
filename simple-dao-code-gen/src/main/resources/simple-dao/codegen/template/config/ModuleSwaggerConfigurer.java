@@ -111,7 +111,9 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
 //        parameters.add(newParameter(SignatureReq.Fields.appSecret, "应用密钥"));
         parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
 //        parameters.add(newParameter(SignatureReq.Fields.nonceStr, "随机字符串"));
+
 //        parameters.add(newParameter(SignatureReq.Fields.timeStamp, "整数时间戳（秒）", true, ScalarType.LONG));
+
         parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
 
         return parameters;
@@ -135,6 +137,7 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
                 .description(description)
                 .required(required)
                 .in(ParameterType.HEADER)
+                .query(q -> q.model(m -> m.scalarModel(scalarType == null ? ScalarType.STRING : scalarType)))
                 .build();
     }
 
