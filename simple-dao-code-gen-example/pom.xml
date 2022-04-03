@@ -121,6 +121,11 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.7.3</version>
+            </dependency>
 
             <dependency>
                 <groupId>${levin.service-support.groupId}</groupId>
@@ -168,6 +173,10 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>-->
 
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
 
         <!-- 引入Swagger3依赖 -->
         <dependency>
