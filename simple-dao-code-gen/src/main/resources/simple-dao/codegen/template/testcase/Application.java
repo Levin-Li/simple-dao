@@ -8,14 +8,24 @@ import org.springframework.beans.factory.annotation.*;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.plugin.support.PluginManagerImpl;
 import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
-import java.lang.reflect.Type;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
 
 /**
  *  启动类
@@ -23,6 +33,10 @@ import java.lang.reflect.Type;
  */
 @SpringBootApplication
 @Slf4j
+
+@EnableScheduling
+@EnableCaching
+@EnableAsync
 public class Application {
 
     public static void main(String[] args) {
