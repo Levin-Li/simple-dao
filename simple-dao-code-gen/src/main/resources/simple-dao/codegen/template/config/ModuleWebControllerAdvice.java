@@ -132,13 +132,16 @@ public class ModuleWebControllerAdvice {
                 , e.getMessage());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class, MissingServletRequestParameterException.class})
+    @ExceptionHandler({IllegalArgumentException.class,
+            IllegalStateException.class,
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class})
     public ApiResp onParameterException(Exception e) {
 
         log.error("请求参数异常," + request.getRequestURL(), e);
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                ,   e.getMessage())
+                , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
     }
 
@@ -201,7 +204,7 @@ public class ModuleWebControllerAdvice {
         log.error("发生异常:" + request.getRequestURL(), e);
 
         //网络异常
-        if(ExceptionUtils.getCauseByTypes(e,SocketException.class) != null){
+        if (ExceptionUtils.getCauseByTypes(e, SocketException.class) != null) {
 
             response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
