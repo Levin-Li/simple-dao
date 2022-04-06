@@ -1,6 +1,8 @@
 package ${modulePackageName};
 
 import com.levin.commons.service.support.*;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.*;
 import org.springframework.beans.factory.annotation.*;
 import com.levin.commons.plugin.PluginManager;
@@ -30,17 +32,32 @@ public class Application {
     @Resource
     Environment environment;
 
-    @Bean
-    PluginManager pluginManager() {
 
-        return new PluginManagerImpl() {
-            @Override
-            public void onApplicationEvent(ContextRefreshedEvent event) {
-                log.info("创建自定义的插件管理器-" + getClass().getSimpleName());
-                super.onApplicationEvent(event);
-            }
-        };
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public CorsFilter corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(18000L);
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
+
+
+//    @Bean
+//    PluginManager pluginManager() {
+//        return new PluginManagerImpl() {
+//            @Override
+//            public void onApplicationEvent(ContextRefreshedEvent event) {
+//                log.info("创建自定义的插件管理器-" + getClass().getSimpleName());
+//                super.onApplicationEvent(event);
+//            }
+//        };
+//    }
 
     @Bean
     VariableResolverConfigurer variableResolverConfigurer() {
