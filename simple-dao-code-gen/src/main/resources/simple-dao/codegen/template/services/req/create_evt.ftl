@@ -61,7 +61,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#if (field.baseEntityField && field.name =='creator')>
     @InjectVar(InjectConsts.USER_ID)
     </#if>
-    private ${field.typeName} ${field.name};
+    ${field.modifiersPrefix} ${field.typeName} ${field.name};
     </#if>
 
 </#list>

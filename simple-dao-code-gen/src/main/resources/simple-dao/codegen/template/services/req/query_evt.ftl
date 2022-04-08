@@ -60,12 +60,12 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
     @Ignore
     @Schema(description = "排序字段")
-    private String orderBy;
+    String orderBy;
 
     //@Ignore
     @Schema(description = "排序方向-desc asc")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
-    private OrderBy.Type orderDir;
+    OrderBy.Type orderDir;
 
 <#list fields as field>
 
@@ -77,26 +77,26 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
     @Schema(description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Gte
-    private ${field.typeName} gte${field.name?cap_first};
+    ${field.modifiersPrefix} ${field.typeName} gte${field.name?cap_first};
 
     @Schema(description = "小于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Lte
-    private ${field.typeName} lte${field.name?cap_first};
+    ${field.modifiersPrefix} ${field.typeName} lte${field.name?cap_first};
 
     <#elseif field.baseType>
     @Schema(description = "${field.desc}")
-    private ${field.typeName} ${field.name};
+    ${field.modifiersPrefix} ${field.typeName} ${field.name};
     <#if field.contains>
     <#-- 模糊匹配 -->
 
     @Schema(description = "模糊匹配 - ${field.desc}")
     @${field.extras.nameSuffix}
-    private ${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
+    ${field.modifiersPrefix} ${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     <#elseif field.lazy!>
     @Schema(description = "是否加载${field.desc}")
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
-    private Boolean load${field.name?cap_first};
+    ${field.modifiersPrefix} Boolean load${field.name?cap_first};
     </#if>
 
 </#list>

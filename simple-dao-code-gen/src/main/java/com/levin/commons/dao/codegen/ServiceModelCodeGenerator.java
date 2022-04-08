@@ -4,6 +4,9 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.codegen.model.ClassModel;
+import com.levin.commons.dao.codegen.model.FieldModel;
+import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
@@ -17,21 +20,14 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
-import lombok.ToString;
-import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
@@ -692,7 +688,6 @@ public final class ServiceModelCodeGenerator {
 
         final Consumer<Map<String, Object>> mapConsumer = (map) -> {
             map.putAll(paramsMap);
-            map.put("fields", fields);
         };
 
         genCode(entityClass, INFO_FTL, fields, srcDir,
@@ -710,8 +705,8 @@ public final class ServiceModelCodeGenerator {
         final Consumer<Map<String, Object>> mapConsumer = (map) -> {
             map.putAll(paramsMap);
             map.put("servicePackageName", servicePackage());
-            map.put("fields", fields);
         };
+
 
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
@@ -855,15 +850,32 @@ public final class ServiceModelCodeGenerator {
 
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
-        params.put("fields", fields);
+        params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().get());
+
+        params.put("classModel", new ClassModel().setEntityType(entityClass));
+
+        //分解字段类型
+
+        LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
 
         params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
-                .reduce(new LinkedHashSet<String>(), (f, s) -> {
+                .reduce(new LinkedHashSet<>(), (f, s) -> {
                     f.addAll(s);
                     return f;
                 }));
 
-        params.put("pkField", getPkField(entityClass, fields));
+        for (FieldModel fieldModel : fields) {
+            multiValueMap.add(fieldModel.crud.name(), fieldModel);
+        }
+
+        //放入空的列表
+        Arrays.stream(FieldModel.CRUD.values()).forEach(action -> params.put(action.name() + "_fields", Collections.emptyList()));
+
+        //默认的字段
+        params.put("fields", multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()));
+
+        //覆盖
+        multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
 
         return params;
     }
@@ -873,18 +885,6 @@ public final class ServiceModelCodeGenerator {
         return fields.stream()
                 .filter(fm -> !Arrays.asList(filterNames).contains(fm.name))
                 .collect(Collectors.toList());
-    }
-
-
-    private static FieldModel getPkField(Class entityClass, List<FieldModel> fields) {
-
-        for (FieldModel field : fields) {
-            if (field.isPk()) {
-                return field;
-            }
-        }
-
-        return null;
     }
 
 
@@ -930,7 +930,7 @@ public final class ServiceModelCodeGenerator {
 
         Object obj = entityClass.newInstance();
 
-        List<FieldModel> list = new ArrayList<>();
+        List<FieldModel> fieldModelList = new ArrayList<>();
 
         final List<Field> declaredFields = new LinkedList<>();
 
@@ -941,8 +941,6 @@ public final class ServiceModelCodeGenerator {
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
-
-        // Field.setAccessible(declaredFields, true);
 
         for (Field field : declaredFields) {
 
@@ -958,7 +956,6 @@ public final class ServiceModelCodeGenerator {
 
             ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
             final Class<?> fieldType = forField.resolve(field.getType());
-
 
             if (field.getType() != fieldType) {
                 logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
@@ -1205,7 +1202,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"" + sn + "\"");
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
-                } else if (fieldModel.enumType) {
+                } else if (fieldModel.isEnumType()) {
                     fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
                 } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
@@ -1226,10 +1223,10 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            list.add(fieldModel);
+            fieldModelList.add(fieldModel);
 
         }
-        return list;
+        return fieldModelList;
     }
 
 
@@ -1344,107 +1341,5 @@ public final class ServiceModelCodeGenerator {
         return e;
     }
 
-
-    @Data
-    @EqualsAndHashCode(of = "name")
-    @ToString()
-    @Accessors(chain = true)
-    public static class FieldModel {
-
-        final Class entityType;
-
-        Field field;
-
-        private String name;
-
-        String prefix;
-
-        //类的短名称
-        private String typeName;
-
-        //字段类型
-        private Class type;
-
-        //对于集合类型的字段，元素的类型
-        private Class eleType;
-
-        private Integer length = -1;
-
-        private String desc;
-
-        private String descDetail;
-
-        private final Set<String> imports = new LinkedHashSet<>();
-
-        private final Set<String> annotations = new HashSet<>();
-
-        private final Map<String, Object> extras = new HashMap<>();
-
-        private boolean pk = false;//是否主键字段
-
-        private boolean uk = false;//是否唯一键
-
-        private boolean baseType = true;//基础封装类型
-
-        private boolean enumType = false;//是否enum
-
-        private boolean jpaEntity = false;//是否 jpa 对象
-
-        private boolean required = false;//是否必填
-
-        private boolean autoIdentity; //是否自动增长主键
-
-        private boolean notUpdate = false;//是否不需要更新
-
-        private boolean hasDefValue = false;//是否有默认值
-
-        private boolean lazy = false;//是否lazy
-
-        private boolean contains; //是否生成模糊查询
-
-        private String infoClassName;
-
-        private String testValue;
-
-        public FieldModel(Class entityType) {
-            Assert.notNull(entityType, "实体类型为空");
-            this.entityType = entityType;
-        }
-
-        /**
-         * 是否是基本实体的字段
-         *
-         * @return
-         */
-        public boolean isBaseEntityField() {
-            return field.getDeclaringClass().getName().equals("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
-        }
-
-        public FieldModel addImport(Class type) {
-
-            if (type == null) {
-                return this;
-            }
-
-            while (type.isArray()) {
-                type = type.getComponentType();
-            }
-
-            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
-                //如果是类中类
-                Class declaringClass = type.getDeclaringClass();
-                if (declaringClass != null) {
-                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
-                    imports.add(declaringClass.getName() + ".*");
-                } else {
-                    imports.add(type.getName());
-                }
-
-            }
-
-            return this;
-        }
-
-    }
 
 }

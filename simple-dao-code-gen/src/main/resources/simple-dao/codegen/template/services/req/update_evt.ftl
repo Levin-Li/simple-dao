@@ -60,8 +60,26 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Schema(description = "${pkField.desc}" , required = true)
     @NotNull
     @Eq(require = true)
-    private ${pkField.typeName} ${pkField.name};
+    ${pkField.typeName} ${pkField.name};
 </#if>
+
+<#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
+    @Schema(description = "可编辑条件" , hidden = true)
+    @Eq(require = true)
+    final boolean eqEditable = true;
+</#if>
+
+<#list UPDATE_fields as field>
+    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
+    <#list field.annotations as annotation>
+        <#if !(annotation?string)?contains("@NotNull")>
+    ${annotation}
+        </#if>
+    </#list>
+    @Schema(description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    ${field.modifiersPrefix} ${field.typeName} ${field.name};
+    </#if>
+</#list>
 
 <#list fields as field>
     <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
@@ -70,8 +88,8 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     ${annotation}
     </#if>
     </#list>
-    @Schema(description = "${field.desc}")
-    private ${field.typeName} ${field.name};
+    @Schema(description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    ${field.modifiersPrefix} ${field.typeName} ${field.name};
 
     </#if>
 </#list>

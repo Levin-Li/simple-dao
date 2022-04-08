@@ -38,10 +38,10 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
 
     private final ResLoader resLoader = new ResLoader() {
+        
+        final List<SimpleIdentifiable> types = new ArrayList<>();
 
-        final List<SimpleIdentifiable> types = new LinkedList<>();
-
-        final List<Res> pluginResList = new LinkedList<>();
+        final LinkedMultiValueMap<String, Res> resMap = new LinkedMultiValueMap<>();
 
         @Override
         public List<SimpleIdentifiable> getResTypes() {
@@ -53,27 +53,21 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
             return types;
         }
 
-
         @Override
-        public <R extends Res> Collection<R> getResItems(String resType, int loadDeep) {
+        public <R extends Res> List<R> getResItems(String resType, int loadDeep) {
 
             Assert.hasText(resType, "资源类型没有指定");
 
-            synchronized (pluginResList) {
-                if (pluginResList.isEmpty()) {
-                    pluginResList.addAll(RbacUtils.loadResFromSpringCtx(context, getId(), resType));
-                }
+            if (!resMap.containsKey(resType)) {
+                resMap.put(resType, RbacUtils.loadResFromSpringCtx(context, getId(), resType));
             }
 
-            return (Collection<R>) pluginResList.stream()
-                    .filter(res -> resType.equals(res.getType()))
-                    .collect(Collectors.toList());
+            return (List<R>) resMap.get(resType);
         }
 
         @Override
         public <R extends Res> Collection<R> getSubItems(String resType, String resId, int loadDeep) {
-
-            return null;
+            throw new UnsupportedOperationException("getSubItems");
         }
 
     };
