@@ -226,7 +226,7 @@ public final class ServiceModelCodeGenerator {
                 + File.separator;
 
         genFileByTemplate("testcase/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
-        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
+//        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
 
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
