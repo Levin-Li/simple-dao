@@ -53,6 +53,7 @@ public final class ServiceModelCodeGenerator {
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
+    public static final String STAT_EVT_FTL = "services/req/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
@@ -725,6 +726,11 @@ public final class ServiceModelCodeGenerator {
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
                 pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        //统计
+        genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
+                pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
+
 
     }
 

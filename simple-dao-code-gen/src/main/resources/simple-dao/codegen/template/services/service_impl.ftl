@@ -181,6 +181,19 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
+    /**
+     * 简单统计
+     *
+     * @param req
+     * @param paging 分页设置，可空
+     * @return pagingData 分页数据
+     */
+    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    @Override
+    public PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req , Paging paging){
+        return simpleDao.findPagingDataByQueryObj(req, paging);
+    }
+
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findOne(Query${entityName}Req req){

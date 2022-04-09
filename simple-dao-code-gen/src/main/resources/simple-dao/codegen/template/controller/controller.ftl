@@ -64,14 +64,27 @@ public class ${className} extends BaseController{
     /**
      * 分页查找
      *
-     * @param req  Query${entityName}Req
+     * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
-    public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req , SimplePaging paging) {
+    public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
+
+
+     /**
+      * 简单统计
+      *
+      * @param req Query${entityName}Req
+      * @return  ApiResp<PagingData<Stat${entityName}Req.Result>>
+      */
+     //@GetMapping("/stat") //默认不开放
+     @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
+     public ApiResp<PagingData<Stat${entityName}Req.Result>> stat(Stat${entityName}Req req, SimplePaging paging) {
+         return ApiResp.ok(${serviceName?uncap_first}.stat(req,paging));
+     }
 
     /**
      * 新增
@@ -160,6 +173,7 @@ public class ${className} extends BaseController{
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
     }
+
 
     /**
      * 检查结果

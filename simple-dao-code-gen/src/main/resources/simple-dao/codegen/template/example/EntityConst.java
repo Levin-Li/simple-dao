@@ -34,6 +34,11 @@ public interface EntityConst {
     /**
      *
      */
+    String STAT_ACTION = "统计";
+
+    /**
+     *
+     */
     String CLEAR_CACHE_ACTION = "清楚缓存";
 
     /**

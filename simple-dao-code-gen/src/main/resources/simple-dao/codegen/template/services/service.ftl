@@ -114,7 +114,17 @@ public interface ${className} {
      * @return pagingData 分页数据
      */
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-    PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req , Paging paging);
+    PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
+
+    /**
+     * 简单统计
+     *
+     * @param req
+     * @param paging 分页设置，可空
+     * @return pagingData 分页数据
+     */
+    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    PagingData<Stat${entityName}Req.Result> stat(@NotNull Stat${entityName}Req req, Paging paging);
 
     /**
      * 查询并返回第一条数据
@@ -124,6 +134,7 @@ public interface ${className} {
      */
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     ${entityName}Info findOne(@NotNull Query${entityName}Req req);
+
 
     /**
     * 清除缓存
