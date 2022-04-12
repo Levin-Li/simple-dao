@@ -115,6 +115,7 @@ public class ModuleWebControllerAspect {
 
     /**
      * 变量注入
+     * 默认启用
      *
      * @param joinPoint
      * @throws Throwable
@@ -124,11 +125,6 @@ public class ModuleWebControllerAspect {
 
         if(log.isDebugEnabled()) {
             log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
-        }
-
-        String headerValue = request.getHeader(PLUGIN_PREFIX + "logHttp");
-        if (StringUtils.hasText(headerValue)) {
-            enableHttpLog.set(Boolean.TRUE.toString().equalsIgnoreCase(headerValue));
         }
         
         Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
@@ -145,12 +141,26 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * 记录日志
+     * 记录日志，默认不启用
      */
-    @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+//    @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        if (!enableHttpLog.get() || !log.isDebugEnabled()) {
+        String contextPath = serverProperties.getServlet().getContextPath() + "/";
+
+        contextPath = contextPath.replace("//", "/");
+
+        String path = request.getRequestURI().replace("//", "/");
+
+        //去除应用路径
+        if (path.startsWith(contextPath)) {
+            path = path.substring(contextPath.length() - 1);
+        }
+
+        final String className = joinPoint.getSignature().getDeclaringTypeName();
+
+        //去除应用路径后，进行匹配
+        if (!enableHttpLog.get() || !log.isDebugEnabled() || path.equals(serverProperties.getError().getPath())) {
             return joinPoint.proceed(joinPoint.getArgs());
         }
 
@@ -176,7 +186,6 @@ public class ModuleWebControllerAspect {
         //如果这里不返回result，则目标对象实际返回值会被置为null
 
         return result;
-
     }
 
 

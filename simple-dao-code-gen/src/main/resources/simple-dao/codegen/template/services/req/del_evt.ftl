@@ -73,6 +73,12 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 </#if>
 
+<#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
+    @Schema(description = "可编辑条件" , hidden = true)
+    @Eq(require = true)
+    final boolean eqEditable = true;
+</#if>
+
     @PostConstruct
     public void preDelete() {
         //@todo 删除之前初始化数据
