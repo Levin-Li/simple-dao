@@ -65,7 +65,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
-    @Eq(require = true)
+    @Eq(condition ="!#user.isSuperAdmin()")
     final boolean eqEditable = true;
 </#if>
 
