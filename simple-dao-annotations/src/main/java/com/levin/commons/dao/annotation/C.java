@@ -189,17 +189,6 @@ public @interface C {
 
 
     /**
-     * 右操作数（参数） Case 选项
-     * 当存在多个时，只取第一个条件成立的 Case
-     * <p>
-     * 注意该表达式比 paramFuncs 更早求取
-     *
-     * @return
-     */
-    Case[] paramCases() default {};
-
-
-    /**
      * 针对字段函数列表
      * 最后一个函数有效
      * <p>
@@ -217,6 +206,16 @@ public @interface C {
      * @return
      */
     Func[] fieldFuncs() default {};
+
+    /**
+     * 右操作数（参数） Case 选项
+     * 当存在多个时，只取第一个条件成立的 Case
+     * <p>
+     * 注意该表达式比 paramFuncs 更早求取
+     *
+     * @return
+     */
+    Case[] paramCases() default {};
 
 
     /**
