@@ -169,7 +169,7 @@ public @interface Avg {
      *
      * @return
      */
-    String paramExpr() default "";
+//    String paramExpr() default "";
 
 
     /**

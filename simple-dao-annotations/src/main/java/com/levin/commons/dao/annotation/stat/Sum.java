@@ -172,7 +172,7 @@ public @interface Sum {
      *
      * @return
      */
-    String paramExpr() default "";
+//    String paramExpr() default "";
 
 
     /**

@@ -170,7 +170,7 @@ public @interface Max {
      *
      * @return
      */
-    String paramExpr() default "";
+//    String paramExpr() default "";
 
 
     /**

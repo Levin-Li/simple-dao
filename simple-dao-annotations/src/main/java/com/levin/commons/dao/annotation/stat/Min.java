@@ -169,7 +169,7 @@ public @interface Min {
      *
      * @return
      */
-    String paramExpr() default "";
+//    String paramExpr() default "";
 
 
     /**
