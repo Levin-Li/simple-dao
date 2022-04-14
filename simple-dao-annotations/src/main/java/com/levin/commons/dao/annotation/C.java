@@ -263,7 +263,8 @@ public @interface C {
      *
      * @return
      */
-    String toCharPattern() default "";
+    //暂时不支持
+    //String toCharPattern() default "";
 
     /**
      * 数据类型转换模板
