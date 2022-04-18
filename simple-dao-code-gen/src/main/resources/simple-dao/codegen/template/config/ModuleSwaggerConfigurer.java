@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 
+import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.SignatureReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,16 +32,20 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.builders.RequestParameterBuilder;
 import springfox.documentation.oas.annotations.EnableOpenApi;
 import springfox.documentation.schema.ScalarType;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.service.ParameterType;
-import springfox.documentation.service.RequestParameter;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
+import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
 import springfox.documentation.spring.web.plugins.Docket;
+
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.*;
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -55,7 +60,7 @@ import javax.annotation.*;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 @ConditionalOnClass({Docket.class})
-public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
+public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebMvcConfigurer {
 
     /**
      * tokenName Authorization
@@ -146,6 +151,42 @@ public class ModuleSwaggerConfigurer implements WebMvcConfigurer {
                 .query(q -> q.model(m -> m.scalarModel(scalarType == null ? ScalarType.STRING : scalarType)))
                 .build();
     }
+
+
+    @Override
+    public void apply(ModelPropertyContext context) {
+
+        Optional<BeanPropertyDefinition> definition = context.getBeanPropertyDefinition();
+
+        if (!definition.isPresent()) {
+            return;
+        }
+
+        final Class<?> enumType = definition.get().getRawPrimaryType();
+
+        //过滤得到目标类型
+//        if (enumType.isEnum()
+//                && EnumDesc.class.isAssignableFrom(enumType)
+//              && enumType.getName().startsWith(PACKAGE_NAME)
+//        ) {
+//
+//            final List<String> displayValues = Arrays.stream((Enum[]) enumType.getEnumConstants())
+//                    .map(e -> e.name() + " -- " + ((EnumDesc) e).getDesc() + "")
+//                    .collect(Collectors.toList());
+//
+//            final AllowableListValues allowableListValues = new AllowableListValues(displayValues, enumType.getTypeName());
+//
+//            context.getSpecificationBuilder().enumerationFacet(builder -> {
+//                builder.allowedValues(allowableListValues);
+//            });
+//        }
+    }
+
+    @Override
+    public boolean supports(DocumentationType documentationType) {
+        return true;
+    }
+
 
     /**
      * api 信息

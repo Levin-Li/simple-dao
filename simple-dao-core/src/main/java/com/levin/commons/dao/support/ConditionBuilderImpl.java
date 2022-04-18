@@ -1561,9 +1561,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 int idx = name.indexOf("_");
 
                 if (idx != -1) {
-
                     opAnno = annotationMap.get(name.substring(0, idx));
-
                 }
 
                 if (opAnno != null) {

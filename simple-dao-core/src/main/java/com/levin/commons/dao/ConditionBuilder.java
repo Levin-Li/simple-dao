@@ -196,11 +196,10 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * param.put("Q_Not_EndsWith_name5", "llw");
      * param.put("name6", "llw");
      *
-     * @param paramPrefix，如果Q_
-     * @param queryParams
+     * @param paramPrefix，Key前缀，例如：Q_
+     * @param queryParams map
      * @return
      */
-    @Deprecated
     T appendByEL(String paramPrefix, Map<String, Object>... queryParams);
 
     /**
