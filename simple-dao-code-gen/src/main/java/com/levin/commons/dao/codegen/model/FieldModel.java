@@ -96,7 +96,7 @@ public class FieldModel implements Cloneable {
     }
 
     public String getModifiersPrefix() {
-        return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" "));
+        return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
 

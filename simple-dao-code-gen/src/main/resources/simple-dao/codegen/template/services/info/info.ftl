@@ -43,18 +43,18 @@ import ${imp};
 @FieldNameConstants
 public class ${className} implements Serializable {
 
-   private static final long serialVersionUID = ${serialVersionUID}L;
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
 
    <#if field.lazy>
-   //@Fetch //默认不加载，请通过查询对象控制
+    //@Fetch //默认不加载，请通过查询对象控制
    </#if>
    <#list field.annotations as annotation>
-   ${annotation}
+    ${annotation}
    </#list>
-   @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = true', '')})
-   ${field.modifiersPrefix} ${field.typeName} ${field.name};
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = true', '')})
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
 </#list>
 

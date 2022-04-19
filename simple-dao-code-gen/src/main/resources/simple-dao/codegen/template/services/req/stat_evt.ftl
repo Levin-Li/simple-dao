@@ -73,20 +73,20 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Gte
-    ${field.modifiersPrefix} ${field.typeName} gte${field.name?cap_first};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "小于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Lte
-    ${field.modifiersPrefix} ${field.typeName} lte${field.name?cap_first};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
     <#elseif field.baseType>
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}")
-    ${field.modifiersPrefix} ${field.typeName} ${field.name};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
     <#-- 模糊匹配 -->
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - ${field.desc}")
     @${field.extras.nameSuffix}
-    ${field.modifiersPrefix} ${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
 </#list>

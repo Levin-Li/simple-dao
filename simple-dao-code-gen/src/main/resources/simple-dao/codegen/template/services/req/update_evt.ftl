@@ -77,7 +77,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
         </#if>
     </#list>
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
-    ${field.modifiersPrefix} ${field.typeName} ${field.name};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     </#if>
 </#list>
 
@@ -89,7 +89,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     </#if>
     </#list>
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
-    ${field.modifiersPrefix} ${field.typeName} ${field.name};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>
 </#list>
