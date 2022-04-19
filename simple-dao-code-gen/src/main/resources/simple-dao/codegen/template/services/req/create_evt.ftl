@@ -53,8 +53,8 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-    <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true', '')})
+    <#if (field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>

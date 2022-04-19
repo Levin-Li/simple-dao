@@ -53,7 +53,7 @@ public class ${className} implements Serializable {
    <#list field.annotations as annotation>
    ${annotation}
    </#list>
-   @Schema(description = "${field.desc}" ${field.required?string(', required = true', '')})
+   @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = true', '')})
    ${field.modifiersPrefix} ${field.typeName} ${field.name};
 
 </#list>

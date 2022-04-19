@@ -6,7 +6,6 @@ import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
-import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
@@ -27,7 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.util.*;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
@@ -1043,16 +1045,17 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
             }
 
-
-            boolean hasSchema = field.isAnnotationPresent(Schema.class);
-            Schema schema = field.getAnnotation(Schema.class);
-            fieldModel.setDesc(hasSchema ? schema.description() : field.getName());
-            fieldModel.setDescDetail(hasSchema ? schema.description() : "");
-            if (!hasSchema) {
-                boolean isDesc = field.isAnnotationPresent(Desc.class);
+            if (field.isAnnotationPresent(Schema.class)) {
+                Schema schema = field.getAnnotation(Schema.class);
+                fieldModel.setTitle(schema.title())
+                        .setDesc(schema.description())
+                        .setDescDetail(schema.title() + schema.description());
+            } else if (field.isAnnotationPresent(Desc.class)) {
                 Desc desc = field.getAnnotation(Desc.class);
-                fieldModel.setDesc(isDesc ? desc.value() : field.getName());
-                fieldModel.setDescDetail(isDesc ? desc.detail() : "");
+                fieldModel.setDesc(desc.value());
+                fieldModel.setDescDetail(desc.detail());
+            }else {
+                fieldModel.setDesc(field.getName());
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
@@ -1066,7 +1069,6 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
                 fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
             }
-
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {

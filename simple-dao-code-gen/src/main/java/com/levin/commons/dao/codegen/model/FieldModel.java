@@ -34,6 +34,8 @@ public class FieldModel implements Cloneable {
 
     public String name;
 
+    public String title;
+
     String prefix;
 
     //类的短名称
@@ -96,6 +98,7 @@ public class FieldModel implements Cloneable {
     public String getModifiersPrefix() {
         return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" "));
     }
+
 
     /**
      * 是否是基本实体的字段
