@@ -83,6 +83,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}")
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
+
     <#-- 模糊匹配 -->
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - ${field.desc}")
     @${field.extras.nameSuffix}
