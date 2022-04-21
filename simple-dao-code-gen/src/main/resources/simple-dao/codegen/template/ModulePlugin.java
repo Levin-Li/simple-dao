@@ -56,6 +56,11 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
     }
 
     @Override
+    public Map<String, String> getAuthor() {
+        return Collections.emptyMap();
+    }
+
+    @Override
     public ResLoader getResLoader() {
         //@todo 返回资源加载器
         return resLoader;
