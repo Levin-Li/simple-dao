@@ -51,6 +51,11 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
     }
 
     @Override
+    public String getVersion() {
+        return ModuleOption.VERSION;
+    }
+
+    @Override
     public ResLoader getResLoader() {
         //@todo 返回资源加载器
         return resLoader;
