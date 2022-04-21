@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
@@ -31,10 +32,6 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 //
 //    @Resource
 //    BizTenantService bizTenantService;
-
-
-    @Value("${r"$"}{" + PLUGIN_PREFIX + "enableAuthorizeInterceptor:true}")
-    boolean enableAuthorizeInterceptor;
 
     @PostConstruct
     void init() {
@@ -74,29 +71,10 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-
-        //https://sa-token.dev33.cn/
-        // 注册路由拦截器，自定义认证规则
-//        registry.addInterceptor(new SaRouteInterceptor((req, res, handler)->{
-//            // 根据路由划分模块，不同模块不同鉴权
-//            SaRouter.match("/user/**", r -> StpUtil.checkPermission("user"));
-//            SaRouter.match("/admin/**", r -> StpUtil.checkPermission("admin"));
-//            SaRouter.match("/goods/**", r -> StpUtil.checkPermission("goods"));
-//            SaRouter.match("/orders/**", r -> StpUtil.checkPermission("orders"));
-//            SaRouter.match("/notice/**", r -> StpUtil.checkPermission("notice"));
-//            SaRouter.match("/comment/**", r -> StpUtil.checkPermission("comment"));
-//        })).addPathPatterns("/**");
-
-         //租户域名拦截器
-        //如果没有强制禁用并且默认的认证服务没有被替换，或是强制启用
-        if (enableAuthorizeInterceptor) {
-            //建议开启
-//            registry.addInterceptor(new DomainInterceptor((domain) -> bizTenantService.setCurrentTenantByDomain(domain))).addPathPatterns(API_PATH + "**");
-//            registry.addInterceptor(new AuthorizeAnnotationInterceptor(rbacService)).addPathPatterns(API_PATH + "**");
-
-            log.info("模块认证拦截器[ {} ]已经启用 ，可以配置[{}enableAuthorizeInterceptor]禁用", API_PATH, PLUGIN_PREFIX);
-
-        }
+        //注册拦截器
+//        registry.addInterceptor(new DomainInterceptor((domain) -> injectVarService.clearCache(), (className) -> true))
+//                .addPathPatterns("/**")
+//                .order(Ordered.HIGHEST_PRECEDENCE + 1000);
     }
 
     @Override

@@ -54,33 +54,8 @@ public class ModuleWebControllerAspect {
     @Resource
     ServerProperties serverProperties;
 
-    @Resource(name = HTTP_REQUEST_INFO_RESOLVER)
-    HttpRequestInfoResolver httpRequestInfoResolver;
-
-
-    @Value("${r"$"}{" + PLUGIN_PREFIX + "logHttp:true}")
-    boolean enableLog;
-
-    final AtomicBoolean enableHttpLog = new AtomicBoolean(false);
-
-    /**
-     * 存储本模块的变量解析器
-     */
-    private List<VariableResolver> moduleResolverList = new ArrayList<>(7);
-
     @PostConstruct
     void init() {
-
-        this.enableHttpLog.set(enableLog);
-
-        //增加 HttpRequestInfoResolver
-        moduleResolverList.add(httpRequestInfoResolver);
-
-        //只找出本模块的解析器
-        List<List<VariableResolver>> resolvers = SpringContextHolder.findBeanByBeanName(context, ResolvableType.forClassWithGenerics(Iterable.class, VariableResolver.class).getType(), PLUGIN_PREFIX);
-
-        resolvers.forEach(moduleResolverList::addAll);
-
         log.info("init...");
     }
 
@@ -114,86 +89,22 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * 变量注入
-     * 默认启用
+     * 拦截例子
+     *
      *
      * @param joinPoint
      * @throws Throwable
      */
-    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public void injectVar(JoinPoint joinPoint) {
-
-        if(log.isDebugEnabled()) {
-            log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
-        }
-        
-        Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
-            Arrays.stream(args)
-                    .filter(Objects::nonNull)
-                    .forEachOrdered(arg -> {
-                        variableInjector.injectByVariableResolvers(arg
-                                , () -> moduleResolverList
-                                , () -> variableResolverManager.getVariableResolvers());
-                    });
-        });
+    //@Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public void before(JoinPoint joinPoint) {
 
     }
-
 
     /**
-     * 记录日志，默认不启用
+     *
      */
-//    @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
-
-        String contextPath = serverProperties.getServlet().getContextPath() + "/";
-
-        contextPath = contextPath.replace("//", "/");
-
-        String path = request.getRequestURI().replace("//", "/");
-
-        //去除应用路径
-        if (path.startsWith(contextPath)) {
-            path = path.substring(contextPath.length() - 1);
-        }
-
-        final String className = joinPoint.getSignature().getDeclaringTypeName();
-
-        //去除应用路径后，进行匹配
-        if (!enableHttpLog.get() || !log.isDebugEnabled() || path.equals(serverProperties.getError().getPath())) {
-            return joinPoint.proceed(joinPoint.getArgs());
-        }
-
-        LinkedHashMap<String, String> headerMap = new LinkedHashMap<>();
-
-        LinkedHashMap<String, Object> paramMap = new LinkedHashMap<>();
-
-        String requestName = getRequestInfo(joinPoint, headerMap, paramMap);
-
-        log.debug("*** " + requestName + " *** URL: {}?{}, headers:{}, 控制器方法参数：{}"
-                , request.getRequestURL(), request.getQueryString()
-                , headerMap, paramMap);
-
-        long st = System.currentTimeMillis();
-
-        //动态修改其参数
-        //注意，如果调用joinPoint.proceed()方法，则修改的参数值不会生效，必须调用joinPoint.proceed(Object[] args)
-        Object result = joinPoint.proceed(joinPoint.getArgs());
-
-        log.debug("*** " + requestName + " *** URL: {}?{}, 执行耗时：{}ms , 响应结果:{}", request.getRequestURL(), request.getQueryString(),
-                (System.currentTimeMillis() - st), result);
-
-        //如果这里不返回result，则目标对象实际返回值会被置为null
-
-        return result;
-    }
-
-
-    public String getRequestInfo(ProceedingJoinPoint joinPoint, Map<String, String> headerMap, Map<String, Object> paramMap) throws Throwable {
-
-        //获取方法参数值数组
-        Object[] args = joinPoint.getArgs();
-
+    //@Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         //得到其方法签名
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         //获取方法参数类型数组
@@ -201,52 +112,6 @@ public class ModuleWebControllerAspect {
         String[] paramNames = methodSignature.getParameterNames();
 
         Method method = methodSignature.getMethod();
-
-        String requestName = request.getRequestURI();
-
-        if (method.isAnnotationPresent(Operation.class)) {
-            requestName += " " + method.getAnnotation(Operation.class).summary();
-        } else if (method.isAnnotationPresent(Schema.class)) {
-            requestName += " " + method.getAnnotation(Schema.class).description();
-        } else if (method.isAnnotationPresent(Desc.class)) {
-            requestName += " " + method.getAnnotation(Desc.class).value();
-        }
-
-        if (paramMap != null) {
-
-            if (paramTypes != null && paramTypes.length > 0) {
-
-                if (paramNames == null || paramNames.length != paramTypes.length) {
-                    paramNames = new String[paramTypes.length];
-                }
-
-                for (int i = 0; i < paramTypes.length; i++) {
-                    //  Class paramType = paramTypes[i];
-
-                    String paramName = paramNames[i];
-
-//                    paramName = paramName != null ? paramName : "";
-//                    paramName = paramName + "(" + paramType.getSimpleName() + ")";
-
-                    if (StringUtils.hasText(paramName)) {
-                        paramMap.put(paramName, args[i]);
-                    }
-                }
-            }
-        }
-
-
-        if (headerMap != null) {
-
-            Enumeration<String> headerNames = request.getHeaderNames();
-
-            while (headerNames.hasMoreElements()) {
-                String key = headerNames.nextElement();
-                headerMap.put(key, request.getHeader(key));
-            }
-        }
-
-        return requestName;
+        return joinPoint.proceed(joinPoint.getArgs());
     }
-
 }

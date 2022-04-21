@@ -37,14 +37,18 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.SimpleDateFormat;
 
 /**
+ *
  * 在Spring 3.2中
  * 新增了@ControllerAdvice、@RestControllerAdvice 注解，
  * 可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping、@PostMapping， @GetMapping注解中。
+ *
+ * 注意：默认不启用
+ *
  */
 @Slf4j
-@Component(PLUGIN_PREFIX + "${className}")
+//@Component(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
-@RestControllerAdvice(PACKAGE_NAME)
+//@RestControllerAdvice(PACKAGE_NAME)
 public class ModuleWebControllerAdvice {
 
     @Resource

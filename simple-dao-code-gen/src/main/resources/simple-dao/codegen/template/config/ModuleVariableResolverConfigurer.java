@@ -74,18 +74,6 @@ public class ModuleVariableResolverConfigurer
         return Collections.emptyList();
     }
 
-
-    /**
-     * 模块级别 http 请求变量解析器
-     *
-     * @return HttpRequestInfoResolver
-     */
-    @Bean(HTTP_REQUEST_INFO_RESOLVER)
-    @Order(1)
-    HttpRequestInfoResolver moduleHttpRequestInfoResolver() {
-        return new HttpRequestInfoResolver();
-    }
-
     /**
      * 模块级别请求变量解析器
      *

@@ -3,9 +3,10 @@ package ${modulePackageName}.config;
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
-
+//import com.levin.oak.base.autoconfigure.FrameworkProperties;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.SignatureReq;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,15 +22,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.builders.RequestParameterBuilder;
+import springfox.documentation.builders.*;
 import springfox.documentation.oas.annotations.EnableOpenApi;
 import springfox.documentation.schema.ScalarType;
 import springfox.documentation.service.*;
@@ -40,7 +39,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 
+
 import javax.annotation.PostConstruct;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,11 +57,14 @@ import javax.annotation.*;
 //@EnableSwagger2
 
 @Slf4j
-@Configuration(PLUGIN_PREFIX + "${className}")
+//注意：默认不启用
+//@Configuration(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 @ConditionalOnClass({Docket.class})
 public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebMvcConfigurer {
+
+    public static final String[] SWAGGER_UI_MAPPING_PATHS = {"/swagger-resources/**", "/swagger-ui/**"};
 
     /**
      * tokenName Authorization
@@ -74,8 +78,11 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
-    //@Value("${r"$"}{" + PLUGIN_PREFIX + "BizTenantService.enableApiSign:false}")
-    boolean enableApiSign = false;
+//    @Resource
+//    FrameworkProperties frameworkProperties;
+
+    @Resource
+    Environment environment;
 
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
 
@@ -112,20 +119,20 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
         List<RequestParameter> parameters = new ArrayList<>();
 
         if (StringUtils.hasText(tokenName)) {
-            parameters.add(newParameter(tokenName, "鉴权token，从登录接口获取"));
+            parameters.add(newParameter(tokenName, "鉴权token，从登录接口获取",
+                    Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.contains("prod")), null));
         }
 
-        if (enableApiSign) {
-
-            parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
+//        if (frameworkProperties.getSign().isEnable()) {
+//            parameters.add(newParameter(SignatureReq.Fields.appId, "应用ID"));
 //        parameters.add(newParameter(SignatureReq.Fields.appSecret, "应用密钥"));
-            parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
+//            parameters.add(newParameter(SignatureReq.Fields.channelCode, "渠道编码"));
 //        parameters.add(newParameter(SignatureReq.Fields.nonceStr, "随机字符串"));
 
 //        parameters.add(newParameter(SignatureReq.Fields.timeStamp, "整数时间戳（秒）", true, ScalarType.LONG));
 
-            parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
-        }
+//            parameters.add(newParameter(SignatureReq.Fields.sign, "签名，验签规则:md5(Utf8(应用ID +  渠道编码 + 应用密钥 + 当前时间毫秒数/(45 * 1000) ))"));
+//        }
 
         return parameters;
     }
@@ -152,42 +159,6 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
                 .build();
     }
 
-
-    @Override
-    public void apply(ModelPropertyContext context) {
-
-        Optional<BeanPropertyDefinition> definition = context.getBeanPropertyDefinition();
-
-        if (!definition.isPresent()) {
-            return;
-        }
-
-        final Class<?> enumType = definition.get().getRawPrimaryType();
-
-        //过滤得到目标类型
-//        if (enumType.isEnum()
-//                && EnumDesc.class.isAssignableFrom(enumType)
-//              && enumType.getName().startsWith(PACKAGE_NAME)
-//        ) {
-//
-//            final List<String> displayValues = Arrays.stream((Enum[]) enumType.getEnumConstants())
-//                    .map(e -> e.name() + " -- " + ((EnumDesc) e).getDesc() + "")
-//                    .collect(Collectors.toList());
-//
-//            final AllowableListValues allowableListValues = new AllowableListValues(displayValues, enumType.getTypeName());
-//
-//            context.getSpecificationBuilder().enumerationFacet(builder -> {
-//                builder.allowedValues(allowableListValues);
-//            });
-//        }
-    }
-
-    @Override
-    public boolean supports(DocumentationType documentationType) {
-        return true;
-    }
-
-
     /**
      * api 信息
      *
@@ -202,12 +173,76 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
                 .build();
     }
 
+
+    @Override
+    public void apply(ModelPropertyContext context) {
+
+        Optional<BeanPropertyDefinition> definition = context.getBeanPropertyDefinition();
+
+        if (!definition.isPresent()) {
+            return;
+        }
+
+        BeanPropertyDefinition pd = definition.get();
+        //
+
+        final Class<?> enumType = pd.getRawPrimaryType();
+
+        final PropertySpecificationBuilder specificationBuilder = context.getSpecificationBuilder();
+
+        //过滤得到目标类型
+        if (enumType.isEnum()
+                && EnumDesc.class.isAssignableFrom(enumType)
+            //  && enumType.getName().startsWith(PACKAGE_NAME)
+        ) {
+            final List<String> displayValues = Arrays.stream((Enum[]) enumType.getEnumConstants())
+                    .map(e -> e.name() + " -- " + ((EnumDesc) e).getDesc() + "")
+                    .collect(Collectors.toList());
+
+            final AllowableListValues allowableListValues = new AllowableListValues(displayValues, enumType.getTypeName());
+
+            specificationBuilder.enumerationFacet(builder -> {
+                builder.allowedValues(allowableListValues);
+            });
+        }
+
+        /////////////////////////////////////////////////////////////////////
+
+        Annotation[] annotations = {};
+
+        if (pd.hasField()) {
+            annotations = pd.getField().getAnnotated().getAnnotations();
+        } else if (pd.hasGetter()) {
+            annotations = pd.getGetter().getAnnotated().getDeclaredAnnotations();
+        } else {
+            return;
+        }
+
+        Optional<Annotation> optionalAnnotation = Arrays.stream(annotations).filter(annotation -> annotation instanceof Schema).findFirst();
+
+        if (optionalAnnotation.isPresent()) {
+            Schema schema = (Schema) optionalAnnotation.get();
+            if (!schema.title().trim().equals(schema.description().trim())) {
+                //加强描述
+                final String desc = (StringUtils.hasText(schema.title()) ? schema.title() + ", " : "") + schema.description();
+                specificationBuilder.description(desc);
+            }
+        }
+
+    }
+
+    @Override
+    public boolean supports(DocumentationType documentationType) {
+        return true;
+    }
+
+
     /**
      * 解决 swagger3   swagger-ui.html 404无法访问的问题
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Stream.of("/**/swagger-ui/**/*", "/**/springfox-swagger-ui/**/*")
+        Stream.of(SWAGGER_UI_MAPPING_PATHS)
                 .filter(p -> !registry.hasMappingForPattern(p))
                 .forEachOrdered(pathPattern ->
                         registry.addResourceHandler(pathPattern)

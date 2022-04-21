@@ -29,48 +29,26 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
     @Resource
     ApplicationContext context;
 
-    @Resource
+    @Autowired
     SimpleDao simpleDao;
-
-    final String pid = ModuleOption.ID;
 
     private PluginManager pluginManager;
 
 
-    private final ResLoader resLoader = new ResLoader() {
-        
-        final List<SimpleIdentifiable> types = new ArrayList<>();
+    @Override
+    public String getId() {
+        return getPackageName();
+    }
 
-        final LinkedMultiValueMap<String, Res> resMap = new LinkedMultiValueMap<>();
+    @Override
+    public String getPackageName() {
+        return ModuleOption.PACKAGE_NAME;
+    }
 
-        @Override
-        public List<SimpleIdentifiable> getResTypes() {
-            synchronized (types) {
-                if (types.isEmpty()) {
-                    types.addAll(RbacUtils.loadResTypeFromSpringCtx(context, getId(), null));
-                }
-            }
-            return types;
-        }
-
-        @Override
-        public <R extends Res> List<R> getResItems(String resType, int loadDeep) {
-
-            Assert.hasText(resType, "资源类型没有指定");
-
-            if (!resMap.containsKey(resType)) {
-                resMap.put(resType, RbacUtils.loadResFromSpringCtx(context, getId(), resType));
-            }
-
-            return (List<R>) resMap.get(resType);
-        }
-
-        @Override
-        public <R extends Res> Collection<R> getSubItems(String resType, String resId, int loadDeep) {
-            throw new UnsupportedOperationException("getSubItems");
-        }
-
-    };
+    @Override
+    public String getName() {
+        return ModuleOption.NAME;
+    }
 
     @Override
     public ResLoader getResLoader() {
@@ -85,9 +63,9 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Override
     public boolean onEvent(Object... objects) {
-       //log.debug(getDescription() + " onEvent " + Arrays.asList(objects));
+        //log.debug(getDescription() + " onEvent " + Arrays.asList(objects));
         //@todo
-       return false;
+        return false;
     }
 
     @Override
@@ -97,22 +75,49 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @PostConstruct
     public void init() {
-       log.info("plugin init...");
+        log.info("plugin init...");
     }
 
     @Override
     public void destroy() throws PluginException {
     }
 
-    @Override
-    public String getId() {
-        return ModuleOption.ID;
-    }
+    /**
+     * 资源加载器
+     */
+    private final ResLoader resLoader = new ResLoader() {
 
-    @Override
-    public String getName() {
-        return ModuleOption.NAME;
-    }
+        final List<SimpleIdentifiable> types = new ArrayList<>();
 
+        final LinkedMultiValueMap<String, Res> resMap = new LinkedMultiValueMap<>();
+
+        @Override
+        public List<SimpleIdentifiable> getResTypes() {
+            synchronized (types) {
+                if (types.isEmpty()) {
+                    types.addAll(RbacUtils.loadResTypeFromSpringCtx(context, getPackageName(), null));
+                }
+            }
+            return types;
+        }
+
+        @Override
+        public <R extends Res> List<R> getResItems(String resType, int loadDeep) {
+
+            Assert.hasText(resType, "资源类型没有指定");
+
+            if (!resMap.containsKey(resType)) {
+                resMap.put(resType, RbacUtils.loadResFromSpringCtx(context, getPackageName(), resType));
+            }
+
+            return (List<R>) resMap.get(resType);
+        }
+
+        @Override
+        public <R extends Res> Collection<R> getSubItems(String resType, String resId, int loadDeep) {
+            throw new UnsupportedOperationException("getSubItems");
+        }
+
+    };
 
 } // end class
