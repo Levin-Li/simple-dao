@@ -58,7 +58,7 @@ import javax.annotation.*;
 
 @Slf4j
 //注意：默认不启用
-//@Configuration(PLUGIN_PREFIX + "${className}")
+@Configuration(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 @ConditionalOnClass({Docket.class})
