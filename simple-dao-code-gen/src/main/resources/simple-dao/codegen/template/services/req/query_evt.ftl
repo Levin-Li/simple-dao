@@ -72,7 +72,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#list field.annotations as annotation>
     //${annotation}
     </#list>
-
+    <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
@@ -83,12 +83,15 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '-日期范围\", ', '')}description = "${field.desc}-日期范围，格式：yyyyMMdd-yyyyMMdd，大于等于且小余等于")
+    @Between(paramDelimiter = "-", patterns = {"yyyyMMdd"})
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+    <#-- 基本类型 -->
     <#elseif field.baseType>
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}")
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
     <#-- 模糊匹配 -->
-
     @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - ${field.desc}")
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
@@ -98,7 +101,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     Boolean load${field.name?cap_first};
     </#if>
-
+    <#-- 字段结束 -->
 </#list>
 
 <#if pkField?exists>

@@ -39,6 +39,8 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
@@ -49,6 +51,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.*;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 //Swagger3
@@ -78,6 +82,13 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
     @Value("${r"${swagger.enabled:true}"}")
     private boolean enabled;
 
+
+    /**
+     * swagger 枚举值和描述之间的分隔符
+     */
+    @Value("${r"${swagger.enumDelimiter:}"}")
+    private String enumDelimiter;
+
 //    @Resource
 //    FrameworkProperties frameworkProperties;
 
@@ -88,7 +99,13 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
 
     @PostConstruct
     void init() {
+
+        if (!StringUtils.hasText(enumDelimiter)) {
+            enumDelimiter = "--";
+        }
+
         log.info("init...");
+
     }
 
     @Bean(PLUGIN_PREFIX + "Docket")
@@ -195,8 +212,12 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
                 && EnumDesc.class.isAssignableFrom(enumType)
             //  && enumType.getName().startsWith(PACKAGE_NAME)
         ) {
+
+            Enumerated enumerated = pd.getField() != null ? pd.getField().getAnnotation(Enumerated.class) : pd.getGetter().getAnnotation(Enumerated.class);
+            boolean isIndex = enumerated == null || EnumType.ORDINAL.ordinal() == enumerated.value().ordinal();
+
             final List<String> displayValues = Arrays.stream((Enum[]) enumType.getEnumConstants())
-                    .map(e -> e.name() + " -- " + ((EnumDesc) e).getDesc() + "")
+                    .map(e -> (isIndex ? e.ordinal() : e.name()) + enumDelimiter + ((EnumDesc) e).getDesc() + "")
                     .collect(Collectors.toList());
 
             final AllowableListValues allowableListValues = new AllowableListValues(displayValues, enumType.getTypeName());
