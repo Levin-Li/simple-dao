@@ -173,7 +173,17 @@ public class ${className} extends BaseController{
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
     }
-    
+ 
+     /**
+     * 批量删除
+     * @param req Delete${entityName}Req
+     */
+    @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> batchDelete2(@RequestBody Delete${entityName}Req req) {
+        return batchDelete(req);
+    }
+
     /**
      * 批量删除
      * @param req Delete${entityName}Req
