@@ -3,6 +3,7 @@ package ${packageName};
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
@@ -157,12 +158,22 @@ public class ${className} extends BaseController{
      * 删除
      * @param req ${entityName}IdReq
      */
+    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req) {
+        return delete(req);
+    }
+
+    /**
+     * 删除
+     * @param req ${entityName}IdReq
+     */
     @DeleteMapping({""})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
     }
-
+    
     /**
      * 批量删除
      * @param req Delete${entityName}Req
@@ -172,7 +183,6 @@ public class ${className} extends BaseController{
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
     }
-
 
     /**
      * 检查结果
