@@ -98,6 +98,14 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+
+    public ${className} set${pkField.name?cap_first}OnNotBlank(${pkField.typeName} ${pkField.name}){
+        if(isNotBlank(${pkField.name})){
+        this.${pkField.name} = ${pkField.name};
+        }
+        return this;
+    }
+
 </#if>
     @PostConstruct
     public void preUpdate() {

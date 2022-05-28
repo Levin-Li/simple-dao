@@ -73,7 +73,6 @@ public class ${className} extends BaseController{
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
-
      /**
       * 简单统计
       *
@@ -106,6 +105,55 @@ public class ${className} extends BaseController{
     </#if>
     }
 
+<#if pkField?exists>
+    /**
+    * 查看详情
+    *
+    * @param req Query${entityName}ByIdReq
+    */
+    @GetMapping({"","{${pkField.name}}"})
+    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
+    public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+         req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+         return ApiResp.ok(${serviceName?uncap_first}.findById(req));
+     }
+
+    /**
+     * 更新
+     * @param req Update${entityName}Req
+     */
+     @PutMapping({"","{${pkField.name}}"})
+     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
+     public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+         req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+         return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
+    }
+
+    /**
+     * 删除
+     * @param req ${entityName}IdReq
+     */
+    @DeleteMapping({"","{${pkField.name}}"})
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+        req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+        return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
+    }
+
+    /**
+     * 删除
+     * @param req ${entityName}IdReq
+     */
+    @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+        //req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+        return delete(req, ${pkField.name});
+    }
+</#if>
+
+    //////////////////////////////////////以下是批量操作//////////////////////////////////////
+
     /**
      * 批量新增
      *
@@ -122,29 +170,6 @@ public class ${className} extends BaseController{
         return ApiResp.ok(${serviceName?uncap_first}.batchCreate(reqList));
     }
 
-<#if pkField?exists>
-    /**
-    * 查看详情
-    *
-    * @param req Query${entityName}ByIdReq
-    */
-    @GetMapping("")
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
-    public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req) {
-         return ApiResp.ok(${serviceName?uncap_first}.findById(req));
-     }
-</#if>
-
-    /**
-     * 更新
-     * @param req Update${entityName}Req
-     */
-     @PutMapping({""})
-     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
-     public ApiResp<Integer> update(@RequestBody Update${entityName}Req req) {
-         return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
-    }
-
     /**
      * 批量更新
      */
@@ -155,36 +180,6 @@ public class ${className} extends BaseController{
     }
 
     /**
-     * 删除
-     * @param req ${entityName}IdReq
-     */
-    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
-    public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req) {
-        return delete(req);
-    }
-
-    /**
-     * 删除
-     * @param req ${entityName}IdReq
-     */
-    @DeleteMapping({""})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
-    public ApiResp<Integer> delete(@NotNull ${entityName}IdReq req) {
-        return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
-    }
- 
-     /**
-     * 批量删除
-     * @param req Delete${entityName}Req
-     */
-    @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
-    public ApiResp<Integer> batchDelete2(@RequestBody Delete${entityName}Req req) {
-        return batchDelete(req);
-    }
-
-    /**
      * 批量删除
      * @param req Delete${entityName}Req
      */
@@ -192,6 +187,16 @@ public class ${className} extends BaseController{
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
+    }
+
+     /**
+     * 批量删除2
+     * @param req @RequestBody Delete${entityName}Req
+     */
+    @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> batchDelete2(@RequestBody Delete${entityName}Req req) {
+        return batchDelete(req);
     }
 
     /**

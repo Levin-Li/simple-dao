@@ -105,11 +105,12 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 </#list>
 
 <#if pkField?exists>
+    <#-- 构造函数-->
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 </#if>
-
+    <#-- 查询前的动作 -->
     @PostConstruct
     public void preQuery() {
         //@todo 查询之前初始化数据
