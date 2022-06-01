@@ -112,6 +112,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected transient MiniDao dao;
 
+    protected boolean disableEmptyValueFilter = false;
 
     /**
      * 别名缓存
@@ -556,8 +557,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         Op op = getOp(annotation);
 
+        //如果没有操作，或是操作不需要参数，或是禁止空值过滤，或是参数非空，都加入条件表达式
         if (op == null
                 || !op.isNeedParamExpr()
+                || disableEmptyValueFilter
                 || !isNullOrEmptyTxt(value)) {
 
             processWhereCondition(null, null, expr, value, null, annotation);
@@ -567,6 +570,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 logger.debug("注解 " + name + " 对应的 参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, " -> "));
             }
         }
+
+        return (CB) this;
+    }
+
+    @Override
+    public CB disableEmptyValueFilter() {
+
+        this.disableEmptyValueFilter = true;
 
         return (CB) this;
     }

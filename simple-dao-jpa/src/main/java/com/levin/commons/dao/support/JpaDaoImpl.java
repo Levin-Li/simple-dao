@@ -929,6 +929,7 @@ public class JpaDaoImpl
     private <ID> ID findIdByUniqueField(Class<?> entityClass, Object queryObj, UniqueField uniqueField) {
 
         SelectDao<?> selectDao = selectFrom(entityClass)
+                .disableEmptyValueFilter()
                 .select(getEntityIdAttrName(entityClass));
 
 //        String idAttrName = getEntityIdAttrName(entityClass);
@@ -939,7 +940,16 @@ public class JpaDaoImpl
 //        }
 
         for (Field field : uniqueField.fieldList) {
-            selectDao.isNullOrEq(field.getName(), ObjectUtil.getValue(queryObj, field.getName(), true));
+
+            String fieldName = field.getName();
+
+            Object value = ObjectUtil.getValue(queryObj, fieldName, true);
+
+            if (value == null) {
+                selectDao.isNull(fieldName);
+            } else {
+                selectDao.eq(fieldName, value);
+            }
         }
 
         //只查ID

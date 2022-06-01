@@ -10,6 +10,17 @@ package com.levin.commons.dao;
 public interface SimpleConditionBuilder<T> {
 
     /**
+     * 禁用空值过滤
+     * <p>
+     * 默认的情况下，当参数值null或空字符串时，条件不会被加入
+     * <p>
+     * 禁用后可以强制加入条件
+     *
+     * @return
+     */
+    T disableEmptyValueFilter();
+
+    /**
      * is null
      *
      * @param entityAttrName 如 name
@@ -34,7 +45,6 @@ public interface SimpleConditionBuilder<T> {
      * @return
      */
     T isNullOrEq(String entityAttrName, Object paramValue);
-
 
     /**
      * =
@@ -158,6 +168,5 @@ public interface SimpleConditionBuilder<T> {
      * @return
      */
     T endsWith(String entityAttrName, String keyword);
-
 
 }

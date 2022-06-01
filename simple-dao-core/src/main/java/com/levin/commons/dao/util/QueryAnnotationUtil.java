@@ -557,14 +557,14 @@ public abstract class QueryAnnotationUtil {
         try {
             op = (Op) ReflectionUtils.findMethod(opAnno.annotationType(), E_C.op).invoke(opAnno);
         } catch (Exception e) {
+
         }
 
         if (op == null) {
-
             op = Stream.of(Op.values())
                     .filter(o -> o.name().contentEquals(opAnno.annotationType().getSimpleName()))
                     .findFirst()
-                    .orElse(null);
+                    .get();
         }
 
         return op;
