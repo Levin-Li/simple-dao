@@ -145,10 +145,8 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
-
     @Resource
     private EntityManagerFactory entityManagerFactory;
-
 
     @Resource
     private EntityManager defaultEntityManager;
@@ -208,8 +206,12 @@ public class JpaDaoImpl
         }
 
         UniqueField finish() {
+
+            fieldList.forEach(field -> field.setAccessible(true));
+
             key = fieldList.stream().map(Field::getName).collect(Collectors.joining(","));
             title = fieldList.stream().map(JpaDaoImpl::getDesc).collect(Collectors.joining("+"));
+
             return this;
         }
 
@@ -986,9 +988,9 @@ public class JpaDaoImpl
                         //唯一约束的列名必须和字段名相同
                         for (String column : constraint.columnNames()) {
                             try {
-                                uniqueField.addField(entityClass.getField(column));
+                                uniqueField.addField(entityClass.getDeclaredField(column));
                             } catch (NoSuchFieldException e) {
-                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames 中必须填入类的字段名而不是列名", e);
+                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames 中必须填入类的字段名而不是数据库的字段名", e);
                             }
                         }
                         if (!uniqueField.fieldList.isEmpty()) {
