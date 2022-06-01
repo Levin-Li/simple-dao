@@ -984,13 +984,13 @@ public class JpaDaoImpl
                 .ifPresent(uniqueConstraints -> {
                     for (UniqueConstraint constraint : uniqueConstraints) {
                         UniqueField uniqueField = new UniqueField();
-
                         //唯一约束的列名必须和字段名相同
                         for (String column : constraint.columnNames()) {
                             try {
-                                uniqueField.addField(entityClass.getDeclaredField(column));
+                                uniqueField.addField(getRequireField(entityClass, column));
                             } catch (NoSuchFieldException e) {
-                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames 中必须填入类的字段名而不是数据库的字段名", e);
+                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames{"
+                                        + column + "} 中必须填入类的字段名而不是数据库的字段名", e);
                             }
                         }
                         if (!uniqueField.fieldList.isEmpty()) {
@@ -1003,6 +1003,22 @@ public class JpaDaoImpl
         uniqueFields.forEach(UniqueField::finish);
 
         return uniqueFields;
+    }
+
+    /**
+     * 获取字段
+     *
+     * @param entityClass
+     * @param fieldNames
+     * @return
+     * @throws NoSuchFieldException
+     */
+    private static Field getRequireField(Class<?> entityClass, String... fieldNames) throws NoSuchFieldException {
+        return getFieldsFromCache(entityClass)
+                .stream()
+                .filter(field -> Arrays.stream(fieldNames).anyMatch(n -> field.getName().equals(n)))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchFieldException("" + Arrays.asList(fieldNames)));
     }
 
     /**
