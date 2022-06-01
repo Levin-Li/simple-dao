@@ -939,7 +939,7 @@ public class JpaDaoImpl
 //        }
 
         for (Field field : uniqueField.fieldList) {
-            selectDao.isNullOrEq(field.getName(), field.get(queryObj));
+            selectDao.isNullOrEq(field.getName(), ObjectUtil.getValue(queryObj, field.getName(), true));
         }
 
         //只查ID
