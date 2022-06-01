@@ -19,6 +19,12 @@ import java.lang.annotation.*;
 public @interface Unique {
 
     /**
+     * 字段名
+     * 默认为被注解字段
+     */
+    String value() default "";
+
+    /**
      * 分组
      */
     String group() default "";

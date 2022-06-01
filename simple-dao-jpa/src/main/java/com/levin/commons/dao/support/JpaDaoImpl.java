@@ -968,6 +968,16 @@ public class JpaDaoImpl
 
                     Unique unique = field.getAnnotation(Unique.class);
 
+                    //如果字段
+                    if (StringUtils.hasText(unique.value())) {
+                        try {
+                            field = getRequireField(entityClass, unique.value().trim());
+                        } catch (NoSuchFieldException e) {
+                            throw new RuntimeException(entityClass + field.getName() + "字段上的注解 Unique(value ="
+                                    + unique.value() + ") 指定的字段不存在", e);
+                        }
+                    }
+
                     if (StringUtils.hasText(unique.group())) {
 
                         UniqueField uniqueField = tmp.get(unique.group());
