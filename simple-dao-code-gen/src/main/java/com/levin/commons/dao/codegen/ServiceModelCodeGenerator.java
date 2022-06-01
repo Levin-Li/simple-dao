@@ -858,7 +858,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
-        params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().get());
+        params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
 
         params.put("classModel", new ClassModel().setEntityType(entityClass));
 

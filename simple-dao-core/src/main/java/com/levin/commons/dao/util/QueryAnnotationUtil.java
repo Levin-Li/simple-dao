@@ -564,7 +564,7 @@ public abstract class QueryAnnotationUtil {
             op = Stream.of(Op.values())
                     .filter(o -> o.name().contentEquals(opAnno.annotationType().getSimpleName()))
                     .findFirst()
-                    .get();
+                    .orElse(null);
         }
 
         return op;

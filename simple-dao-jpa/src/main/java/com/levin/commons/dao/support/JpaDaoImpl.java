@@ -852,17 +852,15 @@ public class JpaDaoImpl
         return fieldOrMethod;
     }
 
-    static String getFirst(String... texts) {
-        return Arrays.asList(texts)
-                .stream()
+    static Optional<String> findFirst(String... texts) {
+        return Arrays.stream(texts)
                 .filter(StringUtils::hasText)
-                .findFirst()
-                .get();
+                .findFirst();
     }
 
     static String getDesc(Field field) {
         return Optional.ofNullable(field.getAnnotation(Schema.class))
-                .map(schema -> getFirst(schema.title(), schema.description()))
+                .map(schema -> findFirst(schema.title(), schema.description()).orElse(field.getName()))
                 .orElse(field.getName());
     }
 
