@@ -117,7 +117,7 @@
         @Service
         public class ExamStatService {
         
-         @Autowired
+         @Resource
          SimpleDao dao; //通用 Dao
          
          public List<ExamStatDto> stat(ExamStatDto statDto){
@@ -133,7 +133,7 @@
      @RestController
      public class ExamStatController{
      
-        @Autowired
+        @Resource
         ExamStatService examStatService;
         
         @GetMapping("/exam_stat")
@@ -222,8 +222,7 @@
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-1.png)
    
-   插件将会生成一个示例模块，生成成功后，请刷新项目。
-   
+   插件将会生成一个示例模块，生成成功后，请刷新项目。 
      
 ##### 2.1.3 编译实体模块
 
@@ -252,7 +251,6 @@
    So Easy!  
         
         
-
 ### 3 用户手册
      
    其它请查看 [用户手册](./manual.md) 

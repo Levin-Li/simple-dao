@@ -18,8 +18,6 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.utils.MapUtils;
-import com.querydsl.jpa.JPQLQueryFactory;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +40,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
@@ -73,10 +70,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
 //    @DynamicInsert和@DynamicUpdate
 
-    @PersistenceUnit
+    @Resource
     private EntityManagerFactory entityManagerFactory;
 
-    @PersistenceContext
+    @Resource
     private EntityManager defaultEntityManager;
 
     @Resource
@@ -138,21 +135,20 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
         return new JpaDaoImpl();
     }
 
-    @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JPQLQueryFactory.class)
-    JPQLQueryFactory newJPQLQueryFactory() {
-        if (defaultEntityManager != null) {
-            return new JPAQueryFactory(defaultEntityManager);
-        } else {
-            return new JPAQueryFactory(new Provider<EntityManager>() {
-                @Override
-                public EntityManager get() {
-                    return entityManagerFactory.createEntityManager();
-                }
-            });
-        }
-    }
-
+//    @Bean
+//    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JPQLQueryFactory.class)
+//    JPQLQueryFactory newJPQLQueryFactory() {
+//        if (defaultEntityManager != null) {
+//            return new JPAQueryFactory(defaultEntityManager);
+//        } else {
+//            return new JPAQueryFactory(new Provider<EntityManager>() {
+//                @Override
+//                public EntityManager get() {
+//                    return entityManagerFactory.createEntityManager();
+//                }
+//            });
+//        }
+//    }
 
     ApplicationContext context;
 

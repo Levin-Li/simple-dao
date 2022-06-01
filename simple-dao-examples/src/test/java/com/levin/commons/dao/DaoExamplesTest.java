@@ -24,6 +24,7 @@ import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -305,7 +306,7 @@ public class DaoExamplesTest {
         }
 
 
-        List<String> names = dao.selectFrom(Group.class).select(E_Group.name).in(E_Group.id,Arrays.asList(1L,2L,3,4,5)).find();
+        List<String> names = dao.selectFrom(Group.class).select(E_Group.name).in(E_Group.id, Arrays.asList(1L, 2L, 3, 4, 5)).find();
 
 
         System.out.println(names);
@@ -338,6 +339,33 @@ public class DaoExamplesTest {
 
     }
 
+    @SneakyThrows
+    @Test
+    public void testUniqueTestObj() {
+
+        try {
+            dao.create(new UniqueTestObj());
+            throw new Throwable("未能正确抛出创建异常");
+        } catch (Exception e) {
+        }
+
+        String uuid = UUID.randomUUID().toString();
+
+        dao.create(new UniqueTestObj()
+                .setUuid(uuid)
+                .setUuid2(uuid)
+        );
+
+        try {
+            dao.create(new UniqueTestObj()
+                    .setUuid(uuid)
+                    .setUuid2(uuid)
+            );
+            throw new Throwable("未能正确抛出创建异常");
+        } catch (Exception e) {
+
+        }
+    }
 
     @Test
     public void testDtoInject() {
@@ -390,11 +418,10 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testFieldConvert(){
+    public void testFieldConvert() {
 
 
         User user = dao.find(User.class, 1L);
-
 
 
         UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class);

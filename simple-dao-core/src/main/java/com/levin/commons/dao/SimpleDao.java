@@ -1,11 +1,14 @@
 package com.levin.commons.dao;
 
 import com.levin.commons.dao.support.PagingData;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
@@ -130,7 +133,15 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     String getEntityIdAttrName(Object entity);
 
-
+    /**
+     * 通过查询对象查询唯一约束的对象ID
+     *
+     * @param queryObj
+     * @param entityClass
+     * @param <ID>
+     * @return
+     */
+    <ID> ID findUniqueEntityId(@NotNull Object queryObj, @Nullable Class<?> entityClass, BiConsumer<ID, String> onFind);
     /////////////////////////////////////////////////////////////////
 
     /**

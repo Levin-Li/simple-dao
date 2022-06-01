@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.util.List;
 
@@ -25,9 +26,8 @@ import java.util.List;
 //@ConditionalOnBean(DataSource.class)
 public class JdbcMiniDao implements MiniDao {
 
-    @Autowired
+    @Resource
     DataSource dataSource;
-
 
     @Autowired(required = false)
     JdbcOperations jdbcOperations;

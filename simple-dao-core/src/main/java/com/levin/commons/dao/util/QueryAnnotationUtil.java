@@ -34,6 +34,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -771,8 +772,10 @@ public abstract class QueryAnnotationUtil {
         return hasAnno;
     }
 
-    public static List<Field> getNonStaticFields(Class type) {
-        return tryGetFieldsFromCache(type, Modifier.STATIC);
+    public static List<Field> getNonStaticFields(Class<?> type) {
+        return getFieldsFromCache(type).stream()
+                .filter(field -> (field.getModifiers() & Modifier.STATIC) == 0)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -783,7 +786,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static List<Field> tryGetFieldsFromCache(Class type, int excludeModifiers) {
+    public static List<Field> getFieldsFromCache(Class<?> type) {
 
 //        if (type == null) {
 //            return Collections.emptyList();
@@ -793,7 +796,7 @@ public abstract class QueryAnnotationUtil {
 
         if (fields == null) {
 
-            fields = getFields(type, excludeModifiers);
+            fields = getAllFields(type);
 
             //放入不可变的列表
             cacheFields.put(type.getName(), Collections.unmodifiableList(fields));
@@ -809,7 +812,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    static synchronized List<Field> getFields(Class type, int excludeModifiers) {
+    static synchronized List<Field> getAllFields(Class<?> type) {
 
         if (type == null
                 || isRootObjectType(type)
@@ -818,27 +821,25 @@ public abstract class QueryAnnotationUtil {
                 || isIgnore(type)) {
 
             return Collections.emptyList();
-
         }
 
         List<Field> fields = new ArrayList<>(16);
 
         //先加入父类的字段
-        Class superclass = type.getSuperclass();
+        Class<?> superclass = type.getSuperclass();
 
         if (superclass != null) {
-            fields.addAll(tryGetFieldsFromCache(superclass, excludeModifiers));
+            fields.addAll(getFieldsFromCache(superclass));
         }
 
         for (Field field : type.getDeclaredFields()) {
             //如果不是被过滤的类型
-            if ((field.getModifiers() & excludeModifiers) == 0) {
-                fields.add(field);
-            }
+//            if ((field.getModifiers() & excludeModifiers) == 0) {
+            fields.add(field);
+//            }
         }
 
         return fields;
-
     }
 
 
@@ -975,7 +976,7 @@ public abstract class QueryAnnotationUtil {
 
     public static boolean isRootObjectType(Type type) {
         return (type instanceof Class)
-                && (Object.class == type || Object.class.getName().equals(((Class) type).getName()));
+                && (Object.class == type || Object.class.getName().equals(type.getTypeName()));
     }
 
     /**
@@ -1019,11 +1020,11 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean isPrimitive(Class type) {
+    public static boolean isPrimitive(Class<?> type) {
         return BeanUtils.isSimpleProperty(type);
     }
 
-    public static boolean isIgnore(Class clazz) {
+    public static boolean isIgnore(Class<?> clazz) {
         return clazz.isAnnotationPresent(Ignore.class);
     }
 

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcOperations;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
@@ -17,16 +18,16 @@ import javax.persistence.PersistenceUnit;
 @Slf4j
 public class JpaDaoExConfiguration {
 
-    @PersistenceUnit
+    @Resource
     private EntityManagerFactory entityManagerFactory;
 
-    @Autowired
+    @Resource
     ApplicationContext applicationContext;
 
-    @Autowired
+    @Resource
     JdbcOperations jdbcOperations;
 
-    @Autowired
+    @Resource
     MiniDao miniDao;
 
     @PostConstruct

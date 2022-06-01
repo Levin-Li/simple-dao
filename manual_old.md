@@ -558,7 +558,7 @@
 
 抽象DAO定义好后，直接在需要的服务类中直接通过Spring注入
 
-    @Autowired
+    @Resource
     GroupDao groupDao;
 
     //使用Dao

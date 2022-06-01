@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -35,7 +36,7 @@ public class RepositoryFactoryBean<T>
 
     private static String PROMPT = "需要在方法上显式声明注解，如：@QueryRequest";
 
-    @Autowired
+    @Resource
     private MiniDao jpaDao;
 
 

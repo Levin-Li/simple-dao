@@ -29,7 +29,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
     @Resource
     ApplicationContext context;
 
-    @Autowired
+    @Resource
     SimpleDao simpleDao;
 
     private PluginManager pluginManager;

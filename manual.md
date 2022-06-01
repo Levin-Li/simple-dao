@@ -57,7 +57,7 @@ Dao 类逻辑框图，如下图所示。
 
    使用示例：
 
-      @Autowired
+      @Resource
       SimpleDao dao;
 
       SelectDao selectDao = dao.selectFrom("t_table_name","alias");
@@ -130,7 +130,7 @@ Dao 类逻辑框图，如下图所示。
           @InjectVar(converter = DefaultJsonConverter.class)
           String actions;
           
-
+          
 #### 4.1 列选择和列更新
 
 ##### 4.1.1 列选择
@@ -450,8 +450,7 @@ Dao 类逻辑框图，如下图所示。
   
       SQL查询参数匹配样式：${:paramName}  如下: 
        
-          t.score +  ${:val}    替换后的语句 -->     t.score +  :?
-          
+          t.score +  ${:val}    替换后的语句 -->     t.score +  :?          
       
       文本替换样式：${paramName}   如下：
       
