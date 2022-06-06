@@ -58,7 +58,7 @@ public @interface OrderBy {
     /**
      * 排序优先级
      * <p/>
-     * 按数值从大到小排序
+     * 升序排序，按数值从小到大排序
      * <p/>
      *
      * @return

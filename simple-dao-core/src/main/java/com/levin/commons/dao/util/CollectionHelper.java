@@ -23,6 +23,8 @@ public abstract class CollectionHelper {
 
 
     /**
+     * 集合数据toString 工具类
+     *
      * @param dataSet
      * @param buf
      * @param delimiter

@@ -985,7 +985,7 @@ public class SelectDaoImpl<T>
         if (!isCountQueryResult) {
             //以下代理是处理排序语句
             if (orderByColumns.length() > 0) {
-                //排序
+                //按升序排序，从小到大
                 Collections.sort(orderByColumns.getList());
                 builder.append(" Order By  " + orderByColumns);
             } else if (defaultOrderByStatement.length() > 0) {
@@ -1565,11 +1565,9 @@ public class SelectDaoImpl<T>
             this.type = type;
         }
 
-        //按从小到大排序
         @Override
         public int compareTo(OrderByObj o) {
-            //按从小到大排序
-            return o.order - order;
+            return order - o.order;
         }
 
         @Override
