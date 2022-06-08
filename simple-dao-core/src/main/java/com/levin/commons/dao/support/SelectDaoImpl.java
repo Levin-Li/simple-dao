@@ -544,7 +544,6 @@ public class SelectDaoImpl<T>
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-
         //处理SelectColumn注解
         processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
 
@@ -577,18 +576,14 @@ public class SelectDaoImpl<T>
 
             OrderBy orderBy = (OrderBy) opAnnotation;
 
-            String domain = evalTextByThreadLocal(orderBy.domain());
-
-            addOrderBy(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type());
+            appendOrderBy(bean, name, value, null, null, orderBy);
 
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
 
             SimpleOrderBy simpleOrderBy = (SimpleOrderBy) opAnnotation;
 
             if (StringUtils.hasText(simpleOrderBy.expr())) {
-
                 addOrderBy(simpleOrderBy.order(), evalExpr(bean, value, name, simpleOrderBy.expr(), null), null);
-
             } else if (value instanceof String) {
                 addOrderBy(simpleOrderBy.order(), (String) value, null);
             } else if (value instanceof String[]) {
@@ -847,9 +842,11 @@ public class SelectDaoImpl<T>
 
     }
 
-    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, final String oldExpr, final String newAlias, OrderBy... orderByList) {
+    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, String oldExpr, final String newAlias, OrderBy... orderByList) {
 
         if (orderByList != null) {
+
+            List<Map<String, ?>> fieldCtxs = this.buildContextValues(root, value, name);
 
             for (int i = 0; i < orderByList.length; i++) {
 
@@ -860,9 +857,21 @@ public class SelectDaoImpl<T>
                     continue;
                 }
 
+                //如果没有表达式，默认为名称
+                String domain = evalTextByThreadLocal(orderBy.domain());
+
+                if (!StringUtils.hasText(oldExpr)) {
+                    oldExpr = aroundColumnPrefix(domain, name);
+                }
+
                 String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
-                expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalTextByThreadLocal(orderBy.domain()), orderBy.value()) : expr;
+                expr = hasText(orderBy.value()) ? aroundColumnPrefix(domain, orderBy.value()) : expr;
+
+                //再对case进行求职
+                if (orderBy.cases() != null && orderBy.cases().length > 0) {
+                    expr = ExprUtils.genCaseExpr(domain, this::aroundColumnPrefix, tmpExpr -> evalTrueExpr(root, value, name, tmpExpr, fieldCtxs), expr, orderBy.cases());
+                }
 
                 if (hasText(expr)) {
                     addOrderBy(orderBy.order(), expr, orderBy.type());

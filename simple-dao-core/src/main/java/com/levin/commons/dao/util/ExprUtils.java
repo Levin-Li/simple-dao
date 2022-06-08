@@ -15,6 +15,7 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -521,12 +522,16 @@ public abstract class ExprUtils {
      * ELSE '其他'
      * END
      *
+     *
      * @param domain
+     * @param aroundColumnPrefixFunc 字段处理函数
+     * @param conditionEvalFunc 条件处理
      * @param expr
      * @param cases
      * @return
      */
-    public static String genCaseExpr(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+    public static String genCaseExpr(String domain, @Nullable BiFunction<String, String, String> aroundColumnPrefixFunc,
+                                     @NotNull Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
 
         return Stream.of(cases)
                 //过滤条件匹配的 case

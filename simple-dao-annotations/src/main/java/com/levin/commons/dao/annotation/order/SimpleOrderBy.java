@@ -1,5 +1,7 @@
 package com.levin.commons.dao.annotation.order;
 
+import com.levin.commons.dao.annotation.misc.Case;
+
 import java.lang.annotation.*;
 
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
@@ -31,7 +33,7 @@ public @interface SimpleOrderBy {
 
     /**
      * 排序语句表达式
-     * SPEL 表达式
+     * 默认 SPEL 表达式
      *
      * @return
      */
@@ -62,4 +64,5 @@ public @interface SimpleOrderBy {
      * @return
      */
     String remark() default "";
+
 }

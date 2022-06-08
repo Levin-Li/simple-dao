@@ -1,5 +1,7 @@
 package com.levin.commons.dao.annotation.order;
 
+import com.levin.commons.dao.annotation.misc.Case;
+
 import java.lang.annotation.*;
 
 @Repeatable(OrderBy.List.class)
@@ -31,6 +33,13 @@ public @interface OrderBy {
      */
     String value() default "";
 
+
+    /**
+     * case 支持
+     *
+     * @return
+     */
+    Case[] cases() default {};
 
     /**
      * 字段归属的域，通常是表的别名
