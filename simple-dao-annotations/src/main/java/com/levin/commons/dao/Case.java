@@ -99,13 +99,12 @@ public class Case implements Serializable {
 
     }
 
-
     private static String nullSafe(String value) {
-        return hasTxt(value) ? "" : value;
+        return hasTxt(value) ? value : "";
     }
 
     private static boolean hasTxt(String value) {
-        return value == null || value.trim().length() == 0;
+        return value != null && value.trim().length() > 0;
     }
 
 }
