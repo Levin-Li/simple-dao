@@ -80,12 +80,22 @@ public class Case implements Serializable {
 
     @Override
     public String toString() {
+        return toString(null, null);
+    }
+
+    /**
+     * @param prefix
+     * @param suffix
+     * @return
+     */
+    public String toString(String prefix, String suffix) {
 
         StringBuilder ql = new StringBuilder();
 
-        ql.append(" CASE ");
-
-        ql.append(nullSafe(column));
+        ql.append(" ")
+                .append(nullSafe(prefix))
+                .append(" CASE ")
+                .append(nullSafe(column));
 
         whenList.forEach((k, v) -> ql.append(" WHEN ").append(k).append(" THEN ").append(v));
 
@@ -93,7 +103,9 @@ public class Case implements Serializable {
             ql.append(" ELSE ").append(elseExpr);
         }
 
-        ql.append(" END ");
+        ql.append(" END ")
+                .append(nullSafe(suffix))
+                .append(" ");
 
         return ql.toString();
 
