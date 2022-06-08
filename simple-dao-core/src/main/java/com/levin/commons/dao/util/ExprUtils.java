@@ -698,7 +698,7 @@ public abstract class ExprUtils {
         }
 
         //替换普通变量
-        final String oldTxt = txt;
+        // final String oldTxt = txt;
 
         txt = replace(groovyVarStylePattern, txt, key -> {
 
