@@ -206,9 +206,10 @@ public class ${className} extends BaseService implements ${serviceName} {
      * @param req
      * @return record count
      */
+    @Override
     @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
-    int count(@NotNull Query${entityName}Req req){
-        return simpleDao.countByQueryObj(req);
+    public int count(@NotNull Query${entityName}Req req){
+        return (int) simpleDao.countByQueryObj(req);
     }
 
     @Override
