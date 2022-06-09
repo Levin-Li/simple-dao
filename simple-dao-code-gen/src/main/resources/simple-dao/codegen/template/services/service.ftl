@@ -116,6 +116,7 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
 
+                        
     /**
      * 简单统计
      *
@@ -125,6 +126,15 @@ public interface ${className} {
      */
     @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
     PagingData<Stat${entityName}Req.Result> stat(@NotNull Stat${entityName}Req req, Paging paging);
+
+    /**
+     * 统计记录数
+     *
+     * @param req
+     * @return record count
+     */
+    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    int count(@NotNull Query${entityName}Req req);
 
     /**
      * 查询并返回第一条数据

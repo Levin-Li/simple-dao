@@ -567,7 +567,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("注解 " + name + " 对应的 参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, " -> "));
+                logger.debug("注解 " + name + " 对应的参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, " -> "));
             }
         }
 
