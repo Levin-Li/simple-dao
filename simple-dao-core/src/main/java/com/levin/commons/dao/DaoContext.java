@@ -101,7 +101,7 @@ public abstract class DaoContext {
      * @return
      */
     public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
-        return getVariableInjector().getInjectValue(targetBean, Arrays.asList(VariableInjector.newDefaultResolver().addBeanContexts(() -> contexts)), field);
+        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(contexts));
     }
 
     /**
