@@ -19,7 +19,7 @@
 
         <revision>2.3.3-SNAPSHOT</revision>
 
-        <levin.service-support.version>1.1.23-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
 <!--        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>-->
