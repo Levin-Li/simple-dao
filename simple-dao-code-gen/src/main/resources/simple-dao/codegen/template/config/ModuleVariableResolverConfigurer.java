@@ -55,23 +55,22 @@ public class ModuleVariableResolverConfigurer
 
         //全局动态变量，每次请求都会执行
 
-        vrm.add(VariableInjector.newDefaultResolver().addMapContexts(this::getGlobalContextVars));
+        vrm.add(VariableInjector.newResolverByMap(this::getGlobalContextVars));
 
     }
-
 
     /**
      * 全局的环境变量
      *
      * @return
      */
-    protected Map<String, ?> getGlobalContextVars() {
+    protected List<Map<String, ?>> getGlobalContextVars() {
 
         //每次请求都会获取的变量
 
         //@todo 增加全局的动态变量
 
-        return Collections.emptyMap();
+        return Collections.emptyList();
     }
 
     /**
@@ -83,18 +82,18 @@ public class ModuleVariableResolverConfigurer
     @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
     @Order(2)
     VariableResolver defaultModuleVariableResolver() {
-        return VariableInjector.newDefaultResolver().addMapContexts(this::getModuleContextVars);
+        return VariableInjector.newResolverByMap(this::getModuleContextVars);
     }
 
     /**
      * 模块级别的环境变量，仅对本模块生效
      */
-    protected Map<String, ?> getModuleContextVars() {
+    protected List<Map<String, ?>> getModuleContextVars() {
 
         //每次请求都会获取的变量
         //@todo 增加本模块的动态变量
 
-        return Collections.emptyMap();
+        return Collections.emptyList();
     }
 
 }
