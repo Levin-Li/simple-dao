@@ -37,6 +37,7 @@ public class ModuleVariableResolverConfigurer
         log.info("init...");
     }
 
+
     /**
      * 配置全局的变量
      *
@@ -54,7 +55,8 @@ public class ModuleVariableResolverConfigurer
 
         //全局动态变量，每次请求都会执行
 
-        vrm.add(VariableInjector.newSupportSpelAndGroovyResolvers(this::getGlobalContextVars));
+        vrm.add(VariableInjector.newDefaultResolver().addMapContexts(getGlobalContextVars()));
+
     }
 
 
@@ -63,15 +65,13 @@ public class ModuleVariableResolverConfigurer
      *
      * @return
      */
-    protected List<Map<String, ?>> getGlobalContextVars() {
+    protected Map<String, ?> getGlobalContextVars() {
 
         //每次请求都会获取的变量
 
         //@todo 增加全局的动态变量
 
-        //return Arrays.asList(MapUtils.putFirst(InjectConsts.ORG_ID, "123456789").build());
-
-        return Collections.emptyList();
+        return Collections.emptyMap();
     }
 
     /**
@@ -79,27 +79,21 @@ public class ModuleVariableResolverConfigurer
      *
      * @return VariableResolver
      */
-    @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolverList")
+    @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
     @Order(2)
-    List<VariableResolver> defaultModuleVariableResolver() {
-        return VariableInjector.newSupportSpelAndGroovyResolvers(this::getModuleContextVars);
+    VariableResolver defaultModuleVariableResolver() {
+        return VariableInjector.newDefaultResolver().addMapContexts(getModuleContextVars());
     }
 
     /**
      * 模块级别的环境变量，仅对本模块生效
-     *
-     * @return vars
-     * @see ${modulePackageName}.aspect.ModuleWebControllerAspect#injectVar
      */
-    protected List<Map<String, ?>> getModuleContextVars() {
+    protected Map<String, ?> getModuleContextVars() {
 
         //每次请求都会获取的变量
-        //return Arrays.asList(MapUtils.putFirst(InjectConsts.ORG_ID, "123456789").build());
-
         //@todo 增加本模块的动态变量
 
-        // 使用注入服务
-        //  return injectVarService.getInjectVars();
-        return Collections.emptyList();
+        return Collections.emptyMap();
     }
+
 }
