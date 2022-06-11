@@ -76,6 +76,7 @@ public class ModuleVariableResolverConfigurer
 
     /**
      * 模块级别请求变量解析器
+     * 模块前缀 PLUGIN_PREFIX 会被识别为模块级别的变量解析器
      *
      * @return VariableResolver
      */
