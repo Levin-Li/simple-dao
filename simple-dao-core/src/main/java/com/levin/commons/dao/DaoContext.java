@@ -88,9 +88,7 @@ public abstract class DaoContext {
             return Collections.emptyList();
         }
 
-        List<?> contexts = getContexts(varSourceBeans);
-
-        return getVariableInjector().inject(targetBean, contexts);
+        return getVariableInjector().inject(targetBean, getContexts(varSourceBeans));
     }
 
     /**
@@ -101,7 +99,7 @@ public abstract class DaoContext {
      * @return
      */
     public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
-        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(contexts));
+        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> contexts));
     }
 
     /**

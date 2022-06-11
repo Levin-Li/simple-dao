@@ -55,7 +55,7 @@ public class ModuleVariableResolverConfigurer
 
         //全局动态变量，每次请求都会执行
 
-        vrm.add(VariableInjector.newDefaultResolver().addMapContexts(getGlobalContextVars()));
+        vrm.add(VariableInjector.newDefaultResolver().addMapContexts(this::getGlobalContextVars));
 
     }
 
@@ -83,7 +83,7 @@ public class ModuleVariableResolverConfigurer
     @Bean(PLUGIN_PREFIX + "DefaultModuleVariableResolver")
     @Order(2)
     VariableResolver defaultModuleVariableResolver() {
-        return VariableInjector.newDefaultResolver().addMapContexts(getModuleContextVars());
+        return VariableInjector.newDefaultResolver().addMapContexts(this::getModuleContextVars);
     }
 
     /**
