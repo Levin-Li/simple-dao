@@ -22,9 +22,12 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
     private static final long serialVersionUID = -123456789L;
 
-    @Schema(description = "父ID")
-    @Column(length = 128)
-    protected ID parentId;
+    //由子类去定义
+//    @Schema(description = "父ID")
+//    @Column(length = 128)
+//    protected ID parentId;
+
+    public abstract AbstractTreeObject<ID, T> setParentId(ID parentId);
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,7 +48,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     }
 
     protected AbstractTreeObject(ID parentId, String name) {
-        this.parentId = parentId;
+        setParentId(parentId);
         this.name = name;
     }
 
@@ -53,7 +56,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
         if (parent == null) {
             this.parent = null;
-            this.parentId = null;
+            setParentId(null);
         } else {
 
             if (this.equals(parent)) {
@@ -61,7 +64,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
             }
 
             this.parent = parent;
-            this.parentId = parent.getId();
+            setParentId(parent.getId());
         }
     }
 

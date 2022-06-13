@@ -4,6 +4,7 @@ import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.domain.DeletableObject;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -29,6 +30,10 @@ public class TestEntity
     @Id
     @GeneratedValue
     private Long id;
+
+    @Schema(description = "父ID")
+    @Column(length = 128)
+    protected Long parentId;
 
     @Desc("删除状态")
     @Column(nullable = false)
