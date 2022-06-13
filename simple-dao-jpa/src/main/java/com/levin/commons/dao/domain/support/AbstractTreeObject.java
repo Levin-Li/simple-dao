@@ -37,7 +37,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     //@Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 
-    @Schema(description = "id路径， 使用|包围，如|1|3|15|")
+    @Schema(title = "id路径", description = "id路径， 使用|包围，如|1|3|15|")
     @Column(length = 1800)
     protected String idPath;
 

@@ -33,7 +33,7 @@ public abstract class AbstractNamedEntityObject
     @Contains
     protected String name;
 
-    @Schema(description = "拼音，格式Json数组：[全拼,简拼]")
+    @Schema(title = "拼音名称",description = "拼音，格式Json数组：[全拼,简拼]")
     @Column(length = 128)
     @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false")
     protected String pinyinName;
