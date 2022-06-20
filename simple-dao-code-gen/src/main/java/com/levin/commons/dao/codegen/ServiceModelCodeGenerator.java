@@ -852,6 +852,7 @@ public final class ServiceModelCodeGenerator {
         params.put("packageName", packageName);
         params.put("className", genClassName);
 
+        params.put("title", desc);
         params.put("desc", desc);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
@@ -934,7 +935,12 @@ public final class ServiceModelCodeGenerator {
     }
 
 
+    private static String getFirst(String... values) {
+        return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
+    }
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
+
 
         Object obj = entityClass.newInstance();
 
@@ -1048,13 +1054,13 @@ public final class ServiceModelCodeGenerator {
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
                 fieldModel.setTitle(schema.title())
-                        .setDesc(schema.description())
+                        .setDesc(getFirst(schema.description(), schema.title(), field.getName()))
                         .setDescDetail(schema.title() + schema.description());
             } else if (field.isAnnotationPresent(Desc.class)) {
                 Desc desc = field.getAnnotation(Desc.class);
                 fieldModel.setDesc(desc.value());
                 fieldModel.setDescDetail(desc.detail());
-            }else {
+            } else {
                 fieldModel.setDesc(field.getName());
             }
 
