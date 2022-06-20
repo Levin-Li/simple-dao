@@ -40,6 +40,9 @@ public class Group
     @GeneratedValue
     Long id;
 
+    @Schema(description = "父ID")
+    Long parentId;
+
     @Schema(description = "类别")
     String category;
 
