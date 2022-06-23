@@ -1139,8 +1139,8 @@ Dao 类逻辑框图，如下图所示。
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.3.2.RELEASE</levin.simple-dao.version>
-             <levin.service-support.version>1.2.23.RELEASE</levin.service-support.version>
+             <levin.simple-dao.version>2.3.3-SNAPSHOT</levin.simple-dao.version>
+             <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
               
                <repositories>
            
