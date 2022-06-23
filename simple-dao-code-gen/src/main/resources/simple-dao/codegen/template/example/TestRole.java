@@ -30,12 +30,12 @@ import java.util.List;
                 @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
                 @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
                 @Index(columnList = E_AbstractNamedMultiTenantObject.name),
-                @Index(columnList = E_Role.code),
+                @Index(columnList = E_TestRole.code),
                 @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
         },
 
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_Role.code}),
+                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_TestRole.code}),
                 @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
         }
 )

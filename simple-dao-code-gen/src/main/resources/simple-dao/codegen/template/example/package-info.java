@@ -21,3 +21,8 @@
 @GenericGenerator(name = "table_gid", strategy = "org.hibernate.id.TableGenerator")
 package ${CLASS_PACKAGE_NAME};
 
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+
+
