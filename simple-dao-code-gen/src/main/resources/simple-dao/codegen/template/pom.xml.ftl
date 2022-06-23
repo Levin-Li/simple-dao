@@ -192,16 +192,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-jpa</artifactId>
-            </dependency>
-
-            <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-apt</artifactId>
-            </dependency>
-
-            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>
             </dependency>
@@ -252,12 +242,10 @@
                 <scope>test</scope>
             </dependency>
 
-        <#--
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
             </dependency>
-            -->
 
         </#if>
 
