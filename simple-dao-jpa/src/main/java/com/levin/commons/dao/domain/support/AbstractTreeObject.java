@@ -52,20 +52,34 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
         this.name = name;
     }
 
-    public void setParent(T parent) {
+    protected void autoCheckParentId() {
 
-        if (parent == null) {
-            this.parent = null;
-            setParentId(null);
-        } else {
+        //父ID不能是自己
+        if (this.equals(parent)) {
+            throw new IllegalArgumentException("parent is self");
+        }
 
-            if (this.equals(parent)) {
-                throw new IllegalArgumentException("parent is self");
-            }
-
-            this.parent = parent;
+        if (getParentId() == null && parent != null) {
             setParentId(parent.getId());
+        }
+
+        //父ID不能是自己
+        if (getParentId() != null && getParentId().equals(getId())) {
+            throw new IllegalArgumentException("parent id is self id");
         }
     }
 
+    @Override
+    @PrePersist
+    public void prePersist() {
+        super.prePersist();
+        autoCheckParentId();
+    }
+
+    @Override
+    @PreUpdate
+    public void preUpdate() {
+        super.preUpdate();
+        autoCheckParentId();
+    }
 }
