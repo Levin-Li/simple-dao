@@ -9,16 +9,16 @@ cd $shellDir
 
 shellDir=`pwd`
 
-appJars=`ls *.war`
+appJars=`ls *.jar`
 isFound=`echo $?`
 
 if [ "$isFound" != "0" ]; then
-  appJars=`ls *.jar`
+  appJars=`ls *.war`
   isFound=`echo $?`
 fi
 
 if [ "$isFound" != "0" ]; then
-   echo "***ERROR*** spring boot launch file(.war or .jar) not found."
+   echo "***ERROR*** Spring Boot App launch file(.war or .jar) not found."
    exit 1
 fi
 
@@ -62,7 +62,7 @@ if [ -z $pids ]; then
 
    #如果文件有内容
    if [ -n "${content}" ]; then
-       content="  -DPrintHookAgentLog=true -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism "
+       content=" -DPrintHookAgentLog=true -agentpath:third-libs/libHookAgent.${extName}=${tempFile} -XX:+DisableAttachMechanism "
    fi
 
    JAVA_CMD=`which ${JAVA_HOME}/bin/java`
@@ -76,24 +76,45 @@ if [ -z $pids ]; then
        echo "***Error*** java cmd not found"
    fi
 
-   globalAppLibs="${G_BOOT_APP_LIBS}"
+# 全局的公共库和第3方库
+   globalAppCommonLibs="${G_BOOT_APP_COMMON_LIBS}"
 
-   if [ -z "$globalAppLibs" ]; then
-       echo "***Info*** you can config shell env G_BOOT_APP_LIBS for app lib dir, the dir must be an absolute dir and split by comma."
-       globalAppLibs=""
+   if [ -z "${globalAppCommonLibs}" ]; then
+       echo "***Info*** you can config shell env G_BOOT_APP_COMMON_LIBS for app common lib dir, the dir must be an absolute dir and split by comma."
+       globalAppCommonLibs=""
    else
        #增加逗号
-       globalAppLibs=",${globalAppLibs}"
+       globalAppCommonLibs=",${globalAppCommonLibs}"
    fi
 
+   globalAppThirdLibs="${G_BOOT_APP_THIRD_LIBS}"
 
-   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${content} -Dloader.path=config,static,resources,biz-libs,third-libs${globalAppLibs} -jar ${appJars}"
+   #测试本地第三方
+   thirdLibs=`ls third-libs/*.jar`
+   testThirdLibs=`echo $?`
+
+
+   if [ -z "${globalAppThirdLibs}" ]; then
+       echo "***Info*** you can config shell env G_BOOT_APP_THIRD_LIBS for app third lib dir, the dir must be an absolute dir and split by comma."
+       globalAppThirdLibs=""
+   elif [ "${testThirdLibs}" = "0" -a "${thirdLibs}" != "" ]; then
+        echo "***Info*** use local third libs, ignore global third lib ${globalAppThirdLibs}."
+        globalAppThirdLibs=""
+   else
+       #增加逗号
+       globalAppThirdLibs=",${globalAppThirdLibs}"
+       echo "***Info*** use global third libs."
+   fi
+
+   #测试本应用的第3方库，是否存在
+
+   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${content} -Dloader.path=config,static,resources,biz-libs,common-libs${globalAppCommonLibs},third-libs${globalAppThirdLibs} -jar ${appJars}"
 
    echo "Startup cmd line：${START_CMD}"
 
    nohup ${START_CMD}  2>&1 &
 
-   sleep 5s
+   sleep 7
 
    #覆盖临时文件
    echo "#INVALID_PWD:#param:$$" > ${tempFile}
@@ -101,12 +122,23 @@ if [ -z $pids ]; then
    #删除临时文件
    rm -fr ${tempFile}
 
-   ps -ef | grep java | grep "$shellDir"
+   pids=`ps -ef | grep java | grep "$shellDir"`
+
+#  如果应用没有启动成功
+   if [ -z $pids ]; then
+     echo "***ERROR*** Spring Boot App [${appJars}] startup fail."
+     tail -n 20 nohup.out
+     exit 1
+   fi
+
+   echo "${pids}"
 
    #如果是人工交互，顺便查看启动过程
    if [ -n "${needParam}" ]; then
        #查看日志
-       tail -f *.out
+       tail -f nohup.out
+   else
+       tail -n 20 nohup.out
    fi
 
 else
