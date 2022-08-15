@@ -1,17 +1,31 @@
 <#noparse>#!/bin/bash
-
+#Author Lilw @2012
 execDir=`pwd`
 
+#sh文件所在目录
 shellDir=`dirname $0`
 
 cd $shellDir
 
 shellDir=`pwd`
 
-appJars=`ls *.jar`
+appJars=`ls *.war`
+isFound=`echo $?`
+
+if [ "$isFound" != "0" ]; then
+  appJars=`ls *.jar`
+  isFound=`echo $?`
+fi
+
+if [ "$isFound" != "0" ]; then
+   echo "***ERROR*** spring boot launch file(.war or .jar) not found."
+   exit 1
+fi
 
 mkdir -p "resources/public"
+mkdir -p "config"
 
+#读取进程标识
 tempFile=`date +%s`
 
 pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
@@ -62,7 +76,18 @@ if [ -z $pids ]; then
        echo "***Error*** java cmd not found"
    fi
 
-   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${content} -Dloader.path=resources,biz-libs,third-libs -jar ${appJars}"
+   globalAppLibs="${G_BOOT_APP_LIBS}"
+
+   if [ -z "$globalAppLibs" ]; then
+       echo "***Info*** you can config shell env G_BOOT_APP_LIBS for app lib dir, the dir must be an absolute dir and split by comma."
+       globalAppLibs=""
+   else
+       #增加逗号
+       globalAppLibs=",${globalAppLibs}"
+   fi
+
+
+   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${content} -Dloader.path=config,static,resources,biz-libs,third-libs${globalAppLibs} -jar ${appJars}"
 
    echo "Startup cmd line：${START_CMD}"
 
@@ -86,7 +111,7 @@ if [ -z $pids ]; then
 
 else
 
-   echo "[$shellDir/$0] program already startup."
+   echo "[$shellDir/$0] program already started."
    ps -ef | grep java | grep "$shellDir"
 
 fi
