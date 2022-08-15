@@ -114,7 +114,7 @@ if [ -z $pids ]; then
 
    nohup ${START_CMD}  2>&1 &
 
-   sleep 7
+   sleep 5
 
    #覆盖临时文件
    echo "#INVALID_PWD:#param:$$" > ${tempFile}
