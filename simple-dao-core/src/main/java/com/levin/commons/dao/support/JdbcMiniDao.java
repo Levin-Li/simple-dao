@@ -45,14 +45,11 @@ public class JdbcMiniDao implements MiniDao {
     public Object create(Object entity) {
 
 
-        String table = entity.getClass().getSimpleName();
+        get
 
-//
-//        if (annotation != null && StringUtils.hasText(annotation.name())) {
-//            table = annotation.name();
-//        }
+        String table = getTableName(entity.getClass());
 
-        Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
+      //  Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
 
 
         try {
@@ -80,7 +77,6 @@ public class JdbcMiniDao implements MiniDao {
                 start = 0;
             }
         }
-
 
         if (start > -1) {
             statement += " limit " + start;
