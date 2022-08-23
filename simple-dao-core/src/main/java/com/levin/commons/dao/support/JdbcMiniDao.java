@@ -45,12 +45,9 @@ public class JdbcMiniDao implements MiniDao {
     public Object create(Object entity) {
 
 
-        get
-
         String table = getTableName(entity.getClass());
 
-      //  Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
-
+        Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
 
         try {
             BeanUtils.getPropertyDescriptor(entity.getClass(), "id").createPropertyEditor(entity).setValue(id);
