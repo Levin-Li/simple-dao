@@ -212,6 +212,11 @@
             </dependency>
 
             <dependency>
+                <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
+                <artifactId>simple-dao-id-generator</artifactId>
+            </dependency>
+
+            <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
             </dependency>

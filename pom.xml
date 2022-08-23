@@ -48,6 +48,7 @@
         <module>simple-dao-core</module>
         <module>simple-dao-jpa</module>
         <module>simple-dao-jpa-starter</module>
+        <module>simple-dao-id-generator</module>
         <module>simple-dao-examples</module>
         <module>simple-dao-code-gen</module>
         <module>simple-dao-code-gen-example</module>
@@ -66,7 +67,6 @@
             <properties>
                 <maven.test.skip>true</maven.test.skip>
             </properties>
-
         </profile>
 
 

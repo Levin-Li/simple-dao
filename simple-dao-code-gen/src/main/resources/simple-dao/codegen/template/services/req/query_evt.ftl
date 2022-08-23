@@ -2,7 +2,7 @@ package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 
-<#--import com.oak.api.model.ApiBaseQueryReq;-->
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.levin.commons.dao.annotation.Ignore;
 
