@@ -12,12 +12,12 @@ shellDir=`pwd`
 appJars=`ls *.jar`
 isFound=`echo $?`
 
-if [ "$isFound" != "0" ]; then
+if [ "${isFound}" != "0" ]; then
   appJars=`ls *.war`
   isFound=`echo $?`
 fi
 
-if [ "$isFound" != "0" ]; then
+if [ "${isFound}" != "0" ]; then
    echo "***ERROR*** Spring Boot App launch file(.war or .jar) not found."
    exit 1
 fi
@@ -32,7 +32,7 @@ pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
 
 content=""
 
-if [ -z $pids ]; then
+if [ -z "${pids}" ]; then
 
 #   read -p "是否需要启动密码?[y/n]" -t 7 needParam
 
@@ -46,7 +46,7 @@ if [ -z $pids ]; then
    fi
 
    #如果有文件
-   if [ -f ${tempFile} ]; then
+   if [ -f "${tempFile}" ]; then
        content=`cat ${tempFile}`
    fi
 
@@ -120,12 +120,12 @@ if [ -z $pids ]; then
    echo "#INVALID_PWD:#param:$$" > ${tempFile}
 
    #删除临时文件
-   rm -fr ${tempFile}
+   rm -fr "${tempFile}"
 
    pids=`ps -ef | grep java | grep "$shellDir"`
 
 #  如果应用没有启动成功
-   if [ -z $pids ]; then
+   if [ -z "${pids}" ]; then
      echo "***ERROR*** Spring Boot App [${appJars}] startup fail."
      tail -n 20 nohup.out
      exit 1
