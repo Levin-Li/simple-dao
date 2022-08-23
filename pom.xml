@@ -97,7 +97,6 @@
             <url>${dist-repo.releases.url}</url>
         </repository>
 
-
         <snapshotRepository>
             <id>${dist-repo}</id>
             <url>${dist-repo.snapshots.url}</url>
