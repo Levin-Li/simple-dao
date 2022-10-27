@@ -89,44 +89,6 @@ public abstract class HookAgent {
         init = true;
     }
 
-    /**
-     * 获取加密类名的MD5列表
-     * 本方法会被C++代码调用，请不要删除
-     *
-     * @return
-     */
-    @SneakyThrows
-    private static String[] getEnClassList(ClassLoader loader) {
-
-        if (loader == null) {
-            loader = Thread.currentThread().getContextClassLoader();
-        }
-
-        //加密的类清单文件
-        Enumeration<URL> resources = loader.getResources(MF_ENCRYPT_RES_LIST);
-
-        List<String> list = new ArrayList<>();
-
-        while (resources.hasMoreElements()) {
-
-            URL url = resources.nextElement();
-
-            String text = new String(JniHelper.readAndClose(url.openStream()), HookAgent.UTF8);
-
-            if (isPrintLog()) {
-                System.out.println("Load " + url + " :\n" + text);
-            }
-
-            for (String line : text.split("\\n")) {
-                list.add(line);
-            }
-
-        }
-
-        return list.toArray(new String[list.size()]);
-    }
-
-
     public static Map<String, String> getManifest() {
 
         synchronized (MANIFEST) {
@@ -173,7 +135,6 @@ public abstract class HookAgent {
             loader = HookAgent.class.getClassLoader();
         }
 
-
         synchronized (MF_ENCRYPT_RES_LIST) {
 
             if (encryptedList == null) {
@@ -214,17 +175,13 @@ public abstract class HookAgent {
             }
         }
 
-        final String resPath = getClassResPath(className);
-
-        final String key = JniHelper.md5("CLS_" + className.replace('/', '.'));
-
         if (encryptedList == null
-                || !encryptedList.contains(key)) {
+                || !encryptedList.contains(JniHelper.md5("CLS_" + className.replace('/', '.')))) {
+            //如果找不到类，快速放回
             return null;
         }
 
-        return JniHelper.loadResource(loader, resPath);
-
+        return JniHelper.loadResource(loader, getClassResPath(className));
     }
 
 
