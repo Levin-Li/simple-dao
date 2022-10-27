@@ -175,6 +175,10 @@ public abstract class HookAgent {
             }
         }
 
+//        if (className == null || className.trim().length() == 0) {
+//            return null;
+//        }
+
         if (encryptedList == null
                 || !encryptedList.contains(JniHelper.md5("CLS_" + className.replace('/', '.')))) {
             //如果找不到类，快速放回
