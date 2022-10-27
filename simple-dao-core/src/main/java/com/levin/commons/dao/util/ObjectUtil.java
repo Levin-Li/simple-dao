@@ -53,24 +53,23 @@ public abstract class ObjectUtil {
      * @param ignoreProperties
      * @see @DeepCopy
      */
-    public static Object copyProperties(Object source, Object target, int deepLevel, String... ignoreProperties) {
+    public static <T> T copyProperties(Object source, T target, int deepLevel, String... ignoreProperties) {
 
         if (target instanceof Map) {
 
-            if (source instanceof Map)
+            if (source instanceof Map) {
                 ((Map) target).putAll((Map) source);
-            else
+            } else {
                 copyProps2Map(source, (Map) target);
+            }
 
             return target;
         }
 
-
         //如果 target 是类型
         boolean isType = target instanceof Class;
 
-
-        return copy(source, (isType ? null : target), (isType ? (Class) target : null), deepLevel, ignoreProperties);
+        return (T) copy(source, (isType ? null : target), (isType ? (Class) target : null), deepLevel, ignoreProperties);
     }
 
 
@@ -902,8 +901,16 @@ public abstract class ObjectUtil {
 
         //按字段复制
         for (Field field : fieldList) {
+
+//            //注入字段不做处理
+//            if (field.isAnnotationPresent(InjectVar.class)) {
+//                continue;
+//            }
+
             String fieldPropertyPath = "";
+
             try {
+
                 field.setAccessible(true);
 
                 String propertyName = field.getName();

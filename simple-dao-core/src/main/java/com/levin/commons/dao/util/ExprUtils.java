@@ -15,12 +15,12 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
@@ -67,11 +67,6 @@ public abstract class ExprUtils {
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
     /**
-     * 实体类缓存
-     * 用于防止频繁出现类加载
-     */
-    protected static final Map<String, Class<?>> entityClassCaches = new ConcurrentReferenceHashMap<>();
-    /**
      *
      */
     private static final String COLUMN_REPLACE_PREFIX = "F$:";
@@ -101,7 +96,7 @@ public abstract class ExprUtils {
         final String domain = domainFunc != null ? domainFunc.apply(c.domain()) : c.domain();
 
         //优先使用 fieldExpr
-        String fieldExpr = StringUtils.hasText(c.fieldExpr()) ? c.fieldExpr() : aroundColumnPrefixFunc.apply(domain, name);
+        String fieldExpr = c.isAddAliasPrefixForValue() ? aroundColumnPrefixFunc.apply(domain, name) : name;
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -527,12 +522,16 @@ public abstract class ExprUtils {
      * ELSE '其他'
      * END
      *
+     *
      * @param domain
+     * @param aroundColumnPrefixFunc 字段处理函数
+     * @param conditionEvalFunc 条件处理
      * @param expr
      * @param cases
      * @return
      */
-    public static String genCaseExpr(String domain, @NotNull BiFunction<String, String, String> aroundColumnPrefixFunc, Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
+    public static String genCaseExpr(String domain, @Nullable BiFunction<String, String, String> aroundColumnPrefixFunc,
+                                     @NotNull Function<String, Object> conditionEvalFunc, final String expr, Case... cases) {
 
         return Stream.of(cases)
                 //过滤条件匹配的 case
@@ -704,7 +703,7 @@ public abstract class ExprUtils {
         }
 
         //替换普通变量
-        final String oldTxt = txt;
+        // final String oldTxt = txt;
 
         txt = replace(groovyVarStylePattern, txt, key -> {
 
@@ -898,30 +897,6 @@ public abstract class ExprUtils {
         return hasText(alias) && alias.trim().equals(result) ? "" : result;
     }
 
-    /**
-     * @param entityClasses
-     * @param nameConvert
-     */
-    public static void cacheEntityClass(Collection<Class> entityClasses, Function<String, String> nameConvert) {
-
-        Optional.ofNullable(entityClasses).ifPresent(list ->
-
-                list.parallelStream()
-                        .filter(Objects::nonNull)
-                        .filter(tempClass -> tempClass.isAnnotationPresent(Entity.class) || tempClass.isAnnotationPresent(MappedSuperclass.class))
-                        .forEach(tempClass -> {
-                            //
-                            entityClassCaches.put(tempClass.getName(), tempClass);
-
-                            String tableName = nameConvert.apply(getTableName(tempClass));
-
-                            if (StringUtils.hasText(tableName)) {
-                                entityClassCaches.put(tableName, tempClass);
-                            }
-                        })
-        );
-
-    }
 
     /**
      * @param entityClass

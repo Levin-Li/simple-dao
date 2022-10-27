@@ -6,6 +6,7 @@ import com.levin.commons.dao.annotation.misc.Case;
 
 import java.lang.annotation.*;
 
+@Repeatable(Update.List.class)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -60,23 +61,6 @@ public @interface Update {
      */
     String optimisticLocking() default "";
 
-    /**
-     * 是否是having 操作
-     * <p>
-     * 只针对查询有效
-     *
-     * @return
-     */
-//    boolean having() default false;
-
-
-    /**
-     * 是否用 NOT () 包围
-     *
-     * @return
-     */
-//    boolean not() default false;
-
 
     /**
      * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
@@ -84,7 +68,6 @@ public @interface Update {
      * @return
      */
     boolean require() default false;
-
 
     /**
      * 表达式，默认为SPEL
@@ -111,21 +94,6 @@ public @interface Update {
      * @return
      */
     boolean filterNullValue() default true;
-
-
-    /**
-     * 针对字段函数列表
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * func3(func2(func1(t.field)
-     *
-     * <p>
-     * <p>
-     * 如果是更新字段则忽略
-     *
-     * @return
-     */
-    // Func[] fieldFuncs() default {};
 
     /**
      * 右操作数（参数） Case 选项
@@ -196,4 +164,35 @@ public @interface Update {
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+         *
+         * @return
+         */
+        boolean require() default false;
+
+        /**
+         * 表达式，考虑支持Groovy和SpEL
+         * <p/>
+         * 当条件成立时，整个条件才会被加入
+         *
+         * @return
+         */
+        String condition() default "";
+
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        Update[] value();
+    }
 }

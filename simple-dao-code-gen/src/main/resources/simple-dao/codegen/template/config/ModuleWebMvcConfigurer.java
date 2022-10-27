@@ -4,23 +4,34 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
 
-@Configuration(PLUGIN_PREFIX + "ModuleWebMvcConfigurer")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebMvcConfigurer", havingValue = "false", matchIfMissing = true)
+@Configuration(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
+//    @Resource
+//    RbacService rbacService;
+//
+//    @Resource
+//    AuthService authService;
+//
+//    @Resource
+//    BizTenantService bizTenantService;
 
     @PostConstruct
     void init() {
@@ -60,22 +71,10 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-
-        //https://sa-token.dev33.cn/
-        // 注册路由拦截器，自定义认证规则
-//        registry.addInterceptor(new SaRouteInterceptor((req, res, handler)->{
-//            // 根据路由划分模块，不同模块不同鉴权
-//            SaRouter.match("/user/**", r -> StpUtil.checkPermission("user"));
-//            SaRouter.match("/admin/**", r -> StpUtil.checkPermission("admin"));
-//            SaRouter.match("/goods/**", r -> StpUtil.checkPermission("goods"));
-//            SaRouter.match("/orders/**", r -> StpUtil.checkPermission("orders"));
-//            SaRouter.match("/notice/**", r -> StpUtil.checkPermission("notice"));
-//            SaRouter.match("/comment/**", r -> StpUtil.checkPermission("comment"));
-//        })).addPathPatterns("/**");
-
-
-//        registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns(API_PATH + "**");
-
+        //注册拦截器
+//        registry.addInterceptor(new DomainInterceptor((domain) -> injectVarService.clearCache(), (className) -> true))
+//                .addPathPatterns("/**")
+//                .order(Ordered.HIGHEST_PRECEDENCE + 1000);
     }
 
     @Override

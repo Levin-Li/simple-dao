@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.util.List;
 
@@ -25,9 +26,8 @@ import java.util.List;
 //@ConditionalOnBean(DataSource.class)
 public class JdbcMiniDao implements MiniDao {
 
-    @Autowired
+    @Resource
     DataSource dataSource;
-
 
     @Autowired(required = false)
     JdbcOperations jdbcOperations;
@@ -41,22 +41,13 @@ public class JdbcMiniDao implements MiniDao {
         insertOperations = new SimpleJdbcInsert(dataSource);
     }
 
-
-
-
     @Override
     public Object create(Object entity) {
 
 
-        String table = entity.getClass().getSimpleName();
-
-//
-//        if (annotation != null && StringUtils.hasText(annotation.name())) {
-//            table = annotation.name();
-//        }
+        String table = getTableName(entity.getClass());
 
         Number id = insertOperations.withTableName(table).executeAndReturnKey(new BeanPropertySqlParameterSource(entity));
-
 
         try {
             BeanUtils.getPropertyDescriptor(entity.getClass(), "id").createPropertyEditor(entity).setValue(id);
@@ -69,7 +60,6 @@ public class JdbcMiniDao implements MiniDao {
 
     @Override
     public int update(boolean isNative, int start, int count, String statement, Object... paramValues) {
-
 
         statement = addLimit(start, count, statement);
 
@@ -84,7 +74,6 @@ public class JdbcMiniDao implements MiniDao {
                 start = 0;
             }
         }
-
 
         if (start > -1) {
             statement += " limit " + start;

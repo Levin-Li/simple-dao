@@ -17,12 +17,15 @@
 
     <properties>
 
-        <revision>2.3.1</revision>
+        <revision>2.3.3.RELEASE</revision>
 
-        <levin.service-support.version>1.1.22-SNAPSHOT</levin.service-support.version>
+        <jitpack.groupId>com.github.Levin-Li</jitpack.groupId>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-<!--        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>-->
+        <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
+
+        <!--   <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+
+        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -38,6 +41,7 @@
 
         <io.swagger.core.v3.version>2.1.2</io.swagger.core.v3.version>
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
+        <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
 
     </properties>
 
@@ -45,6 +49,7 @@
         <module>simple-dao-annotations</module>
         <module>simple-dao-core</module>
         <module>simple-dao-jpa</module>
+        <module>simple-dao-id-generator</module>
         <module>simple-dao-jpa-starter</module>
         <module>simple-dao-examples</module>
         <module>simple-dao-code-gen</module>
@@ -64,7 +69,6 @@
             <properties>
                 <maven.test.skip>true</maven.test.skip>
             </properties>
-
         </profile>
 
 
@@ -94,7 +98,6 @@
             <id>${dist-repo}</id>
             <url>${dist-repo.releases.url}</url>
         </repository>
-
 
         <snapshotRepository>
             <id>${dist-repo}</id>
@@ -180,6 +183,20 @@
                 <groupId>com.oracle</groupId>
                 <artifactId>ojdbc6</artifactId>
                 <version>11.2.0.3</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.dameng/DmDialect-for-hibernate5.0 -->
+            <dependency>
+                <groupId>com.dameng</groupId>
+                <artifactId>DmDialect-for-hibernate5.0</artifactId>
+                <version>${com.dameng.driver.version}</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.dameng/DmJdbcDriver18 -->
+            <dependency>
+                <groupId>com.dameng</groupId>
+                <artifactId>DmJdbcDriver18</artifactId>
+                <version>${com.dameng.driver.version}</version>
             </dependency>
 
         </dependencies>

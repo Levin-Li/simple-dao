@@ -1,23 +1,23 @@
 <#noparse>#!/bin/bash
-
+#Author Lilw @2012
 execDir=`pwd`
 
+#sh文件所在目录
 shellDir=`dirname $0`
 
 cd $shellDir
 
 shellDir=`pwd`
 
-#停止进程
-
+#获取进程ID
 pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
 
-if [ -z $pids ]; then
+if [ -z "${pids}" ]; then
 
    echo "[$shellDir/$0] program already stop, nothing to do."
 
 else
-
+#尝试停止进程
    ps -ef | grep java | grep `pwd`
 
    tempPid=$pids
@@ -32,7 +32,7 @@ else
 
       pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
 
-      if [ -z $pids ]; then
+      if [ -z "${pids}" ]; then
          echo "program ${tempPid} stopped."
          exit
       fi
@@ -45,7 +45,7 @@ fi
 
 pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
 
-if [ -n "$pids" ]; then
+if [ -n "${pids}" ]; then
    echo "***Warning*** kill -9 $pids ..."
    kill -9 $pids
    sleep 1

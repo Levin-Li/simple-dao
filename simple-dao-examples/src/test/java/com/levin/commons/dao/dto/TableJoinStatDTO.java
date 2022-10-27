@@ -31,7 +31,7 @@ public class TableJoinStatDTO {
 
     //    统计部门人数
     @Count(havingOp = Op.Gt, orderBy = @OrderBy)
-    Integer userCnt = 5;
+    Integer userCnt = null;
 
     //    统计部门总得分
     @Sum

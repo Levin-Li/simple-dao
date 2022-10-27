@@ -1,7 +1,10 @@
 package com.levin.commons.dao.annotation.order;
 
+import com.levin.commons.dao.annotation.misc.Case;
+
 import java.lang.annotation.*;
 
+@Repeatable(OrderBy.List.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -25,12 +28,18 @@ public @interface OrderBy {
 
     /**
      * 查询字段名称，默认为字段的属性名称
-     * 排序方式，可以用字段隔开
      *
      * @return
      */
     String value() default "";
 
+
+    /**
+     * case 支持
+     *
+     * @return
+     */
+    Case[] cases() default {};
 
     /**
      * 字段归属的域，通常是表的别名
@@ -46,7 +55,6 @@ public @interface OrderBy {
      */
     boolean require() default false;
 
-
     /**
      * 表达式，考虑支持Groovy和SpEL
      * <p/>
@@ -59,7 +67,7 @@ public @interface OrderBy {
     /**
      * 排序优先级
      * <p/>
-     * 按数值从大到小排序
+     * 升序排序，按数值从小到大排序
      * <p/>
      *
      * @return
@@ -91,4 +99,35 @@ public @interface OrderBy {
      */
     String desc() default "";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+         *
+         * @return
+         */
+        boolean require() default false;
+
+        /**
+         * 表达式，考虑支持Groovy和SpEL
+         * <p/>
+         * 当条件成立时，整个条件才会被加入
+         *
+         * @return
+         */
+        String condition() default "";
+
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        OrderBy[] value();
+    }
 }

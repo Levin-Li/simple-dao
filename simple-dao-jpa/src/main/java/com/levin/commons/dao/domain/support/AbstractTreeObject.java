@@ -22,9 +22,12 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
     private static final long serialVersionUID = -123456789L;
 
-    @Schema(description = "父ID")
-    @Column(length = 128)
-    protected ID parentId;
+    //由子类去定义
+//    @Schema(description = "父ID")
+//    @Column(length = 128)
+//    protected ID parentId;
+
+    public abstract AbstractTreeObject<ID, T> setParentId(ID parentId);
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,7 +40,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     //@Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 
-    @Schema(description = "id路径， 使用|包围，如|1|3|15|")
+    @Schema(title = "id路径", description = "id路径， 使用|包围，如|1|3|15|")
     @Column(length = 1800)
     protected String idPath;
 
@@ -45,24 +48,38 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     }
 
     protected AbstractTreeObject(ID parentId, String name) {
-        this.parentId = parentId;
+        setParentId(parentId);
         this.name = name;
     }
 
-    public void setParent(T parent) {
+    protected void autoCheckParentId() {
 
-        if (parent == null) {
-            this.parent = null;
-            this.parentId = null;
-        } else {
+        //父ID不能是自己
+        if (this.equals(parent)) {
+            throw new IllegalArgumentException("parent is self");
+        }
 
-            if (this.equals(parent)) {
-                throw new IllegalArgumentException("parent is self");
-            }
+        if (getParentId() == null && parent != null) {
+            setParentId(parent.getId());
+        }
 
-            this.parent = parent;
-            this.parentId = parent.getId();
+        //父ID不能是自己
+        if (getParentId() != null && getParentId().equals(getId())) {
+            throw new IllegalArgumentException("parent id is self id");
         }
     }
 
+    @Override
+    @PrePersist
+    public void prePersist() {
+        super.prePersist();
+        autoCheckParentId();
+    }
+
+    @Override
+    @PreUpdate
+    public void preUpdate() {
+        super.preUpdate();
+        autoCheckParentId();
+    }
 }

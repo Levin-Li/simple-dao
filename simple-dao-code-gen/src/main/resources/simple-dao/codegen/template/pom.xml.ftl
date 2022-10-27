@@ -43,6 +43,12 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-jpa</artifactId>
+                <scope>provided</scope>
+            </dependency>
         </#if>
         <#if services??>
             <dependency>
@@ -74,6 +80,18 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
             <#--
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -86,11 +104,7 @@
 
         <#if moduleType?? && (moduleType == 'service')>
             <#-- service -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
-                <scope>provided</scope>
-            </dependency>
+
 
             <dependency>
                 <groupId>com.h2database</groupId>
@@ -178,16 +192,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-jpa</artifactId>
-            </dependency>
-
-            <dependency>
-                <groupId>com.querydsl</groupId>
-                <artifactId>querydsl-apt</artifactId>
-            </dependency>
-
-            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>
             </dependency>
@@ -205,6 +209,11 @@
             <dependency>
                 <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
                 <artifactId>simple-dao-jpa-starter</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
+                <artifactId>simple-dao-id-generator</artifactId>
             </dependency>
 
             <dependency>
@@ -238,12 +247,10 @@
                 <scope>test</scope>
             </dependency>
 
-        <#--
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
             </dependency>
-            -->
 
         </#if>
 

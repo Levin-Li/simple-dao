@@ -36,6 +36,10 @@
             <artifactId>h2</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.querydsl</groupId>
@@ -68,7 +72,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
-
 
         <dependency>
             <groupId>org.projectlombok</groupId>

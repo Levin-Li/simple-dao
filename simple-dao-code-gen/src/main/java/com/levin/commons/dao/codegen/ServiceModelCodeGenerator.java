@@ -1,13 +1,17 @@
 package com.levin.commons.dao.codegen;
 
+import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.Like;
+import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.codegen.model.ClassModel;
+import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.domain.SecurityDomain;
 import com.levin.commons.service.support.ContextHolder;
+import com.levin.commons.service.support.InjectConsts;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -15,17 +19,15 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.Accessors;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +37,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.MessageFormat;
@@ -52,7 +55,8 @@ public final class ServiceModelCodeGenerator {
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
-    public static final String ID_QUERY_EVT_FTL = "services/req/id_query_req.ftl";
+    public static final String STAT_EVT_FTL = "services/req/stat_evt.ftl";
+    public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
@@ -223,8 +227,8 @@ public final class ServiceModelCodeGenerator {
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
 
-        genFileByTemplate("testcase/DataInitializer.java", params, prefix + "DataInitializer.java");
-        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
+        genFileByTemplate("testcase/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
+//        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
 
         genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
@@ -253,6 +257,22 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+    @SneakyThrows
+    public static void genJavaFile(String moduleDir, String templateDir, String className, Map<String, Object> params) {
+
+        String fileName = StringUtils.hasText(templateDir) ?
+                String.join(File.separator, templateDir, className + ".java")
+                : className + ".java";
+
+        params.put("className", className);
+
+        params.put("moduleDir", moduleDir);
+
+        genFileByTemplate(fileName, params, String.join(File.separator,
+                moduleDir, modulePackageName().replace('.', File.separatorChar), fileName));
+
+    }
+
     /**
      * 生成 Spring boot auto stater 文件
      *
@@ -271,56 +291,28 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
-
         String fileName = "index.html";
         genFileByTemplate(fileName, params, String.join(File.separator,
                 controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
 
+        //生成控制器配置文件
+        Arrays.asList("ModuleWebMvcConfigurer"
+                , "ModuleWebControllerAdvice"
+                , "ModuleSwaggerConfigurer"
+                , "ModuleVariableResolverConfigurer"
+        ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
-        fileName = String.join(File.separator, "config", "ModuleWebMvcConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
+        genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
 
-
-        fileName = String.join(File.separator, "config", "ModuleWebControllerAdvice.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "config", "ModuleSwaggerConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "config", "ModuleVariableResolverConfigurer.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-//        fileName = String.join(File.separator, "config", "ModuleWebSecurityConfigurer.java");
-//        genFileByTemplate(fileName, params, String.join(File.separator,
-//                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        fileName = String.join(File.separator, "aspect", "ModuleWebControllerAspect.java");
-        genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, modulePackageName().replace('.', File.separatorChar), fileName));
-
-
-        String pkgDir = serviceDir + File.separator
-                + modulePackageName().replace('.', File.separatorChar)
-                + File.separator;
-
-        String prefix = pkgDir + splitAndFirstToUpperCase(moduleName());
-
-        genFileByTemplate("ModulePlugin.ftl", params, pkgDir + "ModulePlugin.java");
-        genFileByTemplate("ModuleOption.java", params, pkgDir + "ModuleOption.java");
-        genFileByTemplate("ModuleDataInitializer.java", params, pkgDir + "ModuleDataInitializer.java");
-
-        genFileByTemplate("ModuleStarterConfiguration.ftl", params, pkgDir + "ModuleStarterConfiguration.java");
+        //生成服务模块的文件
+        Arrays.asList("ModulePlugin"
+                , "ModuleOption"
+                , "ModuleDataInitializer"
+                , "ModuleStarterConfiguration"
+        ).forEach(className -> genJavaFile(serviceDir, "", className, params));
 
         genFileByTemplate("spring.factories.ftl", params, serviceDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
-
 
     }
 
@@ -444,6 +436,7 @@ public final class ServiceModelCodeGenerator {
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
                         + "controller" + File.separatorChar + "BaseController.java");
+
 
         genFileByTemplate("services/BaseService.java",
                 MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
@@ -652,7 +645,7 @@ public final class ServiceModelCodeGenerator {
         //切换实体类
         entityClass(entityClass);
 
-        genCode(entityClass, "service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
+        genCode(entityClass, "services/service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
                 , params -> {
                     params.put("servicePackageName", servicePackage());
                     params.put("serviceName", serviceName);
@@ -698,7 +691,6 @@ public final class ServiceModelCodeGenerator {
 
         final Consumer<Map<String, Object>> mapConsumer = (map) -> {
             map.putAll(paramsMap);
-            map.put("fields", fields);
         };
 
         genCode(entityClass, INFO_FTL, fields, srcDir,
@@ -716,8 +708,8 @@ public final class ServiceModelCodeGenerator {
         final Consumer<Map<String, Object>> mapConsumer = (map) -> {
             map.putAll(paramsMap);
             map.put("servicePackageName", servicePackage());
-            map.put("fields", fields);
         };
+
 
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
@@ -730,12 +722,17 @@ public final class ServiceModelCodeGenerator {
                 pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //ID查询
-        genCode(entityClass, ID_QUERY_EVT_FTL, fields, srcDir,
-                pkgName, "Query" + entityClass.getSimpleName() + "ByIdReq", mapConsumer);
+        genCode(entityClass, BASE_ID_EVT_FTL, fields, srcDir,
+                pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
 
         //查询
         genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
                 pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        //统计
+        genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
+                pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
+
 
     }
 
@@ -855,21 +852,39 @@ public final class ServiceModelCodeGenerator {
         params.put("packageName", packageName);
         params.put("className", genClassName);
 
+        params.put("title", desc);
         params.put("desc", desc);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
-        params.put("fields", fields);
+        params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
+
+        params.put("classModel", new ClassModel().setEntityType(entityClass));
+
+        //分解字段类型
+
+        LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
 
         params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
-                .reduce(new LinkedHashSet<String>(), (f, s) -> {
+                .reduce(new LinkedHashSet<>(), (f, s) -> {
                     f.addAll(s);
                     return f;
                 }));
 
-        params.put("pkField", getPkField(entityClass, fields));
+        for (FieldModel fieldModel : fields) {
+            multiValueMap.add(fieldModel.crud.name(), fieldModel);
+        }
+
+        //放入空的列表
+        Arrays.stream(FieldModel.CRUD.values()).forEach(action -> params.put(action.name() + "_fields", Collections.emptyList()));
+
+        //默认的字段
+        params.put("fields", multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()));
+
+        //覆盖
+        multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
 
         return params;
     }
@@ -881,17 +896,6 @@ public final class ServiceModelCodeGenerator {
                 .collect(Collectors.toList());
     }
 
-
-    private static FieldModel getPkField(Class entityClass, List<FieldModel> fields) {
-
-        for (FieldModel field : fields) {
-            if (field.isPk()) {
-                return field;
-            }
-        }
-
-        return null;
-    }
 
     private static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
@@ -931,11 +935,16 @@ public final class ServiceModelCodeGenerator {
     }
 
 
+    private static String getFirst(String... values) {
+        return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
+    }
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/) throws Exception {
+
 
         Object obj = entityClass.newInstance();
 
-        List<FieldModel> list = new ArrayList<>();
+        List<FieldModel> fieldModelList = new ArrayList<>();
 
         final List<Field> declaredFields = new LinkedList<>();
 
@@ -946,8 +955,6 @@ public final class ServiceModelCodeGenerator {
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
-
-        // Field.setAccessible(declaredFields, true);
 
         for (Field field : declaredFields) {
 
@@ -962,8 +969,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
-            Class<?> fieldType = forField.resolve(field.getType());
-
+            final Class<?> fieldType = forField.resolve(field.getType());
 
             if (field.getType() != fieldType) {
                 logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
@@ -995,14 +1001,18 @@ public final class ServiceModelCodeGenerator {
 
             Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
-            FieldModel fieldModel = new FieldModel();
+            FieldModel fieldModel = new FieldModel(entityClass);
+
+            fieldModel.setField(field)
+                    .addImport(InjectVar.class)
+                    .addImport(InjectConsts.class);
             fieldModel.setName(field.getName());
             fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
 
             fieldModel.setTypeName(fieldType.getSimpleName());
 
             fieldModel.setType(fieldType);
-            fieldModel.setSubType(subType);
+            fieldModel.setEleType(subType);
 
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
@@ -1041,20 +1051,21 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
             }
 
-
-            boolean hasSchema = field.isAnnotationPresent(Schema.class);
-            Schema schema = field.getAnnotation(Schema.class);
-            fieldModel.setDesc(hasSchema ? schema.description() : field.getName());
-            fieldModel.setDescDetail(hasSchema ? schema.description() : "");
-            if (!hasSchema) {
-                boolean isDesc = field.isAnnotationPresent(Desc.class);
+            if (field.isAnnotationPresent(Schema.class)) {
+                Schema schema = field.getAnnotation(Schema.class);
+                fieldModel.setTitle(schema.title())
+                        .setDesc(getFirst(schema.description(), schema.title(), field.getName()))
+                        .setDescDetail(schema.title() + schema.description());
+            } else if (field.isAnnotationPresent(Desc.class)) {
                 Desc desc = field.getAnnotation(Desc.class);
-                fieldModel.setDesc(isDesc ? desc.value() : field.getName());
-                fieldModel.setDescDetail(isDesc ? desc.detail() : "");
+                fieldModel.setDesc(desc.value());
+                fieldModel.setDescDetail(desc.detail());
+            } else {
+                fieldModel.setDesc(field.getName());
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
-            fieldModel.setContains(field.isAnnotationPresent(Like.class));
+
             fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
@@ -1064,7 +1075,6 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
                 fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
             }
-
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
@@ -1085,19 +1095,68 @@ public final class ServiceModelCodeGenerator {
             ArrayList<String> annotations = new ArrayList<>();
 
             if (fieldModel.isRequired()) {
-                annotations.add("@NotNull");
+                annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
-            //
-            if (field.isAnnotationPresent(InjectVar.class)) {
-                annotations.add("@" + InjectVar.class.getSimpleName() + "");
-                fieldModel.addImport(InjectVar.class);
-            }
+            Consumer<List<Class<? extends Annotation>>> addAnnotation =
+                    classes -> classes.stream().filter(Objects::nonNull)
+                            //.filter(cls -> CharSequence.class.isAssignableFrom(fieldType))
+                            .filter(field::isAnnotationPresent)
+                            .forEachOrdered(
+                                    annotationClass -> {
 
-            if (field.isAnnotationPresent(SecurityDomain.class)) {
-                annotations.add("@" + SecurityDomain.class.getSimpleName());
-                fieldModel.addImport(SecurityDomain.class);
-            }
+                                        InjectVar injectVar = field.getAnnotation(InjectVar.class);
+
+                                        String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
+
+                                        if (GenericConverter.class != injectVar.converter()) {
+                                            fieldModel.addImport(injectVar.converter());
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, converter = %s.class, isRequired = \"false\")", domain, injectVar.converter().getSimpleName()));
+                                        } else {
+                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
+                                        }
+
+                                        if (StringUtils.hasText(injectVar.expectTypeDesc())) {
+
+                                            fieldModel.typeName = injectVar.expectTypeDesc();
+
+                                        } else if (injectVar.expectBaseType() != Void.class) {
+                                            //转换数据类型
+                                            fieldModel.addImport(injectVar.expectBaseType());
+
+                                            for (Class<?> aType : injectVar.expectGenericTypes()) {
+                                                fieldModel.addImport(aType);
+                                            }
+
+                                            fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
+
+                                            String sub = Arrays.stream(injectVar.expectGenericTypes()).map(Class::getSimpleName).collect(Collectors.joining(","));
+
+                                            if (StringUtils.hasText(sub)) {
+                                                fieldModel.typeName += "<" + sub + ">";
+                                            }
+                                            //转换数据类型
+                                        }
+
+                                        fieldModel.addImport(annotationClass);
+                                    }
+                            );
+
+
+            addAnnotation.accept(Arrays.asList(InjectVar.class));
+
+            Consumer<List<Class<? extends Annotation>>> addLikeAnnotation =
+                    classes -> classes.stream().filter(Objects::nonNull)
+                            //.filter(cls -> CharSequence.class.isAssignableFrom(fieldType))
+                            .filter(field::isAnnotationPresent)
+                            .forEachOrdered(
+                                    annotationClass -> {
+                                        fieldModel.setContains(true);
+                                        fieldModel.getExtras().put("nameSuffix", annotationClass.getSimpleName());
+                                    }
+                            );
+
+            addLikeAnnotation.accept(Arrays.asList(StartsWith.class, EndsWith.class, Contains.class));
 
             if (fieldModel.getType().equals(String.class)
                     && fieldModel.getLength() != -1
@@ -1112,6 +1171,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
             }
+
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
                 annotations.add("@Min(0)");
@@ -1137,7 +1197,7 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTestValue(field.getAnnotation(Max.class).value() + "");
             }
 
-            fieldModel.setAnnotations(annotations);
+            fieldModel.getAnnotations().addAll(annotations);
 
 //            if (ignoreSpecificField) {
 //                buildExpandInfo(entityClass, fieldModel);
@@ -1156,7 +1216,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"" + sn + "\"");
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
-                } else if (fieldModel.enumType) {
+                } else if (fieldModel.isEnumType()) {
                     fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
                 } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
@@ -1177,11 +1237,12 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            list.add(fieldModel);
+            fieldModelList.add(fieldModel);
 
         }
-        return list;
+        return fieldModelList;
     }
+
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
 
@@ -1294,85 +1355,5 @@ public final class ServiceModelCodeGenerator {
         return e;
     }
 
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(of = "name")
-    @ToString()
-    @Accessors(chain = true)
-    public static class FieldModel {
-
-        private String name;
-
-        String prefix;
-
-        private String typeName;
-
-        private Class type;
-
-        private Class subType;
-
-        private Integer length = -1;
-
-        private String desc;
-
-        private String descDetail;
-
-        private Set<String> imports = new LinkedHashSet<>();
-
-        private List<String> annotations = new ArrayList<>();
-
-
-        public void addImport(Class type) {
-
-            if (type == null) {
-                return;
-            }
-
-            while (type.isArray()) {
-                type = type.getComponentType();
-            }
-
-            if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
-                //如果是类中类
-                Class declaringClass = type.getDeclaringClass();
-                if (declaringClass != null) {
-                    logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
-                    imports.add(declaringClass.getName() + ".*");
-                } else {
-                    imports.add(type.getName());
-                }
-
-            }
-        }
-
-
-        private boolean pk = false;//是否主键字段
-
-        private boolean uk = false;//是否唯一键
-
-        private boolean baseType = true;//基础封装类型
-
-        private boolean enumType = false;//是否enum
-
-        private boolean jpaEntity = false;//是否 jpa 对象
-
-        private boolean required = false;//是否必填
-
-        private boolean autoIdentity; //是否自动增长主键
-
-        private boolean notUpdate = false;//是否不需要更新
-
-        private boolean hasDefValue = false;//是否有默认值
-
-        private boolean lazy = false;//是否lazy
-
-        private boolean contains; //是否生成模糊查询
-
-        private String infoClassName;
-
-        private String testValue;
-
-    }
 
 }

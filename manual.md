@@ -5,7 +5,7 @@
    
    SimpleDao是一个使用注解生成SQL语句和参数的组件，通过在DTO对象中加入自定义注解自动生成查询语句。
 
-   在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询、逻辑删除，安全模式等。
+   在项目中应用本组件能实现不编写SQL语句。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询、逻辑删除，安全模式等。
  
    目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
   
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.3.1.RELEASE</version>
+            <version>2.3.3.RELEASE</version>
         </dependency>
         
        
@@ -37,7 +37,7 @@
 
 Dao 类逻辑框图，如下图所示。
 
-   ![类逻辑框图](./public/dao-core.png)   
+   ![类逻辑框图](./public/core-interface.png)   
    
 主要以下4个核心接口：
 
@@ -49,24 +49,22 @@ Dao 类逻辑框图，如下图所示。
 
 *    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
-### 2  组件使用方式
+### 2  组件的使用
 
-#### 2.1 方式1 - 使用通用Dao（推荐）
- 
-##### 2.1.1 使用SimpleDao
+##### 2.1 使用SimpleDao
 
    在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
 
    使用示例：
 
-      @Autowired
+      @Resource
       SimpleDao dao;
 
       SelectDao selectDao = dao.selectFrom("t_table_name","alias");
 
-      List queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
+      List<UserStatDTO> queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
 
-##### 2.1.1 动态创建 SelectDao 、UpdateDao、DeleteDao
+##### 2.2 动态创建 SelectDao 、UpdateDao、DeleteDao
 
     //查询DAO
     SelectDao dao = dao.selectFrom(Group.class);
@@ -79,161 +77,60 @@ Dao 类逻辑框图，如下图所示。
     //删除DAO
     DeleteDao dao = dao.deleteFrom(Group.class)
     dao.delete()
-
-#### 2.2 方式2 - 自定义DAO
-
-##### 2.2.1 自定义DAO接口
-
-   接口DAO案例：
-
-    
-    @EntityRepository("用户DAO") //DAO 自动扫描注解
-    @TargetEntity(entityClass = User.class)  //DAO默认操作目标注解
-    public interface UserDao {
-
-        List<User> find(@Eq Long id, @Like String name,
-                        @Gt Integer score, Paging paging);
-
-        @QueryRequest(joinFetchSetAttrs = {"group"})
-        User findOne(@Eq Long id, @Like String name,
-                     @Eq String category, Paging paging);
-
-        @UpdateRequest
-        int update(@Eq Long id, @UpdateColumn String name);
-
-        @DeleteRequest
-        int delete(@OR @Eq Long id, String name);
-
-    }
-
-接口DAO定义好后，直接在需要的服务类中直接通过Spring注入
-
-         @Autowired
-         UserDao userDao;
-
-         userDao.delete(...)
-
-
-   **特别说明：**
-   需要在JDK1.8中编译，并增加编译参数：-parameters ，保留方法的参数名称。
-   在 pom.xml 文件中加入以下配置：
-
-       <plugin>
-           <artifactId>maven-compiler-plugin</artifactId>
-           <inherited>true</inherited>
-           <configuration>
-               <!-- 在编译时表留方法的参数名称-->
-               <parameters>true</parameters>
-           </configuration>
-       </plugin>
-
-
-##### 2.2.2 自定义DAO类（和自定义接口的区别是可以对查询结果二次加工）
-
-   DAO抽象类案例：
-
    
-    @EntityRepository("组DAO") //DAO 自动扫描注解 
-    @TargetEntity(entityClass = Group.class) //DAO默认操作目标注解
-    public abstract class GroupDao {
- 
-        @QueryRequest
-        public Group findOne(@OR @Eq Long id, @Like String name,
-                             @Eq String category, Paging paging) {
-
-            //获取查询结果的关键点：RepositoryFactoryBean.getProxyInvokeResult()
-            Group result = RepositoryFactoryBean.getProxyInvokeResult();
- 
-             //...处理其它逻辑
-            return (Group) result;
-        }
-
-        @QueryRequest
-        public List<Group> find(@OR @Eq Long id, @Like String name,
-                                @Eq String category, Paging paging) {
-
-            List<Group> groups = RepositoryFactoryBean.getProxyInvokeResult();
-
-            //...处理其它逻辑 
-            return groups;
-        }
-
-        @UpdateRequest
-        public int update(@Eq Long id, @UpdateColumn String name) {
-
-            Integer r = RepositoryFactoryBean.getProxyInvokeResult();
-
-            //...处理其它逻辑
-
-            return r != null ? r : 0;
-        }
-  
-    }
-
-抽象DAO定义好后，直接在需要的服务类中直接通过Spring注入
-
-    @Autowired
-    GroupDao groupDao;
-
-    //使用Dao
-     groupDao.find() ...
-           
-##### 2.2.3 启用扫描  
-
-     //设置 EntityRepository 注解的扫描范围        
-     @ProxyBeanScan(scanType = EntityRepository.class, factoryBeanClass = RepositoryFactoryBean.class
-                     , basePackages = {"com.xxx.dao.."})
-                     
-     //启用组件扫描                
-     @EnableProxyBean(registerTypes = EntityRepository.class)                
-
-### 3 分页查询支持
-
-   分页支持采用非入侵的方式，通过注解获取分页参数，通过注解注入查询结果。
    
-       
-     //使用示例
-     PagingData<ResultInfo> resp = dao.findPagingDataByQueryObj(new QueryDto() , new SimplePaging().setRequireTotals(true));
-   
-      
 ### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
    
    ![类逻辑框图](./public/dao-annotation.jpg)     
    
-   注意若果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
+   注意: 如果字段没有注解，相当于是 Eq 注解，字段值为null值或是空字符串，将不会产生 SQL 语句。
 
-   DTO类字段定义示例：
+   查询DTO字段定义示例：
 
-       @Desc("店铺id")
-       @Eq
+       @Desc("店铺id") 
        Long storeId;
 
        @Desc("店铺名称")
-       @Eq
+       @Contains
        String storeName;
 
-       @Desc("店铺所在区域")
-       String storeArea;
-
-       @Desc("店铺状态")
-       @Eq
+       @Desc("店铺状态") 
        StoreStatus storeStatus;
-
-       @Desc("店铺库存预警")
-       @Ignore // 生成的语句忽略该字段
-       Boolean storageAlarm;
-
-       @Desc("商品分类id")
-       @Contains
-       String classId;
        
-       //迭代出现多个StartsWith
-       @CList({@C(op = Op.StartsWith,value = "name")})
+       //自动迭代出现多个StartsWith
+       @StartsWith("name")
        List<String> nameList = Arrays.asList("Test", "LLW");
 
 
+   支持持久化前和查询结果后的转换，通过 InjectVar 注解实现。
+   
+   查询结果的转换
+   
+          //案例1： 在数据库中存的是字符串，查询出来后自动转换成对象。
+          
+          Entity --> DTO
+          
+          @Desc("参与者列表，Json List")
+          @InjectVar(converter = DefaultJsonConverter.class)
+          List<Integer> actions; 
+          
+
+  持久化的转换
+       
+          //案例2： 在保存前是对象，持久化前自动转换成json字符串，存入数据库。
+          
+          DTO --> Entity 
+          
+          //Dto上的字段定义
+          List<Integer> actions;
+          
+          //实体上的注解定义
+          @InjectVar(converter = DefaultJsonConverter.class)
+          String actions;
+          
+          
 #### 4.1 列选择和列更新
 
 ##### 4.1.1 列选择
@@ -244,7 +141,7 @@ Dao 类逻辑框图，如下图所示。
   产生的语句：
 
          select field from ...
-         
+          
          
   使用例子：
   
@@ -422,19 +319,8 @@ Dao 类逻辑框图，如下图所示。
              ELSE 5 
              END) AS scoreLevel   
            From com.levin.commons.dao.domain.User u 
+            
     
-##### 4.2.2 简单工具类支持
-
-        String ql = new Case().column("status")
-                .when("'A'", "0")
-                .when("'B'", "1")
-                .elseExpr("2")
-                .toString();
-                    
-        //语句            
-        ql -->  "CASE status WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END              
-    
- 
 #### 4.3 函数的支持（@Func注解实现）     
            
            class XXX {
@@ -457,7 +343,7 @@ Dao 类逻辑框图，如下图所示。
 
 #### 4.4 查询上下文 & 变量
 
-   在一次查询的过程中，Dao会保持一个上下文，查询对象的所有字段值都会放入上下文中，也可以通过 @CtxVar 注解设置上下文。上下文重的变量主要在 condition 条件中使用。
+   在一次查询的过程中，Dao会保持一个上下文，查询对象的所有字段值都会放入上下文中，也可以通过 @CtxVar 注解设置上下文。上下文中的变量主要在 condition 条件中使用。
    
 ##### 4.4.1  查询上下文
 
@@ -564,8 +450,7 @@ Dao 类逻辑框图，如下图所示。
   
       SQL查询参数匹配样式：${:paramName}  如下: 
        
-          t.score +  ${:val}    替换后的语句 -->     t.score +  :?
-          
+          t.score +  ${:val}    替换后的语句 -->     t.score +  :?          
       
       文本替换样式：${paramName}   如下：
       
@@ -904,6 +789,15 @@ Dao 类逻辑框图，如下图所示。
         @In("status")
         DTO subQueryDTO = new DTO();
 
+            //子查询，并使用命名参数，命名参数从Map变量中取
+            @NotExists(paramExpr = "select '${_name}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
+        //            int minScore =5;
+            Map<String, Object> namedParams = new HashMap<>();
+        
+        
+            //子查询，子查询将从subQueryDTO查询对象中生成
+            @NotExists
+            SubQueryDTO subQueryDTO = new SubQueryDTO();
 
 ### 9 排序(OrderBy注解)
 
@@ -929,6 +823,7 @@ Dao 类逻辑框图，如下图所示。
     
     
    简单排序注解 SimpleOrderBy 
+   一般情况下不建议使用，有SQL注入风险。
    
          @SimpleOrderBy(condition = "state.length > 0")
          String[] orderBy = {"state desc", "name asc"};
@@ -1046,8 +941,8 @@ Dao 类逻辑框图，如下图所示。
       String notInName = "A,B,C";  //生成语句 name not in (:?,:?,:?)
       
       
-       @In(not = true, having = true)
-       String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
+      @In(not = true, having = true)
+      String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
         
     
 ### 11  避免 N + 1 查询        
@@ -1146,25 +1041,6 @@ Dao 类逻辑框图，如下图所示。
      @EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteField = "state", logicalDeleteValue = "deleted")
      //注解声明实体不允许物理删除，dao 会自动执行逻辑删除。
    
-  安全控制接口定义
-   
-       public interface SafeController<T> {
-       
-           /**
-            * 禁止安全模式
-            */
-           T disableSafeMode();
-       
-           /**
-            * 安全模式
-            * <p>
-            * 在安全模式下，不允许无条件的查询、更新和删除
-            *
-            * @return
-            */
-           boolean isSafeMode();
-           
-       }
        
 #### 12.1 逻辑删除 & 权限控制
 
@@ -1198,9 +1074,6 @@ Dao 类逻辑框图，如下图所示。
      
          @Desc("分数")
          Integer score;
-     
-         @Desc("操作")
-         Op op;
      
      }
   
@@ -1263,14 +1136,12 @@ Dao 类逻辑框图，如下图所示。
    
    代码生成插件配置如下：
    
-   
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.3.1.RELEASE</levin.simple-dao.version>
-             <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
+             <levin.simple-dao.version>2.3.3.RELEASE</levin.simple-dao.version>
+             <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
               
-        
                <repositories>
            
                    <repository>

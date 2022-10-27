@@ -1,11 +1,14 @@
 package com.levin.commons.dao;
 
 import com.levin.commons.dao.support.PagingData;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
@@ -130,7 +133,15 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     String getEntityIdAttrName(Object entity);
 
-
+    /**
+     * 通过查询对象查询唯一约束的对象ID
+     *
+     * @param queryObj
+     * @param entityClass
+     * @param <ID>
+     * @return
+     */
+    <ID> ID findUniqueEntityId(@NotNull Object queryObj, @Nullable Class<?> entityClass, BiConsumer<ID, String> onFind);
     /////////////////////////////////////////////////////////////////
 
     /**
@@ -212,29 +223,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <E> E findOneByQueryObj(Class<E> resultType, Object... queryObjs);
-
-
-    /**
-     * 智能属性拷贝，使用Spring转换器
-     *
-     * @param source
-     * @param target
-     * @param deep             拷贝深度，建议不要超过3级
-     * @param ignoreProperties 忽略目标对象的属性
-     *                         a.b.c.name* *号表示忽略以什么开头的属性
-     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
-     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
-     *                         spel:...
-     * @return
-     */
-    <T> T copyProperties(Object source, Object target, int deep, String... ignoreProperties);
-
-    /**
-     * 深度拷贝器
-     *
-     * @return
-     */
-    DeepCopier getDeepCopier();
 
     /**
      * 获取事务管理器

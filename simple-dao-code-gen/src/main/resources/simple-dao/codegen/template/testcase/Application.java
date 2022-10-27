@@ -1,17 +1,30 @@
 package ${modulePackageName};
 
 import com.levin.commons.service.support.*;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.*;
 import org.springframework.beans.factory.annotation.*;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.plugin.support.PluginManagerImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
 
 /**
  *  启动类
@@ -19,26 +32,45 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication
 @Slf4j
+
+@EnableScheduling
+@EnableCaching
+@EnableAsync
 public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
-    @Autowired
+    @Resource
     Environment environment;
 
-    @Bean
-    PluginManager pluginManager() {
 
-        return new PluginManagerImpl() {
-            @Override
-            public void onApplicationEvent(ContextRefreshedEvent event) {
-                log.info("创建自定义的插件管理器-" + getClass().getSimpleName());
-                super.onApplicationEvent(event);
-            }
-        };
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public CorsFilter corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(18000L);
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
+
+
+//    @Bean
+//    PluginManager pluginManager() {
+//        return new PluginManagerImpl() {
+//            @Override
+//            public void onApplicationEvent(ContextRefreshedEvent event) {
+//                log.info("创建自定义的插件管理器-" + getClass().getSimpleName());
+//                super.onApplicationEvent(event);
+//            }
+//        };
+//    }
 
     @Bean
     VariableResolverConfigurer variableResolverConfigurer() {
@@ -53,8 +85,21 @@ public class Application {
             //@todo 增加自定义变量解析器
             //加入
             variableResolverManager.add( new VariableResolver() {
+                /**
+                 * 获取变量
+                 * <p>
+                 * 方法必须永远返回一个ValueHolder对象
+                 *
+                 * @param name                变量名
+                 * @param originalValue       原值
+                 * @param throwExWhenNotFound 当变量无法解析时是否抛出异常
+                 * @param isRequireNotNull
+                 * @param expectTypes         期望的类型
+                 * @return ValueHolder<T>
+                 * @throws VariableNotFoundException 如果变量无法获取将抛出异常
+                 */
                 @Override
-                public <T> ValueHolder<T> resolve(String key, T oldValue, boolean required, Class<?>... classes) throws VariableNotFoundException {
+                public <T> ValueHolder<T> resolve(String key, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
 
                     if (!key.startsWith("env:")) {
                         return ValueHolder.notValue();

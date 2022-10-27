@@ -16,7 +16,9 @@ import org.aspectj.lang.reflect.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -29,11 +31,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Aspect
-@Component(PLUGIN_PREFIX + "ModuleWebControllerAspect")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebControllerAspect", havingValue = "false", matchIfMissing = true)
+@Component(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebControllerAspect {
-
 
     @Resource
     ApplicationContext context;
@@ -50,24 +51,11 @@ public class ModuleWebControllerAspect {
     @Resource
     HttpServletResponse response;
 
-    @Value("${r"$"}{" + PLUGIN_PREFIX + "logHttp:true}")
-    boolean enableLog;
-
-    final AtomicBoolean enableHttpLog = new AtomicBoolean(false);
-
-    /**
-     * 存储本模块的变量解析器
-     */
-    private List<VariableResolver> moduleResolverList = null;
+    @Resource
+    ServerProperties serverProperties;
 
     @PostConstruct
     void init() {
-
-        this.enableHttpLog.set(enableLog);
-
-        //只找出本模块的解析器
-        this.moduleResolverList = SpringContextHolder.findBeanByBeanName(context, VariableResolver.class, PLUGIN_PREFIX);
-
         log.info("init...");
     }
 
@@ -101,77 +89,22 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * 变量注入
+     * 拦截例子
+     *
      *
      * @param joinPoint
      * @throws Throwable
      */
-    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public void injectVar(JoinPoint joinPoint) {
-
-        if(log.isDebugEnabled()) {
-            log.debug("开始为方法 {} 注入变量...", joinPoint.getSignature());
-        }
-
-        String headerValue = request.getHeader(PLUGIN_PREFIX + "logHttp");
-        if (StringUtils.hasText(headerValue)) {
-            enableHttpLog.set(Boolean.TRUE.toString().equalsIgnoreCase(headerValue));
-        }
-        
-        Optional.ofNullable(joinPoint.getArgs()).ifPresent(args -> {
-            Arrays.stream(args)
-                    .filter(Objects::nonNull)
-                    .forEachOrdered(arg -> {
-                        variableInjector.injectByVariableResolver(arg
-                                , () -> moduleResolverList
-                                , () -> variableResolverManager.getVariableResolvers());
-                    });
-        });
+    //@Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public void before(JoinPoint joinPoint) {
 
     }
-
 
     /**
-     * 记录日志
+     *
      */
-    @Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
-
-        if (!enableHttpLog.get() || !log.isDebugEnabled()) {
-            return joinPoint.proceed(joinPoint.getArgs());
-        }
-
-        LinkedHashMap<String, String> headerMap = new LinkedHashMap<>();
-
-        LinkedHashMap<String, Object> paramMap = new LinkedHashMap<>();
-
-        String requestName = getRequestInfo(joinPoint, headerMap, paramMap);
-
-        log.debug("*** " + requestName + " *** URL: {}?{}, headers:{}, 控制器方法参数：{}"
-                , request.getRequestURL(), request.getQueryString()
-                , headerMap, paramMap);
-
-        long st = System.currentTimeMillis();
-
-        //动态修改其参数
-        //注意，如果调用joinPoint.proceed()方法，则修改的参数值不会生效，必须调用joinPoint.proceed(Object[] args)
-        Object result = joinPoint.proceed(joinPoint.getArgs());
-
-        log.debug("*** " + requestName + " *** URL: {}?{}, 执行耗时：{}ms , 响应结果:{}", request.getRequestURL(), request.getQueryString(),
-                (System.currentTimeMillis() - st), result);
-
-        //如果这里不返回result，则目标对象实际返回值会被置为null
-
-        return result;
-
-    }
-
-
-    public String getRequestInfo(ProceedingJoinPoint joinPoint, Map<String, String> headerMap, Map<String, Object> paramMap) throws Throwable {
-
-        //获取方法参数值数组
-        Object[] args = joinPoint.getArgs();
-
+    //@Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         //得到其方法签名
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         //获取方法参数类型数组
@@ -179,52 +112,6 @@ public class ModuleWebControllerAspect {
         String[] paramNames = methodSignature.getParameterNames();
 
         Method method = methodSignature.getMethod();
-
-        String requestName = request.getRequestURI();
-
-        if (method.isAnnotationPresent(Operation.class)) {
-            requestName += " " + method.getAnnotation(Operation.class).summary();
-        } else if (method.isAnnotationPresent(Schema.class)) {
-            requestName += " " + method.getAnnotation(Schema.class).description();
-        } else if (method.isAnnotationPresent(Desc.class)) {
-            requestName += " " + method.getAnnotation(Desc.class).value();
-        }
-
-        if (paramMap != null) {
-
-            if (paramTypes != null && paramTypes.length > 0) {
-
-                if (paramNames == null || paramNames.length != paramTypes.length) {
-                    paramNames = new String[paramTypes.length];
-                }
-
-                for (int i = 0; i < paramTypes.length; i++) {
-                    //  Class paramType = paramTypes[i];
-
-                    String paramName = paramNames[i];
-
-//                    paramName = paramName != null ? paramName : "";
-//                    paramName = paramName + "(" + paramType.getSimpleName() + ")";
-
-                    if (StringUtils.hasText(paramName)) {
-                        paramMap.put(paramName, args[i]);
-                    }
-                }
-            }
-        }
-
-
-        if (headerMap != null) {
-
-            Enumeration<String> headerNames = request.getHeaderNames();
-
-            while (headerNames.hasMoreElements()) {
-                String key = headerNames.nextElement();
-                headerMap.put(key, request.getHeader(key));
-            }
-        }
-
-        return requestName;
+        return joinPoint.proceed(joinPoint.getArgs());
     }
-
 }

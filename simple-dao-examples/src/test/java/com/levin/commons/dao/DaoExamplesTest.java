@@ -4,12 +4,14 @@ import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
+import com.levin.commons.dao.dto.task.CreateTask;
+import com.levin.commons.dao.dto.task.QueryTaskReq;
+import com.levin.commons.dao.dto.task.TaskInfo;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
-import com.levin.commons.dao.repository.SimpleDaoRepository;
 import com.levin.commons.dao.repository.UserDao;
 import com.levin.commons.dao.service.UserService;
 import com.levin.commons.dao.service.dto.QueryUserEvt;
@@ -22,6 +24,7 @@ import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,8 +56,6 @@ public class DaoExamplesTest {
     @Autowired
     SimpleDao dao;
 
-    @Autowired(required = false)
-    SimpleDaoRepository simpleDaoRepository;
 
     @Autowired
     UserDao userDao;
@@ -96,7 +97,6 @@ public class DaoExamplesTest {
     @Before
     public void injectCheck() throws Exception {
         Assert.notNull(dao, "通用DAO没有注入");
-        Assert.notNull(simpleDaoRepository, "simpleDao没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
 
@@ -305,6 +305,11 @@ public class DaoExamplesTest {
 
         }
 
+
+        List<String> names = dao.selectFrom(Group.class).select(E_Group.name).in(E_Group.id, Arrays.asList(1L, 2L, 3, 4, 5)).find();
+
+
+        System.out.println(names);
         //   Session session = entityManager.unwrap(Session.class);
 
         // session.isDirty();
@@ -334,6 +339,59 @@ public class DaoExamplesTest {
 
     }
 
+    @SneakyThrows
+    @Test
+    public void testUniqueTestObj() {
+
+        try {
+            dao.create(new UniqueTestObj());
+            throw new Throwable("未能正确抛出创建异常");
+        } catch (Exception e) {
+        }
+
+        String uuid = UUID.randomUUID().toString();
+
+        dao.create(new UniqueTestObj()
+                .setUuid(uuid)
+                .setUuid2(uuid)
+        );
+
+        try {
+            dao.create(new UniqueTestObj()
+                    .setUuid(uuid)
+                    .setUuid2(uuid)
+            );
+            throw new Throwable("未能正确抛出创建异常");
+        } catch (Exception e) {
+
+        }
+    }
+
+    @Test
+    public void testDtoInject() {
+
+        Task task = dao.create(new CreateTask()
+                .setName("测试任务")
+                .setArea("福州")
+                .setState("新状态")
+                .setActions(Arrays.asList(12, 2, 3, 4, 55, 99))
+        );
+
+
+        Assert.hasText(task.getActions(), "字段转换错误1");
+
+        TaskInfo one = dao.selectFrom(Task.class)
+                .eq(E_Task.id, task.getId())
+                .findOne(TaskInfo.class);
+
+        Assert.notEmpty(one.getActions(), "字段转换错误2");
+
+        one = dao.findOneByQueryObj(new QueryTaskReq());
+
+        System.out.println(one);
+
+    }
+
 
     @Test
     public void testSimpleUserQO() {
@@ -357,6 +415,19 @@ public class DaoExamplesTest {
         System.out.println(byQueryObj);
 
 
+    }
+
+    @Test
+    public void testFieldConvert() {
+
+
+        User user = dao.find(User.class, 1L);
+
+
+        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class);
+
+
+        System.out.println(userInfo);
     }
 
     @Test
@@ -410,6 +481,16 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testGroupDTO() {
+
+        List<GroupInfo> list = dao.findByQueryObj(new GroupDTO());
+
+        System.out.println(list);
+
+    }
+
+
+    @Test
     public void testNativeTableJoinDTO() {
 
         List<NativeTableJoinDTO> byQueryObj = dao.findByQueryObj(NativeTableJoinDTO.class, new NativeTableJoinDTO());
@@ -433,7 +514,6 @@ public class DaoExamplesTest {
                 .when("'B'", "1")
                 .elseExpr("2")
                 .toString();
-
 
     }
 
@@ -516,7 +596,6 @@ public class DaoExamplesTest {
         UserInfo userInfo3 = dao.findOneByQueryObj(UserInfo.class, new QueryUserEvt().setId(userInfo2.getId()));
 
         Assert.isTrue(userInfo3.getScore() == userInfo2.getScore() + 5);
-
 
     }
 
@@ -732,36 +811,6 @@ public class DaoExamplesTest {
 
     }
 
-
-    @Test
-    public void testSimpleDao() {
-
-        try {
-            User user = simpleDaoRepository.findOne(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            List<User> users = simpleDaoRepository.find(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            int update = simpleDaoRepository.update(new UserUpdateDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            int delete = simpleDaoRepository.delete(new UserDTO());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
 
     @Test
     public void testTestEntityStatDto() {
@@ -985,7 +1034,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.name)
                 .find((User u) -> u.getGroup())
                 .stream()
-                .map(g -> (dao.copyProperties(g, new Group(), 2)))
+                .map(g -> (dao.copy(g, new Group(), 2)))
                 .forEach(System.out::println)
 //                .findFirst()
 //                .ifPresent(System.out::println)
@@ -1304,7 +1353,7 @@ public class DaoExamplesTest {
     public void testCListAnno1() throws Exception {
 
 
-        List<TestEntity> objects = dao.findByQueryObj(  new TestEntityDto());
+        List<TestEntity> objects = dao.findByQueryObj(new TestEntityDto());
 
         Assert.notNull(objects, "");
 

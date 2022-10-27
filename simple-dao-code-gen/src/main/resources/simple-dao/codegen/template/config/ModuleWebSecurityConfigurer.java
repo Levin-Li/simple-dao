@@ -4,6 +4,8 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
+import javax.annotation.*;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,7 +30,7 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
 @ConditionalOnClass({WebSecurityConfigurer.class})
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleWebSecurityConfigurer", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {
 
 

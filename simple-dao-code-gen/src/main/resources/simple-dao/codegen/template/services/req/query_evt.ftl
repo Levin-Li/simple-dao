@@ -2,8 +2,9 @@ package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 
-<#--import com.oak.api.model.ApiBaseQueryReq;-->
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.levin.commons.dao.annotation.Ignore;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -16,6 +17,8 @@ import com.levin.commons.dao.annotation.misc.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
+
+import org.springframework.format.annotation.*;
 
 import javax.validation.constraints.*;
 import javax.annotation.*;
@@ -50,45 +53,64 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
-@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS
-, resultClass = ${entityName}Info.class)
+@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')}{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+    @Ignore
+    @Schema(description = "排序字段")
+    String orderBy;
+
+    //@Ignore
+    @Schema(description = "排序方向-desc asc")
+    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
+    OrderBy.Type orderDir;
+
 <#list fields as field>
 
+    <#list field.annotations as annotation>
+    //${annotation}
+    </#list>
+    <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
-    @Schema(description = "大于等于${field.desc}")
+    // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Gte
-    private ${field.typeName} gte${field.name?cap_first};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(description = "小于等于${field.desc}")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "小于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Lte
-    private ${field.typeName} lte${field.name?cap_first};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '-日期范围\", ', '')}description = "${field.desc}-日期范围，格式：yyyyMMdd-yyyyMMdd，大于等于且小余等于")
+    @Between(paramDelimiter = "-", patterns = {"yyyyMMdd"})
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+    <#-- 基本类型 -->
     <#elseif field.baseType>
-    @Schema(description = "${field.desc}")
-    private ${field.typeName} ${field.name};
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}")
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
-    @Schema(description = "${field.desc}")
-    @Contains(E_${entityName}.${field.name})
-    private ${field.typeName} ${field.name}Contains;
+    <#-- 模糊匹配 -->
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - ${field.desc}")
+    @${field.extras.nameSuffix}
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     <#elseif field.lazy!>
     @Schema(description = "是否加载${field.desc}")
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
-    private Boolean load${field.name?cap_first};
+    Boolean load${field.name?cap_first};
     </#if>
-
+    <#-- 字段结束 -->
 </#list>
 
 <#if pkField?exists>
+    <#-- 构造函数-->
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
 </#if>
-
+    <#-- 查询前的动作 -->
     @PostConstruct
     public void preQuery() {
         //@todo 查询之前初始化数据

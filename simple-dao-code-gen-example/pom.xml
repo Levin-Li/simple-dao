@@ -121,6 +121,11 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.7.3</version>
+            </dependency>
 
             <dependency>
                 <groupId>${levin.service-support.groupId}</groupId>
@@ -168,6 +173,10 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>-->
 
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
 
         <!-- 引入Swagger3依赖 -->
         <dependency>
@@ -319,25 +328,29 @@
             </plugin>
 
             <plugin>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>simple-dao-codegen</artifactId>
-                <version>${project.version}</version>
-
-
-                <configuration>
-                    <skip>${simple-dao-codegen.skip}</skip>
-                    <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
-
-                </configuration>
-
+                <groupId>com.github.Levin-Li</groupId>
+<!--                <groupId>com.levin.commons</groupId>-->
+                <artifactId>java-code-guard-plugin</artifactId>
+                <version>2.3.9</version>
                 <executions>
                     <execution>
                         <id>encrypt-repackage</id>
                         <goals>
-                            <goal>encrypt-class</goal>
+                            <goal>encrypt-repackage</goal>
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>simple-dao-codegen</artifactId>
+                <version>${project.version}</version>
+
+                <configuration>
+                    <skip>${simple-dao-codegen.skip}</skip>
+                    <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+                </configuration>
 
                 <dependencies>
                     <dependency>

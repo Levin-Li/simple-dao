@@ -2,7 +2,7 @@ package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 
-<#--import com.oak.api.model.ApiBaseReq;-->
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 //自动导入列表
 <#list importList as imp>
-    import ${imp};
+import ${imp};
 </#list>
 ////////////////////////////////////
 
@@ -53,15 +53,17 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-
-    <#if ( field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(description = "${field.desc}" ${field.required?string(', required = true', '')})
+    <#if (field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true', '')})
     <#list field.annotations as annotation>
-    ${annotation}
+    ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
-    private ${field.typeName} ${field.name};
-
+    <#if (field.baseEntityField && field.name =='creator')>
+    @InjectVar(InjectConsts.USER_ID)
     </#if>
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    </#if>
+
 </#list>
 
     @PostConstruct

@@ -16,6 +16,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.*;
 
+import javax.annotation.*;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executor;
@@ -24,17 +25,16 @@ import java.util.concurrent.Executor;
 import ${clazz.name};
 </#list>
 
-@Component(PLUGIN_PREFIX + "ModuleDataInitializer")
 @Slf4j
-@ConditionalOnProperty(value = PLUGIN_PREFIX + "ModuleDataInitializer", havingValue = "false", matchIfMissing = true)
+@Component(PLUGIN_PREFIX + "${className}")
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
+    @Resource
     SimpleDao dao;
 
-    @Autowired
+    @Resource
     JdbcTemplate jdbcTemplate;
-
 
     private ApplicationContext applicationContext;
 

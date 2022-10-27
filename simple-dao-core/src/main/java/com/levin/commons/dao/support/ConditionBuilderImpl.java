@@ -15,6 +15,7 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
+import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,21 +25,26 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
 import static org.springframework.util.StringUtils.containsWhitespace;
@@ -105,6 +111,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected boolean filterLogicDeletedData = true;
 
     protected transient MiniDao dao;
+
+    protected boolean disableEmptyValueFilter = false;
 
     /**
      * 别名缓存
@@ -287,6 +295,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    /**
+     * 获取上下文
+     *
+     * @return
+     */
+    @Override
+    public Map<String, Object> getContext() {
+        return getLocalContext(true);
+    }
 
     /**
      * @return
@@ -459,9 +476,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     @Override
-    public CB appendByMethodParams(Object bean, Method method, Object... args) {
+    public CB appendByMethodParams(Object methodOwnerBean, Method method, Object... args) {
 
-        walkMethod(bean, method, args);
+        walkMethod(methodOwnerBean, method, args);
 
         return (CB) this;
     }
@@ -526,7 +543,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //            throw new IllegalArgumentException("expr has no content");
 //        }
 
-        final Exception exception = new UnsupportedOperationException("");
+        final Exception exception = new UnsupportedOperationException(expr);
 
         String name = exception.getStackTrace()[callMethodDeep].getMethodName();
 
@@ -538,15 +555,29 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
-        if (annotation instanceof IsNotNull
-                || annotation instanceof IsNull
+        Op op = getOp(annotation);
+
+        //如果没有操作，或是操作不需要参数，或是禁止空值过滤，或是参数非空，都加入条件表达式
+        if (op == null
+                || !op.isNeedParamExpr()
+                || disableEmptyValueFilter
                 || !isNullOrEmptyTxt(value)) {
 
             processWhereCondition(null, null, expr, value, null, annotation);
 
         } else {
-            logger.warn("注解 " + name + "无法处理", exception);
+            if (logger.isDebugEnabled()) {
+                logger.debug("注解 " + name + " 对应的参数值为空，忽略条件，调用堆栈：" + ExceptionUtils.getAllCauseInfo(exception, " -> "));
+            }
         }
+
+        return (CB) this;
+    }
+
+    @Override
+    public CB disableEmptyValueFilter() {
+
+        this.disableEmptyValueFilter = true;
 
         return (CB) this;
     }
@@ -934,7 +965,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return "";
         }
 
-
         //去除空格
         column = column.trim();
 
@@ -1183,7 +1213,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 //////////////////////////////////////////////
 
-    protected void beforeWalkMethod(Object bean, Method method, Object[] args) {
+    protected void beforeWalkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
         //优先
         setQueryOption(args);
@@ -1209,11 +1239,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected void afterWalkMethod(Object bean, Method method, Object[] args) {
+    protected void afterWalkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
     }
 
-    protected void walkMethod(Object bean, Method method, Object[] args) {
+    protected void walkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
         //如果是忽略的方法
         if (method.getAnnotation(Ignore.class) != null) {
@@ -1237,32 +1267,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
-        beforeWalkMethod(bean, method, args);
+        beforeWalkMethod(methodOwnerBean, method, args);
 
         for (int i = 0; i < parameterTypes.length; i++) {
 
             String pName = parameterNames[i];
 
             Annotation[] varAnnotations = parameterAnnotations[i];
-            Class<?> pType = ResolvableType.forMethodParameter(method, i).resolve(parameterTypes[i]);
+
+            //参数获取定义的数据类型
+            Class<?> pType = ResolvableType.forMethodParameter(method, i, methodOwnerBean != null ? methodOwnerBean.getClass() : null)
+                    .resolve(parameterTypes[i]);
+
             Object value = args[i];
 
-            processAttr(bean, method, pName, varAnnotations, pType, value);
+            processAttr(null, null, pName, varAnnotations, pType, value);
 
         }
 
         //之前之后
-        afterWalkMethod(bean, method, args);
+        afterWalkMethod(methodOwnerBean, method, args);
 
-    }
-
-    /**
-     * 解析对象所有的属性，过滤并调用回调
-     *
-     * @param queryObjs
-     */
-    public void walkObject(Object... queryObjs) {
-        walkObject(null, queryObjs);
     }
 
 
@@ -1315,7 +1340,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      *
      * @param queryObjs
      */
-    public void walkObject(AttrCallback attrCallback, Object... queryObjs) {
+    public void walkObject(Object... queryObjs) {
 
         if (queryObjs == null) {
             return;
@@ -1353,13 +1378,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             //没有回调时，表示本地调用
-            if (attrCallback == null) {
-                //尝试设置分页
-                setPaging(queryValueObj);
 
-                //尝试设置查询目标实体
-                setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
-            }
+            //尝试设置分页
+            setPaging(queryValueObj);
+
+            //尝试设置查询目标实体
+            setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
 
             //特别处理
             if (queryValueObj instanceof Map) {
@@ -1367,11 +1391,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //关键方法，必须保证返回的顺序是，父类字段优先出现，然后才是子类的字段
             List<Field> fields = QueryAnnotationUtil.getNonStaticFields(typeClass);
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
 
             processCtxVar(queryValueObj, fields);
+
+            List<?> contexts = DaoContext.getContexts(queryValueObj);
 
             //开始处理字段
             for (Field field : fields) {
@@ -1389,24 +1416,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 try {
 
-                    if (attrCallback != null) {
+                    com.levin.commons.service.support.ValueHolder<Object> valueHolder = dao.getInjectValue(queryValueObj, field, contexts);
 
-                        boolean isContinue = attrCallback.onAction(queryValueObj
-                                , field, field.getName(), field.getAnnotations()
-                                , fieldRealType,
-                                field.get(queryValueObj));
+                    boolean hasValue = valueHolder != null && valueHolder.hasValue();
 
-                        //如果不再处理，则跳出字段处理
-                        if (!isContinue) {
-                            break;
+                    Object value = hasValue ? valueHolder.get() : field.get(queryValueObj);
+
+                    String name = field.getName();
+
+                    if (hasValue) {
+
+                        fieldRealType = value != null ? value.getClass() : fieldRealType;
+
+                        if (StringUtils.hasText(valueHolder.getName())) {
+                            name = valueHolder.getName();
                         }
-
-                    } else {
-                        processAttr(queryValueObj
-                                , field, field.getName(), field.getAnnotations()
-                                , fieldRealType,
-                                field.get(queryValueObj));
                     }
+
+                    processAttr(queryValueObj
+                            , field, name, field.getAnnotations()
+                            , fieldRealType, value);
+
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);
                 }
@@ -1432,61 +1462,59 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             field.setAccessible(true);
 
-            CtxVar ctxVar = field.getAnnotation(CtxVar.class);
+            processCtxVar(queryValueObj, field, field.getAnnotation(CtxVar.class));
 
-            Object fieldValue = null;
+            CtxVar.List list = field.getAnnotation(CtxVar.List.class);
 
-            try {
-                fieldValue = field.get(queryValueObj);
-                if (ctxVar == null
-                        || !evalTrueExpr(queryValueObj, fieldValue, field.getName(), ctxVar.condition())) {
-                    continue;
-                }
-            } catch (IllegalAccessException e) {
-                throw new StatementBuildException(field + "条件过滤失败", e);
-            }
-
-            String name = ctxVar.value();
-
-            if (!StringUtils.hasText(name)) {
-                name = field.getName();
-            }
-
-            if (ctxVar.inject()) {
-
-                //如果是强制覆盖，或是原值为 null
-                if (ctxVar.forceOverride()
-                        || fieldValue == null) {
-                    try {
-
-                        List<Map<String, ?>> contexts = buildContextValues(queryValueObj, fieldValue, field.getName());
-
-                        boolean isSpel = name.toUpperCase().trim().startsWith(ExpressionType.SPEL_PREFIX);
-
-                        name = isSpel ? name.trim().substring(ExpressionType.SPEL_PREFIX.length()) : name;
-
-                        Object tmpValue = isSpel ? ExprUtils.evalSpEL(queryValueObj, name, contexts) : ObjectUtil.findValue(name, true, false, contexts);
-
-                        fieldValue = ObjectUtil.convert(tmpValue, field.getType());
-
-                        field.set(queryValueObj, fieldValue);
-
-                    } catch (IllegalAccessException e) {
-                        throw new StatementBuildException(field + "变量注入识别", e);
-                    }
-                }
-
-            } else {
-
-                Map<String, Object> localContext = getLocalContext(true);
-
-                //如果是强制覆盖 或是原有变量等于 null
-                if (ctxVar.forceOverride()
-                        || localContext.get(name) == null) {
-                    localContext.put(name, fieldValue);
+            if (list != null) {
+                for (CtxVar ctxVar : list.value()) {
+                    processCtxVar(queryValueObj, field, ctxVar);
                 }
             }
         }
+
+        //
+    }
+
+    private void processCtxVar(Object queryValueObj, Field field, CtxVar ctxVar) {
+
+        if (ctxVar == null || field == null) {
+            return;
+        }
+
+        Object exportValue = null;
+
+        try {
+            exportValue = field.get(queryValueObj);
+        } catch (IllegalAccessException e) {
+            throw new StatementBuildException(field + "条件过滤失败", e);
+        }
+
+        if (!evalTrueExpr(queryValueObj, exportValue, field.getName(), ctxVar.condition())) {
+            return;
+        }
+
+        String exportVarName = ctxVar.varName();
+
+        if (!StringUtils.hasText(exportVarName)) {
+            exportVarName = field.getName();
+        }
+
+        Map<String, Object> localContext = getLocalContext(true);
+
+        //如果不是强制覆盖 并且有变量
+        if (!ctxVar.forceOverride() && localContext.containsKey(exportVarName)) {
+            return;
+        }
+
+        String expr = ctxVar.value();
+
+        if (StringUtils.hasText(expr)) {
+            exportValue = ExprUtils.evalSpEL(queryValueObj, expr, buildContextValues(queryValueObj, exportValue, field.getName()));
+        }
+
+        localContext.put(exportVarName, exportValue);
+
     }
 
     /**
@@ -1498,7 +1526,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param queryParams
      * @return
      */
-
     public void walkMap(String paramPrefix, Map<String, Object>... queryParams) {
 
         if (queryParams == null) {
@@ -1545,9 +1572,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 int idx = name.indexOf("_");
 
                 if (idx != -1) {
-
                     opAnno = annotationMap.get(name.substring(0, idx));
-
                 }
 
                 if (opAnno != null) {
@@ -1598,7 +1623,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
+     * 核心方法
+     * <p>
+     * 第一层处理字段或是属性 关联的 组件集合
+     * <p>
+     * 本方法主要处理逻辑注解
+     * <p>
      * 处理单个属性或是方法参数的注解
+     *
      * <p>
      * <p>
      * 单个属性，多个注解的处理入口
@@ -1616,17 +1648,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
+        Assert.hasText(name, "name is empty");
+
         try {
-
-//            BaseModel.TargetModel.builder()
-//                    .fieldOrMethod(fieldOrMethod)
-//                    .rootBean(bean)
-//                    .varType(attrType)
-//                    .name(name)
-//                    .varAnnotations(varAnnotations)
-//                    .value(value)
-//                    .build();
-
             //设置脚本执行功能函数
             elEvalFuncThreadLocal.set((expr, ctxs) -> evalExpr(bean, value, name, expr, null, ctxs));
 
@@ -1681,7 +1705,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr
      * @return
      */
-    public static String evalText(String expr, Map<String, Object>... exMaps) {
+    public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
         BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
 
@@ -1757,10 +1781,54 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     /**
-     * 处理原子属性
-     * 关键处理方法
-     * <p/>
-     * 对每一个字段，对每一个注解循环处理
+     * 自动拆解注解集合，并提交消费
+     *
+     * @param annotation
+     * @param consumer
+     * @return
+     */
+    protected boolean autoConsumerIfList(Annotation annotation, boolean isDoConsume, Consumer<Annotation> consumer) {
+
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+
+        if (!"List".contentEquals(annotationType.getSimpleName())
+                || !annotationType.getName().endsWith("$List")) {
+            return false;
+        }
+
+        Method method = ReflectionUtils.findMethod(annotationType, "value");
+
+        if (method == null) {
+            return false;
+        }
+
+        Class<?> returnType = method.getReturnType();
+
+        if (!returnType.isArray()) {
+            return false;
+        }
+
+        boolean equals = (returnType.getComponentType().getName() + "$List")
+                .contentEquals(annotationType.getName());
+
+        if (equals
+                && isDoConsume
+                && consumer != null) {
+            Annotation[] result = (Annotation[]) ReflectionUtils.invokeMethod(method, annotation);
+            if (result != null) {
+                Stream.of(result).filter(Objects::nonNull).forEachOrdered(consumer);
+            }
+        }
+
+        return equals;
+    }
+
+    /**
+     * 核心方法
+     * <p>
+     * 第二层处理字段或是属性 关联的 组件集合
+     * <p>
+     * 本方法主要对多个注解进行分解，根据数据类型进行分解
      *
      * @param bean
      * @param fieldOrMethod
@@ -1769,169 +1837,122 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param varType
      * @param value
      */
-    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, final Class<?> varType, Object value) {
+    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
 
 //        if (isIgnore(varAnnotations)) {
 //            return;
 //        }
 
-        if (varType == null && value == null) {
-            logger.warn(" *** processAttr " + name + " varType is null and value is null.", new Exception());
+        //如果没有类型，默认获取值的类型
+        if ((varType == null || varType == Object.class) && value != null) {
+            varType = value.getClass();
         }
+
+        if (varType == null && value == null) {
+            logger.warn(" *** processAttr " + name + " varType is null and value is null.");
+        }
+
+        final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType));
+        final boolean isArray = (varType != null && varType.isArray());
 
         final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
-        final Map<Integer, Object> tempParams = new HashMap<>();
+        final AtomicBoolean isNotDaoAnnotation = new AtomicBoolean(true);
 
-        final boolean hasValue = value != null;
+        //合并组件的闭包
+        final Consumer<Annotation> addAnnotationConsumer = annotation -> {
 
-        final boolean isIterable = hasValue && QueryAnnotationUtil.isIterable(value.getClass());
-        final boolean isArray = hasValue && QueryAnnotationUtil.isArray(value.getClass());
+            //
+            isNotDaoAnnotation.set(false);
 
-
-        final Consumer<Annotation> consumer = annotation -> {
             if (annotation instanceof CList) {
-
                 CList clist = (CList) annotation;
-
                 if (isValid(annotation, bean, name, value)) {
-
-                    //如果是CList，并且是迭代条件
-                    if (clist.isIterative() && (isIterable || isArray)) {
-
-                        Object values = isArray ? Arrays.asList((Object[]) value) : value;
-
-                        for (Object paramValue : (Iterable<?>) values) {
-                            for (C c : clist.value()) {
-                                //放入临时参数
-                                tempParams.put(daoAnnotations.size(), paramValue);
-
-                                //放入注解
-                                daoAnnotations.add(c);
-                            }
-                        }
-                    } else {
-                        daoAnnotations.addAll(Arrays.asList(clist.value()));
-                    }
+                    daoAnnotations.addAll(Arrays.asList(clist.value()));
                 }
-
             } else if (annotation instanceof OrderByList) {
-
                 if (isValid(annotation, bean, name, value)) {
                     daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
                 }
-
+            } else if (autoConsumerIfList(annotation, isValid(annotation, bean, name, value), daoAnnotations::add)) {
+                //该if 条件不能去除
+                //自动加入
             } else {
                 daoAnnotations.add(annotation);
             }
         };
 
         //过滤字段级别注解
-        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(consumer);
+        findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(addAnnotationConsumer);
+
+        //如果字段没有注解，则尝试获取类上面的注解
+        if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty() && bean != null) {
+            //扫描类级别注解
+            findNeedProcessDaoAnnotations(fieldOrMethod, bean.getClass().getAnnotations()).forEach(addAnnotationConsumer);
+        }
 
         //如果没有注解
-        if (daoAnnotations.isEmpty()) {
-            //如果字段上没有需要处理的注解
-            //默认为 EQ
+        if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty()) {
 
             boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
 
-            if ((!complexType)) {
+            if (complexType) {
+                //递归加入条件
+                reAppendByQueryObj(value);
+            } else {
+                //如果没有注解，不是复杂类型，则默认为等于查询
+                daoAnnotations.add(getAnnotation(Eq.class));
+            }
 
-                if (bean != null) {
-                    //扫描类级别注解
-                    findNeedProcessDaoAnnotations(null, bean.getClass().getAnnotations()).forEach(consumer);
-                }
+        }
 
-                //如果类上面也没有效注解，
-                if (daoAnnotations.isEmpty()) { // && !isNullOrEmptyTxt(value)
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        Class<?> eleType = null;
 
-                    //如果没有注解，不是复杂类型，则默认为等于查询
-                    Annotation opAnno = getAnnotation(Eq.class);
+        if (isArray) {
+            // eleType = varType.getComponentType();
+        } else if (isIterable) {
+            // ResolvableType.forInstance(bean).getGenerics()
+        }
 
-                    Class tempValType = varType;
+        for (Annotation annotation : daoAnnotations) {
 
-                    if (tempValType == null && value != null) {
-                        tempValType = value.getClass();
-                    }
+            String newName = tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name);
 
-                    //如果参数是一个可迭代对象，改为用 in
-                    if (tempValType != null
-                            && (Iterable.class.isAssignableFrom(tempValType) || tempValType.isArray())) {
-                        opAnno = getAnnotation(In.class);
-                    }
+            //如果是扩展参数的操作 或是 不是迭代类型
+            Op op = getOp(annotation);
 
-                    daoAnnotations.add(opAnno);
-//                    processAttrAnno(bean, fieldOrMethod, varAnnotations, tryGetJpaEntityFieldName(opAnno, entityClass, name), varType, value, opAnno);
+            if (
+                //空值直接忽略迭代
+                    value == null
+                            //如果没有操作 忽略迭代
+                            || op == null
+                            || (!isArray && !isIterable)
+                            //如果是扩展参数的操作，如 IN NotIn Between等
+                            || op.isExpandParamValue()
+                            //如果是不需要参的操作，如 IS NULL，IS NOT NULL
+                            || !op.isNeedParamExpr()) {
+
+                if (isValid(annotation, bean, name, value)) {
+                    processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
                 }
 
             } else {
+                //可迭代参数
+                Iterable<?> iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable<?>) value;
 
-                boolean isIterableOrMap = value instanceof Iterable || value instanceof Map;
+                for (Object paramValue : iterableData) {
 
-                //@todo 数据类型的支持
+                    Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
 
-                //如果是注解的复杂对象
-                if (complexType && !isNullOrEmptyTxt(value) && !isIterableOrMap) {
-                    reAppendByQueryObj(value);
-                } else if (complexType) {
-                    logger.debug("fieldOrMethod:" + fieldOrMethod + " , name:" + name + " discard.");
+                    //迭代循环
+                    if (isValid(annotation, bean, name, paramValue)) {
+                        processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, newVarType, paramValue, annotation);
+                    }
+
                 }
-
             }
         }
-
-        //迭代注解
-        final List<Annotation> annotationList = new ArrayList<>(daoAnnotations.size());
-
-        final AtomicInteger idxAtom = new AtomicInteger(0);
-
-        //临时参数2
-        final Map<Integer, Object> tempParams2 = new HashMap<>();
-
-        for (Annotation daoAnnotation : daoAnnotations) {
-
-            Object paramValue = tempParams.getOrDefault(idxAtom.getAndIncrement(), value);
-
-            if (isValid(daoAnnotation, bean, name, paramValue)) {
-
-                tempParams2.put(annotationList.size(), paramValue);
-
-                annotationList.add(daoAnnotation);
-            }
-
-        }
-
-
-        Check check = findFirstMatched(varAnnotations, Check.class);
-
-        if (check != null) {
-            String pkgName = Eq.class.getPackage().getName();
-            if (annotationList.stream()
-                    .filter(annotation -> annotation.annotationType().getName().startsWith(pkgName))
-                    .count() < check.requireWhereCount()) {
-                throw new StatementBuildException(String.format("fieldOrMethod: %s, name:%s check fail , requireWhereCount >= %s ,remark:%s",
-                        fieldOrMethod, name, check.requireWhereCount(), check.remark()));
-            }
-        }
-
-
-        tempParams.clear();
-        //从 0 开始
-        idxAtom.set(0);
-
-        annotationList.forEach(annotation -> {
-
-            //获取分拆后的参数
-            Object paramValue = tempParams2.getOrDefault(idxAtom.getAndIncrement(), value);
-
-            //如果
-            Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
-
-            processAttrAnno(bean, fieldOrMethod, varAnnotations,
-                    tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name),
-                    newVarType, paramValue, annotation);
-        });
 
     }
 
@@ -1940,7 +1961,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected Class tryGetEntityClass(Annotation annotation) {
+    protected Class<?> tryGetEntityClass(Annotation annotation) {
 
         String domainAlias = ClassUtils.getValue(annotation, E_C.domain, false);
 
@@ -2130,7 +2151,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    protected String buildSubQuery(ValueHolder holder) {
+    protected String buildSubQuery(ValueHolder<?> holder) {
         return ExprUtils.buildSubQuery(holder, getDao(), isNative(), this.context);
     }
 
@@ -2144,7 +2165,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param holder
      * @return
      */
-    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder holder) {
+    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder<?> holder) {
 
         C c = null;
 
@@ -2175,12 +2196,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
 
             c = AnnotationUtils.synthesizeAnnotation(attributes, C.class, null);
-
         }
 
         List<Map<String, ?>> fieldCtxs = this.buildContextValues(holder.root, holder.value, name);
 
-        Function<String, String> domainFunc = (domain) -> evalStringExpr(holder.root, holder.value, name, domain, fieldCtxs);
+        Function<String, String> domainFunc = (domain) -> tryEvalExprIfHasSeplExpr(holder.root, holder.value, name, domain, fieldCtxs);
 
         return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(domainFunc.apply(c.domain()), name), holder, getParamPlaceholder(),
 
@@ -2390,7 +2410,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr
      * @return
      */
-    protected String evalStringExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
+    protected String tryEvalExprIfHasSeplExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
 
         if (!hasText(expr)) {
             return expr;
@@ -2413,6 +2433,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param value
      * @param name
      * @param expr
+     * @param baseContexts 可以为空
+     * @param exMaps
      * @param <T>
      * @return
      */
@@ -2479,11 +2501,32 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     //@todo
     protected Class<?> getExpectFieldType(String domain, String name) {
 
+        Class<?> entityType = null;
+
         if (!hasText(domain)) {
-            return hasEntityClass() ? QueryAnnotationUtil.getFieldType(entityClass, name) : null;
+            entityType = hasEntityClass() ? entityClass : null;
+        } else {
+            entityType = aliasMap.get(domain);
         }
 
-        return QueryAnnotationUtil.getFieldType(aliasMap.get(domain), name);
+        return getFieldType(entityType, name, ((field, type) -> {
+            //如果是枚举，且是原生查询，需要转换为字符串或是整形
+            if (isNative()
+                    && type != null
+                    && type.isEnum()
+                    && field != null) {
+
+                Enumerated e = field.getAnnotation(Enumerated.class);
+
+                if (e == null || EnumType.ORDINAL.equals(e.value())) {
+                    type = Integer.class;
+                } else {
+                    type = String.class;
+                }
+            }
+            return type;
+        }));
+
     }
 
 

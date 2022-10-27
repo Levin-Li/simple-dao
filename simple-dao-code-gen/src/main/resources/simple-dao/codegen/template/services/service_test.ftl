@@ -10,10 +10,10 @@ import ${servicePackageName}.info.*;
 
 <#list fields as field>
     <#if (field.lzay)??>
-        import ${field.classType.package.name}.${field.classType.simpleName};
+import ${field.classType.package.name}.${field.classType.simpleName};
     </#if>
     <#if (field.infoClassName)??>
-        import ${field.infoClassName};
+import ${field.infoClassName};
     </#if>
 </#list>
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import javax.annotation.Resource;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
 public class ${className} {
 
 
-    @Autowired
+    @Resource
     private ${serviceName} ${serviceName?uncap_first};
 
 <#if pkField?exists>
@@ -172,7 +172,7 @@ public class ${className} {
     @Test
     public void delete${entityName}Test() {
 
-        Delete${entityName}Req req = new Delete${entityName}Req();
+        ${entityName}IdReq req = new ${entityName}IdReq();
 
     <#if pkField?exists>
         req.set${pkField.name?cap_first}(${pkField.name});

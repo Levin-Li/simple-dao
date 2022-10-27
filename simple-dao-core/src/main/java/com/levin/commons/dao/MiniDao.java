@@ -1,11 +1,14 @@
 package com.levin.commons.dao;
 
+import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.support.ValueHolder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
-public interface MiniDao {
+public interface MiniDao extends DeepCopier {
 
     interface RS<T> {
 
@@ -57,7 +60,6 @@ public interface MiniDao {
         return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
 
-
     /**
      * 通过表名获取实体类
      *
@@ -106,6 +108,56 @@ public interface MiniDao {
      */
     default String getParamPlaceholder(boolean isNative) {
         return DEFAULT_JDBC_PARAM_PLACEHOLDER;
+    }
+
+
+    /**
+     * 深度属性拷贝
+     *
+     * @param source           拷贝源对象
+     * @param target           实体 或  Class
+     * @param deep             拷贝深度，建议不要超过3级
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     *                         spel:...
+     * @param <T>
+     * @return
+     */
+    @Override
+    default <T> T copy(Object source, T target, int deep, String... ignoreProperties) {
+        return ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
+    }
+
+    /**
+     * 深度拷贝器
+     *
+     * @return
+     */
+    default DeepCopier getDeepCopier() {
+        return this;
+    }
+
+    /**
+     * 注入变量
+     *
+     * @param targetBean
+     * @param varSourceBeans
+     * @return
+     */
+    default List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+        return DaoContext.injectVars(targetBean, varSourceBeans);
+    }
+
+    /**
+     * 注入变量
+     *
+     * @param targetBean
+     * @return
+     */
+    default ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
+        return DaoContext.getInjectValue(targetBean, field, contexts);
     }
 
     /**

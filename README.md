@@ -3,9 +3,9 @@
 
 ### 简介 
    
-   SimpleDao是一个使用注解生成SQL语句和参数的组件，通过在DTO对象中加入自定义注解自动生成查询语句。
+   SimpleDao是一个使用注解生成SQL语句和参数的Dao组件，通过在DTO对象中加入自定义注解自动生成查询语句。
 
-   在项目中应用本组件能大量减少语句的编写和SQL参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询、逻辑删除，安全模式等。
+   在项目中应用本组件能大量减少SQL语句的编写和参数的处理。组件支持Where子句、标量统计函数和Group By子句、Having子句、Order By子句、Select子句、Update Set子句、子查询、逻辑删除，安全模式等。
  
    目前组件基于JPA/Hibernate，如果非JPA环境，可以使用  genFinalStatement()、 genFinalParamList() 方法以来获取SQL语句和参数。
    
@@ -117,7 +117,7 @@
         @Service
         public class ExamStatService {
         
-         @Autowired
+         @Resource
          SimpleDao dao; //通用 Dao
          
          public List<ExamStatDto> stat(ExamStatDto statDto){
@@ -133,7 +133,7 @@
      @RestController
      public class ExamStatController{
      
-        @Autowired
+        @Resource
         ExamStatService examStatService;
         
         @GetMapping("/exam_stat")
@@ -172,9 +172,9 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.3.1.RELEASE</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.3.3.RELEASE</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.version>1.1.21-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
 
     </properties>
   
@@ -222,8 +222,7 @@
    
    ![Image text](./simple-dao-code-gen/src/main/resources/public/images/step-1.png)
    
-   插件将会生成一个示例模块，生成成功后，请刷新项目。
-   
+   插件将会生成一个示例模块，生成成功后，请刷新项目。 
      
 ##### 2.1.3 编译实体模块
 
@@ -252,7 +251,6 @@
    So Easy!  
         
         
-
 ### 3 用户手册
      
    其它请查看 [用户手册](./manual.md) 
@@ -268,4 +266,3 @@
 ### 5 联系作者
 
  邮箱：99668980@qq.com   
- 

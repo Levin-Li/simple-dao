@@ -4,9 +4,20 @@ spring:
   application:
     name: example-server
 
+  #线程池配置
+  task:
+    execution:
+      pool:
+        core-size: 200
+
+    scheduling:
+      pool:
+        size: 30
+
   #环境配置
   profiles:
     active: local # 本地环境
+#    active: @spring.profiles.active@
 
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -56,15 +67,6 @@ spring:
 
   #        hibernate.dialect.storage_engine: innodb
 
-  #线程池配置
-  task:
-    execution:
-      pool:
-        core-size: 200
-
-    scheduling:
-      pool:
-        size: 30
 
 #日志配置
 logging:
@@ -75,3 +77,4 @@ logging:
 #swagger配置
 swagger:
   enabled: true
+#  enable: @swagger.enable@

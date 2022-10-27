@@ -32,7 +32,10 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.springframework.util.StringUtils.containsWhitespace;
 import static org.springframework.util.StringUtils.hasText;
@@ -263,7 +266,7 @@ public abstract class QueryAnnotationUtil {
     public static void addEntityClassMapping(Collection<Class<?>> entityClasses, Function<Class<?>, String> nameConvert) {
 
         Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
-            entityClassList.parallelStream().filter(Objects::nonNull).forEach(cls -> {
+            entityClassList.stream().filter(Objects::nonNull).forEach(cls -> {
 
                 tableNameMappingEntityClassCaches.put(cls.getName(), cls);
 
@@ -371,6 +374,8 @@ public abstract class QueryAnnotationUtil {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * 递归抚平
+     *
      * @param valueList
      * @param paramValues
      * @return
@@ -386,8 +391,8 @@ public abstract class QueryAnnotationUtil {
         }
 
         for (Object paramValue : paramValues) {
-            if (paramValue instanceof Collection) {
-                for (Object pv : ((Collection) paramValue)) {
+            if (paramValue instanceof Iterable) {
+                for (Object pv : ((Iterable) paramValue)) {
                     flattenParams(valueList, pv);
                 }
             } else if (paramValue != null && paramValue.getClass().isArray()) {
@@ -469,6 +474,10 @@ public abstract class QueryAnnotationUtil {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Class<?> getFieldType(Class<?> type, String propertyName) {
+        return getFieldType(type, propertyName, null);
+    }
+
     /**
      * 获取一个对象属性的数据类型
      * <p/>
@@ -478,7 +487,7 @@ public abstract class QueryAnnotationUtil {
      * @param propertyName 支持复杂属性
      * @return
      */
-    public static Class getFieldType(Class<?> type, String propertyName) {
+    public static Class<?> getFieldType(Class<?> type, String propertyName, BiFunction<Field, Class<?>, Class<?>> biFunction) {
 
         if (type == null || !hasText(propertyName)) {
             return null;
@@ -486,12 +495,13 @@ public abstract class QueryAnnotationUtil {
 
         String[] names = propertyName.split("\\.");
 
-
         ResolvableType owner = null;
+
+        Field field = null;
 
         for (int i = 0; i < names.length; i++) {
 
-            Field field = ReflectionUtils.findField(type, names[i]);
+            field = ReflectionUtils.findField(type, names[i]);
 
             if (field == null) {
                 return null;
@@ -500,9 +510,10 @@ public abstract class QueryAnnotationUtil {
             owner = ResolvableType.forField(field, owner);
 
             type = owner.resolve(field.getType());
+
         }
 
-        return type;
+        return biFunction != null ? biFunction.apply(field, type) : type;
     }
 
 
@@ -510,6 +521,9 @@ public abstract class QueryAnnotationUtil {
         return (T) allInstanceMap.get(type.getSimpleName());
     }
 
+    public static <T extends Annotation> T getAnnotation(String simpleName) {
+        return (T) allInstanceMap.get(simpleName);
+    }
 
     public static Annotation[] getAnnotations(Class<? extends Annotation>... types) {
 
@@ -533,6 +547,27 @@ public abstract class QueryAnnotationUtil {
 
 
         return result;
+    }
+
+
+    public static Op getOp(Annotation opAnno) {
+
+        Op op = null;
+
+        try {
+            op = (Op) ReflectionUtils.findMethod(opAnno.annotationType(), E_C.op).invoke(opAnno);
+        } catch (Exception e) {
+
+        }
+
+        if (op == null) {
+            op = Stream.of(Op.values())
+                    .filter(o -> o.name().contentEquals(opAnno.annotationType().getSimpleName()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return op;
     }
 
     /**
@@ -567,7 +602,6 @@ public abstract class QueryAnnotationUtil {
         }
 
         String key = entityClass.getName() + "-" + opAnno.annotationType().getSimpleName() + "-" + name;
-
 
         newName = propertyNameMapCaches.getAndAutoPut(key, v -> true, () -> {
 
@@ -611,25 +645,32 @@ public abstract class QueryAnnotationUtil {
             return null;
         }
 
-        for (Annotation annotation : annotations) {
+        return (A) Stream.of(annotations)
+                .filter(Objects::nonNull)
+                .filter(a -> Stream.of(types).anyMatch(t -> t == a.annotationType()))
+                .findFirst()
+                .orElse(null);
 
-            if (annotation == null) {
-                continue;
-            }
+//        for (Annotation annotation : annotations) {
+//
+//            if (annotation == null) {
+//                continue;
+//            }
+//
+//            for (Class type : types) {
+//
+//                if (type == null) {
+//                    continue;
+//                }
+//
+//                if (annotation.annotationType() == type) {
+//                    return (A) annotation;
+//                }
+//            }
+//        }
+//
+//        return null;
 
-            for (Class type : types) {
-
-                if (type == null) {
-                    continue;
-                }
-
-                if (annotation.annotationType() == type) {
-                    return (A) annotation;
-                }
-            }
-        }
-
-        return null;
     }
 
 
@@ -640,7 +681,6 @@ public abstract class QueryAnnotationUtil {
         if (output == null) {
             output = new LinkedHashMap();
         }
-
 
         for (Map<K, V> source : sources) {
 
@@ -732,6 +772,12 @@ public abstract class QueryAnnotationUtil {
         return hasAnno;
     }
 
+    public static List<Field> getNonStaticFields(Class<?> type) {
+        return getFieldsFromCache(type).stream()
+                .filter(field -> (field.getModifiers() & Modifier.STATIC) == 0)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 获取字段列表，以包括所有父对象的子段
      * <p>
@@ -740,13 +786,17 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static List<Field> getNonStaticFields(Class type) {
+    public static List<Field> getFieldsFromCache(Class<?> type) {
+
+//        if (type == null) {
+//            return Collections.emptyList();
+//        }
 
         List<Field> fields = cacheFields.get(type.getName());
 
         if (fields == null) {
 
-            fields = getFields(type, Modifier.STATIC);
+            fields = getAllFields(type);
 
             //放入不可变的列表
             cacheFields.put(type.getName(), Collections.unmodifiableList(fields));
@@ -757,12 +807,12 @@ public abstract class QueryAnnotationUtil {
 
 
     /**
-     * 获取所有的字段，包括父类的字段
+     * 递归获取所有的字段，包括父类的字段
      *
      * @param type
      * @return
      */
-    static List<Field> getFields(Class type, int excludeModifiers) {
+    static synchronized List<Field> getAllFields(Class<?> type) {
 
         if (type == null
                 || isRootObjectType(type)
@@ -773,16 +823,20 @@ public abstract class QueryAnnotationUtil {
             return Collections.emptyList();
         }
 
+        List<Field> fields = new ArrayList<>(16);
 
-        List<Field> fields = new ArrayList<>(10);
+        //先加入父类的字段
+        Class<?> superclass = type.getSuperclass();
 
-        fields.addAll(getFields(type.getSuperclass(), excludeModifiers));
+        if (superclass != null) {
+            fields.addAll(getFieldsFromCache(superclass));
+        }
 
         for (Field field : type.getDeclaredFields()) {
             //如果不是被过滤的类型
-            if ((field.getModifiers() & excludeModifiers) == 0) {
-                fields.add(field);
-            }
+//            if ((field.getModifiers() & excludeModifiers) == 0) {
+            fields.add(field);
+//            }
         }
 
         return fields;
@@ -817,8 +871,10 @@ public abstract class QueryAnnotationUtil {
 
     /**
      * 判定复杂对象的方法
+     *
+     *
      * <p>
-     * 如果是数组，Map , List 等都不认为是复杂对象
+     * 如果是数组，Map , Iterable 等都不认为是复杂对象
      *
      * <p>
      * 关键方法
@@ -843,7 +899,8 @@ public abstract class QueryAnnotationUtil {
 
         return varType != null
                 && !QueryAnnotationUtil.isPrimitive(varType)
-                && !Object[].class.isAssignableFrom(varType)
+                && !varType.isArray()
+//                && !Object[].class.isAssignableFrom(varType)
                 && !Map.class.isAssignableFrom(varType) //并且不是 Map
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
                 && !varType.isAnnotationPresent(PrimitiveValue.class);
@@ -868,7 +925,7 @@ public abstract class QueryAnnotationUtil {
 
             int length = Array.getLength(value);
 
-            ArrayList list = new ArrayList(length);
+            List list = new ArrayList(length);
 
             for (int i = 0; i < length; i++) {
                 Object v = Array.get(value, i);
@@ -879,16 +936,18 @@ public abstract class QueryAnnotationUtil {
 
             return list;
 
-        } else if (value instanceof Collection) {
+        } else if (value instanceof Iterable) {
 
-            ArrayList list = new ArrayList(((Collection) value).size());
+            List list = new ArrayList();
 
-            for (Object v : (Collection) value) {
+            for (Object v : (Iterable) value) {
                 if (!isNull(v, isFilterEmptyString)) {
                     list.add(v);
                 }
             }
+
             return list;
+
         }
 
         return value;
@@ -917,7 +976,7 @@ public abstract class QueryAnnotationUtil {
 
     public static boolean isRootObjectType(Type type) {
         return (type instanceof Class)
-                && (Object.class == type || Object.class.getName().equals(((Class) type).getName()));
+                && (Object.class == type || Object.class.getName().equals(type.getTypeName()));
     }
 
     /**
@@ -961,11 +1020,11 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean isPrimitive(Class type) {
+    public static boolean isPrimitive(Class<?> type) {
         return BeanUtils.isSimpleProperty(type);
     }
 
-    public static boolean isIgnore(Class clazz) {
+    public static boolean isIgnore(Class<?> clazz) {
         return clazz.isAnnotationPresent(Ignore.class);
     }
 

@@ -13,7 +13,7 @@ import static org.springframework.util.StringUtils.hasText;
 //@ConditionalOnBean(MiniDao.class)
 public abstract class AbstractDaoFactory implements DaoFactory {
 
-//    @Autowired
+//    @Resource
 //    MiniDao dao;
 
     @Autowired(required = false)

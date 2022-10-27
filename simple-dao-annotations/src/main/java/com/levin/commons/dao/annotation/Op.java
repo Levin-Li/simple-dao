@@ -12,6 +12,7 @@ import static com.levin.commons.dao.annotation.Op.OperandType.Param;
 /**
  * 核心枚举类
  *
+ * 表达式生成规则：左操作数 + 操作符 + 前缀 + 右操作数 + 后缀
  * <p>
  * 可扩展操作枚举对象
  */
@@ -19,8 +20,8 @@ import static com.levin.commons.dao.annotation.Op.OperandType.Param;
 public enum Op
         implements Expr<String, String> {
 
-    // 格式
-    // 左操作数 + 操作符 + 前缀 + 右操作数 + 后缀
+    //重点！！！
+    //表达式生成规则：左操作数 + 操作符 + 前缀 + 右操作数 + 后缀
 
     //条件操作
     Eq("="), NotEq("!="),
@@ -29,7 +30,7 @@ public enum Op
 
     Between(),
 
-    //null 判读
+    //null 判读，只需要左操作数
     IsNull("IS NULL", null),
     IsNotNull("IS NOT NULL", null),
 
@@ -267,26 +268,6 @@ public enum Op
         init();
     }
 
-
-    Op(OperandType leftOperandType, String operator, String prefix, OperandType rightOperandType, String suffix) {
-        this.leftOperandType = leftOperandType;
-        this.rightOperandType = rightOperandType;
-        this.operator = operator;
-        this.prefix = prefix;
-        this.suffix = suffix;
-        init();
-    }
-
-    Op(OperandType leftOperandType, OperandType rightOperandType, boolean expandParamValue, String paramDelimiter, String operator, String prefix, String suffix) {
-        this.leftOperandType = leftOperandType;
-        this.rightOperandType = rightOperandType;
-        this.expandParamValue = expandParamValue;
-        this.paramDelimiter = paramDelimiter;
-        this.operator = operator;
-        this.prefix = prefix;
-        this.suffix = suffix;
-    }
-
     /**
      * 是否需要参数表达式
      *
@@ -361,6 +342,7 @@ public enum Op
 
         //最后生成后去除头尾空格
         return sb.toString().trim();
+
     }
 
 

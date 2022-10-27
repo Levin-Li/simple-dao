@@ -23,7 +23,6 @@ public @interface Ignore {
     String value() default "";
 
     /**
-     *
      * @return
      */
     Scope scope() default Scope.Default;
@@ -37,7 +36,7 @@ public @interface Ignore {
     Action action() default Action.ALL;
 
 
-    enum Scope{
+    enum Scope {
         Package,
         Type,
         Field,

@@ -19,7 +19,7 @@ public interface EntityConst {
     /**
      *
      */
-    String TYPE_NAME = "实体";
+    String TYPE_NAME = "实体数据";
 
     /**
      *
@@ -30,6 +30,16 @@ public interface EntityConst {
      *
      */
     String QUERY_ACTION = "查询";
+
+    /**
+     *
+     */
+    String STAT_ACTION = "统计";
+
+    /**
+     *
+     */
+    String CLEAR_CACHE_ACTION = "清楚缓存";
 
     /**
      *

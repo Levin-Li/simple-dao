@@ -7,7 +7,10 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
+import com.levin.commons.service.support.Locker;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.boot.model.naming.Identifier;
 import org.slf4j.Logger;
@@ -25,21 +28,24 @@ import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.persistence.*;
 import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+
+import static com.levin.commons.dao.util.QueryAnnotationUtil.getFieldsFromCache;
 
 
 /**
@@ -139,15 +145,13 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
-    //    @Autowired
-    @PersistenceUnit
+    @Resource
     private EntityManagerFactory entityManagerFactory;
 
-    //    @Autowired
-    @PersistenceContext
+    @Resource
     private EntityManager defaultEntityManager;
 
-    @Autowired
+    @Resource
     private PlatformTransactionManager transactionManager;
 
     @Autowired(required = false)
@@ -167,10 +171,11 @@ public class JpaDaoImpl
     @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
     private int safeModeMaxLimit = 2000;
 
-
-    @Autowired
+    @Resource
     private HibernateProperties hibernateProperties;
 
+    private static final Locker uniqueFieldMapLocker = Locker.build();
+    private static final Map<String, List<UniqueField>> uniqueFieldMap = new HashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
@@ -178,18 +183,44 @@ public class JpaDaoImpl
 
     private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
-    private static final DeepCopier deepCopier = new DeepCopier() {
-        @Override
-        public <T> T copy(Object source, Object target, int deep, String... ignoreProperties) {
-            return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
-        }
-    };
-
+    private final DeepCopier deepCopier = this::copy;
 
     private final String AUTO_FLUSH = getClass().getName() + ".session.flush_" + hashCode();
 
     private final String AUTO_CLEAR = getClass().getName() + ".session.clear_" + hashCode();
 
+    @Data
+    @Accessors(chain = true)
+    static class UniqueField {
+
+        String group;
+        String key;
+        String title;
+        final List<Field> fieldList = new ArrayList<>(3);
+
+        UniqueField addField(Field field) {
+            if (!fieldList.contains(field)) {
+                fieldList.add(field);
+            }
+            return this;
+        }
+
+        UniqueField finish() {
+
+            fieldList.forEach(field -> field.setAccessible(true));
+
+            key = fieldList.stream().map(Field::getName).collect(Collectors.joining(","));
+            title = fieldList.stream().map(JpaDaoImpl::getDesc).collect(Collectors.joining("+"));
+
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            return key + ":" + title;
+        }
+
+    }
 
     @Data
     @Accessors(chain = true)
@@ -356,11 +387,6 @@ public class JpaDaoImpl
     }
 
     @Override
-    public <T> T copyProperties(Object source, Object target, int deep, String... ignoreProperties) {
-        return (T) ObjectUtil.copyProperties(source, target, deep, ignoreProperties);
-    }
-
-    @Override
     public JpaDao setParamPlaceholder(String paramPlaceholder) {
 
         this.paramPlaceholder = paramPlaceholder;
@@ -370,7 +396,6 @@ public class JpaDaoImpl
 
     @Override
     public DeepCopier getDeepCopier() {
-
         return deepCopier;
     }
 
@@ -532,9 +557,18 @@ public class JpaDaoImpl
 //                    throw new org.springframework.dao.DataIntegrityViolationException("数据已经存在");
 //                }
 
-                entityOrDto = (E) copyProperties(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
-            }
+                Object old = entityOrDto;
 
+                // 1、先拷贝对象
+                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+
+                //2、注入变量
+                injectVars(entityOrDto, old);
+
+                //新对象初始化参数
+                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
+
+            }
 
         }
 
@@ -546,6 +580,11 @@ public class JpaDaoImpl
     public <E> E create(Object entityOrDto) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
+
+        //查询重复
+        findUniqueEntityId(entityOrDto, null, (id, info) -> {
+            throw new NonUniqueResultException("[" + info + "]必须唯一");
+        });
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
@@ -568,7 +607,7 @@ public class JpaDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = {PersistenceException.class})
     public <E> E save(Object entityOrDto) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
@@ -579,8 +618,18 @@ public class JpaDaoImpl
 
         try {
             //如果是一个 removed 状态的实体，该方法会抛出 IllegalArgumentException 异常。
-            if (getEntityId(entity) != null) {
+
+            Object entityId = getEntityId(entity);
+
+            if (entityId != null) {
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
+
+                findUniqueEntityId(entityOrDto, null, (id, info) -> {
+                    if (!entityId.equals(id)) {
+                        throw new NonUniqueResultException("[" + info + "]必须唯一");
+                    }
+                });
+
                 entity = em.merge(entity);
 
                 // tryAutoFlushAndDetachAfterUpdate(em, entity);
@@ -596,11 +645,13 @@ public class JpaDaoImpl
         if (!mergeOk) {
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
+            findUniqueEntityId(entityOrDto, null, (id, info) -> {
+                throw new NonUniqueResultException("[" + info + "]必须唯一");
+            });
             em.persist(entity);
         }
 
         return entity;
-
     }
 
     @Override
@@ -618,7 +669,6 @@ public class JpaDaoImpl
             em.remove(entity);
             //tryAutoFlushAndDetachAfterUpdate(em, null);
         }
-
     }
 
     @Override
@@ -709,7 +759,7 @@ public class JpaDaoImpl
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
-        setParams(getParamStartIndex(isNative), query, paramValueList);
+        setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
@@ -800,6 +850,193 @@ public class JpaDaoImpl
         }
 
         return fieldOrMethod;
+    }
+
+    static Optional<String> findFirst(String... texts) {
+        return Arrays.stream(texts)
+                .filter(StringUtils::hasText)
+                .findFirst();
+    }
+
+    static String getDesc(Field field) {
+        return Optional.ofNullable(field.getAnnotation(Schema.class))
+                .map(schema -> findFirst(schema.title(), schema.description()).orElse(field.getName()))
+                .orElse(field.getName());
+    }
+
+
+    /**
+     * 通过查询对象查询唯一约束的对象ID
+     *
+     * @param queryObj
+     * @param entityClass
+     * @return
+     */
+    @Override
+    public <ID> ID findUniqueEntityId(@NotNull Object queryObj, Class<?> entityClass, BiConsumer<ID, String> onFind) {
+
+        Assert.notNull(queryObj, "查询对象为空");
+
+        //尝试自动获取实体类
+        if (entityClass == null) {
+
+            TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
+
+            if (targetOption != null) {
+                entityClass = targetOption.entityClass();
+            }
+
+            if (!isEntityClass(entityClass)
+                    && isEntityClass(queryObj.getClass())) {
+                entityClass = queryObj.getClass();
+            }
+        }
+
+        Assert.isTrue(isEntityClass(entityClass), "查询实体未明确");
+
+        final String className = entityClass.getName();
+
+        List<UniqueField> uniqueFields = null;
+
+        //同步
+        synchronized (uniqueFieldMapLocker.getLock(className)) {
+            uniqueFields = uniqueFieldMap.get(className);
+            if (uniqueFields == null) {
+                uniqueFields = getUniqueFields(entityClass);
+                uniqueFieldMap.put(className, uniqueFields);
+            }
+        }
+
+        //开始查找
+        for (UniqueField uniqueField : uniqueFields) {
+
+            ID id = findIdByUniqueField(entityClass, queryObj, uniqueField);
+
+            if (id != null) {
+                if (onFind != null) {
+                    onFind.accept(id, uniqueField.getTitle());
+                }
+                return id;
+            }
+        }
+
+        return null;
+    }
+
+    @SneakyThrows
+    private <ID> ID findIdByUniqueField(Class<?> entityClass, Object queryObj, UniqueField uniqueField) {
+
+        SelectDao<?> selectDao = selectFrom(entityClass)
+                .disableEmptyValueFilter()
+                .select(getEntityIdAttrName(entityClass));
+
+//        String idAttrName = getEntityIdAttrName(entityClass);
+//        Object id = ObjectUtil.getValue(queryObj, idAttrName, false);
+//        //增加ID不等于自己
+//        if (id != null) {
+//            selectDao.notEq(idAttrName, id);
+//        }
+
+        for (Field field : uniqueField.fieldList) {
+
+            String fieldName = field.getName();
+
+            Object value = ObjectUtil.getValue(queryObj, fieldName, true);
+
+            if (value == null) {
+                selectDao.isNull(fieldName);
+            } else {
+                selectDao.eq(fieldName, value);
+            }
+        }
+
+        //只查ID
+        return selectDao.findOne();
+    }
+
+    private static List<UniqueField> getUniqueFields(Class<?> entityClass) {
+
+        List<UniqueField> uniqueFields = new ArrayList<>(3);
+
+        Map<String, UniqueField> tmp = new LinkedHashMap<>();
+
+        //1、获取Unique注解要求的唯一约束
+        getFieldsFromCache(entityClass)
+                .stream()
+                .filter(field -> field.isAnnotationPresent(Unique.class))
+                .forEachOrdered(field -> {
+
+                    Unique unique = field.getAnnotation(Unique.class);
+
+                    //如果字段
+                    if (StringUtils.hasText(unique.value())) {
+                        try {
+                            field = getRequireField(entityClass, unique.value().trim());
+                        } catch (NoSuchFieldException e) {
+                            throw new RuntimeException(entityClass + field.getName() + "字段上的注解 Unique(value ="
+                                    + unique.value() + ") 指定的字段不存在", e);
+                        }
+                    }
+
+                    if (StringUtils.hasText(unique.group())) {
+
+                        UniqueField uniqueField = tmp.get(unique.group());
+
+                        if (uniqueField == null) {
+                            uniqueField = new UniqueField().setGroup(unique.group());
+                            tmp.put(unique.group(), uniqueField);
+                            uniqueFields.add(uniqueField);
+                        }
+
+                        uniqueField.addField(field);
+
+                    } else {
+                        uniqueFields.add(new UniqueField().addField(field));
+                    }
+
+                });
+
+        //2、获取 Jpa Table 注解定义的唯一约束
+        Optional.ofNullable(entityClass.getAnnotation(Table.class))
+                .map(table -> table.uniqueConstraints())
+                .ifPresent(uniqueConstraints -> {
+                    for (UniqueConstraint constraint : uniqueConstraints) {
+                        UniqueField uniqueField = new UniqueField();
+                        //唯一约束的列名必须和字段名相同
+                        for (String column : constraint.columnNames()) {
+                            try {
+                                uniqueField.addField(getRequireField(entityClass, column));
+                            } catch (NoSuchFieldException e) {
+                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames{"
+                                        + column + "} 中必须填入类的字段名而不是数据库的字段名", e);
+                            }
+                        }
+                        if (!uniqueField.fieldList.isEmpty()) {
+                            uniqueFields.add(uniqueField);
+                        }
+                    }
+                });
+
+        //3、自动生成描述信息
+        uniqueFields.forEach(UniqueField::finish);
+
+        return uniqueFields;
+    }
+
+    /**
+     * 获取字段
+     *
+     * @param entityClass
+     * @param fieldNames
+     * @return
+     * @throws NoSuchFieldException
+     */
+    private static Field getRequireField(Class<?> entityClass, String... fieldNames) throws NoSuchFieldException {
+        return getFieldsFromCache(entityClass)
+                .stream()
+                .filter(field -> Arrays.stream(fieldNames).anyMatch(n -> field.getName().equals(n)))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchFieldException("" + Arrays.asList(fieldNames)));
     }
 
     /**
@@ -958,7 +1195,7 @@ public class JpaDaoImpl
 //        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
 //        query.setHint("org.hibernate.cacheMode", "REFRESH");
 
-        setParams(getParamStartIndex(isNative), query, paramValueList);
+        setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
 
         setRange(query, start, count);
 
@@ -1060,6 +1297,10 @@ public class JpaDaoImpl
         return clazz != null && clazz != Void.class;
     }
 
+    private boolean isEntityClass(Class clazz) {
+        return isValidClass(clazz)
+                && (clazz.isAnnotationPresent(Entity.class));
+    }
 
     @Override
     public <T> SelectDao<T> forSelect(Object... queryObjs) {
@@ -1129,7 +1370,6 @@ public class JpaDaoImpl
 
     @Override
     public <E> E findOneByQueryObj(Object... queryObjs) {
-
         return (E) findOneByQueryObj(tryFindResultClass(queryObjs), queryObjs);
     }
 
@@ -1197,7 +1437,7 @@ public class JpaDaoImpl
         return query;
     }
 
-    private int setParams(int pIndex, Query query, List paramValueList) {
+    private int setParams(boolean isNative, int pIndex, Query query, List paramValueList) {
 
         Map<Object, Parameter> parameterMap = new LinkedHashMap<>();
 
@@ -1215,7 +1455,8 @@ public class JpaDaoImpl
                         //没有属性会抛出异常
                         Object value = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
-                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(parameterMap, entry.getKey(), value));
+
+                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), value));
 
                     } catch (Exception e) {
 
@@ -1224,7 +1465,7 @@ public class JpaDaoImpl
 
             } else {
 
-                paramValue = tryAutoConvertParamValue(parameterMap, pIndex, paramValue);
+                paramValue = tryAutoConvertParamValue(isNative, parameterMap, pIndex, paramValue);
 
                 //尝试使用命名参数
                 if (parameterMap.containsKey("" + pIndex)) {
@@ -1238,10 +1479,11 @@ public class JpaDaoImpl
             }
         }
 
+
         return pIndex;
     }
 
-    private Object tryAutoConvertParamValue(Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+    private Object tryAutoConvertParamValue(boolean isNative, Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
         //自动转换数据类型
         //@todo 观察，需要关注性能问题
         //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
@@ -1257,15 +1499,22 @@ public class JpaDaoImpl
         }
 
         try {
-            Class parameterType = parameter != null ? parameter.getParameterType() : null;
+            Class<?> parameterType = parameter != null ? parameter.getParameterType() : null;
 
-            if (parameterType != null && !parameterType.equals(paramValue.getClass())) {
+            if (parameterType != null
+                    && !parameterType.equals(paramValue.getClass())) {
+
                 paramValue = ObjectUtil.convert(paramValue, parameterType);
             }
 
         } catch (Exception e) {
             logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
         }
+
+        //关键点，如果是原生查询，枚举要转换城对应的
+//        if (isNative && paramValue != null
+//                && paramValue.getClass().isEnum()) {
+//        }
 
         return paramValue;
     }

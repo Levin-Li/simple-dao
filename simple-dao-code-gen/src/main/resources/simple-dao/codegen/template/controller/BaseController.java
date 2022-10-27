@@ -19,6 +19,9 @@ import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 import javax.validation.constraints.*;
 
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.*;
+
 import ${modulePackageName}.*;
 
 import static ${modulePackageName}.ModuleOption.*;
@@ -35,6 +38,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Slf4j
 //默认需要权限访问
 @ResAuthorize(domain = ID, type = TYPE_NAME)
+@MenuResTag(domain = ID)
 public abstract class BaseController {
 
     @Resource
@@ -65,4 +69,10 @@ public abstract class BaseController {
 
         return (T) selfProxy;
     }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder){
+       // binder.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("MM-dd-yyyy"),false));
+    }
+
 }

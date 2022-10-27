@@ -93,11 +93,15 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("now", new Date().toString());
 
             copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
+
             copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
-            copyAndReplace(false, resTemplateDir + "Group.java", new File(entitiesDir, "Group.java"), mapBuilder.build());
-            copyAndReplace(false, resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
-            copyAndReplace(false, resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "TestOrg.java", new File(entitiesDir, "TestOrg.java"), mapBuilder.build());
+            copyAndReplace(false, resTemplateDir + "TestRole.java", new File(entitiesDir, "TestRole.java"), mapBuilder.build());
+
+//            copyAndReplace(false, resTemplateDir + "User.java", new File(entitiesDir, "User.java"), mapBuilder.build());
+//            copyAndReplace(false, resTemplateDir + "Task.java", new File(entitiesDir, "Task.java"), mapBuilder.build());
 
 
             if (!isPomModule) {

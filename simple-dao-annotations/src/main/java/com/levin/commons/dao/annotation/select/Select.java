@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 
 import java.lang.annotation.*;
 
+@Repeatable(Select.List.class)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -148,21 +149,6 @@ public @interface Select {
 
 
     /**
-     * 针对参数的函数列表
-     * <p>
-     * 后面的函数嵌套前面的函数
-     * <p>
-     * 参数是指字段值或是子查询语句
-     * <p>
-     * 例如 func(:?)  把参数用函数包围
-     * func(select name from user where id = :userId) 把子查询用函数包围
-     *
-     * @return
-     */
-//    Func[] paramFuncs() default {};
-
-
-    /**
      * 对整个表达式的包围前缀
      *
      * @return
@@ -206,4 +192,35 @@ public @interface Select {
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
+    /**
+     * 列表
+     */
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+         *
+         * @return
+         */
+        boolean require() default false;
+
+        /**
+         * 表达式，考虑支持Groovy和SpEL
+         * <p/>
+         * 当条件成立时，整个条件才会被加入
+         *
+         * @return
+         */
+        String condition() default "";
+
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        Select[] value();
+    }
 }

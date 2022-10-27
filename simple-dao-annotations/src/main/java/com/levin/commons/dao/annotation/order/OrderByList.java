@@ -13,9 +13,12 @@ import java.lang.annotation.*;
  *
  * 强制排序
  *
+ * 使用 OrderBy.List 代替
+ *
  * @author llw
  * @version 2.0.0
  */
+@Deprecated
 public @interface OrderByList {
 
     /**
@@ -23,8 +26,7 @@ public @interface OrderByList {
      *
      * @return
      */
-    OrderBy[] value() default {};
-
+    OrderBy[] value();
 
     /**
      * 表达式，考虑支持Groovy和SpEL
@@ -35,4 +37,10 @@ public @interface OrderByList {
      */
     String condition() default "";
 
+    /**
+     * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+     *
+     * @return
+     */
+    boolean require() default false;
 }

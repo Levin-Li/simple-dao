@@ -21,6 +21,8 @@ import javax.validation.constraints.*;
 
 import lombok.*;
 import lombok.experimental.*;
+import org.springframework.util.StringUtils;
+
 import java.util.*;
 
 
@@ -40,5 +42,15 @@ public abstract class BaseReq
 //    @Schema(description = "组织ID" , hidden = true)
 //    @InjectVar(value = InjectConsts.ORG_ID , isRequired = "false")
 //    protected String orgId;
+
+    /**
+     * 是否非空
+     * @param value
+     * @return
+     */
+    protected boolean isNotBlank(Object value){
+        return value != null
+                && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
+    }
 
 }

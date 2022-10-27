@@ -2,7 +2,7 @@ package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 
-<#--import com.oak.api.model.ApiBaseReq;-->
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.service.domain.*;
@@ -31,7 +31,7 @@ import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 //自动导入列表
 <#list importList as imp>
-    import ${imp};
+import ${imp};
 </#list>
 ////////////////////////////////////
 
@@ -60,18 +60,36 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     @Schema(description = "${pkField.desc}" , required = true)
     @NotNull
     @Eq(require = true)
-    private ${pkField.typeName} ${pkField.name};
+    ${pkField.typeName} ${pkField.name};
 </#if>
+
+<#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
+    @Schema(description = "可编辑条件" , hidden = true)
+    @Eq(condition ="!#user.isSuperAdmin()")
+    final boolean eqEditable = true;
+</#if>
+
+<#list UPDATE_fields as field>
+    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
+    <#list field.annotations as annotation>
+        <#if !(annotation?string)?contains("@NotNull")>
+    ${annotation}
+        </#if>
+    </#list>
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    </#if>
+</#list>
 
 <#list fields as field>
     <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
     <#if !(annotation?string)?contains("@NotNull")>
-    //${annotation}
+    ${annotation}
     </#if>
     </#list>
-    @Schema(description = "${field.desc}")
-    private ${field.typeName} ${field.name};
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>
 </#list>
@@ -80,6 +98,14 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+
+    public ${className} set${pkField.name?cap_first}OnNotBlank(${pkField.typeName} ${pkField.name}){
+        if(isNotBlank(${pkField.name})){
+        this.${pkField.name} = ${pkField.name};
+        }
+        return this;
+    }
+
 </#if>
     @PostConstruct
     public void preUpdate() {

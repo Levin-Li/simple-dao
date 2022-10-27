@@ -26,6 +26,14 @@ public @interface Check {
      */
     int requireWhereCount() default 0;
 
+
+    /**
+     * 必须满足
+     *
+     * @return
+     */
+    Class<? extends Annotation>[] requireAnnotations() default {};
+
     /**
      * 备注
      *

@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import javax.annotation.Resource;
 
 <#list serviceClassList as className>
 import ${className};
@@ -53,7 +54,7 @@ import ${className};
  */
 public class TestCase {
 
-    @Autowired
+    @Resource
     SimpleDao simpleDao;
 
 

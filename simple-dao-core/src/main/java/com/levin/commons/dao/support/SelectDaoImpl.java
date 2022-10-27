@@ -454,7 +454,6 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> having(String havingStatement, Object... paramValues) {
-
         return having(true, havingStatement, paramValues);
     }
 
@@ -497,18 +496,13 @@ public class SelectDaoImpl<T>
         if (Boolean.TRUE.equals(isAppend)
                 && columnNames != null) {
             for (String column : columnNames) {
-                if (hasText(column)) {
-                    orderByColumns.add(new OrderByObj(column));
-                }
+                addOrderBy(0, column, null);
             }
         }
 
         return this;
     }
 
-    protected void addOrderBy(String expr, int index, OrderBy.Type type) {
-        orderByColumns.add(new OrderByObj(index, expr, type));
-    }
 
     /**
      * 增加排序字段
@@ -520,36 +514,35 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> orderBy(OrderBy.Type type, String... columnNames) {
 
-        if (columnNames == null || columnNames.length == 0) {
-            return this;
-        }
-
-        //自动增加别名
-        for (int i = 0; i < columnNames.length; i++) {
-            columnNames[i] = aroundColumnPrefix(columnNames[i]);
-        }
-
         if (type == null) {
             type = OrderBy.Type.Desc;
         }
 
-        //加上排序方式
-        for (int i = 0; i < columnNames.length; i++) {
-
-            if (hasText(columnNames[i])) {
-                columnNames[i] = columnNames[i] + " " + type.name();
+        if (columnNames != null) {
+            for (String columnName : columnNames) {
+                addOrderBy(0, aroundColumnPrefix(columnName), type);
             }
-
         }
-
-        orderBy(columnNames);
 
         return this;
     }
 
+    /**
+     * @param index
+     * @param expr
+     * @param type
+     */
+    protected void addOrderBy(int index, String expr, OrderBy.Type type) {
+
+        if (StringUtils.hasText(expr)) {
+            orderByColumns.add(new OrderByObj(index, expr, type));
+        }
+
+    }
+
+
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
-
 
         //处理SelectColumn注解
         processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
@@ -580,17 +573,23 @@ public class SelectDaoImpl<T>
     protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         if ((opAnnotation instanceof OrderBy)) {
+
             OrderBy orderBy = (OrderBy) opAnnotation;
 
-            String domain = evalText(orderBy.domain());
+            appendOrderBy(bean, name, value, null, null, orderBy);
 
-            orderByColumns.add(new OrderByObj(orderBy.order(), aroundColumnPrefix(domain, name), orderBy.type()));
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
-//            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
-            if (value instanceof String) {
-                orderBy((String) value);
+
+            SimpleOrderBy simpleOrderBy = (SimpleOrderBy) opAnnotation;
+
+            if (StringUtils.hasText(simpleOrderBy.expr())) {
+                addOrderBy(simpleOrderBy.order(), evalExpr(bean, value, name, simpleOrderBy.expr(), null), null);
+            } else if (value instanceof String) {
+                addOrderBy(simpleOrderBy.order(), (String) value, null);
             } else if (value instanceof String[]) {
-                orderBy((String[]) value);
+                for (String expr : (String[]) value) {
+                    addOrderBy(simpleOrderBy.order(), expr, null);
+                }
             } else {
                 throw new StatementBuildException("SimpleOrderBy注解必须注释在字符串或是字符串数组字段上");
             }
@@ -620,7 +619,7 @@ public class SelectDaoImpl<T>
 
             Fetch fetch = (Fetch) opAnnotation;
 
-            String domain = evalText(fetch.domain());
+            String domain = evalTextByThreadLocal(fetch.domain());
 
             if (fetch.isBindToField()
                     && fetch.joinType() != Fetch.JoinType.None
@@ -643,12 +642,14 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * @param bean
+     * @param name
      * @param opAnnotation
      * @param expr
      * @param holder
      * @param opParamValue
      */
-    protected void tryAppendHaving(Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
+    protected void tryAppendHaving(Object bean, String name, Annotation opAnnotation, String expr, ValueHolder<? extends Object> holder, Object opParamValue) {
 
         Op op = ClassUtils.getValue(opAnnotation, "havingOp", false);
 
@@ -658,16 +659,29 @@ public class SelectDaoImpl<T>
             return;
         }
 
+        Annotation havingAnnotation = QueryAnnotationUtil.getAnnotation(op.name());
+
+        if (havingAnnotation == null
+                || !isValid(havingAnnotation, bean, name, opParamValue)) {
+            //
+            return;
+        }
+
         expr = op.gen(expr, getParamPlaceholder());
 
         if (Boolean.TRUE.equals(not)) {
             expr = " NOT(" + expr + ") ";
         }
 
-        if (holder != null) {
-            having(expr, holder.value, opParamValue);
+        if (op.isNeedParamExpr()) {
+            //
+            if (holder != null) {
+                having(expr, holder.value, opParamValue);
+            } else {
+                having(expr, opParamValue);
+            }
         } else {
-            having(expr, opParamValue);
+            having(expr);
         }
 
     }
@@ -708,7 +722,7 @@ public class SelectDaoImpl<T>
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
 
-                tryAppendHaving(opAnnotation, expr, holder, value);
+                tryAppendHaving(bean, name, opAnnotation, expr, holder, value);
 
                 String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
@@ -775,7 +789,7 @@ public class SelectDaoImpl<T>
                 groupBy(oldExpr, holder.value);
             }
 
-            tryAppendHaving(opAnnotation, oldExpr, holder, value);
+            tryAppendHaving(bean, name, opAnnotation, oldExpr, holder, value);
 
             // ORDER BY 也不能使用别名
             tryAppendOrderBy(bean, name, holder.value, oldExpr, newAlias, opAnnotation);
@@ -828,9 +842,11 @@ public class SelectDaoImpl<T>
 
     }
 
-    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, final String oldExpr, final String newAlias, OrderBy... orderByList) {
+    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, String oldExpr, final String newAlias, OrderBy... orderByList) {
 
         if (orderByList != null) {
+
+            List<Map<String, ?>> fieldCtxs = this.buildContextValues(root, value, name);
 
             for (int i = 0; i < orderByList.length; i++) {
 
@@ -841,12 +857,24 @@ public class SelectDaoImpl<T>
                     continue;
                 }
 
+                //如果没有表达式，默认为名称
+                String domain = evalTextByThreadLocal(orderBy.domain());
+
+                if (!StringUtils.hasText(oldExpr)) {
+                    oldExpr = aroundColumnPrefix(domain, name);
+                }
+
                 String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
-                expr = hasText(orderBy.value()) ? aroundColumnPrefix(evalText(orderBy.domain()), orderBy.value()) : expr;
+                expr = hasText(orderBy.value()) ? aroundColumnPrefix(domain, orderBy.value()) : expr;
+
+                //再对case进行求职
+                if (orderBy.cases() != null && orderBy.cases().length > 0) {
+                    expr = ExprUtils.genCaseExpr(domain, this::aroundColumnPrefix, tmpExpr -> evalTrueExpr(root, value, name, tmpExpr, fieldCtxs), expr, orderBy.cases());
+                }
 
                 if (hasText(expr)) {
-                    addOrderBy(expr, orderBy.order(), orderBy.type());
+                    addOrderBy(orderBy.order(), expr, orderBy.type());
                 }
             }
         }
@@ -966,7 +994,7 @@ public class SelectDaoImpl<T>
         if (!isCountQueryResult) {
             //以下代理是处理排序语句
             if (orderByColumns.length() > 0) {
-                //排序
+                //按升序排序，从小到大
                 Collections.sort(orderByColumns.getList());
                 builder.append(" Order By  " + orderByColumns);
             } else if (defaultOrderByStatement.length() > 0) {
@@ -1073,7 +1101,7 @@ public class SelectDaoImpl<T>
             //  resultClass = (Class<E>) Tuple.class;
         }
 
-        return (List<E>) dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
+        return dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1232,10 +1260,18 @@ public class SelectDaoImpl<T>
             return (E) data;
         }
 
-        return (E) copyProperties(data, targetType, maxCopyDeep, ignoreProperties);
+        //先拷贝变量
+        E e = (E) copy(data, targetType, maxCopyDeep, ignoreProperties);
+
+        //注入变量
+        getDao().injectVars(e, data, getContext());
+
+        //属性属性拷贝后，进行初始化
+        ClassUtils.invokePostConstructMethod(e);
+
+        return e;
 
     }
-
 
     /**
      * 目的是防止 N + 1 查询
@@ -1309,19 +1345,13 @@ public class SelectDaoImpl<T>
 
     }
 
-
-    public <E> E copyProperties(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
+    public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
-            return (E) ObjectUtil.copyProperties(source, target, maxCopyDeep, ignoreProperties);
+            return (E) dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
             ObjectUtil.fetchPropertiesFilters.set(null);
         }
-    }
-
-    @Override
-    public <E> E copyProperties(Object source, E target, String... ignoreProperties) {
-        return copyProperties(source, target, -1, ignoreProperties);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1337,7 +1367,6 @@ public class SelectDaoImpl<T>
             if (column.startsWith(prefix)) {
                 column = column.substring(prefix.length());
             }
-
         }
 
         return column;
@@ -1545,11 +1574,9 @@ public class SelectDaoImpl<T>
             this.type = type;
         }
 
-        //按从小到大排序
         @Override
         public int compareTo(OrderByObj o) {
-            //按从小到大排序
-            return o.order - order;
+            return order - o.order;
         }
 
         @Override

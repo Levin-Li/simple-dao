@@ -19,6 +19,10 @@ public interface ModuleOption {
      */
     String ID = PACKAGE_NAME;
 
+    /**
+     * module name
+     */
+    String NAME = "XX插件(请修改)";
 
     /**
      * module prefix
@@ -70,5 +74,10 @@ public interface ModuleOption {
      * 注意路径必须以 / 结尾
      */
     String H5_UI_PATH = BASE_PATH + "h5/";
+
+    /**
+     * 注意路径必须以 / 结尾
+     */
+    String HTTP_REQUEST_INFO_RESOLVER = PLUGIN_PREFIX + "HttpRequestInfoResolver";
 
 }

@@ -22,6 +22,13 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T setContext(Map<String, Object> context);
 
     /**
+     * 获取上下文
+     *
+     * @return
+     */
+    Map<String, Object> getContext();
+
+    /**
      * 设置查询结果集的的范围
      * <p/>
      * <p/>
@@ -67,7 +74,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T page(int pageIndex, int pageSize);
 
-
     /**
      * 设置的分页
      *
@@ -76,14 +82,12 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T page(Paging paging);
 
-
     /**
      * 当前limit 是否处于安全区域
      *
      * @return
      */
     boolean isSafeLimit();
-
 
     /**
      * 禁用表名和字段名称转换
@@ -99,7 +103,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      */
     T disableNameConvert();
 
-
     /**
      * 过滤操作已经被逻辑删除的数据
      * 默认时过滤的
@@ -107,7 +110,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @return
      */
     T filterLogicDeletedData(boolean enable);
-
 
     /**
      * 增加where条件及参数
@@ -118,7 +120,6 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @return
      */
     T where(String expr, Object... paramValues);
-
 
     /**
      * 增加where条件及参数
@@ -162,11 +163,11 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * @param args
      * @return
      */
-    T appendByMethodParams(Object bean, Method method, Object... args);
-
+    T appendByMethodParams(Object methodOwnerBean, Method method, Object... args);
 
     /**
      * 按文本表达式构建查询条件
+     * <p>
      * <p/>
      * 如：属性名Q_Not_Like_name  值 llw，表f示会生成查询条件 name not like '%llw%'
      * 注意时间的文本表达式："2016/07/16 23:59:07"
@@ -195,11 +196,10 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * param.put("Q_Not_EndsWith_name5", "llw");
      * param.put("name6", "llw");
      *
-     * @param paramPrefix，如果Q_
-     * @param queryParams
+     * @param paramPrefix，Key前缀，例如：Q_
+     * @param queryParams map
      * @return
      */
-
     T appendByEL(String paramPrefix, Map<String, Object>... queryParams);
 
     /**

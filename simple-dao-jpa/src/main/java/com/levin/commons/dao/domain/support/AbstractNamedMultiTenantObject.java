@@ -1,6 +1,8 @@
 package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.InjectConsts;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -30,7 +32,12 @@ public abstract class AbstractNamedMultiTenantObject
         implements MultiTenantObject {
 
     @Schema(description = "租户ID")
-    @Column(nullable = false)
+    @Column(length = 128)
+    @InjectVar(InjectConsts.TENANT_ID)
     protected String tenantId;
+
+    @Schema(description = "系统域")
+    @Column(length = 128)
+    protected String domain;
 
 }
