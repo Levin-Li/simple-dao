@@ -194,6 +194,9 @@ public abstract class HookAgent {
         return isPrintLog;
     }
 
+    /**
+     * 不要删除
+     */
     public static void classInit() {
         //nothing to do
         if (isPrintLog()) {
@@ -202,6 +205,9 @@ public abstract class HookAgent {
         }
     }
 
+    /**
+     * 不要删除
+     */
     public static void unsafeClassInit() {
         if (isPrintLog()) {
             //nothing to do
@@ -211,6 +217,9 @@ public abstract class HookAgent {
     }
 
 
+    /**
+     * 不要删除
+     */
     public static void checkEnv() {
 
         if (isPrintLog()) {
