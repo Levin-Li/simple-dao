@@ -19,10 +19,13 @@
 
         <revision>2.3.3-SNAPSHOT</revision>
 
-        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
+        <jitpack.groupId>com.github.Levin-Li</jitpack.groupId>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-<!--        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>-->
+        <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
+
+        <!--   <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+
+        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
