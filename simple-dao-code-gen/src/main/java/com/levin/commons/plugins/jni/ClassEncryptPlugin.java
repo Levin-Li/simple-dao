@@ -267,7 +267,8 @@ public class ClassEncryptPlugin extends BaseMojo {
 
                 newJarFileOutStream.putNextEntry(new JarEntry(resPath));
 
-                byte[] encryptData = SimpleLoaderAndTransformer.transform2(HookAgent.DEFAULT_KEY2, processMethodBody(fileContent, name, false, true));
+                String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
+                byte[] encryptData = SimpleLoaderAndTransformer.transform2( DEFAULT_KEY2, processMethodBody(fileContent, name, false, true));
 
                 newJarFileOutStream.write(encryptData);
 
@@ -346,7 +347,9 @@ public class ClassEncryptPlugin extends BaseMojo {
 
             //固定名称，故意混淆名称
             jarOutputStream.putNextEntry(new JarEntry("META-INF/MANIFEST.INF"));
-            jarOutputStream.write(SimpleLoaderAndTransformer.transform1(HookAgent.DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
+
+            String DEFAULT_KEY = "09_HO#$%&^@OK_21";
+            jarOutputStream.write(SimpleLoaderAndTransformer.transform1( DEFAULT_KEY, JniHelper.loadData(HookAgent.class)));
 
         }
 

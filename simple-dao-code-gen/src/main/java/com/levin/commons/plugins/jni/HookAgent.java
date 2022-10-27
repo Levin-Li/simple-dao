@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -34,9 +35,9 @@ public abstract class HookAgent {
     private static final String AGENT_LIB_PREFIX = "-agentlib:";
     private static final String AGENT_PATH_PREFIX = "-agentpath:";
 
-    public static final String DEFAULT_KEY = "09_HO#$%&^@OK_21";
+//    public static final String DEFAULT_KEY = "09_HO#$%&^@OK_21";
 
-    public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
+//    public static final String DEFAULT_KEY2 = "#$%&^@OK_2109_HO";
 
     private static Boolean isPrintLog = null;
 
@@ -45,13 +46,17 @@ public abstract class HookAgent {
     private static SortedSet<String> encryptedList = null;
     private static Map<String, String> manifest = null;
 
+    private static boolean init = false;
 
     private HookAgent() {
+
     }
 
 
     @SneakyThrows
     public static void main(String[] args) {
+
+        init();
 
         if (args == null) {
             args = new String[0];
@@ -69,7 +74,58 @@ public abstract class HookAgent {
 
         //启动主类
         mainClass.getMethod("main", args.getClass()).invoke(null, (Object) args);
+
     }
+
+    @SneakyThrows
+    private static void init() {
+
+        if (init) {
+            return;
+        }
+
+        //暂时没有用
+
+        init = true;
+    }
+
+    /**
+     * 获取加密类名的MD5列表
+     * 本方法会被C++代码调用，请不要删除
+     *
+     * @return
+     */
+    @SneakyThrows
+    private static String[] getEnClassList(ClassLoader loader) {
+
+        if (loader == null) {
+            loader = Thread.currentThread().getContextClassLoader();
+        }
+
+        //加密的类清单文件
+        Enumeration<URL> resources = loader.getResources(MF_ENCRYPT_RES_LIST);
+
+        List<String> list = new ArrayList<>();
+
+        while (resources.hasMoreElements()) {
+
+            URL url = resources.nextElement();
+
+            String text = new String(JniHelper.readAndClose(url.openStream()), HookAgent.UTF8);
+
+            if (isPrintLog()) {
+                System.out.println("Load " + url + " :\n" + text);
+            }
+
+            for (String line : text.split("\\n")) {
+                list.add(line);
+            }
+
+        }
+
+        return list.toArray(new String[list.size()]);
+    }
+
 
     public static Map<String, String> getManifest() {
 
@@ -396,6 +452,7 @@ public abstract class HookAgent {
 
     static {
         checkEnv();
+        init();
     }
 
 }
