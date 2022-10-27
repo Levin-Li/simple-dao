@@ -41,7 +41,6 @@
 
         <io.swagger.core.v3.version>2.1.2</io.swagger.core.v3.version>
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
-
         <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
 
     </properties>
@@ -50,8 +49,8 @@
         <module>simple-dao-annotations</module>
         <module>simple-dao-core</module>
         <module>simple-dao-jpa</module>
-        <module>simple-dao-jpa-starter</module>
         <module>simple-dao-id-generator</module>
+        <module>simple-dao-jpa-starter</module>
         <module>simple-dao-examples</module>
         <module>simple-dao-code-gen</module>
         <module>simple-dao-code-gen-example</module>
