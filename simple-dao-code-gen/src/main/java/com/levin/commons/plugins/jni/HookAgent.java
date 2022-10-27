@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -43,10 +42,11 @@ public abstract class HookAgent {
 
     private static String fileHashcode = null;
 
-    private static SortedSet<String> encryptedList = null;
+    private static SortedSet<String> encryptedClassNameSet = null;
     private static Map<String, String> manifest = null;
 
     private static boolean init = false;
+
 
     private HookAgent() {
 
@@ -135,57 +135,68 @@ public abstract class HookAgent {
             loader = HookAgent.class.getClassLoader();
         }
 
-        synchronized (MF_ENCRYPT_RES_LIST) {
-
-            if (encryptedList == null) {
-
-                Enumeration<URL> resources = null;
-
-                try {
-                    resources = loader.getResources(MF_ENCRYPT_RES_LIST);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-
-                encryptedList = new TreeSet<>();
-
-                while (resources.hasMoreElements()) {
-                    try {
-                        URL url = resources.nextElement();
-
-                        if (isPrintLog()) {
-                            System.out.println("load list res:" + url);
-                        }
-
-                        String[] resList = new String(JniHelper.readAndClose(url.openStream()), Charset.forName(UTF8)).split("\\n");
-
-                        Arrays.stream(resList)
-                                .filter(str -> str != null && str.trim().length() > 0)
-                                .forEachOrdered(encryptedList::add);
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (isPrintLog()) {
-                    System.out.println("encryptedList:" + encryptedList);
-                }
-            }
-        }
+        final Set<String> classNameSet = getEncryptedClassNameSet(loader);
 
 //        if (className == null || className.trim().length() == 0) {
 //            return null;
 //        }
 
-        if (encryptedList == null
-                || !encryptedList.contains(JniHelper.md5("CLS_" + className.replace('/', '.')))) {
+        if (classNameSet == null
+                || !classNameSet.contains(JniHelper.md5("CLS_" + className.replace('/', '.')))) {
             //如果找不到类，快速放回
             return null;
         }
 
         return JniHelper.loadResource(loader, getClassResPath(className));
+    }
+
+
+    /**
+     * 获取所有加密的类名哈希集合
+     *
+     * @param loader
+     * @return
+     */
+    public synchronized static Set<String> getEncryptedClassNameSet(ClassLoader loader) {
+
+        if (encryptedClassNameSet == null) {
+
+            Enumeration<URL> resources = null;
+
+            try {
+                resources = loader.getResources(MF_ENCRYPT_RES_LIST);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+
+            encryptedClassNameSet = new TreeSet<>();
+
+            while (resources.hasMoreElements()) {
+                try {
+                    URL url = resources.nextElement();
+
+                    if (isPrintLog()) {
+                        System.out.println("*** Load MANIFEST: " + url);
+                    }
+
+                    String[] resList = new String(JniHelper.readAndClose(url.openStream()), Charset.forName(UTF8)).split("\\n");
+
+                    Arrays.stream(resList)
+                            .filter(str -> str != null && str.trim().length() > 0)
+                            .forEachOrdered(encryptedClassNameSet::add);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (isPrintLog()) {
+                System.out.println("*** All EncryptedClassNameSet:" + encryptedClassNameSet);
+            }
+        }
+
+        return encryptedClassNameSet;
     }
 
 
