@@ -117,7 +117,7 @@
                             <logOnlyOnError>true</logOnlyOnError>
                             <processors>
                                 <processor>com.querydsl.apt.QuerydslAnnotationProcessor</processor>
-                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>
+<!--                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>-->
                                 <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
                                 <!--                                <processor>com.querydsl.apt.jdo.JDOAnnotationProcessor</processor> -->
                                 <!--                                <processor>com.querydsl.apt.roo.RooAnnotationProcessor</processor> -->

@@ -897,7 +897,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
+    public static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
         File file = new File(fileName);
 
