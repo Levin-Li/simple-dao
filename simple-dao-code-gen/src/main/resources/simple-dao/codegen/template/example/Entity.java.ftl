@@ -4,6 +4,7 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.AbstractNamedMultiTenantObject;
 import com.levin.commons.dao.domain.support.E_AbstractNamedMultiTenantObject;
+import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
@@ -37,13 +38,14 @@ import java.util.List;
 
         uniqueConstraints = {
               //   唯一约束
-              //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_TestRole.code}),
+              //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_${entityName}.code}),
               //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
         }
 )
 public class ${entityName}
  //       extends AbstractBaseEntityObject
  //       extends AbstractNamedMultiTenantObject
+          implements  EntityObject
 {
 
 private static final long serialVersionUID = ${serialVersionUID}L;
