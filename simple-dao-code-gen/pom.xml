@@ -85,7 +85,12 @@
         <dependency>
             <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
-            <scope>runtime</scope>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
         </dependency>
 
         <dependency>

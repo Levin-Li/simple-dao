@@ -16,6 +16,7 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -151,19 +152,27 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
                     .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
+            getLog().info("开始读取数据库：" + dbConfig);
+
             SQLService sqlService = SQLServiceFactory.build(dbConfig);
 
             TableSelector tableSelector = sqlService.getTableSelector(dbConfig);
 
-
             for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
 
                 final String entityName = StrUtil.toCamelCase(tableDefinition.getTableName());
+                File outFile = new File(entitiesDir, entityName + ".java");
+
+                if(outFile.exists()){
+                    continue;
+                }
+
+                logger.info("开始生成实体类:{} -> {}",entityName,outFile);
 
                 Map<String, Object> params = MapUtil
                         .builder("fields", (Object) tableDefinition.getColumnDefinitions())
                         .put("entityName", entityName)
-                        .put("serialVersionUID","9876543210")
+                        .put("serialVersionUID", "9876543210")
                         .put("entityComment", tableDefinition.getComment())
                         .put("entitySchema", tableDefinition.getSchema())
                         .put("entityPkName", StrUtil.toCamelCase(tableDefinition.getPkColumn().getColumnName()))
@@ -171,8 +180,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 params.putAll(mapBuilder.build());
 
-                ServiceModelCodeGenerator.genFileByTemplate(resTemplateDir + "Entity.java.ftl", params, new File(entitiesDir, entityName + ".java").getCanonicalPath());
-
+                ServiceModelCodeGenerator.genFileByTemplate(resTemplateDir + "Entity.java.ftl", params, outFile.getCanonicalPath());
             }
 
 

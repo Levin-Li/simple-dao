@@ -1,12 +1,14 @@
 package com.levin.commons.dao.codegen.db;
 
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 
 @Data
 @Accessors(chain = true)
+@ToString
 public class DbConfig {
 
     private DbType dbType;
@@ -55,8 +57,7 @@ public class DbConfig {
 
     public DbConfig setJdbcUrl(String jdbcUrl) {
 
-        if (StringUtils.hasText(this.jdbcUrl)
-                && this.dbType != null) {
+        if (StringUtils.hasText(jdbcUrl)) {
             this.dbType = DbType.guess(jdbcUrl);
         }
 
