@@ -85,7 +85,6 @@
         <dependency>
             <groupId>${levin.service-support.groupId}</groupId>
             <artifactId>service-support</artifactId>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
