@@ -3,7 +3,6 @@ package com.levin.commons.dao.codegen.db;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
 
 @Data

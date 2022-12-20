@@ -4,6 +4,7 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.dao.codegen.db.*;
+import com.levin.commons.dao.codegen.db.util.FieldUtil;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
@@ -152,6 +153,12 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
                     .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
+            final String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
+
+            if (!StringUtils.hasText(tablePrefix)) {
+                getLog().info("可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体的表前置");
+            }
+
             getLog().info("开始读取数据库：" + dbConfig);
 
             SQLService sqlService = SQLServiceFactory.build(dbConfig);
@@ -160,14 +167,19 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
 
-                final String entityName = StrUtil.toCamelCase(tableDefinition.getTableName());
-                File outFile = new File(entitiesDir, entityName + ".java");
+                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableDefinition.getTableName()));
 
-                if(outFile.exists()){
+                if (StringUtils.hasText(tablePrefix) && !entityName.startsWith(tablePrefix)) {
                     continue;
                 }
 
-                logger.info("开始生成实体类:{} -> {}",entityName,outFile);
+                File outFile = new File(entitiesDir, entityName + ".java");
+
+                if (outFile.exists()) {
+                    continue;
+                }
+
+                logger.info("开始生成实体类:{} -> {}", entityName, outFile);
 
                 Map<String, Object> params = MapUtil
                         .builder("fields", (Object) tableDefinition.getColumnDefinitions())
@@ -180,7 +192,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 params.putAll(mapBuilder.build());
 
-                ServiceModelCodeGenerator.genFileByTemplate(resTemplateDir + "Entity.java.ftl", params, outFile.getCanonicalPath());
+                ServiceModelCodeGenerator.genFileByTemplate("example/Entity.java.ftl", params, outFile.getCanonicalPath());
             }
 
 

@@ -40,16 +40,16 @@ public class DataSourceManager {
     }
 
 
-    public static DataSource getDataSource(DbConfig generatorConfig) {
+    public static DataSource getDataSource(DbConfig dbCfg) {
 
-        String jdbcUrl = generatorConfig.getJdbcUrl() + ":" + generatorConfig.getUsername();
+        final String jdbcKey = dbCfg.getJdbcUrl() + ":" + dbCfg.getUsername();
 
-        DataSource dataSource = DATA_SOURCE_MAP.computeIfAbsent(jdbcUrl, key -> {
+        DataSource dataSource = DATA_SOURCE_MAP.computeIfAbsent(jdbcKey, key -> {
             Properties properties = new Properties();
-            properties.put("driverClassName", generatorConfig.getDriverClass());
-            properties.put("url", generatorConfig.getJdbcUrl());
-            properties.put("username", generatorConfig.getUsername());
-            properties.put("password", generatorConfig.getPassword());
+            properties.put("driverClassName", dbCfg.getDriverClass());
+            properties.put("url", dbCfg.getJdbcUrl());
+            properties.put("username", dbCfg.getUsername());
+            properties.put("password", dbCfg.getPassword());
             // 初始连接数
             properties.put("initialSize", 1);
             // 最大活跃数
@@ -64,7 +64,7 @@ public class DataSourceManager {
             // 连接在所指定的秒数内未使用才会被删除(秒)
             properties.put("removeAbandonedTimeout", 5);
 
-            return new DriverManagerDataSource(jdbcUrl,properties);
+            return new DriverManagerDataSource(dbCfg.getJdbcUrl(),dbCfg.getUsername(),dbCfg.getPassword());
 
         });
 
