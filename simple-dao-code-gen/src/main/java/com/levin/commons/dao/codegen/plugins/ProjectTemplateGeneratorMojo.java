@@ -25,7 +25,7 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * 生成项目模板
  */
-@Mojo(name = "gen-project-template", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "gen-demo-project-template", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
     /**

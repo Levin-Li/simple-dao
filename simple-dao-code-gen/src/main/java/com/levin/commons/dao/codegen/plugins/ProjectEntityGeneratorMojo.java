@@ -16,8 +16,6 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -31,7 +29,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 
 /**
- * 生成项目实体
+ * 从数据库生成项目实体类
  */
 @Mojo(name = "gen-project-entity-form-db", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ProjectEntityGeneratorMojo extends BaseMojo {
@@ -69,7 +67,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
      */
     @Parameter
     private String defaultJdbcUrl = "";
-
 
     /**
      * 默认数据库连接用户名

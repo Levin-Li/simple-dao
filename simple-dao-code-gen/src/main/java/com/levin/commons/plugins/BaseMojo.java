@@ -1,7 +1,6 @@
 package com.levin.commons.plugins;
 
 
-import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -154,12 +153,6 @@ public abstract class BaseMojo extends AbstractMojo {
 
 
     protected final AntPathMatcher antPathMatcher = new AntPathMatcher();
-
-    /**
-     * 线程变量
-     */
-    protected static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
-
 
     private final transient Map<String, Script> cachedScripts = new ConcurrentHashMap<>();
 
