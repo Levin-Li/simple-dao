@@ -33,7 +33,7 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * 生成项目实体
  */
-@Mojo(name = "gen-project-template-form-db", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "gen-project-entity-form-db", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ProjectEntityGeneratorMojo extends BaseMojo {
 
     /**
