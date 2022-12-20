@@ -1,6 +1,5 @@
 package com.levin.commons.dao.codegen.plugins;
 
-import cn.hutool.Hutool;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
