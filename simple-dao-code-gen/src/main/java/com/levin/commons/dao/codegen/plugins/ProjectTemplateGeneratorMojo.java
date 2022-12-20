@@ -48,7 +48,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
      * 默认  "2.3.5.RELEASE"
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.3.5.RELEASE";
+    private String springBootStarterParentVersion = "2.6.14";
 
     {
         independentPluginClassLoader = false;
