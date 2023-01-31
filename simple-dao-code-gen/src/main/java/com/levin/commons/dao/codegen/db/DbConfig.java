@@ -60,6 +60,29 @@ public class DbConfig {
             this.dbType = DbType.guess(jdbcUrl);
         }
 
+        if (!StringUtils.hasText(this.dbName)
+                && DbType.MYSQL.equals(this.dbType)) {
+
+//            jdbc:mysql://localhost:3306/auto_code?sss=ss
+//            jdbc:mysql://localhost:3306/auto_code;sss=ss
+
+            String tempUrl = jdbcUrl;
+
+            int i = tempUrl.indexOf("?");
+
+            if (i == -1) {
+                i = tempUrl.indexOf(";");
+            }
+
+            if (i > 0) {
+                tempUrl = tempUrl.substring(0, i);
+            }
+
+            i = tempUrl.lastIndexOf("/");
+
+            this.dbName = tempUrl.substring(i + 1);
+        }
+
         this.jdbcUrl = jdbcUrl;
 
         return this;
@@ -78,6 +101,10 @@ public class DbConfig {
         String jdbcUrl = dbType.getJdbcUrl();
 
         return String.format(jdbcUrl, host, port, dbName);
+    }
+
+    public static void main(String[] args) {
+        new DbConfig().setJdbcUrl("jdbc:mysql://root:mypass@myhost1:3306/db_name?");
     }
 
 }

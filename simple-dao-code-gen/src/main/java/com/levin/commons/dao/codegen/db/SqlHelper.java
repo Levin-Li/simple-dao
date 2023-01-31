@@ -11,9 +11,12 @@ import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -52,20 +55,41 @@ public class SqlHelper {
      * List<Map<String, Object>> map = SqlHelper.runSql(dataSourceConfig, sql,params);
      * </pre>
      *
-     * @param generatorConfig 配置
-     * @param sql             sql
-     * @param params          参数
+     * @param dbConfig 配置
+     * @param sql      sql
+     * @param params   参数
      * @return 返回查询结果
      */
-    public static List<Map<String, Object>> runSql(DbConfig generatorConfig, String sql,
+    public static List<Map<String, Object>> runSql(DbConfig dbConfig, String sql,
                                                    Map<String, Object> params) {
 
-        DataSource dataSource = DataSourceManager.getDataSource(generatorConfig);
+        DataSource dataSource = DataSourceManager.getDataSource(dbConfig);
         String runSql = buildSqlWithParams(dataSource, sql, params);
         String[] sqls = runSql.split(";");
         Connection conn = null;
         try {
-            conn = DataSourceManager.getConnection(generatorConfig);
+            conn = DataSourceManager.getConnection(dbConfig);
+
+            if (dbConfig.getDbType().equals(DbType.MYSQL)
+                    && !StringUtils.hasText(dbConfig.getDbName())) {
+
+                DatabaseMetaData metaData = conn.getMetaData();
+
+                dbConfig.setUsername(metaData.getUserName());
+
+                ResultSet schemas = metaData.getSchemas();
+
+                while (schemas.next()) {
+                    String schema = schemas.getString("SCHEMA_NAME");
+                    if (!"information_schema".equalsIgnoreCase(schema)) {
+                        dbConfig.setDbName(schema);
+                        break;
+                    }
+                }
+
+                schemas.close();
+            }
+
             SqlRunner runner = buildSqlRunner(conn);
             int sqlCount = sqls.length;
             if (sqlCount == 1) {

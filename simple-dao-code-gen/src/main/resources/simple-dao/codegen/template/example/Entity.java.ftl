@@ -15,7 +15,9 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
-import java.util.List;
+import java.util.*;
+import java.math.*;
+
 
 @Entity(name = EntityConst.PREFIX + "${entityName}")
 @Data
@@ -55,7 +57,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     @Id
     @GeneratedValue<#if !field.isIdentity>(generator = "default_uuid")</#if>
    </#if>
-    @Column(<#if !field.isNullable>nullable = false</#if><#if field.maxLength??>, length = ${field.maxLength}</#if>)
+    @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength??> length = ${field.maxLength}</#if>)
     @Schema(description = "${field.label}")
     protected ${field.fieldTypeBox} ${field.javaFieldName};
 

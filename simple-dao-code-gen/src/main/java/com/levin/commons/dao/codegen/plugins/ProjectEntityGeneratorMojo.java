@@ -174,6 +174,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             String dsPrefix = "spring.datasource.";
 
             DbConfig dbConfig = new DbConfig()
+                    .setDbName(props.getProperty(dsPrefix + "dbName"))
                     .setJdbcUrl(props.getProperty(dsPrefix + "url", defaultJdbcUrl))
                     .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
                     .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
