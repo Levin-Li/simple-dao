@@ -83,7 +83,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
-            String resTemplateDir = "simple-dao/codegen/template/example/";
+            String resTemplateDir = "simple-dao/codegen/template/entity/";
 
             //拷贝 POM 文件
 

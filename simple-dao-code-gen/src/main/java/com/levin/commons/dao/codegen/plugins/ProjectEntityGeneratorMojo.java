@@ -122,7 +122,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
-            String resTemplateDir = "simple-dao/codegen/template/example/";
+            String resTemplateDir = "simple-dao/codegen/template/entity/";
 
             //拷贝 POM 文件
 
@@ -222,7 +222,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 params.putAll(mapBuilder.build());
 
-                ServiceModelCodeGenerator.genFileByTemplate("example/Entity.java.ftl", params, outFile.getCanonicalPath());
+                ServiceModelCodeGenerator.genFileByTemplate("entity/Entity.java.ftl", params, outFile.getCanonicalPath());
             }
 
 

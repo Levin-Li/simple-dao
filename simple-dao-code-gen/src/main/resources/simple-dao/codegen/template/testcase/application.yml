@@ -2,7 +2,7 @@
 
 spring:
   application:
-    name: example-server
+    name: entity-server
 
   #线程池配置
   task:
