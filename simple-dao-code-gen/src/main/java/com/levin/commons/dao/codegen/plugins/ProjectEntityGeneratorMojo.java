@@ -131,6 +131,11 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
+            File resDir = new File(basedir, "src/main/resources");
+
+            if (!resDir.exists()) {
+                resDir.mkdirs();
+            }
 
             YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
             ClassPathResource classPathResource = new ClassPathResource("application.yml");
