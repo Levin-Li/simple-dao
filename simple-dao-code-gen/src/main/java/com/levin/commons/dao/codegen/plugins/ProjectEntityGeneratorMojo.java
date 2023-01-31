@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
@@ -16,14 +17,12 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,6 +82,13 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     @Parameter
     private String defaultJdbcPassword = "";
 
+
+    /**
+     * 要生成实体类的表名称前缀
+     */
+    @Parameter
+    private String defaultTableNamePrefix = "";
+
     {
         independentPluginClassLoader = false;
     }
@@ -131,21 +137,35 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
+            YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
+
             File resDir = new File(basedir, "src/main/resources");
 
             if (!resDir.exists()) {
                 resDir.mkdirs();
             }
 
-            YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
-            ClassPathResource classPathResource = new ClassPathResource("application.yml");
-            ClassPathResource res2 = StringUtils.hasText(springbootProfile) ? new ClassPathResource("application-" + springbootProfile + ".yml") : null;
+            FileSystemResource dbConfigRes = StringUtils.hasText(springbootProfile)
+                    ? new FileSystemResource(new File(resDir, "application-" + springbootProfile + ".yml"))
+                    : new FileSystemResource(new File(resDir, "application.yml"));
 
-            if (res2 != null && res2.exists()) {
-                yamlProperties.setResources(classPathResource, res2);
-            } else {
-                yamlProperties.setResources(classPathResource);
+            if (!dbConfigRes.exists()) {
+
+                FileUtil.writeString("spring.datasource:\n" +
+                                "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
+                                "  username: root\n" +
+                                "  password: \n",
+                        dbConfigRes.getFile(),
+                        "utf-8");
+
+                // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
+
+                logger.info("请在{}中配置数据库连接相关信息，目前支持mysql oracle selserver dm等数据库", dbConfigRes.getFile());
+
+                return;
             }
+
+            yamlProperties.setResources(dbConfigRes);
 
             yamlProperties.afterPropertiesSet();
 
@@ -158,7 +178,11 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
                     .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
-            final String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
+            String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
+
+            if (!StringUtils.hasText(tablePrefix)) {
+                tablePrefix = defaultTableNamePrefix;
+            }
 
             if (!StringUtils.hasText(tablePrefix)) {
                 getLog().info("可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体的表前置");
@@ -174,7 +198,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableDefinition.getTableName()));
 
-                if (StringUtils.hasText(tablePrefix) && !entityName.startsWith(tablePrefix)) {
+                if (StringUtils.hasText(tablePrefix) && !entityName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
                     continue;
                 }
 

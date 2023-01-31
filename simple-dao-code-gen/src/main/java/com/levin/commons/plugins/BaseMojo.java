@@ -145,11 +145,17 @@ public abstract class BaseMojo extends AbstractMojo {
     protected String[] dependenciesScopes = {};
 
     /**
-     * 插件类加载器，需要加载的Scopes
+     * 插件类加载器，需要加载的构件
      */
     @Parameter
     protected String[] includeArtifacts = {};
 
+
+    /**
+     * 默认本地类路径
+     */
+    @Parameter
+    protected String[] defaultLocalClassPaths = {};
 
     protected final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
@@ -193,6 +199,15 @@ public abstract class BaseMojo extends AbstractMojo {
             try {
                 urlList.add(new File(mavenProject.getBuild().getOutputDirectory()).toURI().toURL());
             } catch (MalformedURLException e) {
+            }
+
+            if (defaultLocalClassPaths != null) {
+                for (String defaultLocalClassPath : defaultLocalClassPaths) {
+                    try {
+                        urlList.add(new File(defaultLocalClassPath).toURI().toURL());
+                    } catch (MalformedURLException e) {
+                    }
+                }
             }
 
             //首次默认加入类路径
@@ -425,7 +440,6 @@ public abstract class BaseMojo extends AbstractMojo {
             return;
         }
 
-
         initVars();
 
         String artifactId = mavenProject.getArtifactId();
@@ -483,7 +497,6 @@ public abstract class BaseMojo extends AbstractMojo {
         if (!(vars instanceof LinkedHashMap)) {
             vars = (vars != null) ? new LinkedHashMap<>(vars) : new LinkedHashMap<>();
         }
-
 
         Map projectParams = new LinkedHashMap<>();
 
