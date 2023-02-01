@@ -192,6 +192,12 @@
 
             <dependency>
                 <groupId>${levin.simple-dao.groupId}</groupId>
+                <artifactId>simple-dao-id-generator</artifactId>
+                <version>${levin.simple-dao.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-jpa-starter</artifactId>
                 <version>${levin.simple-dao.version}</version>
             </dependency>

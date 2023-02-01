@@ -99,6 +99,9 @@ public class FieldModel implements Cloneable {
         return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
+    public String getDesc() {
+        return desc != null ? desc.replace("\n", "\\n") : desc;
+    }
 
     /**
      * 是否是基本实体的字段

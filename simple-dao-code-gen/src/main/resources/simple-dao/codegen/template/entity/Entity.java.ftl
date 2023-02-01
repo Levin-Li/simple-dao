@@ -1,6 +1,5 @@
 package ${CLASS_PACKAGE_NAME};
 
-import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.AbstractNamedMultiTenantObject;
 import com.levin.commons.dao.domain.support.E_AbstractNamedMultiTenantObject;
