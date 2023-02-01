@@ -24,7 +24,7 @@ import org.springframework.web.filter.CorsFilter;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
+import java.lang.reflect.Type;
 
 /**
  *  启动类
