@@ -69,7 +69,10 @@ public class MySqlColumnSelector extends ColumnSelector {
 		columnDefinition.setIsPk(isPk);
 
 		String type = FieldUtil.convertString(rowMap.get("TYPE"));
-		columnDefinition.setType(TYPE_FORMATTER.format(type));
+
+		columnDefinition.setType(TYPE_FORMATTER.format(type))
+				.setColumnType(type)
+				.setTypeFormatter(TYPE_FORMATTER);
 
 		columnDefinition.setComment(FieldUtil.convertString(rowMap.get("COMMENT")));
 

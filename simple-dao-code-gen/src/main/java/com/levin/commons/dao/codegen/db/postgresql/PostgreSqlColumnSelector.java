@@ -16,7 +16,7 @@ import static com.levin.commons.dao.codegen.db.util.FieldUtil.convertString;
  */
 public class PostgreSqlColumnSelector extends ColumnSelector {
 
-    private static final PostgreSqlTypeFormatter SQL_TYPE_FORMATTER = new PostgreSqlTypeFormatter();
+    private static final PostgreSqlTypeFormatter TYPE_FORMATTER = new PostgreSqlTypeFormatter();
 
     public PostgreSqlColumnSelector(DbConfig dataBaseConfig) {
         super(dataBaseConfig);
@@ -88,7 +88,9 @@ public class PostgreSqlColumnSelector extends ColumnSelector {
             type = "0".equals(scale) ? "integer" : "decimal";
         }
 
-        columnDefinition.setType(SQL_TYPE_FORMATTER.format(type));
+        columnDefinition.setType(TYPE_FORMATTER.format(type))
+                .setColumnType(type)
+                .setTypeFormatter(TYPE_FORMATTER);
 
         columnDefinition.setComment(convertString(rowMap.get("CMT")));
 

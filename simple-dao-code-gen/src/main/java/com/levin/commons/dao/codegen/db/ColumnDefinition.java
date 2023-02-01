@@ -9,16 +9,30 @@ import org.springframework.util.StringUtils;
 /**
  * 表字段信息
  */
+@Data
+@Accessors(chain = true)
 public class ColumnDefinition {
+
+    /**
+     *
+     */
+    private transient TypeFormatter typeFormatter;
 
     /**
      * 数据库字段名
      */
     private String columnName;
+
     /**
-     * 数据库类型
+     * 数据库字段类型
+     */
+    private String columnType;
+
+    /**
+     * 字段抽象类型
      */
     private String type;
+
     /**
      * 是否自增
      */
@@ -31,6 +45,7 @@ public class ColumnDefinition {
      * 字段注释
      */
     private String comment;
+
     /**
      * 字段长度
      */
@@ -45,8 +60,20 @@ public class ColumnDefinition {
      */
     private boolean isNullable = false;
 
+    public ColumnDefinition setColumnType(String columnType) {
+
+        this.columnType = columnType;
+
+        if (this.columnType != null) {
+            this.columnType = this.columnType.toLowerCase();
+        }
+
+        return this;
+    }
+
     /**
      * 数据库字段名首字母小写
+     *
      * @return
      */
     public String getColumnNameLF() {
@@ -54,24 +81,9 @@ public class ColumnDefinition {
     }
 
     public String getLabel() {
-        return StringUtils.hasLength(comment) ? comment : columnName;
+        return StringUtils.hasLength(comment) ? comment.replace("\n","\\n") : columnName;
     }
 
-    public void setMaxLength(Integer maxLength) {
-        this.maxLength = maxLength;
-    }
-
-    public void setScale(Integer scale) {
-        this.scale = scale;
-    }
-
-    public Integer getMaxLength() {
-        return maxLength;
-    }
-
-    public Integer getScale() {
-        return scale;
-    }
 
     /**
      * 获得基本类型,int,float
@@ -80,7 +92,7 @@ public class ColumnDefinition {
      */
 
     public String getFieldType() {
-        return getColumnTypeConverter().convertType(type);
+        return getColumnTypeConverter().convertType(getType());
     }
 
     /**
@@ -94,28 +106,20 @@ public class ColumnDefinition {
     }
 
     /**
+     *
+     * @return
+     */
+    public Boolean getIsLob() {
+        return typeFormatter.isBlob(getColumnType());
+    }
+
+    /**
      * 是否是自增主键
      *
      * @return true, 是自增主键
      */
     public boolean getIsIdentityPk() {
         return getIsPk() && getIsIdentity();
-    }
-
-    public String getColumnName() {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public Boolean getIsIdentity() {

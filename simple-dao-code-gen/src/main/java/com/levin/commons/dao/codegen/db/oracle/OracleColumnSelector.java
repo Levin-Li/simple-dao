@@ -95,7 +95,10 @@ public class OracleColumnSelector extends ColumnSelector {
 			String scale = String.valueOf(scaleCol);
 			type = "0".equals(scale) ? "int" : "decimal";
 		}
-		columnDefinition.setType(TYPE_FORMATTER.format(type));
+
+		columnDefinition.setType(TYPE_FORMATTER.format(type))
+				.setColumnType(type)
+				.setTypeFormatter(TYPE_FORMATTER);
 
 		columnDefinition.setComment(FieldUtil.convertString(rowMap.get("COMMENTS")));
 
