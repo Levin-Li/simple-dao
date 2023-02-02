@@ -57,21 +57,21 @@ public class TestCase {
     SimpleDao simpleDao;
 
     @BeforeAll
-    public void beforeAll() throws Exception {
+    public static void beforeAll() throws Exception {
+    }
+
+    @AfterAll
+    public static void afterAll() throws Exception {
     }
 
     @BeforeEach
     public void beforeEach() throws Exception {
     }
 
-
     @AfterEach
     public void afterEach() throws Exception {
     }
 
-    @AfterAll
-    public void afterAll() throws Exception {
-    }
 
     @Test
     public void test() {
