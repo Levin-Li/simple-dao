@@ -59,7 +59,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
 <#list fields as field>
    <#if field.isPk>
     @Id
-    @GeneratedValue<#if !field.isIdentity>(generator = "default_uuid")</#if>
+    @GeneratedValue<#if !field.isIdentity>(generator = "default_uid")</#if>
    </#if>
    <#if field.isLob>
     @Lob
