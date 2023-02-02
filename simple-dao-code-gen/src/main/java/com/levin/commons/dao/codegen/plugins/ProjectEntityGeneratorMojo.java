@@ -23,6 +23,8 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -211,8 +213,29 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 logger.info("开始生成实体类:{} -> {}", entityName, outFile);
 
+                /**
+                 *
+                 */
+                Predicate<String> fun = (name) -> tableDefinition.getColumnDefinitions()
+                        .parallelStream()
+                        .filter(columnDefinition -> columnDefinition.getCamelCaseName().equals(name))
+                        .findAny()
+                        .isPresent();
+
+                /**
+                 * 名称为关键字或是以关键字结尾
+                 */
+                BiPredicate<String, String> keywordFun = (name, keywords) -> StrUtil.split(keywords, ',').parallelStream()
+                        .map(keyword -> keyword.trim())
+                        .filter(keyword -> !StrUtil.isBlank(keyword))
+                        .filter(keyword -> name.equals(keyword) || name.endsWith(StrUtil.upperFirst(keyword)))
+                        .findAny()
+                        .isPresent();
+
                 Map<String, Object> params = MapUtil
                         .builder("fields", (Object) tableDefinition.getColumnDefinitions())
+                        .put("attrs", fun)
+                        .put("keywordFun", keywordFun)
                         .put("entityName", entityName)
                         .put("serialVersionUID", "9876543210")
                         .put("entityComment", tableDefinition.getComment())

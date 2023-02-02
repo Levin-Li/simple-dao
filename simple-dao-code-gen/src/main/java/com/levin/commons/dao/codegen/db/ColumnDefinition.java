@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 @Accessors(chain = true)
 public class ColumnDefinition {
 
+
     /**
      *
      */
@@ -60,6 +61,25 @@ public class ColumnDefinition {
      */
     private boolean isNullable = false;
 
+    /**
+     * 返回Pascal命名
+     *
+     * @return
+     */
+    public String getPascalCaseName() {
+        return FieldUtil.upperFirstLetter(getCamelCaseName());
+    }
+
+    /**
+     * 返回驼峰命名
+     *
+     * @return
+     */
+    public String getCamelCaseName() {
+        String fieldName = FieldUtil.underlineFilter(getColumnName());
+        return fieldName.replaceAll("_", "");
+    }
+
     public ColumnDefinition setColumnType(String columnType) {
 
         this.columnType = columnType;
@@ -81,7 +101,7 @@ public class ColumnDefinition {
     }
 
     public String getLabel() {
-        return StringUtils.hasLength(comment) ? comment.replace("\n","\\n") : columnName;
+        return StringUtils.hasLength(comment) ? comment.replace("\n", "\\n") : columnName;
     }
 
 
@@ -106,7 +126,6 @@ public class ColumnDefinition {
     }
 
     /**
-     *
      * @return
      */
     public Boolean getIsLob() {

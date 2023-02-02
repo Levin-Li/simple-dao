@@ -29,12 +29,18 @@ import java.math.*;
 <#if entitySchema??>        //schema = "${entitySchema}",</#if>
         indexes = {
                // 索引
-               // @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-               // @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-               // @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-               // @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
-               // @Index(columnList = E_AbstractNamedMultiTenantObject.name),
-               // @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
+<#if !attrs.test('orderCode')></#if>//               @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
+<#if !attrs.test('enable')>//</#if>                @Index(columnList = AbstractBaseEntityObject.Fields.enable),
+<#if !attrs.test('createTime')></#if>//              @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
+<#if !attrs.test('lastUpdateTime')></#if>//                @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
+<#if !attrs.test('tenantId')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
+<#if !attrs.test('name')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.name),
+
+<#list fields as field>
+    <#if keywordFun.test(field.camelCaseName,'id,time,name,status,type,code,category') >
+              @Index(columnList = E_${entityName}.${field.camelCaseName}),
+    </#if>
+</#list>
         },
 
         uniqueConstraints = {
@@ -64,7 +70,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
    </#if>
     @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
     @Schema(description = "${field.label}")
-    protected ${field.fieldTypeBox} ${field.javaFieldName};
+    protected ${field.fieldTypeBox} ${field.camelCaseName};
 
 </#list>
 

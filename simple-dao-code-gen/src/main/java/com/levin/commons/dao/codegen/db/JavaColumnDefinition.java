@@ -15,6 +15,7 @@ public class JavaColumnDefinition extends ColumnDefinition {
     private static final JavaColumnTypeConverter COLUMN_TYPE_CONVERTER = new JavaColumnTypeConverter();
 
     private static final Map<String, String> TYPE_MYBATIS_MAP = new HashMap<>(64);
+
     static {
         TYPE_MYBATIS_MAP.put(TypeEnum.BIT.getType(), "BOOLEAN");
         TYPE_MYBATIS_MAP.put(TypeEnum.BOOLEAN.getType(), "BOOLEAN");
@@ -34,24 +35,6 @@ public class JavaColumnDefinition extends ColumnDefinition {
         return TYPE_MYBATIS_MAP.getOrDefault(getType(), "VARCHAR");
     }
 
-    /**
-     * 返回java字段名,并且第一个字母大写
-     *
-     * @return 返回字段名
-     */
-    public String getJavaFieldNameUF() {
-        return FieldUtil.upperFirstLetter(getJavaFieldName());
-    }
-
-    /**
-     * 返回java字段
-     *
-     * @return 返回java字段
-     */
-    public String getJavaFieldName() {
-        String fieldName = FieldUtil.underlineFilter(getColumnName());
-        return  fieldName.replaceAll("_", "");
-    }
 
     /**
      * 获得基本类型,int,float

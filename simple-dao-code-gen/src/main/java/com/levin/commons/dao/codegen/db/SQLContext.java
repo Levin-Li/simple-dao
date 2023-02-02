@@ -161,9 +161,9 @@ public class SQLContext {
         return "";
     }
 
-    public String getJavaPkName() {
+    public String getPkCamelCaseName() {
         if (javaPkColumn != null) {
-            return javaPkColumn.getJavaFieldName();
+            return javaPkColumn.getCamelCaseName();
         }
         return "";
     }
