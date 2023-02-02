@@ -4,7 +4,6 @@ import com.levin.commons.service.support.SpringContextHolder;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.service.ServiceRegistry;
@@ -16,7 +15,7 @@ import java.util.Properties;
 /**
  * 代理的ID生成器
  */
-public class DelegateIdGenerator implements IdentifierGenerator, Configurable {
+public class DelegateIdGenerator implements IdentifierGenerator {
 
     IdentifierGenerator identifierGenerator;
 
@@ -24,30 +23,40 @@ public class DelegateIdGenerator implements IdentifierGenerator, Configurable {
     transient Type type;
     transient ServiceRegistry serviceRegistry;
 
+    static boolean isLoaded = false;
+    static IdentifierGenerator ctxIdentifierGenerator;
+
     private IdentifierGenerator getIdentifierGenerator() {
 
-        if (this.identifierGenerator == null) {
-
-            this.identifierGenerator = SpringContextHolder.getBeanFactory()
-                    .getBeanProvider(IdentifierGenerator.class)
-                    .getIfAvailable();
+        //立刻返回
+        if (this.identifierGenerator != null) {
+            return this.identifierGenerator;
         }
 
+        //如果没加载过，只会加载一次
+        if (!isLoaded && ctxIdentifierGenerator == null) {
+
+            ctxIdentifierGenerator = SpringContextHolder.getBeanFactory()
+                    .getBeanProvider(IdentifierGenerator.class)
+                    .getIfAvailable();
+
+            isLoaded = true;
+
+            if (ctxIdentifierGenerator != null) {
+                //初始一次
+                ctxIdentifierGenerator.configure(type, params, serviceRegistry);
+            }
+        }
+
+        this.identifierGenerator = ctxIdentifierGenerator;
+
         if (this.identifierGenerator == null) {
-            //配置
-            identifierGenerator = configure(new UUIDGenerator());
+            //使用默认的生成器
+            this.identifierGenerator = new UUIDGenerator();
+            this.identifierGenerator.configure(type, params, serviceRegistry);
         }
 
         return identifierGenerator;
-    }
-
-    public <T extends IdentifierGenerator> T configure(T generator) {
-
-        if (generator instanceof Configurable) {
-            ((Configurable) generator).configure(type, params, serviceRegistry);
-        }
-
-        return generator;
     }
 
 
@@ -67,13 +76,15 @@ public class DelegateIdGenerator implements IdentifierGenerator, Configurable {
         Class returnedClass = type.getReturnedClass();
 
         if (!returnedClass.isInstance(id)) {
+
             if (String.class == returnedClass) {
                 return id.toString();
-            } else if (Long.class == returnedClass) {
-                return Long.parseLong(id.toString());
             } else if (Integer.class == returnedClass) {
                 return Integer.parseInt(id.toString());
+            } else if (Long.class == returnedClass) {
+                return Long.parseLong(id.toString());
             }
+
         }
 
         return id;

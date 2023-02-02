@@ -1,5 +1,6 @@
 package com.levin.commons.dao.uid.baidu;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,25 +15,21 @@ import java.io.Serializable;
 import java.util.Properties;
 
 @Service(ModuleOption.PLUGIN_PREFIX + "HibernateIDGenerator")
+@Slf4j
 public class HibernateUIDGenerator
-        implements IdentifierGenerator, Configurable {
+        implements IdentifierGenerator {
 
     @Resource
     UidGenerator uidGenerator;
 
     @Override
     public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-
+        log.info("HibernateUIDGenerator configure.");
     }
 
     @Override
     public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
         return uidGenerator.getUID();
-    }
-
-    @Override
-    public boolean supportsJdbcBatchInserts() {
-        return true;
     }
 
 }
