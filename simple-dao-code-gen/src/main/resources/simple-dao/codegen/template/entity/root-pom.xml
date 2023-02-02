@@ -171,7 +171,7 @@
         </profile>
 
         <profile>
-            <id>构件非独立jar包应用</id>
+            <id>构建SpringBoot非单体应用</id>
             <properties>
                 <spring-boot.repackage-not-single-jar>true</spring-boot.repackage-not-single-jar>
                 <spring-boot.repackage-single-jar>false</spring-boot.repackage-single-jar>
