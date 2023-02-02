@@ -46,6 +46,9 @@
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
+        <spring-boot.repackage-not-single-jar>false</spring-boot.repackage-not-single-jar>
+        <spring-boot.repackage-single-jar>true</spring-boot.repackage-single-jar>
+
     </properties>
 
 
@@ -164,6 +167,14 @@
                 <logback.profiles.level>INFO</logback.profiles.level>
                 <logback.profiles.loghub.level>ERROR</logback.profiles.loghub.level>
                 <swagger.enable>false</swagger.enable>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>构件非独立jar包应用</id>
+            <properties>
+                <spring-boot.repackage-not-single-jar>true</spring-boot.repackage-not-single-jar>
+                <spring-boot.repackage-single-jar>false</spring-boot.repackage-single-jar>
             </properties>
         </profile>
 

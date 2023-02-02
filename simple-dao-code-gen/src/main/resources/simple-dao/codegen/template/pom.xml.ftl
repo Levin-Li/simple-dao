@@ -271,6 +271,10 @@
 
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>
+                    <configuration>
+                        <skip>${r"${spring-boot.repackage-single-jar}"}</skip>
+                    </configuration>
+
                     <executions>
 
                         <execution>
@@ -308,6 +312,7 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
 
                     <configuration>
+                        <skip>${r"${spring-boot.repackage-single-jar}"}</skip>
                         <!--   ZIP 布局 -->
                         <layout>ZIP</layout>
                         <includes>
@@ -321,11 +326,16 @@
 
                     <executions>
                         <execution>
+                            <id>repackage</id>
+                            <configuration>
+                                <skip>${r"${spring-boot.repackage-not-single-jar}"}</skip>
+                            </configuration>
                             <goals>
                                 <goal>repackage</goal>
                             </goals>
                         </execution>
                     </executions>
+
                 </plugin>
 
                 <plugin>
