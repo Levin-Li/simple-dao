@@ -1,11 +1,10 @@
 package ${modulePackageName};
 
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.dao.domain.support.TestEntity;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.data.ldap.DataLdapTest;
@@ -57,15 +56,21 @@ public class TestCase {
     @Resource
     SimpleDao simpleDao;
 
-
-    @Before
-    public void setup() {
-
+    @BeforeAll
+    public void beforeAll() throws Exception {
     }
 
-    @After
-    public void teardown() {
+    @BeforeEach
+    public void beforeEach() throws Exception {
+    }
 
+
+    @AfterEach
+    public void afterEach() throws Exception {
+    }
+
+    @AfterAll
+    public void afterAll() throws Exception {
     }
 
     @Test
