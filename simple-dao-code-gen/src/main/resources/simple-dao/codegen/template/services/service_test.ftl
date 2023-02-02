@@ -38,11 +38,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -50,10 +45,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.jupiter.api.Assertions;
-//import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
+
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -87,14 +82,22 @@ public class ${className} {
     private ${pkField.typeName} ${pkField.name};
 </#if>
 
-    @Before
-    public void before() throws Exception {
+    @BeforeAll
+    public void beforeAll() throws Exception {
     }
 
-    @After
-    public void after() throws Exception {
+    @BeforeEach
+    public void beforeEach() throws Exception {
     }
 
+
+    @AfterEach
+    public void afterEach() throws Exception {
+    }
+
+    @AfterAll
+    public void afterAll() throws Exception {
+    }
 
     @Test
     public void create${entityName}Test() {
@@ -115,9 +118,9 @@ public class ${className} {
 
         log.debug("新增${desc}->" + ${pkField.name});
 
-        Assert.assertTrue(${pkField.name} != null);
+        Assert.isTrue(${pkField.name} != null, "${desc}");
 <#else>
-        Assert.assertTrue(${serviceName?uncap_first}.create(req));
+        Assert.isTrue(${serviceName?uncap_first}.create(req), "${desc}");
 </#if>
 
     }
@@ -143,7 +146,7 @@ public class ${className} {
 
         log.debug("查询${desc}->" + resp);
 
-        Assert.assertTrue(!resp.isEmpty());
+        Assert.isTrue(!resp.isEmpty(), "${desc}");
     }
 
     @Test
@@ -166,7 +169,7 @@ public class ${className} {
 
           log.debug("更新${desc}-> " + resp);
 
-          Assert.assertTrue(resp > 0);
+          Assert.isTrue(resp > 0, "${desc}");
     }
 
     @Test
@@ -182,6 +185,6 @@ public class ${className} {
 
         log.debug("删除${desc}->" + n);
 
-        Assert.assertTrue(n > 0);
+        Assert.isTrue(n > 0, "${desc}");
     }
 }
