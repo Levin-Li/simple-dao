@@ -37,7 +37,7 @@ import java.math.*;
 <#if !attrs.test('name')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.name),
 
 <#list fields as field>
-    <#if keywordFun.test(field.camelCaseName,'id,time,name,status,type,code,category') >
+    <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,time,name,status,type,code,category') >
               @Index(columnList = E_${entityName}.${field.camelCaseName}),
     </#if>
 </#list>
