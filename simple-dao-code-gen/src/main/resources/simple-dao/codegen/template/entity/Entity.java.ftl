@@ -47,6 +47,7 @@ import java.math.*;
               //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
         }
 )
+//@EntityListener(${entityName}Listener.class)
 public class ${entityName}
  //       extends AbstractBaseEntityObject
  //       extends AbstractMultiTenantObject

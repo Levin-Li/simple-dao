@@ -1,6 +1,7 @@
 package com.levin.commons.dao.support;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
@@ -11,9 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 表名和字段名命名策略
+ *
+ * 注意：
+ * 当没有使用@Table和@Column注解时，implicit-strategy配置项才会被使用，即implicit-strategy定义的是一种缺省场景的处理策略；
+ * 而physical-strategy属于一种高优先级的策略，只要设置就会被执行，而不管是否有@Table和@Column注解。
+ *
  */
 @Slf4j
-public class EntityNamingStrategy extends SpringPhysicalNamingStrategy {
+public class EntityNamingStrategy extends CamelCaseToUnderscoresNamingStrategy {
 
     private final static Map<String, String> prefixMapping = new ConcurrentHashMap<>();
 
