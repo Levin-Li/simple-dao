@@ -103,10 +103,10 @@ public final class ServiceModelCodeGenerator {
      * @param mavenProject
      * @param controllerDir 控制器模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
-     * @param testcaseDir
+     * @param bootstrapDir
      * @param genParams
      */
-    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> genParams) throws Exception {
+    public static void tryGenPomFile(MavenProject mavenProject, String controllerDir, String serviceDir, String bootstrapDir, Map<String, Object> genParams) throws Exception {
 
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
@@ -163,12 +163,12 @@ public final class ServiceModelCodeGenerator {
 
         params.put("controller", MapUtils.put(key, params.get(key)).build());
 
-        pomFile = new File(testcaseDir, "../../../pom.xml").getCanonicalFile();
+        pomFile = new File(bootstrapDir, "../../../pom.xml").getCanonicalFile();
 
 
         params.put(key, (moduleName + "-" + pomFile.getParentFile().getName()).toLowerCase());
 
-        params.put("moduleType", "testcase");
+        params.put("moduleType", "bootstrap");
         genFileByTemplate(POM_XML_FTL, params, pomFile.getAbsolutePath());
 
         modules.add(pomFile.getParentFile().getName());
@@ -209,7 +209,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    public static void tryGenTestcase(MavenProject mavenProject, String controllerDir, String serviceDir, String testcaseDir, Map<String, Object> params) throws Exception {
+    public static void tryGenBootstrap(MavenProject mavenProject, String controllerDir, String serviceDir, String bootstrapDir, Map<String, Object> params) throws Exception {
 
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
@@ -218,41 +218,41 @@ public final class ServiceModelCodeGenerator {
 
         params.putAll(threadContext.getAll(false));
 
-        //是否 testcase
-        params.put("isTestcase", true);
+        //是否 bootstrap
+        params.put("isBootstrap", true);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
-        String prefix = testcaseDir + File.separator
+        String prefix = bootstrapDir + File.separator
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
 
-        genFileByTemplate("testcase/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
-//        genFileByTemplate("testcase/PluginManagerController.java", params, prefix + "PluginManagerController.java");
-        genFileByTemplate("testcase/Application.java", params, prefix + "Application.java");
+        genFileByTemplate("bootstrap/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
+//        genFileByTemplate("bootstrap/PluginManagerController.java", params, prefix + "PluginManagerController.java");
+        genFileByTemplate("bootstrap/Application.java", params, prefix + "Application.java");
 
-        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+        genFileByTemplate("bootstrap/application.yml", params, new File(bootstrapDir).getParentFile().getCanonicalPath()
                 + File.separator + "resources" + File.separator + "application.yml");
 
-        genFileByTemplate("testcase/shell/startup.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+        genFileByTemplate("bootstrap/shell/startup.sh", params, new File(bootstrapDir).getParentFile().getCanonicalPath()
                 + File.separator + "resources" + File.separator + "shell" + File.separator + "startup.sh");
 
-        genFileByTemplate("testcase/shell/shutdown.sh", params, new File(testcaseDir).getParentFile().getCanonicalPath()
+        genFileByTemplate("bootstrap/shell/shutdown.sh", params, new File(bootstrapDir).getParentFile().getCanonicalPath()
                 + File.separator + "resources" + File.separator + "shell" + File.separator + "shutdown.sh");
 
         //替换成 test
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
-        genFileByTemplate("testcase/TestCase.java", params, prefix + "TestCase.java");
+        genFileByTemplate("bootstrap/TestCase.java", params, prefix + "TestCase.java");
 
-        testcaseDir = testcaseDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+        bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
 
-        genFileByTemplate("testcase/application.yml", params, new File(testcaseDir)
+        genFileByTemplate("bootstrap/application.yml", params, new File(bootstrapDir)
                 .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator + "application.yml");
 
         for (Class entityClass : entityClassList()) {
-            genTestCode(entityClass, testcaseDir, null);
+            genTestCode(entityClass, bootstrapDir, null);
         }
 
     }

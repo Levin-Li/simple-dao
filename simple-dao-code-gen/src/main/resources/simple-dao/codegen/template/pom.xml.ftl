@@ -153,7 +153,7 @@
 
         </#if>
 
-        <#if moduleType?? && moduleType == 'testcase' >
+        <#if moduleType?? && moduleType == 'bootstrap' >
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -267,7 +267,7 @@
 
         <plugins>
 
-                <#if moduleType?? && moduleType == 'testcase'>
+                <#if moduleType?? && moduleType == 'bootstrap'>
 
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>

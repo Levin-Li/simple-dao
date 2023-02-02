@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -47,11 +48,11 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String apiModuleDirName = "api";
 
     /**
-     * testcase
+     * bootstrap
      * 如果目录不存在，则会自动创建
      */
-    @Parameter(defaultValue = "testcase")
-    private String testcaseModuleDirName = "testcase";
+    @Parameter(defaultValue = "bootstrap")
+    private String bootstrapModuleDirName = "bootstrap";
 
     /**
      * admin-ui
@@ -153,20 +154,20 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             String serviceDir = (splitDir && hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
             String controllerDir = (splitDir && hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
-            String testcaseDir = (splitDir && hasText(testcaseModuleDirName)) ? dirPrefix + testcaseModuleDirName : "";
+            String bootstrapDir = (splitDir && hasText(bootstrapModuleDirName)) ? dirPrefix + bootstrapModuleDirName : "";
             String adminUiDir = (splitDir && hasText(adminUiModuleDirName)) ? dirPrefix + adminUiModuleDirName : "";
 
 
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
-            testcaseDir = StringUtils.hasLength(testcaseDir) ? basedir.getAbsolutePath() + "/../" + testcaseDir + "/" + mavenDirStyle : srcDir;
+            bootstrapDir = StringUtils.hasLength(bootstrapDir) ? basedir.getAbsolutePath() + "/../" + bootstrapDir + "/" + mavenDirStyle : srcDir;
 
             adminUiDir = basedir.getAbsolutePath() + "/../" + adminUiDir;
 
 
             serviceDir = new File(serviceDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
-            testcaseDir = new File(testcaseDir).getCanonicalPath();
+            bootstrapDir = new File(bootstrapDir).getCanonicalPath();
             adminUiDir = new File(adminUiDir).getCanonicalPath();
 
 
@@ -194,6 +195,17 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
+            codeGenParams.putIfAbsent("mavenProject",mavenProject);
+            codeGenParams.putIfAbsent("artifactId",mavenProject.getArtifactId());
+            codeGenParams.putIfAbsent("basedir",mavenProject.getBasedir());
+            codeGenParams.putIfAbsent("modulePackageName",modulePackageName);
+            codeGenParams.putIfAbsent("moduleName",moduleName);
+
+            codeGenParams.putIfAbsent("serviceDir",serviceDir);
+            codeGenParams.putIfAbsent("controllerDir",controllerDir);
+            codeGenParams.putIfAbsent("bootstrapDir",bootstrapDir);
+            codeGenParams.putIfAbsent("adminUiDir",adminUiDir);
+
             //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
                     , outputDirectory, controllerDir, serviceDir, codeGenParams);
@@ -201,8 +213,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             //2、生成辅助文件
             if (splitDir) { //尝试生成Pom 文件
 
-                ServiceModelCodeGenerator.tryGenTestcase(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
-                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, testcaseDir, codeGenParams);
+                ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, controllerDir, serviceDir, bootstrapDir, codeGenParams);
+                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, bootstrapDir, codeGenParams);
 
                 //生成界面文件
                 ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, controllerDir, serviceDir, adminUiDir, codeGenParams);

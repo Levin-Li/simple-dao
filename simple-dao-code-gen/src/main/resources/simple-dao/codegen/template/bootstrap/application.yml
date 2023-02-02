@@ -2,7 +2,7 @@
 
 spring:
   application:
-    name: entity-server
+    name: ${artifactId}
 
   #线程池配置
   task:
@@ -16,7 +16,8 @@ spring:
 
   #环境配置
   profiles:
-    active: local # 本地环境
+    active: local # 开发环境
+#    active: dev # 开发环境
 #    active: @spring.profiles.active@
 
   datasource:
@@ -71,8 +72,9 @@ spring:
 #日志配置
 logging:
   level:
-    root: info
-    com.levin: trace
+    root: warn
+    com.levin: info
+
 
 #swagger配置
 swagger:
