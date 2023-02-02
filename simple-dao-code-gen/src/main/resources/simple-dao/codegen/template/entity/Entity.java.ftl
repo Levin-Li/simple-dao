@@ -1,8 +1,6 @@
 package ${CLASS_PACKAGE_NAME};
 
-import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
-import com.levin.commons.dao.domain.support.AbstractNamedMultiTenantObject;
-import com.levin.commons.dao.domain.support.E_AbstractNamedMultiTenantObject;
+import com.levin.commons.dao.domain.support.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.InjectVar;
@@ -38,7 +36,7 @@ import java.math.*;
 
 <#list fields as field>
     <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,time,name,status,type,code,category') >
-              @Index(columnList = E_${entityName}.${field.camelCaseName}),
+               @Index(columnList = E_${entityName}.${field.camelCaseName}),
     </#if>
 </#list>
         },
@@ -51,6 +49,7 @@ import java.math.*;
 )
 public class ${entityName}
  //       extends AbstractBaseEntityObject
+ //       extends AbstractMultiTenantObject
  //       extends AbstractNamedMultiTenantObject
           implements  EntityObject
 {
