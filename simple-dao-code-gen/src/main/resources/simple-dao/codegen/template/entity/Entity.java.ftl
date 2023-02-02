@@ -30,7 +30,7 @@ import java.math.*;
         indexes = {
                // 索引
 <#if !attrs.test('orderCode')></#if>//               @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-<#if !attrs.test('enable')>//</#if>                @Index(columnList = AbstractBaseEntityObject.Fields.enable),
+<#if !attrs.test('enable')>//</#if>                 @Index(columnList = AbstractBaseEntityObject.Fields.enable),
 <#if !attrs.test('createTime')></#if>//              @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
 <#if !attrs.test('lastUpdateTime')></#if>//                @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
 <#if !attrs.test('tenantId')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),

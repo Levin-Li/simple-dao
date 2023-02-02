@@ -344,6 +344,8 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 copyAndReplace(overwrite, resTemplateDir + "root-pom.xml", pomFile, mapBuilder.build());
 
+                ServiceModelCodeGenerator.genFileByTemplate("gitignore.ftl", new LinkedHashMap<>(mapBuilder.build()), new File(basedir, ".gitignore").getCanonicalPath());
+
             } else {
                 updatePom(mavenProject, moduleName);
             }

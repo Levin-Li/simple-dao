@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -198,6 +200,8 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                 boolean overwrite = !FileUtils.readFileToString(pomFile, "utf-8").contains("simple-dao-codegen-flag=" + mapBuilder.build().get("parent.groupId"));
 
                 copyAndReplace(overwrite, resTemplateDir + "root-pom.xml", pomFile, mapBuilder.build());
+
+                ServiceModelCodeGenerator.genFileByTemplate("gitignore.ftl", new LinkedHashMap<>(mapBuilder.build()), new File(basedir, ".gitignore").getCanonicalPath());
 
             } else {
                 updatePom(mavenProject, moduleName);
