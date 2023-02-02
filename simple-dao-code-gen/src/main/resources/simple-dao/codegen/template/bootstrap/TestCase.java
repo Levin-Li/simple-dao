@@ -33,7 +33,7 @@ import ${className};
 </#list>
 
 //@ActiveProfiles("test")
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
 
 @SpringBootTest //自动侦测并加载@SpringBootApplication或@SpringBootConfiguration中的配置，默认web环境为MOCK，不监听任务端口
 //@DataRedisTest //测试对Redis操作，自动扫描被@RedisHash描述的类，并配置Spring Data Redis的库
