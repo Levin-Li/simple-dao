@@ -65,6 +65,7 @@ public class TestOrg
         extends AbstractTreeObject<String, TestOrg>
         implements MultiTenantObject, StatefulObject {
 
+    @Schema(description = "机构状态")
     public enum State implements EnumDesc {
         @Schema(description = "正常")
         Normal,
@@ -74,6 +75,7 @@ public class TestOrg
         Cancellation,
     }
 
+    @Schema(description = "机构类型")
     public enum Type implements EnumDesc {
         @Schema(description = "公司/独立法人")
         LegalPerson,
