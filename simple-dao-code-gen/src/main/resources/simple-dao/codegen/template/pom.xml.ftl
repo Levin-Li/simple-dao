@@ -105,7 +105,6 @@
         <#if moduleType?? && (moduleType == 'service')>
             <#-- service -->
 
-
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>

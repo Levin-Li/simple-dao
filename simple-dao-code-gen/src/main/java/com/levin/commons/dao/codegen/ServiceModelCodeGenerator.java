@@ -479,9 +479,16 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static String controllerPackage() {
-        return modulePackageName() + ".controller." + subPkgName();
+        return modulePackageName() + ".controller" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
     }
 
+    public static Boolean isCreateControllerSubDir(boolean newValue) {
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
+    }
+
+    public static Boolean isCreateControllerSubDir() {
+        return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), false);
+    }
 
     private static Boolean hasEntityClass(boolean newValue) {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);

@@ -47,6 +47,13 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "api")
     private String apiModuleDirName = "api";
 
+
+    /**
+     * 生成的控制器类是否创建子目录
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isCreateControllerSubDir = true;
+
     /**
      * bootstrap
      * 如果目录不存在，则会自动创建
@@ -189,22 +196,24 @@ public class CodeGeneratorMojo extends BaseMojo {
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
             }
 
+            ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
+
             ServiceModelCodeGenerator.splitDir(splitDir);
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
 
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
-            codeGenParams.putIfAbsent("mavenProject",mavenProject);
-            codeGenParams.putIfAbsent("artifactId",mavenProject.getArtifactId());
-            codeGenParams.putIfAbsent("basedir",mavenProject.getBasedir());
-            codeGenParams.putIfAbsent("modulePackageName",modulePackageName);
-            codeGenParams.putIfAbsent("moduleName",moduleName);
+            codeGenParams.putIfAbsent("mavenProject", mavenProject);
+            codeGenParams.putIfAbsent("artifactId", mavenProject.getArtifactId());
+            codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
+            codeGenParams.putIfAbsent("modulePackageName", modulePackageName);
+            codeGenParams.putIfAbsent("moduleName", moduleName);
 
-            codeGenParams.putIfAbsent("serviceDir",serviceDir);
-            codeGenParams.putIfAbsent("controllerDir",controllerDir);
-            codeGenParams.putIfAbsent("bootstrapDir",bootstrapDir);
-            codeGenParams.putIfAbsent("adminUiDir",adminUiDir);
+            codeGenParams.putIfAbsent("serviceDir", serviceDir);
+            codeGenParams.putIfAbsent("controllerDir", controllerDir);
+            codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
+            codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
             //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
