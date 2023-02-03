@@ -49,10 +49,10 @@ import java.math.*;
 )
 //@EntityListener(${entityName}Listener.class)
 public class ${entityName}
- //       extends AbstractBaseEntityObject
- //       extends AbstractMultiTenantObject
- //       extends AbstractNamedMultiTenantObject
-          implements  EntityObject{
+ //    extends AbstractBaseEntityObject
+ //    extends AbstractMultiTenantObject
+ //    extends AbstractNamedMultiTenantObject
+       implements EntityObject{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
