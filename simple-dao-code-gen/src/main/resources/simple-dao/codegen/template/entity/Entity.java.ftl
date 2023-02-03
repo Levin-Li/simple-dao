@@ -52,10 +52,9 @@ public class ${entityName}
  //       extends AbstractBaseEntityObject
  //       extends AbstractMultiTenantObject
  //       extends AbstractNamedMultiTenantObject
-          implements  EntityObject
-{
+          implements  EntityObject{
 
-private static final long serialVersionUID = ${serialVersionUID}L;
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
    <#if field.isPk>
