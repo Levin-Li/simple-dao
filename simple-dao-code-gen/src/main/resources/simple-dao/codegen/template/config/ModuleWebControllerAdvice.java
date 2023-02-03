@@ -42,7 +42,7 @@ import java.text.SimpleDateFormat;
  * 新增了@ControllerAdvice、@RestControllerAdvice 注解，
  * 可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping、@PostMapping， @GetMapping注解中。
  *
- * 注意：默认不启用
+ * 注意：默认不启用，启用请取消注释
  *
  */
 @Slf4j
