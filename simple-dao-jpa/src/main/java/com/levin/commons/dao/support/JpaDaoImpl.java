@@ -20,7 +20,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
-import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -334,7 +333,7 @@ public class JpaDaoImpl
             String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
 
             if (!StringUtils.hasText(physicalStrategy)) {
-                physicalStrategy = SpringPhysicalNamingStrategy.class.getName();
+                physicalStrategy = EntityNamingStrategy.class.getName();
             }
 
             try {
