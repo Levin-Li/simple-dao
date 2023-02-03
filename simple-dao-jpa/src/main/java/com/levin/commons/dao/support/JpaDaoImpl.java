@@ -345,7 +345,7 @@ public class JpaDaoImpl
 
                     final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
 
-                    SpringPhysicalNamingStrategy springPhysicalNamingStrategy = (SpringPhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
+                    org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
                     @Override
                     public String toPhysicalTableName(String name, Object jdbcEnvironment) {
