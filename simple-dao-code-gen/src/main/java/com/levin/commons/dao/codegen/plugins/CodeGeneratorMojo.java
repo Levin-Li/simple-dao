@@ -205,7 +205,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
             codeGenParams.putIfAbsent("mavenProject", mavenProject);
-            codeGenParams.putIfAbsent("artifactId", mavenProject.getArtifactId());
+            codeGenParams.putIfAbsent("mavenSession", mavenSession);
+            codeGenParams.putIfAbsent("artifactId", mavenSession.getCurrentProject().getArtifactId());
             codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
             codeGenParams.putIfAbsent("modulePackageName", modulePackageName);
             codeGenParams.putIfAbsent("moduleName", moduleName);
