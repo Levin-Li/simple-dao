@@ -10,22 +10,18 @@ spring:
       pool:
         core-size: 200
 
+    #调度器线程
     scheduling:
       pool:
-        size: 30
+        size: 100
 
-  #环境配置
-  profiles:
-    active: local # 开发环境
-#    active: dev # 开发环境
-#    active: @spring.profiles.active@
-
+  # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid: #单独使用druid时的配置
       initial-size: 50
       max-active: 500
-      min-idle: 50
+      min-idle: 10
       max-wait: 60000
       min-evictable-idle-time-millis: 1800000
       max-evictable-idle-time-millis: 1800000
@@ -43,16 +39,16 @@ spring:
         url-pattern: /druid/*
         allow: " "
 
+  #    url: jdbc:h2:./dev.db;MODE=MySQL;
+  #    url: jdbc:h2:mem:dev.db;
+  #    username: dev
+  #    password: dev
 
-    #    url: jdbc:h2:./dev.db;MODE=MySQL;
-    url: jdbc:h2:mem:dev.db;
-    username: dev
-    password: dev
-
+  #JPA配置
   jpa:
     show-sql: false
-    generate-ddl: true
-    database: H2
+    #    generate-ddl: false
+    #    database: H2
     #关闭视图事务，避免jpa 出现 N + 1 查询
     open-in-view: false
     hibernate:
@@ -65,7 +61,6 @@ spring:
   #      properties:
   #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
   #        hibernate.id.new_generator_mappings: false
-
   #        hibernate.dialect.storage_engine: innodb
 
 
@@ -74,9 +69,4 @@ logging:
   level:
     root: warn
     com.levin: info
-
-
-#swagger配置
-swagger:
-  enabled: true
-#  enable: @swagger.enable@
+    ${modulePackageName}: debug

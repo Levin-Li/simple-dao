@@ -1,0 +1,11 @@
+#Auto gen by simple-dao-codegen ${.now}
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/${moduleName}
+    username: test
+    password: test
+
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    database: MYSQL     # DB2, DERBY,  H2,  HANA,  HSQL,  INFORMIX,   MYSQL,  ORACLE,  POSTGRESQL, SQL_SERVER,   SYBASE;

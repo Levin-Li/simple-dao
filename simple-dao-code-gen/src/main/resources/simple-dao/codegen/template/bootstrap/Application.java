@@ -38,7 +38,7 @@ import java.lang.reflect.Type;
 @EnableAsync
 public class Application {
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         SpringApplication.run(Application.class, args);
     }
 
@@ -54,7 +54,8 @@ public class Application {
         config.setAllowCredentials(true);
         config.addAllowedOrigin("*");
         config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+//        config.addAllowedMethod("*");
+        config.addAllowedOriginPattern("*");
         config.setMaxAge(18000L);
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
