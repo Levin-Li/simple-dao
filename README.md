@@ -174,7 +174,7 @@
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
         <levin.simple-dao.version>2.3.5-SNAPSHOT</levin.simple-dao.version> 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
 
     </properties>
   
@@ -200,7 +200,9 @@
                 <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${levin.simple-dao.version}</version>
-
+                <configuration>
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>${levin.service-support.groupId}</groupId>

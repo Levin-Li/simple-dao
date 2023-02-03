@@ -1140,7 +1140,7 @@ Dao 类逻辑框图，如下图所示。
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
              <levin.simple-dao.version>2.3.5-SNAPSHOT</levin.simple-dao.version>
-             <levin.service-support.version>1.2.25-SNAPSHOT</levin.service-support.version>
+             <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
               
                <repositories>
            
