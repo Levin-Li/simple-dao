@@ -295,36 +295,44 @@
 
                 </plugin>
 
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
 
-                    <configuration>
-                        <skip>${r"${spring-boot.repackage-single-jar}"}</skip>
-                        <!--   ZIP 布局 -->
-                        <layout>ZIP</layout>
-                        <includes>
-                            <include>
-                                <!--   不包含任何依赖 -->
-                                <groupId>nothing</groupId>
-                                <artifactId>nothing</artifactId>
-                            </include>
-                        </includes>
-                    </configuration>
+                        <executions>
+                            <execution>
+                                <id>repackage</id>
+                                <configuration>
+                                    <skip>${r"${spring-boot.repackage-not-single-jar}"}</skip>
+                                </configuration>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
 
-                    <executions>
-                        <execution>
-                            <id>repackage</id>
-                            <configuration>
-                                <skip>${r"${spring-boot.repackage-not-single-jar}"}</skip>
-                            </configuration>
-                            <goals>
-                                <goal>repackage</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                            <execution>
+                                <id>构建非单体应用</id>
 
-                </plugin>
+                                <configuration>
+                                    <skip>${r"${spring-boot.repackage-single-jar}"}</skip>
+                                    <!--   ZIP 布局 -->
+                                    <layout>ZIP</layout>
+                                    <includes>
+                                        <include>
+                                            <!--   不包含任何依赖 -->
+                                            <groupId>nothing</groupId>
+                                            <artifactId>nothing</artifactId>
+                                        </include>
+                                    </includes>
+                                </configuration>
+
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+
+                    </plugin>
 
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
