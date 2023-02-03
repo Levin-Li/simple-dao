@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Data
@@ -17,6 +18,9 @@ import java.util.stream.Collectors;
 @ToString()
 @Accessors(chain = true)
 public class FieldModel implements Cloneable {
+
+    //识别中文
+    static final Pattern zhCn = Pattern.compile("[\u4e00-\u9fa5]");
 
     public enum CRUD {
         CREATE,
@@ -50,6 +54,7 @@ public class FieldModel implements Cloneable {
     private Integer length = -1;
 
     private String desc;
+    private String finalDesc;
 
     private String descDetail;
 
@@ -99,8 +104,54 @@ public class FieldModel implements Cloneable {
         return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
+    public String getRealDesc() {
+        return desc;
+    }
+
+    /**
+     * 替换换行符
+     *
+     * @return
+     */
     public String getDesc() {
-        return desc != null ? desc.replace("\n", "\\n") : desc;
+
+        if (StringUtils.hasText(finalDesc)) {
+            return finalDesc;
+        }
+
+        if (!StringUtils.hasText(desc))
+            return "";
+
+        String tempDesc = desc.replace("\n", " ")
+                .replace("\r", " ");
+
+        //尝试识别中文注释
+        int idx = tempDesc.indexOf(':');
+
+        if (idx < 0) {
+            idx = tempDesc.indexOf('：');
+        }
+
+        if (idx < 0) {
+            return finalDesc = tempDesc;
+        }
+
+        //分割出冒号前的内容
+        String result = tempDesc.substring(0, idx);
+
+        //如果不包含中文
+        if (!result.matches(zhCn.pattern())) {
+
+            //分割出冒号后的内容
+            tempDesc = tempDesc.substring(idx + 1);
+
+            //如果包含中文
+            if (tempDesc.matches(zhCn.pattern())) {
+                result = tempDesc;
+            }
+        }
+
+        return finalDesc = StringUtils.trimAllWhitespace(result);
     }
 
     /**
