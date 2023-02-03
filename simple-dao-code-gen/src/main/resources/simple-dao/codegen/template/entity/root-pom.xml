@@ -30,13 +30,14 @@
         <levin.service-support.groupId>${service-support.groupId}</levin.service-support.groupId>
         <levin.service-support.version>${service-support.version}</levin.service-support.version>
 
+        <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
 
         <knife4j.version>4.0.0</knife4j.version>
         <swagger.version>2.2.2</swagger.version>
         <swagger.enable>true</swagger.enable>
 
-        <druid.enable>1.1.24</druid.enable>
+
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -311,6 +312,10 @@
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${levin.simple-dao.version}</version>
 
+                <configuration>
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+                </configuration>
+
                 <dependencies>
                     <dependency>
                         <groupId>${levin.service-support.groupId}</groupId>
@@ -321,9 +326,7 @@
             </plugin>
 
             <plugin>
-
                 <!--  flatten-maven-plugin 插件由 spring boot 进行版本管理-->
-
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
 
