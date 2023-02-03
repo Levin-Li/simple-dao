@@ -231,7 +231,6 @@ public final class ServiceModelCodeGenerator {
 //        genFileByTemplate("bootstrap/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("bootstrap/Application.java", params, prefix + "Application.java");
 
-
         String resPath = new File(bootstrapDir).getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
 
         genFileByTemplate("bootstrap/application.properties", params, resPath + "application.properties");
@@ -244,17 +243,18 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell" + File.separator + "startup.sh");
         genFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell" + File.separator + "shutdown.sh");
 
+        //开始生成测试相关文件
         //替换成 test
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
         genFileByTemplate("bootstrap/TestCase.java", params, prefix + "TestCase.java");
 
+        //测试目录
         bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
+        resPath = new File(bootstrapDir).getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
 
-        resPath = new File(bootstrapDir)
-                .getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
-
+        genFileByTemplate("bootstrap/application.properties", params, resPath + "application.properties");
         genFileByTemplate("bootstrap/application.yml", params, resPath + "application.yml");
         genFileByTemplate("bootstrap/application-local.yml", params, resPath + "application-local.yml");
 
