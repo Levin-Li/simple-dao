@@ -578,6 +578,14 @@ public final class ServiceModelCodeGenerator {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
+    public static boolean isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef){
+         return threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
+    }
+
+    public static boolean isSchemaDescUseConstRef(){
+       return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), true);
+    }
+
     public static String modulePackageName() {
         return threadContext.get(ExceptionUtils.getInvokeMethodName());
     }
@@ -1015,7 +1023,8 @@ public final class ServiceModelCodeGenerator {
 
             Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
-            FieldModel fieldModel = new FieldModel(entityClass);
+            FieldModel fieldModel = new FieldModel(entityClass)
+                    .setSchemaDescUseConstRef(isSchemaDescUseConstRef());
 
             fieldModel.setField(field)
                     .addImport(InjectVar.class)

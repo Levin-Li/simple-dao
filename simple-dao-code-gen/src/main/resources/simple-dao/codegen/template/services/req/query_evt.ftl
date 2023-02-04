@@ -31,6 +31,7 @@ import ${servicePackageName}.info.*;
 import ${entityClassName};
 
 import ${entityClassPackage}.*;
+import static ${entityClassPackage}.E_${entityName}.*;
 import ${modulePackageName}.services.commons.req.*;
 
 ////////////////////////////////////
@@ -44,7 +45,7 @@ import ${modulePackageName}.services.commons.req.*;
  *  查询${desc}
  *  @Author Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = QUERY_ACTION + E_${entityName}.BIZ_NAME)
+@Schema(description = QUERY_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
@@ -88,16 +89,16 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
     <#-- 基本类型 -->
     <#elseif field.baseType>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
     <#-- 模糊匹配 -->
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - ${field.desc}")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - " + ${field.schemaDesc})
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     <#elseif field.lazy!>
-    @Schema(description = "是否加载${field.desc}")
+    @Schema(description = "是否加载" + ${field.schemaDesc})
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     Boolean load${field.name?cap_first};
     </#if>

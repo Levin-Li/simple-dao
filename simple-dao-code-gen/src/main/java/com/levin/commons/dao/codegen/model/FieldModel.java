@@ -95,6 +95,11 @@ public class FieldModel implements Cloneable {
 
     private String testValue;
 
+    /**
+     * 使用常量应用
+     */
+    private boolean isSchemaDescUseConstRef = true;
+
     public FieldModel(Class entityType) {
         Assert.notNull(entityType, "实体类型为空");
         this.entityType = entityType;
@@ -106,6 +111,18 @@ public class FieldModel implements Cloneable {
 
     public String getRealDesc() {
         return desc;
+    }
+
+
+    /**
+     * 返回swagger 描述
+     * <p>
+     * 通过参数可以生成 引用或是字符串
+     *
+     * @return
+     */
+    public String getSchemaDesc() {
+        return isSchemaDescUseConstRef ? "L_" + name : ("\"" + getDesc() + "\"");
     }
 
     /**

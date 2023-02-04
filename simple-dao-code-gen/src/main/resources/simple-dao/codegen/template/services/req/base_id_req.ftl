@@ -25,6 +25,7 @@ import java.util.*;
 import ${servicePackageName}.info.*;
 import ${entityClassName};
 import ${entityClassPackage}.*;
+import static ${entityClassPackage}.E_${entityName}.*;
 import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 //自动导入列表
@@ -38,7 +39,7 @@ import ${imp};
 *  //Auto gen by simple-dao-codegen ${.now}
 */
 
-@Schema(description = E_${entityName}.BIZ_NAME + " 主键通用查询")
+@Schema(description =  BIZ_NAME + " 主键通用查询")
 @Data
 
 <#if pkField?exists>
@@ -57,7 +58,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = "${pkField.desc}" , required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = ${pkField.schemaDesc} , required = false, requiredMode = Schema.RequiredMode.REQUIRED)
     @Eq(require = true)
     //@NotNull
     protected ${pkField.typeName} ${pkField.name};

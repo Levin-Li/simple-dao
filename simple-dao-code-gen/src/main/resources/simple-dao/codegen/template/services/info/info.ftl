@@ -22,6 +22,7 @@ import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
 import ${entityClassPackage}.*;
+import static ${entityClassPackage}.E_${entityName}.*;
 ////////////////////////////////////
 <#list importList as imp>
 import ${imp};
@@ -32,7 +33,7 @@ import ${imp};
 * ${desc}
 * @Author Auto gen by simple-dao-codegen ${.now}
 */
-@Schema(description = E_${entityName}.BIZ_NAME)
+@Schema(description = BIZ_NAME)
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
@@ -53,7 +54,7 @@ public class ${className} implements Serializable {
    <#list field.annotations as annotation>
     ${annotation}
    </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = false, requiredMode = Schema.RequiredMode.REQUIRED', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.required!?string(', required = false, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
 </#list>

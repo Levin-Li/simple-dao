@@ -25,6 +25,7 @@ import java.util.*;
 
 import ${entityClassName};
 import ${entityClassPackage}.*;
+import static ${entityClassPackage}.E_${entityName}.*;
 import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 //自动导入列表
@@ -37,7 +38,7 @@ import ${imp};
  *  删除${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = DELETE_ACTION + E_${entityName}.BIZ_NAME)
+@Schema(description = DELETE_ACTION + BIZ_NAME)
 @Data
 
 <#if pkField?exists>
@@ -57,8 +58,8 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#if pkField?exists>
 
-    @Schema(description = "${pkField.desc}集合")
-    @In(value = E_${entityName}.${pkField.name}, required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = ${field.schemaDesc} + "集合", required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @In(value = E_${entityName}.${pkField.name})
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;
 

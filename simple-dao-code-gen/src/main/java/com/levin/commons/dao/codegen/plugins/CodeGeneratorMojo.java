@@ -91,6 +91,19 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean forceSplitDir = false;
 
     /**
+     * 生成代码的字段上的Schema注解，描述是否使用常量引用，默认使用。
+     * <p>
+     * 例子：使用时
+     *
+     * @Schema(description = L_planName )
+     * <p>
+     * 不使用时
+     * @Schema(description = "计划名称" )
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isSchemaDescUseConstRef = true;
+
+    /**
      * 代码生成的附加参数
      */
     @Parameter
@@ -201,6 +214,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.splitDir(splitDir);
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
+            ServiceModelCodeGenerator.isSchemaDescUseConstRef(isSchemaDescUseConstRef);
 
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 

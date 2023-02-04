@@ -25,7 +25,7 @@ import java.util.*;
 
 import ${entityClassName};
 import ${entityClassPackage}.*;
-
+import static ${entityClassPackage}.E_${entityName}.*;
 import ${modulePackageName}.services.commons.req.*;
 
 ////////////////////////////////////
@@ -39,7 +39,7 @@ import ${imp};
  *  更新${desc}
  *  Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = UPDATE_ACTION + E_${entityName}.BIZ_NAME)
+@Schema(description = UPDATE_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
@@ -56,7 +56,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = "${pkField.desc}", required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = ${pkField.schemaDesc}, required = false, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
@@ -75,7 +75,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     ${annotation}
         </#if>
     </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     </#if>
 </#list>
@@ -87,7 +87,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     ${annotation}
     </#if>
     </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.hidden?string(' , hidden = true', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc}${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>
