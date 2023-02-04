@@ -49,13 +49,15 @@ public class Application {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public CorsFilter corsFilter() {
+
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
-        config.addAllowedHeader("*");
-//        config.addAllowedMethod("*");
-        config.addAllowedOriginPattern("*");
+        config.addAllowedMethod(CorsConfiguration.ALL);
+        config.addAllowedHeader(CorsConfiguration.ALL);
+        config.addAllowedOriginPattern(CorsConfiguration.ALL);
+
         config.setMaxAge(18000L);
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
