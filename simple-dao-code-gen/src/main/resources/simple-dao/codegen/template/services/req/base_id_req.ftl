@@ -54,10 +54,9 @@ import ${imp};
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')} {
 
-private static final long serialVersionUID = ${serialVersionUID}L;
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-
     @Schema(description = "${pkField.desc}" , required = true)
     @Eq(require = true)
     //@NotNull

@@ -37,7 +37,6 @@ public class ModuleVariableResolverConfigurer
         log.info("init...");
     }
 
-
     /**
      * 配置全局的变量
      *

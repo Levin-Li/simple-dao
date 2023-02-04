@@ -72,7 +72,6 @@ public class ${entityName}
     protected ${field.fieldTypeBox} ${field.camelCaseName};
 
 </#list>
-
     //@Override
     @PrePersist
     public void prePersist() {

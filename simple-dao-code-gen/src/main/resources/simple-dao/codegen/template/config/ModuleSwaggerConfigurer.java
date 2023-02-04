@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)
-@ConditionalOnClass({GroupedOpenApi.class})
+@ConditionalOnClass({GroupedOpenApi.class,})
 public class ModuleSwaggerConfigurer
         implements
         WebMvcConfigurer {
@@ -62,6 +62,14 @@ public class ModuleSwaggerConfigurer
                 .group(ID)
                 .displayName(GROUP_NAME)
                 .packagesToScan(PACKAGE_NAME)
+                .addOpenApiCustomiser(openApi ->
+                        openApi.setInfo(new Info()
+                                .summary(GROUP_NAME)
+                                .title(NAME)
+                                .version(VERSION)
+                                .description(GROUP_NAME)
+                        ))
+                .addOperationCustomizer((operation, handlerMethod) -> operation)
                 .build();
     }
 

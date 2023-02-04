@@ -30,7 +30,6 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
-
 /**
  * 抽象服务类
  *

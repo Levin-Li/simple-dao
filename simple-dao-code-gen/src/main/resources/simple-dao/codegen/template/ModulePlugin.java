@@ -27,10 +27,10 @@ import java.util.stream.*;
 public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Resource
-    ApplicationContext context;
+    private ApplicationContext context;
 
     @Resource
-    SimpleDao simpleDao;
+    private SimpleDao simpleDao;
 
     private PluginManager pluginManager;
 

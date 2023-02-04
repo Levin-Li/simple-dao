@@ -246,7 +246,6 @@
 
     <build>
 
-
         <pluginManagement>
             <plugins>
 
@@ -362,6 +361,5 @@
        </plugins>
 
     </build>
-
 
 </project>
