@@ -119,39 +119,7 @@ public class FieldModel implements Cloneable {
             return finalDesc;
         }
 
-        if (!StringUtils.hasText(desc))
-            return "";
-
-        String tempDesc = desc.replace("\n", " ")
-                .replace("\r", " ");
-
-        //尝试识别中文注释
-        int idx = tempDesc.indexOf(':');
-
-        if (idx < 0) {
-            idx = tempDesc.indexOf('：');
-        }
-
-        if (idx < 0) {
-            return finalDesc = tempDesc;
-        }
-
-        //分割出冒号前的内容
-        String result = tempDesc.substring(0, idx);
-
-        //如果不包含中文
-        if (!result.matches(zhCn.pattern())) {
-
-            //分割出冒号后的内容
-            tempDesc = tempDesc.substring(idx + 1);
-
-            //如果包含中文
-            if (tempDesc.matches(zhCn.pattern())) {
-                result = tempDesc;
-            }
-        }
-
-        return finalDesc = StringUtils.trimAllWhitespace(result);
+        return finalDesc = com.levin.commons.utils.ExceptionUtils.getZhDesc(desc);
     }
 
     /**

@@ -101,7 +101,9 @@ public class ColumnDefinition {
     }
 
     public String getLabel() {
-        return StringUtils.hasLength(comment) ? comment.replace("\n", "\\n") : columnName;
+        return StringUtils.hasLength(comment) ?
+                comment.replace("\n", "\\n").replace("\r", "\\r")
+                : columnName;
     }
 
 
