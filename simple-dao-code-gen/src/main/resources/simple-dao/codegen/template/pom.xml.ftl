@@ -104,7 +104,6 @@
 
         <#if moduleType?? && (moduleType == 'service')>
             <#-- service -->
-
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
@@ -137,17 +136,14 @@
                 <artifactId>spring-boot-starter-web</artifactId>
                 <scope>provided</scope>
             </dependency>
-
             <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-webmvc-core</artifactId>
                 <scope>provided</scope>
             </dependency>
-
         </#if>
 
         <#if moduleType?? && moduleType == 'bootstrap' >
-
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -244,7 +240,6 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
             </dependency>
-
         </#if>
 
     </dependencies>

@@ -229,13 +229,19 @@
                 <scope>provided</scope>
             </dependency>
 
+
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.session</groupId>
                 <artifactId>spring-session-data-redis</artifactId>
             </dependency>
 
             <!-- 引入Swagger3依赖 -->
-
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
@@ -243,9 +249,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
-                <version>${knife4j.version}</version>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-webmvc-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
@@ -255,10 +261,11 @@
             </dependency>
 
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid</artifactId>
-                <version>${druid.version}</version>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
             </dependency>
+
 
         </dependencies>
     </dependencyManagement>
@@ -340,7 +347,7 @@
                 <version>${levin.simple-dao.version}</version>
 
                 <configuration>
-                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+                    <isCreateControllerSubDir>false</isCreateControllerSubDir>
                 </configuration>
 
                 <dependencies>
