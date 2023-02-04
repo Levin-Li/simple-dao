@@ -201,7 +201,11 @@
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${levin.simple-dao.version}</version>
                 <configuration>
-                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+                    <!-- 生成的控制器代码是否包括目录-->
+                    <isCreateControllerSubDir>false</isCreateControllerSubDir>
+
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
                 </configuration>
                 <dependencies>
                     <dependency>
