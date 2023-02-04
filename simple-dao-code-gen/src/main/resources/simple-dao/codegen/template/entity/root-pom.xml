@@ -251,7 +251,7 @@
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-webmvc-core</artifactId>
-                <version>${project.version}</version>
+                <version>${springdoc.version}</version>
             </dependency>
 
             <dependency>

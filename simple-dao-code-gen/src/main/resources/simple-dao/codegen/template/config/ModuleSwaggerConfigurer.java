@@ -3,6 +3,7 @@ package ${modulePackageName}.config;
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
+import io.swagger.v3.oas.models.info.Info;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
