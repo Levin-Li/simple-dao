@@ -1,6 +1,6 @@
 package ${packageName};
 
-<#--import static ${modulePackageName}.ModuleOption.*;-->
+import static ${modulePackageName}.entities.EntityConst.*;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,7 +38,7 @@ import ${imp};
 *  //Auto gen by simple-dao-codegen ${.now}
 */
 
-@Schema(description = "${desc} 主键通用请求")
+@Schema(description = E_${entityName}.BIZ_NAME + " 主键通用查询")
 @Data
 
 <#if pkField?exists>
@@ -57,7 +57,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = "${pkField.desc}" , required = true)
+    @Schema(description = "${pkField.desc}" , required = false, requiredMode = Schema.RequiredMode.REQUIRED)
     @Eq(require = true)
     //@NotNull
     protected ${pkField.typeName} ${pkField.name};

@@ -1,7 +1,7 @@
 package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
-
+import static ${modulePackageName}.entities.EntityConst.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -37,7 +37,7 @@ import ${imp};
  *  删除${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "删除${desc}")
+@Schema(description = DELETE_ACTION + E_${entityName}.BIZ_NAME)
 @Data
 
 <#if pkField?exists>
@@ -58,7 +58,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 <#if pkField?exists>
 
     @Schema(description = "${pkField.desc}集合")
-    @In(value = E_${entityName}.${pkField.name}, require = true)
+    @In(value = E_${entityName}.${pkField.name}, required = false, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;
 

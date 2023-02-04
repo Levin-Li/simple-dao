@@ -1,7 +1,7 @@
 package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
-
+import static ${modulePackageName}.entities.EntityConst.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.levin.commons.dao.annotation.Ignore;
@@ -44,7 +44,7 @@ import ${modulePackageName}.services.commons.req.*;
  *  查询${desc}
  *  @Author Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "查询${desc}")
+@Schema(description = QUERY_ACTION + E_${entityName}.BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor

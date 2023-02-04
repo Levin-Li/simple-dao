@@ -1,6 +1,7 @@
 package ${packageName};
 
 <#--import static ${modulePackageName}.ModuleOption.*;-->
+import static ${modulePackageName}.entities.EntityConst.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -21,7 +22,6 @@ import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
 import ${entityClassPackage}.*;
-
 ////////////////////////////////////
 <#list importList as imp>
 import ${imp};
@@ -32,7 +32,7 @@ import ${imp};
 * ${desc}
 * @Author Auto gen by simple-dao-codegen ${.now}
 */
-@Schema(description ="${desc}")
+@Schema(description = E_${entityName}.BIZ_NAME)
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
@@ -53,7 +53,7 @@ public class ${className} implements Serializable {
    <#list field.annotations as annotation>
     ${annotation}
    </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = true', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}"${field.required!?string(', required = false, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
 </#list>

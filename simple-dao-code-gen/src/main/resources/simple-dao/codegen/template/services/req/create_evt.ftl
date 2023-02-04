@@ -1,7 +1,7 @@
 package ${packageName};
 
-<#--import static ${modulePackageName}.ModuleOption.*;-->
-
+//import static ${modulePackageName}.ModuleOption.*;
+import static ${modulePackageName}.entities.EntityConst.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -38,7 +38,7 @@ import ${imp};
  *  新增${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "新增${desc}")
+@Schema(description = CREATE_ACTION + E_${entityName}.BIZ_NAME)
 @Data
 @Accessors(chain = true)
 @ToString
@@ -54,7 +54,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#list fields as field>
     <#if (field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "${field.desc}" ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = false, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
