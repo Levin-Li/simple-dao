@@ -132,7 +132,7 @@
 
 
         <profile>
-            <id>环境0-local</id>
+            <id>env0-local</id>
             <properties>
                 <spring.profiles.active>local</spring.profiles.active>
                 <logback.profiles.level>DEBUG</logback.profiles.level>
@@ -141,7 +141,7 @@
         </profile>
 
         <profile>
-            <id>环境1-dev</id>
+            <id>env1-dev</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -155,7 +155,7 @@
         </profile>
 
         <profile>
-            <id>环境2-test</id>
+            <id>env2-test</id>
             <properties>
                 <spring.profiles.active>test</spring.profiles.active>
                 <logback.profiles.level>DEBUG</logback.profiles.level>
@@ -164,7 +164,7 @@
         </profile>
 
         <profile>
-            <id>环境3-prod</id>
+            <id>env3-prod</id>
             <properties>
                 <spring.profiles.active>prod</spring.profiles.active>
                 <logback.profiles.level>INFO</logback.profiles.level>
