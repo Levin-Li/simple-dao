@@ -32,7 +32,7 @@
         </dependency>
 
         <dependency>
-            <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
+            <groupId>${levin.simple-dao.groupId}</groupId>
             <artifactId>simple-dao-annotations</artifactId>
         </dependency>
 
