@@ -578,8 +578,8 @@ public final class ServiceModelCodeGenerator {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
-    public static boolean isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef){
-         return threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
+    public static void isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef){
+           threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
     }
 
     public static boolean isSchemaDescUseConstRef(){

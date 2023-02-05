@@ -58,7 +58,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#if pkField?exists>
 
-    @Schema(description = ${field.schemaDesc} + "集合", required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = ${pkField.schemaDesc} + "集合", required = false, requiredMode = Schema.RequiredMode.REQUIRED)
     @In(value = E_${entityName}.${pkField.name})
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;
