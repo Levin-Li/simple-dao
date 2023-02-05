@@ -125,7 +125,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     //@todo 统计之前初始化数据
     }
 
-    @Schema(description = ${field.schemaDesc} + "统计结果")
+    @Schema(description = "${desc}统计结果")
     @Data
     @Accessors(chain = true)
     @FieldNameConstants
