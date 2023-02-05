@@ -68,7 +68,7 @@ public class ModuleSwaggerConfigurer
                                 .summary(GROUP_NAME)
                                 .title(NAME)
                                 .version(VERSION)
-                                .description(GROUP_NAME)
+                                .description(DESC)
                         ))
                 .addOperationCustomizer((operation, handlerMethod) -> operation)
                 .build();

@@ -22,7 +22,12 @@ public interface ModuleOption {
     /**
      * module name
      */
-    String NAME = "XX插件(请修改)";
+    String NAME = "${projectName}";
+
+    /**
+     * module desc
+     */
+    String DESC = "${projectDesc}";
 
     /**
      * module prefix

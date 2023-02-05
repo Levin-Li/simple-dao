@@ -93,7 +93,7 @@ public class Application {
                  * <p>
                  * 方法必须永远返回一个ValueHolder对象
                  *
-                 * @param name                变量名
+                 * @param key                变量名
                  * @param originalValue       原值
                  * @param throwExWhenNotFound 当变量无法解析时是否抛出异常
                  * @param isRequireNotNull

@@ -16,6 +16,7 @@ public interface EntityConst {
      */
     String PREFIX = "${modulePackageName}-";
 
+
     /**
      *
      */

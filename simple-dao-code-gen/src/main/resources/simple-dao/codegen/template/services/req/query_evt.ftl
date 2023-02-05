@@ -76,15 +76,15 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于" + ${field.schemaDesc} + "，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "小于等于${field.desc}，默认的时间格式：yyyy/MM/dd HH:mm:ss")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "小于等于" + ${field.schemaDesc} + "，默认的时间格式：yyyy/MM/dd HH:mm:ss")
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '-日期范围\", ', '')}description = "${field.desc}-日期范围，格式：yyyyMMdd-yyyyMMdd，大于等于且小余等于")
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '-日期范围\", ', '')}description = ${field.schemaDesc} + "-日期范围，格式：yyyyMMdd-yyyyMMdd，大于等于且小余等于")
     @Between(paramDelimiter = "-", patterns = {"yyyyMMdd"})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
     <#-- 基本类型 -->

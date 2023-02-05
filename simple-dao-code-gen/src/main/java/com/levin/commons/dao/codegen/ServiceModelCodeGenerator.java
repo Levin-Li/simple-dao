@@ -351,7 +351,9 @@ public final class ServiceModelCodeGenerator {
      * @param serviceDir    服务层模块绝对目录，为空则和实体层放在同个 pom 模块
      * @param genParams
      */
-    public static void genCodeAsMavenStyle(MavenProject mavenProject, ClassLoader classLoader, String buildOutputDirectory, String controllerDir, String serviceDir, Map<String, Object> genParams) throws Exception {
+    public static void genCodeAsMavenStyle(MavenProject mavenProject, ClassLoader classLoader
+            , String buildOutputDirectory, String controllerDir, String serviceDir
+            , Map<String, Object> genParams) throws Exception {
 
 //            File file = new File(project.getBuild().getOutputDirectory());
         File file = new File(buildOutputDirectory);
