@@ -319,21 +319,24 @@
     <build>
 
         <resources>
-           <!--   过滤SpringBoot profile文件   -->
+            <!--   过滤SpringBoot profile文件   -->
             <resource>
-                <filtering>true</filtering>
                 <directory>src/main/resources</directory>
                 <excludes>
-             <!--  1、  先排除所有profile文件-->
+                    <!--  1、  先排除所有profile文件-->
                     <exclude>application-*.yml</exclude>
                 </excludes>
             </resource>
 
             <resource>
+                <!--  开启替换变量-->
                 <filtering>true</filtering>
+
                 <directory>src/main/resources</directory>
                 <!--      2、  加入当前profile文件-->
                 <includes>
+                    <include>application.properties</include>
+                    <include>application.yml</include>
                     <include>application-${spring.profiles.active}.yml</include>
                 </includes>
             </resource>
