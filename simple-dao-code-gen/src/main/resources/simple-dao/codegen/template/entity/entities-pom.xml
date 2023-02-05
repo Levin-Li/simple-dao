@@ -31,10 +31,13 @@
             <scope>provided</scope>
         </dependency>
 
+<!--
         <dependency>
             <groupId>${levin.simple-dao.groupId}</groupId>
             <artifactId>simple-dao-annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
+-->
 
     </dependencies>
 
