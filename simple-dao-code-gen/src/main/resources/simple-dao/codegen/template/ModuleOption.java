@@ -10,6 +10,16 @@ package ${modulePackageName};
 public interface ModuleOption {
 
     /**
+     * module name
+     */
+    String NAME = "请填写模块名称";
+
+    /**
+     * module desc
+     */
+    String DESC = "请填写模块描述";
+
+    /**
      * module package name
      */
     String PACKAGE_NAME = "${modulePackageName}";
@@ -18,16 +28,6 @@ public interface ModuleOption {
      * module id
      */
     String ID = PACKAGE_NAME;
-
-    /**
-     * module name
-     */
-    String NAME = "${projectName}";
-
-    /**
-     * module desc
-     */
-    String DESC = "${projectDesc}";
 
     /**
      * module prefix
