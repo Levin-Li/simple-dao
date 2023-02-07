@@ -230,6 +230,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
 //        genFileByTemplate("bootstrap/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("bootstrap/Application.java", params, prefix + "Application.java");
+        genFileByTemplate("bootstrap/BlockingFilter.java", params, prefix + "BlockingFilter.java");
 
         String resPath = new File(bootstrapDir).getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
 

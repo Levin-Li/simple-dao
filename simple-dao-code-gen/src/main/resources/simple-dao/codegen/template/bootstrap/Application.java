@@ -45,9 +45,14 @@ public class Application {
     @Resource
     Environment environment;
 
-
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    public BlockingFilter blockingFilter() {
+        return new BlockingFilter();
+    }
+
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public CorsFilter corsFilter() {
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -62,7 +67,6 @@ public class Application {
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
-
 
 //    @Bean
 //    PluginManager pluginManager() {
