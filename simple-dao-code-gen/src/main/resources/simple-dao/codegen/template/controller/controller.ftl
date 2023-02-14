@@ -114,7 +114,7 @@ public class ${className} extends BaseController{
     @GetMapping({"","{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
     public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-         req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
      }
 
@@ -125,7 +125,7 @@ public class ${className} extends BaseController{
      @PutMapping({"","{${pkField.name}}"})
      @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-         req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
     }
 
@@ -136,7 +136,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({"","{${pkField.name}}"})
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-        req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
     }
 
@@ -147,7 +147,7 @@ public class ${className} extends BaseController{
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-        //req.set${pkField.name?cap_first}OnNotBlank(${pkField.name});
+        //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return delete(req, ${pkField.name});
     }
 </#if>

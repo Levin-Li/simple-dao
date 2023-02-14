@@ -63,7 +63,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     //@NotNull
     protected ${pkField.typeName} ${pkField.name};
 
-    public ${className} set${pkField.name?cap_first}OnNotBlank(${pkField.typeName} ${pkField.name}){
+    public ${className} update${pkField.name?cap_first}WhenNotBlank(${pkField.typeName} ${pkField.name}){
         if(isNotBlank(${pkField.name})){
             this.${pkField.name} = ${pkField.name};
         }
