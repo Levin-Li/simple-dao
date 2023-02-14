@@ -84,6 +84,11 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     @Parameter
     private String defaultJdbcPassword = "";
 
+    /**
+     * 要忽略的表
+     */
+    @Parameter
+    private String[] ignoreTables;
 
     /**
      * 要生成实体类的表名称前缀
@@ -199,11 +204,20 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
 
-                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableDefinition.getTableName()));
+                if (ignoreTables != null && ignoreTables.length > 0
+                        && Stream.of(ignoreTables).anyMatch(ignoreTable -> tableDefinition.getTableName().equalsIgnoreCase(ignoreTable))) {
 
-                if (StringUtils.hasText(tablePrefix) && !entityName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
                     continue;
                 }
+
+                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableDefinition.getTableName()));
+
+                if (StringUtils.hasText(tablePrefix)
+                        && !entityName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
+                    //如果不是指定前缀的表
+                    continue;
+                }
+
 
                 File outFile = new File(entitiesDir, entityName + ".java");
 
