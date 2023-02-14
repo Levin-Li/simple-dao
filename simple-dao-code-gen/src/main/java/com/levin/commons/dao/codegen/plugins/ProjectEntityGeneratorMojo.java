@@ -214,7 +214,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                 if (StringUtils.hasText(tablePrefix)
                         && !tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
                     //如果不是指定前缀的表
-                    logger.info("非指定前缀[{}],忽略:{}", tablePrefix, tableName);
+                    logger.info("非指定前缀[{}],忽略表:{}", tablePrefix, tableName);
                     continue;
                 }
 
