@@ -204,19 +204,21 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
 
-                if (ignoreTables != null && ignoreTables.length > 0
-                        && Stream.of(ignoreTables).anyMatch(ignoreTable -> tableDefinition.getTableName().equalsIgnoreCase(ignoreTable))) {
+                final String tableName = tableDefinition.getTableName();
 
+                if (ignoreTables != null && ignoreTables.length > 0
+                        && Stream.of(ignoreTables).anyMatch(ignoreTable -> tableName.equalsIgnoreCase(ignoreTable))) {
                     continue;
                 }
-
-                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableDefinition.getTableName()));
 
                 if (StringUtils.hasText(tablePrefix)
-                        && !entityName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
+                        && !tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
                     //如果不是指定前缀的表
+                    logger.info("非指定前缀[{}],忽略:{}", tablePrefix, tableName);
                     continue;
                 }
+
+                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableName));
 
 
                 File outFile = new File(entitiesDir, entityName + ".java");
