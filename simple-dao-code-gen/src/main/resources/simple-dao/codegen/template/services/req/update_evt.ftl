@@ -56,7 +56,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = ${pkField.schemaDesc}, required = false, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = ${pkField.schemaDesc}, required = true, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};

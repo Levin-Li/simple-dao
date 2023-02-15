@@ -55,7 +55,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#list fields as field>
     <#if (field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = false, requiredMode = Schema.RequiredMode.REQUIRED', '')})
+    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
