@@ -123,7 +123,7 @@ public class ${className} extends BaseController{
      * @param req Update${entityName}Req
      */
      @PutMapping({"","{${pkField.name}}"})
-     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME)
+     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
@@ -134,7 +134,7 @@ public class ${className} extends BaseController{
      * @param req ${entityName}IdReq
      */
     @DeleteMapping({"","{${pkField.name}}"})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + "(Query方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
@@ -145,9 +145,9 @@ public class ${className} extends BaseController{
      * @param req ${entityName}IdReq
      */
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME)
+    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-        //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return delete(req, ${pkField.name});
     }
 </#if>
