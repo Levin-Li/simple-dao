@@ -56,11 +56,10 @@ public @interface JoinOption {
     String alias();
 
     /**
-     * 连接的列名或是字段名
+     * 本表的字段名，连接的列名或是字段名
      * <p>
      * 默认为主键字段名
      * <p>
-     * 本表的字段名
      *
      * @return
      */

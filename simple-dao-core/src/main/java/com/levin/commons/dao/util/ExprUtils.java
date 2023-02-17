@@ -16,6 +16,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -402,7 +403,7 @@ public abstract class ExprUtils {
 
             } else if (value instanceof Collection) {
                 return ((Collection) value).stream().map(ele ->
-                        tryConvertToDate(ele, c.patterns()))
+                                tryConvertToDate(ele, c.patterns()))
                         .collect(Collectors.toList());
             }
         }
@@ -522,10 +523,9 @@ public abstract class ExprUtils {
      * ELSE '其他'
      * END
      *
-     *
      * @param domain
      * @param aroundColumnPrefixFunc 字段处理函数
-     * @param conditionEvalFunc 条件处理
+     * @param conditionEvalFunc      条件处理
      * @param expr
      * @param cases
      * @return
@@ -1004,7 +1004,7 @@ public abstract class ExprUtils {
         for (JoinOption joinOption : joinOptions) {
 
             //别名全部用小写
-            final String selfAlias = joinOption.alias().trim().toLowerCase();
+            String selfAlias = joinOption.alias().trim().toLowerCase();
 
             boolean hasJoinEntityClass = isValidClass(joinOption.entityClass());
 
@@ -1016,7 +1016,12 @@ public abstract class ExprUtils {
             }
 
             if (!hasText(selfAlias)) {
-
+                String eClass = joinEntityClass.getPackage().getName() + ".E_" + joinEntityClass.getSimpleName();
+                try {
+                    selfAlias = (String) ClassUtils.forName(eClass, null).getField("ALIAS").get(null);
+                } catch (Exception e) {
+                    throw new StatementBuildException(joinOption + ": 多表关联时，尝试自动 获取 JoinOption注解 的 alias 时失败，请手动指定，错误：" + e.getMessage());
+                }
             }
 
             if (!hasText(selfAlias)) {
@@ -1024,7 +1029,7 @@ public abstract class ExprUtils {
             }
 
             if (aliasMap.containsKey(selfAlias)) {
-                throw new StatementBuildException(joinOption + ": alias 重名 ");
+                throw new StatementBuildException(joinOption + ": alias 重名");
             } else {
 
                 aliasMap.put(selfAlias, joinEntityClass);
@@ -1062,6 +1067,12 @@ public abstract class ExprUtils {
                 if (refFieldNames != null && refFieldNames.size() == 1) {
                     targetColumn = refFieldNames.get(0);
                 }
+
+                //如果无法获得，尝试自动获取目标表的主键
+                if (!hasText(targetColumn)
+                        && refFieldNames.size() == 0) {
+                    //@todo
+                }
             }
 
             if (!hasText(targetColumn)) {
@@ -1089,7 +1100,6 @@ public abstract class ExprUtils {
 
             //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
-
                 targetColumn = QueryAnnotationUtil.getColumnName(entityClass, targetColumn);
                 joinColumn = QueryAnnotationUtil.getColumnName(joinEntityClass, joinColumn);
 

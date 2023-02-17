@@ -42,8 +42,9 @@ import static ${modulePackageName}.entities.EntityConst.*;
 // 所以一般插入新数据的时候使用post方法，更新数据库时用put方法
 // @Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
-@RestController(PLUGIN_PREFIX + "${className}")
-//@RequestMapping(API_PATH + "${entityName?lower_case}")
+//生成的控制器默认不开启，请手动取消注释
+//@RestController(PLUGIN_PREFIX + "${className}")
+//@RequestMapping(API_PATH + "${entityName?lower_case}") //小写路径
 @RequestMapping(API_PATH + "${entityName}")
 
 @Slf4j
@@ -51,6 +52,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //默认需要权限访问
 //@ResAuthorize(domain = ID, type = TYPE_NAME)
+
+//类注解
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 
 @Valid
@@ -68,7 +71,7 @@ public class ${className} extends BaseController{
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
+    @Operation(summary = QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
@@ -80,7 +83,7 @@ public class ${className} extends BaseController{
       * @return  ApiResp<PagingData<Stat${entityName}Req.Result>>
       */
      //@GetMapping("/stat") //默认不开放
-     @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
+     @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
      public ApiResp<PagingData<Stat${entityName}Req.Result>> stat(Stat${entityName}Req req, SimplePaging paging) {
          return ApiResp.ok(${serviceName?uncap_first}.stat(req,paging));
      }
@@ -92,7 +95,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping
-    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
+    @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(@RequestBody Create${entityName}Req req) {
 <#else>
@@ -112,7 +115,7 @@ public class ${className} extends BaseController{
     * @param req Query${entityName}ByIdReq
     */
     @GetMapping({"","{${pkField.name}}"})
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
+    @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
     public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
@@ -123,7 +126,7 @@ public class ${className} extends BaseController{
      * @param req Update${entityName}Req
      */
      @PutMapping({"","{${pkField.name}}"})
-     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+     @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
@@ -134,7 +137,7 @@ public class ${className} extends BaseController{
      * @param req ${entityName}IdReq
      */
     @DeleteMapping({"","{${pkField.name}}"})
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + "(Query方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @Operation(summary = DELETE_ACTION + "(Query方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
@@ -145,7 +148,7 @@ public class ${className} extends BaseController{
      * @param req ${entityName}IdReq
      */
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @Operation(summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return delete(req, ${pkField.name});
@@ -161,7 +164,7 @@ public class ${className} extends BaseController{
      * @return ApiResp
      */
     @PostMapping("/batchCreate")
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION, description = BATCH_CREATE_ACTION + " " + BIZ_NAME)
+    @Operation(summary = BATCH_CREATE_ACTION, description = BATCH_CREATE_ACTION + " " + BIZ_NAME)
 <#if pkField?exists>
     public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 <#else>
@@ -174,7 +177,7 @@ public class ${className} extends BaseController{
      * 批量更新
      */
      @PutMapping("/batchUpdate")
-     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
+     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
      public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION));
     }
@@ -184,7 +187,7 @@ public class ${className} extends BaseController{
      * @param req Delete${entityName}Req
      */
     @DeleteMapping({"/batchDelete"})
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
+    @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
     }
@@ -194,7 +197,7 @@ public class ${className} extends BaseController{
      * @param req @RequestBody Delete${entityName}Req
      */
     @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
+    @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete2(@RequestBody Delete${entityName}Req req) {
         return batchDelete(req);
     }
