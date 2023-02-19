@@ -64,7 +64,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
     String orderBy;
 
     //@Ignore
-    @Schema(description = "排序方向-desc asc")
+    @Schema(description = "排序方向")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
     OrderBy.Type orderDir;
 
