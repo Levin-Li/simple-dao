@@ -242,6 +242,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/application-prod.yml", params, resPath + "application-prod.yml");
 
         genFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell" + File.separator + "startup.sh");
+        genFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell" + File.separator + "restart.sh");
         genFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell" + File.separator + "shutdown.sh");
 
         //开始生成测试相关文件
