@@ -57,6 +57,13 @@ public interface ModuleOption {
     String API_PATH = BASE_PATH + "api/";
 
     /**
+     * websocket
+     * 注意路径必须以 / 结尾
+     */
+    String WS_PATH = BASE_PATH + "ws/";
+
+
+    /**
      * admin api path
      * 注意路径必须以 / 结尾
      */

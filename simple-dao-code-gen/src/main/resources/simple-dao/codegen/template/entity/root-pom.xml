@@ -264,6 +264,17 @@
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springdoc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+
+                    <exclusion>
+                        <groupId>io.swagger.core.v3</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
 
