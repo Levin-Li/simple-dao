@@ -30,9 +30,11 @@ import java.lang.reflect.Type;
  *  启动类
  *  @author Auto gen by simple-dao-codegen ${.now}
  */
-@SpringBootApplication
 @Slf4j
 
+@SpringBootApplication
+@EnableWebSocketMessageBroker
+@EnableWebSocket
 @EnableScheduling
 @EnableCaching
 @EnableAsync
