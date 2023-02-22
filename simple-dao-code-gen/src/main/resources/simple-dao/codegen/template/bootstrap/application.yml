@@ -3,7 +3,9 @@
 spring:
   application:
     name: ${moduleName}
-
+  main:
+    #允许Spring Bean循环应用
+    allow-circular-references: true
   #线程池配置
   task:
     execution:
