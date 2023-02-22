@@ -227,6 +227,7 @@ public final class ServiceModelCodeGenerator {
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
 
+        genFileByTemplate("bootstrap/AppWebMvcConfigurer.java", params, prefix + "AppWebMvcConfigurer.java");
         genFileByTemplate("bootstrap/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
 //        genFileByTemplate("bootstrap/PluginManagerController.java", params, prefix + "PluginManagerController.java");
         genFileByTemplate("bootstrap/Application.java", params, prefix + "Application.java");
@@ -309,6 +310,7 @@ public final class ServiceModelCodeGenerator {
                 , "ModuleWebControllerAdvice"
                 , "ModuleSwaggerConfigurer"
                 , "ModuleVariableResolverConfigurer"
+                , "ModuleWebSocketConfigurer"
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
         genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);

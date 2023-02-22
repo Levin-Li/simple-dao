@@ -3,11 +3,15 @@ package ${modulePackageName}.config;
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
+import com.levin.commons.service.domain.EnumDesc;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;

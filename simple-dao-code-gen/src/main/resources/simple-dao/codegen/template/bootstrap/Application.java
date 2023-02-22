@@ -80,7 +80,7 @@ public class Application {
 //    }
 
     @Bean
-    VariableResolverConfigurer variableResolverConfigurer() {
+    public VariableResolverConfigurer variableResolverConfigurer() {
         return variableResolverManager -> {
 
             //加入全局变量
