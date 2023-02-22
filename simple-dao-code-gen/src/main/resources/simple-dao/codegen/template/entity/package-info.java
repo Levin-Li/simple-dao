@@ -20,7 +20,7 @@
 @GenericGenerator(name = "hex_uuid", strategy = "org.hibernate.id.UUIDHexGenerator")
 @GenericGenerator(name = "table_gid", strategy = "org.hibernate.id.TableGenerator")
 
-
+// Hibernate 字段类型映射器
 @TypeDefs({
         @TypeDef(
                 name = "EnumDesc",

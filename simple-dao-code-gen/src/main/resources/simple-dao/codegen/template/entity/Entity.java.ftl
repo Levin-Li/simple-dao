@@ -14,7 +14,7 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 import java.util.*;
 import java.math.*;
-
+import org.hibernate.annotations.*;
 
 @Entity(name = EntityConst.PREFIX + "${entityName}")
 @Data

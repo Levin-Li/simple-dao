@@ -15,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 import java.util.List;
+import org.hibernate.annotations.Type;
 
 @Entity(name = EntityConst.PREFIX + "TestRole")
 @Data
