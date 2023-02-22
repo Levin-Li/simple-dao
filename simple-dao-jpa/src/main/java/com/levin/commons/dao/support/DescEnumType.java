@@ -37,6 +37,7 @@ public class DescEnumType extends EnumType {
                 throw new RuntimeException(e);
             }
         }
+
     }
 
 
@@ -53,6 +54,7 @@ public class DescEnumType extends EnumType {
             }
 
             return super.toOrdinal(domainForm);
+
         }
 
         @Override
@@ -65,6 +67,7 @@ public class DescEnumType extends EnumType {
             }
 
             return super.fromOrdinal(relationalForm);
+
         }
     }
 }
