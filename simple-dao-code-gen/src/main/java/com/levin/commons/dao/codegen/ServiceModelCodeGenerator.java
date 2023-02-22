@@ -8,6 +8,7 @@ import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.plugins.Utils;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
@@ -246,6 +247,10 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell" + File.separator + "restart.sh");
         genFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell" + File.separator + "shutdown.sh");
 
+        final String resTemplateDir = "simple-dao/codegen/template/";
+
+        Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
+
         //开始生成测试相关文件
         //替换成 test
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
@@ -260,6 +265,8 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/application.properties", params, resPath + "application.properties");
         genFileByTemplate("bootstrap/application.yml", params, resPath + "application.yml");
         genFileByTemplate("bootstrap/application-local.yml", params, resPath + "application-local.yml");
+
+        Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
 
         for (Class entityClass : entityClassList()) {
             genTestCode(entityClass, bootstrapDir, null);
@@ -584,12 +591,12 @@ public final class ServiceModelCodeGenerator {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
-    public static void isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef){
-           threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
+    public static void isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef) {
+        threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
     }
 
-    public static boolean isSchemaDescUseConstRef(){
-       return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), true);
+    public static boolean isSchemaDescUseConstRef() {
+        return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), true);
     }
 
     public static String modulePackageName() {

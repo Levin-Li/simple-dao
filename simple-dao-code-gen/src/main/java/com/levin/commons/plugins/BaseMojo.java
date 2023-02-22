@@ -622,43 +622,7 @@ public abstract class BaseMojo extends AbstractMojo {
      * @throws IOException
      */
     protected void copyAndReplace(boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
-
-        String prefix = mavenProject.getBasedir().getCanonicalPath();
-
-        String path = target.getCanonicalPath();
-
-        if (path.startsWith(prefix)) {
-            path = path.substring(prefix.length());
-        }
-
-        if (!overwrite && target.exists()) {
-            logger.warn("*** 文件[" + path + "]已经存在，忽略代码生成。");
-            return;
-        }
-
-        logger.info("*** 开始生成 [" + path + "] 文件，替换变量：" + Arrays.asList(varMaps));
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        while (templateRes.trim().startsWith("/")) {
-            templateRes = templateRes.trim().substring(1);
-        }
-
-        String resText = IOUtils.resourceToString(templateRes, Charset.forName("utf-8"), classLoader);
-
-        if (varMaps != null) {
-            for (Map<String, String> varMap : varMaps) {
-                if (varMap != null) {
-                    for (Map.Entry<String, String> entry : varMap.entrySet()) {
-                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue());
-                    }
-                }
-            }
-        }
-
-        target.getParentFile().mkdirs();
-
-        FileUtils.write(target, resText, "utf-8");
+        Utils.copyAndReplace(mavenProject.getBasedir().getCanonicalPath(),overwrite,templateRes,target,varMaps);
     }
 
 

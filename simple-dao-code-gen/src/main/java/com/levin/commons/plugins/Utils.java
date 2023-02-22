@@ -1,6 +1,7 @@
 package com.levin.commons.plugins;
 
 import groovy.lang.GroovyShell;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.util.ResourceUtils;
@@ -9,9 +10,61 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Map;
 
+@Slf4j
 public abstract class Utils {
+
+    /**
+     * 替换并写入文件
+     *
+     * @param templateRes
+     * @param target
+     * @param varMaps
+     * @throws IOException
+     */
+    public static void copyAndReplace(String prefix, boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
+
+        //String prefix = mavenProject.getBasedir().getCanonicalPath();
+
+        String path = target.getCanonicalPath();
+
+        if (path.startsWith(prefix)) {
+            path = path.substring(prefix.length());
+        }
+
+        if (!overwrite && target.exists()) {
+            log.warn("*** 文件[" + path + "]已经存在，忽略代码生成。");
+            return;
+        }
+
+        log.info("*** 开始生成 [" + path + "] 文件，替换变量：" + Arrays.asList(varMaps));
+
+        ClassLoader classLoader = Utils.class.getClassLoader();
+
+        while (templateRes.trim().startsWith("/")) {
+            templateRes = templateRes.trim().substring(1);
+        }
+
+        String resText = IOUtils.resourceToString(templateRes, Charset.forName("utf-8"), classLoader);
+
+        if (varMaps != null) {
+            for (Map<String, String> varMap : varMaps) {
+                if (varMap != null) {
+                    for (Map.Entry<String, String> entry : varMap.entrySet()) {
+                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue());
+                    }
+                }
+            }
+        }
+
+        target.getParentFile().mkdirs();
+
+        FileUtils.write(target, resText, "utf-8");
+    }
+
 
     /**
      * 执行 groovy 脚本
