@@ -17,7 +17,8 @@ public class DescEnumType extends EnumType {
 
     static {
         try {
-            field = EnumType.class.getField("enumValueConverter");
+            field = EnumType.class.getDeclaredField("enumValueConverter");
+            field.setAccessible(true);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
