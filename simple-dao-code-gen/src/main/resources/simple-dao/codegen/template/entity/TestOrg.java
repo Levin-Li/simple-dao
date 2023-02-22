@@ -118,7 +118,7 @@ public class TestOrg
 
     @Schema(description = "类型")
     @Column(nullable = false, length = 64)
-    @Enumerated(EnumType.STRING)
+    @Type(type = "EnumDesc")
     protected Type type;
 
     @Schema(description = "所属行业")

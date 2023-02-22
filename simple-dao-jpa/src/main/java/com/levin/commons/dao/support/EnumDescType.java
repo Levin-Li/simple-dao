@@ -9,9 +9,9 @@ import java.lang.reflect.Field;
 import java.util.Properties;
 
 /**
- *
+ * 枚举装换
  */
-public class DescEnumType extends EnumType {
+public class EnumDescType extends EnumType {
 
     static Field field;
 
@@ -55,7 +55,6 @@ public class DescEnumType extends EnumType {
             }
 
             return super.toOrdinal(domainForm);
-
         }
 
         @Override
@@ -68,7 +67,6 @@ public class DescEnumType extends EnumType {
             }
 
             return super.fromOrdinal(relationalForm);
-
         }
     }
 }
