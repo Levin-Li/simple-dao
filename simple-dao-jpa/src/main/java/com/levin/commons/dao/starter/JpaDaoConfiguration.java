@@ -138,7 +138,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 //        DaoContext.setGlobalVar("DF_YEAR", "YYYY");
 //        DaoContext.setGlobalVar("DF_YYYYMMDD", "YYYYMMDD");
 
-        log.info("init jpa dao , default identifierGenerator:" + identifierGenerator.getClass());
+        log.info("init jpa dao, default identifierGenerator:" + (identifierGenerator != null ? identifierGenerator.getClass() : "null"));
 
         return new JpaDaoImpl();
     }
