@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.id.IdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -157,12 +158,12 @@ public class JpaDaoImpl
     private ParameterNameDiscoverer parameterNameDiscoverer;
 
     @Autowired(required = false)
-    Validator validator;
+    private Validator validator;
 
     private ApplicationContext applicationContext;
 
     @Autowired(required = false)
-    FormattingConversionService formattingConversionService;
+    private FormattingConversionService formattingConversionService;
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;

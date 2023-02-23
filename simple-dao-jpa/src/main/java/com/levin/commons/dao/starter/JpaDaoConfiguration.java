@@ -21,6 +21,7 @@ import com.levin.commons.utils.MapUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.id.IdentifierGenerator;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -70,6 +71,10 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
 
 //    @DynamicInsert和@DynamicUpdate
+
+    //特意提取加载ID生成器
+    @Autowired(required = false)
+    private IdentifierGenerator identifierGenerator;
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -132,6 +137,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 //        DaoContext.setGlobalVar("dateFormat", "YYYYMMDD");
 //        DaoContext.setGlobalVar("DF_YEAR", "YYYY");
 //        DaoContext.setGlobalVar("DF_YYYYMMDD", "YYYYMMDD");
+
+        log.info("init jpa dao , default identifierGenerator:" + identifierGenerator.getClass());
 
         return new JpaDaoImpl();
     }
