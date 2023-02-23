@@ -127,6 +127,7 @@
                 <artifactId>spring-boot-starter-cache</artifactId>
                 <scope>provided</scope>
             </dependency>
+
         </#if>
 
         <#if moduleType?? && moduleType == 'controller' >
@@ -228,6 +229,11 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-cache</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
             </dependency>
 
             <dependency>

@@ -37,7 +37,7 @@
         <springdoc.version>1.6.14</springdoc.version>
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
-
+        <redission.version>3.19.3</redission.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -239,6 +239,12 @@
             <dependency>
                 <groupId>org.springframework.session</groupId>
                 <artifactId>spring-session-data-redis</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redission.version}</version>
             </dependency>
 
             <!-- 引入Swagger3依赖 -->
