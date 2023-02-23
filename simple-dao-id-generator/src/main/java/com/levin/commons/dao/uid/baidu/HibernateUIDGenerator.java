@@ -9,12 +9,18 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.persistence.EntityManagerFactory;
 import java.io.Serializable;
 import java.util.Properties;
 
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@AutoConfigureBefore(EntityManagerFactory.class)
 @Service(ModuleOption.PLUGIN_PREFIX + "HibernateIDGenerator")
 @Slf4j
 public class HibernateUIDGenerator

@@ -27,7 +27,7 @@ import java.util.Date;
 @Schema(description = "工作节点")
 
 //6、必须建立索引
-@Entity(name = "com.levin.oak.base-" + "WorkerNodeEntity")
+@Entity(name = "WorkerNodeEntity")
 
 //7、必须建立索引
 @Table(
