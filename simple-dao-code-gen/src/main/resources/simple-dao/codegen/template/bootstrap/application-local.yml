@@ -1,12 +1,16 @@
 #Auto gen by simple-dao-codegen ${.now}
+
 spring:
   datasource:
     #    url: jdbc:h2:./dev.db;MODE=MySQL;
-    url: jdbc:h2:mem:dev.db;
+    url: jdbc:h2:mem:dev.db;MODE=MySQL;
     username: dev
     password: dev
 
   jpa:
     show-sql: true
     generate-ddl: true
-    database: H2
+    database: mysql
+    hibernate:
+      ddl-auto: update
+
