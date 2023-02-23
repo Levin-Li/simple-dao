@@ -40,6 +40,11 @@ public interface ModuleOption {
     String PLUGIN_PREFIX = "plugin." + ID_PREFIX;
 
     /**
+     * 缓存分隔符
+     */
+    String CACHE_DELIM = ":";
+
+    /**
      * version
      */
     String VERSION = "V1";

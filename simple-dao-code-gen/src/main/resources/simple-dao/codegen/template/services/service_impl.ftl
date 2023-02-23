@@ -69,7 +69,7 @@ import ${imp};
 @Slf4j
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
-@CacheConfig(cacheNames = {ModuleOption.ID_PREFIX + E_${entityName}.SIMPLE_CLASS_NAME})
+@CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
 public class ${className} extends BaseService implements ${serviceName} {
 
     @Autowired
