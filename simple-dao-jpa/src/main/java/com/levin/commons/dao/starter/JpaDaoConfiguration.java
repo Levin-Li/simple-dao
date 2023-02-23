@@ -70,22 +70,22 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
 //    @DynamicInsert和@DynamicUpdate
 
-    @Resource
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-    @Resource
+    @Autowired
     private EntityManager defaultEntityManager;
 
-    @Resource
+    @Autowired
     private DataSource dataSource;
 
-    @Resource
+    @Autowired
     private JpaProperties jpaProperties;
 
-    @Resource
+    @Autowired
     private HibernateProperties hibernateProperties;
 
-    @Resource
+    @Autowired
     private DataSourceProperties dataSourceProperties;
 
     public static final String ENABLE_ALTER_TABLE_COMMENT = "enable_alter_table_comment";

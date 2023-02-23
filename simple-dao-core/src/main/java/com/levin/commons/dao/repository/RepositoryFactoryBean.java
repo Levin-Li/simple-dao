@@ -36,7 +36,7 @@ public class RepositoryFactoryBean<T>
 
     private static String PROMPT = "需要在方法上显式声明注解，如：@QueryRequest";
 
-    @Resource
+    @Autowired
     private MiniDao jpaDao;
 
 

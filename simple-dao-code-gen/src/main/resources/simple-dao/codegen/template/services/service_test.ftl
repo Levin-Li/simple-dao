@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
 @Slf4j
 public class ${className} {
 
-    @Resource
+    @Autowired
     private ${serviceName} ${serviceName?uncap_first};
 
 <#if pkField?exists>

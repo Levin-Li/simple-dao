@@ -51,10 +51,10 @@ import java.text.SimpleDateFormat;
 //@RestControllerAdvice(PACKAGE_NAME)
 public class ModuleWebControllerAdvice {
 
-    @Resource
+    @Autowired
     HttpServletRequest request;
 
-    @Resource
+    @Autowired
     HttpServletResponse response;
 
     @PostConstruct

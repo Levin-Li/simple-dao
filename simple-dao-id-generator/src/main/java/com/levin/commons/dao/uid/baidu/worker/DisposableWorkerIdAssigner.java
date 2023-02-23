@@ -40,7 +40,7 @@ public class DisposableWorkerIdAssigner
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DisposableWorkerIdAssigner.class);
 
-    @Resource
+    @Autowired
     private WorkerNodeDAO workerNodeDAO;
 
     /**

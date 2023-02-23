@@ -18,16 +18,16 @@ import javax.persistence.PersistenceUnit;
 @Slf4j
 public class JpaDaoExConfiguration {
 
-    @Resource
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-    @Resource
+    @Autowired
     ApplicationContext applicationContext;
 
-    @Resource
+    @Autowired
     JdbcOperations jdbcOperations;
 
-    @Resource
+    @Autowired
     MiniDao miniDao;
 
     @PostConstruct

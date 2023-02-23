@@ -46,16 +46,16 @@ import static org.springframework.util.StringUtils.hasText;
 @Tag(name = "微信相关", description = "微信相关")
 public class WeixinController {
 
-    @Resource
+    @Autowired
     HttpServletRequest httpServletRequest;
 
-    @Resource
+    @Autowired
     HttpServletResponse httpServletResponse;
 
-    @Resource
+    @Autowired
     WxMpService wxMpService;
 
-    @Resource
+    @Autowired
     SimpleDao simpleDao;
 
 

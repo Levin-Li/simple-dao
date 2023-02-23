@@ -30,10 +30,10 @@ import ${clazz.name};
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleDataInitializer implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
-    @Resource
+    @Autowired
     SimpleDao dao;
 
-    @Resource
+    @Autowired
     JdbcTemplate jdbcTemplate;
 
     private ApplicationContext applicationContext;

@@ -57,7 +57,7 @@ Dao 类逻辑框图，如下图所示。
 
    使用示例：
 
-      @Resource
+      @Autowired
       SimpleDao dao;
 
       SelectDao selectDao = dao.selectFrom("t_table_name","alias");

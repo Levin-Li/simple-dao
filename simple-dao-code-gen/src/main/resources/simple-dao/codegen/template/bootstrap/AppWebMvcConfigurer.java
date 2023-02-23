@@ -18,13 +18,13 @@ import static ${modulePackageName}.ModuleOption.*;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "AppWebMvcConfigurer", matchIfMissing = true)
 public class AppWebMvcConfigurer implements WebMvcConfigurer {
 
-//    @Resource
+//    @Autowired
 //    RbacService rbacService;
 //
-//    @Resource
+//    @Autowired
 //    AuthService authService;
 //
-//    @Resource
+//    @Autowired
 //    BizTenantService bizTenantService;
 
     @PostConstruct

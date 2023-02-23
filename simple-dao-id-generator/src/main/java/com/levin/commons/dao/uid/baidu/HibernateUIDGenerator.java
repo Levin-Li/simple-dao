@@ -19,7 +19,7 @@ import java.util.Properties;
 public class HibernateUIDGenerator
         implements IdentifierGenerator {
 
-    @Resource
+    @Autowired
     UidGenerator uidGenerator;
 
     @Override

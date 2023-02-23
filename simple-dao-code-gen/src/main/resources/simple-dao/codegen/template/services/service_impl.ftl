@@ -72,7 +72,7 @@ import ${imp};
 @CacheConfig(cacheNames = {ModuleOption.ID_PREFIX + E_${entityName}.SIMPLE_CLASS_NAME})
 public class ${className} extends BaseService implements ${serviceName} {
 
-    @Resource
+    @Autowired
     private SimpleDao simpleDao;
 
     protected ${serviceName} getSelfProxy(){

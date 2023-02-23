@@ -41,13 +41,13 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @MenuResTag(domain = ID)
 public abstract class BaseController {
 
-    @Resource
+    @Autowired
     protected HttpServletRequest httpRequest;
 
-    @Resource
+    @Autowired
     protected HttpServletResponse httpResponse;
 
-    @Resource
+    @Autowired
     protected ApplicationContext applicationContext;
 
     protected Object selfProxy = null;

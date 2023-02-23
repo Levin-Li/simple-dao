@@ -26,7 +26,7 @@ import java.util.List;
 //@ConditionalOnBean(DataSource.class)
 public class JdbcMiniDao implements MiniDao {
 
-    @Resource
+    @Autowired
     DataSource dataSource;
 
     @Autowired(required = false)

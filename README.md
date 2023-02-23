@@ -117,7 +117,7 @@
         @Service
         public class ExamStatService {
         
-         @Resource
+         @Autowired
          SimpleDao dao; //通用 Dao
          
          public List<ExamStatDto> stat(ExamStatDto statDto){
@@ -133,7 +133,7 @@
      @RestController
      public class ExamStatController{
      
-        @Resource
+        @Autowired
         ExamStatService examStatService;
         
         @GetMapping("/exam_stat")

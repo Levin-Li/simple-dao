@@ -28,13 +28,13 @@ import org.springframework.web.servlet.config.annotation.*;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
 
-//    @Resource
+//    @Autowired
 //    RbacService rbacService;
 //
-//    @Resource
+//    @Autowired
 //    AuthService authService;
 //
-//    @Resource
+//    @Autowired
 //    BizTenantService bizTenantService;
 
     @PostConstruct

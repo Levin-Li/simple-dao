@@ -26,10 +26,10 @@ import java.util.*;
 public class ModuleVariableResolverConfigurer
         implements VariableResolverConfigurer {
 
-    @Resource
+    @Autowired
     VariableInjector variableInjector;
 
-//    @Resource
+//    @Autowired
 //    InjectVarService injectVarService;
 
     @PostConstruct

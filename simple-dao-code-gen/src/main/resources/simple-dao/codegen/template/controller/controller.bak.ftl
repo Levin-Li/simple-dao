@@ -55,7 +55,7 @@ public class ${className} extends BaseController{
 
     private static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    @Resource
+    @Autowired
     ${serviceName} ${serviceName?uncap_first};
 
     /**
@@ -176,7 +176,7 @@ public class ${className} extends BaseController{
      //   List<Integer> ns = getSelfProxy(getClass())
      //       .batchDelete(new Delete${entityName}Req().set${pkField.name?cap_first}List(${pkField.name}))
      //       .getData();
-     //   
+     //
      //       return ns != null && !ns.isEmpty() ? ApiResp.ok(ns.get(0)) : ApiResp.error(DELETE_ACTION + BIZ_NAME + "失败");
      //  }
 

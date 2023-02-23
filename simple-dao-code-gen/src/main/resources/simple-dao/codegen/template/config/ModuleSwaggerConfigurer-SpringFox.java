@@ -89,10 +89,10 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
     @Value("${r"${swagger.enumDelimiter:}"}")
     private String enumDelimiter;
 
-//    @Resource
+//    @Autowired
 //    FrameworkProperties frameworkProperties;
 
-    @Resource
+    @Autowired
     Environment environment;
 
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;

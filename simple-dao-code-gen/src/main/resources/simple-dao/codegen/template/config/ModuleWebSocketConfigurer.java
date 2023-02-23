@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 public class ModuleWebSocketConfigurer
         implements WebSocketMessageBrokerConfigurer {
 
-    @Resource
+    @Autowired
     TaskScheduler messageBrokerTaskScheduler;
 
     @Override

@@ -9,7 +9,7 @@
  * 典型使用方式:
  * 1、通过spring 扫描并注入Context @Repository("com.levin.commons.dao.support.JpaDaoImpl")
  * <p/>
- * 2、在使用的地方通过  @Resource JpaDao dao; 引入JpaDao实例
+ * 2、在使用的地方通过  @Autowired JpaDao dao; 引入JpaDao实例
  * <p>
  * <p>
  * jdk8 编译参数：-parameters

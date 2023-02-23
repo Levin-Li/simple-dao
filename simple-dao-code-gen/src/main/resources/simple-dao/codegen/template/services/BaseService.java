@@ -38,10 +38,10 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Slf4j
 public abstract class BaseService {
 
-    @Resource
+    @Autowired
     protected SimpleDao simpleDao;
 
-    @Resource
+    @Autowired
     protected ApplicationContext applicationContext;
 
     protected Object selfProxy = null;

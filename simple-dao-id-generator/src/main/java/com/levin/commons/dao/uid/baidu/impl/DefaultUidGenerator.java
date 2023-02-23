@@ -93,7 +93,7 @@ public class DefaultUidGenerator
     /**
      * Spring property
      */
-    @Resource
+    @Autowired
     protected WorkerIdAssigner workerIdAssigner;
 
     @Override

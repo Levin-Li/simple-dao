@@ -44,7 +44,7 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    @Resource
+    @Autowired
     Environment environment;
 
     @Bean

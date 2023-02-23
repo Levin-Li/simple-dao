@@ -26,10 +26,10 @@ import java.util.stream.*;
 @Component(PLUGIN_PREFIX + "${className}")
 public class ModulePlugin implements Plugin, PluginManagerAware {
 
-    @Resource
+    @Autowired
     private ApplicationContext context;
 
-    @Resource
+    @Autowired
     private SimpleDao simpleDao;
 
     private PluginManager pluginManager;

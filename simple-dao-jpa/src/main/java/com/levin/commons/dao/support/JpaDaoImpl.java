@@ -144,13 +144,13 @@ public class JpaDaoImpl
 
     private final Integer hibernateVersion;
 
-    @Resource
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-    @Resource
+    @Autowired
     private EntityManager defaultEntityManager;
 
-    @Resource
+    @Autowired
     private PlatformTransactionManager transactionManager;
 
     @Autowired(required = false)
@@ -170,7 +170,7 @@ public class JpaDaoImpl
     @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
     private int safeModeMaxLimit = 2000;
 
-    @Resource
+    @Autowired
     private HibernateProperties hibernateProperties;
 
     private static final Locker uniqueFieldMapLocker = Locker.build();
