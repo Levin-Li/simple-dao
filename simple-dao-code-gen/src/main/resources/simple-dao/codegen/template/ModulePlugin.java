@@ -8,7 +8,6 @@ import com.levin.commons.dao.*;
 import com.levin.commons.rbac.*;
 import com.levin.commons.dao.repository.*;
 import com.levin.commons.plugin.*;
-
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
 import org.springframework.context.*;

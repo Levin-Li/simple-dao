@@ -5,7 +5,7 @@ import ${modulePackageName}.*;
 
 import lombok.extern.slf4j.Slf4j;
 import javax.annotation.*;
-
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

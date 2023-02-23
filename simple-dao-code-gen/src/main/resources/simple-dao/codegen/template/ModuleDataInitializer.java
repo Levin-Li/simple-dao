@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.*;
+import org.springframework.beans.factory.annotation.*;
 
 import javax.annotation.*;
 import java.util.Optional;
