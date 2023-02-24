@@ -5,11 +5,12 @@ import com.levin.commons.dao.DeepCopy;
 import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
+import com.levin.commons.service.domain.EnumDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.format.AnnotationFormatterFactory;
 import org.springframework.format.Printer;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -36,7 +37,7 @@ public abstract class ObjectUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectUtil.class);
 
-    public static final GenericConversionService conversionService = new DefaultFormattingConversionService();
+    public static final ConfigurableConversionService conversionService = new DefaultFormattingConversionService();
 
     private static final AnnotationFormatterFactory<DateTimeFormat> dateFormatterFactory = new DateTimeFormatAnnotationFormatterFactory();
 
@@ -119,24 +120,31 @@ public abstract class ObjectUtil {
      */
     public static <T> T convert(Object source, Class<T> targetType, String... patterns) {
 
-
         if (targetType == null || targetType == Void.class) {
             return (T) source;
         }
 
+        //如果目标类型可以从源对象派生
+        if (source != null && targetType.isAssignableFrom(source.getClass())) {
+            return (T) source;
+        }
+
         //对枚举类型进行转换
-        if (targetType.isEnum()) {
-            if (source == null) {
-                return null;
-            } else if (source instanceof Number) {
-                return targetType.getEnumConstants()[((Number) source).intValue()];
-            } else if (source instanceof CharSequence) {
-                return (T) Enum.valueOf((Class<Enum>) targetType, source.toString());
-            }
+        if (source instanceof EnumDesc) {
+            //如果是数值，并且源是枚举
+            if (Number.class.isAssignableFrom(targetType))
+                source = ((EnumDesc) source).code();
+            else if (CharSequence.class.isAssignableFrom(targetType))
+                source = ((EnumDesc) source).name();
+
+        } else if (targetType.isEnum() && EnumDesc.class.isAssignableFrom(targetType)) {
+            if (source instanceof Number)
+                return (T) EnumDesc.parse((Class<? extends Enum>) targetType, ((Number) source).intValue());
+            else if (source instanceof String)
+                return (T) EnumDesc.parse((Class<? extends Enum>) targetType, (String) source);
         }
 
         return conversionService.convert(source, targetType);
-
     }
 
 
