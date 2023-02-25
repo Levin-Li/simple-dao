@@ -92,13 +92,11 @@
                 <scope>provided</scope>
             </dependency>
 
-            <#--
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
                 <scope>provided</scope>
             </dependency>
-            -->
 
         </#if>
 
@@ -137,6 +135,7 @@
                 <artifactId>spring-boot-starter-web</artifactId>
                 <scope>provided</scope>
             </dependency>
+
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-webmvc-core</artifactId>
@@ -162,11 +161,6 @@
             </dependency>
 
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-            </dependency>
-
-            <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
             </dependency>
@@ -175,12 +169,12 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
             </dependency>
-           <!--
+
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
             </dependency>
-            -->
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>

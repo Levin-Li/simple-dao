@@ -57,7 +57,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
      * 默认  "2.3.5.RELEASE"
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.6.14";
+    private String springBootStarterParentVersion = "2.7.8";
 
     /**
      * Spring boot 数据库配置的 profile
