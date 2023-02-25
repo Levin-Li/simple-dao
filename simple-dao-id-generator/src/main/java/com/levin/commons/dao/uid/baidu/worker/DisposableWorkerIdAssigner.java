@@ -106,7 +106,7 @@ public class DisposableWorkerIdAssigner
         }
 
         if (node1.getId() == null) {
-            node1.setId(System.currentTimeMillis() - 3600 * 1000 * 24 * 365 * 30);
+            node1.setId(System.currentTimeMillis() - 3600L * 1000 * 24 * 365 * 30);
         }
 
         return node1.getId();
