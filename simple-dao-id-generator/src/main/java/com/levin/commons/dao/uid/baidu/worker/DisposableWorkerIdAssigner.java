@@ -80,7 +80,7 @@ public class DisposableWorkerIdAssigner
                 workerNodeDAO.save(node1);
             }
 
-        } else if (jdbcOperations != null) {
+        } else if (jdbcOperations != null && jdbcInsert!=null) {
 
             Map<String, Object> node = findNode(node1);
 
@@ -91,6 +91,7 @@ public class DisposableWorkerIdAssigner
                 node1.prePersist();
 
                 jdbcInsert.withTableName("uuid_worker_node_entity")
+                        .usingGeneratedKeyColumns("id")
                         .execute(MapUtils.putFirst("host_name", node1.getHostName())
                                 .put("port", node1.getPort())
                                 .put("type", node1.getType())
