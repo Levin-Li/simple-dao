@@ -47,7 +47,7 @@ public class WorkerNodeEntity implements Identifiable {
 
     @Schema(description = "ID")
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     /**
