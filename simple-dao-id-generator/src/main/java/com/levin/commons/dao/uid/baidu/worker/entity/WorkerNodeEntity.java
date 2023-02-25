@@ -33,9 +33,9 @@ import java.util.Date;
 @Table(
         name = "uuid_worker_node_entity",
         indexes = {
-                @Index(columnList = E_WorkerNodeEntity.hostName),
-                @Index(columnList = E_WorkerNodeEntity.port),
-                @Index(columnList = E_WorkerNodeEntity.type),
+                @Index(columnList = "host_name"),
+                @Index(columnList = "port"),
+                @Index(columnList = "type"),
         }
         ,
         uniqueConstraints = {

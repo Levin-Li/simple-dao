@@ -30,6 +30,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -111,7 +112,8 @@ public class DisposableWorkerIdAssigner
     }
 
     private Map<String, Object> findNode(WorkerNodeEntity node1) {
-        return jdbcOperations.queryForMap("select id from uuid_worker_node_entity where host_name = ? and port = ?", node1.getHostName(), node1.getPort());
+        List<Map<String, Object>> mapList = jdbcOperations.queryForList("select id from uuid_worker_node_entity where host_name = ? and port = ? ", node1.getHostName(), node1.getPort());
+        return (mapList != null && !mapList.isEmpty()) ? mapList.get(0) : null;
     }
 
     /**
