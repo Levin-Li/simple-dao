@@ -27,10 +27,11 @@ import java.util.Date;
 @Schema(description = "工作节点")
 
 //6、必须建立索引
-@Entity(name = "WorkerNodeEntity")
+@Entity
 
 //7、必须建立索引
 @Table(
+        name = "uuid-worker-node-entity",
         indexes = {
                 @Index(columnList = E_WorkerNodeEntity.hostName),
                 @Index(columnList = E_WorkerNodeEntity.port),
