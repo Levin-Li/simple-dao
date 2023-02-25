@@ -31,7 +31,7 @@ import java.util.Date;
 
 //7、必须建立索引
 @Table(
-        name = "uuid-worker-node-entity",
+        name = "uuid_worker_node_entity",
         indexes = {
                 @Index(columnList = E_WorkerNodeEntity.hostName),
                 @Index(columnList = E_WorkerNodeEntity.port),
