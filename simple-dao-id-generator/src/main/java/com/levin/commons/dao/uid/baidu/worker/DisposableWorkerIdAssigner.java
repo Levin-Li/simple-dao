@@ -80,7 +80,7 @@ public class DisposableWorkerIdAssigner
                 workerNodeDAO.save(node1);
             }
 
-        } else if (jdbcOperations != null && jdbcInsert!=null) {
+        } else if (jdbcOperations != null && jdbcInsert != null) {
 
             Map<String, Object> node = findNode(node1);
 
@@ -106,7 +106,7 @@ public class DisposableWorkerIdAssigner
         }
 
         if (node1.getId() == null) {
-            node1.setId(System.currentTimeMillis());
+            node1.setId(System.currentTimeMillis() - 3600 * 1000 * 24 * 365 * 30);
         }
 
         return node1.getId();
