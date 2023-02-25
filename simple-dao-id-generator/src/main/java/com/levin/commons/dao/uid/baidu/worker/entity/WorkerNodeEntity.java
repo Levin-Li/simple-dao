@@ -53,6 +53,7 @@ public class WorkerNodeEntity implements Identifiable {
     /**
      * Type of CONTAINER: HostName, ACTUAL : IP.
      */
+    @Column(name = "host_name")
     String hostName;
 
     /**
@@ -68,6 +69,7 @@ public class WorkerNodeEntity implements Identifiable {
     /**
      * Worker launch date, default now
      */
+    @Column(name = "launch_date")
     Date launchDate = new Date();
 
     /**

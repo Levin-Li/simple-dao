@@ -16,18 +16,21 @@
 package com.levin.commons.dao.uid.baidu.worker;
 
 import com.levin.commons.dao.uid.baidu.ModuleOption;
-import com.levin.commons.dao.uid.baidu.worker.dao.WorkerNodeDAO;
-import com.levin.commons.dao.uid.baidu.worker.entity.WorkerNodeEntity;
 import com.levin.commons.dao.uid.baidu.utils.DockerUtils;
 import com.levin.commons.dao.uid.baidu.utils.NetUtils;
+import com.levin.commons.dao.uid.baidu.worker.dao.WorkerNodeDAO;
+import com.levin.commons.dao.uid.baidu.worker.entity.WorkerNodeEntity;
+import com.levin.commons.utils.MapUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * Represents an implementation of {@link WorkerIdAssigner},
@@ -41,8 +44,14 @@ public class DisposableWorkerIdAssigner
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DisposableWorkerIdAssigner.class);
 
-    @Autowired
-    private WorkerNodeDAO workerNodeDAO;
+    @Autowired(required = false)
+    WorkerNodeDAO workerNodeDAO;
+
+    @Autowired(required = false)
+    JdbcOperations jdbcOperations;
+
+    @Autowired(required = false)
+    SimpleJdbcInsert jdbcInsert;
 
     /**
      * Assign worker id base on database.<p>
@@ -56,14 +65,53 @@ public class DisposableWorkerIdAssigner
     public long assignWorkerId() {
 
         // build worker node entity
-        WorkerNodeEntity workerNodeEntity = buildWorkerNode();
+        WorkerNodeEntity node1 = buildWorkerNode();
 
         // add worker node for new (ignore the same IP + PORT)
-        workerNodeDAO.save(workerNodeEntity);
+        // workerNodeDAO.save(node1);
+        if (workerNodeDAO != null) {
 
-        LOGGER.info("Add worker node:" + workerNodeEntity);
+            WorkerNodeEntity node = workerNodeDAO.findByHostNameAndPort(node1.getHostName(), node1.getPort());
 
-        return workerNodeEntity.getId();
+            if (node != null) {
+                node1 = node;
+            } else {
+                workerNodeDAO.save(node1);
+            }
+
+        } else if (jdbcOperations != null) {
+
+            Map<String, Object> node = findNode(node1);
+
+            if (node != null && !node.isEmpty()) {
+                node1.setId((Long) node.get("id"));
+            } else {
+
+                node1.prePersist();
+
+                jdbcInsert.withTableName("uuid_worker_node_entity")
+                        .execute(MapUtils.putFirst("host_name", node1.getHostName())
+                                .put("port", node1.getPort())
+                                .put("type", node1.getType())
+                                .put("launch_date", node1.getLaunchDate())
+                                .put("created", node1.getCreated())
+                                .build());
+
+                node = findNode(node1);
+
+                node1.setId((Long) node.get("id"));
+            }
+        }
+
+        if (node1.getId() == null) {
+            node1.setId(System.currentTimeMillis());
+        }
+
+        return node1.getId();
+    }
+
+    private Map<String, Object> findNode(WorkerNodeEntity node1) {
+        return jdbcOperations.queryForMap("select id from uuid_worker_node_entity where host_name = ? and port = ?", node1.getHostName(), node1.getPort());
     }
 
     /**

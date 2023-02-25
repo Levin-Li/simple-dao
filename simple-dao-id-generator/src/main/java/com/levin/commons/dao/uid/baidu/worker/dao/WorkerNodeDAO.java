@@ -17,6 +17,7 @@ package com.levin.commons.dao.uid.baidu.worker.dao;
 
 import com.levin.commons.dao.uid.baidu.ModuleOption;
 import com.levin.commons.dao.uid.baidu.worker.entity.WorkerNodeEntity;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +27,9 @@ import org.springframework.stereotype.Repository;
  * @author yutianbao
  */
 @Repository(ModuleOption.PLUGIN_PREFIX + "WorkerNodeDAO")
+@Lazy
 public interface WorkerNodeDAO extends JpaRepository<WorkerNodeEntity, Long> {
+
+    WorkerNodeEntity findByHostNameAndPort(String hostName, String port);
 
 }
