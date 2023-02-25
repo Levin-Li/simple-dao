@@ -33,8 +33,8 @@ import java.lang.reflect.Type;
 @Slf4j
 
 @SpringBootApplication
-@EnableWebSocketMessageBroker
-@EnableWebSocket
+//@EnableWebSocketMessageBroker
+//@EnableWebSocket
 @EnableScheduling
 @EnableCaching
 @EnableAsync
