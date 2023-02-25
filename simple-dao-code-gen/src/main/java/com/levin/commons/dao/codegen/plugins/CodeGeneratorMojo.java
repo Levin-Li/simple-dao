@@ -1,6 +1,5 @@
 package com.levin.commons.dao.codegen.plugins;
 
-import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -138,21 +137,21 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             File basedir = mavenProject.getBasedir();
 
+            //是否分割目录
             boolean splitDir = forceSplitDir;
 
             String dirPrefix = "";
 
+            //如果当前的项目目录名称
             final String basedirName = basedir.getName();
 
-            //如果当前项目目录规则匹配
+            //如果当前项目目录规则匹配，和配置指定的实体目录相匹配，则认为读独立的实体目录
             if (hasText(entitiesModuleDirName)
                     && (basedirName.equals(entitiesModuleDirName)
                     || basedirName.endsWith("-" + entitiesModuleDirName)
                     || basedirName.endsWith("_" + entitiesModuleDirName)
             )) {
-
                 //如果发现实体目录匹配，也自动分割目录
-
                 int indexOf = basedirName.indexOf(entitiesModuleDirName);
 
                 if (indexOf > 0) {

@@ -76,7 +76,7 @@ public class TestOrg
     }
 
     @Schema(description = "机构类型")
-    public enum Type implements EnumDesc {
+    public enum OrgType implements EnumDesc {
         @Schema(description = "公司/独立法人")
         LegalPerson,
         @Schema(description = "分公司/分支机构")
@@ -119,7 +119,7 @@ public class TestOrg
     @Schema(description = "类型")
     @Column(nullable = false, length = 64)
     @Type(type = "EnumDesc")
-    protected Type type;
+    protected OrgType type;
 
     @Schema(description = "所属行业")
     @Column(length = 64)
