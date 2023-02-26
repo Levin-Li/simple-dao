@@ -16,12 +16,14 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 import org.hibernate.annotations.Type;
 
-@Entity(name = EntityConst.PREFIX + "TestOrg")
+
 @Data
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
+
 @Schema(description = "机构")
+@Entity(name = EntityConst.PREFIX + "TestOrg")
 @Table(
         indexes = {
                 @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
@@ -48,6 +50,8 @@ import org.hibernate.annotations.Type;
                 @UniqueConstraint(columnNames = {E_TestOrg.tenantId, E_TestOrg.parentId, E_TestOrg.code}),
         }
 )
+
+//@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
 //关于 JPA 继承模型
 //@DiscriminatorColumn

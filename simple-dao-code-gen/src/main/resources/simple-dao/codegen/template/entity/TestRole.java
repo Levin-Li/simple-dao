@@ -17,13 +17,14 @@ import javax.persistence.*;
 import java.util.List;
 import org.hibernate.annotations.Type;
 
-@Entity(name = EntityConst.PREFIX + "TestRole")
+
 @Data
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
-@Schema(description = "测试角色")
 
+@Schema(description = "测试角色")
+@Entity(name = EntityConst.PREFIX + "TestRole")
 @Table(
         indexes = {
                 @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
@@ -40,6 +41,18 @@ import org.hibernate.annotations.Type;
                 @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
         }
 )
+
+//关于 JPA 继承模型
+//@DiscriminatorColumn
+//@DiscriminatorValue
+//@PrimaryKeyJoinColumn(name="aId", referencedColumnName="id")
+//@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
+//@MappedSuperclass告诉JPA提供者包含基类的持久性属性，就好像它们是由扩展用@MappedSuperclass注解的超类的子类所声明的@MappedSuperclass 。
+//但是，inheritance仅在OOP世界中是可见的，因为从数据库的angular度来看，没有任何基类的迹象。 只有子类实体将有一个关联的映射表。
+//@Inheritance注释是为了实现数据库表结构中的OOPinheritance模型。 更多的，你可以查询用@Inheritance注解的基类，但是你不能用@MappedSuperclass注解的基类。
+//现在，您要使用@Inheritance JPA注释的原因是要实施像“战略模式”这样的行为驱动模式 。另一方面， @MappedSuperclass只是一种重用基本属性，关联，甚至是使用公共基类的实体@Id方法。
+//不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
+
 public class TestRole
         extends AbstractNamedMultiTenantObject {
 
