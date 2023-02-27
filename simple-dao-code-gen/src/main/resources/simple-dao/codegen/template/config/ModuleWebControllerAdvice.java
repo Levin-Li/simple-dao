@@ -7,6 +7,7 @@ import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.ServiceResp;
 import com.levin.commons.service.exception.AccessDeniedException;
 import com.levin.commons.service.exception.ServiceException;
+import com.levin.commons.service.exception.UnauthorizedException;
 import com.levin.commons.utils.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -126,6 +127,15 @@ public class ModuleWebControllerAdvice {
 //        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
 //                , "认证异常：" + e.getMessage());
 //    }
+
+    @ExceptionHandler({UnauthorizedException.class})
+    public ApiResp onAuthorizedException(Exception e) {
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+                , "认证异常：" + e.getMessage());
+    }
 
     @ExceptionHandler({AccessDeniedException.class,})
     public ApiResp onAccessDeniedException(Exception e) {

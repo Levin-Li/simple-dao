@@ -42,7 +42,6 @@ public class ModuleWebSocketConfigurer
                 .setHeartbeatValue(new long[]{10000, 20000})
                 .setTaskScheduler(this.messageBrokerTaskScheduler);
 
-
         //send命令时需要带上/app前缀
         // 全局使用的消息前缀（客户端订阅路径上会体现出来）
         registry.setApplicationDestinationPrefixes(BASE_PATH);
