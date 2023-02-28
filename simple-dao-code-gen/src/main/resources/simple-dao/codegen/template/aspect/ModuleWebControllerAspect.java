@@ -4,6 +4,7 @@ import static  ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import com.levin.commons.plugin.Plugin;
+import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.IPAddrUtils;
@@ -55,6 +56,9 @@ public class ModuleWebControllerAspect {
 
     @Autowired
     ServerProperties serverProperties;
+
+    @Autowired
+    PluginManager pluginManager;
 
     @PostConstruct
     void init() {
@@ -189,7 +193,7 @@ public class ModuleWebControllerAspect {
 
         final List<VariableResolver> variableResolverList = new ArrayList<>();
 
-        final Map<String, ?> injectVars = injectVarService.getInjectVars();
+        final Map<String, ?> injectVars =  injectVarService.getInjectVars();
 
         variableResolverList.addAll(getModuleResolverList(joinPoint));
         variableResolverList.addAll(variableResolverManager.getVariableResolvers());

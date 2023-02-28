@@ -75,7 +75,7 @@ public class ${entityName}
 <#list fields as field>
    <#if field.isPk>
     @Id
-    @GeneratedValue<#if !field.isIdentity>(generator = "default_uid")</#if>
+    @GeneratedValue<#if !field.isIdentity>(generator = "default_id")</#if>
    </#if>
    <#if field.isLob>
     @Lob

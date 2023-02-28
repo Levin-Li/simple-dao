@@ -11,7 +11,7 @@
                 @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy"),
         }
 )
-//默认的uid生成器
+//默认的id生成器
 @GenericGenerator(name = "default_id", strategy = "com.levin.commons.dao.support.DelegateIdGenerator",
         parameters = {
                 @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy"),
