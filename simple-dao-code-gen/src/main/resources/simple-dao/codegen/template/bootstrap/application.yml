@@ -84,7 +84,7 @@ spring:
 
   #      MYSQL 配置选项
         properties:
-  #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
+  #        hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
 
           hibernate.id.new_generator_mappings: false
   #        hibernate.dialect.storage_engine: innodb
