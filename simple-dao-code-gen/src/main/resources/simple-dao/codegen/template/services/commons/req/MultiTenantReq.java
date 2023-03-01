@@ -46,6 +46,7 @@ public abstract class MultiTenantReq
 //            , isRequired = InjectVar.SPEL_PREFIX + "!#isTenantAdmin" // 如果不是租户管理员，那么值是必须的
 //    )
 //    @Schema(description = "机构ID")
+//    @Eq
 //    protected String orgId;
 
     /**

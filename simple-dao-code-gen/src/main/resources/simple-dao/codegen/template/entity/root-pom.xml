@@ -39,6 +39,8 @@
         <swagger.enable>true</swagger.enable>
         <redission.version>3.19.3</redission.version>
 
+        <mysql-driver.version>8.0.32</mysql-driver.version>
+
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
@@ -283,6 +285,11 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-driver.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
