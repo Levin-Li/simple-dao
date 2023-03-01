@@ -1,37 +1,23 @@
-package ${modulePackageName}.aspect;
-
-import static  ${modulePackageName}.ModuleOption.*;
-import ${modulePackageName}.*;
+package $
 
 import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
-import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.support.*;
-import com.levin.commons.utils.IPAddrUtils;
 import com.levin.commons.utils.MapUtils;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.*;
-import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.servlet.http.*;
-
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Aspect
 @Slf4j
@@ -59,6 +45,11 @@ public class ModuleWebControllerAspect {
 
     @Autowired
     PluginManager pluginManager;
+
+    /**
+     * 存储模块的变量解析器
+     */
+    private MultiValueMap<String, VariableResolver> moduleResolverMap = new LinkedMultiValueMap<>();
 
     @PostConstruct
     void init() {
@@ -96,7 +87,6 @@ public class ModuleWebControllerAspect {
 
     /**
      * 拦截例子
-     *
      *
      * @param joinPoint
      * @throws Throwable
@@ -163,7 +153,8 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * 变量注入
+     * AOP变量注入
+     * 默认是不启用的
      *
      * @param joinPoint
      * @throws Throwable
@@ -193,7 +184,8 @@ public class ModuleWebControllerAspect {
 
         final List<VariableResolver> variableResolverList = new ArrayList<>();
 
-        final Map<String, ?> injectVars =  Collections.emptyMap();  ;// injectVarService.getInjectVars();
+        final Map<String, ?> injectVars = Collections.emptyMap();
+        ;// injectVarService.getInjectVars();
 
         variableResolverList.addAll(getModuleResolverList(joinPoint));
         variableResolverList.addAll(variableResolverManager.getVariableResolvers());
@@ -245,7 +237,7 @@ public class ModuleWebControllerAspect {
     }
 
     /**
-     *
+     * @Around注解用于修饰Around增强处理，Around增强处理是功能比较强大的增强处理，它近似于Before增强处理和AfterReturing增强处理的总结，Around增强处理既可在执行目标方法之前增强动作，也可在执行目标方法之后织入增强的执行。与Before增强处理、AfterReturning增强处理不同的是，Around增强处理可以决定目标方法在什么时候执行，如何执行，甚至可以完全阻止目标方法的执行。
      */
     //@Around("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {

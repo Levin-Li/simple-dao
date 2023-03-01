@@ -21,6 +21,25 @@ spring:
       pool:
         size: 100
 
+  # spring.mvc.date-format和spring.jackson.date-format区别
+  #  当Content-Type 为 application/json，dispatcherServlet会使用jackson的MessageConvert，里面解析json的convert为jackson的配置
+  #
+  #  @JsonFormat(优先级高)  或  spring.jackson.date-format
+  #
+  #  当Content-Type 为 application/x-www-form-urlencoded（普通表单上传），使用的是ModelAttributeMethodProcessor ，使用的是mvc自己的配置
+  #  spring.mvc.date-format(优先级高) 或 @DatetimeFormat
+  jackson:
+    #date-format: yyyy-MM-dd HH:mm:ss
+    date-format: com.levin.oak.base.format.DefaultDateFormat
+    time-zone: GMT+8
+    locale: zh_CN
+
+  mvc:
+    format:
+      date: yyyy-MM-dd
+      date-time: yyyy-MM-dd HH:mm:ss
+      time: HH:mm:ss
+
   # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -64,11 +83,11 @@ spring:
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
 
   #      MYSQL 配置选项
-  #      properties:
+        properties:
   #        hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
-  #        hibernate.id.new_generator_mappings: false
-  #        hibernate.dialect.storage_engine: innodb
 
+          hibernate.id.new_generator_mappings: false
+  #        hibernate.dialect.storage_engine: innodb
 
 #日志配置
 logging:
