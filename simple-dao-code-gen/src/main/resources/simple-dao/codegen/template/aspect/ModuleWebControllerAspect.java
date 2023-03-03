@@ -199,25 +199,28 @@ public class ModuleWebControllerAspect {
         variableResolverList.addAll(variableResolverManager.getVariableResolvers());
 
         //对方法参数进行迭代
-        Arrays.stream(requestArgs).filter(Objects::nonNull).forEachOrdered(arg -> {
+        Arrays.stream(requestArgs)
+                .filter(Objects::nonNull)
+                .filter(arg -> !BeanUtils.isSimpleValueType(arg.getClass()))
+                .forEachOrdered(arg -> {
 
-            //如果参数本身是一个集合，支持第一级是集合对象的参数
-            Collection<?> params = (arg instanceof Collection) ? ((Collection<?>) arg) : Arrays.asList(arg);
+                    //如果参数本身是一个集合，支持第一级是集合对象的参数
+                    Collection<?> params = (arg instanceof Collection) ? ((Collection<?>) arg) : Arrays.asList(arg);
 
-            params.stream()
-                    .filter(Objects::nonNull)
-                    .forEachOrdered(param -> {
+                    params.stream()
+                            .filter(Objects::nonNull)
+                            .forEachOrdered(param -> {
 
-                        ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
+                                ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
 
-                        tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
+                                tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
 
-                        tempList.addAll(variableResolverList);
+                                tempList.addAll(variableResolverList);
 
-                        variableInjector.injectByVariableResolvers(param, tempList);
-                    });
+                                variableInjector.injectByVariableResolvers(param, tempList);
+                            });
 
-        });
+                });
 
     }
 
