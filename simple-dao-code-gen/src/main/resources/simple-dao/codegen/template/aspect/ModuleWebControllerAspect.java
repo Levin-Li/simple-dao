@@ -6,6 +6,7 @@ import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -162,6 +163,13 @@ public class ModuleWebControllerAspect {
     //@Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
     public void injectVar(JoinPoint joinPoint) {
 
+        final Object[] requestArgs = joinPoint.getArgs();
+        //如果没有参数,或是空参数 或是简单参数，直接返回
+        if (requestArgs == null || requestArgs.length == 0
+                || Arrays.stream(requestArgs).allMatch(arg -> arg == null || BeanUtils.isSimpleValueType(arg.getClass()))) {
+            return;
+        }
+
         final String path = getRequestPath();
 
         Signature signature = joinPoint.getSignature();
@@ -190,29 +198,27 @@ public class ModuleWebControllerAspect {
         variableResolverList.addAll(getModuleResolverList(joinPoint));
         variableResolverList.addAll(variableResolverManager.getVariableResolvers());
 
-        Optional.ofNullable(joinPoint.getArgs()).ifPresent(args ->
+        //对方法参数进行迭代
+        Arrays.stream(requestArgs).filter(Objects::nonNull).forEachOrdered(arg -> {
 
-                //对方法参数进行迭代
-                Arrays.stream(args).filter(Objects::nonNull).forEachOrdered(arg -> {
+            //如果参数本身是一个集合，支持第一级是集合对象的参数
+            Collection<?> params = (arg instanceof Collection) ? ((Collection<?>) arg) : Arrays.asList(arg);
 
-                    //如果参数本身是一个集合，支持第一级是集合对象的参数
-                    Collection<?> params = (arg instanceof Collection) ? ((Collection<?>) arg) : Arrays.asList(arg);
+            params.stream()
+                    .filter(Objects::nonNull)
+                    .forEachOrdered(param -> {
 
-                    params.stream()
-                            .filter(Objects::nonNull)
-                            .forEachOrdered(param -> {
+                        ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
 
-                                ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
+                        tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
 
-                                tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
+                        tempList.addAll(variableResolverList);
 
-                                tempList.addAll(variableResolverList);
+                        variableInjector.injectByVariableResolvers(param, tempList);
+                    });
 
-                                variableInjector.injectByVariableResolvers(param, tempList);
-                            });
+        });
 
-                })
-        );
     }
 
     /**
