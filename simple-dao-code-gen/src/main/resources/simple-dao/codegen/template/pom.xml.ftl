@@ -50,6 +50,7 @@
                 <scope>provided</scope>
             </dependency>
         </#if>
+
         <#if services??>
             <dependency>
                 <artifactId>${services.artifactId}</artifactId>
@@ -233,6 +234,11 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-cache</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
             </dependency>
 
             <dependency>
