@@ -36,7 +36,7 @@
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.source.skip>true</maven.source.skip>
+        <maven.source.skip>false</maven.source.skip>
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>

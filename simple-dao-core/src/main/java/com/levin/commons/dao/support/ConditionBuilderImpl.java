@@ -1669,7 +1669,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
             //可以多次逻辑组
             try {
-
                 //如果是忽略的类型
                 if (attrType != null && attrType.isAnnotationPresent(Ignore.class)) {
                     return;
