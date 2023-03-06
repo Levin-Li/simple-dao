@@ -1,30 +1,39 @@
 package ${modulePackageName};
 
 import com.levin.commons.service.support.*;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.*;
 import org.springframework.beans.factory.annotation.*;
-import com.levin.commons.plugin.PluginManager;
-import com.levin.commons.plugin.support.PluginManagerImpl;
+
+import com.levin.commons.service.support.ValueHolder;
+import com.levin.commons.service.support.VariableNotFoundException;
+import com.levin.commons.service.support.VariableResolver;
+import com.levin.commons.service.support.VariableResolverConfigurer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.lang.reflect.Type;
+
 
 /**
  *  启动类
@@ -68,6 +77,32 @@ public class Application {
         config.setMaxAge(18000L);
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
+    }
+
+    /**
+     * 默认执行器
+     *
+     * @param builder
+     * @return
+     */
+    @Lazy
+    @Bean(name = {"applicationTaskExecutor", "taskExecutor"})
+    @ConditionalOnMissingBean(name = {"applicationTaskExecutor", "taskExecutor"})
+    public ThreadPoolTaskExecutor applicationTaskExecutor(@Autowired TaskExecutorBuilder builder) {
+        return builder.build();
+    }
+
+    /**
+     * 使用json序列化
+     * 默认过期时间
+     *
+     * @return
+     */
+    @Bean
+    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
+        return builder -> builder
+                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())));
     }
 
 //    @Bean
