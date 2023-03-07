@@ -1154,23 +1154,23 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .filter(o -> o instanceof QueryOption)
                     .map(o -> (QueryOption) o).forEach(queryOption -> {
 
-                if (hasValidQueryEntity()) {
-                    return;
-                }
+                        if (hasValidQueryEntity()) {
+                            return;
+                        }
 
-                entityClass = queryOption.getEntityClass();
+                        entityClass = queryOption.getEntityClass();
 
-                this.setNative(queryOption.isNative());
+                        this.setNative(queryOption.isNative());
 
-                // tableName = queryOption.getEntityName();
+                        // tableName = queryOption.getEntityName();
 
-                setTableName(queryOption.getEntityName());
+                        setTableName(queryOption.getEntityName());
 
-                alias = queryOption.getAlias();
+                        alias = queryOption.getAlias();
 
-                tryUpdateTableName();
+                        tryUpdateTableName();
 
-                if (hasValidQueryEntity()) {
+                        if (hasValidQueryEntity()) {
 
 //                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
 //                            , aliasMap::put
@@ -1180,12 +1180,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //                        join(true, joinStatement);
 //                    }
 
-                    join(true, queryOption.getJoinOptions());
+                            join(true, queryOption.getJoinOptions());
 
-                    join(true, queryOption.simpleJoinOptions());
-                }
+                            join(true, queryOption.simpleJoinOptions());
+                        }
 
-            });
+                    });
         });
 
         return (CB) this;
@@ -1410,32 +1410,41 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 ResolvableType fieldRT = ResolvableType.forField(field, rootType);
 
-                Class<?> fieldRealType = fieldRT.resolve(field.getType());
+                Class<?> targetType = fieldRT.resolve(field.getType());
 
                 field.setAccessible(true);
+
+                String name = field.getName();
 
                 try {
 
                     com.levin.commons.service.support.ValueHolder<Object> valueHolder = dao.getInjectValue(queryValueObj, field, contexts);
 
-                    boolean hasValue = valueHolder != null && valueHolder.hasValue();
+                    Object value = null;
 
-                    Object value = hasValue ? valueHolder.get() : field.get(queryValueObj);
-
-                    String name = field.getName();
-
-                    if (hasValue) {
-
-                        fieldRealType = value != null ? value.getClass() : fieldRealType;
+                    if (valueHolder != null) {
 
                         if (StringUtils.hasText(valueHolder.getName())) {
                             name = valueHolder.getName();
                         }
+
+                        if (valueHolder.hasValue()) {
+                            value = valueHolder.getValue();
+                        }
+
+                        if ((valueHolder.getType() instanceof Class)) {
+                            targetType = (Class<?>) valueHolder.getType();
+                        } else if (value != null) {
+                            targetType = value.getClass();
+                        }
+
+                    } else {
+                        value = field.get(queryValueObj);
                     }
 
                     processAttr(queryValueObj
                             , field, name, field.getAnnotations()
-                            , fieldRealType, value);
+                            , targetType, value);
 
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);

@@ -388,6 +388,9 @@ public class DaoExamplesTest {
 
         one = dao.findOneByQueryObj(new QueryTaskReq());
 
+
+        int i = dao.updateByQueryObj(one);
+
         System.out.println(one);
 
     }
