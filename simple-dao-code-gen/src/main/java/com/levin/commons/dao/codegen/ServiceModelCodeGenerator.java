@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.ClassUtils;
@@ -1143,21 +1144,23 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
-                                        String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
+                                        if(!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
-                                        String params ="";
+                                            String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
 
+                                            String params = "";
 
-                                        if("evt".equalsIgnoreCase(action)){
-                                            fieldModel.addImport(fieldType);
-                                            params  =String.format(" expectBaseType = %s.class, ",fieldType.getSimpleName());
-                                        }
+                                            if ("evt".equalsIgnoreCase(action)) {
+                                                fieldModel.addImport(fieldType);
+                                                params = String.format(" expectBaseType = %s.class, ", fieldType.getSimpleName());
+                                            }
 
-                                        if (GenericConverter.class != injectVar.converter()) {
-                                            fieldModel.addImport(injectVar.converter());
-                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params , injectVar.converter().getSimpleName()));
-                                        } else {
-                                            annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
+                                            if (GenericConverter.class != injectVar.converter()) {
+                                                fieldModel.addImport(injectVar.converter());
+                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, injectVar.converter().getSimpleName()));
+                                            } else {
+                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
+                                            }
                                         }
 
                                         if (StringUtils.hasText(injectVar.expectTypeDesc())) {
