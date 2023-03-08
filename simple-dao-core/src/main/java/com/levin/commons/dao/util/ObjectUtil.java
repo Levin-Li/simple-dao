@@ -24,7 +24,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -115,11 +114,10 @@ public abstract class ObjectUtil {
     /**
      * @param source
      * @param targetType
-     * @param patterns   转换表达式，如 yyyyMMdd
      * @param <T>
      * @return
      */
-    public static <T> T convert(Object source, Class<T> targetType, Function<?, T>... converts) {
+    public static <T> T convert(Object source, Class<T> targetType) {
 
         if (targetType == null || targetType == Void.class) {
             return (T) source;
@@ -145,10 +143,6 @@ public abstract class ObjectUtil {
                 return (T) EnumDesc.parse((Class<? extends Enum>) targetType, (String) source);
         }
 
-        if (converts != null && converts.length > 0) {
-
-        }
-
         return conversionService.convert(source, targetType);
     }
 
@@ -160,7 +154,6 @@ public abstract class ObjectUtil {
      * @param map
      */
     public static Map copyField2Map(Object bean, Map map) {
-
 
         if (map == null) {
             map = new LinkedHashMap();
