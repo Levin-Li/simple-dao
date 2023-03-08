@@ -127,7 +127,6 @@ public abstract class PagingQueryHelper {
 
             setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultList);
 
-
         }
 
         return (T) pagingData;

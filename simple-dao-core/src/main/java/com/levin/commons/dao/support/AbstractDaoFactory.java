@@ -50,7 +50,6 @@ public abstract class AbstractDaoFactory implements DaoFactory {
         } else {
             throw new IllegalArgumentException("dao  " + daoClass.getName() + " is not support");
         }
-
     }
 
     @Override

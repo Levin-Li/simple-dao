@@ -9,6 +9,7 @@ import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 

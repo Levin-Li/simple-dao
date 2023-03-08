@@ -1369,6 +1369,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
+            //如果是增强器，则执行增强功能
+            if (queryValueObj instanceof Consumer) {
+                ((Consumer) queryValueObj).accept(this);
+                continue;
+            }
+
             //对注解的支持 PostConstruct
             ClassUtils.invokePostConstructMethod(queryValueObj);
 
