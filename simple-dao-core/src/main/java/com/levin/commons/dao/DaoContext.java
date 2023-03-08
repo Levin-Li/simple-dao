@@ -1,6 +1,7 @@
 package com.levin.commons.dao;
 
 
+import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
@@ -24,6 +25,11 @@ public abstract class DaoContext {
         @Override
         public String getInjectDomain() {
             return "dao";
+        }
+
+        @Override
+        public <T> T convert(Object source, Class<T> targetType) {
+            return ObjectUtil.convert(source, targetType);
         }
     };
 
