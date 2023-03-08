@@ -13,6 +13,7 @@ import com.levin.commons.dao.annotation.update.Immutable;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.ExceptionUtils;
@@ -1418,7 +1419,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 try {
 
-                    com.levin.commons.service.support.ValueHolder<Object> valueHolder = dao.getInjectValue(queryValueObj, field, contexts);
+                    //处理注入值
+                    com.levin.commons.service.support.ValueHolder<Object> valueHolder =
+                            field.isAnnotationPresent(InjectVar.class) ? dao.getInjectValue(queryValueObj, field, contexts) : null;
 
                     Object value = null;
 
