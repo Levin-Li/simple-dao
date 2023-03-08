@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -70,25 +71,28 @@ public abstract class PagingQueryHelper {
             final SimplePaging simplePaging = new SimplePaging();
 
             flattenQueryObjs.stream()
-                    .filter(Objects::nonNull).forEachOrdered(queryObj -> {
+                    .filter(Objects::nonNull)
+                    //忽略消费着
+                    .filter(o -> o instanceof Consumer)
+                    .forEachOrdered(queryObj -> {
 
-                Map<PageOption.Type, Field> pageOptionFields = getPageOptionFields(queryObj);
+                        Map<PageOption.Type, Field> pageOptionFields = getPageOptionFields(queryObj);
 
-                Field indexField = pageOptionFields.get(PageOption.Type.PageIndex);
-                Field sizeField = pageOptionFields.get(PageOption.Type.PageSize);
+                        Field indexField = pageOptionFields.get(PageOption.Type.PageIndex);
+                        Field sizeField = pageOptionFields.get(PageOption.Type.PageSize);
 
-                Object pageIndex = indexField != null ? ReflectionUtils.getField(indexField, queryObj) : null;
+                        Object pageIndex = indexField != null ? ReflectionUtils.getField(indexField, queryObj) : null;
 
-                Object pageSize = sizeField != null ? ReflectionUtils.getField(sizeField, queryObj) : null;
+                        Object pageSize = sizeField != null ? ReflectionUtils.getField(sizeField, queryObj) : null;
 
-                if (pageIndex != null) {
-                    simplePaging.setPageIndex(ObjectUtil.convert(pageIndex, Integer.class));
-                }
+                        if (pageIndex != null) {
+                            simplePaging.setPageIndex(ObjectUtil.convert(pageIndex, Integer.class));
+                        }
 
-                if (pageSize != null) {
-                    simplePaging.setPageSize(ObjectUtil.convert(pageSize, Integer.class));
-                }
-            });
+                        if (pageSize != null) {
+                            simplePaging.setPageSize(ObjectUtil.convert(pageSize, Integer.class));
+                        }
+                    });
 
             //分页
             flattenQueryObjs.add(simplePaging);
