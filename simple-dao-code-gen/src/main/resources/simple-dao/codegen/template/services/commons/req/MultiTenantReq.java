@@ -31,8 +31,8 @@ public abstract class MultiTenantReq
 
     @Schema(description = "租户ID" , hidden = true)
     @InjectVar(value = InjectConsts.TENANT_ID
-            , isOverride = InjectVar.SPEL_PREFIX + "!#user.isSuperAdmin()" // 如果不是超级管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + "!#user.isSuperAdmin()" // 如果不是超级管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
     )
     @OR(autoClose = true)
     @Eq
@@ -42,10 +42,10 @@ public abstract class MultiTenantReq
 
     //注意需要在注入服务中设置isTenantAdmin变量
 //    @InjectVar(value = InjectConsts.ORG_ID
-//            , isOverride = InjectVar.SPEL_PREFIX + "!#isTenantAdmin" // 如果不是租户管理员, 那么覆盖必须的
-//            , isRequired = InjectVar.SPEL_PREFIX + "!#isTenantAdmin" // 如果不是租户管理员，那么值是必须的
+//            , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_TENANT_ADMIN // 如果不是租户管理员, 那么覆盖必须的
+//            , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_TENANT_ADMIN // 如果不是租户管理员，那么值是必须的
 //    )
-//    @Schema(description = "机构ID")
+//    @Schema(description = "机构ID" , hidden = true)
 //    @Eq
 //    protected String orgId;
 
