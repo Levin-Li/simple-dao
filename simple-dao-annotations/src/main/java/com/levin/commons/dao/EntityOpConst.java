@@ -19,6 +19,7 @@ public interface EntityOpConst {
      *
      */
     String QUERY_ACTION = "查询";
+    String QUERY_LIST_ACTION = "查询列表";
 
     /**
      *

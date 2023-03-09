@@ -70,9 +70,9 @@ public class ${className} extends BaseController{
      * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @GetMapping("/query")
-    @Operation(summary = "列表" + QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
-    public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req, SimplePaging paging) {
+    @GetMapping("/queryList")
+    @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
+    public ApiResp<PagingData<${entityName}Info>> queryList(Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
