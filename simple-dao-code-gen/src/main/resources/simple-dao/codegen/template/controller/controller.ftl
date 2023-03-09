@@ -65,13 +65,13 @@ public class ${className} extends BaseController{
     ${serviceName} ${serviceName?uncap_first};
 
     /**
-     * 分页查找
+     * 分页列表查找
      *
      * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
     @GetMapping("/query")
-    @Operation(summary = QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
+    @Operation(summary = "列表" + QUERY_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     public ApiResp<PagingData<${entityName}Info>> query(Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
