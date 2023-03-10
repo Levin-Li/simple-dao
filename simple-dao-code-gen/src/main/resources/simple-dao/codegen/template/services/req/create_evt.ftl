@@ -14,6 +14,7 @@ import java.util.*;
 
 ///////////////////////////////////////////////////////
 import com.levin.commons.service.domain.*;
+import com.levin.commons.service.support.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.update.*;

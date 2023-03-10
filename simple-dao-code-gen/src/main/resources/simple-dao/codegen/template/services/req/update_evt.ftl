@@ -6,6 +6,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.service.domain.*;
+import com.levin.commons.service.support.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -64,7 +65,7 @@ public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq
 
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
-    @Eq(condition ="!#user.isSuperAdmin()")
+    @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
     final boolean eqEditable = true;
 </#if>
 
