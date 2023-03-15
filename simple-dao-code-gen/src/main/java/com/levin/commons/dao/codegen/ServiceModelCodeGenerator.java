@@ -1019,6 +1019,10 @@ public final class ServiceModelCodeGenerator {
                 logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
             }
 
+            if (fieldType == Object.class) {
+                logger.warn("*** " + entityClass + " 发现根基类型字段 : " + field + " --> " + fieldType);
+            }
+
             if (Map.class.isAssignableFrom(fieldType)) {
                 //暂不支持Map
                 logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
@@ -1166,7 +1170,8 @@ public final class ServiceModelCodeGenerator {
                                             if (GenericConverter.class != injectVar.converter()) {
                                                 fieldModel.addImport(injectVar.converter());
                                                 annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, injectVar.converter().getSimpleName()));
-                                            } else {
+                                            } else if (!BeanUtils.isSimpleValueType(fieldType)
+                                                    && StringUtils.hasText(domain)) {
                                                 annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
                                             }
                                         }
