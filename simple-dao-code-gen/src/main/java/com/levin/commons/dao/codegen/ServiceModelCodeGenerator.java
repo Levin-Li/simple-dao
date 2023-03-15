@@ -1016,16 +1016,16 @@ public final class ServiceModelCodeGenerator {
             final Class<?> fieldType = forField.resolve(field.getType());
 
             if (field.getType() != fieldType) {
-                logger.info("*** " + entityClass + " 发现泛型字段 : " + field + " --> " + fieldType);
+                logger.info("*** " + entityClass + "[" + action + "] 发现泛型字段 : " + field + " --> " + fieldType);
             }
 
             if (fieldType == Object.class) {
-                logger.warn("*** " + entityClass + " 发现根基类型字段 : " + field + " --> " + fieldType);
+                logger.warn("*** " + entityClass + "[" + action + "] 发现根基类型字段 : " + field + " --> " + fieldType);
             }
 
             if (Map.class.isAssignableFrom(fieldType)) {
                 //暂不支持Map
-                logger.warn("*** " + entityClass + " 发现不支持的字段 : " + field + " --> " + fieldType);
+                logger.warn("*** " + entityClass + "[" + action + "] 发现不支持的字段 : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1033,7 +1033,7 @@ public final class ServiceModelCodeGenerator {
                     && isMultiTenantObject
                     && field.getName().equals("tenantId")) {
                 //多租户字段
-                logger.info("*** " + entityClass + " 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
+                logger.info("*** " + entityClass + "[" + action + "] 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1041,7 +1041,7 @@ public final class ServiceModelCodeGenerator {
                     && isOrganizedObject
                     && field.getName().equals("orgId")) {
                 //多租户字段
-                logger.info("*** " + entityClass + " 忽略组织字段 orgId : " + field + " --> " + fieldType);
+                logger.info("*** " + entityClass + "[" + action + "] 忽略组织字段 orgId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1170,13 +1170,14 @@ public final class ServiceModelCodeGenerator {
                                             if (GenericConverter.class != injectVar.converter()) {
                                                 fieldModel.addImport(injectVar.converter());
                                                 annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, injectVar.converter().getSimpleName()));
-                                            } else if (!BeanUtils.isSimpleValueType(fieldType)
-                                                    && StringUtils.hasText(domain)) {
+                                            } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
                                                 annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
                                             }
                                         }
 
-                                        if (injectVar.expectBaseType() != Void.class) {
+                                        //默认类型
+                                        if (injectVar.expectBaseType() != Void.class
+                                                && injectVar.expectBaseType() != Object.class) {
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 
