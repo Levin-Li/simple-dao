@@ -648,13 +648,13 @@ public final class ServiceModelCodeGenerator {
                 .put("isOrganizedObject", OrganizedObject.class.isAssignableFrom(entityClass))
                 .build();
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false,"info");
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
 
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
 
         //请求对象会忽略继承的属性
-        fields = buildFieldModel(entityClass, entityMapping, true,"evt");
+        fields = buildFieldModel(entityClass, entityMapping, true, "evt");
 
         buildEvt(entityClass, fields, serviceDir, params);
 
@@ -670,7 +670,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false,"test");
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "test");
 
         fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -975,7 +975,7 @@ public final class ServiceModelCodeGenerator {
         return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
     }
 
-    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/,String action) throws Exception {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
 
         Object obj = entityClass.newInstance();
@@ -1144,7 +1144,7 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
-                                        if(!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
+                                        if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
                                             String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
 
@@ -1163,11 +1163,7 @@ public final class ServiceModelCodeGenerator {
                                             }
                                         }
 
-                                        if (StringUtils.hasText(injectVar.expectTypeDesc())) {
-
-                                            fieldModel.typeName = injectVar.expectTypeDesc();
-
-                                        } else if (injectVar.expectBaseType() != Void.class) {
+                                        if (injectVar.expectBaseType() != Void.class) {
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 
