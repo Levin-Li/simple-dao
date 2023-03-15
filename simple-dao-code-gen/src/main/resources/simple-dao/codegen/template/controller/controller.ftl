@@ -44,8 +44,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //生成的控制器默认不开启，请手动取消注释
 //@RestController(PLUGIN_PREFIX + "${className}")
-//@RequestMapping(API_PATH + "${entityName?lower_case}") //小写路径
-@RequestMapping(API_PATH + "${entityName}")
+@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
