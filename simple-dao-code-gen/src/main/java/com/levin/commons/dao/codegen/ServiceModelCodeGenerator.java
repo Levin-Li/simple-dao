@@ -478,6 +478,14 @@ public final class ServiceModelCodeGenerator {
                         + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
                         + fn);
 
+
+        fn = String.join(File.separator, "services", "commons", "req", "MultiTenantOrgReq.java");
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
+
         ///////////////////////////////////////////////
         for (Class<?> clazz : classList) {
 

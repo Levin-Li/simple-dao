@@ -50,6 +50,9 @@ public abstract class BaseController {
     @Autowired
     protected ApplicationContext applicationContext;
 
+    @Autowired
+    protected SimpleDao simpleDao;
+
     protected Object selfProxy = null;
 
     public final String getModuleId() {
