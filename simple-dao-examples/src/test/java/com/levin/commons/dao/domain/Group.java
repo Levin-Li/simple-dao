@@ -2,10 +2,12 @@ package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.domain.support.AbstractTreeObject;
 import com.levin.commons.service.domain.Desc;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -25,7 +27,10 @@ public class Group
     @GeneratedValue
     private Long id;
 
-//    String area;
+    //由子类去定义
+    @Schema(description = "父ID")
+    @Column(length = 128)
+    protected Long parentId;
 
     @Desc("状态")
     String state;

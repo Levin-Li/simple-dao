@@ -1,7 +1,7 @@
 package com.levin.commons.dao.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -47,7 +47,7 @@ public class QueryAnnotationUtilTest {
 
 
 
-    @Before
+    @BeforeAll
     public void init() {
 
         param.put("Q_name", "llw");

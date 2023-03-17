@@ -49,7 +49,7 @@ public class User
     String description;
 
     @Schema(description = "归属的虚拟组织")
-    @InjectVar(expectTypeDesc = "List<String>", converter = PrimitiveArrayJsonConverter.class)
+    @InjectVar(converter = PrimitiveArrayJsonConverter.class)
     String belongOrgList;
 
 }

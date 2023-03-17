@@ -26,6 +26,7 @@ import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -92,7 +93,7 @@ public class DaoExamplesTest {
      * @throws Exception
      */
 
-    @BeforeAll
+    @BeforeEach
     public void injectCheck() throws Exception {
         Assert.notNull(dao, "通用DAO没有注入");
         Assert.notNull(userDao, "userDao没有注入");
@@ -103,7 +104,7 @@ public class DaoExamplesTest {
     }
 
 
-    @BeforeAll
+    @BeforeEach
     public void testGetEntityManager() throws Exception {
         //  EntityManager entityManager = dao.getEntityManager();
         Assert.notNull(entityManager);
@@ -128,7 +129,7 @@ public class DaoExamplesTest {
     }
 
 
-    @BeforeAll
+    @BeforeEach
     public void initTestEntity() throws Exception {
 
         int n = dao.deleteFrom(TestEntity.class)
@@ -196,7 +197,7 @@ public class DaoExamplesTest {
 
     }
 
-    @BeforeAll
+    @BeforeEach
     public void initTestData() throws Exception {
 
         try {
@@ -1320,7 +1321,7 @@ public class DaoExamplesTest {
         List<MulitTableJoinDTO> objects = dao.findByQueryObj(MulitTableJoinDTO.class, new MulitTableJoinDTO());
 
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects,"null");
 
     }
 
@@ -1332,7 +1333,7 @@ public class DaoExamplesTest {
         List<TableJoinDTO> objects = dao.findByQueryObj(new TableJoinDTO());
 
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects);
 
     }
 
@@ -1345,7 +1346,7 @@ public class DaoExamplesTest {
 
         String aa = "Select Count( 1 ) , Sum( u.score ) , Avg( u.score ) AS avg , g.name  From com.levin.commons.dao.domain.User u  Left join com.levin.commons.dao.domain.Group g on u.group = g.id     Group By  g.name Having  Count( 1 ) >   ?1  AND Avg( u.score ) >   ?2  Order By  Count( 1 ) Desc , avg Desc , g.name Desc";
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects);
 
     }
 
@@ -1384,7 +1385,7 @@ public class DaoExamplesTest {
                 .gt("u.id", "1")
                 .find(MulitTableJoinDTO.class);
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects);
     }
 
 
@@ -1402,7 +1403,7 @@ public class DaoExamplesTest {
                 .find(MulitTableJoinDTO.class);
 
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects);
     }
 
 
@@ -1414,7 +1415,7 @@ public class DaoExamplesTest {
     @Test
     public void testMixParam() throws Exception {
 
-        String columnName = QueryAnnotationUtil.getEntityColumnName(OperationLog.class, E_OperationLog.logText);
+        String columnName = QueryAnnotationUtil.getEntityColumnName(OperationLog.class, E_OperationLog.logText,E_OperationLog.logText);
 
         List<User> objects =
                 dao.selectFrom(User.class)
@@ -1432,7 +1433,7 @@ public class DaoExamplesTest {
 
         OperationLog operationLog = dao.find(OperationLog.class, 1L);
 
-        org.junit.Assert.assertNotNull(objects);
+        Assert.notNull(objects);
 
     }
 
