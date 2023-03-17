@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -24,6 +25,7 @@ import javax.annotation.Resource;
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)
 @ConditionalOnClass({GroupedOpenApi.class,})
+@Profile({"dev","test","local"})
 public class ModuleSwaggerConfigurer
         implements
         WebMvcConfigurer {
