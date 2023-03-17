@@ -957,19 +957,19 @@ public abstract class ExprUtils {
      * 自动生成连接语句
      *
      * @param miniDao
-     * @param isNative            是否是原生查询
-     * @param tableNameConverter  表名转化器
-     * @param columnNameConverter 列名转化器
-     * @param entityClass         主表
-     * @param tableOrStatement    主表
-     * @param alias               主表别名
-     * @param joinOptions         连接选项
+     * @param isNative                  是否是原生查询
+     * @param nativeTableNameConverter  表名转化器
+     * @param nativeColumnNameConverter 列名转化器
+     * @param entityClass               主表
+     * @param tableOrStatement          主表
+     * @param alias                     主表别名
+     * @param joinOptions               连接选项
      * @return
      */
     public static String genJoinStatement(MiniDao miniDao, boolean isNative,
                                           BiConsumer<String, Class> aliasCacheFunc,
-                                          Function<String, String> tableNameConverter,
-                                          Function<String, String> columnNameConverter,
+                                          Function<String, String> nativeTableNameConverter,
+                                          Function<String, String> nativeColumnNameConverter,
                                           Class entityClass, String tableOrStatement,
                                           String alias, JoinOption... joinOptions) {
 
@@ -1040,7 +1040,7 @@ public abstract class ExprUtils {
 
             }
 
-            String fromStatement = genFromStatement(tableNameConverter, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
+            String fromStatement = genFromStatement(nativeTableNameConverter, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -1100,14 +1100,12 @@ public abstract class ExprUtils {
 
             //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
-                targetColumn = QueryAnnotationUtil.getColumnName(entityClass, targetColumn);
-                joinColumn = QueryAnnotationUtil.getColumnName(joinEntityClass, joinColumn);
 
-                if (columnNameConverter != null) {
-                    //如果是 SQL 原生查询，需要转换列名
-                    targetColumn = columnNameConverter.apply(targetColumn);
-                    joinColumn = columnNameConverter.apply(joinColumn);
-                }
+                targetColumn = QueryAnnotationUtil.getEntityColumnName(entityClass, targetColumn
+                        , nativeColumnNameConverter.apply(targetColumn));
+
+                joinColumn = QueryAnnotationUtil.getEntityColumnName(joinEntityClass, joinColumn
+                        , nativeColumnNameConverter.apply(joinColumn));
             }
 
             //
@@ -1121,7 +1119,7 @@ public abstract class ExprUtils {
     }
 
 
-    public static String genFromStatement(Function<String, String> tableNameConverter, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
+    public static String genFromStatement(Function<String, String> nativeTableNameConverter, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
 
         if (hasText(tableOrStatement)) {
 
@@ -1144,8 +1142,8 @@ public abstract class ExprUtils {
             return "";
         }
 
-        if (isNative && tableNameConverter != null) {
-            tableOrStatement = tableNameConverter.apply(tableOrStatement);
+        if (isNative && nativeTableNameConverter != null) {
+            tableOrStatement = nativeTableNameConverter.apply(tableOrStatement);
         }
 
         return tableOrStatement + " " + nullSafe(alias);

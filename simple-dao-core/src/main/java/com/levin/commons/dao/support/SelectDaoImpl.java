@@ -289,7 +289,6 @@ public class SelectDaoImpl<T>
             Stream.of(joinOptions).filter(Objects::nonNull).forEachOrdered(
                     o -> join(true, o.entityClass(), o.alias())
             );
-
         }
 
         return this;

@@ -874,7 +874,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return name;
     }
 
-
     /**
      * @param name
      * @return
@@ -1018,17 +1017,18 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //转换成小写
                 String domain = column.substring(0, indexOf).trim().toLowerCase();
 
-                column = QueryAnnotationUtil.getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column.substring(indexOf + 1).trim());
+                column = column.substring(indexOf + 1).trim();
 
-                column = getColumnNameByPhysicalNamingStrategy(column);
+                //优先使用注解中的列名
+                column = QueryAnnotationUtil.getEntityColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain)
+                        , column, getColumnNameByPhysicalNamingStrategy(column));
 
                 column = domain + "." + column;
 
             } else {
 
-                column = QueryAnnotationUtil.getColumnName(entityClass, column);
-
-                column = getColumnNameByPhysicalNamingStrategy(column);
+                column = QueryAnnotationUtil.getEntityColumnName(entityClass, column
+                        , getColumnNameByPhysicalNamingStrategy(column));
             }
 
         }

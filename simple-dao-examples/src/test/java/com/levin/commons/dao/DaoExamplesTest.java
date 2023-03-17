@@ -25,13 +25,11 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -48,7 +46,7 @@ import java.util.stream.Stream;
  */
 
 @ActiveProfiles("dev")
-@RunWith(SpringJUnit4ClassRunner.class)
+//@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class})
 //@Transactional
 public class DaoExamplesTest {
@@ -94,7 +92,7 @@ public class DaoExamplesTest {
      * @throws Exception
      */
 
-    @Before
+    @BeforeAll
     public void injectCheck() throws Exception {
         Assert.notNull(dao, "通用DAO没有注入");
         Assert.notNull(userDao, "userDao没有注入");
@@ -105,7 +103,7 @@ public class DaoExamplesTest {
     }
 
 
-    @Before
+    @BeforeAll
     public void testGetEntityManager() throws Exception {
         //  EntityManager entityManager = dao.getEntityManager();
         Assert.notNull(entityManager);
@@ -130,7 +128,7 @@ public class DaoExamplesTest {
     }
 
 
-    @Before
+    @BeforeAll
     public void initTestEntity() throws Exception {
 
         int n = dao.deleteFrom(TestEntity.class)
@@ -198,7 +196,7 @@ public class DaoExamplesTest {
 
     }
 
-    @Before
+    @BeforeAll
     public void initTestData() throws Exception {
 
         try {
@@ -969,7 +967,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testJpaEntityStatusTest() throws Exception {
 
         User user = dao.selectFrom(User.class).findOne();
@@ -990,7 +988,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testSave() throws Exception {
 
 
@@ -1014,7 +1012,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testDelete() throws Exception {
 
         Task one = dao.selectFrom(Task.class).findOne();
@@ -1028,7 +1026,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testFindAndConvert() throws Exception {
 
         dao.selectFrom(User.class, "u")
@@ -1047,7 +1045,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testGetEntityId() throws Exception {
 
         Group group = new Group(15L, "test");
@@ -1058,7 +1056,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testEnv() throws Exception {
 
 
@@ -1070,7 +1068,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testUpdateDTO() throws Exception {
 
         UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
@@ -1082,7 +1080,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testStatDTO() throws Exception {
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
@@ -1095,7 +1093,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testPagingQueryHelper() throws Exception {
 
         int n = 0;
@@ -1113,7 +1111,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testPagingQueryHelper2() throws Exception {
 
         PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,
@@ -1123,7 +1121,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testStatDTO2() throws Exception {
 
 
@@ -1132,7 +1130,7 @@ public class DaoExamplesTest {
         System.out.println(byQueryObj);
     }
 
-    @org.junit.Test
+    @Test
     public void testQueryFrom() throws Exception {
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
@@ -1156,7 +1154,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testEnvQueryFrom() throws Exception {
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
@@ -1185,7 +1183,7 @@ public class DaoExamplesTest {
     }
 
 
-    //    @org.junit.Test
+    //    @Test
     public void testNativeSelect() throws Exception {
 
         SelectDao<User> selectDao = dao.selectFrom("jpa_dao_test_User");
@@ -1205,7 +1203,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testLogicDelete() throws Exception {
 
         SelectDao<TestEntity> dao = this.dao.selectFrom(TestEntity.class);
@@ -1273,7 +1271,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
 
     public void testSelect() throws Exception {
 
@@ -1295,7 +1293,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testStat() throws Exception {
 
         Object commDto = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
@@ -1307,7 +1305,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testDeleteById() throws Exception {
 
         dao.deleteById(TestEntity.class, 1L);
@@ -1315,7 +1313,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testJoinDto() throws Exception {
 
 
@@ -1327,7 +1325,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testJoinDto2() throws Exception {
 
 
@@ -1338,7 +1336,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testTableJoinStatDTO() throws Exception {
 
 
@@ -1352,7 +1350,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testCListAnno1() throws Exception {
 
 
@@ -1363,7 +1361,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testCListAnno2() throws Exception {
 
         List<TestEntity> objects = dao.findByQueryObj(new TestCListDto());
@@ -1373,7 +1371,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testJoin() throws Exception {
 
 
@@ -1390,7 +1388,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testJoin2() throws Exception {
 
 
@@ -1416,7 +1414,7 @@ public class DaoExamplesTest {
     @Test
     public void testMixParam() throws Exception {
 
-        String columnName = QueryAnnotationUtil.getColumnName(OperationLog.class, E_OperationLog.logText);
+        String columnName = QueryAnnotationUtil.getEntityColumnName(OperationLog.class, E_OperationLog.logText);
 
         List<User> objects =
                 dao.selectFrom(User.class)
@@ -1438,7 +1436,7 @@ public class DaoExamplesTest {
 
     }
 
-    //@org.junit.Test
+    //@Test
     public void testSelectFrom() throws Exception {
 
         long millis = System.currentTimeMillis();
@@ -1460,7 +1458,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testSimpleSubQuery() {
 
 
@@ -1586,7 +1584,7 @@ public class DaoExamplesTest {
      *
      * @throws Exception
      */
-    @org.junit.Test
+    @Test
     public void testGenSQLSpeed() throws Exception {
 
         long millis = System.currentTimeMillis();
@@ -1646,7 +1644,7 @@ public class DaoExamplesTest {
 
     }
 
-    @org.junit.Test
+    @Test
     public void testUpdateFrom() throws Exception {
 
         UpdateDao<User> updateDao = dao.updateTo(User.class, "u");
@@ -1678,7 +1676,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testQueryFrom2() throws Exception {
 
         List<Object> list = dao
@@ -1694,7 +1692,7 @@ public class DaoExamplesTest {
     }
 
 
-    @org.junit.Test
+    @Test
     public void testDeleteFrom() throws Exception {
 
         int r = dao.deleteFrom(User.class, "u")
@@ -1711,7 +1709,7 @@ public class DaoExamplesTest {
         System.out.println(r);
     }
 
-    @org.junit.Test
+    @Test
     public void testMapFrom() throws Exception {
 
         Map elMap = new LinkedHashMap();

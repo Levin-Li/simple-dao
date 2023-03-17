@@ -200,7 +200,7 @@ public abstract class QueryAnnotationUtil {
      * @param fieldName
      * @return
      */
-    public static String getColumnName(Class entityClass, String fieldName) {
+    public static String getEntityColumnName(Class entityClass, String fieldName, String defaultValue) {
 
         if (!ExprUtils.isValidClass(entityClass)
                 || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
@@ -251,7 +251,7 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-        return fieldMap.getOrDefault(fieldName, fieldName);
+        return fieldMap.getOrDefault(fieldName, defaultValue);
     }
 
 
@@ -325,9 +325,9 @@ public abstract class QueryAnnotationUtil {
                         Optional.ofNullable(entityClass.getAnnotation(Entity.class))
                                 .filter(t -> hasText(t.name()))
                                 .map(Entity::name).orElse(
-                                //否则取类名
-                                entityClass.getSimpleName()
-                        )
+                                        //否则取类名
+                                        entityClass.getSimpleName()
+                                )
                 );
 
         entityTableNameCaches.put(entityClass.getName(), name);
