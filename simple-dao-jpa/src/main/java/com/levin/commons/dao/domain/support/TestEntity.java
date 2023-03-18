@@ -2,6 +2,7 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.domain.DeletableObject;
+import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.domain.StatefulObject;
 import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,10 +23,10 @@ import javax.persistence.Id;
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
-@EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteFieldName = "isDeleted", logicalDeleteValue = "deleted")
+@EntityOption(disableActions = {EntityOption.Action.Delete}, logicalDeleteFieldName = "deleted", logicalDeleteValue = "true")
 public class TestEntity
         extends AbstractTreeObject<Long, TestEntity>
-        implements StatefulObject, DeletableObject {
+        implements StatefulObject , DeletableObject {
 
     @Id
     @GeneratedValue
