@@ -229,6 +229,25 @@ public class JpaDaoImpl
         List<T> resultList;
     }
 
+
+    @PostConstruct
+    public void init() {
+
+        entityManagerFactory.getMetamodel().getEntities().forEach(entityType -> {
+
+            Class<?> entityClass = entityType.getJavaType();
+
+            //加载缓存
+            getTableName(entityClass);
+
+            //加载缓存
+            getColumnName(entityClass, "id");
+
+        });
+
+        logger.info("jpa dao init.");
+    }
+
     public JpaDaoImpl() {
         hibernateVersion = getHibernateVersion();
     }

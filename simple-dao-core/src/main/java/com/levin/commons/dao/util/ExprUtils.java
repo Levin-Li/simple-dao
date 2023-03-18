@@ -958,8 +958,8 @@ public abstract class ExprUtils {
      *
      * @param miniDao
      * @param isNative                  是否是原生查询
-     * @param nativeTableNameConverter  表名转化器
-     * @param nativeColumnNameConverter 列名转化器
+//     * @param nativeTableNameConverter  表名转化器
+//     * @param nativeColumnNameConverter 列名转化器
      * @param entityClass               主表
      * @param tableOrStatement          主表
      * @param alias                     主表别名
@@ -968,8 +968,8 @@ public abstract class ExprUtils {
      */
     public static String genJoinStatement(MiniDao miniDao, boolean isNative,
                                           BiConsumer<String, Class> aliasCacheFunc,
-                                          Function<String, String> nativeTableNameConverter,
-                                          Function<String, String> nativeColumnNameConverter,
+//                                          Function<String, String> nativeTableNameConverter,
+//                                          Function<String, String> nativeColumnNameConverter,
                                           Class entityClass, String tableOrStatement,
                                           String alias, JoinOption... joinOptions) {
 
@@ -1040,7 +1040,7 @@ public abstract class ExprUtils {
 
             }
 
-            String fromStatement = genFromStatement(nativeTableNameConverter, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
+            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -1101,11 +1101,9 @@ public abstract class ExprUtils {
             //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
 
-                targetColumn = QueryAnnotationUtil.getEntityColumnName(entityClass, targetColumn
-                        , nativeColumnNameConverter.apply(targetColumn));
+                targetColumn = miniDao.getColumnName(entityClass, targetColumn);
 
-                joinColumn = QueryAnnotationUtil.getEntityColumnName(joinEntityClass, joinColumn
-                        , nativeColumnNameConverter.apply(joinColumn));
+                joinColumn = miniDao.getColumnName(joinEntityClass, joinColumn);
             }
 
             //
@@ -1119,7 +1117,7 @@ public abstract class ExprUtils {
     }
 
 
-    public static String genFromStatement(Function<String, String> nativeTableNameConverter, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
+    public static String genFromStatement(MiniDao miniDao, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
 
         if (hasText(tableOrStatement)) {
 
@@ -1133,17 +1131,17 @@ public abstract class ExprUtils {
 
             tableOrStatement = entityClass.getName();
 
-            if (isNative) {
+            if (isNative && miniDao != null) {
                 //尝试获取表名
-                tableOrStatement = QueryAnnotationUtil.getTableNameByAnnotation(entityClass);
+                tableOrStatement = miniDao.getTableName(entityClass);
             }
 
         } else {
             return "";
         }
 
-        if (isNative && nativeTableNameConverter != null) {
-            tableOrStatement = nativeTableNameConverter.apply(tableOrStatement);
+        if (isNative && miniDao != null) {
+            tableOrStatement = miniDao.getNamingStrategy().toPhysicalTableName(tableOrStatement, null);
         }
 
         return tableOrStatement + " " + nullSafe(alias);

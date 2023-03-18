@@ -844,7 +844,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             if (entityClass != null) {
                 //如果表名是类名，做个自动转换
-                this.tableName = getTableNameByAnnotation(entityClass);
+                this.tableName = getDao().getTableName(entityClass);
             }
         }
 
@@ -852,49 +852,53 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     /**
-     * @param name
+     * 通过名称转换器转换表名
+     *
+     * @param tableName
      * @return
      */
-    protected String getTableNameByPhysicalNamingStrategy(String name) {
+    protected String convertTableNameByNamingStrategy(String tableName) {
 
         if (isNative()
                 && enableNameConvert
-                && hasText(name)
-                && !containsWhitespace(name)
+                && hasText(tableName)
+                && !containsWhitespace(tableName)
                 && getDao() != null) {
 
             PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
 
             if (namingStrategy != null) {
                 //转换名称
-                name = namingStrategy.toPhysicalTableName(name, null);
+                tableName = namingStrategy.toPhysicalTableName(tableName, null);
             }
         }
 
-        return name;
+        return tableName;
     }
 
     /**
-     * @param name
+     * 转换列名
+     *
+     * @param columnName
      * @return
      */
-    protected String getColumnNameByPhysicalNamingStrategy(String name) {
+    protected String convertColumnNameByNamingStrategy(String columnName) {
 
         if (isNative()
                 && enableNameConvert
-                && hasText(name)
-                && !containsWhitespace(name)
+                && hasText(columnName)
+                && !containsWhitespace(columnName)
                 && getDao() != null) {
 
             PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
 
             if (namingStrategy != null) {
                 //转换名称
-                name = namingStrategy.toPhysicalColumnName(name, null);
+                columnName = namingStrategy.toPhysicalColumnName(columnName, null);
             }
         }
 
-        return name;
+        return columnName;
     }
 
     /**
@@ -907,7 +911,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (isNative()
                 && hasEntityClass()
                 && !StringUtils.hasText(tableName)) {
-            setTableName(getTableNameByAnnotation(entityClass));
+            setTableName(getDao().getTableName(entityClass));
         }
 
         return (CB) this;
@@ -927,7 +931,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             Matcher matcher = ExprUtils.entityVarStylePattern.matcher(tableName);
 
             if (!matcher.matches()) {
-                this.tableName = getTableNameByPhysicalNamingStrategy(tableName);
+                this.tableName = convertTableNameByNamingStrategy(tableName);
             }
 
             if (hasText(this.tableName)) {
@@ -1020,15 +1024,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 column = column.substring(indexOf + 1).trim();
 
                 //优先使用注解中的列名
-                column = QueryAnnotationUtil.getEntityColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain)
-                        , column, getColumnNameByPhysicalNamingStrategy(column));
+                column = getDao().getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column);
 
                 column = domain + "." + column;
 
             } else {
 
-                column = QueryAnnotationUtil.getEntityColumnName(entityClass, column
-                        , getColumnNameByPhysicalNamingStrategy(column));
+                column = getDao().getColumnName(entityClass, column);
             }
 
         }
@@ -1052,13 +1054,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected String tryToPhysicalTableName(String tableName) {
+    protected String tryToPhysicalTableName(String className) {
 
         if (isNative()) {
-            return this.getTableNameByPhysicalNamingStrategy(getTableNameByEntityClassName(tableName));
+            return getDao().getTableName(className);
         }
 
-        return tableName;
+        return className;
     }
 
 

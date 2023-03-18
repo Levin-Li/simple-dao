@@ -71,13 +71,23 @@ public interface MiniDao extends DeepCopier {
     }
 
     /**
+     * 获取列名
+     *
+     * @param entityClass
+     * @return
+     */
+    default String getColumnName(Class<?> entityClass, String fieldName) {
+        return QueryAnnotationUtil.getEntityColumnName(entityClass, fieldName, columnName -> getNamingStrategy().toPhysicalColumnName(columnName, null));
+    }
+
+    /**
      * 通过类名获取表名称
      *
      * @param entityClass
      * @return
      */
     default String getTableName(Class<?> entityClass) {
-        return getNamingStrategy().toPhysicalTableName(QueryAnnotationUtil.getTableNameByAnnotation(entityClass), null);
+        return QueryAnnotationUtil.getTableNameByAnnotation(entityClass, tableName -> getNamingStrategy().toPhysicalTableName(tableName, null));
     }
 
     /**
@@ -87,7 +97,7 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     default String getTableName(String entityClassName) {
-        return getNamingStrategy().toPhysicalTableName(QueryAnnotationUtil.getTableNameByEntityClassName(entityClassName), null);
+        return QueryAnnotationUtil.getTableNameByEntityClassName(entityClassName, tableName -> getNamingStrategy().toPhysicalTableName(tableName, null));
     }
 
     /**

@@ -192,6 +192,26 @@ public abstract class QueryAnnotationUtil {
         return aBoolean;
     }
 
+    /**
+     * @param entityClasses
+     * @param nameConvert
+     */
+    public static void addEntityClassMapping(Collection<Class<?>> entityClasses, Function<Class<?>, String> nameConvert) {
+
+        Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
+            entityClassList.stream().filter(Objects::nonNull).forEach(cls -> {
+
+                tableNameMappingEntityClassCaches.put(cls.getName(), cls);
+
+                String name = nameConvert.apply(cls);
+
+                if (StringUtils.hasText(name)) {
+                    tableNameMappingEntityClassCaches.put(name, cls);
+                }
+
+            });
+        });
+    }
 
     /**
      * 获取实体类类字段名对应的表列名
@@ -200,7 +220,7 @@ public abstract class QueryAnnotationUtil {
      * @param fieldName
      * @return
      */
-    public static String getEntityColumnName(Class entityClass, String fieldName, String defaultValue) {
+    public static String getEntityColumnName(Class entityClass, String fieldName, Function<String, String> columnNameConvert) {
 
         if (!ExprUtils.isValidClass(entityClass)
                 || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
@@ -237,7 +257,8 @@ public abstract class QueryAnnotationUtil {
                                         Optional.ofNullable(field.getAnnotation(JoinColumn.class))
                                                 .map(JoinColumn::name)
                                                 .filter(StringUtils::hasText)
-                                                .orElse(null)
+                                                //默认使用转换值
+                                                .orElse(columnNameConvert.apply(field.getName()))
                                 );
 
                         if (hasText(column)) {
@@ -251,7 +272,7 @@ public abstract class QueryAnnotationUtil {
             }
         }
 
-        return fieldMap.getOrDefault(fieldName, defaultValue);
+        return fieldMap.getOrDefault(fieldName, fieldName);
     }
 
 
@@ -259,26 +280,6 @@ public abstract class QueryAnnotationUtil {
         return tableNameMappingEntityClassCaches.get(tableName);
     }
 
-    /**
-     * @param entityClasses
-     * @param nameConvert
-     */
-    public static void addEntityClassMapping(Collection<Class<?>> entityClasses, Function<Class<?>, String> nameConvert) {
-
-        Optional.ofNullable(entityClasses).ifPresent(entityClassList -> {
-            entityClassList.stream().filter(Objects::nonNull).forEach(cls -> {
-
-                tableNameMappingEntityClassCaches.put(cls.getName(), cls);
-
-                String name = nameConvert.apply(cls);
-
-                if (StringUtils.hasText(name)) {
-                    tableNameMappingEntityClassCaches.put(name, cls);
-                }
-
-            });
-        });
-    }
 
     /**
      * 获取表名
@@ -287,7 +288,7 @@ public abstract class QueryAnnotationUtil {
      * @return
      */
     @SneakyThrows
-    public static String getTableNameByEntityClassName(String entityClassName) {
+    public static String getTableNameByEntityClassName(String entityClassName, Function<String, String> tableNameConvert) {
 
         String name = entityTableNameCaches.get(entityClassName);
 
@@ -296,7 +297,7 @@ public abstract class QueryAnnotationUtil {
         }
 
         //通过类加载
-        return getTableNameByAnnotation(Thread.currentThread().getContextClassLoader().loadClass(entityClassName));
+        return getTableNameByAnnotation(Thread.currentThread().getContextClassLoader().loadClass(entityClassName), tableNameConvert);
     }
 
     /**
@@ -305,7 +306,8 @@ public abstract class QueryAnnotationUtil {
      * @param entityClass
      * @return
      */
-    public static String getTableNameByAnnotation(Class<?> entityClass) {
+    public static String getTableNameByAnnotation(Class<?> entityClass, Function<String, String> tableNameConvert) {
+
 
         if (entityClass == null) {
             return null;
@@ -321,20 +323,23 @@ public abstract class QueryAnnotationUtil {
                 .filter((t) -> hasText(t.name()))
                 .map(Table::name)
                 .orElse(
-                        //否则取实体名
-                        Optional.ofNullable(entityClass.getAnnotation(Entity.class))
-                                .filter(t -> hasText(t.name()))
-                                .map(Entity::name).orElse(
-                                        //否则取类名
-                                        entityClass.getSimpleName()
-                                )
+                        //转换名称
+                        tableNameConvert.apply(
+                                //否则取实体名
+                                Optional.ofNullable(entityClass.getAnnotation(Entity.class))
+                                        .filter(t -> hasText(t.name()))
+                                        .map(Entity::name).orElse(
+                                                //否则取类名
+                                                entityClass.getSimpleName()
+                                        )
+                        )
                 );
 
+        //缓存
         entityTableNameCaches.put(entityClass.getName(), name);
 
         return name;
     }
-
 
     /**
      * 是否时同个包的

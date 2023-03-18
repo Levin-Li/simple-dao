@@ -268,11 +268,7 @@ public class SelectDaoImpl<T>
         String targetName = targetClass.getName();
 
         if (isNative()) {
-
-            targetName = QueryAnnotationUtil.getTableNameByAnnotation(targetClass);
-
-            targetName = getTableNameByPhysicalNamingStrategy(targetName);
-
+            targetName = getDao().getTableName(targetClass);
         }
 
         //加入表达式
@@ -304,8 +300,8 @@ public class SelectDaoImpl<T>
 
         String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
                 , this::appendToAliasMap
-                , this::getTableNameByPhysicalNamingStrategy
-                , this::getColumnNameByPhysicalNamingStrategy
+//                , this::convertTableNameByNamingStrategy
+//                , this::convertColumnNameByNamingStrategy
                 , entityClass, tableName, alias, joinOptions);
 
         if (hasText(joinStatement)) {
