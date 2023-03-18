@@ -250,6 +250,10 @@ public abstract class QueryAnnotationUtil {
 
                     ReflectionUtils.doWithFields(entityClass, field -> {
 
+                        if (Modifier.isStatic(field.getModifiers())) {
+                            return;
+                        }
+
                         String column = Optional.ofNullable(field.getAnnotation(Column.class))
                                 .map(Column::name)
                                 .filter(StringUtils::hasText)

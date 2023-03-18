@@ -11,7 +11,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"uuid"})
+       // @UniqueConstraint(columnNames = {"uuid"})
 })
 @Data
 @Accessors(chain = true)

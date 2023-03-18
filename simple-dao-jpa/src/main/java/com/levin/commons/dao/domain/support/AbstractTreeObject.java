@@ -31,7 +31,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
 
     @Schema(description = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parentId", insertable = false, updatable = false)
+    @JoinColumn(name = "parent_id", insertable = false, updatable = false)
     protected T parent;
 
     @Schema(description = "子节点")

@@ -1415,8 +1415,6 @@ public class DaoExamplesTest {
     @Test
     public void testMixParam() throws Exception {
 
-        String columnName = QueryAnnotationUtil.getEntityColumnName(OperationLog.class, E_OperationLog.logText,E_OperationLog.logText);
-
         List<User> objects =
                 dao.selectFrom(User.class)
                         .gt(E_User.score, 1)

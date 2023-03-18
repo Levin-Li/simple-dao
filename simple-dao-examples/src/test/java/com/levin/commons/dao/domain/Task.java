@@ -15,7 +15,7 @@ import javax.persistence.*;
  */
 @Entity(name = "jpa_dao_test_Task")
 @Table(uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"uuid"})
+      //  @UniqueConstraint(columnNames = {"uuid"})
 })
 @Data
 @Accessors(chain = true)
