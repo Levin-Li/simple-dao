@@ -7,7 +7,7 @@ import com.levin.commons.dao.annotation.NotIn;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.stat.*;
-import com.levin.commons.dao.domain.support.TestEntity;
+import com.levin.commons.dao.domain.TestEntity;
 import lombok.Data;
 
 import java.util.ArrayList;

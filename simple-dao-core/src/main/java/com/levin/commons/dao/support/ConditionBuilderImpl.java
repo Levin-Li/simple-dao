@@ -176,10 +176,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
         dao = miniDao;
         this.entityClass = null;
-        setTableName(tableName);
         this.nativeQL = (isNative);
         this.alias = alias;
 
+        setTableName(tableName);
     }
 
 
@@ -840,11 +840,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (!hasEntityClass()) {
 
-            this.entityClass = (Class<T>) dao.getEntityClass(tableName.trim());
+            Matcher matcher = ExprUtils.entityVarStylePattern.matcher(this.tableName);
+
+            if (matcher.matches()) {
+                this.tableName = matcher.group(2);
+            }
+
+            this.entityClass = (Class<T>) dao.getEntityClass(this.tableName.trim());
 
             if (entityClass != null) {
                 //如果表名是类名，做个自动转换
-                this.tableName = getDao().getTableName(entityClass);
+                this.tableName = dao.getTableName(entityClass);
             }
         }
 
@@ -904,7 +910,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         if (isNative()
                 && hasEntityClass()
                 && !StringUtils.hasText(tableName)) {
-            setTableName(getDao().getTableName(entityClass));
+            this.tableName = getDao().getTableName(entityClass);
         }
 
         return (CB) this;
@@ -930,6 +936,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             if (hasText(this.tableName)) {
                 return tableName + " " + getText(alias, " ");
             }
+
         }
 
         if (!isNative() && hasEntityClass()) {

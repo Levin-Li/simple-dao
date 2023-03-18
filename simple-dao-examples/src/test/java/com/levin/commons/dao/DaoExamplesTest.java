@@ -427,7 +427,7 @@ public class DaoExamplesTest {
         User user = dao.find(User.class, 1L);
 
 
-        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class);
+        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class,new UserInfo());
 
 
         System.out.println(userInfo);

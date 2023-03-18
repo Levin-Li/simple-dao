@@ -33,7 +33,6 @@ public class CommDto {
     @Desc("备注")
     protected String remark;
 
-    @GroupBy
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     String createTime;
 
