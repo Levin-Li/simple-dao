@@ -29,6 +29,8 @@ public class TestEntity implements Serializable {
     @Column
     String area;
 
+    String operation;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     Group group;
