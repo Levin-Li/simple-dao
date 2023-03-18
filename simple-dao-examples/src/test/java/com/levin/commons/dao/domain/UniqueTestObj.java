@@ -11,7 +11,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(uniqueConstraints = {
-       // @UniqueConstraint(columnNames = {"uuid"})
+        @UniqueConstraint(columnNames = {"uuid1"})
 })
 @Data
 @Accessors(chain = true)
@@ -23,7 +23,7 @@ public class UniqueTestObj implements Serializable {
     Long id;
 
     @Column
-    String uuid;
+    String uuid1;
 
     @Column
     @Unique

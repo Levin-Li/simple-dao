@@ -346,18 +346,19 @@ public class DaoExamplesTest {
             dao.create(new UniqueTestObj());
             throw new Throwable("未能正确抛出创建异常");
         } catch (Exception e) {
+
         }
 
         String uuid = UUID.randomUUID().toString();
 
         dao.create(new UniqueTestObj()
-                .setUuid(uuid)
+                .setUuid1(uuid)
                 .setUuid2(uuid)
         );
 
         try {
             dao.create(new UniqueTestObj()
-                    .setUuid(uuid)
+                    .setUuid1(uuid)
                     .setUuid2(uuid)
             );
             throw new Throwable("未能正确抛出创建异常");

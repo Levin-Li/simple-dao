@@ -37,7 +37,7 @@ public class TestEntityStatDto {
     @IsNull
     @NotIn
     @OR(autoClose = true)
-    String op = "Eq,Lt,Gt,"; // Arrays.stream(Op.values()).reduce("", (op1, op2) -> op1 + "," + op2, null);
+    String operation = "Eq,Lt,Gt,"; // Arrays.stream(Op.values()).reduce("", (op1, op2) -> op1 + "," + op2, null);
 
     @Contains
     @OR
