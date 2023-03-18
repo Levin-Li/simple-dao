@@ -865,12 +865,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 && !containsWhitespace(tableName)
                 && getDao() != null) {
 
-            PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+            //转换名称
+            tableName = getDao().getNamingStrategy().toPhysicalTableName(tableName, null);
 
-            if (namingStrategy != null) {
-                //转换名称
-                tableName = namingStrategy.toPhysicalTableName(tableName, null);
-            }
         }
 
         return tableName;
@@ -890,12 +887,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 && !containsWhitespace(columnName)
                 && getDao() != null) {
 
-            PhysicalNamingStrategy namingStrategy = getDao().getNamingStrategy();
+            columnName = getDao().getNamingStrategy().toPhysicalColumnName(columnName, null);
 
-            if (namingStrategy != null) {
-                //转换名称
-                columnName = namingStrategy.toPhysicalColumnName(columnName, null);
-            }
         }
 
         return columnName;

@@ -343,6 +343,7 @@ public class JpaDaoImpl
 
     }
 
+    @SneakyThrows
     @Override
     public PhysicalNamingStrategy getNamingStrategy() {
 
@@ -356,40 +357,34 @@ public class JpaDaoImpl
                 physicalStrategy = EntityNamingStrategy.class.getName();
             }
 
-            try {
+            Class<?> aClass = ClassUtils.forName(physicalStrategy, this.getClass().getClassLoader());
 
-                Class<?> aClass = ClassUtils.forName(physicalStrategy, this.getClass().getClassLoader());
+            namingStrategy = new PhysicalNamingStrategy() {
 
-                namingStrategy = new PhysicalNamingStrategy() {
+                final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
 
-                    final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
+                org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
-                    org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
+                @Override
+                public String toPhysicalTableName(String name, Object jdbcEnvironment) {
+                    return springPhysicalNamingStrategy.toPhysicalTableName(Identifier.toIdentifier(name), null).getText();
+                }
 
-                    @Override
-                    public String toPhysicalTableName(String name, Object jdbcEnvironment) {
-                        return springPhysicalNamingStrategy.toPhysicalTableName(Identifier.toIdentifier(name), null).getText();
+                @Override
+                public String toPhysicalColumnName(String name, Object jdbcEnvironment) {
+
+                    String newName = columnNameMapCaches.get(name);
+
+                    if (!StringUtils.hasText(newName)) {
+                        newName = springPhysicalNamingStrategy.toPhysicalColumnName(Identifier.toIdentifier(name), null).getText();
+                        columnNameMapCaches.put(name, newName);
                     }
 
-                    @Override
-                    public String toPhysicalColumnName(String name, Object jdbcEnvironment) {
+                    return newName;
+                }
+            };
 
-                        String newName = columnNameMapCaches.get(name);
-
-                        if (!StringUtils.hasText(newName)) {
-                            newName = springPhysicalNamingStrategy.toPhysicalColumnName(Identifier.toIdentifier(name), null).getText();
-                            columnNameMapCaches.put(name, newName);
-                        }
-
-                        return newName;
-                    }
-                };
-
-                DaoContext.setGlobalValue(PhysicalNamingStrategy.class.getName(), namingStrategy);
-
-            } catch (ClassNotFoundException e) {
-
-            }
+            DaoContext.setGlobalValue(PhysicalNamingStrategy.class.getName(), namingStrategy);
 
         }
 
