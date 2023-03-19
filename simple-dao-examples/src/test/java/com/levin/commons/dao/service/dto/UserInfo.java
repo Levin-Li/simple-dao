@@ -3,6 +3,7 @@ package com.levin.commons.dao.service.dto;
 
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.misc.Fetch;
+import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = User.class)
+@TargetOption(entityClass = User.class,alias= E_User.ALIAS)
 public class UserInfo {
 
     String id;
