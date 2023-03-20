@@ -25,7 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public abstract class MultiTenantReq
+public class MultiTenantReq
         extends BaseReq
         implements MultiTenantObject {
 

@@ -60,7 +60,7 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
     //joinOptions = { @JoinOption(entityClass = XXX.class,alias = E_XXX.ALIAS,joinColumn = E_XXX.joinColumn)},
     resultClass = ${className}.Result.class
 )
-public class ${className} extends ${isMultiTenantObject ? string('MultiTenantReq','BaseReq')}{
+public class ${className} extends ${reqExtendClass}{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

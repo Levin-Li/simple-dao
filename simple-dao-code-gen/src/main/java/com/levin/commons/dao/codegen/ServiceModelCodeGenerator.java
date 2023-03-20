@@ -650,10 +650,14 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
+        boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
+        boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
-                .put("isMultiTenantObject", MultiTenantObject.class.isAssignableFrom(entityClass))
-                .put("isOrganizedObject", OrganizedObject.class.isAssignableFrom(entityClass))
+                .put("isMultiTenantObject", isMultiTenant)
+                .put("isOrganizedObject", isOrg)
+                //设置请求对象继承的类
+                .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
                 .build();
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
