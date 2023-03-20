@@ -16,6 +16,7 @@ import javax.servlet.http.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
+import com.levin.commons.ui.annotation.*;
 import javax.validation.constraints.*;
 
 import ${modulePackageName}.controller.*;
@@ -56,6 +57,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 
 @Valid
+@CRUD
 public class ${className} extends BaseController{
 
     private static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
@@ -71,7 +73,8 @@ public class ${className} extends BaseController{
      */
     @GetMapping("/queryList")
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
-    public ApiResp<PagingData<${entityName}Info>> queryList(Query${entityName}Req req, SimplePaging paging) {
+    @CRUD.ListTable
+    public ApiResp<PagingData<${entityName}Info>> queryList(@Form Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
@@ -95,6 +98,7 @@ public class ${className} extends BaseController{
      */
     @PostMapping
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
+    @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(@RequestBody Create${entityName}Req req) {
 <#else>
@@ -115,6 +119,7 @@ public class ${className} extends BaseController{
     */
     @GetMapping({"","{${pkField.name}}"})
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
+    @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(${serviceName?uncap_first}.findById(req));
@@ -126,6 +131,7 @@ public class ${className} extends BaseController{
      */
      @PutMapping({"","{${pkField.name}}"})
      @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+     @CRUD.Op
      public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
@@ -136,7 +142,8 @@ public class ${className} extends BaseController{
      * @param req ${entityName}IdReq
      */
     @DeleteMapping({"","{${pkField.name}}"})
-    @Operation(summary = DELETE_ACTION + "(Query方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + ", 路径变量参数优先")
+    @CRUD.Op
     public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
@@ -187,6 +194,7 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping({"/batchDelete"})
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
+    @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
     public ApiResp<Integer> batchDelete(@NotNull Delete${entityName}Req req) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION));
     }
