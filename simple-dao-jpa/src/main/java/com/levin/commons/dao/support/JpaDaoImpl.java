@@ -6,6 +6,7 @@ import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -573,10 +574,11 @@ public class JpaDaoImpl
 
                 Object old = entityOrDto;
 
-                // 1、先拷贝对象
-                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1);
+                // 1、先拷贝对象，忽略注入的属性
+                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1
+                        , QueryAnnotationUtil.getDaoInjectAttrs(entityOrDto.getClass()));
 
-                //2、注入变量
+                //2、注入变量,需要注入的变量
                 injectVars(entityOrDto, old);
 
                 //新对象初始化参数

@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.*;
@@ -13,6 +14,7 @@ import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
 import lombok.SneakyThrows;
@@ -32,6 +34,7 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -135,6 +138,9 @@ public abstract class QueryAnnotationUtil {
     protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
 
 
+    private static final Map<String, String[]> entityInjectAttrNames = new ConcurrentHashMap<>();
+
+
     static {
 
         Map<String, Annotation> temp = new HashMap<>(64);
@@ -161,6 +167,34 @@ public abstract class QueryAnnotationUtil {
         return allInstanceMap;
     }
 
+
+    /**
+     * 获取目标类的注入域
+     *
+     * @param entityClass
+     * @return
+     */
+    public static String[] getDaoInjectAttrs(final Class entityClass) {
+
+        final String injectDomain = DaoContext.getVariableInjector().getInjectDomain();
+
+        String[] injectAttrs = entityInjectAttrNames.computeIfAbsent(entityClass.getName() + ":" + injectDomain, (key) -> {
+
+            ArrayList attrs = new ArrayList(7);
+
+            //找出 InjectVar的字段，并且是 injectDomain 相同的注入域
+            ReflectionUtils.doWithFields(entityClass, field -> {
+                        attrs.add(field.getName());
+                    }
+                    , field -> field.isAnnotationPresent(InjectVar.class)
+                            && injectDomain.equals(field.getAnnotation(InjectVar.class).domain())
+            );
+
+            return (String[]) attrs.toArray(new String[attrs.size()]);
+        });
+
+        return injectAttrs;
+    }
 
     /**
      * 是否不允许空
