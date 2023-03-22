@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -24,6 +26,7 @@ import java.util.Date;
 //        @Index(columnList = AbstractBaseEntityObject.Fields.enable),
 //        @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
 //})
+//@EntityListeners()
 public abstract class AbstractBaseEntityObject
         implements BaseEntityObject {
 
@@ -37,11 +40,13 @@ public abstract class AbstractBaseEntityObject
     @Schema(description = "创建时间")
     @Column(nullable = false)
     @Temporal(value = TemporalType.TIMESTAMP)
+//    @CreatedDate
     protected Date createTime;
 
     @Schema(description = "更新时间")
     @Column
     @Temporal(value = TemporalType.TIMESTAMP)
+//    @LastModifiedDate
     protected Date lastUpdateTime;
 
     //@OrderBy
