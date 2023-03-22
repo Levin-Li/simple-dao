@@ -236,10 +236,10 @@
                 <artifactId>spring-boot-starter-cache</artifactId>
             </dependency>
 
-            <dependency>
+<#--            <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
-            </dependency>
+            </dependency>-->
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
