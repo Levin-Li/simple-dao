@@ -1224,7 +1224,7 @@ public final class ServiceModelCodeGenerator {
                     && !fieldModel.getName().endsWith("Body")) {
                 boolean isLob = field.isAnnotationPresent(Lob.class);
                 if (isLob) {
-                    fieldModel.setLength(4000);
+                    //fieldModel.setLength(4000);
                     fieldModel.setTestValue("\"这是长文本正文\"");
                 }
                 if (fieldModel.getLength() != 255) {
