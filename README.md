@@ -244,13 +244,9 @@
     
    代码生成插件会生成服务类，控制器类，spring boot 自动配置文件，测试用例，插件类等，后续加入会生成 vue和 react 的页面代码。
          
-##### 2.1.5 启动testcase程序和查看运行结果
+##### 2.1.5 启动bootstrap程序和查看运行结果
    
-   在Maven操作面板上刷新项目，然后启动项目。
-    
-   ![启动项目](./simple-dao-code-gen/src/main/resources/public/images/step-4.png)     
-           
-   项目启动成功，点击控制台的链接查看运行结果。    
+   在Maven操作面板上刷新项目，然后启动项目，项目启动成功，点击控制台的链接查看运行结果。    
    
    ![查看结果](./simple-dao-code-gen/src/main/resources/public/images/step-5.png)    
    
