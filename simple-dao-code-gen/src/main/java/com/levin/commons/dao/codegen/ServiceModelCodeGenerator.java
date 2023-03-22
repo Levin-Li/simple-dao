@@ -1181,7 +1181,7 @@ public final class ServiceModelCodeGenerator {
 
                                         //默认类型
                                         if (injectVar.expectBaseType() != Void.class
-                                                && injectVar.expectBaseType() != Object.class) {
+                                                && ("dao".equalsIgnoreCase(injectVar.domain()) || injectVar.expectBaseType() != Object.class)) {
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 
