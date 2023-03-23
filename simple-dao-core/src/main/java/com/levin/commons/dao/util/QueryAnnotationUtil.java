@@ -196,6 +196,34 @@ public abstract class QueryAnnotationUtil {
         return injectAttrs;
     }
 
+
+    /**
+     * 合并数组
+     *
+     * @param addArray           增加的数组
+     * @param defaultReturnArray 默认返回的数组
+     * @return
+     */
+    public static String[] mergeArray(String[] addArray, String[] defaultReturnArray) {
+
+        if (addArray != null
+                && addArray.length > 0) {
+            if (defaultReturnArray == null || defaultReturnArray.length == 0) {
+                defaultReturnArray = addArray;
+            } else {
+
+                String[] temp = new String[addArray.length + defaultReturnArray.length];
+
+                System.arraycopy(defaultReturnArray, 0, temp, 0, defaultReturnArray.length);
+                System.arraycopy(addArray, 0, temp, defaultReturnArray.length, addArray.length);
+
+                defaultReturnArray = temp;
+            }
+        }
+
+        return defaultReturnArray;
+    }
+
     /**
      * 是否不允许空
      *

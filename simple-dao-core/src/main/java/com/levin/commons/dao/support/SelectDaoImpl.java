@@ -1255,6 +1255,8 @@ public class SelectDaoImpl<T>
             return (E) data;
         }
 
+        ignoreProperties = QueryAnnotationUtil.mergeArray(QueryAnnotationUtil.getDaoInjectAttrs(targetType), ignoreProperties);
+
         //先拷贝变量
         E e = (E) copy(data, targetType, maxCopyDeep, ignoreProperties);
 
@@ -1265,7 +1267,6 @@ public class SelectDaoImpl<T>
         ClassUtils.invokePostConstructMethod(e);
 
         return e;
-
     }
 
     /**
