@@ -575,17 +575,23 @@ public class JpaDaoImpl
                 Object old = entityOrDto;
 
                 // 1、先拷贝对象，忽略注入的属性
-                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1
-                        , QueryAnnotationUtil.getDaoInjectAttrs(entityOrDto.getClass()));
+                String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(entityOrDto.getClass());
 
-                //2、注入变量,需要注入的变量
-                injectVars(entityOrDto, old);
+                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1, daoInjectAttrs);
+
+                if (daoInjectAttrs != null
+                        && daoInjectAttrs.length > 0) {
+
+                    DaoContext.getThreadContext()
+                    //2、注入变量,需要注入的变量
+                    injectVars(entityOrDto, old);
+                    // getDao().injectVars(entityOrDto, old, getContext());
+                }
 
                 //新对象初始化参数
                 com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
 
             }
-
         }
 
         return (E) entityOrDto;

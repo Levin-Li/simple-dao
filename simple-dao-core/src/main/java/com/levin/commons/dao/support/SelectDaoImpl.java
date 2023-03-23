@@ -1255,13 +1255,18 @@ public class SelectDaoImpl<T>
             return (E) data;
         }
 
-        ignoreProperties = QueryAnnotationUtil.mergeArray(QueryAnnotationUtil.getDaoInjectAttrs(targetType), ignoreProperties);
+        String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
+
+        ignoreProperties = QueryAnnotationUtil.mergeArray(daoInjectAttrs, ignoreProperties);
 
         //先拷贝变量
         E e = (E) copy(data, targetType, maxCopyDeep, ignoreProperties);
 
-        //注入变量
-        getDao().injectVars(e, data, getContext());
+        if (daoInjectAttrs != null
+                && daoInjectAttrs.length > 0) {
+            //注入变量
+            getDao().injectVars(e, data, getContext());
+        }
 
         //属性属性拷贝后，进行初始化
         ClassUtils.invokePostConstructMethod(e);
