@@ -9,6 +9,9 @@ cd $shellDir
 
 shellDir=`pwd`
 
+#包括双引号
+keyword="\"${shellDir}\""
+
 appJars=`ls *.jar`
 isFound=`echo $?`
 
@@ -28,7 +31,7 @@ mkdir -p "config"
 #读取进程标识
 tempFile=`date +%s`
 
-pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+pids=`ps -ef | grep java | grep "${keyword}" | awk '{print $2}'`
 
 #加密参数
 encryptParams=""
@@ -109,7 +112,7 @@ if [ -z "${pids}" ]; then
 
    #测试本应用的第3方库，是否存在
 
-   START_CMD="${JAVA_CMD} -server -Dwork.dir=${shellDir} ${encryptParams} -Dloader.path=config,resources,biz-libs,common-libs${globalAppCommonLibs},third-libs${globalAppThirdLibs} -jar ${appJars}"
+   START_CMD="${JAVA_CMD} -server -Dwork.dir=\"${shellDir}\" ${encryptParams} -Dloader.path=config,resources,biz-libs,common-libs${globalAppCommonLibs},third-libs${globalAppThirdLibs} -jar ${appJars}"
 
    echo "Startup cmd line：${START_CMD}"
 
@@ -123,7 +126,7 @@ if [ -z "${pids}" ]; then
    #删除临时文件
    rm -fr "${tempFile}"
 
-   pList=`ps -ef | grep java | grep "$shellDir"`
+   pList=`ps -ef | grep java | grep "${keyword}"`
 
 #  如果应用没有启动成功
    if [ -z "${pList}" ]; then
@@ -145,9 +148,10 @@ if [ -z "${pids}" ]; then
 else
 
    echo "[$shellDir/$0] program already started."
-   ps -ef | grep java | grep "$shellDir"
+   ps -ef | grep java | grep "${keyword}"
 
 fi
+
 
 </#noparse>
 ###

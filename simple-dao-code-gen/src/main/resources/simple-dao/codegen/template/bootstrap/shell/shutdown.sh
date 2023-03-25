@@ -9,8 +9,11 @@ cd $shellDir
 
 shellDir=`pwd`
 
+#包括双引号
+keyword="\"${shellDir}\""
+
 #获取进程ID
-pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+pids=`ps -ef | grep java | grep "${keyword}" | awk '{print $2}'`
 
 if [ -z "${pids}" ]; then
 
@@ -18,7 +21,7 @@ if [ -z "${pids}" ]; then
 
 else
 #尝试停止进程
-   ps -ef | grep java | grep `pwd`
+   ps -ef | grep java | grep "${keyword}"
 
    tempPid=$pids
 
@@ -30,7 +33,7 @@ else
 
       sleep 1
 
-      pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+      pids=`ps -ef | grep java | grep "${keyword}" | awk '{print $2}'`
 
       if [ -z "${pids}" ]; then
          echo "program ${tempPid} stopped."
@@ -43,7 +46,7 @@ fi
 
 ##################强制停止进程#######################
 
-pids=`ps -ef | grep java | grep "$shellDir" | awk '{print $2}'`
+pids=`ps -ef | grep java | grep "${keyword}" | awk '{print $2}'`
 
 if [ -n "${pids}" ]; then
    echo "***Warning*** kill -9 $pids ..."
