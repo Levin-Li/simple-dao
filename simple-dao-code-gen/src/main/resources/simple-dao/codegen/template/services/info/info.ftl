@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.Date;
 import javax.validation.constraints.*;
 
+import com.fasterxml.jackson.annotation.*;
 /////////////////////////////////////////////////////
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -42,6 +43,7 @@ import ${imp};
 </#if>
 @ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
+<#if isMultiTenantObject>@JsonIncludeProperties(tenantId)</#if>
 public class ${className} implements Serializable {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
