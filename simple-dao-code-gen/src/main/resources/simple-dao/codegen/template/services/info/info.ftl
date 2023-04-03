@@ -43,7 +43,7 @@ import ${imp};
 </#if>
 @ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
-<#if isMultiTenantObject>@JsonIncludeProperties(tenantId)</#if>
+<#if isMultiTenantObject>@JsonIgnoreProperties(tenantId)</#if>
 public class ${className} implements Serializable {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
