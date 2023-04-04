@@ -8,10 +8,12 @@ import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -149,19 +151,66 @@ public class UpdateDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int update() {
+        return batchUpdate(rowCount);
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public boolean singleUpdate() {
+
+        setRowCount(1);
+
+        int n = update();
+
+        if (n > 1) {
+            throw new NonUniqueResultException(n + "条记录被更新，预期1条");
+        }
+
+        return n == 1;
+    }
+
+    /**
+     * @param batchCommitSize
+     * @return
+     */
+    @Override
+    @Transactional(propagation = Propagation.NEVER) //不允许存在外层事务
+    public int batchUpdate(int batchCommitSize) {
+
+        if (batchCommitSize < 1) {
+            batchCommitSize = 1024;
+        } else if (batchCommitSize > 15000) {
+            //最大批15000
+            batchCommitSize = 15000;
+        }
+
+        setRowCount(batchCommitSize);
+
+        String statement = genFinalStatement();
 
         if (!hasColumnsForUpdate() && !throwExWhenNoColumnForUpdate) {
-
-            logger.warn("忽略没有要更新列的更新语句[" + genFinalStatement() + "]");
-
+            logger.warn("忽略没有要更新列的更新语句[" + statement + "]");
             return -1;
         }
 
         checkAction(EntityOption.Action.Update, null);
 
-        return dao.update(isNative(), rowStart, rowCount, genFinalStatement(), genFinalParamList());
-    }
+        int total = 0;
 
+        List paramList = genFinalParamList();
+
+        int tempCnt = 0;
+
+        //循环批量更新，每次都是单独的事务
+        while ((tempCnt = dao.update(isNative(), rowStart, rowCount, statement, paramList)) > 0) {
+            total += tempCnt;
+        }
+
+        return total;
+    }
 
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,

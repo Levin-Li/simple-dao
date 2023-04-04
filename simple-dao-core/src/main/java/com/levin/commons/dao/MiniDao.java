@@ -181,8 +181,8 @@ public interface MiniDao extends DeepCopier {
     <E> E create(Object entityOrDto);
 
     /**
-     * @param start
-     * @param count
+     * @param start       <1 表示不限制
+     * @param count       <1 表示不限制
      * @param statement   更新或是删除语句
      * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
      * @return
@@ -190,13 +190,11 @@ public interface MiniDao extends DeepCopier {
     @Transactional
     int update(boolean isNative, int start, int count, String statement, Object... paramValues);
 
-
     /**
      * 手动刷新事务，主要用于同个事务中先写后读的时候
      */
     default void flush() {
     }
-
 
     /**
      * @param isNative    是否是原生查询

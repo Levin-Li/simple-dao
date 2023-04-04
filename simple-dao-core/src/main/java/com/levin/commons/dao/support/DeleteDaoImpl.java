@@ -8,8 +8,10 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.NonUniqueResultException;
 import java.util.List;
 
 /**
@@ -109,6 +111,36 @@ public class DeleteDaoImpl<T>
     @Override
     @Transactional
     public int delete() {
+        return batchDelete(rowCount);
+    }
+
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public boolean singleDelete() {
+
+        setRowCount(1);
+
+        int n = delete();
+
+        if (n > 1) {
+            throw new NonUniqueResultException(n + "条记录被删除，预期1条");
+        }
+
+        return n == 1;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    public int batchDelete(int batchCommitSize) {
+
+        if (batchCommitSize < 1) {
+            batchCommitSize = 1024;
+        } else if (batchCommitSize > 15000) {
+            //最大批15000
+            batchCommitSize = 15000;
+        }
+
+        setRowCount(batchCommitSize);
 
         EntityOption entityOption = getEntityOption();
 
@@ -123,7 +155,7 @@ public class DeleteDaoImpl<T>
 
         if (!disableDel && !hasLogicDeleteField) {
             //如果能物理删除，但又没有逻辑删除的字段，那么只能物理删除
-            return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
+            return batchDelete(genFinalStatement(false), genFinalParamList(false));
         }
 
         Exception ex = null;
@@ -132,7 +164,7 @@ public class DeleteDaoImpl<T>
             ////如果能物理删除，先尝试物理删除
             try {
                 // if (true) throw new StatementBuildException("mock delete error");
-                return dao.update(isNative(), rowStart, rowCount, genFinalStatement(false), genFinalParamList(false));
+                return batchDelete(genFinalStatement(false), genFinalParamList(false));
             } catch (Exception e) {
                 ex = e;
             }
@@ -145,7 +177,7 @@ public class DeleteDaoImpl<T>
 
         //接下来尝试逻辑删除
 
-        int n = dao.update(isNative(), rowStart, rowCount, genFinalStatement(true), genFinalParamList(true));
+        int n = batchDelete(genFinalStatement(true), genFinalParamList(true));
 
         if (n > 0) {
             if (ex != null) {
@@ -156,7 +188,26 @@ public class DeleteDaoImpl<T>
         }
 
         return n;
+    }
 
+
+    /**
+     * @param statement
+     * @param paramList
+     * @return
+     */
+    int batchDelete(String statement, List paramList) {
+
+        int total = 0;
+
+        int tempCnt = 0;
+
+        //循环批量更新，每次都是单独的事务
+        while ((tempCnt = dao.update(isNative(), rowStart, rowCount, statement, paramList)) > 0) {
+            total += tempCnt;
+        }
+
+        return total;
     }
 
     private void reThrow(Exception ex) {
