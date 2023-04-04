@@ -151,7 +151,7 @@ public class UpdateDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int update() {
-        return batchUpdate(rowCount);
+        return batchUpdate(getRowCount());
     }
 
     /**

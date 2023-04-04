@@ -80,7 +80,6 @@ public interface UpdateDao<T>
      * @see #disableThrowExWhenNoColumnForUpdate
      */
     @Transactional
-    @Deprecated
     int update();
 
     /**

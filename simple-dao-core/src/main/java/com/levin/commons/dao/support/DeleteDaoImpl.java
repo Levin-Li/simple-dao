@@ -111,7 +111,7 @@ public class DeleteDaoImpl<T>
     @Override
     @Transactional
     public int delete() {
-        return batchDelete(rowCount);
+        return batchDelete(getRowCount());
     }
 
     @Override
