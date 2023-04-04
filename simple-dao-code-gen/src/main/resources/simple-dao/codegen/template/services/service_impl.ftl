@@ -141,7 +141,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     public int update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return checkResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
+        return checkUniqueResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
@@ -158,7 +158,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     public int delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return checkResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
+        return checkUniqueResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
@@ -216,7 +216,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     public void clearCache(Object key) {
     }
 
-    protected int checkResult(int n, String action) {
+    protected int checkUniqueResult(int n, String action) {
         if (n > 1) {
             throw new DaoSecurityException("非法的" + action + "操作");
         }
