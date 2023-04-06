@@ -180,6 +180,8 @@ public class UpdateDaoImpl<T>
     @Transactional(propagation = Propagation.NEVER) //不允许存在外层事务
     public int batchUpdate(int batchCommitSize) {
 
+        checkAction(EntityOption.Action.Update, null);
+
         if (batchCommitSize < 1) {
             batchCommitSize = 1024;
         } else if (batchCommitSize > 15000) {
@@ -196,8 +198,6 @@ public class UpdateDaoImpl<T>
             return -1;
         }
 
-        checkAction(EntityOption.Action.Update, null);
-
         int total = 0;
 
         List paramList = genFinalParamList();
@@ -210,6 +210,7 @@ public class UpdateDaoImpl<T>
         }
 
         return total;
+
     }
 
     @Override
