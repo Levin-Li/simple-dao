@@ -69,6 +69,18 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     @Transactional
     int updateByQueryObj(Object... queryObjs);
 
+
+    /**
+     * 更新一条记录
+     * <p>
+     * 如果更新的记录数为多条，将抛出异常并回滚
+     *
+     * @param queryObjs
+     * @return 如果被更新的记录数为 0，则返回false, 被更新的记录数为 1 返回TRUE，如果被更新的记录数大于1则抛出异常
+     */
+    @Transactional
+    boolean singleUpdateByQueryObj(Object... queryObjs);
+
     /**
      * 通过查询对象删除
      *
@@ -77,6 +89,17 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     @Transactional
     int deleteByQueryObj(Object... queryObjs);
 
+
+    /**
+     * 删除一条记录
+     * <p>
+     * 如果删除的记录数为多条，将抛出异常并回滚
+     *
+     * @param queryObjs
+     * @return 如果被删除的记录数为 0，则返回false, 被删除的记录数为 1 返回TRUE，如果被删除的记录数大于1则抛出异常
+     */
+    @Transactional
+    boolean singleDeleteByQueryObj(Object... queryObjs);
     ////////////////////////////////////////////////////////////////////////////////////////
 
     /**

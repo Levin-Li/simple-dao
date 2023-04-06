@@ -139,9 +139,11 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
-    public int update(Update${entityName}Req req) {
+    public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return checkUniqueResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
+
+       return simpleDao.singleUpdateByQueryObj(req);
+       // return checkUniqueResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
@@ -149,16 +151,17 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
-        return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n).sum();
+        return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n?1:0).sum();
     }
 
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     @Override
     @CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
-    public int delete(${entityName}IdReq req) {
+    public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return checkUniqueResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
+        return simpleDao.singleDeleteByQueryObj(req);
+        // return checkUniqueResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
@@ -169,7 +172,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return Stream.of(req.get${pkField.name?cap_first}List())
             .map(${pkField.name} -> simpleDao.copy(req, new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name})))
             .map(idReq -> getSelfProxy().delete(idReq))
-            .mapToInt(n -> n)
+            .mapToInt(n -> n?1:0)
             .sum();
     }
 

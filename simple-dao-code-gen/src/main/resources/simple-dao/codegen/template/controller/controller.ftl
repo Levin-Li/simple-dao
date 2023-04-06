@@ -132,7 +132,7 @@ public class ${className} extends BaseController{
      @PutMapping({"","{${pkField.name}}"})
      @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
      @CRUD.Op
-     public ApiResp<Integer> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+     public ApiResp<Boolean> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
          return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION));
     }
@@ -144,7 +144,7 @@ public class ${className} extends BaseController{
     @DeleteMapping({"","{${pkField.name}}"})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Integer> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Boolean> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION));
     }
@@ -155,7 +155,7 @@ public class ${className} extends BaseController{
      */
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
-    public ApiResp<Integer> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Boolean> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
         return delete(req, ${pkField.name});
     }
@@ -219,4 +219,17 @@ public class ${className} extends BaseController{
         Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
         return n;
     }
+
+
+    /**
+     * 检查结果
+     * @param n
+     * @param action
+     * @return
+     */
+    protected boolean checkResult(boolean ok, String action) {
+        Assert.isTrue(ok, action + BIZ_NAME + "失败");
+        return ok;
+    }
+    
 }

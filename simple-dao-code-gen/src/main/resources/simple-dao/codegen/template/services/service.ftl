@@ -79,7 +79,7 @@ public interface ${className} {
      * @return num 更新记录数
      */
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
-    int update(@NotNull Update${entityName}Req req);
+    boolean update(@NotNull Update${entityName}Req req);
 
     /**
      * 批量更新记录，并返回更新记录数
@@ -96,7 +96,7 @@ public interface ${className} {
      * @return num 删除记录数
      */
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
-    int delete(@NotNull ${entityName}IdReq req);
+    boolean delete(@NotNull ${entityName}IdReq req);
 
     /**
      * 批量删除记录，并返回删除记录数
@@ -116,7 +116,7 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
 
-                        
+
     /**
      * 简单统计
      *
