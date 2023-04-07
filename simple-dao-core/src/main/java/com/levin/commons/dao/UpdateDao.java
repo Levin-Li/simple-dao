@@ -74,7 +74,6 @@ public interface UpdateDao<T>
      * 如果没有要更新的列该方法默认抛出异常，可以通过调用 {@link #disableThrowExWhenNoColumnForUpdate}
      * 禁止抛出异常，那将放弃执行语句返回 -1
      * <p>
-     * 使用  singleUpdate 或 batchUpdate替代
      *
      * @return 如果语句正常执行返回更新的记录数，如果语句没有执行返回 -1
      * @see #disableThrowExWhenNoColumnForUpdate
@@ -93,14 +92,5 @@ public interface UpdateDao<T>
      */
     @Transactional
     boolean singleUpdate();
-
-    /**
-     * 批量更新，直到所有的记录都更新完成
-     *
-     * @param batchCommitSize
-     * @return
-     */
-    @Transactional(propagation = Propagation.NEVER)
-    int batchUpdate(int batchCommitSize);
 
 }

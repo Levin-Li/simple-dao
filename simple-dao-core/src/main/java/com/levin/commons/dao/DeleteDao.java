@@ -27,22 +27,5 @@ public interface DeleteDao<T>
     @Transactional
     boolean singleDelete();
 
-    /**
-     * 批量更新，直到所有的记录都更新完成
-     *
-     * @param batchCommitSize
-     * @return
-     */
-    @Transactional(propagation = Propagation.NEVER)
-    int batchDelete(int batchCommitSize);
-
-//    /**
-//     * 逻辑删除
-//     * 如果不支持逻辑删除，则直接返回 0
-//     *
-//     * @return
-//     */
-//    @Transactional
-//    int logicDelete();
 
 }

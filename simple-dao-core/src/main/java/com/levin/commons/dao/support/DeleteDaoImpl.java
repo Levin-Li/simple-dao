@@ -111,36 +111,6 @@ public class DeleteDaoImpl<T>
     @Override
     @Transactional
     public int delete() {
-        return batchDelete(getRowCount());
-    }
-
-    @Override
-    @Transactional(rollbackFor = RuntimeException.class)
-    public boolean singleDelete() {
-
-        setRowCount(1);
-
-        int n = delete();
-
-        if (n > 1) {
-            throw new NonUniqueResultException(n + "条记录被删除，预期1条");
-        }
-
-        return n == 1;
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    public int batchDelete(int batchCommitSize) {
-
-        if (batchCommitSize < 1) {
-            batchCommitSize = 1024;
-        } else if (batchCommitSize > 15000) {
-            //最大批15000
-            batchCommitSize = 15000;
-        }
-
-        setRowCount(batchCommitSize);
 
         EntityOption entityOption = getEntityOption();
 
@@ -190,6 +160,21 @@ public class DeleteDaoImpl<T>
         return n;
     }
 
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public boolean singleDelete() {
+
+        setRowCount(1);
+
+        int n = delete();
+
+        if (n > 1) {
+            throw new NonUniqueResultException(n + "条记录被删除，预期1条");
+        }
+
+        return n == 1;
+    }
+
 
     /**
      * @param statement
@@ -197,17 +182,7 @@ public class DeleteDaoImpl<T>
      * @return
      */
     int batchDelete(String statement, List paramList) {
-
-        int total = 0;
-
-        int tempCnt = 0;
-
-        //循环批量更新，每次都是单独的事务
-        while ((tempCnt = dao.update(isNative(), rowStart, rowCount, statement, paramList)) > 0) {
-            total += tempCnt;
-        }
-
-        return total;
+        return dao.update(isNative(), rowStart, rowCount, statement, paramList);
     }
 
     private void reThrow(Exception ex) {
