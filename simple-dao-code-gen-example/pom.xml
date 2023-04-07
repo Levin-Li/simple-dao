@@ -28,7 +28,7 @@
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
-        <springdoc.version>1.6.14</springdoc.version>
+
     </properties>
 
     <repositories>
@@ -125,7 +125,7 @@
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
-                <version>5.7.3</version>
+                <version>${hutool.version}</version>
             </dependency>
 
             <dependency>
@@ -137,20 +137,15 @@
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
-                <version>2.2.7</version>
+                <version>${io.swagger.core.v3.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
-                <version>1.1.24</version>
+                <version>${com.alibaba.druid.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
-                <version>2.3.6.RELEASE</version>
-            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -177,18 +172,6 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-        </dependency>
-
-        <!-- 引入Swagger3依赖 -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-boot-starter</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <dependency>
