@@ -346,7 +346,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     @Override
     public CB end() {
-        endLogic();
+        endLogic(true);
         return (CB) this;
     }
 
@@ -1747,11 +1747,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
-
         return Optional.ofNullable(logicAnnotation)
                 .map(a -> (boolean) ClassUtils.getValue(logicAnnotation, "autoClose", true))
                 .orElse(false);
-
     }
 
     /**
@@ -2499,14 +2497,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         whereExprRootNode.beginGroup(op, valid);
     }
 
-    protected void endLogic() {
-        whereExprRootNode.endGroup();
+    protected void endLogic(boolean isContainLastField) {
+        whereExprRootNode.endGroup(isContainLastField);
     }
 
     private void endLogicGroup(Object bean, Annotation logicAnnotation, Object value) {
         //如果遇到逻辑结束
         if (logicAnnotation instanceof END) {
-            end();
+            endLogic(((END) logicAnnotation).containCurrentField());
         }
     }
 

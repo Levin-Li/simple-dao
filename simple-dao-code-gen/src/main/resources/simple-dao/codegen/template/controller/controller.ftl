@@ -14,6 +14,7 @@ import javax.annotation.*;
 
 import javax.servlet.http.*;
 
+import com.levin.commons.dao.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.ui.annotation.*;
@@ -231,5 +232,5 @@ public class ${className} extends BaseController{
         Assert.isTrue(ok, action + BIZ_NAME + "失败");
         return ok;
     }
-    
+
 }

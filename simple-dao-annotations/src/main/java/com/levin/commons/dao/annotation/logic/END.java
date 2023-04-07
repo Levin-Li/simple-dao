@@ -17,6 +17,13 @@ import java.lang.annotation.*;
 public @interface END {
 
     /**
+     * 结束范围是否包含当前字段
+     *
+     * @return
+     */
+    boolean containCurrentField() default true;
+
+    /**
      * 描述信息
      *
      * @return

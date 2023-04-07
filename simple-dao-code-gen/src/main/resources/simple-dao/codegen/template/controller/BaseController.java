@@ -1,5 +1,6 @@
 package ${modulePackageName}.controller;
 
+import com.levin.commons.dao.*;
 import com.levin.commons.rbac.*;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;

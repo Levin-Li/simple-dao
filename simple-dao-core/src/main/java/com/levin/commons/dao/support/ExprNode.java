@@ -111,7 +111,24 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
      *
      * @return
      */
-    public synchronized ExprNode<OP, E> endGroup() {
+    public synchronized ExprNode<OP, E> endGroup(boolean isContainLastElement) {
+
+        //如果不包含最后一个节点，则把最后一个节点移动到父节点
+        if (!isContainLastElement
+                && currentNode != null
+                && !currentNode.getSubNodes().isEmpty()) {
+
+            //把最后一个节点移出，加给父节点
+            List tempList = currentNode.getSubNodes();
+
+            Object lastNode = tempList.remove(tempList.size() - 1);
+
+            ExprNode<OP, E> p = currentNode.parentNode;
+
+            if (p != null) {
+                p.getSubNodes().add(lastNode);
+            }
+        }
 
         //回到自己
         if (currentNode != this) {
@@ -121,6 +138,9 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
         if (currentNode == null) {
             currentNode = this;
         }
+
+        //把
+
 
         return currentNode;
     }
