@@ -334,13 +334,23 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     @Override
     public CB and() {
-        beginLogic(AND.class.getSimpleName(), true);
+        return and(true);
+    }
+
+    @Override
+    public CB and(Boolean valid) {
+        beginLogic(AND.class.getSimpleName(), Boolean.TRUE.equals(valid));
         return (CB) this;
     }
 
     @Override
     public CB or() {
-        beginLogic(OR.class.getSimpleName(), true);
+        return or(true);
+    }
+
+    @Override
+    public CB or(Boolean valid) {
+        beginLogic(OR.class.getSimpleName(), Boolean.TRUE.equals(valid));
         return (CB) this;
     }
 

@@ -19,9 +19,7 @@ import java.util.Date;
 @TargetOption(entityClass = User.class, alias = "u", maxResults = 100)
 public class UserDTO2 {
 
-
     Paging paging = new PagingQueryReq(1, 20);
-
 
     Long id;
 
@@ -48,8 +46,8 @@ public class UserDTO2 {
     @END
     protected Integer[] scores = new Integer[]{200, 100, null, null};
 
+    @END(containCurrentField = false)
     @Like
-    @END
     protected String description = "desc";
 
 

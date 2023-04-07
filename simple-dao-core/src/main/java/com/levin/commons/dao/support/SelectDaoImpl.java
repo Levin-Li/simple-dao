@@ -474,9 +474,7 @@ public class SelectDaoImpl<T>
 
     @Override
     protected void endLogic(boolean isContainLastField) {
-
         super.endLogic(isContainLastField);
-
         havingExprRootNode.endGroup(isContainLastField);
     }
 
