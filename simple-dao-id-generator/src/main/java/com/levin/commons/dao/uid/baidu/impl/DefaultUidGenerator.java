@@ -20,7 +20,7 @@ import com.levin.commons.dao.uid.baidu.UidGenerator;
 import com.levin.commons.dao.uid.baidu.exception.UidGenerateException;
 import com.levin.commons.dao.uid.baidu.worker.WorkerIdAssigner;
 import com.levin.commons.dao.uid.baidu.utils.DateUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
