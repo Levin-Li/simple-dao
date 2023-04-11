@@ -163,11 +163,11 @@ public class ${className} {
         </#if>
     </#list>
 
-          int resp = ${serviceName?uncap_first}.update(req);
+          boolean resp = ${serviceName?uncap_first}.update(req);
 
           log.debug("更新${desc}-> " + resp);
 
-          Assert.isTrue(resp > 0, "${desc}");
+          Assert.isTrue(resp, "${desc}");
     }
 
     @Test
