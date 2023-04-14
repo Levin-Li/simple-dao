@@ -2,10 +2,12 @@ package com.levin.commons.dao;
 
 
 import com.levin.commons.dao.util.ObjectUtil;
+import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
@@ -25,11 +27,6 @@ public abstract class DaoContext {
         @Override
         public String getInjectDomain() {
             return "dao";
-        }
-
-        @Override
-        public <T> T convert(Object source, Class<T> targetType) {
-            return ObjectUtil.convert(source, targetType);
         }
     };
 
