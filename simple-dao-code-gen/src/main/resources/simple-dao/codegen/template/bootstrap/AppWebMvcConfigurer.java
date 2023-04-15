@@ -33,19 +33,19 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
         log.info("init...");
     }
 
-    static class String2EnumCF implements ConverterFactory<String, Enum> {
-        @Override
-        public <T extends Enum> Converter<String, T> getConverter(Class<T> targetType) {
-            return name -> (T) EnumDesc.parse(targetType, name);
-        }
-    }
-
-    static class Number2EnumCF implements ConverterFactory<Number, Enum> {
-        @Override
-        public <T extends Enum> Converter<Number, T> getConverter(Class<T> targetType) {
-            return code -> (T) EnumDesc.parse(targetType, code.intValue());
-        }
-    }
+//    static class String2EnumCF implements ConverterFactory<String, Enum> {
+//        @Override
+//        public <T extends Enum> Converter<String, T> getConverter(Class<T> targetType) {
+//            return name -> (T) EnumDesc.parse(targetType, name);
+//        }
+//    }
+//
+//    static class Number2EnumCF implements ConverterFactory<Number, Enum> {
+//        @Override
+//        public <T extends Enum> Converter<Number, T> getConverter(Class<T> targetType) {
+//            return code -> (T) EnumDesc.parse(targetType, code.intValue());
+//        }
+//    }
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
@@ -56,8 +56,11 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
         registry.removeConvertible(Integer.class, Enum.class);
         registry.removeConvertible(Number.class, Enum.class);
 
-        registry.addConverterFactory(new String2EnumCF());
-        registry.addConverterFactory(new Number2EnumCF());
+//        registry.addConverterFactory(new String2EnumCF());
+//        registry.addConverterFactory(new Number2EnumCF());
+
+        registry.addConverterFactory(EnumDesc.string2EnumFactory);
+        registry.addConverterFactory(EnumDesc.number2EnumFactory);
 
     }
 

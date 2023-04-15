@@ -21,7 +21,7 @@ import com.levin.commons.dao.uid.baidu.utils.NetUtils;
 import com.levin.commons.dao.uid.baidu.worker.dao.WorkerNodeDAO;
 import com.levin.commons.dao.uid.baidu.worker.entity.WorkerNodeEntity;
 import com.levin.commons.utils.MapUtils;
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,7 +132,7 @@ public class DisposableWorkerIdAssigner
         } else {
             workerNodeEntity.setType(WorkerNodeType.ACTUAL.value());
             workerNodeEntity.setHostName(NetUtils.getLocalAddress());
-            workerNodeEntity.setPort(System.currentTimeMillis() + "-" + RandomUtils.nextInt(100000));
+            workerNodeEntity.setPort(System.currentTimeMillis() + "-" + RandomUtils.nextInt(1,100000));
         }
 
         return workerNodeEntity;

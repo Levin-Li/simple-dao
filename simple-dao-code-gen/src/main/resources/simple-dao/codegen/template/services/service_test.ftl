@@ -163,11 +163,11 @@ public class ${className} {
         </#if>
     </#list>
 
-          int resp = ${serviceName?uncap_first}.update(req);
+          boolean ok = ${serviceName?uncap_first}.update(req);
 
-          log.debug("更新${desc}-> " + resp);
+          log.debug("更新${desc}-> " + ok);
 
-          Assert.isTrue(resp > 0, "${desc}");
+          Assert.isTrue(ok, "${desc}");
     }
 
     @Test
@@ -179,10 +179,10 @@ public class ${className} {
         req.set${pkField.name?cap_first}(${pkField.name});
     </#if>
 
-        int n = ${serviceName?uncap_first}.delete(req);
+        boolean ok = ${serviceName?uncap_first}.delete(req);
 
-        log.debug("删除${desc}->" + n);
+        log.debug("删除${desc}->" + ok);
 
-        Assert.isTrue(n > 0, "${desc}");
+        Assert.isTrue(ok , "${desc}");
     }
 }

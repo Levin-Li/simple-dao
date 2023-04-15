@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCust
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+//import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;

@@ -11,6 +11,15 @@ spring:
   cache:
     type: redis
 
+  redis:
+    client-type: lettuce
+    lettuce:
+      pool:
+        enabled: true
+        min-idle: 8
+        max-idle: 50
+        max-active: 300
+
   #线程池配置
   task:
     execution:
