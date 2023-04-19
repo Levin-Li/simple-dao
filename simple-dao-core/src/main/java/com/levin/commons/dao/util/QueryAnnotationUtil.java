@@ -485,15 +485,17 @@ public abstract class QueryAnnotationUtil {
 
     /**
      * 过滤出指定包的注解
+     * <p>
      *
-     * @param packageName
+     *
+     * @param packageName  精确相等的包名，不包含子包
      * @param annotations
      * @param excludeTypes
      * @return
      */
     public static List<Annotation> getAnnotationsByPackage(String packageName, Annotation[] annotations, Class<? extends Annotation>... excludeTypes) {
 
-        List<Annotation> result = new ArrayList<>(2);
+        List<Annotation> result = new ArrayList<>(3);
 
         if (annotations == null) {
             return result;

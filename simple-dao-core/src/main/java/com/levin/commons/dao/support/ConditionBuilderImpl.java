@@ -41,6 +41,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
@@ -1385,10 +1386,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            //如果是类
-            final boolean isClass = queryValueObj instanceof Class;
+            //
+            final boolean isClassCurrQueryObj = queryValueObj instanceof Class;
 
-            Class<?> typeClass = isClass ? (Class<?>) queryValueObj : queryValueObj.getClass();
+            Class<?> typeClass = isClassCurrQueryObj ? (Class<?>) queryValueObj : queryValueObj.getClass();
 
             if (typeClass.isPrimitive()
                     || QueryAnnotationUtil.isRootObjectType(typeClass)
@@ -1398,7 +1399,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            if (!isClass) {
+            if (!isClassCurrQueryObj) {
 
                 //对注解的支持 PostConstruct
                 ClassUtils.invokePostConstructMethod(queryValueObj);
@@ -1429,11 +1430,21 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
 
-            if (!isClass) {
+            if (!isClassCurrQueryObj) {
                 processCtxVar(queryValueObj, fields);
             }
 
-            List<?> contexts = isClass ? null : DaoContext.getContexts(queryValueObj);
+            List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getContexts(queryValueObj);
+
+            final String pkgStartsWith = BASE_PACKAGE_NAME + ".";
+
+            //查找类上的注解
+            Annotation[] annotationsOnClass = null;
+
+            if (isClassCurrQueryObj) {
+                List<Annotation> anList = Stream.of(typeClass.getAnnotations()).filter(a -> a.annotationType().getName().startsWith(pkgStartsWith)).collect(Collectors.toList());
+                annotationsOnClass = anList.toArray(new Annotation[anList.size()]);
+            }
 
             //开始处理字段
             for (Field field : fields) {
@@ -1453,7 +1464,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                     Object value = null;
 
-                    if (!isClass) {
+                    if (!isClassCurrQueryObj) {
 
                         field.setAccessible(true);
 
@@ -1483,8 +1494,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         }
                     }
 
-                    processAttr(isClass ? null : queryValueObj
-                            , field, name, field.getAnnotations()
+                    Annotation[] varAnnotations = field.getAnnotations();
+
+                    if (isClassCurrQueryObj
+                            && Stream.of(varAnnotations).noneMatch(a -> a.annotationType().getName().startsWith(pkgStartsWith))) {
+                        //使用类上的注解
+                        varAnnotations = annotationsOnClass;
+                    }
+
+                    processAttr(isClassCurrQueryObj ? null : queryValueObj
+                            , field, name, varAnnotations
                             , targetType, value);
 
                 } catch (Exception e) {
@@ -1493,7 +1512,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             }
 
-            if (!isClass) {
+            if (!isClassCurrQueryObj) {
                 //拷贝对象的字段，可能会被作为命名的查询参数
                 whereParamValues.add(QueryAnnotationUtil.copyMap(true, null, ObjectUtil.copyField2Map(queryValueObj, null)));
             }
@@ -1741,7 +1760,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         .forEach(logicAnnotation -> end());
 
                 endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
-
             }
             //结束逻辑分组
 
