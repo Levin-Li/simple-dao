@@ -2291,6 +2291,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
+    /**
+     * 检查安全模式
+     *
+     * @param whereStatement
+     */
     protected void checkSafeMode(String whereStatement) {
 
         if (this.isSafeMode()

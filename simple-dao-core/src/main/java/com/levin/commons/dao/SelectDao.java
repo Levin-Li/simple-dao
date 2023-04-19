@@ -29,6 +29,14 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 
     /**
+     * having 字句 和 order by 字句使用别名
+     *
+     * @return
+     */
+    SelectDao<T> useStatAliasForHavingGroupByOrderBy(boolean useStatAlias);
+
+
+    /**
      * 设置的分页
      *
      * @param pageIndex 第几页，从1开始

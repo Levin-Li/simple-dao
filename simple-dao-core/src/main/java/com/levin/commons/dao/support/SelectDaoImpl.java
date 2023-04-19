@@ -77,6 +77,8 @@ public class SelectDaoImpl<T>
 
     boolean hasStatColumns = false;
 
+    private boolean useStatAliasForHavingGroupByOrderBy = DaoContext.getValue("useStatAliasForHavingGroupByOrderBy", false);
+
     Class resultType;
 
 
@@ -206,6 +208,14 @@ public class SelectDaoImpl<T>
     }
 
     @Override
+    public SelectDao<T> useStatAliasForHavingGroupByOrderBy(boolean useStatAlias) {
+
+        this.useStatAliasForHavingGroupByOrderBy = useStatAlias;
+
+        return this;
+    }
+
+    @Override
     public SelectDao<T> join(String... joinStatements) {
 
         if (joinStatements != null) {
@@ -255,6 +265,14 @@ public class SelectDaoImpl<T>
 
     }
 
+    /**
+     * 连接
+     *
+     * @param isAppend
+     * @param targetClass
+     * @param targetAlias
+     * @return
+     */
     @Override
     public SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias) {
 
@@ -277,6 +295,13 @@ public class SelectDaoImpl<T>
         return this;
     }
 
+    /**
+     * 连接
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
     @Override
     public SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions) {
 
@@ -291,6 +316,13 @@ public class SelectDaoImpl<T>
     }
 
 
+    /**
+     * 连接
+     *
+     * @param isAppend
+     * @param joinOptions
+     * @return
+     */
     @Override
     public SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions) {
 
@@ -317,6 +349,8 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * 连接
+     *
      * @param isAppend
      * @param entityClass
      * @param alias
@@ -483,6 +517,7 @@ public class SelectDaoImpl<T>
         return orderBy(true, columnNames);
     }
 
+
     @Override
     public SelectDao<T> orderBy(Boolean isAppend, String... columnNames) {
 
@@ -534,6 +569,17 @@ public class SelectDaoImpl<T>
     }
 
 
+    /**
+     * 处理字段的所有的注解
+     *
+     * @param bean
+     * @param fieldOrMethod
+     * @param varAnnotations
+     * @param name
+     * @param varType
+     * @param value
+     * @param opAnnotation
+     */
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
@@ -555,6 +601,8 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * 处理排序注解
+     *
      * @param bean
      * @param fieldOrMethod
      * @param varAnnotations
@@ -592,6 +640,8 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * 处理抓取语句
+     *
      * @param bean
      * @param fieldOrMethod
      * @param varAnnotations
@@ -634,6 +684,8 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * 加入 having 子句
+     *
      * @param bean
      * @param name
      * @param opAnnotation
@@ -679,11 +731,14 @@ public class SelectDaoImpl<T>
     }
 
 
-    private String tryAppendAlias(String expr, String alias) {
-        return hasText(alias) ? " " + expr + " AS " + alias + " " : expr;
-    }
-
-
+    /**
+     * 增加排重语句
+     *
+     * @param expr
+     * @param alias
+     * @param opAnnotation
+     * @return
+     */
     String tryAppendDistinctAndAlias(String expr, String alias, Annotation opAnnotation) {
 
         boolean isDistinct = Boolean.TRUE.equals(ClassUtils.getValue(opAnnotation, "isDistinct", false));
@@ -700,6 +755,8 @@ public class SelectDaoImpl<T>
     }
 
     /**
+     * 处理选择注解
+     *
      * @param bean
      * @param fieldOrMethod
      * @param varAnnotations
@@ -738,6 +795,8 @@ public class SelectDaoImpl<T>
 
 
     /**
+     * 处理统计注解
+     *
      * @param bean
      * @param fieldOrMethod
      * @param varAnnotations
@@ -770,7 +829,7 @@ public class SelectDaoImpl<T>
             if (isGroupBy) {
                 //增加GroupBy字段
 
-                //多数数据库的 group by 语句不支持别名，因为GROUP BY子句比SELECT子句先执行
+                //多数数据库的 group by 语句不支持别名，因为 GROUP BY 子句 比 SELECT 子句先执行
                 //SQL按照如下顺序执行查询：
                 //FROM子句
                 //WHERE子句
@@ -778,13 +837,13 @@ public class SelectDaoImpl<T>
                 //HAVING子句
                 //SELECT子句
                 //ORDER BY子句
-                groupBy(oldExpr, holder.value);
+                groupBy(useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, holder.value);
             }
 
-            tryAppendHaving(bean, name, opAnnotation, oldExpr, holder, value);
+            tryAppendHaving(bean, name, opAnnotation, useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, holder, value);
 
             // ORDER BY 也不能使用别名
-            tryAppendOrderBy(bean, name, holder.value, oldExpr, newAlias, opAnnotation);
+            tryAppendOrderBy(bean, name, holder.value, useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, newAlias, opAnnotation);
 
             select(expr, holder.value);
 
@@ -795,6 +854,14 @@ public class SelectDaoImpl<T>
 
     }
 
+    /**
+     * 获取别名
+     *
+     * @param fieldOrMethod
+     * @param opAnnotation
+     * @param newAlias
+     * @return
+     */
     private static String getAlias(Object fieldOrMethod, Annotation opAnnotation, String newAlias) {
 
         if (!hasText(newAlias)) {
@@ -825,51 +892,73 @@ public class SelectDaoImpl<T>
         return newAlias;
     }
 
-    //    @Override
+
+    /**
+     * @param root
+     * @param name
+     * @param value
+     * @param expr
+     * @param newAlias
+     * @param opAnnotation
+     */
     protected void tryAppendOrderBy(Object root, String name, Object value, String expr, String newAlias, Annotation opAnnotation) {
 
         OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
 
-        appendOrderBy(root, name, value, expr, newAlias, orderByList);
+        if (orderByList != null && orderByList.length > 0) {
+            appendOrderBy(root, name, value, expr, newAlias, orderByList);
+        }
 
     }
 
+    /**
+     * 增加 OrderBy 表达
+     *
+     * @param root
+     * @param name
+     * @param value
+     * @param oldExpr
+     * @param newAlias
+     * @param orderByList
+     * @return
+     */
     protected SelectDao<T> appendOrderBy(Object root, String name, Object value, String oldExpr, final String newAlias, OrderBy... orderByList) {
 
-        if (orderByList != null) {
+        if (orderByList == null)
+            return this;
 
-            List<Map<String, ?>> fieldCtxs = this.buildContextValues(root, value, name);
+        List<Map<String, ?>> fieldCtxs = this.buildContextValues(root, value, name);
 
-            for (int i = 0; i < orderByList.length; i++) {
+        for (int i = 0; i < orderByList.length; i++) {
 
-                OrderBy orderBy = orderByList[i];
+            OrderBy orderBy = orderByList[i];
 
-                if (orderBy == null
-                        || !isValid(orderBy, root, name, value)) {
-                    continue;
-                }
+            if (orderBy == null
+                    || !isValid(orderBy, root, name, value)) {
+                continue;
+            }
 
-                //如果没有表达式，默认为名称
-                String domain = evalTextByThreadLocal(orderBy.domain());
+            //如果没有表达式，默认为名称
+            String domain = evalTextByThreadLocal(orderBy.domain());
 
-                if (!StringUtils.hasText(oldExpr)) {
-                    oldExpr = aroundColumnPrefix(domain, name);
-                }
+            if (!StringUtils.hasText(oldExpr)) {
+                oldExpr = aroundColumnPrefix(domain, name);
+            }
 
-                String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
+            String expr = (orderBy.useAlias() && hasText(newAlias)) ? newAlias : oldExpr;
 
-                expr = hasText(orderBy.value()) ? aroundColumnPrefix(domain, orderBy.value()) : expr;
+            expr = hasText(orderBy.value()) ? aroundColumnPrefix(domain, orderBy.value()) : expr;
 
-                //再对case进行求职
-                if (orderBy.cases() != null && orderBy.cases().length > 0) {
-                    expr = ExprUtils.genCaseExpr(domain, this::aroundColumnPrefix, tmpExpr -> evalTrueExpr(root, value, name, tmpExpr, fieldCtxs), expr, orderBy.cases());
-                }
+            //再对case进行求职
+            if (orderBy.cases() != null && orderBy.cases().length > 0) {
+                expr = ExprUtils.genCaseExpr(domain, this::aroundColumnPrefix, tmpExpr -> evalTrueExpr(root, value, name, tmpExpr, fieldCtxs), expr, orderBy.cases());
+            }
 
-                if (hasText(expr)) {
-                    addOrderBy(orderBy.order(), expr, orderBy.type());
-                }
+            if (hasText(expr)) {
+                addOrderBy(orderBy.order(), expr, orderBy.type());
             }
         }
+
 
         return this;
     }
@@ -890,6 +979,11 @@ public class SelectDaoImpl<T>
     }
 
 
+    /**
+     * 安全模式检查
+     *
+     * @param whereStatement
+     */
     @Override
     protected void checkSafeMode(String whereStatement) {
 
@@ -997,7 +1091,10 @@ public class SelectDaoImpl<T>
 
         builder.append(" ").append(lastStatements);
 
-        if (this.isSafeMode() && !isCountQueryResult && !hasText(whereStatement) && !isSafeLimit()) {
+        if (this.isSafeMode()
+                && !isCountQueryResult
+                && !hasText(whereStatement)
+                && !isSafeLimit()) {
             throw new DaoSecurityException("Safe mode not allow no where statement or limit [" + rowCount + "] too large, safeModeMaxLimit[1 - " + getDao().getSafeModeMaxLimit() + "], SQL[" + builder + "]");
         }
 
@@ -1020,6 +1117,7 @@ public class SelectDaoImpl<T>
 
         //如果有指定的查询字段
         if (selectColumns.length() > 0) {
+
             //@todo 待修复一个已知bug-201709262350，返回类型为 Long ，注意 count(*) 语法在 hibernate 中可用，但在 toplink 其它产品中并不可用
 
             // column = foundColumn(column, selectColumns.toString());
