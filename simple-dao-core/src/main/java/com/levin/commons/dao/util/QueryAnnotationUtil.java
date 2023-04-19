@@ -775,6 +775,18 @@ public abstract class QueryAnnotationUtil {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static boolean hasSelectAnnotation(Annotation... annotations) {
+
+        for (Annotation annotation : annotations) {
+            if (isSamePackage(annotation, Select.class)
+                    || isSamePackage(annotation, GroupBy.class)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean hasSelectStatementField(Class type) {
         return hasSelectStatementField(type, null);
     }
@@ -787,7 +799,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean hasSelectStatementField(Class type, ResolvableType resolvableType) {
+    public static boolean hasSelectStatementField(Class<?> type, ResolvableType resolvableType) {
 
         if (type == null) {
             return false;
@@ -797,7 +809,12 @@ public abstract class QueryAnnotationUtil {
 
         if (hasAnno == null) {
 
-            hasAnno = false;
+            hasAnno = hasSelectAnnotation(type.getAnnotations());
+
+            if (hasAnno) {
+                hasSelectAnnotationCache.put(type.getName(), hasAnno);
+                return hasAnno;
+            }
 
             if (resolvableType == null) {
                 resolvableType = ResolvableType.forClass(type);
@@ -807,19 +824,10 @@ public abstract class QueryAnnotationUtil {
 
             for (Field field : cacheFields) {
                 //如果是统计或是选择注解
-                if (
-                        field.isAnnotationPresent(Select.class)
-                                || field.isAnnotationPresent(Avg.class)
-                                || field.isAnnotationPresent(Count.class)
-                                || field.isAnnotationPresent(GroupBy.class)
-                                || field.isAnnotationPresent(Max.class)
-                                || field.isAnnotationPresent(Min.class)
-                                || field.isAnnotationPresent(Sum.class)
-                ) {
+                if (hasSelectAnnotation(field.getAnnotations())) {
                     hasAnno = true;
                     break;
                 }
-
                 //如果示复杂对象
                 ResolvableType forField = ResolvableType.forField(field, resolvableType);
 
@@ -837,7 +845,6 @@ public abstract class QueryAnnotationUtil {
             }
 
             hasSelectAnnotationCache.put(type.getName(), hasAnno);
-
         }
 
         return hasAnno;

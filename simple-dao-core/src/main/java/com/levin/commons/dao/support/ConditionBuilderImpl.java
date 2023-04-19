@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -31,10 +30,7 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
+import javax.persistence.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -1329,7 +1325,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             //如果是类，则实例化
             if (queryObj instanceof Class) {
-                queryObj = BeanUtils.instantiateClass((Class<? extends Object>) queryObj);
+//                不实例化
+                // queryObj = BeanUtils.instantiateClass((Class<? extends Object>) queryObj);
             }
 
             if (queryObj.getClass().isArray()) {
@@ -1359,6 +1356,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return;
         }
 
+        //如果主体类还没有定义，则尝试设置实体类，优先级低于 @TargetOption，会被覆盖
+        if (this.entityClass == null) {
+            for (Object queryObj : queryObjs) {
+                if (queryObj instanceof Class && ((Class<?>) queryObj).isAnnotationPresent(Entity.class)) {
+                    this.entityClass = (Class<T>) queryObj;
+                    break;
+                }
+            }
+        }
+
+        //
         List<Object> expand = expand(new ArrayList(queryObjs.length), queryObjs);
 
         queryObjs = expand.toArray();
@@ -1371,7 +1379,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            Class<?> typeClass = queryValueObj.getClass();
+            //如果是增强器，则执行增强功能
+            if (queryValueObj instanceof Consumer) {
+                ((Consumer) queryValueObj).accept(this);
+                continue;
+            }
+
+            //如果是类
+            final boolean isClass = queryValueObj instanceof Class;
+
+            Class<?> typeClass = isClass ? (Class<?>) queryValueObj : queryValueObj.getClass();
 
             if (typeClass.isPrimitive()
                     || QueryAnnotationUtil.isRootObjectType(typeClass)
@@ -1381,33 +1398,30 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 continue;
             }
 
-            //如果是增强器，则执行增强功能
-            if (queryValueObj instanceof Consumer) {
-                ((Consumer) queryValueObj).accept(this);
-                continue;
-            }
+            if (!isClass) {
 
-            //对注解的支持 PostConstruct
-            ClassUtils.invokePostConstructMethod(queryValueObj);
+                //对注解的支持 PostConstruct
+                ClassUtils.invokePostConstructMethod(queryValueObj);
 
-            if (this instanceof UpdateDao) {
-                ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreUpdate.class);
-            } else if (this instanceof DeleteDao) {
-                ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreRemove.class);
-            }
+                if (this instanceof UpdateDao) {
+                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreUpdate.class);
+                } else if (this instanceof DeleteDao) {
+                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreRemove.class);
+                }
 
-            //没有回调时，表示本地调用
+                //没有回调时，表示本地调用
 
-            //尝试设置分页
-            setPaging(queryValueObj);
+                //尝试设置分页
+                setPaging(queryValueObj);
 
-            //尝试设置查询目标实体
-            setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
+                //尝试设置查询目标实体
+                setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
 
-            //特别处理
-            if (queryValueObj instanceof Map) {
-                walkMap("", (Map) queryValueObj);
-                continue;
+                //特别处理
+                if (queryValueObj instanceof Map) {
+                    walkMap("", (Map) queryValueObj);
+                    continue;
+                }
             }
 
             //关键方法，必须保证返回的顺序是，父类字段优先出现，然后才是子类的字段
@@ -1415,9 +1429,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             ResolvableType rootType = ResolvableType.forType(typeClass);
 
-            processCtxVar(queryValueObj, fields);
+            if (!isClass) {
+                processCtxVar(queryValueObj, fields);
+            }
 
-            List<?> contexts = DaoContext.getContexts(queryValueObj);
+            List<?> contexts = isClass ? null : DaoContext.getContexts(queryValueObj);
 
             //开始处理字段
             for (Field field : fields) {
@@ -1431,50 +1447,56 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                 Class<?> targetType = fieldRT.resolve(field.getType());
 
-                field.setAccessible(true);
-
                 String name = field.getName();
 
                 try {
 
-                    //处理注入值
-                    com.levin.commons.service.support.ValueHolder<Object> valueHolder =
-                            field.isAnnotationPresent(InjectVar.class) ? dao.getInjectValue(queryValueObj, field, contexts) : null;
-
                     Object value = null;
 
-                    if (valueHolder != null) {
+                    if (!isClass) {
 
-                        if (StringUtils.hasText(valueHolder.getName())) {
-                            name = valueHolder.getName();
+                        field.setAccessible(true);
+
+                        //处理注入值
+                        com.levin.commons.service.support.ValueHolder<Object> valueHolder =
+                                field.isAnnotationPresent(InjectVar.class) ? dao.getInjectValue(queryValueObj, field, contexts) : null;
+
+
+                        if (valueHolder != null) {
+
+                            if (StringUtils.hasText(valueHolder.getName())) {
+                                name = valueHolder.getName();
+                            }
+
+                            if (valueHolder.hasValue()) {
+                                value = valueHolder.getValue();
+                            }
+
+                            if ((valueHolder.getType() instanceof Class)) {
+                                targetType = (Class<?>) valueHolder.getType();
+                            } else if (value != null) {
+                                targetType = value.getClass();
+                            }
+
+                        } else {
+                            value = field.get(queryValueObj);
                         }
-
-                        if (valueHolder.hasValue()) {
-                            value = valueHolder.getValue();
-                        }
-
-                        if ((valueHolder.getType() instanceof Class)) {
-                            targetType = (Class<?>) valueHolder.getType();
-                        } else if (value != null) {
-                            targetType = value.getClass();
-                        }
-
-                    } else {
-                        value = field.get(queryValueObj);
                     }
 
-                    processAttr(queryValueObj
+                    processAttr(isClass ? null : queryValueObj
                             , field, name, field.getAnnotations()
                             , targetType, value);
 
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);
                 }
+
             }
 
-            //拷贝对象的字段，可能会被作为命名的查询参数
-
-            whereParamValues.add(QueryAnnotationUtil.copyMap(true, null, ObjectUtil.copyField2Map(queryValueObj, null)));
+            if (!isClass) {
+                //拷贝对象的字段，可能会被作为命名的查询参数
+                whereParamValues.add(QueryAnnotationUtil.copyMap(true, null, ObjectUtil.copyField2Map(queryValueObj, null)));
+            }
 
         }
     }

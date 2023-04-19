@@ -1174,11 +1174,8 @@ public class DaoExamplesTest {
 
         context.put("env.jpaDao.P1", "Dao参数1");
 
-        selectDao
-                .limit(1, 10)
-                .setContext(context)
-                .appendByQueryObj(new UserDTO2())
-                .find();
+
+        PagingData<Object> pagingData = dao.findPagingDataByQueryObj(new UserDTO2());
 
         System.out.println("ok");
 
