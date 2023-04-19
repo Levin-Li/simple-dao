@@ -485,15 +485,17 @@ public abstract class QueryAnnotationUtil {
 
     /**
      * 过滤出指定包的注解
+     * <p>
      *
-     * @param packageName
+     *
+     * @param packageName  精确相等的包名，不包含子包
      * @param annotations
      * @param excludeTypes
      * @return
      */
     public static List<Annotation> getAnnotationsByPackage(String packageName, Annotation[] annotations, Class<? extends Annotation>... excludeTypes) {
 
-        List<Annotation> result = new ArrayList<>(2);
+        List<Annotation> result = new ArrayList<>(3);
 
         if (annotations == null) {
             return result;
@@ -775,6 +777,18 @@ public abstract class QueryAnnotationUtil {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static boolean hasSelectAnnotation(Annotation... annotations) {
+
+        for (Annotation annotation : annotations) {
+            if (isSamePackage(annotation, Select.class)
+                    || isSamePackage(annotation, GroupBy.class)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean hasSelectStatementField(Class type) {
         return hasSelectStatementField(type, null);
     }
@@ -787,7 +801,7 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    public static boolean hasSelectStatementField(Class type, ResolvableType resolvableType) {
+    public static boolean hasSelectStatementField(Class<?> type, ResolvableType resolvableType) {
 
         if (type == null) {
             return false;
@@ -797,7 +811,12 @@ public abstract class QueryAnnotationUtil {
 
         if (hasAnno == null) {
 
-            hasAnno = false;
+            hasAnno = hasSelectAnnotation(type.getAnnotations());
+
+            if (hasAnno) {
+                hasSelectAnnotationCache.put(type.getName(), hasAnno);
+                return hasAnno;
+            }
 
             if (resolvableType == null) {
                 resolvableType = ResolvableType.forClass(type);
@@ -807,19 +826,10 @@ public abstract class QueryAnnotationUtil {
 
             for (Field field : cacheFields) {
                 //如果是统计或是选择注解
-                if (
-                        field.isAnnotationPresent(Select.class)
-                                || field.isAnnotationPresent(Avg.class)
-                                || field.isAnnotationPresent(Count.class)
-                                || field.isAnnotationPresent(GroupBy.class)
-                                || field.isAnnotationPresent(Max.class)
-                                || field.isAnnotationPresent(Min.class)
-                                || field.isAnnotationPresent(Sum.class)
-                ) {
+                if (hasSelectAnnotation(field.getAnnotations())) {
                     hasAnno = true;
                     break;
                 }
-
                 //如果示复杂对象
                 ResolvableType forField = ResolvableType.forField(field, resolvableType);
 
@@ -837,7 +847,6 @@ public abstract class QueryAnnotationUtil {
             }
 
             hasSelectAnnotationCache.put(type.getName(), hasAnno);
-
         }
 
         return hasAnno;
@@ -969,11 +978,22 @@ public abstract class QueryAnnotationUtil {
         }
 
         return varType != null
-                && !QueryAnnotationUtil.isPrimitive(varType)
+
+                //不是数组
                 && !varType.isArray()
+
+                && !QueryAnnotationUtil.isPrimitive(varType)
+
+                //不是 Object.class
+                && !varType.getName().equals(Object.class.getName())
+
 //                && !Object[].class.isAssignableFrom(varType)
                 && !Map.class.isAssignableFrom(varType) //并且不是 Map
+
+                //不是可迭代
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
+
+                //不是特殊标记的
                 && !varType.isAnnotationPresent(PrimitiveValue.class);
     }
 

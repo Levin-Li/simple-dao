@@ -8,16 +8,36 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
-//import com.levin.commons.dao.annotation.update.UpdateColumn;
+import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 
-@TargetOption(entityClass = User.class, alias = "u", maxResults = 100)
+@TargetOption(entityClass = User.class, alias = "u", resultClass = UserDTO2.UserInfo.class)
 public class UserDTO2 {
+
+    @Data
+    @Select
+    public static class UserInfo {
+
+//        @Desc("分数")
+//        Integer score;
+
+        String description;
+
+        @Schema(description = "归属的虚拟组织")
+        @InjectVar(converter = PrimitiveArrayJsonConverter.class)
+        List<String> belongOrgList;
+
+    }
 
     Paging paging = new PagingQueryReq(1, 20);
 

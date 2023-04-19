@@ -410,7 +410,7 @@ public class DaoExamplesTest {
 
         Object byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
 
-        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
+        byQueryObj = dao.findByQueryObj(new SimpleUserQO().setQueryStatus(true), SimpleUserQO.QResult.class);
 
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(false));
@@ -1174,11 +1174,8 @@ public class DaoExamplesTest {
 
         context.put("env.jpaDao.P1", "Dao参数1");
 
-        selectDao
-                .limit(1, 10)
-                .setContext(context)
-                .appendByQueryObj(new UserDTO2())
-                .find();
+
+        PagingData<Object> pagingData = dao.findPagingDataByQueryObj(new UserDTO2());
 
         System.out.println("ok");
 

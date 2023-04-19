@@ -19,7 +19,6 @@ import java.util.List;
  */
 public class QLUtils {
 
-
     private static final ConcurrentReferenceHashMap<String, List<String[]>> softRefCache = new ConcurrentReferenceHashMap();
 
     /**
@@ -140,7 +139,6 @@ public class QLUtils {
     }
 
     public static void main(String[] args) {
-
 
         parseSelectColumns(null, "avg( t.aa +${:a} ) as ts");
         parseSelectColumns(null, "avg( t.aa +${a} ) as ts");
