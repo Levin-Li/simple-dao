@@ -410,7 +410,7 @@ public class DaoExamplesTest {
 
         Object byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult2.class, new SimpleUserQO());
 
-        byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(true), new SimpleUserQO.QResult());
+        byQueryObj = dao.findByQueryObj(new SimpleUserQO().setQueryStatus(true), SimpleUserQO.QResult.class);
 
 
         byQueryObj = dao.findByQueryObj(SimpleUserQO.QResult.class, new SimpleUserQO().setQueryStatus(false));
