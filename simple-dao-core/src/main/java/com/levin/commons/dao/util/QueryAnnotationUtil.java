@@ -971,9 +971,15 @@ public abstract class QueryAnnotationUtil {
         return varType != null
                 && !QueryAnnotationUtil.isPrimitive(varType)
                 && !varType.isArray()
+
+                //不是 Object.class
+                && !varType.getName().equals(Object.class.getName())
+
 //                && !Object[].class.isAssignableFrom(varType)
                 && !Map.class.isAssignableFrom(varType) //并且不是 Map
+
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
+
                 && !varType.isAnnotationPresent(PrimitiveValue.class);
     }
 

@@ -591,7 +591,6 @@ public class SelectDaoImpl<T>
 
     }
 
-
     /**
      * @param bean
      * @param fieldOrMethod
