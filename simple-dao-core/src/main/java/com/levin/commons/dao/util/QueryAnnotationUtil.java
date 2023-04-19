@@ -969,8 +969,11 @@ public abstract class QueryAnnotationUtil {
         }
 
         return varType != null
-                && !QueryAnnotationUtil.isPrimitive(varType)
+
+                //不是数组
                 && !varType.isArray()
+
+                && !QueryAnnotationUtil.isPrimitive(varType)
 
                 //不是 Object.class
                 && !varType.getName().equals(Object.class.getName())
@@ -978,8 +981,10 @@ public abstract class QueryAnnotationUtil {
 //                && !Object[].class.isAssignableFrom(varType)
                 && !Map.class.isAssignableFrom(varType) //并且不是 Map
 
+                //不是可迭代
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
 
+                //不是特殊标记的
                 && !varType.isAnnotationPresent(PrimitiveValue.class);
     }
 
