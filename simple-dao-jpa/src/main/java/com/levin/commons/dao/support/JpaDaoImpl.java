@@ -6,7 +6,6 @@ import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +13,6 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.id.IdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -32,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.persistence.*;
 import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
@@ -554,43 +551,54 @@ public class JpaDaoImpl
         //如果不是实体类
         Class<?> entityOrDtoClass = entityOrDto.getClass();
 
-        if (!entityOrDtoClass.isAnnotationPresent(Entity.class)) {
-
-            TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
-
-            if (targetOption != null && isValidClass(targetOption.entityClass())) {
-
-                //执行初始化方法
-                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
-
-                if (isInitPrePersistMethod) {
-                    //执行初始化方法
-                    com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
-                }
-
-//                if (countByQueryObj(entityOrDto) > 0) {
-//                    throw new org.springframework.dao.DataIntegrityViolationException("数据已经存在");
-//                }
-
-                Object old = entityOrDto;
-
-                // 1、先拷贝对象，忽略注入的属性
-                String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(entityOrDto.getClass());
-
-                entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(targetOption.entityClass()), 1, daoInjectAttrs);
-
-                if (daoInjectAttrs != null
-                        && daoInjectAttrs.length > 0) {
-                    //2、注入变量,需要注入的变量
-                    injectVars(entityOrDto, old);
-                    // getDao().injectVars(entityOrDto, old, getContext());
-                }
-
-                //新对象初始化参数
-                com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
-
-            }
+        //如果是实体类，不做处理
+        if (entityOrDtoClass.isAnnotationPresent(Entity.class)) {
+            return (E) entityOrDto;
         }
+
+        TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
+
+        //如果没有指定实体类，不做处理
+        if (targetOption == null) {
+            return (E) entityOrDto;
+        }
+
+        Class<?> entityClass = targetOption.entityClass();
+
+        //如果不是有效的实体类，不做处理
+        if (!isValidClass(entityClass)) {
+            return (E) entityOrDto;
+        }
+
+        //执行初始化方法
+        com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
+
+        if (isInitPrePersistMethod) {
+            //执行初始化方法
+            com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(entityOrDto, false, PrePersist.class);
+        }
+
+        //                if (countByQueryObj(entityOrDto) > 0) {
+        //                    throw new org.springframework.dao.DataIntegrityViolationException("数据已经存在");
+        //                }
+
+        Object old = entityOrDto;
+
+        // 1、获取实体对象，需要注入的属性
+        String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(entityClass);
+
+        //2、不拷贝注入属性
+        entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(entityClass), 1, daoInjectAttrs);
+
+        if (daoInjectAttrs != null
+                && daoInjectAttrs.length > 0) {
+            //3、注入变量,需要注入的变量
+            injectVars(entityOrDto, old);
+            // getDao().injectVars(entityOrDto, old, getContext());
+        }
+
+        //新对象初始化参数
+        com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
 
         return (E) entityOrDto;
     }
