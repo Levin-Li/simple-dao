@@ -223,8 +223,15 @@ public abstract class ExprUtils {
         } else if (isFieldExpand) {
 
             if (complexType) {
-                fieldExpr = subQueryBuilder.apply(holder);
-                hasDynamicExpr = true;
+
+                //如果查询对象为 null
+
+                hasDynamicExpr = holder.value != null;
+
+                if (hasDynamicExpr) {
+                    fieldExpr = subQueryBuilder.apply(holder);
+                }
+
             }
 
         }
@@ -487,6 +494,11 @@ public abstract class ExprUtils {
      * @return
      */
     public static String buildSubQuery(ValueHolder holder, MiniDao dao, final boolean isNative, Map<String, Object> context) {
+
+        //如果查询对象为空，则直接返回表达式
+        if (holder.value == null) {
+            return holder.name;
+        }
 
         SelectDaoImpl selectDao = new SelectDaoImpl(dao, isNative);
 
@@ -957,13 +969,13 @@ public abstract class ExprUtils {
      * 自动生成连接语句
      *
      * @param miniDao
-     * @param isNative                  是否是原生查询
-//     * @param nativeTableNameConverter  表名转化器
-//     * @param nativeColumnNameConverter 列名转化器
-     * @param entityClass               主表
-     * @param tableOrStatement          主表
-     * @param alias                     主表别名
-     * @param joinOptions               连接选项
+     * @param isNative         是否是原生查询
+     *                         //     * @param nativeTableNameConverter  表名转化器
+     *                         //     * @param nativeColumnNameConverter 列名转化器
+     * @param entityClass      主表
+     * @param tableOrStatement 主表
+     * @param alias            主表别名
+     * @param joinOptions      连接选项
      * @return
      */
     public static String genJoinStatement(MiniDao miniDao, boolean isNative,
