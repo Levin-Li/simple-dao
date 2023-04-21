@@ -159,9 +159,11 @@ public abstract class ExprUtils {
 
             } else if (complexType) {
 
-                paramExpr = subQueryBuilder.apply(holder);
+                hasDynamicExpr = holder.value != null;
 
-                hasDynamicExpr = true;
+                if (hasDynamicExpr) {
+                    paramExpr = subQueryBuilder.apply(holder);
+                }
 
             } else if (isExistsOp
                     && !isNotEmptyAnnotation(domain, aroundColumnPrefixFunc, ctxEvalFunc, c, op)
