@@ -3,15 +3,19 @@ package ${modulePackageName}.config;
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
+import cn.hutool.core.exceptions.ExceptionUtil;
 import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.ServiceResp;
 import com.levin.commons.service.exception.AccessDeniedException;
+import com.levin.commons.service.exception.BizException;
 import com.levin.commons.service.exception.ServiceException;
 import com.levin.commons.service.exception.UnauthorizedException;
 import com.levin.commons.utils.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -128,7 +132,16 @@ public class ModuleWebControllerAdvice {
 //                , "认证异常：" + e.getMessage());
 //    }
 
-    @ExceptionHandler({UnauthorizedException.class})
+    @ExceptionHandler({NotLoginException.class,})
+    public ApiResp onNotLoginException(Exception e) {
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+                , "未登录：" + e.getMessage());
+    }
+
+    @ExceptionHandler({SaTokenException.class, UnauthorizedException.class})
     public ApiResp onAuthorizedException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -146,6 +159,16 @@ public class ModuleWebControllerAdvice {
                 , e.getMessage());
     }
 
+    @ExceptionHandler({BizException.class})
+    public ApiResp onBizException(Exception e) {
+
+        log.error("业务参数异常," + request.getRequestURL(), e);
+
+        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
+                        , e.getMessage())
+                .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
+    }
+
     @ExceptionHandler({IllegalArgumentException.class,
             IllegalStateException.class,
             MethodArgumentNotValidException.class,
@@ -155,21 +178,8 @@ public class ModuleWebControllerAdvice {
         log.error("请求参数异常," + request.getRequestURL(), e);
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                , e.getMessage())
+                        , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
-    }
-
-    @ExceptionHandler({ConstraintViolationException.class, SQLIntegrityConstraintViolationException.class})
-    public ApiResp onConstraintViolationException(Exception e) {
-
-        log.error("发生数据约束异常," + request.getRequestURL(), e);
-
-        boolean used = e.getMessage().contains(" delete ")
-                || e.getMessage().contains(" update ");
-
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                , used ? "操作失败，数据已经被使用" : "名称、编码或其它唯一值已经存在")
-                .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
     }
 
     @ExceptionHandler(ServiceException.class)
@@ -178,15 +188,31 @@ public class ModuleWebControllerAdvice {
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
-                , e.getMessage())
+                        , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
     }
 
-    @ExceptionHandler({PersistenceException.class, SQLException.class})
+    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
+    public ApiResp onConstraintViolationException(Exception e) {
+
+        log.error("发生数据约束异常," + request.getRequestURL(), e);
+
+        boolean used = e.getMessage().contains(" delete ")
+                || e.getMessage().contains(" update ");
+
+        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
+                        , used ? "操作失败，数据已经被使用" : "名称、编码或其它唯一值已经存在")
+                .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
+    }
+
+
+    @ExceptionHandler({PersistenceException.class, SQLException.class, DataAccessException.class})
     public ApiResp onPersistenceException(Exception e) {
 
-        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        Throwable rootCause = ExceptionUtil.getRootCause(e);
+
         if (rootCause instanceof ConstraintViolationException
+                || rootCause instanceof DataIntegrityViolationException
                 || rootCause instanceof SQLIntegrityConstraintViolationException) {
             return onConstraintViolationException((Exception) rootCause);
         }
@@ -194,7 +220,7 @@ public class ModuleWebControllerAdvice {
         log.error("发生数据库操作异常," + request.getRequestURL(), e);
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode(),
-                "数据异常，请稍后重试")
+                        "数据异常，请稍后重试")
                 .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
     }
 
@@ -207,7 +233,7 @@ public class ModuleWebControllerAdvice {
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
-                , e.getMessage())
+                        , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getPrintInfo(e));
     }
 
@@ -223,14 +249,14 @@ public class ModuleWebControllerAdvice {
             response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
             return (ApiResp) ApiResp.error(ServiceResp.ErrorType.ResourceError.getBaseErrorCode()
-                    , e.getMessage())
+                            , e.getMessage())
                     .setDetailMsg(ExceptionUtils.getPrintInfo(e));
         }
 
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
 
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.UnknownError.getBaseErrorCode()
-                , e.getMessage())
+                        , e.getMessage())
                 .setDetailMsg(ExceptionUtils.getPrintInfo(e));
     }
 }
