@@ -2,6 +2,8 @@ package com.levin.commons.dao.support;
 
 
 import com.levin.commons.dao.*;
+import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
@@ -173,6 +175,7 @@ public class JpaDaoImpl
     private HibernateProperties hibernateProperties;
 
     private static final Locker uniqueFieldMapLocker = Locker.build();
+
     private static final Map<String, List<UniqueField>> uniqueFieldMap = new HashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
@@ -207,8 +210,9 @@ public class JpaDaoImpl
 
             fieldList.forEach(field -> field.setAccessible(true));
 
-            key = fieldList.stream().map(Field::getName).collect(Collectors.joining(","));
-            title = fieldList.stream().map(JpaDaoImpl::getDesc).collect(Collectors.joining("+"));
+            key = fieldList.stream().map(Field::getName).filter(Objects::nonNull).collect(Collectors.joining(","));
+
+            title = fieldList.stream().map(JpaDaoImpl::getDesc).filter(Objects::nonNull).collect(Collectors.joining("+"));
 
             return this;
         }
@@ -611,7 +615,7 @@ public class JpaDaoImpl
 
         //查询重复
         findUniqueEntityId(entityOrDto, null, (id, info) -> {
-            throw new NonUniqueResultException("[" + info + "]必须唯一");
+            throw new NonUniqueResultException("[" + info + "]已经存在");
         });
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
@@ -654,7 +658,7 @@ public class JpaDaoImpl
 
                 findUniqueEntityId(entityOrDto, null, (id, info) -> {
                     if (!entityId.equals(id)) {
-                        throw new NonUniqueResultException("[" + info + "]必须唯一");
+                        throw new NonUniqueResultException("[" + info + "]已经存在");
                     }
                 });
 
@@ -674,7 +678,7 @@ public class JpaDaoImpl
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
             findUniqueEntityId(entityOrDto, null, (id, info) -> {
-                throw new NonUniqueResultException("[" + info + "]必须唯一");
+                throw new NonUniqueResultException("[" + info + "]已经存在");
             });
             em.persist(entity);
         }
@@ -897,9 +901,18 @@ public class JpaDaoImpl
     }
 
     static String getDesc(Field field) {
+
+        Class<?> fieldClass = field.getClass();
+
+        //特别处理，如何过多租户 或是 跨部门对象
+        if (MultiTenantObject.class.isAssignableFrom(fieldClass) || OrganizedObject.class.isAssignableFrom(fieldClass)) {
+            return null;
+        }
+
         return Optional.ofNullable(field.getAnnotation(Schema.class))
                 .map(schema -> findFirst(schema.title(), schema.description()).orElse(field.getName()))
                 .orElse(field.getName());
+
     }
 
 
