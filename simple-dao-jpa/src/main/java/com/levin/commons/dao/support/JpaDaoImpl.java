@@ -689,11 +689,13 @@ public class JpaDaoImpl
      */
     protected void checkUniqueEntity(Object entityOrDto) {
 
-        if (Boolean.TRUE.equals(DaoContext.getValue(DaoContext.enableUniqueCheckWhenEntitySave, false))) {
+        if (Boolean.TRUE.equals(DaoContext.getAndRemoveValue(DaoContext.enableUniqueCheckWhenEntitySave, false))) {
+
             //默认不检查，否则耗费性能
             findUniqueEntityId(entityOrDto, null, (id, info) -> {
                 throw new NonUniqueResultException("[" + info + "]已经存在");
             });
+
         }
 
     }

@@ -142,6 +142,24 @@ public abstract class DaoContext {
         return value != null ? value : globalContext.getOrDefault(key, defaultValue);
     }
 
+    /**
+     * @param key
+     * @param defaultValue
+     * @param <T>
+     * @return
+     */
+    public static <T> T getAndRemoveValue(String key, T defaultValue) {
+
+        T value = threadContext.remove(key);
+
+        T remove = globalContext.remove(key);
+
+        if (value == null) {
+            value = remove;
+        }
+
+        return value != null ? value : defaultValue;
+    }
 
     /**
      * 设置全局默认值
