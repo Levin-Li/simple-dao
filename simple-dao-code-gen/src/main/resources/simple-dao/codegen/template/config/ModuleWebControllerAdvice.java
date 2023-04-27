@@ -34,6 +34,7 @@ import javax.servlet.http.*;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.sql.SQLException;
+import javax.validation.ValidationException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 import org.springframework.web.servlet.config.annotation.*;
@@ -172,6 +173,7 @@ public class ModuleWebControllerAdvice {
     @ExceptionHandler({IllegalArgumentException.class,
             IllegalStateException.class,
             MethodArgumentNotValidException.class,
+            ValidationException.class,
             MissingServletRequestParameterException.class})
     public ApiResp onParameterException(Exception e) {
 
@@ -205,7 +207,6 @@ public class ModuleWebControllerAdvice {
                 .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
     }
 
-
     @ExceptionHandler({PersistenceException.class, SQLException.class, DataAccessException.class})
     public ApiResp onPersistenceException(Exception e) {
 
@@ -222,6 +223,7 @@ public class ModuleWebControllerAdvice {
         return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode(),
                         "数据异常，请稍后重试")
                 .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
+
     }
 
     //    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理

@@ -77,13 +77,11 @@ public class SelectDaoImpl<T>
 
     boolean hasStatColumns = false;
 
-    private boolean useStatAliasForHavingGroupByOrderBy = DaoContext.getValue("useStatAliasForHavingGroupByOrderBy", false);
+    private boolean useStatAliasForHavingGroupByOrderBy = DaoContext.getValue(DaoContext.useStatAliasForHavingGroupByOrderBy, false);
 
     Class resultType;
 
-
     final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildThreadContext(true);
-
 
     {
         disableSafeMode();
