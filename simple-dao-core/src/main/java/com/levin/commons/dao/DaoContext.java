@@ -1,13 +1,10 @@
 package com.levin.commons.dao;
 
 
-import com.levin.commons.dao.util.ObjectUtil;
-import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
-import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
@@ -22,6 +19,10 @@ import java.util.*;
  */
 
 public abstract class DaoContext {
+
+    public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
+
+    public static final String enableUniqueCheckWhenEntitySave = "enableEntityUniqueCheckWhenCreateAndUpdate";
 
     private static final VariableInjector defaultVariableInjector = new SimpleVariableInjector() {
         @Override
@@ -140,6 +141,7 @@ public abstract class DaoContext {
         T value = threadContext.get(key);
         return value != null ? value : globalContext.getOrDefault(key, defaultValue);
     }
+
 
     /**
      * 设置全局默认值

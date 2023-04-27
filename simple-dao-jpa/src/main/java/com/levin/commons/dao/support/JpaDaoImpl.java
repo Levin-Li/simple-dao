@@ -190,6 +190,8 @@ public class JpaDaoImpl
 
     private final String AUTO_CLEAR = getClass().getName() + ".session.clear_" + hashCode();
 
+    private boolean disableUniqueEntityCheck = false;
+
     @Data
     @Accessors(chain = true)
     static class UniqueField {
@@ -614,9 +616,7 @@ public class JpaDaoImpl
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
         //查询重复
-        findUniqueEntityId(entityOrDto, null, (id, info) -> {
-            throw new NonUniqueResultException("[" + info + "]已经存在");
-        });
+        checkUniqueEntity(entityOrDto);
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
@@ -656,11 +656,7 @@ public class JpaDaoImpl
             if (entityId != null) {
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
 
-                findUniqueEntityId(entityOrDto, null, (id, info) -> {
-                    if (!entityId.equals(id)) {
-                        throw new NonUniqueResultException("[" + info + "]已经存在");
-                    }
-                });
+                checkUniqueEntity(entityOrDto);
 
                 entity = em.merge(entity);
 
@@ -675,16 +671,33 @@ public class JpaDaoImpl
         }
 
         if (!mergeOk) {
+
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
-            findUniqueEntityId(entityOrDto, null, (id, info) -> {
-                throw new NonUniqueResultException("[" + info + "]已经存在");
-            });
+            checkUniqueEntity(entityOrDto);
+
             em.persist(entity);
         }
 
         return entity;
     }
+
+    /**
+     * 唯一约束检查
+     *
+     * @param entityOrDto
+     */
+    protected void checkUniqueEntity(Object entityOrDto) {
+
+        if (Boolean.TRUE.equals(DaoContext.getValue(DaoContext.enableUniqueCheckWhenEntitySave, false))) {
+            //默认不检查，否则耗费性能
+            findUniqueEntityId(entityOrDto, null, (id, info) -> {
+                throw new NonUniqueResultException("[" + info + "]已经存在");
+            });
+        }
+
+    }
+
 
     @Override
     @Transactional(rollbackFor = PersistenceException.class)
