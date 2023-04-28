@@ -224,7 +224,7 @@ public class ${className} extends BaseController{
 
     /**
      * 检查结果
-     * @param n
+     * @param ok
      * @param action
      * @return
      */
