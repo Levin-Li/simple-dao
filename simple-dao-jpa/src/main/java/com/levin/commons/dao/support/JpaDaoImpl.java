@@ -609,12 +609,14 @@ public class JpaDaoImpl
 
     @Override
     @Transactional
-    public <E> E create(Object entityOrDto) {
+    public <E> E create(Object entityOrDto, boolean isCheckUnionValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
-        //查询重复
-        checkUniqueEntity(entityOrDto);
+        if (isCheckUnionValue) {
+            //查询重复
+            checkUniqueEntity(entityOrDto);
+        }
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
@@ -638,7 +640,7 @@ public class JpaDaoImpl
 
     @Override
     @Transactional(rollbackFor = {PersistenceException.class})
-    public <E> E save(Object entityOrDto) {
+    public <E> E save(Object entityOrDto, boolean isCheckUnionValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
@@ -654,7 +656,9 @@ public class JpaDaoImpl
             if (entityId != null) {
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
 
-                checkUniqueEntity(entityOrDto);
+                if (isCheckUnionValue) {
+                    checkUniqueEntity(entityOrDto);
+                }
 
                 entity = em.merge(entity);
 
@@ -672,7 +676,9 @@ public class JpaDaoImpl
 
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
-            checkUniqueEntity(entityOrDto);
+            if (isCheckUnionValue) {
+                checkUniqueEntity(entityOrDto);
+            }
 
             em.persist(entity);
         }
@@ -687,14 +693,10 @@ public class JpaDaoImpl
      */
     protected void checkUniqueEntity(Object entityOrDto) {
 
-        if (Boolean.TRUE.equals(DaoContext.getAndRemoveValue(DaoContext.enableUniqueCheckWhenEntitySave, false))) {
-
-            //默认不检查，否则耗费性能
-            findUniqueEntityId(entityOrDto, null, (id, info) -> {
-                throw new NonUniqueResultException("[" + info + "]已经存在");
-            });
-
-        }
+        //默认不检查，否则耗费性能
+        findUniqueEntityId(entityOrDto, null, (id, info) -> {
+            throw new NonUniqueResultException("[" + info + "]已经存在");
+        });
 
     }
 

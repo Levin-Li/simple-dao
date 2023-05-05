@@ -97,7 +97,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
         </#if>
     </#list>
-        ${entityName} entity = simpleDao.create(req);
+        ${entityName} entity = simpleDao.create(req, true);
 <#if pkField?exists>
         return entity.get${pkField.name?cap_first}();
 <#else>

@@ -13,13 +13,25 @@ import java.util.function.BiConsumer;
 public interface SimpleDao extends MiniDao, DaoFactory {
 
     /**
-     * 更新或是删除
+     * 更新或是创建
      *
      * @param entity
      * @return
      */
     @Transactional
-    <E> E save(Object entity);
+    default <E> E save(Object entity) {
+        return save(entity, false);
+    }
+
+    /**
+     * 更新或是创建
+     *
+     * @param entity
+     * @param <E>
+     * @return
+     */
+    @Transactional
+    <E> E save(Object entity, boolean isCheckUnionValue);
 
     /**
      * 删除一个实体对象

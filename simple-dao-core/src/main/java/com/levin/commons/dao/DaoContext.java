@@ -22,8 +22,6 @@ public abstract class DaoContext {
 
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
 
-    public static final String enableUniqueCheckWhenEntitySave = "enableEntityUniqueCheckWhenCreateAndUpdate";
-
     private static final VariableInjector defaultVariableInjector = new SimpleVariableInjector() {
         @Override
         public String getInjectDomain() {
@@ -71,13 +69,19 @@ public abstract class DaoContext {
         return variableInjector;
     }
 
-    public static VariableInjector setCurrentThreadVariableInjector(VariableInjector variableInjector) {
+    public static VariableInjector setCurrentThreadVarInjector(VariableInjector variableInjector) {
         return threadContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
+    }
+
+    public static VariableInjector setCurrentThreadVar(String key,Object value) {
+        return threadContext.put(key, value);
     }
 
     public static VariableInjector setGlobalVariableInjector(VariableInjector variableInjector) {
         return globalContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
     }
+
+
 
     /**
      * 从变量来源注入变量到目标变量中
