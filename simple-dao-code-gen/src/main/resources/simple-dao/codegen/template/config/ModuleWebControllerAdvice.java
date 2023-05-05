@@ -28,6 +28,7 @@ import org.springframework.web.bind.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -194,7 +195,7 @@ public class ModuleWebControllerAdvice {
                 .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
     }
 
-    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
+    @ExceptionHandler({ConstraintViolationException.class, NonUniqueResultException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
     public ApiResp onConstraintViolationException(Exception e) {
 
         log.error("发生数据约束异常," + request.getRequestURL(), e);
