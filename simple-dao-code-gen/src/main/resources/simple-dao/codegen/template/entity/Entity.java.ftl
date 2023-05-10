@@ -14,7 +14,7 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 import java.util.*;
 import java.math.*;
-import org.hibernate.annotations.*;
+//import org.hibernate.annotations.*;
 
 
 @Data
@@ -68,7 +68,8 @@ public class ${entityName}
  //    extends AbstractBaseEntityObject
  //    extends AbstractMultiTenantObject
  //    extends AbstractNamedMultiTenantObject
-       implements EntityObject{
+       implements EntityObject
+{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

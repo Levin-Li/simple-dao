@@ -16,7 +16,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
@@ -109,6 +108,10 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
 
+            if (!isPomModule) {
+                logger.warn("***【表生成实体类插件】*** 请尽量在Pom模块中执行");
+            }
+
             if (this.subModuleName != null) {
                 subModuleName = subModuleName.trim();
             }
@@ -167,7 +170,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
 
-                logger.info("请在{}中配置数据库连接相关信息，目前支持mysql oracle selserver dm等数据库", dbConfigRes.getFile());
+                logger.info("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库", dbConfigRes.getFile());
 
                 return;
             }
@@ -193,7 +196,9 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             }
 
             if (!StringUtils.hasText(tablePrefix)) {
-                getLog().info("可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体的表前置");
+                getLog().warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同事会去除前缀");
+            } else {
+
             }
 
             getLog().info("开始读取数据库：" + dbConfig);
@@ -211,14 +216,17 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     continue;
                 }
 
-                if (StringUtils.hasText(tablePrefix)
-                        && !tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
-                    //如果不是指定前缀的表
-                    logger.info("非指定前缀[{}],忽略表:{}", tablePrefix, tableName);
-                    continue;
+                if (StringUtils.hasText(tablePrefix)) {
+
+                    if (!tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
+                        //如果不是指定前缀的表
+                        logger.info("非指定前缀[{}],忽略表:{}", tablePrefix, tableName);
+                        continue;
+                    }
                 }
 
-                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(tableName));
+
+                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tablePrefix) ? tableName.substring(tablePrefix.length()) : tableName));
 
 
                 File outFile = new File(entitiesDir, entityName + ".java");
