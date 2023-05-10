@@ -163,6 +163,8 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 FileUtil.writeString("spring.datasource:\n" +
                                 "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
+                                "  #需要生成实体类的表前缀\n" +
+                                "  genEntityTablePrefix: \n" +
                                 "  username: root\n" +
                                 "  password: \n",
                         dbConfigRes.getFile(),
