@@ -1103,7 +1103,8 @@ public class SelectDaoImpl<T>
     public long count() {
 
         if (isNative()) {
-            return count("Select Count(*) From (" + this.genFinalStatement() + ") AS cnt_tmp", genFinalParamList());
+            return count("Select Count(*) From (" + genQL(true) + ") AS cnt_tmp"
+                    , getDaoContextValues(), whereParamValues, havingParamValues, lastStatementParamValues);
         }
 
         //JPA 暂时不支持对统计查询进行二次统计
