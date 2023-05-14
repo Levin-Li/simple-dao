@@ -72,9 +72,6 @@ import ${imp};
 @CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
 public class ${className} extends BaseService implements ${serviceName} {
 
-    @Autowired
-    private SimpleDao simpleDao;
-
     protected ${serviceName} getSelfProxy(){
         return getSelfProxy(${serviceName}.class);
     }

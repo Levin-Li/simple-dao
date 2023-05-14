@@ -23,6 +23,9 @@ import javax.validation.constraints.*;
 import ${modulePackageName}.controller.*;
 import ${modulePackageName}.*;
 import ${entityClassPackage}.*;
+
+import ${bizServicePackageName}.*;
+
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
@@ -56,15 +59,17 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //类注解
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
-
 @Valid
 @CRUD
 public class ${className} extends BaseController{
 
-    private static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
+    protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
     @Autowired
     ${serviceName} ${serviceName?uncap_first};
+
+    @Autowired
+    Biz${serviceName} biz${serviceName};
 
     /**
      * 分页列表查找

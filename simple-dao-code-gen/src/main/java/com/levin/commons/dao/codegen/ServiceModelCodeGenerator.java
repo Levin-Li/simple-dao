@@ -61,6 +61,7 @@ public final class ServiceModelCodeGenerator {
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
+    public static final String BIZ_SERVICE_FTL = "biz/service.ftl";
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
@@ -507,6 +508,10 @@ public final class ServiceModelCodeGenerator {
         return modulePackageName() + ".services." + subPkgName();
     }
 
+    private static String bizServicePackage() {
+        return modulePackageName() + ".biz" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+    }
+
     private static String controllerPackage() {
         return modulePackageName() + ".controller" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
     }
@@ -784,7 +789,6 @@ public final class ServiceModelCodeGenerator {
 
     }
 
-
     private static void buildService(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
         final String pkgName = servicePackage();
@@ -798,7 +802,11 @@ public final class ServiceModelCodeGenerator {
             params.put("isService", true);
         };
 
+        //生成通用服务类
         genCode(entityClass, SERVICE_FTL, fields, srcDir, pkgName, serviceName, setVars);
+
+        //生成业务服务类
+        genCode(entityClass, BIZ_SERVICE_FTL, fields, srcDir, bizServicePackage(), "Biz" + serviceName, setVars);
 
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
@@ -814,6 +822,7 @@ public final class ServiceModelCodeGenerator {
 
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
             params.put("servicePackageName", servicePackage());
+            params.put("bizServicePackageName", bizServicePackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
             params.put("isController", true);
