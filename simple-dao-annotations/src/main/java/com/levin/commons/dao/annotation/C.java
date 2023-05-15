@@ -61,7 +61,7 @@ public @interface C {
     String NOT_EMPTY = "NOT_EMPTY";
 
     /**
-     * 空值
+     * 特别空值
      * 对于domain 和 alias 可强行指定空值
      */
     String BLANK_VALUE = "#BLANK";

@@ -820,6 +820,8 @@ public class SelectDaoImpl<T>
 
             String newAlias = getAlias(fieldOrMethod, opAnnotation, alias);
 
+            final boolean useNewAlias = useStatAliasForHavingGroupByOrderBy && hasText(newAlias);
+
             //expr = tryAppendAlias(expr, newAlias);
 
             expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
@@ -835,13 +837,14 @@ public class SelectDaoImpl<T>
                 //HAVING子句
                 //SELECT子句
                 //ORDER BY子句
-                groupBy(useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, holder.value);
+
+                groupBy(useNewAlias ? newAlias : oldExpr, holder.value);
             }
 
-            tryAppendHaving(bean, name, opAnnotation, useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, holder, value);
+            tryAppendHaving(bean, name, opAnnotation, useNewAlias ? newAlias : oldExpr, holder, value);
 
             // ORDER BY 也不能使用别名
-            tryAppendOrderBy(bean, name, holder.value, useStatAliasForHavingGroupByOrderBy ? newAlias : oldExpr, newAlias, opAnnotation);
+            tryAppendOrderBy(bean, name, holder.value, useNewAlias ? newAlias : oldExpr, newAlias, opAnnotation);
 
             select(expr, holder.value);
 
