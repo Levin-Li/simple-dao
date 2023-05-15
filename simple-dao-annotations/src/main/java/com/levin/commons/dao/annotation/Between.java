@@ -130,7 +130,7 @@ public @interface Between {
      *
      * @return
      */
-    String condition() default C.NOT_EMPTY;
+    String condition() default C.VALUE_NOT_EMPTY;
 
 
     /**

@@ -1007,7 +1007,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         // :?P
 
         //如果别名指定为 null，按特殊值处理
-        if (C.NULL_VALUE.equalsIgnoreCase(domain)) {
+        if (C.BLANK_VALUE.equalsIgnoreCase(domain)) {
             domain = "";
         }
 
@@ -2466,8 +2466,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         expr = expr.trim();
 
         //优化性能
-        if (C.NOT_EMPTY.equals(expr) || expr.equals("#" + C.NOT_EMPTY)) {
+        if (C.NOT_EMPTY.equals(expr) || expr.equals("#" + C.NOT_EMPTY)
+                || C.VALUE_NOT_EMPTY.equals(expr) || expr.equals("#" + C.VALUE_NOT_EMPTY)) {
             return ExprUtils.isNotEmpty(value);
+        }
+
+        if (C.VALUE_EMPTY.equals(expr) || expr.equals("#" + C.VALUE_EMPTY)) {
+            return !ExprUtils.isNotEmpty(value);
         }
 
         return evalExpr(root, value, name, expr, contexts);
@@ -2635,9 +2640,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             contextValues.add(Map.class.cast(value));
         }
 
+        final boolean notEmpty = ExprUtils.isNotEmpty(value);
+
         contextValues.add(MapUtils
                 .put("_val", value)
-                .put(C.NOT_EMPTY, ExprUtils.isNotEmpty(value))
+                .put(C.NOT_EMPTY, notEmpty)
+                .put(C.VALUE_NOT_EMPTY, notEmpty)
+                .put(C.VALUE_EMPTY, !notEmpty)
                 .put("_this", root)
                 .put("_name", fieldName)
                 .put("_isSelect", (this instanceof SelectDao))

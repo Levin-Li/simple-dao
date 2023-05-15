@@ -65,7 +65,7 @@ public @interface NotExists {
      *
      * @return
      */
-    String condition() default C.NOT_EMPTY;
+    String condition() default C.VALUE_NOT_EMPTY;
 
     /**
      * 对整个表达式的包围前缀

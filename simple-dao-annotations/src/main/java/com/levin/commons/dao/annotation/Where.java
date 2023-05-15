@@ -101,7 +101,7 @@ public @interface Where {
      *
      * @return
      */
-    String condition() default C.NOT_EMPTY;
+    String condition() default C.VALUE_NOT_EMPTY;
 
 
     /**

@@ -22,7 +22,7 @@ class ExprUtilsTest {
         Map<String, Object> caseMap = MapUtils
                 .put(E_Case.column, (Object) "column_name")
                 .put(E_Case.condition, "")
-                .put(E_Case.elseExpr, C.NULL_VALUE)
+                .put(E_Case.elseExpr, C.BLANK_VALUE)
                 .build();
 
 

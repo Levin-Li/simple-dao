@@ -867,7 +867,7 @@ public class SelectDaoImpl<T>
         }
 
         //特殊处理的别名
-        if (C.NULL_VALUE.equalsIgnoreCase(newAlias)) {
+        if (C.BLANK_VALUE.equalsIgnoreCase(newAlias)) {
             return "";
         }
 

@@ -53,16 +53,18 @@ public @interface C {
      * 首先不是 NUll 对象 ，也不是空字符串
      * 如果是数组或是集合或是 Map 也不是空
      */
-//    String NOT_NULL = "#_val != null and (!(#_val instanceof T(CharSequence)) ||  #_val.trim().length() > 0)";
-    @Deprecated
-    String NOT_NULL = "NOT_EMPTY";
+    String VALUE_EMPTY = "VALUE_EMPTY";
 
+    String VALUE_NOT_EMPTY = "VALUE_NOT_EMPTY";
+
+    @Deprecated
     String NOT_EMPTY = "NOT_EMPTY";
 
     /**
      * 空值
+     * 对于domain 和 alias 可强行指定空值
      */
-    String NULL_VALUE = "NULL";
+    String BLANK_VALUE = "#BLANK";
 
     /**
      * 原表达式

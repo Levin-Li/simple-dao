@@ -32,7 +32,7 @@ import javax.persistence.PreUpdate;
 public class TableJoin4 {
 
     @Eq
-    @Select(value = E_User.ALIAS, domain = C.NULL_VALUE, alias = C.NULL_VALUE)
+    @Select(value = E_User.ALIAS, domain = C.BLANK_VALUE, alias = C.BLANK_VALUE)
     String name;
 
     @Ignore

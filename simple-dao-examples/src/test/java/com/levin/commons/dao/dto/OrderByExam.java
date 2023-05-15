@@ -25,7 +25,7 @@ public class OrderByExam {
             {
                     @OrderBy(E_User.createTime),
                     @OrderBy(value = E_User.area, order = 5,type = OrderBy.Type.Asc),
-                    @OrderBy(condition = C.NOT_NULL)
+                    @OrderBy(condition = C.VALUE_NOT_EMPTY)
             }
     )
     String orderCode ="1111";

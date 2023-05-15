@@ -85,7 +85,7 @@ public @interface Eq {
      *
      * @return
      */
-    String condition() default C.NOT_EMPTY;
+    String condition() default C.VALUE_NOT_EMPTY;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值
