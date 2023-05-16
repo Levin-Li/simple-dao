@@ -58,7 +58,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 //@ResAuthorize(domain = ID, type = TYPE_NAME)
 
 //类注解
-@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+//@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
 public abstract class ${className} extends BaseController{

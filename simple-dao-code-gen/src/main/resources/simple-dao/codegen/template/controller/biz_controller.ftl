@@ -63,6 +63,6 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
-public class ${className} extends Biz${entityName}Controller{
+public class ${className} extends ${entityName}Controller{
 
 }
