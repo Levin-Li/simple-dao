@@ -74,9 +74,6 @@ public class ${className} extends BaseService {
     @Autowired
     ${serviceName} ${serviceName?uncap_first};
 
-    @Autowired
-    SimpleDao simpleDao;
-
     protected ${className} getSelfProxy(){
         return getSelfProxy(${className}.class);
     }

@@ -61,11 +61,13 @@ public final class ServiceModelCodeGenerator {
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
-    public static final String BIZ_SERVICE_FTL = "biz/service.ftl";
+    public static final String BIZ_SERVICE_FTL = "services/biz_service.ftl";
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
+
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
+    public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";
 
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
@@ -513,6 +515,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static String controllerPackage() {
+        return modulePackageName() + ".controller.base" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+    }
+
+    private static String bizControllerPackage() {
         return modulePackageName() + ".controller" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
     }
 
@@ -823,6 +829,7 @@ public final class ServiceModelCodeGenerator {
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
             params.put("servicePackageName", servicePackage());
             params.put("bizServicePackageName", bizServicePackage());
+            params.put("controllerPackageName", controllerPackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
             params.put("isController", true);
@@ -832,6 +839,8 @@ public final class ServiceModelCodeGenerator {
         controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
+
+        genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), "Biz" + entityClass.getSimpleName() + "Controller", mapConsumer);
 
     }
 

@@ -49,10 +49,10 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //生成的控制器默认不开启，请手动取消注释
 //@RestController(PLUGIN_PREFIX + "${className}")
-@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
+//@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+//@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 //默认需要权限访问
 //@ResAuthorize(domain = ID, type = TYPE_NAME)
@@ -61,7 +61,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
-public class ${className} extends BaseController{
+public abstract class ${className} extends BaseController{
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
@@ -225,7 +225,6 @@ public class ${className} extends BaseController{
         Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
         return n;
     }
-
 
     /**
      * 检查结果
