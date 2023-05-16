@@ -260,7 +260,7 @@ public final class ServiceModelCodeGenerator {
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
-        genFileByTemplate("bootstrap/TestCase.java", params, prefix + "TestCase.java");
+        genFileByTemplate("test/TestCase.java", params, prefix + "TestCase.java");
 
         //测试目录
         bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
@@ -704,9 +704,10 @@ public final class ServiceModelCodeGenerator {
         //切换实体类
         entityClass(entityClass);
 
-        genCode(entityClass, "services/service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
+        genCode(entityClass, "test/service_test.ftl", fields, srcDir, modulePackageName(), serviceName + "Test"
                 , params -> {
                     params.put("servicePackageName", servicePackage());
+                    params.put("bizServicePackageName", bizServicePackage());
                     params.put("serviceName", serviceName);
                     params.putAll(paramsMap);
 
@@ -836,11 +837,14 @@ public final class ServiceModelCodeGenerator {
         };
 
         //加入控制器类
-        controllerClassList((controllerPackage() + "." + entityClass.getSimpleName() + "Controller").replace("..", "."));
+        String className = entityClass.getSimpleName() + "Controller";
+        String bizClassName = "Biz" + className;
 
-        genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), entityClass.getSimpleName() + "Controller", mapConsumer);
+        controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
 
-        genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), "Biz" + entityClass.getSimpleName() + "Controller", mapConsumer);
+        genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
+
+        genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
 
     }
 

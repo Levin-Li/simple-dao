@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import ${entityClassPackage}.*;
 import ${entityClassName};
 
+import ${bizServicePackageName}.*;
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
@@ -76,6 +77,9 @@ public class ${className} {
 
     @Autowired
     private ${serviceName} ${serviceName?uncap_first};
+
+    @Autowired
+    private Biz${serviceName} biz${serviceName?uncap_first};
 
 <#if pkField?exists>
     private ${pkField.typeName} ${pkField.name};
