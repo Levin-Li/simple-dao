@@ -10,6 +10,26 @@ package ${modulePackageName};
 public interface ModuleOption {
 
     /**
+     * 主版本号
+     */
+    String MAJOR = "1";
+
+    /**
+     * 子版本号
+     */
+    String MINOR = "0";
+
+    /**
+     * 修订版本号
+     */
+    String REVISION = "0";
+
+    /**
+     * 版本号
+     */
+    String VERSION_NAME = MAJOR + "." + MINOR + "." + REVISION;
+
+    /**
      * module name
      */
     String NAME = "请填写模块名称";
@@ -45,15 +65,15 @@ public interface ModuleOption {
     String CACHE_DELIM = ":";
 
     /**
-     * version
+     * api version
      */
-    String VERSION = "V1";
+    String API_VERSION = "V1";
 
     /**
      * base path
      * 注意路径必须以 / 开头和结尾
      */
-    String BASE_PATH = "/" + ID + "/" + VERSION + "/";
+    String BASE_PATH = "/" + ID + "/" + API_VERSION + "/";
 
     /**
      * api path
