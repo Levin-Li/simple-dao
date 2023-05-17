@@ -186,7 +186,7 @@ public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebM
                 .title("插件[" + GROUP_NAME + "]接口文档")
                 .description("插件[" + GROUP_NAME + "]接口文档")
                 .contact(new Contact("Levin", "https://github.com/Levin-Li/simple-dao", "99668980@qq.com"))
-                .version(ModuleOption.VERSION)
+                .version(ModuleOption.VERSION_NAME)
                 .build();
     }
 

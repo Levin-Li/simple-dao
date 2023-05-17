@@ -51,7 +51,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Override
     public String getVersion() {
-        return ModuleOption.VERSION;
+        return ModuleOption.VERSION_NAME;
     }
 
     @Override
