@@ -1,5 +1,6 @@
 package ${packageName};
 
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import javax.annotation.*;
 
 import javax.servlet.http.*;
 
+import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.dao.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
@@ -55,7 +57,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 <#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 //默认需要权限访问
-<#if isCreateBizController>//</#if>@ResAuthorize(domain = ID, type = TYPE_NAME)
+//@ResAuthorize(domain = ID, type = TYPE_NAME)
 
 //类注解
 <#if isCreateBizController>//</#if>@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
