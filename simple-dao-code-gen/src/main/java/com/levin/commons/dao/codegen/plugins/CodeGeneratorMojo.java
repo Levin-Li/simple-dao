@@ -11,6 +11,7 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -45,13 +46,6 @@ public class CodeGeneratorMojo extends BaseMojo {
      */
     @Parameter(defaultValue = "api")
     private String apiModuleDirName = "api";
-
-
-    /**
-     * 生成的控制器类是否创建子目录
-     */
-    @Parameter(defaultValue = "true")
-    private boolean isCreateControllerSubDir = true;
 
     /**
      * bootstrap
@@ -102,12 +96,32 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isSchemaDescUseConstRef = true;
 
+
+    /**
+     * 生成的控制器类是否创建子目录
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isCreateControllerSubDir = true;
+
+
+    /**
+     * 生成的控制器类是否创建子目录
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isCreateBizController = true;
+
+
+    /**
+     * 忽略的实体类，类名正则表达式
+     */
+    @Parameter
+    protected String[] ignoreEntities = {};
+
     /**
      * 代码生成的附加参数
      */
     @Parameter
     protected Map<String, Object> codeGenParams;
-
 
     {
         independentPluginClassLoader = false;
@@ -209,6 +223,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             }
 
             ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
+            ServiceModelCodeGenerator.isCreateBizController(this.isCreateBizController);
+            ServiceModelCodeGenerator.ignoreEntities(Arrays.asList(this.ignoreEntities));
 
             ServiceModelCodeGenerator.splitDir(splitDir);
             ServiceModelCodeGenerator.moduleName(moduleName);

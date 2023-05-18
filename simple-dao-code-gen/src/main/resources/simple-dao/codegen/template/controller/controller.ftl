@@ -49,19 +49,19 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //生成的控制器默认不开启，请手动取消注释
 //@RestController(PLUGIN_PREFIX + "${className}")
-//@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
+<#if isCreateBizController>//</#if>@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
-//@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+<#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
 //默认需要权限访问
-//@ResAuthorize(domain = ID, type = TYPE_NAME)
+<#if isCreateBizController>//</#if>@ResAuthorize(domain = ID, type = TYPE_NAME)
 
 //类注解
-//@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+<#if isCreateBizController>//</#if>@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
-public abstract class ${className} extends BaseController{
+public<#if isCreateBizController> abstract</#if> class ${className} extends BaseController{
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 

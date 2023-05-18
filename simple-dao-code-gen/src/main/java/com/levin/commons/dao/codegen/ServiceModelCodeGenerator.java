@@ -388,6 +388,7 @@ public final class ServiceModelCodeGenerator {
 
         final List<Class<?>> classList = FileUtils.listFiles(file, new String[]{"class"}, true)
                 .stream().filter(File::isFile)
+
                 .map(f -> f.getAbsolutePath().substring(canonicalPath.length() + 1)
                         .replace('/', '.')
                         .replace('\\', '.')
@@ -490,7 +491,13 @@ public final class ServiceModelCodeGenerator {
                         + fn);
 
         ///////////////////////////////////////////////
+        List<String> ignoreEntities = ignoreEntities();
         for (Class<?> clazz : classList) {
+
+            if (ignoreEntities.stream().anyMatch(regex -> clazz.getName().matches(regex))) {
+                logger.info("忽略实体类:{}", clazz.getName());
+                continue;
+            }
 
             entityClassList(clazz);
 
@@ -503,7 +510,6 @@ public final class ServiceModelCodeGenerator {
             }
         }
         ///////////////////////////////////////////////
-
     }
 
     private static String servicePackage() {
@@ -511,15 +517,19 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static String bizServicePackage() {
-        return modulePackageName() + ".biz" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+//        return modulePackageName() + ".biz" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+        return modulePackageName() + ".biz";
     }
 
     private static String controllerPackage() {
-        return modulePackageName() + ".controller.base" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+        return modulePackageName() + ".controller"
+                + (isCreateBizController() ? ".base" : "")
+                + (isCreateControllerSubDir() ? "." + subPkgName() : "");
     }
 
     private static String bizControllerPackage() {
-        return modulePackageName() + ".controller" + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+        return modulePackageName() + ".controller"
+                + (isCreateControllerSubDir() ? "." + subPkgName() : "");
     }
 
     public static Boolean isCreateControllerSubDir(boolean newValue) {
@@ -528,6 +538,22 @@ public final class ServiceModelCodeGenerator {
 
     public static Boolean isCreateControllerSubDir() {
         return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), false);
+    }
+
+    public static Boolean isCreateBizController(boolean newValue) {
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
+    }
+
+    public static Boolean isCreateBizController() {
+        return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), false);
+    }
+
+    public static List<String> ignoreEntities(List<String> ignoreEntities) {
+        return threadContext.put(ExceptionUtils.getInvokeMethodName(), ignoreEntities);
+    }
+
+    public static List<String> ignoreEntities() {
+        return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), Collections.<String>emptyList());
     }
 
     private static Boolean hasEntityClass(boolean newValue) {
@@ -830,6 +856,7 @@ public final class ServiceModelCodeGenerator {
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
             params.put("servicePackageName", servicePackage());
             params.put("bizServicePackageName", bizServicePackage());
+            params.put("isCreateBizController", isCreateBizController());
             params.put("controllerPackageName", controllerPackage());
             params.put("serviceName", entityClass.getSimpleName() + "Service");
             params.putAll(paramsMap);
@@ -840,11 +867,13 @@ public final class ServiceModelCodeGenerator {
         String className = entityClass.getSimpleName() + "Controller";
         String bizClassName = "Biz" + className;
 
-        controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
+        controllerClassList(((isCreateBizController() ? bizControllerPackage() : controllerPackage()) + "." + bizClassName).replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
 
-        genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
+        if (isCreateBizController()) {
+            genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
+        }
 
     }
 
