@@ -6,13 +6,10 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Entity;
 import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -76,12 +73,19 @@ public class UpdateDaoImpl<T>
         return this;
     }
 
-
     @Override
-    public UpdateDao<T> set(String entityAttrName, Object paramValue) {
-        return set(true, entityAttrName, paramValue);
-    }
+    public UpdateDao<T> setNull(Boolean isAppend, String... entityAttrNames) {
 
+        if (Boolean.TRUE.equals(isAppend) && entityAttrNames != null) {
+            for (String entityAttrName : entityAttrNames) {
+                if (StringUtils.hasText(entityAttrName)) {
+                    append(aroundColumnPrefix(entityAttrName) + " = NULL");
+                }
+            }
+        }
+
+        return this;
+    }
 
     @Override
     public UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {

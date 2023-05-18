@@ -1,7 +1,5 @@
 package com.levin.commons.dao;
 
-import lombok.Data;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface UpdateDao<T>
@@ -28,6 +26,27 @@ public interface UpdateDao<T>
      */
     UpdateDao<T> setColumns(Boolean isAppend, String expr, Object... paramValues);
 
+
+    /**
+     * 对字段设置NUll值
+     *
+     * @param entityAttrNames
+     * @return
+     * @since 2.3.6
+     */
+    UpdateDao<T> setNull(Boolean isAppend, String... entityAttrNames);
+
+    /**
+     * 对字段设置NUll值
+     *
+     * @param entityAttrNames
+     * @return
+     * @since 2.3.6
+     */
+    default UpdateDao<T> setNull(String... entityAttrNames) {
+        return setNull(true, entityAttrNames);
+    }
+
     /**
      * 增加单个需要更新的属性
      *
@@ -35,8 +54,9 @@ public interface UpdateDao<T>
      * @param paramValue     属性值
      * @return
      */
-
-    UpdateDao<T> set(String entityAttrName, Object paramValue);
+   default UpdateDao<T> set(String entityAttrName, Object paramValue){
+       return set(true,entityAttrName,paramValue);
+   }
 
     /**
      * 增加单个需要更新的属性
