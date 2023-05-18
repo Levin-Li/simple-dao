@@ -77,8 +77,21 @@ Dao 类逻辑框图，如下图所示。
     //删除DAO
     DeleteDao dao = dao.deleteFrom(Group.class)
     dao.delete()
-   
-   
+
+##### 2.3 回调应用（SelectDao 、UpdateDao、DeleteDao） 
+    
+       //java.util.function.Consumer
+      
+       //回调
+       Consumer<SelectDao<?>> callback = dao -> {
+            dao.orderBy(OrderBy.Type.Desc,E_AfterSaleOrder.create_time);
+            dao.eq("name","lily");
+        };
+       
+      //查询
+      simpleDao.findPagingDataByQueryObj(req,callback,paging);
+
+
 ### 4 基础查询
     
    查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
