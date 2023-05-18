@@ -57,12 +57,6 @@ public class UpdateDaoImpl<T>
     }
 
     @Override
-    public UpdateDao<T> setColumns(String columns, Object... paramValues) {
-
-        return setColumns(true, columns, paramValues);
-    }
-
-    @Override
     public UpdateDao<T> setColumns(Boolean isAppend, String columns, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)

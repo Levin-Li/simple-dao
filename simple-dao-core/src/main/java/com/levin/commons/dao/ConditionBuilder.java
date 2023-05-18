@@ -105,7 +105,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
     /**
      * 过滤操作已经被逻辑删除的数据
-     * 默认时过滤的
+     * 默认被逻辑删除的数据不会被查询出来
      *
      * @return
      */
@@ -119,7 +119,9 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      *                    是Map时，会当成命名参数进行处理，当Map中的key是Int时，会当成位置参数来使用
      * @return
      */
-    T where(String expr, Object... paramValues);
+    default T where(String expr, Object... paramValues) {
+        return this.where(true, expr, paramValues);
+    }
 
     /**
      * 增加where条件及参数
@@ -197,7 +199,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      * param.put("name6", "llw");
      *
      * @param paramPrefix，Key前缀，例如：Q_
-     * @param queryParams map
+     * @param queryParams             map
      * @return
      */
     T appendByEL(String paramPrefix, Map<String, Object>... queryParams);

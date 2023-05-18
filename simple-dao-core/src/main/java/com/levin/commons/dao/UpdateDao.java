@@ -13,8 +13,9 @@ public interface UpdateDao<T>
      *                    是Map时，会当成命名参数进行处理。
      * @return
      */
-    UpdateDao<T> setColumns(String expr, Object... paramValues);
-
+    default UpdateDao<T> setColumns(String expr, Object... paramValues) {
+        return setColumns(true, expr, paramValues);
+    }
 
     /**
      * 增加更新的列
@@ -54,9 +55,9 @@ public interface UpdateDao<T>
      * @param paramValue     属性值
      * @return
      */
-   default UpdateDao<T> set(String entityAttrName, Object paramValue){
-       return set(true,entityAttrName,paramValue);
-   }
+    default UpdateDao<T> set(String entityAttrName, Object paramValue) {
+        return set(true, entityAttrName, paramValue);
+    }
 
     /**
      * 增加单个需要更新的属性

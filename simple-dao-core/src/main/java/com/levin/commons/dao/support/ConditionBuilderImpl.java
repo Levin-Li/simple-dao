@@ -444,12 +444,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public CB where(String whereStatement, Object... paramValues) {
 
-        return this.where(true, whereStatement, paramValues);
-
-    }
 
     @Override
     public CB where(Boolean isAppend, String conditionExpr, Object... paramValues) {
