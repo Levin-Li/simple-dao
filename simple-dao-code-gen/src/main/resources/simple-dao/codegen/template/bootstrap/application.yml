@@ -71,7 +71,7 @@ spring:
 #      配置是否对数据库密码进行加密，
 #      加密工具：  java -cp druid-xx.jar com.alibaba.druid.filter.config.ConfigTools 你的密码
 #      config.decrypt=true/false 表示是否对密码进行解密
-      connection-properties: config.decrypt=false;config.decrypt.key=${public-key};
+      connection-properties: ${r"config.decrypt=false;config.decrypt.key=${public-key};"}
 
       stat-view-servlet:
         loginUsername: admin
