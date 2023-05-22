@@ -330,20 +330,6 @@
             </plugin>
 
             <plugin>
-                <groupId>com.github.Levin-Li</groupId>
-                <artifactId>java-code-guard-plugin</artifactId>
-                <version>2.3.9</version>
-                <executions>
-                    <execution>
-                        <id>encrypt-repackage</id>
-                        <goals>
-                            <goal>encrypt-repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>

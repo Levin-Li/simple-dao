@@ -253,7 +253,6 @@
                 <file>
                     <!--  关键字：jitpack 表示是在 gitpack 打包-->
                     <exists>/home/jitpack/build/${project.artifactId}/pom.xml</exists>
-                    <!--                      <exists>/Users/llw/open_source/SimpleDao/simple-dao-code-gen</exists>-->
                 </file>
             </activation>
 
