@@ -69,7 +69,7 @@ public class ModuleSwaggerConfigurer
                         openApi.setInfo(new Info()
                                 .summary(GROUP_NAME)
                                 .title(NAME)
-                                .version(VERSION)
+                                .version(API_VERSION)
                                 .description(DESC)
                         ))
                 .addOperationCustomizer((operation, handlerMethod) -> operation)
