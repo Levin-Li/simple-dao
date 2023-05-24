@@ -48,7 +48,8 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.source.skip>true</maven.source.skip>
 
-        <maven-source-plugin.attach>true</maven-source-plugin.attach>
+        <maven-source-plugin.attach>false</maven-source-plugin.attach>
+
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
         <spring-boot.repackage-not-single-jar>false</spring-boot.repackage-not-single-jar>
@@ -367,6 +368,13 @@
         </resources>
 
         <plugins>
+
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <configuration>
+                    <attach>${maven-source-plugin.attach}</attach>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>${levin.simple-dao.groupId}</groupId>
