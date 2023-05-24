@@ -388,6 +388,21 @@
                         </execution>
                     </executions>
                 </plugin>
+
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+
         </#if>
 
        </plugins>
