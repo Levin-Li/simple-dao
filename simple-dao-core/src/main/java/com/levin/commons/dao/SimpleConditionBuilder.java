@@ -20,6 +20,18 @@ public interface SimpleConditionBuilder<T> {
      */
     T disableEmptyValueFilter();
 
+
+    /**
+     * 禁用空值过滤
+     * <p>
+     * 默认的情况下，当参数值null或空字符串时，条件不会被加入
+     * <p>
+     * 禁用后可以强制加入条件
+     *
+     * @return
+     */
+    T enableEmptyValueFilter();
+
     /**
      * is null
      *

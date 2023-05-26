@@ -110,7 +110,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected transient MiniDao dao;
 
-    protected boolean disableEmptyValueFilter = false;
+    //默认不过滤空置的
+    protected boolean disableEmptyValueFilter = true;
 
     /**
      * 别名缓存
@@ -581,6 +582,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     public CB disableEmptyValueFilter() {
 
         this.disableEmptyValueFilter = true;
+
+        return (CB) this;
+    }
+
+
+    @Override
+    public CB enableEmptyValueFilter() {
+
+        this.disableEmptyValueFilter = false;
 
         return (CB) this;
     }
