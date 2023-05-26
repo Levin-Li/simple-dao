@@ -17,9 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 //Auto gen by simple-dao-codegen ${.now}
 
+/**
+ * 模块自举配置
+ *
+ * 模块需要自举加载的内容都需要配置在该类中
+ *
+ */
 @Configuration(PLUGIN_PREFIX + "${className}")
 @Slf4j
 
@@ -29,6 +36,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 @ComponentScan({PACKAGE_NAME})
 
 @ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
+
+@EnableFeignClients({PACKAGE_NAME})
 
 public class ModuleStarterConfiguration {
 
