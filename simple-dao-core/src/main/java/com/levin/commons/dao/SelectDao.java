@@ -17,7 +17,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     boolean hasStatColumns();
 
-
     /**
      * 是否有选择的列
      * <p>

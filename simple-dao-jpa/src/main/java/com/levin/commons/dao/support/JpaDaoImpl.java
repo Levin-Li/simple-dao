@@ -943,6 +943,7 @@ public class JpaDaoImpl
 
         Assert.notNull(queryObj, "查询对象为空");
 
+
         //尝试自动获取实体类
         if (entityClass == null) {
 
@@ -1003,6 +1004,8 @@ public class JpaDaoImpl
 //            selectDao.notEq(idAttrName, id);
 //        }
 
+        boolean hasWhere = false;
+
         for (Field field : uniqueField.fieldList) {
 
             String fieldName = field.getName();
@@ -1010,14 +1013,17 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
-                selectDao.isNull(fieldName);
+                //目前 MySql 支持空值忽略，唯一约束
+                //暂时 忽略空值
+                // selectDao.isNull(fieldName);
             } else {
                 selectDao.eq(fieldName, value);
+                hasWhere = true;
             }
         }
 
         //只查ID
-        return selectDao.findOne();
+        return hasWhere ? selectDao.findOne() : null;
     }
 
     private static List<UniqueField> getUniqueFields(Class<?> entityClass) {
