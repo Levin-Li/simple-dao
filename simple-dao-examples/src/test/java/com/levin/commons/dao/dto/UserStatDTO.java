@@ -2,11 +2,13 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.TargetOption;
+import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
+import com.levin.commons.dao.annotation.stat.Sum;
 import com.levin.commons.dao.domain.User;
 import lombok.Data;
 
@@ -25,7 +27,7 @@ public class UserStatDTO {
     @OrderBy
     String state;
 
-    @Avg(havingOp = Op.Gt)
+    @Sum(havingOp = Op.Gt,domain = C.BLANK_VALUE)
     Integer score = 500;
 
     @Contains

@@ -1028,13 +1028,7 @@ public class SelectDaoImpl<T>
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
 
-            builder.append("Select ");
-
-            if (joinStatement.length() < 1) {
-                builder.append(" * ");
-            } else {
-                builder.append(getAlias() + ".* ");
-            }
+            builder.append("Select " + (hasSelectColumns() ? selectColumns : "*"));
 
         } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() < 1) {
             //如果连接有查询
@@ -1051,7 +1045,6 @@ public class SelectDaoImpl<T>
         }
 
         builder.append(" ").append(genFromStatement);
-
 
         //如果不是统计语句，则允许集合抓取语句
         if (!isCountQueryResult && fetchAttrs.size() > 0) {

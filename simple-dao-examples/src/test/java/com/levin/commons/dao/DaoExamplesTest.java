@@ -1091,7 +1091,12 @@ public class DaoExamplesTest {
                 .limit(1, 10)
                 .appendByQueryObj(new UserStatDTO());
 
-        System.out.println(selectDao.genFinalStatement() + "  -->   params:" + selectDao.genFinalParamList());
+        String statement = selectDao.genFinalStatement();
+        Assert.isTrue(statement.contains(" having "));
+
+        System.out.println(statement + "  -->   params:" + selectDao.genFinalParamList());
+
+
     }
 
 
