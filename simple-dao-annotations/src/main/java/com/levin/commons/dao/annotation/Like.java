@@ -6,6 +6,8 @@ import java.lang.annotation.*;
 
 /**
  * <p>Like class.</p>
+ * <p>
+ * 不建议使用，使用 StartsWith,EndsWith,Contains
  *
  * @author llw
  * @version 2.0.0
@@ -15,8 +17,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@Deprecated
 public @interface Like {
-
 
     /**
      *

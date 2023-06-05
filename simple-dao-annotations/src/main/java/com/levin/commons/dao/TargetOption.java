@@ -51,6 +51,8 @@ public @interface TargetOption {
     /**
      * 查询期望的查询结果类
      * 只针对查询有效
+     * <p>
+     * 结果类上默认不支持where条件
      *
      * @return
      */
