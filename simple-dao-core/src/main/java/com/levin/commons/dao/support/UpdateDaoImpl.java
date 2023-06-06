@@ -122,8 +122,7 @@ public class UpdateDaoImpl<T>
                 .append(" Set ")
                 .append(updateColumns)
                 .append(whereStatement)
-                .append(" ").append(lastStatements)
-                .append(getLimitStatement());
+                .append(" ").append(lastStatements.isEmpty() ? getLimitStatement() : lastStatements);
 
         return replaceVar(ql.toString());
     }
@@ -169,6 +168,7 @@ public class UpdateDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public boolean singleUpdate() {
 
+        //允许1条，
         setRowCount(1);
 
         int n = update();
@@ -180,6 +180,23 @@ public class UpdateDaoImpl<T>
         return n == 1;
     }
 
+    /**
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public void uniqueUpdate() {
+
+        //允许2条，
+        setRowCount(2);
+
+        int n = update();
+
+        if (n != 1) {
+            throw new NonUniqueResultException(n + "条记录被更新，预期有且仅有1条");
+        }
+
+    }
 
     @Override
     public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,

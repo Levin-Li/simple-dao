@@ -1379,18 +1379,18 @@ public class JpaDaoImpl
         return forSelect(null, queryObjs);
     }
 
-    public <T> SelectDao<T> forSelect(Class type, Object... queryObjs) {
+    public <T> SelectDao<T> forSelect(Class resultType, Object... queryObjs) {
 
-        if (type == null) {
-            type = tryFindResultClass(queryObjs);
+        if (resultType == null) {
+            resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(type);
+        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(resultType);
 
         SelectDao selectDao = null;
 
-        if (hasSelectAnnotationField && !hasType(type, queryObjs)) {
-            selectDao = newDao(SelectDao.class, queryObjs, type);
+        if (hasSelectAnnotationField && !hasType(resultType, queryObjs)) {
+            selectDao = newDao(SelectDao.class, queryObjs, resultType);
         } else {
             selectDao = newDao(SelectDao.class, queryObjs);
         }
@@ -1441,35 +1441,30 @@ public class JpaDaoImpl
 
 
     @Override
-    public <E> E findOneByQueryObj(Object... queryObjs) {
-        return (E) findOneByQueryObj(tryFindResultClass(queryObjs), queryObjs);
-    }
+    public <E> List<E> findByQueryObj(Class<E> resultType, Object... queryObjs) {
 
-    @Override
-    public <E> List<E> findByQueryObj(Class<E> type, Object... queryObjs) {
-
-        if (type == null) {
-            type = tryFindResultClass(queryObjs);
+        if (resultType == null) {
+            resultType = tryFindResultClass(queryObjs);
         }
 
-        return forSelect(type, queryObjs).find(type);
+        return forSelect(resultType, queryObjs).find(resultType);
     }
 
 
     @Override
-    public <E> E findOneByQueryObj(Class<E> type, Object... queryObjs) {
+    public <E> E findOneByQueryObj(boolean isExpectUnique, Class<E> resultType, Object... queryObjs) {
 
-        if (type == null) {
-            type = tryFindResultClass(queryObjs);
+        if (resultType == null) {
+            resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(type);
+        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(resultType);
 
-        if (hasSelectStatementField && !hasType(type, queryObjs)) {
-            return (E) newDao(SelectDao.class, queryObjs, type).findOne(type);
+        if (hasSelectStatementField && !hasType(resultType, queryObjs)) {
+            return (E) newDao(SelectDao.class, queryObjs, resultType).findOne(isExpectUnique, resultType);
         }
 
-        return (E) newDao(SelectDao.class, queryObjs).findOne(type);
+        return (E) newDao(SelectDao.class, queryObjs).findOne(isExpectUnique, resultType);
     }
 
 

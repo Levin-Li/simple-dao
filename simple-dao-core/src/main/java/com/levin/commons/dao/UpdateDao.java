@@ -114,4 +114,11 @@ public interface UpdateDao<T>
     @Transactional
     boolean singleUpdate();
 
+    /**
+     * 更新数据
+     * <p>
+     * 要求有且只有一条被更新，否则抛出异常
+     */
+    @Transactional
+    void uniqueUpdate();
 }

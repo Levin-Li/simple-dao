@@ -44,8 +44,11 @@ public interface ConditionBuilder<T extends ConditionBuilder>
 
     /**
      * 允许自动追加 limit 语句
-     * 默认是不允许的
-     * 查询也是不允许的
+     * <p>
+     * Jpa 对于更新或是删除语句并不会启用 limit ，该参数主要为了弥补这个问题
+     * <p>
+     * 默认是允许的
+     * 该选项对不影响查询，只作用于更新或是删除
      * <p>
      * 这个方法用于更新或是删除时，限制记录数
      * <p>

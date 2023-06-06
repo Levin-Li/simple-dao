@@ -8,7 +8,6 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.NonUniqueResultException;
@@ -69,24 +68,23 @@ public class DeleteDaoImpl<T>
         StringBuilder ql = new StringBuilder();
 
         if (isLogicDelete) {
-
             ql.append("Update ")
                     .append(genEntityStatement())
                     .append(" Set ")
                     .append(genLogicDeleteExpr(getEntityOption(), Op.Eq))
-                    .append(genWhereStatement(EntityOption.Action.LogicalDelete))
-                    .append(" ").append(lastStatements)
-                    .append(getLimitStatement());
+                    .append(genWhereStatement(EntityOption.Action.LogicalDelete));
         } else {
             ql.append("Delete ")
                     .append(genFromStatement())
-                    .append(genWhereStatement(EntityOption.Action.Delete))
-                    .append(" ").append(lastStatements)
-                    .append(getLimitStatement());
+                    .append(genWhereStatement(EntityOption.Action.Delete));
         }
+
+        ql.append(" ")
+                .append(lastStatements.isEmpty() ? getLimitStatement() : lastStatements);
 
         return replaceVar(ql.toString());
     }
+
 
     @Override
     public List genFinalParamList() {
@@ -175,6 +173,19 @@ public class DeleteDaoImpl<T>
         return n == 1;
     }
 
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public void uniqueDelete() {
+
+        setRowCount(2);
+
+        int n = delete();
+
+        if (n != 1) {
+            throw new NonUniqueResultException(n + "条记录被删除，预期有且仅有1条");
+        }
+
+    }
 
     /**
      * @param statement

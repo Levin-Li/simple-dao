@@ -134,7 +134,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 查询时无效
      */
 //    @Getter
-    protected boolean autoAppendLimitStatement = false;
+    protected boolean autoAppendLimitStatement = true;
 
     /**
      * 默认自动追加更新或是删除的条件
@@ -381,6 +381,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    /**
+     * 获取 limit 语句
+     *
+     * @return
+     */
     protected String getLimitStatement() {
 
         String ql = "";

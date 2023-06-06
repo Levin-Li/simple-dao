@@ -235,12 +235,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     <E> RS<E> findTotalsAndResultList(Object... queryObjs);
 
-    /**
-     * @param queryObjs
-     * @param <E>
-     * @return
-     */
-    <E> E findOneByQueryObj(Object... queryObjs);
 
     /**
      * @param resultType
@@ -252,12 +246,54 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 
 
     /**
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    default <E> E findOneByQueryObj(Object... queryObjs) {
+        return findOneByQueryObj(null, queryObjs);
+    }
+
+    /**
+     * 查找唯一
+     *
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    default <E> E findUnique(Object... queryObjs) {
+        return findUnique(null, queryObjs);
+    }
+
+    /**
      * @param resultType
      * @param queryObjs
      * @param <E>
      * @return
      */
-    <E> E findOneByQueryObj(Class<E> resultType, Object... queryObjs);
+    default <E> E findOneByQueryObj(Class<E> resultType, Object... queryObjs) {
+        return findOneByQueryObj(false, resultType, queryObjs);
+    }
+
+    /**
+     * 查找唯一值
+     *
+     * @param resultType
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    default <E> E findUnique(Class<E> resultType, Object... queryObjs) {
+        return findOneByQueryObj(true, resultType, queryObjs);
+    }
+
+    /**
+     * @param resultType
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    <E> E findOneByQueryObj(boolean isExpectUnique, Class<E> resultType, Object... queryObjs);
 
     /**
      * 获取事务管理器

@@ -12,9 +12,9 @@ public interface SimpleConditionBuilder<T> {
     /**
      * 禁用空值过滤
      * <p>
-     * 默认的情况下，当参数值null或空字符串时，条件不会被加入
+     * 默认是禁用空值过滤
      * <p>
-     * 禁用后可以强制加入条件
+     * 禁用后，新加入的查询条件会被强制加入
      *
      * @return
      */
@@ -22,11 +22,9 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * 禁用空值过滤
+     * 允许空值过滤
      * <p>
-     * 默认的情况下，当参数值null或空字符串时，条件不会被加入
-     * <p>
-     * 禁用后可以强制加入条件
+     * 允许空值过滤后，新加入的条件将会过滤空值
      *
      * @return
      */

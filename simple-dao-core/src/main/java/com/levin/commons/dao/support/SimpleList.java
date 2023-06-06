@@ -131,6 +131,10 @@ public final class SimpleList<E> {
         return delegate.size();
     }
 
+    public boolean isEmpty() {
+        return delegate.isEmpty();
+    }
+
     @Override
     public String toString() {
         return toString(null, delimiter, prefix, suffix).toString();

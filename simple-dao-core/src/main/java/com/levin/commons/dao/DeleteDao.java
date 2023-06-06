@@ -26,5 +26,11 @@ public interface DeleteDao<T>
     @Transactional
     boolean singleDelete();
 
-
+    /**
+     * 删除数据
+     * <p>
+     * 要求有且只有一条被更新，否则抛出异常
+     */
+    @Transactional
+    void uniqueDelete();
 }

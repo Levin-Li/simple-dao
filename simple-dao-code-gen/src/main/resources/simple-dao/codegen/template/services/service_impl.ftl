@@ -128,7 +128,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     //@CachePut(unless = "#result == null" , condition = "#req.${pkField.name} != null" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.findOneByQueryObj(req);
+        return simpleDao.findUnique(req);
     }
 </#if>
 
@@ -196,6 +196,13 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     public ${entityName}Info findOne(Query${entityName}Req req){
         return simpleDao.findOneByQueryObj(req);
+    }
+
+
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findUnique(Query${entityName}Req req){
+        return simpleDao.findUnique(req);
     }
 
     /**

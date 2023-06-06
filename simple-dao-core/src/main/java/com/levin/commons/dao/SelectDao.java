@@ -380,37 +380,15 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     //////////////////////////////////////////////
 
     /**
-     * 获取结果集，并转换成指定的对对象
-     * 数据转换采用spring智能转换器
+     * 获取一个结果
+     * 如果没有数据，可能返回null
      *
-     * @param <E> targetType 要求的结果类型
+     * @param <E>
      * @return
      */
-    <E> E findOne(Class<E> targetType);
-
-
-    /**
-     * 获取结果集，并转换成指定的对对象
-     * 数据转换采用spring智能转换器
-     *
-     * @param <E>              targetType 要求的结果类型
-     * @param maxCopyDeep      -1，表示不限层级
-     * @param ignoreProperties 忽略目标对象的属性
-     *                         a.b.c.name* *号表示忽略以什么开头的属性
-     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
-     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
-     * @return
-     */
-    <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties);
-
-    /**
-     * 获取结果集，并转换成指定的对对象
-     *
-     * @param
-     * @return
-     */
-
-    <I, E> E findOne(Converter<I, E> converter);
+    default <E> E findOne() {
+        return findOne(false);
+    }
 
 
     /**
@@ -420,7 +398,120 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param <E>
      * @return
      */
-    <E> E findOne();
+    default <E> E findUnique() {
+        return findOne(true);
+    }
+
+    /**
+     * 获取一个结果
+     *
+     * @param isExpectUnique 是否预期唯一，如果true，但是查询结果不唯一将抛出异常，
+     * @param <E>
+     * @return
+     */
+    <E> E findOne(boolean isExpectUnique);
+
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E> targetType 要求的结果类型
+     * @return
+     */
+    default <E> E findOne(Class<E> resultType) {
+        return findOne(false, resultType);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E> targetType 要求的结果类型
+     * @return
+     */
+    default <E> E findUnique(Class<E> resultType) {
+        return findOne(true, resultType);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E> resultType 要求的结果类型
+     * @return
+     */
+    default <E> E findOne(boolean isExpectUnique, Class<E> resultType) {
+
+        if (resultType == null || resultType == Void.class) {
+            return findOne(isExpectUnique);
+        }
+
+        return findOne(isExpectUnique, resultType, 2);
+    }
+
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E>              resultType 要求的结果类型
+     * @param maxCopyDeep      -1，表示不限层级
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     * @return
+     */
+    default <E> E findOne(Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
+        return findOne(false, resultType, maxCopyDeep, ignoreProperties);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E>              resultType 要求的结果类型
+     * @param maxCopyDeep      -1，表示不限层级
+     * @param ignoreProperties 忽略目标对象的属性
+     *                         a.b.c.name* *号表示忽略以什么开头的属性
+     *                         a.b.c.{*}    大括号表示忽略所有的复杂类型属性
+     *                         a.b.c.{com.User}    大括号表示忽略User类型属性
+     * @return
+     */
+    <E> E findOne(boolean isExpectUnique, Class<E> resultType, int maxCopyDeep, String... ignoreProperties);
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param
+     * @return
+     */
+
+    default <I, E> E findOne(Converter<I, E> converter) {
+        return findOne(false, converter);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     *
+     * @param isExpectUnique
+     * @param converter
+     * @param <I>
+     * @param <E>
+     * @return
+     */
+    default <I, E> E findOne(boolean isExpectUnique, Converter<I, E> converter) {
+
+        if (converter == null) {
+            throw new IllegalArgumentException("converter is null");
+        }
+
+        Object data = findOne(isExpectUnique);
+
+        return data != null ? converter.convert((I) data) : null;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     /**

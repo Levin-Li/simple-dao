@@ -23,6 +23,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -1298,42 +1299,43 @@ public class SelectDaoImpl<T>
 
     ////////////////////////////////////////////////////////////////////////////////
     @Override
-    public <E> E findOne() {
-        //设置只取第一条
-        setRowCount(1);
+    public <E> E findOne(boolean isExpectUnique) {
+
+        setRowCount(isExpectUnique ? 2 : 1);
 
         List<E> list = find();
 
-        return ((list != null && list.size() > 0) ? list.get(0) : null);
-    }
-
-    @Override
-    public <E> E findOne(Class<E> targetType) {
-
-        if (targetType == null || targetType == Void.class) {
-            return findOne();
+        if (list == null || list.isEmpty()) {
+            return null;
         }
 
-        return findOne(targetType, 2);
+        //预期唯一值，但结果超过一条记录
+        if (isExpectUnique && list.size() > 1) {
+            throw new NonUniqueResultException();
+        }
+
+        return list.get(0);
     }
 
     /**
      * 获取结果集，并转换成指定的对对象
      * 数据转换采用spring智能转换器
      *
-     * @param targetType
+     * @param resultType
      * @return
      */
     @Override
-    public <E> E findOne(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
+    public <E> E findOne(boolean isExpectUnique, Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
 
-        if (targetType == null || targetType == Void.class) {
-            return findOne();
+        E result = findOne(isExpectUnique);
+
+        if (resultType == null || resultType == Void.class) {
+            return result;
         }
 
-        autoSetFetch(targetType);
+        autoSetFetch(resultType);
 
-        return tryConvertData(findOne(), targetType, null, maxCopyDeep, ignoreProperties);
+        return tryConvertData(result, resultType, null, maxCopyDeep, ignoreProperties);
 
     }
 
@@ -1407,19 +1409,6 @@ public class SelectDaoImpl<T>
                 }, field -> field.isAnnotationPresent(Fetch.class)
         );
 
-    }
-
-
-    @Override
-    public <I, E> E findOne(Converter<I, E> converter) {
-
-        if (converter == null) {
-            throw new IllegalArgumentException("converter is null");
-        }
-
-        Object data = findOne();
-
-        return data != null ? converter.convert((I) data) : null;
     }
 
 
