@@ -26,35 +26,12 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     boolean hasSelectColumns();
 
-
     /**
-     * having 字句 和 order by 字句使用别名
+     * 设置 having 子句 group by 子句 和 order by 子句 是否使用统计别名
      *
      * @return
      */
     SelectDao<T> useStatAliasForHavingGroupByOrderBy(boolean useStatAlias);
-
-
-    /**
-     * 设置的分页
-     *
-     * @param pageIndex 第几页，从1开始
-     * @param pageSize  分页大小
-     * @return
-     * @see #limit(int, int)
-     */
-    @Override
-    SelectDao<T> page(int pageIndex, int pageSize);
-
-
-    /**
-     * 设置的分页
-     *
-     * @return
-     * @see #limit(int, int)
-     */
-    @Override
-    SelectDao<T> page(Paging paging);
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -65,8 +42,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param paramValues
      * @return
      */
-
-    SelectDao<T> select(String expr, Object... paramValues);
+    default SelectDao<T> select(String expr, Object... paramValues) {
+        return select(true, expr, paramValues);
+    }
 
     /**
      * 增加要选择的列表达式
@@ -248,7 +226,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param paramValues 参数
      * @return
      */
-    SelectDao<T> groupBy(String expr, Object... paramValues);
+    default SelectDao<T> groupBy(String expr, Object... paramValues) {
+        return groupBy(true, expr, paramValues);
+    }
 
     /**
      * 增加 group by 语句和参数
@@ -281,7 +261,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param paramValues
      * @return
      */
-    SelectDao<T> having(String havingStatement, Object... paramValues);
+    default SelectDao<T> having(String havingStatement, Object... paramValues) {
+        return having(true, havingStatement, paramValues);
+    }
 
     /**
      * 增加 having 字句
@@ -300,7 +282,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param columnNames 例：  "name desc" , "createTime desc"
      * @return
      */
-    SelectDao<T> orderBy(String... columnNames);
+    default SelectDao<T> orderBy(String... columnNames) {
+        return orderBy(true, columnNames);
+    }
 
     /**
      * 增加排序字段
@@ -334,8 +318,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    ////////////////////////////////////////////////////////////////////////////
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -389,7 +371,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
     default <E> E findOne() {
         return findOne(false);
     }
-
 
     /**
      * 获取一个结果

@@ -169,7 +169,7 @@ public class UpdateDaoImpl<T>
     public boolean singleUpdate() {
 
         //允许1条，
-        setRowCount(1);
+        setRowCount(2);
 
         int n = update();
 

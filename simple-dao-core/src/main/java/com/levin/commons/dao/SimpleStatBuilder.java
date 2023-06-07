@@ -28,6 +28,8 @@ import java.util.Map;
 public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
 
     /**
+     * count 函数
+     *
      * @param expr
      * @param alias
      * @param paramValues
@@ -36,6 +38,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T count(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
+     * avg 函数
+     *
      * @param expr
      * @param alias
      * @param paramValues
@@ -44,6 +48,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T avg(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
+     * sum 函数
+     *
      * @param expr
      * @param alias
      * @param paramValues
@@ -52,6 +58,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T sum(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
+     * max 函数
+     *
      * @param expr
      * @param alias
      * @param paramValues
@@ -60,6 +68,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T max(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
+     * min 函数
+     *
      * @param expr
      * @param alias
      * @param paramValues
@@ -68,12 +78,14 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
     T min(String expr, String alias, Map<String, Object>... paramValues);
 
     /**
+     * group by 字句
+     *
      * <p>
      * 通过模拟 GroupBy 注解的方式增加 groupBy 语句
      *
      * @param expr
      * @param alias
-     * @param paramValues
+     * @param paramValues 支持表达式中使用参数
      * @return
      */
     T groupByAndSelect(String expr, String alias, Map<String, Object>... paramValues);

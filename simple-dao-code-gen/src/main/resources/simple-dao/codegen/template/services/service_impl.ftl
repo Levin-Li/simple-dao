@@ -198,7 +198,6 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.findOneByQueryObj(req);
     }
 
-
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findUnique(Query${entityName}Req req){

@@ -11,7 +11,7 @@ package com.levin.commons.dao;
 public interface SafeController<T> {
 
     /**
-     * 禁止安全模式
+     * 禁用安全模式
      */
     T disableSafeMode();
 

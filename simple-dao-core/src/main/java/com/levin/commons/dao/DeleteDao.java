@@ -19,7 +19,7 @@ public interface DeleteDao<T>
      * <p>
      * 防止出现大量删除错误
      * <p>
-     * 如果删除的记录数不是 > 1 条，将抛出异常，回滚
+     * 如果删除的记录数 > 1 条，将抛出异常，回滚
      *
      * @return
      */
@@ -29,7 +29,7 @@ public interface DeleteDao<T>
     /**
      * 删除数据
      * <p>
-     * 要求有且只有一条被更新，否则抛出异常
+     * 要求有且只有一条被删除，否则抛出异常
      */
     @Transactional
     void uniqueDelete();

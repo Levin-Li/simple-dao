@@ -131,12 +131,6 @@ public class SelectDaoImpl<T>
 
 
     @Override
-    public SelectDao<T> select(String expr, Object... paramValues) {
-
-        return select(true, expr, paramValues);
-    }
-
-    @Override
     public SelectDao<T> select(Boolean isAppend, String expr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
@@ -463,10 +457,6 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    @Override
-    public SelectDao<T> groupBy(String expr, Object... paramValues) {
-        return groupBy(true, expr, paramValues);
-    }
 
     @Override
     public SelectDao<T> groupBy(Boolean isAppend, String expr, Object... paramValues) {
@@ -480,7 +470,6 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    @Override
     public SelectDao<T> having(String havingStatement, Object... paramValues) {
         return having(true, havingStatement, paramValues);
     }
@@ -510,12 +499,6 @@ public class SelectDaoImpl<T>
         super.endLogic(isContainLastField);
         havingExprRootNode.endGroup(isContainLastField);
     }
-
-    @Override
-    public SelectDao<T> orderBy(String... columnNames) {
-        return orderBy(true, columnNames);
-    }
-
 
     @Override
     public SelectDao<T> orderBy(Boolean isAppend, String... columnNames) {

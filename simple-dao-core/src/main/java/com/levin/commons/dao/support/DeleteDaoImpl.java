@@ -162,7 +162,7 @@ public class DeleteDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public boolean singleDelete() {
 
-        setRowCount(1);
+        setRowCount(2);
 
         int n = delete();
 

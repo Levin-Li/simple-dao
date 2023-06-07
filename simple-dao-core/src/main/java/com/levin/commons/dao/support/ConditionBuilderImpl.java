@@ -134,7 +134,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 查询时无效
      */
 //    @Getter
-    protected boolean autoAppendLimitStatement = true;
+    protected boolean autoAppendLimitStatement = false;
 
     /**
      * 默认自动追加更新或是删除的条件
@@ -366,9 +366,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     @Override
-    public CB enableAutoAppendLimitStatement() {
+    public CB enableAutoAppendLimitStatement(boolean enable) {
 
-        autoAppendLimitStatement = true;
+        autoAppendLimitStatement = enable;
 
         return (CB) this;
     }
@@ -390,8 +390,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         String ql = "";
 
-        if (autoAppendLimitStatement) {
+        if (autoAppendLimitStatement || isNative()) {
 
+            //hibernate jpql 不支持 limit 语句。
             if (rowStart > 0) {
                 ql = " " + rowStart;
             }

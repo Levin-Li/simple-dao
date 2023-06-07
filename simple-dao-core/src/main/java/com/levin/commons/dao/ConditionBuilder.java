@@ -56,10 +56,10 @@ public interface ConditionBuilder<T extends ConditionBuilder>
      *
      * @return
      */
-    T enableAutoAppendLimitStatement();
+    T enableAutoAppendLimitStatement(boolean enable);
 
     /**
-     * 禁用默认的更新和删除的条件
+     * 禁用更新和删除的条件
      *
      * @return
      * @see EntityOption#updateCondition()
@@ -68,7 +68,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T disableOperationCondition();
 
     /**
-     * 设置的分页
+     * 设置分页
      *
      * @param pageIndex 第几页，从1开始
      * @param pageSize  分页大小
@@ -78,7 +78,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T page(int pageIndex, int pageSize);
 
     /**
-     * 设置的分页
+     * 设置分页
      *
      * @return
      * @see #limit(int, int)
@@ -86,7 +86,7 @@ public interface ConditionBuilder<T extends ConditionBuilder>
     T page(Paging paging);
 
     /**
-     * 当前limit 是否处于安全区域
+     * 当前limit 是否处于安全范围
      *
      * @return
      */

@@ -23,7 +23,6 @@ public interface DaoFactory {
      */
     <DAO extends ConditionBuilder> DAO newDao(Class<DAO> daoClass, Object... queryObjs);
 
-
     /**
      * 从查询对象构造SelectDao
      *
@@ -72,6 +71,31 @@ public interface DaoFactory {
     <T> SelectDao<T> selectFrom(@NotNull Class<T> clazz, String... alias);
 
     /**
+     * 创建一个指定类型的更新dao
+     *
+     * @param clazz 实体类，不允许为null
+     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+     * @param <T>
+     * @return
+     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+     */
+    <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
+
+    /**
+     * 创建一个指定类型的删除dao
+     *
+     * @param clazz 实体类，不允许为null
+     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
+     * @param <T>
+     * @return
+     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
+     */
+    <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
      * 原生查询
      *
      * @param clazz
@@ -90,31 +114,11 @@ public interface DaoFactory {
      * @return
      * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
      */
-    <T> UpdateDao<T> updateTo(@NotNull Class<T> clazz, String... alias);
-
-    /**
-     * 创建一个指定类型的更新dao
-     *
-     * @param clazz 实体类，不允许为null
-     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-     * @param <T>
-     * @return
-     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-     */
     <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias);
 
     /**
-     * 创建一个指定类型的删除dao
+     * 构建原生删除dao
      *
-     * @param clazz 实体类，不允许为null
-     * @param alias 实体类别名，为了接口使用更方便，使用可变参，但只获取第一个别名
-     * @param <T>
-     * @return
-     * @throws IllegalArgumentException 如果别名多于一个将会抛出异常
-     */
-    <T> DeleteDao<T> deleteFrom(@NotNull Class<T> clazz, String... alias);
-
-    /**
      * @param clazz
      * @param alias
      * @param <T>

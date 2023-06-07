@@ -77,7 +77,7 @@ public interface SimpleConditionBuilder<T> {
     T notEq(String entityAttrName, Object paramValue);
 
     /**
-     * >
+     * > 操作
      *
      * @param entityAttrName 如 name
      * @param paramValue     如果值为null ，将不加入查询条件
@@ -87,7 +87,7 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * <
+     * < 操作
      *
      * @param entityAttrName 如 name
      * @param paramValue     如果值为null ，将不加入查询条件
@@ -97,7 +97,7 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * >=
+     * >= 操作
      *
      * @param entityAttrName 如 name
      * @param paramValue     如果值为null ，将不加入查询条件
@@ -107,7 +107,7 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * <=
+     * <= 操作
      *
      * @param entityAttrName 如 name
      * @param paramValue     如果值为null ，将不加入查询条件
@@ -133,7 +133,7 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
-     * field in (?...)
+     * field not in (?...)
      *
      * @return
      */
@@ -141,14 +141,16 @@ public interface SimpleConditionBuilder<T> {
 
 
     /**
+     * exists 操作
      * 查询对象或是字符串表达式
      *
      * @return
      */
     T exists(Object exprOrQueryObj, Object... paramValues);
 
-
     /**
+     * exists 操作
+     * <p>
      * 查询对象或是字符串表达式
      *
      * @return
