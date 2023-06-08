@@ -476,6 +476,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    protected List getLastStatementParamValues() {
+        return lastStatements.isEmpty() ? Collections.emptyList() : lastStatementParamValues;
+    }
+
     @Override
     public CB appendByQueryObj(Object... queryObjs) {
 

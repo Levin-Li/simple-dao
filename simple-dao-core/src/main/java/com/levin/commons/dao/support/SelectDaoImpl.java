@@ -1008,18 +1008,21 @@ public class SelectDaoImpl<T>
         final StringBuilder builder = new StringBuilder();
 
         //目前如果没有要选择字段，不会加入select 子句
-        if (!isCountQueryResult && selectColumns.length() > 0) {
+
+        if (isCountQueryResult) {
+            //count 语句
+            if (isNative()) {
+                builder.insert(0, "Select 1");
+            }
+        } else if (selectColumns.length() > 0) {
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
-
-            builder.append("Select " + (hasSelectColumns() ? selectColumns : "*"));
-
-        } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() < 1) {
+            builder.append("Select *");
+        } else if (joinStatement.length() > 0 && fetchAttrs.size() <= 0) {
             //如果连接有查询
-            builder.insert(0, "Select " + getAlias() + " ");
-        } else if (!isCountQueryResult && joinStatement.length() > 0 && fetchAttrs.size() > 0) {
-            // builder.insert(0, "Select DISTINCT(" + getText(getAlias(), "")+")");
-            builder.insert(0, "Select " + getAlias() + " ");
+            builder.insert(0, "Select " + getAlias());
+        } else if (joinStatement.length() > 0 && fetchAttrs.size() >= 1) {
+            builder.insert(0, "Select " + getAlias());
         }
 
         String genFromStatement = genFromStatement();
@@ -1084,7 +1087,7 @@ public class SelectDaoImpl<T>
 
         if (isNative()) {
             return count("Select Count(*) From (" + genQL(true) + ") AS cnt_tmp"
-                    , getDaoContextValues(), whereParamValues, havingParamValues, lastStatementParamValues);
+                    , getDaoContextValues(), whereParamValues, havingParamValues, getLastStatementParamValues());
         }
 
         //JPA 暂时不支持对统计查询进行二次统计
@@ -1098,7 +1101,6 @@ public class SelectDaoImpl<T>
         if (selectColumns.length() > 0) {
 
             //@todo 待修复一个已知bug-201709262350，返回类型为 Long ，注意 count(*) 语法在 hibernate 中可用，但在 toplink 其它产品中并不可用
-
             // column = foundColumn(column, selectColumns.toString());
             column = "1";
 
@@ -1107,9 +1109,8 @@ public class SelectDaoImpl<T>
             column = alias;
         }
 
-
         return count("Select Count(" + column + ") " + genQL(true)
-                , getDaoContextValues(), whereParamValues, havingParamValues, lastStatementParamValues);
+                , getDaoContextValues(), whereParamValues, havingParamValues, getLastStatementParamValues());
     }
 
     /**
@@ -1144,7 +1145,7 @@ public class SelectDaoImpl<T>
                 , whereParamValues
                 , groupByParamValues
                 , havingParamValues
-                , lastStatementParamValues);
+                , getLastStatementParamValues());
     }
 
     /**

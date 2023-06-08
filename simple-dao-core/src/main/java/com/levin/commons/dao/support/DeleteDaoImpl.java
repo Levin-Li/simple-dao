@@ -97,7 +97,7 @@ public class DeleteDaoImpl<T>
 
         List flattenParams = QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
-                , whereParamValues, lastStatementParamValues);
+                , whereParamValues, getLastStatementParamValues());
 
         if (isLogicDelete) {
             flattenParams.add(0, convertLogicDeleteValue(getEntityOption()));
@@ -105,6 +105,8 @@ public class DeleteDaoImpl<T>
 
         return flattenParams;
     }
+
+
 
     @Override
     @Transactional

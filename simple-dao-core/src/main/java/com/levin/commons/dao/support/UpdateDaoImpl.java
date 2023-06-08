@@ -142,7 +142,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public List genFinalParamList() {
-        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, lastStatementParamValues);
+        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, getLastStatementParamValues());
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
