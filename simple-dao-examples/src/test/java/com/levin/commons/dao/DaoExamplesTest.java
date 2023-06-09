@@ -1532,7 +1532,7 @@ public class DaoExamplesTest {
 
 
         List<Object> objects = dao.selectFrom(User.class, "u")
-                .join(true, Group.class, "g")
+                .leftJoin( Group.class, "g")
                 .select(true, "u")
                 .where("u.group.id = g.id ")
                 .isNotNull(E_User.id)

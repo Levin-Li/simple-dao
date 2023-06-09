@@ -1109,8 +1109,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return (CB) this;
         }
 
-
-        this.entityClass = targetOption.entityClass();
+        this.entityClass = (Class<T>) targetOption.entityClass();
 
         setTableName(targetOption.tableName());
 
