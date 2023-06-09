@@ -27,12 +27,12 @@ import lombok.experimental.Accessors;
         })
 public class TableJoinDTO extends PagingQueryReq {
 
-    @Select(value = "u.id", distinct = true, orderBy = @OrderBy(useAlias = true))
+    @Select(value = E_User.ALIAS +".id", distinct = true, orderBy = @OrderBy(useAlias = true))
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid;
 
     @Select(value = E_Group.id, domain = E_Group.ALIAS)
-    @Gte("g.id")
+    @Gte(E_Group.ALIAS +".id")
     Long gid;
 
     @Select

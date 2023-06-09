@@ -78,6 +78,7 @@ public @interface C {
      * <p>
      * 如：
      * F$:u.userId
+     *
      * 原生查询 --->   u.user_id
      * JPA查询 --->   u.userId
      */

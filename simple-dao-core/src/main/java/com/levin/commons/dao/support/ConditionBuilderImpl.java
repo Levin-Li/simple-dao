@@ -116,7 +116,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     /**
      * 别名缓存
      */
-    protected final ContextHolder<String, Class> aliasMap = ContextHolder.buildContext(true);
+    protected final ContextHolder<String, Class<?>> aliasMap = ContextHolder.buildContext(true);
 
     {
         aliasMap.setKeyConverter(key -> key.trim().toLowerCase());
@@ -978,6 +978,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return aroundColumnPrefix(null, column);
     }
 
+
     /**
      * 重点方法
      *
@@ -997,11 +998,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         boolean hasDomain = hasText(domain);
 
         //关键逻辑点
-        //如果包含占位符，包含空格（说明是个表达式），首字符不是字母 ,则直接返回
+        //判定一个字段表达式 是否是一个函数，或是表达式
+        //@todo 逻辑风险点
+        // 1、包含占位符
+        // 2、包含空格（说明是个表达式）
+        // 3、首字符不是字母或下线
         //@Fix bug 20200227
         if (column.contains(getParamPlaceholder().trim()) //如果包含参数占位符
-                || !Character.isLetter(column.charAt(0)) //如果首字符不是字母
                 || StringUtils.containsWhitespace(column) //包含白空格
+                || !(Character.isLetter(column.charAt(0)) || '_' == column.charAt(0)) //如果首字符不是字母
                 || !column.matches("[\\w._]+") //如果是特殊字符
             //  || (!hasDomain && column.contains("."))
         ) {

@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Data
-@TargetOption(entityClass = User.class, alias = E_User.ALIAS, resultClass = SimpleSubQueryDTO.class)
+@TargetOption(entityClass = User.class, alias = "u", resultClass = SimpleSubQueryDTO.class)
 public class SimpleSubQueryDTO {
 
     Paging paging = new PagingQueryReq(1, 20);

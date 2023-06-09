@@ -115,7 +115,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      *
      * @param joinStatements inner join 和left join 表达式
      */
-    SelectDao<T> join(String... joinStatements);
+    default SelectDao<T> join(String... joinStatements) {
+        return join(true, joinStatements);
+    }
 
     /**
      * 增加连接语句
@@ -126,7 +128,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     SelectDao<T> join(Boolean isAppend, String... joinStatements);
 
-
     /**
      * 笛卡儿积
      * 自然连接
@@ -136,8 +137,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param targetAlias
      * @return
      */
-    SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias);
-
+    SelectDao<T> join(Boolean isAppend, Class<?> targetClass, String targetAlias);
 
     /**
      * 笛卡儿积
@@ -158,6 +158,56 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     SelectDao<T> join(Boolean isAppend, JoinOption... joinOptions);
 
+
+    /**
+     * 左连接
+     *
+     * @param entityClass
+     * @return
+     */
+    default SelectDao<T> leftJoin(Class<?> entityClass) {
+        return leftJoin(entityClass, "");
+    }
+
+    /**
+     * 左连接
+     * 默认连接主要的主键字段
+     *
+     * @param entityClass
+     * @param alias
+     * @return
+     */
+    default SelectDao<T> leftJoin(Class<?> entityClass, String alias) {
+        return leftJoin(entityClass, alias, "");
+    }
+
+    /**
+     * 左连接
+     * 默认连接主要的主键字段
+     *
+     * @param entityClass
+     * @param alias
+     * @param joinColumn
+     * @return
+     */
+    default SelectDao<T> leftJoin(Class<?> entityClass, String alias, String joinColumn) {
+        return join(true, Fetch.JoinType.Left, entityClass, alias, joinColumn, "", "");
+    }
+
+    /**
+     * 左连接
+     *
+     * @param entityClass
+     * @param alias
+     * @param joinColumn
+     * @param joinTargetAlias
+     * @param joinTargetColumn
+     * @return
+     */
+    default SelectDao<T> leftJoin(Class<?> entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn) {
+        return join(true, Fetch.JoinType.Left, entityClass, alias, joinColumn, joinTargetAlias, joinTargetColumn);
+    }
+
     /**
      * 增加连接
      *
@@ -170,7 +220,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param joinTargetColumn
      * @return
      */
-    SelectDao<T> join(Boolean isAppend, Fetch.JoinType joinType, Class entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn);
+    SelectDao<T> join(Boolean isAppend, Fetch.JoinType joinType, Class<?> entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn);
     ////////////////////////////////////////////////////////////////////////////////////
 
     /**

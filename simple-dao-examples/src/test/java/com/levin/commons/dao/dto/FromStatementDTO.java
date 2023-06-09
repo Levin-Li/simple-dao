@@ -19,17 +19,17 @@ import lombok.experimental.Accessors;
 public class FromStatementDTO {
 
     @Select(value = "u.id", distinct = true)
-    @Gt(value = E_User.id, domain = E_User.ALIAS)
+    @Gt(value = E_User.id, domain = "u")
     Long uid = 1l;
 
-    @Select(value = E_Group.id, domain = E_Group.ALIAS)
+    @Select(value = E_Group.id, domain = "g")
     @Gte("g.id")
     Long gid;
 
-    @Select(domain = E_User.ALIAS)
+    @Select(domain = "u")
     String name;
 
-    @Select(domain = E_Group.ALIAS, value = E_Group.name)
+    @Select(domain = "g", value = E_Group.name)
     String groupName;
 
 }

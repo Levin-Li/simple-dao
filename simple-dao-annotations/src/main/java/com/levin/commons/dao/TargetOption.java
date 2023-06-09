@@ -33,7 +33,7 @@ public @interface TargetOption {
      *
      * @return
      */
-    Class entityClass() default Void.class;
+    Class<?> entityClass() default Void.class;
 
     /**
      * 表名
@@ -56,7 +56,7 @@ public @interface TargetOption {
      *
      * @return
      */
-    Class resultClass() default Void.class;
+    Class<?> resultClass() default Void.class;
 
 
     /**

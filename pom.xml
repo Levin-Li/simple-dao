@@ -99,7 +99,6 @@
 
 
     <distributionManagement>
-
         <!--具体变量来自 Setting 文件-->
         <repository>
             <id>${dist-repo}</id>
@@ -114,19 +113,10 @@
     </distributionManagement>
 
     <repositories>
-
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-
-        <!--  在 gitpack.io 打包时会非常的慢 -->
-        <!--                <repository>
-                            &lt;!&ndash; 仓库首页 https://maven.aliyun.com/ &ndash;&gt;
-                            <id>aliyun-central仓和jcenter仓的聚合仓</id>
-                            <url>https://maven.aliyun.com/repository/public</url>
-                        </repository>
-        -->
     </repositories>
 
     <pluginRepositories>

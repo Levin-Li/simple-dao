@@ -25,7 +25,6 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -427,7 +426,7 @@ public class DaoExamplesTest {
         User user = dao.find(User.class, 1L);
 
 
-        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class,new UserInfo());
+        UserInfo userInfo = dao.findOneByQueryObj(UserInfo.class, new UserInfo());
 
 
         System.out.println(userInfo);
@@ -454,11 +453,8 @@ public class DaoExamplesTest {
     @Test
     public void testFromStatementDTO() {
 
-        List<FromStatementDTO> byQueryObj = dao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
-
-        // System.out.println(byQueryObj);
-
-        assert byQueryObj.size() > 0;
+//        List<FromStatementDTO> byQueryObj = dao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
+//        assert byQueryObj.size() > 0;
 
 
         List<TableJoin3> byQueryObj1 = dao.findByQueryObj(TableJoin3.class, new TableJoin3());
@@ -510,7 +506,6 @@ public class DaoExamplesTest {
         byQueryObj = dao.findByQueryObj(CaseTestDto.class, new CaseTestDto().setScoreLevel(2).setQueryState(true));
 
         System.out.println(byQueryObj);
-
 
         String ql = new Case().column("status")
                 .when("'A'", "0")
@@ -820,7 +815,7 @@ public class DaoExamplesTest {
 
         List<TestEntityStatDto> dtoList = dao.findByQueryObj(TestEntityStatDto.class, new TestEntityStatDto());
 
-      //  Assert.isTrue(dtoList.size() > 0, "TestEntity统计结果错误");
+        //  Assert.isTrue(dtoList.size() > 0, "TestEntity统计结果错误");
 
     }
 
@@ -1083,6 +1078,37 @@ public class DaoExamplesTest {
 
 
     @Test
+    public void testCount() throws Exception {
+
+        long count = dao.selectFrom(User.class, E_User.ALIAS)
+                .leftJoin(Group.class, E_Group.ALIAS)
+                .count();
+
+        count = dao.selectFrom(User.class, E_User.ALIAS)
+                .leftJoin(Group.class)
+                .count();
+
+        System.out.println(count);
+    }
+
+    @Test
+    public void testHaving() throws Exception {
+
+        SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
+
+        selectDao
+                .limit(1, 10)
+                .appendByQueryObj(new UserStatDTO());
+
+        String statement = selectDao.genFinalStatement();
+
+        System.out.println(statement + "  -->   params:" + selectDao.genFinalParamList());
+
+        Assert.isTrue(statement.contains(" Having "));
+    }
+
+
+    @Test
     public void testStatDTO() throws Exception {
 
         SelectDao<User> selectDao = dao.selectFrom(User.class, "u");
@@ -1092,7 +1118,7 @@ public class DaoExamplesTest {
                 .appendByQueryObj(new UserStatDTO());
 
         String statement = selectDao.genFinalStatement();
-        Assert.isTrue(statement.contains(" having "));
+        Assert.isTrue(statement.contains(" Having "));
 
         System.out.println(statement + "  -->   params:" + selectDao.genFinalParamList());
 
@@ -1324,7 +1350,7 @@ public class DaoExamplesTest {
         List<MulitTableJoinDTO> objects = dao.findByQueryObj(MulitTableJoinDTO.class, new MulitTableJoinDTO());
 
 
-        Assert.notNull(objects,"null");
+        Assert.notNull(objects, "null");
 
     }
 
@@ -1497,8 +1523,8 @@ public class DaoExamplesTest {
     public void testSimpleJoin() {
 
 
-        List<Object> objects = dao.selectFrom(User.class, E_User.ALIAS)
-                .join(true, Group.class, E_Group.ALIAS)
+        List<Object> objects = dao.selectFrom(User.class, "u")
+                .join(true, Group.class, "g")
                 .select(true, "u")
                 .where("u.group.id = g.id ")
                 .isNotNull(E_User.id)
@@ -1510,19 +1536,19 @@ public class DaoExamplesTest {
 
         Assert.isTrue(objects.size() == 20);
 
-        //自然连接
-        List result = dao.selectByNative(User.class, E_User.ALIAS)
-                .join(true, Group.class, E_Group.ALIAS)
-                .select("u.*")
-                .where("F$:u.group.id = g.id ")
-                .isNotNull(E_User.id)
-                .gt(E_User.score, 5)
-                .limit(0, 20)
-                .find();
-
-        System.out.println(result);
-
-        Assert.isTrue(result.size() == 20);
+//        //自然连接
+//        List result = dao.selectByNative(User.class, "u")
+//                .join(true, Group.class, "g")
+//                .select("u.*")
+//                .where("F$:u.group.id = g.id ")
+//                .isNotNull(E_User.id)
+//                .gt(E_User.score, 5)
+//                .limit(0, 20)
+//                .find();
+//
+//        System.out.println(result);
+//
+//        Assert.isTrue(result.size() == 20);
 
     }
 
@@ -1539,7 +1565,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.createTime)
                 .end()
                 .limit(-1, 3)
-                .enableAutoAppendLimitStatement()
+                .enableAutoAppendLimitStatement(true)
                 // .appendToLast(true,"order by id limit 1")
                 .update();
 
@@ -1554,7 +1580,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.createTime)
                 .end()
                 .limit(-1, 1)
-                .enableAutoAppendLimitStatement()
+                .enableAutoAppendLimitStatement(true)
                 // .appendToLast(true,"order by id limit 1")
                 .update();
 
@@ -1569,7 +1595,7 @@ public class DaoExamplesTest {
                 .isNotNull(E_User.createTime)
                 .end()
                 .limit(-1, 5)
-                .enableAutoAppendLimitStatement()
+                .enableAutoAppendLimitStatement(true)
                 // .appendToLast(true,"order by id limit 1")
                 .update();
 

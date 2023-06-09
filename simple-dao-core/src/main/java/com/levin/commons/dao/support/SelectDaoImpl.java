@@ -208,26 +208,18 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    @Override
-    public SelectDao<T> join(String... joinStatements) {
 
-        if (joinStatements != null) {
+    @Override
+    public SelectDao<T> join(Boolean isAppend, String... joinStatements) {
+
+        if (Boolean.TRUE.equals(isAppend) && joinStatements != null) {
 
             for (String statement : joinStatements) {
                 if (hasText(statement)) {
                     this.joinStatement.append(" ").append(statement).append(" ");
                 }
             }
-        }
 
-        return this;
-    }
-
-    @Override
-    public SelectDao<T> join(Boolean isAppend, String... joinStatements) {
-
-        if (Boolean.TRUE.equals(isAppend)) {
-            join(joinStatements);
         }
 
         return this;
@@ -355,6 +347,10 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> join(Boolean isAppend, Fetch.JoinType joinType, Class entityClass, String alias, String joinColumn, String joinTargetAlias, String joinTargetColumn) {
 
+        if (!Boolean.TRUE.equals(isAppend)) {
+            return this;
+        }
+
         if (joinType == null) {
             joinType = Fetch.JoinType.Left;
         }
@@ -369,7 +365,9 @@ public class SelectDaoImpl<T>
                 .put(E_JoinOption.alias, alias)
                 .put(E_JoinOption.joinColumn, joinColumn)
                 .put(E_JoinOption.joinTargetAlias, fallbackAlias(joinTargetAlias))
-                .put(E_JoinOption.joinTargetColumn, joinTargetColumn).build();
+                .put(E_JoinOption.joinTargetColumn, joinTargetColumn)
+                .put(E_JoinOption.tableOrStatement, "")
+                .build();
 
         return join(isAppend, (JoinOption) ClassUtils.newAnnotation(JoinOption.class, map));
     }

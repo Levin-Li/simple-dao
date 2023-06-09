@@ -16,10 +16,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -66,11 +63,6 @@ public abstract class ExprUtils {
      * 线程安全的解析器
      */
     private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
-
-    /**
-     *
-     */
-    private static final String COLUMN_REPLACE_PREFIX = "F$:";
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -967,6 +959,26 @@ public abstract class ExprUtils {
         return true;
     }
 
+
+    /**
+     * 获取默认别名
+     *
+     * @param entityClass
+     * @return
+     */
+    public static String getDefaultAlias(Class<?> entityClass) {
+
+        Assert.isTrue(isValidClass(entityClass), entityClass.getName() + "不是一个JPA实体类");
+
+        String eClass = entityClass.getPackage().getName() + ".E_" + entityClass.getSimpleName();
+        try {
+            return (String) ClassUtils.forName(eClass, null).getField("ALIAS").get(null);
+        } catch (Exception e) {
+            throw new StatementBuildException(entityClass.getName() + "获取默认别名失败，错误：" + e.getMessage());
+        }
+
+    }
+
     /**
      * 自动生成连接语句
      *
@@ -1022,20 +1034,14 @@ public abstract class ExprUtils {
 
             boolean hasJoinEntityClass = isValidClass(joinOption.entityClass());
 
-            Class joinEntityClass = hasJoinEntityClass ? joinOption.entityClass() : null;
-
+            Class<?> joinEntityClass = hasJoinEntityClass ? joinOption.entityClass() : null;
 
             if (joinEntityClass == null) {
                 joinEntityClass = miniDao.getEntityClass(joinOption.tableOrStatement());
             }
 
             if (!hasText(selfAlias)) {
-                String eClass = joinEntityClass.getPackage().getName() + ".E_" + joinEntityClass.getSimpleName();
-                try {
-                    selfAlias = (String) ClassUtils.forName(eClass, null).getField("ALIAS").get(null);
-                } catch (Exception e) {
-                    throw new StatementBuildException(joinOption + ": 多表关联时，尝试自动 获取 JoinOption注解 的 alias 时失败，请手动指定，错误：" + e.getMessage());
-                }
+                selfAlias = getDefaultAlias(joinEntityClass);
             }
 
             if (!hasText(selfAlias)) {
@@ -1063,6 +1069,7 @@ public abstract class ExprUtils {
             String targetAlias = joinOption.joinTargetAlias();
 
             if (!hasText(targetAlias)) {
+                //没有指定，默认关联到主表别名
                 targetAlias = alias;
             }
 
@@ -1104,12 +1111,12 @@ public abstract class ExprUtils {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
             }
 
-            if (joinColumn.startsWith(COLUMN_REPLACE_PREFIX)) {
-                joinColumn = joinColumn.substring(COLUMN_REPLACE_PREFIX.length());
+            if (joinColumn.startsWith(C.FIELD_PREFIX)) {
+                joinColumn = joinColumn.substring(C.FIELD_PREFIX.length());
             }
 
-            if (targetColumn.startsWith(COLUMN_REPLACE_PREFIX)) {
-                targetColumn = targetColumn.substring(COLUMN_REPLACE_PREFIX.length());
+            if (targetColumn.startsWith(C.FIELD_PREFIX)) {
+                targetColumn = targetColumn.substring(C.FIELD_PREFIX.length());
             }
 
             //如果是 SQL 原生查询，需要转换列名
@@ -1211,6 +1218,4 @@ public abstract class ExprUtils {
     }
 
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
-
-
 }

@@ -34,7 +34,7 @@ public @interface JoinOption {
      *
      * @return
      */
-    Class entityClass();
+    Class<?> entityClass();
 
     /**
      * 表名或是语句表达式

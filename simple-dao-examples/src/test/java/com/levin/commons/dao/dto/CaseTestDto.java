@@ -26,7 +26,7 @@ public class CaseTestDto {
 
     @Select(value = E_User.score, fieldCases = {
             @Case(column = "", elseExpr = "5", condition = "#_val == 1", whenOptions = {
-                    @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
+                    @Case.When(whenExpr = "F$:score > 95 AND F$:_user.lastUpdateTime is null", thenExpr = "1")
                     , @Case.When(whenExpr = "score > 85", thenExpr = "2")
                     , @Case.When(whenExpr = "score > 60", thenExpr = "3")
                     , @Case.When(whenExpr = "score > 30", thenExpr = "4")
