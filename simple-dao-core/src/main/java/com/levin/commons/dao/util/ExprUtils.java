@@ -7,6 +7,7 @@ import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.Case;
+import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.service.support.SpringContextHolder;
@@ -1029,6 +1030,11 @@ public abstract class ExprUtils {
 
         for (JoinOption joinOption : joinOptions) {
 
+            if (joinOption.type() == null
+                    || joinOption.type() == Fetch.JoinType.None) {
+                throw new StatementBuildException(joinOption + " type 连接类型必须指定");
+            }
+
             //别名全部用小写
             String selfAlias = joinOption.alias().trim().toLowerCase();
 
@@ -1128,9 +1134,9 @@ public abstract class ExprUtils {
             }
 
             //
-            builder.append(" ").append(joinOption.type().name()).append(" join ")
+            builder.append(" ").append(joinOption.type().name()).append(" Join ")
                     .append(fromStatement)
-                    .append(" on ").append(targetAlias).append(".").append(targetColumn)
+                    .append(" On ").append(targetAlias).append(".").append(targetColumn)
                     .append(" = ").append(selfAlias).append(".").append(joinColumn).append(" ");
         }
 

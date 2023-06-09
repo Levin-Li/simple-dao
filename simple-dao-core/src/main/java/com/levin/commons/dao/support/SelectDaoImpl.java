@@ -258,7 +258,6 @@ public class SelectDaoImpl<T>
      * @param targetAlias
      * @return
      */
-    @Override
     public SelectDao<T> join(Boolean isAppend, Class<?> targetClass, String targetAlias) {
 
         if (!Boolean.TRUE.equals(isAppend)) {

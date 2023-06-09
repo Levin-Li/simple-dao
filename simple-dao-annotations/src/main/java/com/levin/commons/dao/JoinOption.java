@@ -22,6 +22,8 @@ public @interface JoinOption {
     /**
      * 连接类型
      *
+     *
+     *
      * @return
      */
     Fetch.JoinType type() default Fetch.JoinType.Left;
