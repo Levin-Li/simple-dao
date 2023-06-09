@@ -133,17 +133,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * 自然连接
      *
      * @param isAppend
-     * @param targetClass
-     * @param targetAlias
-     * @return
-     */
-    SelectDao<T> join(Boolean isAppend, Class<?> targetClass, String targetAlias);
-
-    /**
-     * 笛卡儿积
-     * 自然连接
-     *
-     * @param isAppend
      * @param joinOptions
      * @return
      */
@@ -212,7 +201,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * 增加连接
      *
      * @param isAppend
-     * @param joinType
+     * @param joinType         如果不填，默认为左连接
      * @param entityClass
      * @param alias
      * @param joinColumn

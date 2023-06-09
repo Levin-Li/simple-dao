@@ -1088,6 +1088,14 @@ public class DaoExamplesTest {
                 .leftJoin(Group.class)
                 .count();
 
+        Assert.isTrue(count == dao.selectFrom(User.class).count(), "左连接数据错误");
+
+
+        dao.selectByNative(User.class, E_User.ALIAS)
+                .leftJoin(Group.class)
+                .count();
+
+
         System.out.println(count);
     }
 

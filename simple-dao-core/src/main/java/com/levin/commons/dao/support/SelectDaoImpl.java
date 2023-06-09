@@ -225,7 +225,7 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    protected void appendToAliasMap(String targetAlias, Class targetClass) {
+    protected void appendToAliasMap(String targetAlias, Class<?> targetClass) {
 
         if (!ExprUtils.isValidClass(targetClass)) {
             throw new StatementBuildException("join class " + targetClass + " fail");
@@ -259,14 +259,13 @@ public class SelectDaoImpl<T>
      * @return
      */
     @Override
-    public SelectDao<T> join(Boolean isAppend, Class targetClass, String targetAlias) {
+    public SelectDao<T> join(Boolean isAppend, Class<?> targetClass, String targetAlias) {
 
         if (!Boolean.TRUE.equals(isAppend)) {
             return this;
         }
 
         appendToAliasMap(targetAlias, targetClass);
-
 
         String targetName = targetClass.getName();
 

@@ -22,7 +22,7 @@ public @interface SimpleJoinOption {
      *
      * @return
      */
-    Class entityClass();
+    Class<?> entityClass();
 
 
     /**
