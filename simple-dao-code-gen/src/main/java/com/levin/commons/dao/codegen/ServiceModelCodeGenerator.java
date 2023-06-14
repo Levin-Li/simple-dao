@@ -4,6 +4,7 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.MultiTenantObject;
@@ -1157,15 +1158,34 @@ public final class ServiceModelCodeGenerator {
 
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
-                fieldModel.setTitle(schema.title())
-                        .setDesc(getFirst(schema.description(), schema.title(), field.getName()))
-                        .setDescDetail(schema.title() + schema.description());
+
+                if (StringUtils.hasText(schema.title())) {
+
+                    fieldModel.setTitle(schema.title())
+                            .setDesc(schema.description())
+                    //  .setDescDetail(schema.title() + ":" + schema.description())
+                    ;
+
+                } else if (StringUtils.hasText(schema.description())) {
+
+                    String[] splitDesc = CommentUtils.splitDesc(schema.description());
+
+                    fieldModel.setTitle(splitDesc[0])
+                            .setDesc(splitDesc[1])
+                    //    .setDescDetail(splitDesc[0] + ":" + splitDesc[1])
+                    ;
+                }
+
+//                fieldModel.setTitle(schema.title())
+//                        .setDesc(getFirst(schema.description(), schema.title(), field.getName()))
+//                        .setDescDetail(schema.title() + schema.description());
+
             } else if (field.isAnnotationPresent(Desc.class)) {
                 Desc desc = field.getAnnotation(Desc.class);
-                fieldModel.setDesc(desc.value());
-                fieldModel.setDescDetail(desc.detail());
+                fieldModel.setTitle(desc.value());
+                fieldModel.setDesc(desc.detail());
             } else {
-                fieldModel.setDesc(field.getName());
+                fieldModel.setTitle(field.getName());
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
@@ -1333,7 +1353,7 @@ public final class ServiceModelCodeGenerator {
                 } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
                 } else if (fieldModel.getType().equals(String.class)) {
-                    fieldModel.setTestValue("\"" + fieldModel.getDesc() + "_1\"");
+                    fieldModel.setTestValue("\"" + fieldModel.getTitle() + "_1\"");
                 } else if (fieldModel.getType().equals(Integer.class) || fieldModel.getType().equals(Long.class)) {
                     fieldModel.setTestValue(fieldModel.getName().endsWith("Id")
                             ? "null" : ("1" + (fieldModel.getType().equals(Long.class) ? "L" : "")));

@@ -45,7 +45,7 @@ import ${modulePackageName}.services.commons.req.*;
  *  查询${desc}
  *  @Author Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = QUERY_ACTION + BIZ_NAME)
+@Schema(title = QUERY_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
@@ -60,11 +60,11 @@ public class ${className} extends ${reqExtendClass}{
     private static final long serialVersionUID = ${serialVersionUID}L;
 
     @Ignore
-    @Schema(description = "排序字段")
+    @Schema(title = "排序字段")
     String orderBy;
 
     //@Ignore
-    @Schema(description = "排序方向")
+    @Schema(title = "排序方向")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
     OrderBy.Type orderDir;
 
@@ -76,29 +76,29 @@ public class ${className} extends ${reqExtendClass}{
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
     // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "大于等于" + ${field.schemaDesc} + "，默认的时间格式：yyyy/MM/dd HH:mm:ss")
+    @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "小于等于" + ${field.schemaDesc} + "，默认的时间格式：yyyy/MM/dd HH:mm:ss")
+    @Schema(title = ${field.schemaTitle} , description = "小于等于" + ${field.schemaTitle})
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '-日期范围\", ', '')}description = ${field.schemaDesc} + "-日期范围，格式：yyyyMMdd-yyyyMMdd，大于等于且小余等于")
-    @Between(paramDelimiter = "-", patterns = {"yyyyMMdd"})
+    @Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyy-MM-dd"})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
     <#-- 基本类型 -->
     <#elseif field.baseType>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#if field.contains>
     <#-- 模糊匹配 -->
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = "模糊匹配 - " + ${field.schemaDesc})
+    @Schema(title = "模糊匹配-" + ${field.schemaTitle})
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     <#elseif field.lazy!>
-    @Schema(description = "是否加载" + ${field.schemaDesc})
+    @Schema(title = "是否加载" + ${field.schemaTitle})
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     Boolean load${field.name?cap_first};
     </#if>

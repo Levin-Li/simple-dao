@@ -40,7 +40,7 @@ import ${imp};
  *  新增${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = CREATE_ACTION + BIZ_NAME)
+@Schema(title = CREATE_ACTION + BIZ_NAME)
 @Data
 @Accessors(chain = true)
 @ToString
@@ -56,7 +56,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
     <#if (field.baseType && !field.pk && !field.lazy && !field.autoIdentity)>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = Schema.RequiredMode.REQUIRED', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>

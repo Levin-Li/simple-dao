@@ -21,7 +21,7 @@ import lombok.experimental.FieldNameConstants;
  *
  * @Author Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "多租户查询对象")
+@Schema(title = "多租户查询对象")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
@@ -34,7 +34,7 @@ public class MultiTenantOrgReq
             , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN  + " && !#" + InjectConsts.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN  + " && !#" + InjectConsts.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(description = "机构ID" , hidden = true)
+    @Schema(title = "机构ID" , hidden = true)
     @Eq
     protected String orgId;
 

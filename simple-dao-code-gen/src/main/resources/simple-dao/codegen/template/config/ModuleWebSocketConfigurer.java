@@ -15,9 +15,9 @@ import org.springframework.beans.factory.annotation.*;
 import javax.annotation.Resource;
 
 @Slf4j
-@Configuration(PLUGIN_PREFIX + "ModuleWebSocketConfigurer")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebSocketConfigurer", matchIfMissing = true)
-@EnableWebSocketMessageBroker
+//@Configuration(PLUGIN_PREFIX + "ModuleWebSocketConfigurer")
+//@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebSocketConfigurer", matchIfMissing = true)
+//@EnableWebSocketMessageBroker
 public class ModuleWebSocketConfigurer
         implements WebSocketMessageBrokerConfigurer {
 

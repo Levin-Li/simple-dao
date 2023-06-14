@@ -39,7 +39,7 @@ import ${imp};
  *  删除${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = DELETE_ACTION + BIZ_NAME)
+@Schema(title = DELETE_ACTION + BIZ_NAME)
 @Data
 
 <#if pkField?exists>
@@ -59,7 +59,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#if pkField?exists>
 
-    @Schema(description = ${pkField.schemaDesc} + "集合", required = true, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = Schema.RequiredMode.REQUIRED)
     @In(value = E_${entityName}.${pkField.name})
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;

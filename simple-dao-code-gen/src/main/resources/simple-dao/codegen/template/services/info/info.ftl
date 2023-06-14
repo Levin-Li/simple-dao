@@ -34,7 +34,7 @@ import ${imp};
 * ${desc}
 * @Author Auto gen by simple-dao-codegen ${.now}
 */
-@Schema(description = BIZ_NAME)
+@Schema(title = BIZ_NAME)
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
@@ -56,7 +56,7 @@ public class ${className} implements Serializable {
    <#list field.annotations as annotation>
     ${annotation}
    </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.required!?string(', required = true, requiredMode = Schema.RequiredMode.REQUIRED', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = Schema.RequiredMode.REQUIRED', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
 </#list>

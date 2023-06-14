@@ -40,7 +40,7 @@ import ${imp};
  *  更新${desc}
  *  Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = UPDATE_ACTION + BIZ_NAME)
+@Schema(title = UPDATE_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
@@ -57,7 +57,7 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = ${pkField.schemaDesc}, required = true, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
@@ -76,7 +76,7 @@ public class ${className} extends ${reqExtendClass} {
     ${annotation}
         </#if>
     </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc} ${field.hidden?string(' , hidden = true', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     </#if>
 </#list>
@@ -88,7 +88,7 @@ public class ${className} extends ${reqExtendClass} {
     ${annotation}
     </#if>
     </#list>
-    @Schema(${(field.title!?trim!?length > 0)?string('title = \"' + field.title!?trim + '\", ', '')}description = ${field.schemaDesc}${field.hidden?string(' , hidden = true', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>

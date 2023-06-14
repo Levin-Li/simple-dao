@@ -40,7 +40,7 @@ import ${imp};
 *  //Auto gen by simple-dao-codegen ${.now}
 */
 
-@Schema(description =  BIZ_NAME + " 主键通用查询")
+@Schema(title =  BIZ_NAME + " 主键通用查询")
 @Data
 
 <#if pkField?exists>
@@ -59,7 +59,7 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(description = ${pkField.schemaDesc} , required = true, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(title = ${pkField.schemaTitle} , required = true, requiredMode = Schema.RequiredMode.REQUIRED)
     @Eq(require = true)
     //@NotNull
     protected ${pkField.typeName} ${pkField.name};

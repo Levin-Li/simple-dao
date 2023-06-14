@@ -22,7 +22,7 @@ import org.hibernate.annotations.Type;
 @Accessors(chain = true)
 @FieldNameConstants
 
-@Schema(description = "机构")
+@Schema(title = "机构")
 @Entity(name = EntityConst.PREFIX + "TestOrg")
 @Table(
         indexes = {
@@ -69,27 +69,27 @@ public class TestOrg
         extends AbstractTreeObject<String, TestOrg>
         implements MultiTenantObject, StatefulObject {
 
-    @Schema(description = "机构状态")
+    @Schema(title = "机构状态")
     public enum State implements EnumDesc {
-        @Schema(description = "正常")
+        @Schema(title = "正常")
         Normal,
-        @Schema(description = "冻结")
+        @Schema(title = "冻结")
         Freeze,
-        @Schema(description = "注销")
+        @Schema(title = "注销")
         Cancellation,
     }
 
-    @Schema(description = "机构类型")
+    @Schema(title = "机构类型")
     public enum OrgType implements EnumDesc {
-        @Schema(description = "公司/独立法人")
+        @Schema(title = "公司/独立法人")
         LegalPerson,
-        @Schema(description = "分公司/分支机构")
+        @Schema(title = "分公司/分支机构")
         Branch,
-        @Schema(description = "部门")
+        @Schema(title = "部门")
         Department,
-        @Schema(description = "小组")
+        @Schema(title = "小组")
         Group,
-        @Schema(description = "其它")
+        @Schema(title = "其它")
         Other,
     }
 
@@ -99,79 +99,79 @@ public class TestOrg
     @Column(length = 64)
     protected String id;
 
-    @Schema(description = "父ID")
+    @Schema(title = "父ID")
     @Column(length = 64)
     protected String parentId;
 
-    @Schema(description = "租户ID")
+    @Schema(title = "租户ID")
     @Column(length = 64)
     protected String tenantId;
 
-    @Schema(description = "编码", title = "对于公司是统一信用码")
+    @Schema(title = "编码", description = "对于公司是统一信用码")
     @Column(length = 64)
     @Contains
     protected String code;
 
-    @Schema(description = "图标")
+    @Schema(title = "图标")
     protected String icon;
 
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     @Column(nullable = false, length = 32)
     @Enumerated(EnumType.STRING)
     protected State state;
 
-    @Schema(description = "类型")
+    @Schema(title = "类型")
     @Column(nullable = false, length = 64)
     @Type(type = "EnumDesc")
     protected OrgType type;
 
-    @Schema(description = "所属行业")
+    @Schema(title = "所属行业")
     @Column(length = 64)
     protected String industries;
 
-    @Schema(description = "区域编码")
+    @Schema(title = "区域编码")
     @Column(nullable = false, length = 64)
     @Contains
     protected String areaCode;
 
-//    @Schema(description = "所属区域")
+//    @Schema(title = "所属区域")
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "areaCode", insertable = false, updatable = false)
 //    protected Area area;
 
-    @Schema(description = "机构级别", title = "使用字典值配置")
+    @Schema(title = "机构级别", description = "使用字典值配置")
     @Column(length = 128)
     protected String level;
 
     @Column(nullable = false, length = 128)
-    @Schema(description = "机构类别", title = "使用字典值配置")
+    @Schema(title = "机构类别", description = "使用字典值配置")
     protected String category;
 
     @Column(nullable = false)
-    @Schema(description = "是否外部机构")
+    @Schema(title = "是否外部机构")
     protected Boolean isExternal;
 
     //////////////////////////////////////////////////////////////////////
 
-    @Schema(description = "联系人")
+    @Schema(title = "联系人")
     @Column(length = 64)
     @Contains
     protected String contacts;
 
-    @Schema(description = "联系电话")
+    @Schema(title = "联系电话")
     @Column(length = 20)
     @Contains
     protected String phones;
 
-    @Schema(description = "联系邮箱")
+    @Schema(title = "联系邮箱")
     @Column(length = 32)
     protected String emails;
 
-    @Schema(description = "联系地址")
+    @Schema(title = "联系地址")
     @Contains
     protected String address;
 
-    @Schema(description = "邮政编码")
+    @Schema(title = "邮政编码")
     @Column(length = 32)
     protected String zipCode;
 

@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen.db;
 
 import com.levin.commons.dao.codegen.db.converter.ColumnTypeConverter;
 import com.levin.commons.dao.codegen.db.util.FieldUtil;
+import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.util.StringUtils;
@@ -12,7 +13,6 @@ import org.springframework.util.StringUtils;
 @Data
 @Accessors(chain = true)
 public class ColumnDefinition {
-
 
     /**
      *
@@ -38,19 +38,26 @@ public class ColumnDefinition {
      * 是否自增
      */
     private Boolean isIdentity;
+
     /**
      * 是否主键
      */
     private Boolean isPk;
+
     /**
      * 字段注释
      */
     private String comment;
 
+    private String title;
+
+    private String desc;
+
     /**
      * 字段长度
      */
     private Integer maxLength;
+
     /**
      * 小数位长度
      */
@@ -98,12 +105,6 @@ public class ColumnDefinition {
      */
     public String getColumnNameLF() {
         return FieldUtil.lowerFirstLetter(this.columnName);
-    }
-
-    public String getLabel() {
-        return StringUtils.hasLength(comment) ?
-                comment.replace("\n", "\\n").replace("\r", "\\r")
-                : columnName;
     }
 
 
@@ -165,10 +166,23 @@ public class ColumnDefinition {
     }
 
     public void setComment(String comment) {
+
         if (comment == null) {
             comment = "";
         }
-        this.comment = comment;
+
+        this.comment = comment.trim();
+
+        String[] splitDesc = CommentUtils.splitDesc(getComment());
+
+        if (!StringUtils.hasText(title)) {
+            title = splitDesc[0];
+        }
+
+        if (!StringUtils.hasText(desc)) {
+            desc = splitDesc[1];
+        }
+
     }
 
     public ColumnTypeConverter getColumnTypeConverter() {

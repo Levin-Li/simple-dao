@@ -85,7 +85,7 @@ public class ${entityName}
     @Temporal(TemporalType.<#if field.columnType =='date'>DATE<#elseif field.columnType =='time'>TIME<#else>TIMESTAMP</#if>)
    </#if>
     @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
-    @Schema(description = "${field.label}")
+    @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
     protected ${field.fieldTypeBox} ${field.camelCaseName};
 
 </#list>

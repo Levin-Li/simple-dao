@@ -24,7 +24,7 @@ public class FieldModel implements Cloneable {
 
     public enum CRUD {
         CREATE,
-        RETRIVE,
+        RETRIEVE,
         UPDATE,
         DELETE,
         DEFAULT
@@ -38,7 +38,9 @@ public class FieldModel implements Cloneable {
 
     public String name;
 
-    public String title;
+    public String title = "";
+    private String desc = "";
+
 
     String prefix;
 
@@ -53,10 +55,6 @@ public class FieldModel implements Cloneable {
 
     private Integer length = -1;
 
-    private String desc;
-    private String finalDesc;
-
-    private String descDetail;
 
     public final Set<String> imports = new LinkedHashSet<>();
 
@@ -109,11 +107,6 @@ public class FieldModel implements Cloneable {
         return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
-    public String getRealDesc() {
-        return desc;
-    }
-
-
     /**
      * 返回swagger 描述
      * <p>
@@ -122,21 +115,11 @@ public class FieldModel implements Cloneable {
      * @return
      */
     public String getSchemaDesc() {
-        return isSchemaDescUseConstRef ? "L_" + name : ("\"" + getDesc() + "\"");
+        return isSchemaDescUseConstRef ? "D_" + name : ("\"" + getDesc() + "\"");
     }
 
-    /**
-     * 替换换行符
-     *
-     * @return
-     */
-    public String getDesc() {
-
-        if (StringUtils.hasText(finalDesc)) {
-            return finalDesc;
-        }
-
-        return finalDesc = com.levin.commons.utils.ExceptionUtils.getZhDesc(desc);
+    public String getSchemaTitle() {
+        return isSchemaDescUseConstRef ? "L_" + name : ("\"" + getTitle() + "\"");
     }
 
     /**

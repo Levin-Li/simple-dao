@@ -145,6 +145,14 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     ${entityName}Info findOne(@NotNull Query${entityName}Req req);
 
+     /**
+     * 查询并返回唯一一条数据
+     * 如果有多余1条数据，将抛出异常
+     * @param req
+     * @return data
+     */
+     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+     public ${entityName}Info findUnique(Query${entityName}Req req);
 
     /**
     * 清除缓存

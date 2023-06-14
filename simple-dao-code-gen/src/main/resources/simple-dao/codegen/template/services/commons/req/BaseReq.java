@@ -30,7 +30,7 @@ import java.util.*;
  *  基本查询对象
  *  @Author Auto gen by simple-dao-codegen ${.now}
  */
-@Schema(description = "基本查询对象")
+@Schema(title = "基本查询对象")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
