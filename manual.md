@@ -78,19 +78,20 @@ Dao 类逻辑框图，如下图所示。
     DeleteDao dao = dao.deleteFrom(Group.class)
     dao.delete()
 
-##### 2.3 回调应用（SelectDao 、UpdateDao、DeleteDao） 
+##### 2.3 回调使用 
     
-       //java.util.function.Consumer
-      
-       //回调
+       //1、回调接口定义：java.util.function.Consumer<SelectDao/UpdateDao/DeleteDao>
+       //支持3种dao回调
+       
+       //2、回调实例
        Consumer<SelectDao<?>> callback = dao -> {
+            //在回调中动态增加查询条件
             dao.orderBy(OrderBy.Type.Desc,E_AfterSaleOrder.create_time);
             dao.eq("name","lily");
         };
        
-      //查询
+      //3、回调使用
       simpleDao.findPagingDataByQueryObj(req,callback,paging);
-
 
 ### 4 基础查询
     
@@ -236,7 +237,7 @@ Dao 类逻辑框图，如下图所示。
                      
  @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
  
-       @Schema(description = "增量更新设备数据")
+       @Schema(title = "增量更新设备数据")
        @Data 
        @NoArgsConstructor 
        @ToString
@@ -251,18 +252,18 @@ Dao 类逻辑框图，如下图所示。
        
            private static final long serialVersionUID = 362651129L;
        
-           @Schema(description = "id")
+           @Schema(title = "id")
            @NotNull
            @Eq(require = true)
            private Long id;
        
-           @Schema(description = "实时运行告警数（0为未告警，n为告警条数")
+           @Schema(title = "实时运行告警数（0为未告警，n为告警条数")
            private Integer runAlarmCnt;
        
-           @Schema(description = "状态告警数（0：无告警，n为告警条数)")
+           @Schema(title = "状态告警数（0：无告警，n为告警条数)")
            private Integer statusAlarmCnt;
        
-           @Schema(description = "合同告警数（含有租金、押金、合同告警条数）")
+           @Schema(title = "合同告警数（含有租金、押金、合同告警条数）")
            private Integer contractAlarmCnt;
        
            public IncrementEditDeviceReq(Long id) {
@@ -450,7 +451,7 @@ Dao 类逻辑框图，如下图所示。
 
    字段变量的替换
    
-   为了兼容 原生查询和 JPA 查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
+  同时同时兼容原生查询和JPA查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
    
       F$:score > 95 AND F$:u.lastUpdateTime
       
@@ -497,10 +498,10 @@ Dao 类逻辑框图，如下图所示。
      
          private static final long serialVersionUID = -350965260L;
      
-         @Schema(description = "ID")
+         @Schema(title = "ID")
          private Long id;
      
-         @Schema(description = "ID集合")
+         @Schema(title = "ID集合")
          @In(E_Customer.id)
          @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
          private Long[] ids;
