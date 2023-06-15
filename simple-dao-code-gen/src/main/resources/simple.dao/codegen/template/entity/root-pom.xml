@@ -391,7 +391,7 @@
 
                 <configuration>
                     <!-- 生成的控制器代码是否包括目录-->
-                    <isCreateControllerSubDir>false</isCreateControllerSubDir>
+                    <!--  <isCreateControllerSubDir>false</isCreateControllerSubDir> -->
 
                     <!-- 是否生成BizController -->
                     <isCreateBizController>false</isCreateBizController>
