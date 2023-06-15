@@ -86,9 +86,9 @@ public class ${className} extends ${reqExtendClass}{
         @Lte
         ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-        @Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-        @Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyy-MM-dd"})
-        ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+        //@Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+        //@Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyy-MM-dd"})
+        //${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
     <#-- 基本类型 -->
     <#elseif field.baseType>
         @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
