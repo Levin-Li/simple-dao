@@ -73,6 +73,7 @@ public class ${className} extends ${reqExtendClass}{
 
     <#list field.annotations as annotation>
         <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
+    @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao",  converter = JsonStrLikeConverter.class, isRequired = "false")
         <#else>
