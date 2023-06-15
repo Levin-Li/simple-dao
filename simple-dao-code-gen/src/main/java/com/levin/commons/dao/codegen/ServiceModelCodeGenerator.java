@@ -14,6 +14,7 @@ import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -1251,7 +1252,10 @@ public final class ServiceModelCodeGenerator {
 
                                             if (GenericConverter.class != injectVar.converter()) {
                                                 fieldModel.addImport(injectVar.converter());
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, injectVar.converter().getSimpleName()));
+
+                                                String simpleName = injectVar.converter().getSimpleName();
+
+                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, simpleName));
                                             } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
                                                 annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
                                             }

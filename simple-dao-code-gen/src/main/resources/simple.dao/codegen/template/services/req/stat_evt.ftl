@@ -17,6 +17,7 @@ import com.levin.commons.dao.annotation.misc.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
+import com.levin.commons.service.support.*;
 
 import org.springframework.format.annotation.*;
 
@@ -67,7 +68,12 @@ public class ${className} extends ${reqExtendClass}{
 <#list fields as field>
 
     <#list field.annotations as annotation>
-        //${annotation}
+        <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
+    @Contains
+    @InjectVar(domain = "dao",  converter = JsonStrLikeConverter.class, isRequired = "false")
+        <#else>
+    ${annotation}
+        </#if>
     </#list>
 <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
