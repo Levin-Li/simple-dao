@@ -261,7 +261,7 @@ public final class ServiceModelCodeGenerator {
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
-       // genFileByTemplate("test/TestCase.java", params, prefix + "TestCase.java");
+        // genFileByTemplate("test/TestCase.java", params, prefix + "TestCase.java");
 
         //测试目录
         bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
@@ -463,7 +463,7 @@ public final class ServiceModelCodeGenerator {
 //                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
 //                        + "controller" + File.separatorChar + "BaseController.java");
 
-        genFileByTemplate(genParams, controllerDir,"controller", "BaseController.java");
+        genFileByTemplate(genParams, controllerDir, "controller", "BaseController.java");
 
 //        genFileByTemplate("services/BaseService.java",
 //                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
@@ -471,16 +471,16 @@ public final class ServiceModelCodeGenerator {
 //                        + "services" + File.separatorChar + "BaseService.java");
 
 
-        genFileByTemplate(genParams, serviceDir,"services", "BaseService.java");
+        genFileByTemplate(genParams, serviceDir, "services", "BaseService.java");
 
 
-        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "BaseReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
 
 
-        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "MultiTenantReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
 
 
-        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "MultiTenantOrgReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
 
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -532,15 +532,15 @@ public final class ServiceModelCodeGenerator {
     private static String controllerPackage() {
         return modulePackageName() + ".controller"
                 + (isCreateBizController() ? ".base" : "")
-                + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+                + (Boolean.FALSE.equals(isCreateControllerSubDir()) ? "" : ("." + subPkgName()));
     }
 
     private static String bizControllerPackage() {
         return modulePackageName() + ".controller"
-                + (isCreateControllerSubDir() ? "." + subPkgName() : "");
+                + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? "." + subPkgName() : "");
     }
 
-    public static Boolean isCreateControllerSubDir(boolean newValue) {
+    public static Boolean isCreateControllerSubDir(Boolean newValue) {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 
@@ -548,7 +548,7 @@ public final class ServiceModelCodeGenerator {
         return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), false);
     }
 
-    public static Boolean isCreateBizController(boolean newValue) {
+    public static Boolean isCreateBizController(Boolean newValue) {
         return threadContext.put(ExceptionUtils.getInvokeMethodName(), newValue);
     }
 

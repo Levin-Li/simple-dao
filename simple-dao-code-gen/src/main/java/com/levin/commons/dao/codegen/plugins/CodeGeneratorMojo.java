@@ -99,15 +99,14 @@ public class CodeGeneratorMojo extends BaseMojo {
     /**
      * 生成的控制器类是否创建子目录
      */
-    @Parameter(defaultValue = "false")
-    private boolean isCreateControllerSubDir = false;
+    @Parameter
+    private Boolean isCreateControllerSubDir = null;
 
     /**
      * 生成的控制器类是否创建子目录
      */
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
-
 
     /**
      * 忽略的实体类，类名正则表达式
@@ -220,7 +219,9 @@ public class CodeGeneratorMojo extends BaseMojo {
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
             }
 
+
             ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
+
             ServiceModelCodeGenerator.isCreateBizController(this.isCreateBizController);
             ServiceModelCodeGenerator.ignoreEntities(Arrays.asList(this.ignoreEntities));
 
