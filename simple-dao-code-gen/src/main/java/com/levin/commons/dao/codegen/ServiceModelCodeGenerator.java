@@ -62,7 +62,7 @@ public final class ServiceModelCodeGenerator {
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
-    public static final String BIZ_SERVICE_FTL = "services/biz_service.ftl";
+    public static final String BIZ_SERVICE_FTL = "biz/biz_service.ftl";
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
@@ -252,7 +252,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell" + File.separator + "restart.sh");
         genFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell" + File.separator + "shutdown.sh");
 
-        final String resTemplateDir = "simple-dao/codegen/template/";
+        final String resTemplateDir = "simple.dao/codegen/template/";
 
         Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
 
@@ -261,7 +261,7 @@ public final class ServiceModelCodeGenerator {
         prefix = prefix.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         new File(prefix).mkdirs();
 
-        genFileByTemplate("test/TestCase.java", params, prefix + "TestCase.java");
+       // genFileByTemplate("test/TestCase.java", params, prefix + "TestCase.java");
 
         //测试目录
         bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
@@ -458,38 +458,35 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
 
-        genFileByTemplate("controller/BaseController.java",
-                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
-                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
-                        + "controller" + File.separatorChar + "BaseController.java");
+//        genFileByTemplate("controller/BaseController.java",
+//                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
+//                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+//                        + "controller" + File.separatorChar + "BaseController.java");
+
+        genFileByTemplate(genParams, controllerDir,"controller", "BaseController.java");
+
+//        genFileByTemplate("services/BaseService.java",
+//                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
+//                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+//                        + "services" + File.separatorChar + "BaseService.java");
 
 
-        genFileByTemplate("services/BaseService.java",
-                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
-                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
-                        + "services" + File.separatorChar + "BaseService.java");
-
-        String fn = String.join(File.separator, "services", "commons", "req", "BaseReq.java");
-
-        genFileByTemplate(fn,
-                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
-                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
-                        + fn);
-
-        fn = String.join(File.separator, "services", "commons", "req", "MultiTenantReq.java");
-
-        genFileByTemplate(fn,
-                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
-                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
-                        + fn);
+        genFileByTemplate(genParams, serviceDir,"services", "BaseService.java");
 
 
-        fn = String.join(File.separator, "services", "commons", "req", "MultiTenantOrgReq.java");
+        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "BaseReq.java");
 
-        genFileByTemplate(fn,
-                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
-                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
-                        + fn);
+
+        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "MultiTenantReq.java");
+
+
+        genFileByTemplate(genParams, serviceDir,"services", "commons", "req", "MultiTenantOrgReq.java");
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
+        genFileByTemplate(genParams, serviceDir, "biz", "InjectVarServiceImpl.java");
 
         ///////////////////////////////////////////////
         List<String> ignoreEntities = ignoreEntities();
@@ -511,6 +508,16 @@ public final class ServiceModelCodeGenerator {
             }
         }
         ///////////////////////////////////////////////
+    }
+
+    private static void genFileByTemplate(Map<String, Object> genParams, String srcDir, String... templatePaths) throws Exception {
+
+        String fn = String.join(File.separator, templatePaths);
+
+        genFileByTemplate(fn,
+                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), srcDir + File.separatorChar
+                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
+                        + fn);
     }
 
     private static String servicePackage() {
@@ -1470,7 +1477,7 @@ public final class ServiceModelCodeGenerator {
         //支持从jar中加载模板
         configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
         //获取页面模版。
-        return configuration.getTemplate(MessageFormat.format("/simple-dao/codegen/template/{0}", templatePath));
+        return configuration.getTemplate(MessageFormat.format("/simple.dao/codegen/template/{0}", templatePath));
     }
 
     private static Enum getEnumByVal(Class ec, int i) {

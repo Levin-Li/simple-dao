@@ -1,9 +1,7 @@
 package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.annotation.Contains;
-import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
-import com.levin.commons.dao.domain.support.AbstractNamedMultiTenantObject;
-import com.levin.commons.dao.domain.support.E_AbstractNamedMultiTenantObject;
+import com.levin.commons.dao.domain.support.*;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
@@ -31,14 +29,14 @@ import org.hibernate.annotations.Type;
                 @Index(columnList = AbstractBaseEntityObject.Fields.enable),
                 @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
                 @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
-                @Index(columnList = E_AbstractNamedMultiTenantObject.name),
+                @Index(columnList = E_AbstractNamedEntityObject.name),
                 @Index(columnList = E_TestRole.code),
                 @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
         },
 
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_TestRole.code}),
-                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
+                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedEntityObject.name}),
         }
 )
 
