@@ -96,13 +96,11 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isSchemaDescUseConstRef = true;
 
-
     /**
      * 生成的控制器类是否创建子目录
      */
-    @Parameter(defaultValue = "true")
-    private boolean isCreateControllerSubDir = true;
-
+    @Parameter(defaultValue = "false")
+    private boolean isCreateControllerSubDir = false;
 
     /**
      * 生成的控制器类是否创建子目录
