@@ -17,7 +17,7 @@
 
     <properties>
 
-        <revision>2.3.6-SNAPSHOT</revision>
+        <revision>2.5.1-SNAPSHOT</revision>
 
         <jitpack.groupId>com.github.Levin-Li</jitpack.groupId>
 

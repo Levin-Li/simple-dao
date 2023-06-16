@@ -152,7 +152,7 @@ public interface ${className} {
      * @return data
      */
      @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-     public ${entityName}Info findUnique(Query${entityName}Req req);
+     ${entityName}Info findUnique(Query${entityName}Req req);
 
     /**
     * 清除缓存
