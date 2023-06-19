@@ -69,6 +69,12 @@
         <#if moduleType?? && (moduleType == 'service' || moduleType == 'controller')>
 
             <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-aop</artifactId>
                 <scope>provided</scope>
@@ -151,6 +157,18 @@
         </#if>
 
         <#if moduleType?? && moduleType == 'bootstrap' >
+
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-dependencies-zookeeper</artifactId>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-spring-boot-starter</artifactId>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-jpa</artifactId>

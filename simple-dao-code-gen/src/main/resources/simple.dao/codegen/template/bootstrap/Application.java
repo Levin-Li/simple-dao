@@ -32,6 +32,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import org.apache.dubbo.config.spring.context.annotation.*;
+
 import java.lang.reflect.Type;
 
 
@@ -47,6 +49,7 @@ import java.lang.reflect.Type;
 @EnableScheduling
 @EnableCaching
 @EnableAsync
+@EnableDubboConfig
 public class Application {
 
     public static void main(String... args) {

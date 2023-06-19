@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.apache.dubbo.config.spring.context.annotation.*;
 
 //Auto gen by simple-dao-codegen ${.now}
 
@@ -30,19 +31,24 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @Configuration(PLUGIN_PREFIX + "${className}")
 @Slf4j
 
-//spring data scan，jpa querydsl entity class ...
+//spring data jpa scan，jpa querydsl entity class ...
 @EntityScan({PACKAGE_NAME})
 
+// Spring 扫描
 @ComponentScan({PACKAGE_NAME})
 
+// 自定义注解接口 扫描
 @ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
 
+// FeignClients 扫描
 @EnableFeignClients({PACKAGE_NAME})
+
+// Dubbo 扫描
+@DubboComponentScan(basePackages = {PACKAGE_NAME})
 
 public class ModuleStarterConfiguration {
 
     @Autowired
     Environment environment;
-
 
 }

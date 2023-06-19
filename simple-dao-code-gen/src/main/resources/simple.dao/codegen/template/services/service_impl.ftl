@@ -29,6 +29,7 @@ import cn.hutool.core.lang.*;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
+//import org.apache.dubbo.config.spring.context.annotation.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
