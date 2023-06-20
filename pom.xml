@@ -47,6 +47,8 @@
 
         <openfeign.version>3.1.5</openfeign.version>
 
+        <dubbo.version>3.1.8</dubbo.version>
+
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
         <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>

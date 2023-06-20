@@ -15,6 +15,8 @@ import javax.annotation.*;
 
 import javax.servlet.http.*;
 
+import org.apache.dubbo.config.annotation.*;
+
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.dao.*;
 import com.levin.commons.service.domain.*;
@@ -67,10 +69,12 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    @Autowired
+    //@Autowired
+    @DubboReference
     ${serviceName} ${serviceName?uncap_first};
 
-    @Autowired
+    //@Autowired
+    @DubboReference
     Biz${serviceName} biz${serviceName};
 
     /**

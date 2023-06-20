@@ -30,6 +30,7 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
 //import org.apache.dubbo.config.spring.context.annotation.*;
+import org.apache.dubbo.config.annotation.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -63,11 +64,12 @@ import ${imp};
  *
  */
 
-//@Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
-
-@Service(PLUGIN_PREFIX + "${serviceName}")
+//@Service(PLUGIN_PREFIX + "${serviceName}")
+@DubboService
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${serviceName}", matchIfMissing = true)
 @Slf4j
+
+//@Valid只能用在controller， @Validated可以用在其他被spring管理的类上。
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
