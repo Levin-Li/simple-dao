@@ -181,6 +181,16 @@
                 <groupId>org.apache.dubbo</groupId>
                 <artifactId>dubbo-dependencies-zookeeper</artifactId>
                 <type>pom</type>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
