@@ -46,6 +46,7 @@
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
         <redission.version>3.19.3</redission.version>
+        <redission.version>3.16.8</redission.version>
 
         <openfeign.version>3.1.5</openfeign.version>
 
