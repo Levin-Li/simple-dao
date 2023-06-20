@@ -40,7 +40,7 @@ spring:
   #  spring.mvc.date-format(优先级高) 或 @DatetimeFormat
   jackson:
     #date-format: yyyy-MM-dd HH:mm:ss
-    date-format: com.levin.oak.base.format.DefaultDateFormat
+    date-format: com.levin.commons.format.DefaultDateFormat
     time-zone: GMT+8
     locale: zh_CN
 
