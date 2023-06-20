@@ -4,7 +4,7 @@ package ${packageName};
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
-import org.springframework.cache.annotation.*;
+//import org.springframework.cache.annotation.*;
 import java.util.*;
 import javax.validation.constraints.*;
 

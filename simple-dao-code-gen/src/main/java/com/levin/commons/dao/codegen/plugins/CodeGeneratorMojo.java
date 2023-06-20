@@ -41,6 +41,14 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String servicesModuleDirName = "services";
 
     /**
+     * 生成的Starter类的存放位置
+     * <p>
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "starter")
+    private String starterModuleDirName = "starter";
+
+    /**
      * 生成的控制器类的存放位置
      * 如果目录不存在，则会自动创建
      */
@@ -183,12 +191,14 @@ public class CodeGeneratorMojo extends BaseMojo {
             final String mavenDirStyle = new File(srcDir).getCanonicalPath().substring(basedir.getCanonicalPath().length() + 1);
 
             String serviceDir = (splitDir && hasText(servicesModuleDirName)) ? dirPrefix + servicesModuleDirName : "";
+            String starterDir = (splitDir && hasText(starterModuleDirName)) ? dirPrefix + starterModuleDirName : "";
             String controllerDir = (splitDir && hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
             String bootstrapDir = (splitDir && hasText(bootstrapModuleDirName)) ? dirPrefix + bootstrapModuleDirName : "";
             String adminUiDir = (splitDir && hasText(adminUiModuleDirName)) ? dirPrefix + adminUiModuleDirName : "";
 
 
             serviceDir = StringUtils.hasLength(serviceDir) ? basedir.getAbsolutePath() + "/../" + serviceDir + "/" + mavenDirStyle : srcDir;
+            starterDir = StringUtils.hasLength(starterDir) ? basedir.getAbsolutePath() + "/../" + starterDir + "/" + mavenDirStyle : srcDir;
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
             bootstrapDir = StringUtils.hasLength(bootstrapDir) ? basedir.getAbsolutePath() + "/../" + bootstrapDir + "/" + mavenDirStyle : srcDir;
 
@@ -196,6 +206,7 @@ public class CodeGeneratorMojo extends BaseMojo {
 
 
             serviceDir = new File(serviceDir).getCanonicalPath();
+            starterDir = new File(starterDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
             bootstrapDir = new File(bootstrapDir).getCanonicalPath();
             adminUiDir = new File(adminUiDir).getCanonicalPath();
@@ -219,9 +230,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
             }
 
-
             ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
-
             ServiceModelCodeGenerator.isCreateBizController(this.isCreateBizController);
             ServiceModelCodeGenerator.ignoreEntities(Arrays.asList(this.ignoreEntities));
 
@@ -229,6 +238,12 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.moduleName(moduleName);
             ServiceModelCodeGenerator.modulePackageName(modulePackageName);
             ServiceModelCodeGenerator.isSchemaDescUseConstRef(isSchemaDescUseConstRef);
+
+            ServiceModelCodeGenerator.serviceDir(serviceDir);
+            ServiceModelCodeGenerator.starterDir(starterDir);
+            ServiceModelCodeGenerator.controllerDir(controllerDir);
+            ServiceModelCodeGenerator.adminUiDir(adminUiDir);
+            ServiceModelCodeGenerator.bootstrapDir(bootstrapDir);
 
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
@@ -243,26 +258,25 @@ public class CodeGeneratorMojo extends BaseMojo {
 
 
             codeGenParams.putIfAbsent("serviceDir", serviceDir);
+            codeGenParams.putIfAbsent("starterDir", starterDir);
             codeGenParams.putIfAbsent("controllerDir", controllerDir);
             codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
             //1、生成代码
-            ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader()
-                    , outputDirectory, controllerDir, serviceDir, codeGenParams);
+            ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader(), outputDirectory, codeGenParams);
 
             //2、生成辅助文件
             if (splitDir) { //尝试生成Pom 文件
 
-                ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, controllerDir, serviceDir, bootstrapDir, codeGenParams);
-                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, controllerDir, serviceDir, bootstrapDir, codeGenParams);
-
+                ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, codeGenParams);
+                ServiceModelCodeGenerator.tryGenPomFile(mavenProject, codeGenParams);
                 //生成界面文件
-                ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, controllerDir, serviceDir, adminUiDir, codeGenParams);
+                ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, codeGenParams);
             }
 
             //3、生成
-            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, controllerDir, serviceDir, codeGenParams);
+            ServiceModelCodeGenerator.tryGenSpringBootStarterFile(mavenProject, codeGenParams);
 
         } catch (Exception e) {
             getLog().error(mavenProject.getArtifactId() + " 模块代码生成错误：" + e.getMessage(), e);

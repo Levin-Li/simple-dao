@@ -36,8 +36,20 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
-        <#if entities??>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <#if moduleType == 'service'>
             <dependency>
                 <artifactId>${entities.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
@@ -45,20 +57,39 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-jpa</artifactId>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
                 <scope>provided</scope>
             </dependency>
         </#if>
 
-        <#if services??>
+        <#if moduleType == 'starter' || moduleType == 'controller'>
             <dependency>
-                <artifactId>${services.artifactId}</artifactId>
+                <artifactId>${service.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
         </#if>
-        <#if controller??>
+
+        <#if moduleType == 'bootstrap'>
+            <dependency>
+                <artifactId>${starter.artifactId}</artifactId>
+                <groupId>${r"${project.groupId}"}</groupId>
+                <version>${r"${project.version}"}</version>
+            </dependency>
+
             <dependency>
                 <artifactId>${controller.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
@@ -66,7 +97,8 @@
             </dependency>
         </#if>
 
-        <#if moduleType?? && (moduleType == 'service' || moduleType == 'controller')>
+
+        <#if (moduleType == 'starter' || moduleType == 'controller')>
 
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
@@ -77,19 +109,6 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-aop</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
-            <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
                 <scope>provided</scope>
             </dependency>
 
@@ -107,8 +126,8 @@
 
         </#if>
 
-        <#if moduleType?? && (moduleType == 'service')>
-            <#-- service -->
+        <#if moduleType?? && (moduleType == 'starter')>
+            <#-- starter -->
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
