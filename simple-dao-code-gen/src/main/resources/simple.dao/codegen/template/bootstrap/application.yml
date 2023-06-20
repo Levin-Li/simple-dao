@@ -110,13 +110,13 @@ public-key: xxxx
 #dubbo 配置
 dubbo:
   application:
-    name: dubbo-springboot-${moduleName}
+    name: dubbo-${moduleName}
   protocol:
     name: tri
     port: -1
     ext-protocol: dubbo,
   registry:
-    address: ${r"zookeeper://${zookeeper.address:127.0.0.1}:2181"}
+#    address: ${r"zookeeper://${zookeeper.address:127.0.0.1}:2181"}
 
 #日志配置
 logging:
