@@ -82,7 +82,6 @@ public class ${className} extends ${reqExtendClass}{
     </#list>
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
-    // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
     @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};

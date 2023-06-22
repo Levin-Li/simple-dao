@@ -76,37 +76,37 @@ public class ${className} extends ${reqExtendClass}{
     ${annotation}
         </#if>
     </#list>
-<#-- 如果是日期类型 -->
+    <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
-        // @DateTimeFormat(iso = ISO.DATE_TIME) // Spring mvc 默认的时间格式：yyyy/MM/dd HH:mm:ss
-        @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
-        @Gte
-        ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
+    @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
+    @Gte
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-        @Schema(title = ${field.schemaTitle} , description = "小于等于" + ${field.schemaTitle})
-        @Lte
-        ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
+    @Schema(title = ${field.schemaTitle} , description = "小于等于" + ${field.schemaTitle})
+    @Lte
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-        //@Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-        //@Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyy-MM-dd"})
-        //${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+    //@Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    //@Between(paramDelimiter = "-", patterns = {"yyyyMMdd","yyyy-MM-dd"})
+    //${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
     <#-- 基本类型 -->
     <#elseif field.baseType>
-        @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-        ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
-        <#if field.contains>
-        <#-- 模糊匹配 -->
-            @Schema(title = "模糊匹配-" + ${field.schemaTitle})
-            @${field.extras.nameSuffix}
-            ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
-        </#if>
-    <#elseif field.lazy!>
-        @Schema(title = "是否加载" + ${field.schemaTitle})
-        @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
-        Boolean load${field.name?cap_first};
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    <#if field.contains>
+    <#-- 模糊匹配 -->
+    @Schema(title = "模糊匹配-" + ${field.schemaTitle})
+    @${field.extras.nameSuffix}
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
-<#-- 字段结束 -->
+    <#elseif field.lazy!>
+    @Schema(title = "是否加载" + ${field.schemaTitle})
+    @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
+    Boolean load${field.name?cap_first};
+    </#if>
+    <#-- 字段结束 -->
 </#list>
+
 
 <#if pkField?exists>
     public ${className}(${pkField.typeName} ${pkField.name}) {
@@ -124,7 +124,6 @@ public class ${className} extends ${reqExtendClass}{
     //@CtxVar //增加当前字段名称和字段值到环境变量中
     //@Ignore //
     //private boolean isGroupByDate;
-
 
     @PostConstruct
     public void preStat() {
