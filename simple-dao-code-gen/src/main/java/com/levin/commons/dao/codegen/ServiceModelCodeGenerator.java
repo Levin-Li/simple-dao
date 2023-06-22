@@ -162,11 +162,13 @@ public final class ServiceModelCodeGenerator {
         genPom(moduleName, "service", serviceDir(), params, modules);
         /////////////////////////////////////自举模块///////////////////////////////////////////////////////////////////
 
-        genPom(moduleName, "starter", starterDir(), params, modules);
-        /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
+        genPom(moduleName, "service_impl", serviceImplDir(), params, modules);
 
         genPom(moduleName, "controller", controllerDir(), params, modules);
         //////////////////////////启动模块//////////////////////////////////////////
+
+        genPom(moduleName, "starter", starterDir(), params, modules);
+        /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         genPom(moduleName, "bootstrap", bootstrapDir(), params, modules);
         ///////////////////////// 修改项目根POM ////////////////////////////
@@ -175,22 +177,17 @@ public final class ServiceModelCodeGenerator {
 
         StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
 
-        //写入模块
-        for (String module : modules) {
 
-            module = "        <module>" + module + "</module>";
+        String modInfo = modules.stream()
+                .map(m -> "\n        <module>" + m + "</module>")
+                .collect(Collectors.joining());
 
-            if (pomContent.indexOf(module) == -1) {
+        int indexOf = pomContent.indexOf("</modules>");
 
-                int indexOf = pomContent.indexOf("<modules>");
-
-                if (indexOf == -1) {
-                    pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + module + "\n    </modules>\n");
-                } else {
-                    pomContent.insert(indexOf + "<modules>".length(), "\n" + module + "\n");
-                }
-
-            }
+        if (indexOf == -1) {
+            pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + modInfo + "\n    </modules>\n");
+        } else {
+            pomContent.insert(indexOf, modInfo+"\n    ");
         }
 
         //写入依赖
@@ -301,6 +298,7 @@ public final class ServiceModelCodeGenerator {
         String controllerDir = controllerDir();
 
         String serviceDir = serviceDir();
+        String serviceImplDir = serviceImplDir();
 
         String starterDir = starterDir();
 
@@ -321,6 +319,9 @@ public final class ServiceModelCodeGenerator {
                 , "ModuleWebSocketConfigurer"
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
+        Arrays.asList("ModulePlugin"
+        ).forEach(className -> genJavaFile(controllerDir, "", className, params));
+
         genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
 
         //生成服务模块的文件
@@ -328,11 +329,12 @@ public final class ServiceModelCodeGenerator {
                 "ModuleOption"
         ).forEach(className -> genJavaFile(serviceDir, "", className, params));
 
-        Arrays.asList("ModulePlugin"
-                , "ModuleDataInitializer"
-                , "ModuleStarterConfiguration"
-        ).forEach(className -> genJavaFile(starterDir, "", className, params));
+        Arrays.asList(
+                "ModuleDataInitializer"
+        ).forEach(className -> genJavaFile(serviceImplDir, "", className, params));
 
+        Arrays.asList("ModuleStarterConfiguration"
+        ).forEach(className -> genJavaFile(starterDir, "", className, params));
 
         genFileByTemplate("spring.factories.ftl", params, starterDir + File.separator + ".."
                 + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
@@ -458,6 +460,7 @@ public final class ServiceModelCodeGenerator {
         String controllerDir = controllerDir();
         String starterDir = starterDir();
         String serviceDir = serviceDir();
+        String serviceImplDir = serviceImplDir();
 
         ///////////////////////////////////////////////
 
@@ -474,21 +477,18 @@ public final class ServiceModelCodeGenerator {
 //                        + "services" + File.separatorChar + "BaseService.java");
 
 
-        genFileByTemplate(genParams, starterDir, "services", "BaseService.java");
+        genFileByTemplate(genParams, serviceImplDir, "services", "BaseService.java");
+        genFileByTemplate(genParams, serviceImplDir, "services", "基础服务类开发规范.md");
+        genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarService.java");
+        genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarServiceImpl.java");
+        genFileByTemplate(genParams, serviceImplDir, "biz", "业务服务类开发规范.md");
 
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
-
-
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
-
-
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-
-        genFileByTemplate(genParams, starterDir, "biz", "InjectVarService.java");
-        genFileByTemplate(genParams, starterDir, "biz", "InjectVarServiceImpl.java");
 
         ///////////////////////////////////////////////
         List<String> ignoreEntities = ignoreEntities();
@@ -668,6 +668,18 @@ public final class ServiceModelCodeGenerator {
     }
 
     ///////////////////////////////////////////////////
+
+    public static String serviceImplDir(String newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static String serviceImplDir() {
+        return getThreadVar(null);
+    }
+
+    ///////////////////////////////////////////////////
+
+
     public static String starterDir(String newValue) {
         return putThreadVar(newValue);
     }
@@ -911,6 +923,7 @@ public final class ServiceModelCodeGenerator {
         };
 
         String serviceDir = serviceDir();
+        String serviceImplDir = serviceImplDir();
         String starterDir = starterDir();
 
         //生成通用服务类
@@ -919,14 +932,14 @@ public final class ServiceModelCodeGenerator {
         //生成业务服务类
         genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, setVars);
 
-        genCode(entityClass, BIZ_SERVICE_IMPL_FTL, fields, starterDir, bizServicePackage(), "Biz" + serviceName + "Impl", setVars);
+        genCode(entityClass, BIZ_SERVICE_IMPL_FTL, fields, serviceImplDir, bizServicePackage(), "Biz" + serviceName + "Impl", setVars);
 
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
         serviceClassNameList(serviceName);
 
-        genCode(entityClass, SERVICE_IMPL_FTL, fields, starterDir, pkgName, serviceName + "Impl", setVars);
+        genCode(entityClass, SERVICE_IMPL_FTL, fields, serviceImplDir, pkgName, serviceName + "Impl", setVars);
 
     }
 

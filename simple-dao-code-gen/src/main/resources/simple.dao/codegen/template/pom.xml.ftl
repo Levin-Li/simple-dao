@@ -28,7 +28,6 @@
 
     </repositories>
 
-
     <dependencyManagement>
         <dependencies>
 
@@ -75,7 +74,7 @@
             </dependency>
         </#if>
 
-        <#if moduleType == 'starter' || moduleType == 'controller'>
+        <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller'>
             <dependency>
                 <artifactId>${service.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
@@ -84,6 +83,13 @@
         </#if>
 
         <#if moduleType == 'bootstrap'>
+
+            <dependency>
+                <artifactId>${service_impl.artifactId}</artifactId>
+                <groupId>${r"${project.groupId}"}</groupId>
+                <version>${r"${project.version}"}</version>
+            </dependency>
+
             <dependency>
                 <artifactId>${starter.artifactId}</artifactId>
                 <groupId>${r"${project.groupId}"}</groupId>
@@ -95,10 +101,11 @@
                 <groupId>${r"${project.groupId}"}</groupId>
                 <version>${r"${project.version}"}</version>
             </dependency>
+
+
         </#if>
 
-
-        <#if (moduleType == 'starter' || moduleType == 'controller')>
+        <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller')>
 
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
@@ -124,9 +131,15 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         </#if>
 
-        <#if moduleType?? && (moduleType == 'starter')>
+        <#if moduleType?? && (moduleType == 'service_impl')>
             <#-- starter -->
             <dependency>
                 <groupId>com.h2database</groupId>
