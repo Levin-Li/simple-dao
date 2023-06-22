@@ -166,6 +166,7 @@ public @interface Between {
     /**
      * 数据类型转换模板
      * 通常是date类型转换
+     * 默认会尝试各种常见的格式
      *
      * @return
      */
