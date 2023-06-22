@@ -1,5 +1,6 @@
 package com.levin.commons.dao.util;
 
+import cn.hutool.core.date.DateUtil;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
@@ -11,6 +12,7 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.service.support.SpringContextHolder;
+import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
@@ -24,6 +26,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -431,15 +434,23 @@ public abstract class ExprUtils {
      * @param patterns
      * @return
      */
+    @SneakyThrows
     private static Object tryConvertToDate(Object data, String... patterns) {
 
         if (data != null && !(data instanceof Date)) {
-            for (String pattern : patterns) {
-                try {
-                    return new SimpleDateFormat(pattern).parse(data.toString());
-                } catch (Exception e) {
+
+            if (patterns != null && patterns.length > 0) {
+                for (String pattern : patterns) {
+                    if (!StringUtils.hasText(pattern))
+                        continue;
+                    try {
+                        return new SimpleDateFormat(pattern).parse(data.toString());
+                    } catch (Exception e) {
+                    }
                 }
             }
+
+            return DateUtil.parse(data.toString());
         }
 
         return data;
