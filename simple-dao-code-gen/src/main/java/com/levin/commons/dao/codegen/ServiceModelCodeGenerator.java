@@ -132,7 +132,9 @@ public final class ServiceModelCodeGenerator {
     public static void tryGenPomFile(MavenProject mavenProject, Map<String, Object> genParams) throws Exception {
 
         //如果没有包名，也没有发现实体类
-        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+        if (!StringUtils.hasText(modulePackageName())
+                || !hasEntityClass()
+        ) {
             return;
         }
 
@@ -201,7 +203,9 @@ public final class ServiceModelCodeGenerator {
     public static void tryGenBootstrap(MavenProject mavenProject, Map<String, Object> params) throws Exception {
 
         //如果没有包名，也没有发现实体类
-        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+        if (!StringUtils.hasText(modulePackageName())
+                || !hasEntityClass()
+        ) {
             return;
         }
 
@@ -291,7 +295,9 @@ public final class ServiceModelCodeGenerator {
     public static void tryGenSpringBootStarterFile(MavenProject mavenProject, Map<String, Object> params) throws Exception {
 
         //如果没有包名，也没有发现实体类
-        if (!StringUtils.hasText(modulePackageName()) || !hasEntityClass()) {
+        if (!StringUtils.hasText(modulePackageName())
+                || !hasEntityClass()
+        ) {
             return;
         }
 
@@ -375,7 +381,7 @@ public final class ServiceModelCodeGenerator {
         File file = new File(buildOutputDirectory);
 
         if (!file.exists()) {
-            logger.warn("***" + buildOutputDirectory + "目录不存在");
+            logger.error("***" + buildOutputDirectory + "目录不存在，请先编译实体模块。");
             return;
         }
 
@@ -407,7 +413,7 @@ public final class ServiceModelCodeGenerator {
                 .collect(Collectors.toList());
 
         if (classList.isEmpty()) {
-            logger.info("*** [" + file + "] 没有发现 Jpa 实体类，跳过代码生成。");
+            logger.error("*** [" + file + "] 没有发现 Jpa 实体类，忽略代码生成。");
             return;
         }
 
@@ -415,7 +421,6 @@ public final class ServiceModelCodeGenerator {
 
         //获取包名最端的类，把最短的包名，做为模块的包名
         Class tempClass = null;
-
 
         //如果包名没有确定，尝试获取实体类包名最短的为包名
         if (!StringUtils.hasText(modulePackageName())) {
@@ -493,7 +498,14 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
         List<String> ignoreEntities = ignoreEntities();
+
         for (Class<?> clazz : classList) {
+
+            //忽略测试类
+//            if (clazz.getSimpleName().equals("TestOrg")
+//                    || clazz.getSimpleName().equals("TestRole")) {
+//                continue;
+//            }
 
             if (ignoreEntities.stream().anyMatch(regex -> clazz.getName().matches(regex))) {
                 logger.info("忽略实体类:{}", clazz.getName());

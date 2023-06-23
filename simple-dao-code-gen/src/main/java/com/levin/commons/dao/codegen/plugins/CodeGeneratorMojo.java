@@ -127,9 +127,10 @@ public class CodeGeneratorMojo extends BaseMojo {
 
     /**
      * 忽略的实体类，类名正则表达式
+     * 默认忽略测试Demo类
      */
     @Parameter
-    protected String[] ignoreEntities = {};
+    protected String[] ignoreEntities = {".+\\.TestOrg", ".+\\.TestRole"};
 
     /**
      * 代码生成的附加参数
@@ -159,8 +160,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             File file = new File(outputDirectory);
 
             if (!file.exists()) {
-                logger.warn("*** 代码生成插件 *** 请先编译模块" + mavenProject.getArtifact());
-                // return;
+                logger.error("*** 代码生成插件 *** 请先编译实体模块[" + mavenProject.getArtifact() + "]");
+                return;
             }
 
             File basedir = mavenProject.getBasedir();
