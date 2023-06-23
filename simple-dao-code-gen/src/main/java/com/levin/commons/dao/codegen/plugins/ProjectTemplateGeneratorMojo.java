@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen.plugins;
 
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
+import com.levin.commons.plugins.Utils;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -164,7 +165,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
             mapBuilder.put("project.packaging", "jar");
 
             //设置构建名称为：父节点的名称加上本节点的名称
-            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : mavenProject.getArtifactId()) + "-" + entitiesModuleDir.getName());
+            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
 
             copyAndReplace(false, resTemplateDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
 

@@ -187,7 +187,7 @@ public final class ServiceModelCodeGenerator {
         if (indexOf == -1) {
             pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + modInfo + "\n    </modules>\n");
         } else {
-            pomContent.insert(indexOf, modInfo+"\n    ");
+            pomContent.insert(indexOf, modInfo + "\n    ");
         }
 
         //写入依赖
@@ -445,6 +445,7 @@ public final class ServiceModelCodeGenerator {
                 //自动获取项目目录的上级目录做为模块的包名
                 //要考虑为服务类和控制器类和实体在同一个项目的情况
                 moduleName = splitDir() ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName();
+                moduleName = Utils.getModuleName(moduleName);
             }
 
             moduleName(moduleName);

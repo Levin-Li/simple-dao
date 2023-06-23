@@ -7,6 +7,7 @@ import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.dao.codegen.db.*;
 import com.levin.commons.dao.codegen.db.util.FieldUtil;
 import com.levin.commons.plugins.BaseMojo;
+import com.levin.commons.plugins.Utils;
 import com.levin.commons.utils.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -53,7 +54,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
     /**
      * springBootStarterParentVersion
-     * 默认  "2.3.5.RELEASE"
      */
     @Parameter
     private String springBootStarterParentVersion = "2.7.8";
@@ -110,7 +110,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             if (!isPomModule) {
                 logger.warn("***【表生成实体类插件】*** 请在Pom模块中执行本插件");
-               // return;
+                // return;
             }
 
             if (this.subModuleName != null) {
@@ -333,8 +333,9 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             mapBuilder.put("project.packaging", "jar");
 
+
             //设置构建名称为：父节点的名称加上本节点的名称
-            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : mavenProject.getArtifactId()) + "-" + entitiesModuleDir.getName());
+            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
 
             copyAndReplace(false, resTemplateDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
 
@@ -381,6 +382,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             getLog().error(mavenProject.getArtifactId() + " 模块模板生成错误：" + e.getMessage(), e);
         }
     }
+
 
     private static void updatePom(MavenProject mavenProject, String... moduleNames) throws IOException {
 

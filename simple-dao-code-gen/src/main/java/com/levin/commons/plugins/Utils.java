@@ -18,6 +18,23 @@ import java.util.Map;
 public abstract class Utils {
 
     /**
+     * 获取名称
+     *
+     * @param moduleName
+     * @return
+     */
+    public static String getModuleName(String moduleName) {
+
+        //自动去除 root 或是 parent
+        if (moduleName.endsWith("-root")
+                || moduleName.endsWith("-parent")) {
+            moduleName = moduleName.substring(0, moduleName.lastIndexOf("-"));
+        }
+
+        return moduleName;
+    }
+
+    /**
      * 替换并写入文件
      *
      * @param templateRes

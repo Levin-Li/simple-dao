@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen.plugins;
 
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
+import com.levin.commons.plugins.Utils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -239,10 +240,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                 }
 
                 //自动去除 root 或是 parent
-                if (moduleName.endsWith("-root")
-                        || moduleName.endsWith("-parent")) {
-                    moduleName = moduleName.substring(0, moduleName.lastIndexOf("-"));
-                }
+                moduleName = Utils.getModuleName(moduleName);
 
             }
 
