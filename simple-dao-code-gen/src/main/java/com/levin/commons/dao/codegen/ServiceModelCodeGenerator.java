@@ -138,6 +138,8 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
+        logger.info("开始生成模块的Pom文件...");
+
 //        String controllerDir = controllerDir();
 //        String serviceDir = serviceDir();
 //        String starterDir = starterDir();
@@ -205,9 +207,11 @@ public final class ServiceModelCodeGenerator {
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName())
                 || !hasEntityClass()
-        ) {
+       ) {
             return;
         }
+
+        logger.info("开始生成[Bootstrap]模块代码...");
 
         String controllerDir = controllerDir();
         String serviceDir = serviceDir();
@@ -300,6 +304,8 @@ public final class ServiceModelCodeGenerator {
         ) {
             return;
         }
+
+        logger.info("开始生成模块的通用代码...");
 
         String controllerDir = controllerDir();
 
