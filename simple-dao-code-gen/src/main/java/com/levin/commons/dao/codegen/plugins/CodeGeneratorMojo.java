@@ -158,8 +158,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             File file = new File(outputDirectory);
 
             if (!file.exists()) {
-                logger.warn("*** 代码生成插件: 请先编译" + mavenProject.getArtifact());
-                return;
+                logger.warn("*** 代码生成插件 *** 请先编译模块" + mavenProject.getArtifact());
+               // return;
             }
 
             File basedir = mavenProject.getBasedir();

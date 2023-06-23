@@ -109,7 +109,8 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
 
             if (!isPomModule) {
-                logger.warn("***【表生成实体类插件】*** 请尽量在Pom模块中执行");
+                logger.warn("***【表生成实体类插件】*** 请在Pom模块中执行本插件");
+               // return;
             }
 
             if (this.subModuleName != null) {
