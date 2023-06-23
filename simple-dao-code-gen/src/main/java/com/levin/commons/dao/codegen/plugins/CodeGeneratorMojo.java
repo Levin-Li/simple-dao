@@ -159,7 +159,7 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             if (!file.exists()) {
                 logger.warn("*** 代码生成插件 *** 请先编译模块" + mavenProject.getArtifact());
-               // return;
+                // return;
             }
 
             File basedir = mavenProject.getBasedir();
@@ -227,7 +227,9 @@ public class CodeGeneratorMojo extends BaseMojo {
 
 
             if (!hasText(moduleName)) {
+
                 MavenProject projectParent = mavenProject.getParent();
+
                 if (projectParent != null
                         && projectParent.getBasedir() != null
                         && new File(projectParent.getBasedir(), "pom.xml").exists()) {
@@ -235,6 +237,13 @@ public class CodeGeneratorMojo extends BaseMojo {
                 } else {
                     moduleName = mavenProject.getArtifactId();
                 }
+
+                //自动去除 root 或是 parent
+                if (moduleName.endsWith("-root")
+                        || moduleName.endsWith("-parent")) {
+                    moduleName = moduleName.substring(0, moduleName.lastIndexOf("-"));
+                }
+
             }
 
             if (!hasText(moduleName)) {
