@@ -18,6 +18,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(
+        nativeQL = true,
         entityClass = User.class, alias = E_User.ALIAS,
         resultClass = TableJoinDTO.class,
         safeMode = false,
@@ -27,12 +28,12 @@ import lombok.experimental.Accessors;
         })
 public class TableJoinDTO extends PagingQueryReq {
 
-    @Select(value = E_User.ALIAS +".id", distinct = true, orderBy = @OrderBy(useAlias = true))
+    @Select(value = E_User.ALIAS + ".id", distinct = true, orderBy = @OrderBy(useAlias = true))
     @Gt(value = E_User.id, domain = E_User.ALIAS)
     Long uid;
 
-    @Select(value = E_Group.id, domain = E_Group.ALIAS)
-    @Gte(E_Group.ALIAS +".id")
+    @Select(value = E_Group.id, domain = E_Group.ALIAS, orderBy = @OrderBy)
+    @Gte(E_Group.ALIAS + ".id")
     Long gid;
 
     @Select

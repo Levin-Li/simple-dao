@@ -1378,6 +1378,12 @@ public class DaoExamplesTest {
     public void testTableJoinStatDTO() throws Exception {
 
 
+        SelectDao selectDao = dao.newDao(SelectDao.class, new TableJoinStatDTO());
+
+        String sql = selectDao.genFinalStatement();
+
+        Assert.isTrue(sql.contains(E_Group.ALIAS+".name Desc"),"预期的排序语句不存在");
+
         List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO(), new PagingQueryReq(1, 10));
 //        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
 

@@ -1,5 +1,7 @@
 <#noparse>#!/bin/bash
 #Author Lilw @2012
+#代码生成哈希校验码：[]
+
 execDir=`pwd`
 
 #sh文件所在目录

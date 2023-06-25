@@ -19,6 +19,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @TargetOption(
+        nativeQL = true,
         entityClass = User.class, //主表
         alias = E_User.ALIAS, //主表别名
         resultClass = TableJoinStatDTO.class, //结果类
