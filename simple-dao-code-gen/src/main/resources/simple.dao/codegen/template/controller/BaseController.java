@@ -35,6 +35,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  * 抽象控制器
  *
  * @author lilw
+ * Auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

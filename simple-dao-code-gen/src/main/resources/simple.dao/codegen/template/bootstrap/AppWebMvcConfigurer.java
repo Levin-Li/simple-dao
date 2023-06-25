@@ -16,6 +16,7 @@ import static ${modulePackageName}.ModuleOption.*;
 
 /**
  * 应用MVC配置
+ * Auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

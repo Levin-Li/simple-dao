@@ -28,12 +28,12 @@ import ${modulePackageName}.*;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-//Auto gen by simple-dao-codegen ${.now}
 
 /**
  * 抽象服务类
  *
  * @author lilw
+ * Auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

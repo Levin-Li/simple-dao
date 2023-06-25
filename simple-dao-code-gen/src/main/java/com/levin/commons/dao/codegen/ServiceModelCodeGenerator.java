@@ -1143,13 +1143,14 @@ public final class ServiceModelCodeGenerator {
 
                 String md5 = codeContent.substring(prefix.length());
 
-                logger.info("hash:" + codeContent + "=" + md5 + " : " + file.getCanonicalPath());
+//                logger.info("MD5:" + md5 + " : " + file.getCanonicalPath());
 
                 fileContent = fileContent.substring(0, startIdx + prefix.length()) + fileContent.substring(endIndex);
 
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileContent))) {
                     skip = false;
+                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + "，MD5：{} 已经存在，但是没有被修改过，将覆盖旧文件。", md5);
                 }
             }
 

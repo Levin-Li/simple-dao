@@ -45,7 +45,7 @@ import ${modulePackageName}.services.commons.req.*;
 /**
  *  查询${desc}
  *  @Author Auto gen by simple-dao-codegen ${.now}
- * 代码生成哈希校验码：[]
+ *  代码生成哈希校验码：[]
  */
 @Schema(title = QUERY_ACTION + BIZ_NAME)
 @Data
