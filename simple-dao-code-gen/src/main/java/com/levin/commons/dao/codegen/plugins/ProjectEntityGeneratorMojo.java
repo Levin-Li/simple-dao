@@ -131,6 +131,8 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             entitiesDir.mkdirs();
 
+            new File(basedir, "docs").mkdirs();
+
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
             String resTemplateDir = "simple.dao/codegen/template/entity/";
@@ -141,7 +143,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     MapUtils.put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
                             .put("modulePackageName", modulePackageName)
                             .put("now", new Date().toString());
-
 
             copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
             copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
@@ -173,7 +174,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
                 // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
 
-                logger.info("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库", dbConfigRes.getFile());
+                logger.error("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
 
                 return;
             }
@@ -192,6 +193,11 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
                     .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
+            if (StrUtil.isBlank(dbConfig.getJdbcUrl())) {
+                logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
+                return;
+            }
+
             String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
 
             if (!StringUtils.hasText(tablePrefix)) {
@@ -199,9 +205,9 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             }
 
             if (!StringUtils.hasText(tablePrefix)) {
-                getLog().warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同事会去除前缀");
+                logger.warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同时会去除前缀");
             } else {
-
+                logger.info("需要生成实体类的表名前缀：{}", tablePrefix);
             }
 
             getLog().info("开始读取数据库：" + dbConfig);
@@ -220,17 +226,14 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                 }
 
                 if (StringUtils.hasText(tablePrefix)) {
-
                     if (!tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
                         //如果不是指定前缀的表
-                        logger.info("非指定前缀[{}],忽略表:{}", tablePrefix, tableName);
+                        logger.info("指定要求前缀[{}],忽略表:{}", tablePrefix, tableName);
                         continue;
                     }
                 }
 
-
                 final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tablePrefix) ? tableName.substring(tablePrefix.length()) : tableName));
-
 
                 File outFile = new File(entitiesDir, entityName + ".java");
 

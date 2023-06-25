@@ -84,6 +84,8 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             entitiesDir.mkdirs();
 
+            new File(basedir,"docs").mkdirs();
+
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
             String resTemplateDir = "simple.dao/codegen/template/entity/";
