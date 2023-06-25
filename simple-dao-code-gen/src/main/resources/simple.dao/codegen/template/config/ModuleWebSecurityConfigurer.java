@@ -31,6 +31,12 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalAuthentication
 @ConditionalOnClass({WebSecurityConfigurer.class})
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+/**
+ * 模块Spring Security 配置
+ *
+ * @author auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {
 
 

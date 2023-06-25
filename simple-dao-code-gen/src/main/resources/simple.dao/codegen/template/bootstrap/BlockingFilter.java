@@ -13,7 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
+ *
  * 支持的必要的时候，阻断新的请求
+ * 代码生成哈希校验码：[]
  */
 @Slf4j
 public class BlockingFilter extends OncePerRequestFilter {

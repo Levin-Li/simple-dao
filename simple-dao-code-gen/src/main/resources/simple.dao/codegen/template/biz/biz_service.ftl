@@ -41,7 +41,7 @@ import ${imp};
  *  ${desc}-业务服务
  *
  * @author auto gen by simple-dao-codegen ${.now}
- *
+ * 代码生成哈希校验码：[]
  */
 
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")

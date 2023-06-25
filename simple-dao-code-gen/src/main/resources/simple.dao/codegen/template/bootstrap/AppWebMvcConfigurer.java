@@ -14,6 +14,10 @@ import javax.annotation.PostConstruct;
 
 import static ${modulePackageName}.ModuleOption.*;
 
+/**
+ * 应用MVC配置
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "AppWebMvcConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "AppWebMvcConfigurer", matchIfMissing = true)

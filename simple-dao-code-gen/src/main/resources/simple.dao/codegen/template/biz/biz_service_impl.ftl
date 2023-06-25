@@ -61,7 +61,7 @@ import ${imp};
  *  ${desc}-业务服务实现类
  *
  * @author auto gen by simple-dao-codegen ${.now}
- *
+ * 代码生成哈希校验码：[]
  */
 
 @DubboService

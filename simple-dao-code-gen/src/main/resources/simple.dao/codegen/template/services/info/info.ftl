@@ -31,9 +31,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
-* ${desc}
-* @Author Auto gen by simple-dao-codegen ${.now}
-*/
+ * ${desc}
+ * @Author Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 @Schema(title = BIZ_NAME)
 @Data
 @Accessors(chain = true)

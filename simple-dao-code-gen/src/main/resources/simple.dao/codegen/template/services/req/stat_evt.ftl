@@ -46,6 +46,7 @@ import ${modulePackageName}.services.commons.req.*;
 /**
  *  统计${desc}
  *  @Author Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
  */
 @Schema(title = STAT_ACTION + BIZ_NAME)
 @Data

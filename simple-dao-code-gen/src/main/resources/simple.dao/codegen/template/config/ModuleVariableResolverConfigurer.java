@@ -19,6 +19,7 @@ import java.util.*;
 
 /**
  * 模块变量解析器配置
+ * 代码生成哈希校验码：[]
  */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "${className}")

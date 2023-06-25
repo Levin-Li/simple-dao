@@ -40,6 +40,7 @@ import java.lang.reflect.Type;
 /**
  *  启动类
  *  @author Auto gen by simple-dao-codegen ${.now}
+ *  代码生成哈希校验码：[]
  */
 @Slf4j
 

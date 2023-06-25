@@ -47,7 +47,7 @@ import java.text.SimpleDateFormat;
  * 可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping、@PostMapping， @GetMapping注解中。
  *
  * 注意：默认不启用，启用请取消注释
- *
+ * 代码生成哈希校验码：[]
  */
 @Slf4j
 //@Component(PLUGIN_PREFIX + "${className}")

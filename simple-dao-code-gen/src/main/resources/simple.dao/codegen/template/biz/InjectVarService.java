@@ -4,6 +4,7 @@ import java.util.Map;
 
 /**
  * 注入变量服务
+ * 代码生成哈希校验码：[]
  */
 public interface InjectVarService {
 

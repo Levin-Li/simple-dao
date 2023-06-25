@@ -23,6 +23,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.config.annotation.*;
 
+/**
+ * 模块MVC配置
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)

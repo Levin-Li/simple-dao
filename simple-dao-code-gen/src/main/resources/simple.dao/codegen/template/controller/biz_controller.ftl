@@ -37,7 +37,6 @@ import ${servicePackageName}.info.*;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-//Auto gen by simple-dao-codegen ${.now}
 
 // POST: 创建一个新的资源，如用户资源，部门资源
 // PATCH: 修改资源的某个属性
@@ -65,6 +64,12 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
+/**
+ * ${desc}业务控制器
+ *
+ * @author auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 public class ${className} extends ${entityName}Controller{
 
 }

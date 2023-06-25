@@ -14,6 +14,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.beans.factory.annotation.*;
 import javax.annotation.Resource;
 
+/**
+ * 模块WebSocket配置
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 //@Configuration(PLUGIN_PREFIX + "ModuleWebSocketConfigurer")
 //@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebSocketConfigurer", matchIfMissing = true)

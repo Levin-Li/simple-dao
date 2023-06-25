@@ -21,6 +21,10 @@ import javax.annotation.Resource;
 
 //Swagger3
 
+/**
+ * 模块文档配置
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)

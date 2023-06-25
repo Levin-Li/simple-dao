@@ -7,11 +7,12 @@
     <parent>
         <groupId>${parent.groupId}</groupId>
         <artifactId>${parent.artifactId}</artifactId>
-<#--        <version>${parent.version}</version>-->
+<#--        <version>${parent.version}</version> -->
         <version>${r"${revision}"}</version>
     </parent>
 
 <#--  @Author Auto gen by simple-dao-codegen ${now} -->
+    <!-- 代码生成哈希校验码：[] -->
 
     <artifactId>${artifactId}</artifactId>
 

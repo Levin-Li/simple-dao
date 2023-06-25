@@ -18,9 +18,13 @@ import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 
-//Auto gen by simple-dao-codegen ${.now}
-//模块插件
 
+/**
+ * 模块插件
+ *
+ * Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 @Component(PLUGIN_PREFIX + "${className}")
 public class ModulePlugin implements Plugin, PluginManagerAware {

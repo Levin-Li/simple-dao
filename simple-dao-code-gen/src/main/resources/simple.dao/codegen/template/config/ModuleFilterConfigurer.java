@@ -8,6 +8,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * 模块过滤器
+ *
+ * @author auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 //默认不启用
 @Slf4j
 //@Configuration(PLUGIN_PREFIX + "ModuleFilterConfigurer")

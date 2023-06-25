@@ -36,9 +36,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
-*  ${desc} 主键通用请求
-*  //Auto gen by simple-dao-codegen ${.now}
-*/
+ *  ${desc} 主键通用请求
+ *  //Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 
 @Schema(title =  BIZ_NAME + " 主键通用查询")
 @Data

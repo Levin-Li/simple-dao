@@ -29,7 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.*;
 
-
+/**
+ * 模块控制器切面拦截器
+ * 代码生成哈希校验码：[]
+ */
 @Aspect
 @Slf4j
 @Component(PLUGIN_PREFIX + "${className}")

@@ -22,13 +22,12 @@ import org.apache.dubbo.config.spring.context.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
-//Auto gen by simple-dao-codegen ${.now}
-
 /**
  * 模块自举配置
  *
  * 模块需要自举加载的内容都需要配置在该类中
- *
+ * Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
  */
 @Configuration(PLUGIN_PREFIX + "${className}")
 @Slf4j

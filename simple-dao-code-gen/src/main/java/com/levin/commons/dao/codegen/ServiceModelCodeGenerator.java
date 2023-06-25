@@ -1,5 +1,8 @@
 package com.levin.commons.dao.codegen;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.HashUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
@@ -43,9 +46,13 @@ import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -207,7 +214,7 @@ public final class ServiceModelCodeGenerator {
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName())
                 || !hasEntityClass()
-       ) {
+        ) {
             return;
         }
 
@@ -1111,9 +1118,45 @@ public final class ServiceModelCodeGenerator {
 
         File file = new File(fileName);
 
+        final String prefix = "代码生成哈希校验码：[";
+
         if (file.exists()) {
-            logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，不覆盖。");
-            return;
+
+            boolean skip = true;
+
+            //文件内容，去除空格，空行
+            String fileContent = Files.readAllLines(file.toPath(), Charset.forName("utf-8"))
+                    .stream()
+                    //去除空行
+                    .filter(StringUtils::hasText)
+                    //去除空格
+                    .map(StringUtils::trimAllWhitespace)
+                    .collect(Collectors.joining());
+
+            int startIdx = fileContent.indexOf(prefix);
+
+            if (startIdx != -1) {
+
+                int endIndex = fileContent.indexOf("]", startIdx);
+
+                String codeContent = fileContent.substring(startIdx, endIndex);
+
+                String md5 = codeContent.substring(prefix.length());
+
+                logger.info("hash:" + codeContent + "=" + md5 + " : " + file.getCanonicalPath());
+
+                fileContent = fileContent.substring(0, startIdx + prefix.length()) + fileContent.substring(endIndex);
+
+                //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
+                if (md5.equals(SecureUtil.md5(fileContent))) {
+                    skip = false;
+                }
+            }
+
+            if (skip) {
+                logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，并且被修改过，不覆盖。");
+                return;
+            }
         }
 
         file.getParentFile().mkdirs();
@@ -1122,16 +1165,34 @@ public final class ServiceModelCodeGenerator {
         params.put("fileName", file.getName());
         params.put("templateFileName", template.replace("\\", "/"));
 
-        Writer hWriter = new OutputStreamWriter(new FileOutputStream(fileName), "utf-8");
+        StringWriter stringWriter = new StringWriter();
 
-        try {
-            getTemplate(template).process(params, hWriter);
-        } finally {
-            hWriter.close();
+        getTemplate(template).process(params, stringWriter);
+
+        String fileContent = stringWriter.toString();
+
+        int startIdx = fileContent.indexOf(prefix);
+
+        if (startIdx != -1) {
+
+            int endIndex = fileContent.indexOf("]", startIdx);
+
+            //需要hash的部分
+            String hashContent = Stream.of(fileContent.split("[\r\n]"))
+                    //去除空行
+                    .filter(StringUtils::hasText)
+                    //去除空格
+                    .map(StringUtils::trimAllWhitespace)
+                    .collect(Collectors.joining());
+
+            String md5 = SecureUtil.md5(hashContent);
+
+            fileContent = fileContent.substring(0, startIdx + prefix.length()) + md5 + fileContent.substring(endIndex);
         }
 
+        //写入文件
+        FileUtil.writeString(fileContent, file, "utf-8");
     }
-
 
     private static String getInfoClassImport(Class entity) {
 

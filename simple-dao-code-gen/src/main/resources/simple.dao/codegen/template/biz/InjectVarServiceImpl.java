@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 注入服务
  * 正常情况下，一个项目只需要一个注入服务，为项目提供注入上下文。
- *
+ * 代码生成哈希校验码：[]
  */
 //@Service(PLUGIN_PREFIX + "InjectVarService")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "InjectVarService", matchIfMissing = true)

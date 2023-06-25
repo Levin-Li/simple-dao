@@ -16,6 +16,7 @@ import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
 
+//代码生成哈希校验码：[]
 
 @Data
 <#if entityPkName??>@EqualsAndHashCode(of = {"${entityPkName}"})</#if>

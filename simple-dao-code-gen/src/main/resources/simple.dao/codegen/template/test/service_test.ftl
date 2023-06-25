@@ -61,10 +61,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *  ${desc}测试
+ * ${desc}测试
  *
- *  @author auto gen by simple-dao-codegen ${.now}
- *
+ * @author auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
  */
 
 //@ActiveProfiles("test")

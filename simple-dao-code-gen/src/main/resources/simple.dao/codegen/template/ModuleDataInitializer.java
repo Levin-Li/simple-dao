@@ -26,6 +26,12 @@ import java.util.concurrent.Executor;
 import ${clazz.name};
 </#list>
 
+/**
+ * 模块初始化器
+ *
+ * Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
+ */
 @Slf4j
 @Component(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)

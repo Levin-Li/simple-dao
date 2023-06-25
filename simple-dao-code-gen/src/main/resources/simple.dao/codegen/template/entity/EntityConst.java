@@ -8,6 +8,7 @@ package ${CLASS_PACKAGE_NAME};
  * //@Entity(name = EntityConst.PREFIX + "exam_tasks")
  * //@Table(name = EntityConst.PREFIX + "exam_tasks")
  * //Auto gen by simple-dao-codegen ${now}
+ * 代码生成哈希校验码：[]
  */
 public interface EntityConst
         extends com.levin.commons.dao.EntityOpConst //继承默认的定义

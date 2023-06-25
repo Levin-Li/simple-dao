@@ -34,6 +34,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  * 抽象服务类
  *
  * @author lilw
+ * 代码生成哈希校验码：[]
  */
 @Slf4j
 public abstract class BaseService {

@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <!-- 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}  -->
+    <!-- 代码生成哈希校验码：[] -->
 
     <modelVersion>4.0.0</modelVersion>
 

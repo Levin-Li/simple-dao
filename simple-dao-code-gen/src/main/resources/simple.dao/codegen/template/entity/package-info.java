@@ -2,6 +2,7 @@
  * 实体包定义
  * <p>
  * 定义ID生成器
+ * 代码生成哈希校验码：[]
  */
 @GenericGenerator(name = "guid", strategy = "org.hibernate.id.GUIDGenerator")
 

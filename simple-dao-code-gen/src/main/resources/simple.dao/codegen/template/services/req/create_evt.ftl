@@ -39,6 +39,7 @@ import ${imp};
 /**
  *  新增${desc}
  *  //Auto gen by simple-dao-codegen ${.now}
+ * 代码生成哈希校验码：[]
  */
 @Schema(title = CREATE_ACTION + BIZ_NAME)
 @Data
