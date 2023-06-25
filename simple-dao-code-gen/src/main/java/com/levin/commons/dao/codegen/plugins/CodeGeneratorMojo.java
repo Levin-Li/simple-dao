@@ -166,6 +166,8 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             File basedir = mavenProject.getBasedir();
 
+            ServiceModelCodeGenerator.baseDir(basedir);
+
             //是否分割目录
             boolean splitDir = forceSplitDir;
 

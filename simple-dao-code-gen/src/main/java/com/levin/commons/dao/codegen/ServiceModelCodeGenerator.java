@@ -592,6 +592,14 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(false);
     }
 
+    public static File baseDir(File dir) {
+        return putThreadVar(dir);
+    }
+
+    public static File baseDir() {
+        return getThreadVar(null);
+    }
+
     public static List<String> ignoreEntities(List<String> ignoreEntities) {
         return putThreadVar(ignoreEntities);
     }
@@ -1128,6 +1136,13 @@ public final class ServiceModelCodeGenerator {
 
         File file = new File(fileName);
 
+        String path = file.getAbsoluteFile().getCanonicalPath();
+
+        File baseDir = baseDir();
+        if (baseDir != null && baseDir.exists()) {
+            path = path.substring(baseDir.getCanonicalPath().length());
+        }
+
         final String prefix = "代码生成哈希校验码：[";
 
         if (file.exists()) {
@@ -1157,12 +1172,13 @@ public final class ServiceModelCodeGenerator {
 
                 fileContent = fileContent.substring(0, startIdx + prefix.length()) + fileContent.substring(endIndex);
 
+
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileContent))) {
                     skip = false;
-                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + "(MD5：{}) 已经存在，但是没有被修改过，将覆盖旧文件...", md5);
+                    logger.info("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过，将覆盖旧文件...", md5);
                 } else {
-                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，并且被修改过，不覆盖。");
+                    logger.info("目标文件：" + path + " 已经存在，并且被修改过，不覆盖。");
                 }
             }
 
@@ -1204,6 +1220,7 @@ public final class ServiceModelCodeGenerator {
 
         //写入文件
         FileUtil.writeString(fileContent, file, "utf-8");
+        logger.info("目标文件：" + path + "写入成功。");
     }
 
     private static String getInfoClassImport(Class entity) {
