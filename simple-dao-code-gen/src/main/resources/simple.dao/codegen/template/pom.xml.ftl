@@ -12,8 +12,7 @@
     </parent>
 
 <#--  @Author Auto gen by simple-dao-codegen ${now} -->
-    <!-- 代码生成哈希校验码：[] -->
-
+    <!--    代码生成哈希校验码：[] -->
     <artifactId>${artifactId}</artifactId>
 
 <#--    <groupId>${groupId}</groupId>-->

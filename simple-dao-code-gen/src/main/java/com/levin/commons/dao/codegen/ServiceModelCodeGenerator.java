@@ -115,6 +115,10 @@ public final class ServiceModelCodeGenerator {
 
     private static String genPom(String moduleNamePrefix, String moduleType, String srcDir, Map<String, Object> params, List<String> modules) throws Exception {
 
+        if (!StringUtils.hasText(moduleNamePrefix)) {
+            moduleNamePrefix = moduleName();
+        }
+
         final String key = "artifactId";
         File pomFile = new File(srcDir, "../../../pom.xml").getCanonicalFile();
 
@@ -160,28 +164,30 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
+        /////////////////////////////生成说明文件///////////////////////////////////
         String template = "模块开发说明.md";
-
         genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
+
+        ////////////////////////////////////////////////
 
         final List<String> modules = new ArrayList<>(2);
 
-        String moduleName = moduleName();// mavenProject.getBasedir().getParentFile().getName();
+      //  String moduleName = moduleName();// mavenProject.getBasedir().getParentFile().getName();
 
         ////////////////////////服务层////////////////////////////////
 
-        genPom(moduleName, "service", serviceDir(), params, modules);
+        genPom(null, "service", serviceDir(), params, modules);
         /////////////////////////////////////自举模块///////////////////////////////////////////////////////////////////
 
-        genPom(moduleName, "service_impl", serviceImplDir(), params, modules);
+        genPom(null, "service_impl", serviceImplDir(), params, modules);
 
-        genPom(moduleName, "controller", controllerDir(), params, modules);
+        genPom(null, "controller", controllerDir(), params, modules);
         //////////////////////////启动模块//////////////////////////////////////////
 
-        genPom(moduleName, "starter", starterDir(), params, modules);
+        genPom(null, "starter", starterDir(), params, modules);
         /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
-        genPom(moduleName, "bootstrap", bootstrapDir(), params, modules);
+        genPom(null, "bootstrap", bootstrapDir(), params, modules);
         ///////////////////////// 修改项目根POM ////////////////////////////
 
         File parent = new File(serviceDir(), "../../../../pom.xml").getCanonicalFile();
@@ -1116,6 +1122,9 @@ public final class ServiceModelCodeGenerator {
 
     public static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
+        //复制
+        params = new LinkedHashMap<>(params);
+
         File file = new File(fileName);
 
         final String prefix = "代码生成哈希校验码：[";
@@ -1150,7 +1159,7 @@ public final class ServiceModelCodeGenerator {
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileContent))) {
                     skip = false;
-                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + "，MD5：{} 已经存在，但是没有被修改过，将覆盖旧文件。", md5);
+                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + "(MD5：{}) 已经存在，但是没有被修改过，将覆盖旧文件...", md5);
                 } else {
                     logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，并且被修改过，不覆盖。");
                 }
