@@ -1151,11 +1151,12 @@ public final class ServiceModelCodeGenerator {
                 if (md5.equals(SecureUtil.md5(fileContent))) {
                     skip = false;
                     logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + "，MD5：{} 已经存在，但是没有被修改过，将覆盖旧文件。", md5);
+                } else {
+                    logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，并且被修改过，不覆盖。");
                 }
             }
 
             if (skip) {
-                logger.info("目标源文件：" + file.getAbsoluteFile().getCanonicalPath() + " 已经存在，并且被修改过，不覆盖。");
                 return;
             }
         }
