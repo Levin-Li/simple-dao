@@ -53,6 +53,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -172,7 +173,7 @@ public final class ServiceModelCodeGenerator {
 
         final List<String> modules = new ArrayList<>(2);
 
-      //  String moduleName = moduleName();// mavenProject.getBasedir().getParentFile().getName();
+        //  String moduleName = moduleName();// mavenProject.getBasedir().getParentFile().getName();
 
         ////////////////////////服务层////////////////////////////////
 
@@ -194,8 +195,8 @@ public final class ServiceModelCodeGenerator {
 
         StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
 
-
         String modInfo = modules.stream()
+                .filter(m ->  !java.util.regex.Pattern.compile("<module>\\s*"+m+"\\s*</module>").matcher(pomContent).find())
                 .map(m -> "\n        <module>" + m + "</module>")
                 .collect(Collectors.joining());
 
@@ -208,9 +209,6 @@ public final class ServiceModelCodeGenerator {
         }
 
         //写入依赖
-
-        //写入依赖
-
         FileUtils.write(parent, pomContent, "utf-8");
     }
 
