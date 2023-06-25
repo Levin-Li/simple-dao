@@ -196,20 +196,23 @@ public final class ServiceModelCodeGenerator {
         StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(parent, "utf-8"));
 
         String modInfo = modules.stream()
-                .filter(m ->  !java.util.regex.Pattern.compile("<module>\\s*"+m+"\\s*</module>").matcher(pomContent).find())
+                .filter(m -> !java.util.regex.Pattern.compile("<module>\\s*" + m + "\\s*</module>").matcher(pomContent).find())
                 .map(m -> "\n        <module>" + m + "</module>")
                 .collect(Collectors.joining());
 
-        int indexOf = pomContent.indexOf("</modules>");
+        if (StringUtils.hasText(modInfo)) {
 
-        if (indexOf == -1) {
-            pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + modInfo + "\n    </modules>\n");
-        } else {
-            pomContent.insert(indexOf, modInfo + "\n    ");
+            int indexOf = pomContent.indexOf("</modules>");
+
+            if (indexOf == -1) {
+                pomContent.insert(pomContent.indexOf("</project>"), "\n    <modules>\n" + modInfo + "\n    </modules>\n");
+            } else {
+                pomContent.insert(indexOf, modInfo + "\n    ");
+            }
+            //写入模块
+            FileUtils.write(parent, pomContent, "utf-8");
         }
 
-        //写入依赖
-        FileUtils.write(parent, pomContent, "utf-8");
     }
 
 
