@@ -88,7 +88,7 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     //@Override
     //@CacheEvict(condition = "#req.id != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.id")
     //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
-    //public boolean update(UpdateMenuResReq req) {
+    //public boolean update(Update${entityName}Req req) {
     //    Assert.notNull(req.getId(), BIZ_NAME + " id 不能为空");
     //    return simpleDao.singleUpdateByQueryObj(req);
     //}
