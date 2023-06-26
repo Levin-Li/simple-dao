@@ -23,18 +23,18 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     private static final long serialVersionUID = -123456789L;
 
     //由子类去定义
-//    @Schema(description = "父ID")
+//    @Schema(title = "父ID")
 //    @Column(length = 128)
 //    protected ID parentId;
 
     public abstract AbstractTreeObject<ID, T> setParentId(ID parentId);
 
-    @Schema(description = "父对象")
+    @Schema(title = "父对象")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parentId", insertable = false, updatable = false)
     protected T parent;
 
-    @Schema(description = "子节点")
+    @Schema(title = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
     @OrderBy(value = " orderCode ASC , name  ASC ")
     //@Fetch(value = FetchMode.JOIN)

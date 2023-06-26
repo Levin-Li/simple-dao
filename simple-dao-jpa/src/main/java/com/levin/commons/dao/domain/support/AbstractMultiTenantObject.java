@@ -24,14 +24,14 @@ import javax.persistence.MappedSuperclass;
 @FieldNameConstants
 
 //5、必须注解业务名称
-@Schema(description = "抽象租户实体")
+@Schema(title = "抽象租户实体")
 
 @MappedSuperclass
 public abstract class AbstractMultiTenantObject
         extends AbstractBaseEntityObject
         implements MultiTenantObject {
 
-    @Schema(description = "租户ID")
+    @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConsts.TENANT_ID)
     protected String tenantId;

@@ -32,36 +32,36 @@ public abstract class AbstractBaseEntityObject
 
     private static final long serialVersionUID = -123456789L;
 
-    @Schema(description = "创建者")
+    @Schema(title = "创建者")
     @Column(length = 128)
     @InjectVar(InjectConsts.USER_ID)
     protected String creator;
 
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     @Column(nullable = false)
     @Temporal(value = TemporalType.TIMESTAMP)
 //    @CreatedDate
     protected Date createTime;
 
-    @Schema(description = "更新时间")
+    @Schema(title = "更新时间")
     @Column
     @Temporal(value = TemporalType.TIMESTAMP)
 //    @LastModifiedDate
     protected Date lastUpdateTime;
 
     //@OrderBy
-    @Schema(description = "排序代码")
+    @Schema(title = "排序代码")
     protected Integer orderCode;
 
-    @Schema(description = "是否允许")
+    @Schema(title = "是否允许")
     @Column(nullable = false)
     protected Boolean enable;
 
-    @Schema(description = "是否可编辑")
+    @Schema(title = "是否可编辑")
     @Column(nullable = false)
     protected Boolean editable;
 
-    @Schema(description = "备注")
+    @Schema(title = "备注")
     @Column(length = 512)
     protected String remark;
 

@@ -13,7 +13,7 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 @Data
 @Accessors(chain = true)
-@Schema(description = "命名对象")
+@Schema(title = "命名对象")
 @FieldNameConstants
 //@Table(indexes = {
 //        @Index(columnList = AbstractNamedEntityObject.Fields.name),
@@ -24,7 +24,7 @@ public abstract class AbstractNamedEntityObject
 
     private static final long serialVersionUID = -123456789L;
 
-    @Schema(description = "名称")
+    @Schema(title = "名称")
     @Column(nullable = false, length = 128)
     @Contains
     protected String name;

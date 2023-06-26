@@ -25,14 +25,14 @@ import javax.persistence.MappedSuperclass;
 @FieldNameConstants
 
 //5、必须注解业务名称
-@Schema(description = "抽象租户组织实体")
+@Schema(title = "抽象租户组织实体")
 
 @MappedSuperclass
 public abstract class AbstractMultiTenantOrgObject
         extends AbstractMultiTenantObject
         implements MultiTenantObject, OrganizedObject {
 
-    @Schema(description = "OrgID")
+    @Schema(title = "组织机构ID")
     @Column(length = 128)
     @InjectVar(InjectConsts.ORG_ID)
     protected String orgId;

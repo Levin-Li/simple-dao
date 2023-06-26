@@ -32,7 +32,7 @@ public class TestEntity
     @GeneratedValue
     private Long id;
 
-    @Schema(description = "父ID")
+    @Schema(title = "父ID")
     @Column(length = 128)
     protected Long parentId;
 
