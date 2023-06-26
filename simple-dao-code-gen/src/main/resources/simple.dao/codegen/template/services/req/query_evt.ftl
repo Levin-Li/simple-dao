@@ -102,7 +102,7 @@ public class ${className} extends ${reqExtendClass}{
     <#-- 模糊匹配 -->
     <#if field.contains && field.typeName = 'String'>
 
-    @Schema(title = "模糊匹配-" + ${field.schemaTitle})
+    @Schema(title = "模糊匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
