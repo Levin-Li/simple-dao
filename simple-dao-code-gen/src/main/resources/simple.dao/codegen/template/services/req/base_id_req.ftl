@@ -43,11 +43,9 @@ import ${imp};
 
 @Schema(title =  BIZ_NAME + " 主键通用查询")
 @Data
-
 <#if pkField?exists>
-    ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 </#if>
-
 @NoArgsConstructor
 @Builder
 //@EqualsAndHashCode(callSuper = true)
