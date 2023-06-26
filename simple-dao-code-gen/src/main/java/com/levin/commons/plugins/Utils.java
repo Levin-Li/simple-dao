@@ -61,6 +61,8 @@ public abstract class Utils {
 
         ClassLoader classLoader = Utils.class.getClassLoader();
 
+       // templateRes= templateRes.replaceAll("")
+
         while (templateRes.trim().startsWith("/")) {
             templateRes = templateRes.trim().substring(1);
         }

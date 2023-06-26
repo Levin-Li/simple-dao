@@ -84,6 +84,8 @@ public final class ServiceModelCodeGenerator {
 
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
+    public static final String TEMPLATE_PATH = "/simple.dao/codegen/template/";
+
 
 //    private static Set<Class> baseTypes = new HashSet<>();
 
@@ -1209,7 +1211,7 @@ public final class ServiceModelCodeGenerator {
         file.getParentFile().mkdirs();
 
         //文件名
-        params.put("fileName", file.getName());
+        params.put("fileName",  file.getName());
         params.put("templateFileName", template.replace("\\", "/"));
 
         StringWriter stringWriter = new StringWriter();
@@ -1691,8 +1693,13 @@ public final class ServiceModelCodeGenerator {
 
         //支持从jar中加载模板
         configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+
+        if (!templatePath.startsWith(TEMPLATE_PATH)) {
+            templatePath = TEMPLATE_PATH + templatePath;
+        }
+
         //获取页面模版。
-        return configuration.getTemplate(MessageFormat.format("/simple.dao/codegen/template/{0}", templatePath));
+        return configuration.getTemplate(templatePath);
     }
 
     private static Enum getEnumByVal(Class ec, int i) {

@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.levin.commons.dao.codegen.ServiceModelCodeGenerator.TEMPLATE_PATH;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -135,7 +136,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
-            String resTemplateDir = "simple.dao/codegen/template/entity/";
+            String resTemplateDir = TEMPLATE_PATH + "entity/";
 
             //拷贝 POM 文件
 
@@ -145,9 +146,14 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                             .put("now", new Date().toString());
 
             copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
-            copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
+           // copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
+           // copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
-            copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
+            Map<String,  Object> params = new LinkedHashMap<>( mapBuilder.build());
+
+            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params ,new File(entitiesDir, "package-info.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params ,new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+
 
             YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
 

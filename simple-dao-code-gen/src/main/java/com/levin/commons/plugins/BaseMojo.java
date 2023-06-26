@@ -4,7 +4,6 @@ import com.levin.commons.utils.ClassUtils;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -622,7 +621,10 @@ public abstract class BaseMojo extends AbstractMojo {
      * @throws IOException
      */
     protected void copyAndReplace(boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
-        Utils.copyAndReplace(mavenProject.getBasedir().getCanonicalPath(),overwrite,templateRes,target,varMaps);
+
+            Utils.copyAndReplace(mavenProject.getBasedir().getCanonicalPath(), overwrite, templateRes, target, varMaps);
+
+
     }
 
 
