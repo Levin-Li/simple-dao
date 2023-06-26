@@ -84,22 +84,22 @@ public abstract class BaseController {
     /**
      * 检查结果
      * @param n
-     * @param action
+     * @param failAction
      * @return
      */
-    protected int checkResult(int n, String action) {
-        Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
+    protected int checkResult(int n, String failAction) {
+        Assert.isTrue(n > 0, failAction);
         return n;
     }
 
     /**
      * 检查结果
      * @param ok
-     * @param action
+     * @param failAction
      * @return
      */
-    protected boolean checkResult(boolean ok, String action) {
-        Assert.isTrue(ok, action + BIZ_NAME + "失败");
+    protected boolean checkResult(boolean ok, String failAction) {
+        Assert.isTrue(ok, failAction);
         return ok;
     }
 }

@@ -66,17 +66,4 @@ public abstract class BaseService {
         return (T) selfProxy;
     }
 
-    /**
-     * 检查唯一结果
-     * @param n
-     * @param action
-     * @return
-     */
-    protected int checkUniqueResult(int n, String action) {
-        if (n > 1) {
-            throw new DaoSecurityException("非法的" + action + "操作");
-        }
-        return n;
-    }
-
 }

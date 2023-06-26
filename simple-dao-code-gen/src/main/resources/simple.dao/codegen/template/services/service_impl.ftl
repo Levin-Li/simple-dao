@@ -143,7 +143,6 @@ public class ${className} extends BaseService implements ${serviceName} {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
 
        return simpleDao.singleUpdateByQueryObj(req);
-       // return checkUniqueResult(simpleDao.updateByQueryObj(req), UPDATE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
@@ -161,7 +160,6 @@ public class ${className} extends BaseService implements ${serviceName} {
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleDeleteByQueryObj(req);
-        // return checkUniqueResult(simpleDao.deleteByQueryObj(req), DELETE_ACTION);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
