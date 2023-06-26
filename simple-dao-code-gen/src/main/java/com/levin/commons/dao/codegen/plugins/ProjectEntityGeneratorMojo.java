@@ -149,10 +149,10 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
            // copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
            // copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
-            Map<String,  Object> params = new LinkedHashMap<>( mapBuilder.build());
+            Map<String,  Object> tempParams = new LinkedHashMap<>( mapBuilder.build());
 
-            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params ,new File(entitiesDir, "package-info.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params ,new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", tempParams ,new File(entitiesDir, "package-info.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", tempParams ,new File(entitiesDir, "EntityConst.java").getCanonicalPath());
 
 
             YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
