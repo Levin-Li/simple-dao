@@ -49,7 +49,7 @@ public interface ModuleOption {
      * module id
      */
     String ID = PACKAGE_NAME;
-
+    
     /**
      * module prefix
      */
