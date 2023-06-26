@@ -61,7 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ${desc}测试
+ * ${entityTitle}测试
  *
  * @author auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]
@@ -118,11 +118,11 @@ public class ${className} {
 <#if pkField?exists>
        ${pkField.typeName} ${pkField.name}  = ${serviceName?uncap_first}.create(req);
 
-        log.debug("新增${desc}->" + ${pkField.name});
+        log.debug("新增${entityTitle}->" + ${pkField.name});
 
-        Assert.isTrue(${pkField.name} != null, "${desc}");
+        Assert.isTrue(${pkField.name} != null, "${entityTitle}");
 <#else>
-        Assert.isTrue(${serviceName?uncap_first}.create(req), "${desc}");
+        Assert.isTrue(${serviceName?uncap_first}.create(req), "${entityTitle}");
 </#if>
 
     }
@@ -146,9 +146,9 @@ public class ${className} {
 
         PagingData<${entityName}Info> resp = ${serviceName?uncap_first}.query(req,null);
 
-        log.debug("查询${desc}->" + resp);
+        log.debug("查询${entityTitle}->" + resp);
 
-        Assert.isTrue(!resp.isEmpty(), "${desc}");
+        Assert.isTrue(!resp.isEmpty(), "${entityTitle}");
     }
 
     @Test
@@ -169,9 +169,9 @@ public class ${className} {
 
           boolean ok = ${serviceName?uncap_first}.update(req);
 
-          log.debug("更新${desc}-> " + ok);
+          log.debug("更新${entityTitle}-> " + ok);
 
-          Assert.isTrue(ok, "${desc}");
+          Assert.isTrue(ok, "${entityTitle}");
     }
 
     @Test
@@ -185,8 +185,8 @@ public class ${className} {
 
         boolean ok = ${serviceName?uncap_first}.delete(req);
 
-        log.debug("删除${desc}->" + ok);
+        log.debug("删除${entityTitle}->" + ok);
 
-        Assert.isTrue(ok , "${desc}");
+        Assert.isTrue(ok , "${entityTitle}");
     }
 }

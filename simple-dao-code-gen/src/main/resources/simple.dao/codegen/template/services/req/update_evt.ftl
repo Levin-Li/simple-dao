@@ -37,7 +37,7 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  更新${desc}
+ *  更新${entityTitle}
  *  Auto gen by simple-dao-codegen ${.now}
  *  代码生成哈希校验码：[]
  */

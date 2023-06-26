@@ -36,7 +36,7 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  ${desc} 主键通用请求
+ *  ${entityTitle} 主键通用请求
  *  //Auto gen by simple-dao-codegen ${.now}
  *  代码生成哈希校验码：[]
  */

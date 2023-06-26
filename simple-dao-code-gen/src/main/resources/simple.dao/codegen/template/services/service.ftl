@@ -22,7 +22,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 
 /**
- *  ${desc}-服务接口
+ *  ${entityTitle}-服务接口
  *  @author Auto gen by simple-dao-codegen ${.now}
  *  代码生成哈希校验码：[]
  */

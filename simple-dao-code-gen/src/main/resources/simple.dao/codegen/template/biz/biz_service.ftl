@@ -38,7 +38,7 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  ${desc}-业务服务
+ *  ${entityTitle}-业务服务
  *
  * @author auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]

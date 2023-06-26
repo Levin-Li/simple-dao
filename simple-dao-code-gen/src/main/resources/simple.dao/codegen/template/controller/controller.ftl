@@ -64,7 +64,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Valid
 @CRUD
 /**
- * ${desc}控制器
+ * ${entityTitle}控制器
  *
  * @author auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]

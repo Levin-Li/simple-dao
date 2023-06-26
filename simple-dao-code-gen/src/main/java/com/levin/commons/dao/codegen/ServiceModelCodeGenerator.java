@@ -18,6 +18,7 @@ import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConsts;
 import com.levin.commons.utils.ExceptionUtils;
+import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -1070,9 +1071,26 @@ public final class ServiceModelCodeGenerator {
 
     private static Map<String, Object> getBaseInfo(Class entityClass, List<FieldModel> fields, String packageName, String genClassName) {
 
-        final String desc = entityClass.isAnnotationPresent(Schema.class)
-                ? ((Schema) entityClass.getAnnotation(Schema.class)).description()
-                : entityClass.getSimpleName();
+        String entityTitle = "";
+
+        String entityDesc = "";
+
+        Schema schema = (Schema) entityClass.getAnnotation(Schema.class);
+        if (schema != null) {
+            entityDesc = schema.description();
+            entityTitle = schema.title();
+        }
+
+        if (!StringUtils.hasText(entityTitle)
+                && StringUtils.hasText(entityDesc)) {
+            String[] splitDesc = LangUtils.splitDesc(entityDesc);
+            entityTitle = splitDesc[0];
+            entityDesc = splitDesc[1];
+        }
+
+        if (!StringUtils.hasText(entityTitle)) {
+            entityTitle = entityClass.getSimpleName();
+        }
 
         Map<String, Object> params = new LinkedHashMap<>();
 
@@ -1085,8 +1103,8 @@ public final class ServiceModelCodeGenerator {
         params.put("packageName", packageName);
         params.put("className", genClassName);
 
-        params.put("title", desc);
-        params.put("desc", desc);
+        params.put("entityTitle", entityDesc);
+        params.put("entityDesc", entityDesc);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 

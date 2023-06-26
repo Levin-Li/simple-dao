@@ -58,7 +58,7 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  ${desc}-服务实现
+ *  ${entityTitle}-服务实现
  *
  *  @author auto gen by simple-dao-codegen ${.now}
  *  代码生成哈希校验码：[]

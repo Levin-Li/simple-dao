@@ -44,7 +44,7 @@ import ${modulePackageName}.services.commons.req.*;
 ////////////////////////////////////
 
 /**
- *  统计${desc}
+ *  统计${entityTitle}
  *  @Author Auto gen by simple-dao-codegen ${.now}
  *  代码生成哈希校验码：[]
  */
@@ -131,7 +131,7 @@ public class ${className} extends ${reqExtendClass}{
     //@todo 统计之前初始化数据
     }
 
-    @Schema(description = "${desc}统计结果")
+    @Schema(description = BIZ_NAME + "统计结果")
     @Data
     @Accessors(chain = true)
     @FieldNameConstants

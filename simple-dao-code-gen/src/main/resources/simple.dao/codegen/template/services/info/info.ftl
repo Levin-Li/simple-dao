@@ -31,7 +31,7 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- * ${desc}
+ * ${entityTitle}
  * @Author Auto gen by simple-dao-codegen ${.now}
  * 代码生成哈希校验码：[]
  */
