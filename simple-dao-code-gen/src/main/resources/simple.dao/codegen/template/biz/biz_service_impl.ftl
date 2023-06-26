@@ -73,6 +73,7 @@ import ${imp};
 //@Valid只能用在controller，@Validated可以用在其他被spring管理的类上。
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
+@CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
 public class ${className} extends BaseService implements Biz${serviceName} {
 
     @Autowired
@@ -81,5 +82,15 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     protected ${className} getSelfProxy(){
         return getSelfProxy(${className}.class);
     }
+
+    //示例方法
+    //@Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
+    //@Override
+    //@CacheEvict(condition = "#req.id != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.id")
+    //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    //public boolean update(UpdateMenuResReq req) {
+    //    Assert.notNull(req.getId(), BIZ_NAME + " id 不能为空");
+    //    return simpleDao.singleUpdateByQueryObj(req);
+    //}
 
 }
