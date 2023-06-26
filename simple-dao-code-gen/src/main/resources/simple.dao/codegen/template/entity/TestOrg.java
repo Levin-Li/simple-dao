@@ -14,13 +14,18 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 import org.hibernate.annotations.Type;
 
+/**
+ * 示例代码
+ * Auto gen by simple-dao-codegen ${now}
+ * 代码生成哈希校验码：[]
+ */
 
 @Data
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
 
-@Schema(title = "机构")
+@Schema(title = "测试机构", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestOrg")
 @Table(
         indexes = {

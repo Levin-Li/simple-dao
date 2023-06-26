@@ -15,13 +15,18 @@ import javax.persistence.*;
 import java.util.List;
 import org.hibernate.annotations.Type;
 
+/**
+ * 示例代码
+ * Auto gen by simple-dao-codegen ${now}
+ * 代码生成哈希校验码：[]
+ */
 
 @Data
 @EqualsAndHashCode(of = {"id"})
 @Accessors(chain = true)
 @FieldNameConstants
 
-@Schema(title = "测试角色")
+@Schema(title = "测试角色", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestRole")
 @Table(
         indexes = {

@@ -5,9 +5,9 @@ package ${CLASS_PACKAGE_NAME};
  * <p>
  * eg.
  * <p>
- * //@Entity(name = EntityConst.PREFIX + "exam_tasks")
- * //@Table(name = EntityConst.PREFIX + "exam_tasks")
- * //Auto gen by simple-dao-codegen ${now}
+ * @Entity(name = EntityConst.PREFIX + "exam_tasks")
+ * @Table(name = EntityConst.PREFIX + "exam_tasks")
+ * Auto gen by simple-dao-codegen ${now}
  * 代码生成哈希校验码：[]
  */
 public interface EntityConst
