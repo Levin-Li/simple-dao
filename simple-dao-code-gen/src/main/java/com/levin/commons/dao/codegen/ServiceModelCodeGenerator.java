@@ -1103,7 +1103,7 @@ public final class ServiceModelCodeGenerator {
         params.put("packageName", packageName);
         params.put("className", genClassName);
 
-        params.put("entityTitle", entityDesc);
+        params.put("entityTitle", entityTitle);
         params.put("entityDesc", entityDesc);
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
