@@ -225,10 +225,4 @@ public class ${className} extends BaseService implements ${serviceName} {
     public void clearCache(Object key) {
     }
 
-    protected int checkUniqueResult(int n, String action) {
-        if (n > 1) {
-            throw new DaoSecurityException("非法的" + action + "操作");
-        }
-        return n;
-    }
 }

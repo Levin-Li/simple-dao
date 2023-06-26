@@ -225,26 +225,4 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
         return batchDelete(req);
     }
 
-    /**
-     * 检查结果
-     * @param n
-     * @param action
-     * @return
-     */
-    protected int checkResult(int n, String action) {
-        Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
-        return n;
-    }
-
-    /**
-     * 检查结果
-     * @param ok
-     * @param action
-     * @return
-     */
-    protected boolean checkResult(boolean ok, String action) {
-        Assert.isTrue(ok, action + BIZ_NAME + "失败");
-        return ok;
-    }
-
 }

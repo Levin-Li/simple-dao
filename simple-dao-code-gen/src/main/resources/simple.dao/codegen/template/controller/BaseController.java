@@ -81,4 +81,25 @@ public abstract class BaseController {
        // binder.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("MM-dd-yyyy"),false));
     }
 
+    /**
+     * 检查结果
+     * @param n
+     * @param action
+     * @return
+     */
+    protected int checkResult(int n, String action) {
+        Assert.isTrue(n > 0, action + BIZ_NAME + "失败");
+        return n;
+    }
+
+    /**
+     * 检查结果
+     * @param ok
+     * @param action
+     * @return
+     */
+    protected boolean checkResult(boolean ok, String action) {
+        Assert.isTrue(ok, action + BIZ_NAME + "失败");
+        return ok;
+    }
 }
