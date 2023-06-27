@@ -23,7 +23,7 @@
 
         <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
 
-<!--           <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+        <!--           <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
 
         <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
 
@@ -67,7 +67,6 @@
         <module>simple-dao-code-gen-example</module>
     </modules>
 
-
     <profiles>
 
         <profile>
@@ -98,9 +97,58 @@
             </properties>
         </profile>
 
+        <profile>
+            <id>olny-for-without-gitpack-env</id>
+            <activation>
+                <file>
+                    <!--  关键字：jitpack 表示是在 gitpack 打包-->
+                    <missing>/home/jitpack/build/${project.artifactId}/pom.xml</missing>
+                </file>
+            </activation>
+
+            <repositories>
+
+                <repository>
+                    <!-- 仓库首页 https://maven.aliyun.com/ , 如果在 gitpack.io 打包时会非常的慢 -->
+                    <id>aliyun-central仓和jcenter仓的聚合仓</id>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                </repository>
+
+            </repositories>
+
+            <pluginRepositories>
+
+                <pluginRepository>
+                    <!-- 仓库首页 https://maven.aliyun.com/ , 如果在 gitpack.io 打包时会非常的慢 -->
+                    <id>aliyun-central仓和jcenter仓的聚合仓</id>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                </pluginRepository>
+
+            </pluginRepositories>
+
+        </profile>
 
     </profiles>
 
+
+    <repositories>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </repository>
+
+    </repositories>
+
+    <pluginRepositories>
+
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </pluginRepository>
+
+    </pluginRepositories>
 
     <distributionManagement>
         <!--具体变量来自 Setting 文件-->
@@ -116,20 +164,6 @@
 
     </distributionManagement>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://www.jitpack.io</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <!--  插件库 -->
-            <id>jitpack.io</id>
-            <url>https://www.jitpack.io</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <dependencyManagement>
         <dependencies>

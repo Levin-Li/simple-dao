@@ -255,7 +255,7 @@
     <profiles>
 
         <profile>
-            <id>only-for-gitpack</id>
+            <id>only-for-gitpack-env</id>
             <activation>
                 <file>
                     <!--  关键字：jitpack 表示是在 gitpack 打包-->
