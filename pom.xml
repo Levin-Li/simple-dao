@@ -23,7 +23,7 @@
 
         <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
 
-        <!--   <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+<!--           <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
 
         <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
 
@@ -119,7 +119,7 @@
     <repositories>
         <repository>
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </repository>
     </repositories>
 
@@ -127,7 +127,7 @@
         <pluginRepository>
             <!--  插件库 -->
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </pluginRepository>
     </pluginRepositories>
 

@@ -80,7 +80,7 @@
 
         <repository>
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </repository>
 
         <!--        在 gitpack.io 打包时会非常的慢-->
@@ -96,7 +96,7 @@
         <pluginRepository>
             <!--  插件库 -->
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </pluginRepository>
     </pluginRepositories>
 

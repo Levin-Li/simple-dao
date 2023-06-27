@@ -1,5 +1,5 @@
 
-[![](https://jitpack.io/v/Levin-Li/simple-dao.svg)](https://jitpack.io/#Levin-Li/simple-dao)
+[![](https://www.jitpack.io/v/Levin-Li/simple-dao.svg)](https://www.jitpack.io/#Levin-Li/simple-dao)
 
 ### 简介 
    
@@ -181,7 +181,7 @@
     <repositories> 
         <repository>
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </repository> 
     </repositories>
 
@@ -189,7 +189,7 @@
         <pluginRepository>
             <!--  插件库 -->
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </pluginRepository>
     </pluginRepositories>
 
