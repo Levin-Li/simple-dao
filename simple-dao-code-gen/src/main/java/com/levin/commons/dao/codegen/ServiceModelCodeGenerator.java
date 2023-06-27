@@ -1259,24 +1259,24 @@ public final class ServiceModelCodeGenerator {
         return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
     }
 
-    public static void setLazy(FieldModel fieldModel){
-
-        FetchType fetchType = tryGetFetchType(fieldModel.getField());
-
-        if(FetchType.LAZY.equals(fetchType)){
+    public static void setLazy(FieldModel fieldModel) {
+        if (FetchType.LAZY.equals(tryGetFetchType(fieldModel.getField()))) {
             fieldModel.setLazy(true);
         }
     }
 
     public static FetchType tryGetFetchType(Field field) {
         return Stream.of(field.getAnnotations())
-                .map(annotation -> (FetchType) com.levin.commons.utils.ClassUtils.getValue(annotation, "fetch", false))
+                .filter(Objects::nonNull)
+                .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "fetch", false))
+                //.filter(Objects::nonNull)
+                .filter(v -> v instanceof FetchType)
+                .map(v -> (FetchType) v)
                 .findFirst()
                 .orElse(null);
     }
 
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
-
 
         Object obj = entityClass.newInstance();
 
@@ -1359,7 +1359,6 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setEnumType(fieldType.isEnum());
 
-
             fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
             fieldModel.addImport(fieldType);
@@ -1391,6 +1390,8 @@ public final class ServiceModelCodeGenerator {
 
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
             }
+
+            setLazy(fieldModel);
 
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
@@ -1450,8 +1451,6 @@ public final class ServiceModelCodeGenerator {
                 }
                 // fieldModel.setTestValue("null");
             }
-
-            setLazy(fieldModel);
 
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
@@ -1605,7 +1604,6 @@ public final class ServiceModelCodeGenerator {
                 } else if (fieldModel.getType().equals(Date.class)) {
                     fieldModel.setTestValue("new Date()");
                 } else {
-
                     // fieldModel.setTestValue("null");
                 }
             }
@@ -1624,7 +1622,9 @@ public final class ServiceModelCodeGenerator {
                 || type.isEnum()
                 || Number.class.isAssignableFrom(type)
                 || Date.class.isAssignableFrom(type)
-                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()));
+                || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()))
+                || BeanUtils.isSimpleProperty(type)
+                ;
 
     }
 

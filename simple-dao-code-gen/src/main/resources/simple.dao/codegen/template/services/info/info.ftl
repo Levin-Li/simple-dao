@@ -51,7 +51,7 @@ public class ${className} implements Serializable {
 
 <#list fields as field>
 
-   <#if field.lazy>
+   <#if field.lazy!>
     //@Fetch //默认不加载，请通过查询对象控制
    </#if>
    <#list field.annotations as annotation>

@@ -71,7 +71,7 @@ public class ${className} extends ${reqExtendClass} {
 </#if>
 
 <#list UPDATE_fields as field>
-    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
+    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
         <#if !(annotation?string)?contains("@NotNull")>
     ${annotation}
@@ -83,7 +83,7 @@ public class ${className} extends ${reqExtendClass} {
 </#list>
 
 <#list fields as field>
-    <#if !field.notUpdate && !field.lazy && field.baseType && !field.jpaEntity >
+    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
     <#if !(annotation?string)?contains("@NotNull")>
     ${annotation}
