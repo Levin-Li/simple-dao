@@ -1211,7 +1211,7 @@ public final class ServiceModelCodeGenerator {
         file.getParentFile().mkdirs();
 
         //文件名
-        params.put("fileName",  file.getName());
+        params.put("fileName", file.getName());
         params.put("templateFileName", template.replace("\\", "/"));
 
         StringWriter stringWriter = new StringWriter();
@@ -1255,9 +1255,24 @@ public final class ServiceModelCodeGenerator {
 
     }
 
-
     private static String getFirst(String... values) {
         return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
+    }
+
+    public static void setLazy(FieldModel fieldModel){
+
+        FetchType fetchType = tryGetFetchType(fieldModel.getField());
+
+        if(FetchType.LAZY.equals(fetchType)){
+            fieldModel.setLazy(true);
+        }
+    }
+
+    public static FetchType tryGetFetchType(Field field) {
+        return Stream.of(field.getAnnotations())
+                .map(annotation -> (FetchType) com.levin.commons.utils.ClassUtils.getValue(annotation, "fetch", false))
+                .findFirst()
+                .orElse(null);
     }
 
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
@@ -1424,17 +1439,19 @@ public final class ServiceModelCodeGenerator {
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
                 fieldModel.setJpaEntity(true);
-                if (field.isAnnotationPresent(ManyToOne.class)) {
-                    fieldModel.setLazy(field.getAnnotation(ManyToOne.class).fetch().equals(FetchType.LAZY));
-                } else if (field.isAnnotationPresent(OneToOne.class)) {
-                    fieldModel.setLazy(field.getAnnotation(OneToOne.class).fetch().equals(FetchType.LAZY));
-                }
+//                if (field.isAnnotationPresent(ManyToOne.class)) {
+//                    fieldModel.setLazy(field.getAnnotation(ManyToOne.class).fetch().equals(FetchType.LAZY));
+//                } else if (field.isAnnotationPresent(OneToOne.class)) {
+//                    fieldModel.setLazy(field.getAnnotation(OneToOne.class).fetch().equals(FetchType.LAZY));
+//                }
                 Object aClass = entityMapping.get(field.getName());
                 if (aClass instanceof Class) {
                     fieldModel.setInfoClassName(((Class) aClass).getPackage().getName() + "." + ((Class) aClass).getSimpleName());
                 }
                 // fieldModel.setTestValue("null");
             }
+
+            setLazy(fieldModel);
 
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();

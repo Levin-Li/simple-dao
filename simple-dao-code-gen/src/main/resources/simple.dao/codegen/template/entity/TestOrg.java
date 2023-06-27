@@ -154,6 +154,10 @@ public class TestOrg
     @Schema(title = "是否外部机构")
     protected Boolean isExternal;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY) //默认延迟加载
+    @Schema(title = "机构扩展信息")
+    protected String extInfo;
     //////////////////////////////////////////////////////////////////////
 
     @Schema(title = "联系人")

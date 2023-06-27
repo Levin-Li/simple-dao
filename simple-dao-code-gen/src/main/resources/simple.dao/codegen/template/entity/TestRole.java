@@ -94,6 +94,7 @@ public class TestRole
 
     @Schema(title = "资源权限列表", description = "Json数组")
     @Lob
+    @Basic(fetch = FetchType.LAZY) //延迟抓取
     @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false")
     protected String permissionList;
 
