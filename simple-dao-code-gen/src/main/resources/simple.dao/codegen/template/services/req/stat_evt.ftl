@@ -101,6 +101,7 @@ public class ${className} extends ${reqExtendClass}{
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
+    </#if>
     <#if field.lazy!>
     @Schema(title = "是否加载" + ${field.schemaTitle})
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
