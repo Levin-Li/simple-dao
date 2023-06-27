@@ -103,6 +103,7 @@ public class ${className} extends ${reqExtendClass}{
     </#if>
     </#if>
     <#if field.lazy!>
+
     @Schema(title = "是否加载" + ${field.schemaTitle})
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
     Boolean load${field.name?cap_first};
