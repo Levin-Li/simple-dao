@@ -117,7 +117,6 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
 
-
     /**
      * 简单统计
      *

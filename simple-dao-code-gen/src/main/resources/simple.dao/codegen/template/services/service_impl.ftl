@@ -141,8 +141,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-
-       return simpleDao.singleUpdateByQueryObj(req);
+        return simpleDao.singleUpdateByQueryObj(req);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
@@ -193,18 +192,6 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-    @Override
-    public ${entityName}Info findOne(Query${entityName}Req req){
-        return simpleDao.findOneByQueryObj(req);
-    }
-
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-    @Override
-    public ${entityName}Info findUnique(Query${entityName}Req req){
-        return simpleDao.findUnique(req);
-    }
-
     /**
      * 统计记录数
      *
@@ -215,6 +202,18 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
     public int count(Query${entityName}Req req){
         return (int) simpleDao.countByQueryObj(req);
+    }
+
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findOne(Query${entityName}Req req){
+        return simpleDao.findOneByQueryObj(req);
+    }
+
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findUnique(Query${entityName}Req req){
+        return simpleDao.findUnique(req);
     }
 
     @Override
