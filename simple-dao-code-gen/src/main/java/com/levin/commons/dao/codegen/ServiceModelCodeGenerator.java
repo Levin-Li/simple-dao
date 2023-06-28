@@ -1164,6 +1164,8 @@ public final class ServiceModelCodeGenerator {
             path = path.substring(baseDir.getCanonicalPath().length());
         }
 
+        String fileOldCompactContent = "";
+
         final String prefix = "代码生成哈希校验码：[";
 
         if (file.exists()) {
@@ -1171,7 +1173,7 @@ public final class ServiceModelCodeGenerator {
             boolean skip = true;
 
             //文件内容，去除空格，空行
-            String fileContent = Files.readAllLines(file.toPath(), Charset.forName("utf-8"))
+            fileOldCompactContent = Files.readAllLines(file.toPath(), Charset.forName("utf-8"))
                     .stream()
                     //去除空行
                     .filter(StringUtils::hasText)
@@ -1179,25 +1181,25 @@ public final class ServiceModelCodeGenerator {
                     .map(StringUtils::trimAllWhitespace)
                     .collect(Collectors.joining());
 
-            int startIdx = fileContent.indexOf(prefix);
+            int startIdx = fileOldCompactContent.indexOf(prefix);
 
             if (startIdx != -1) {
 
-                int endIndex = fileContent.indexOf("]", startIdx);
+                int endIndex = fileOldCompactContent.indexOf("]", startIdx);
 
-                String codeContent = fileContent.substring(startIdx, endIndex);
+                String codeContent = fileOldCompactContent.substring(startIdx, endIndex);
 
                 String md5 = codeContent.substring(prefix.length());
 
 //                logger.info("MD5:" + md5 + " : " + file.getCanonicalPath());
 
-                fileContent = fileContent.substring(0, startIdx + prefix.length()) + fileContent.substring(endIndex);
+                fileOldCompactContent = fileOldCompactContent.substring(0, startIdx + prefix.length()) + fileOldCompactContent.substring(endIndex);
 
 
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
-                if (md5.equals(SecureUtil.md5(fileContent))) {
+                if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     skip = false;
-                    logger.info("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过，将覆盖旧文件...", md5);
+                    logger.info("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5);
                 } else {
                     logger.info("目标文件：" + path + " 已经存在，并且被修改过，不覆盖。");
                 }
@@ -1224,17 +1226,23 @@ public final class ServiceModelCodeGenerator {
 
         if (startIdx != -1) {
 
-            int endIndex = fileContent.indexOf("]", startIdx);
 
             //需要hash的部分
-            String hashContent = Stream.of(fileContent.split("[\r\n]"))
+            String newCompactContent = Stream.of(fileContent.split("[\r\n]"))
                     //去除空行
                     .filter(StringUtils::hasText)
                     //去除空格
                     .map(StringUtils::trimAllWhitespace)
                     .collect(Collectors.joining());
 
-            String md5 = SecureUtil.md5(hashContent);
+            //如果文件内容相同，则直接返回
+            if (newCompactContent.equals(fileOldCompactContent)) {
+                return;
+            }
+
+            String md5 = SecureUtil.md5(newCompactContent);
+
+            int endIndex = fileContent.indexOf("]", startIdx);
 
             fileContent = fileContent.substring(0, startIdx + prefix.length()) + md5 + fileContent.substring(endIndex);
         }
