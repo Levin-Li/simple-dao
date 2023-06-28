@@ -33,15 +33,14 @@ import org.hibernate.annotations.Type;
                 @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
                 @Index(columnList = AbstractBaseEntityObject.Fields.enable),
                 @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-                @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
+                @Index(columnList = AbstractMultiTenantObject.Fields.tenantId),
                 @Index(columnList = E_AbstractNamedEntityObject.name),
                 @Index(columnList = E_TestRole.code),
-                @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
         },
 
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_TestRole.code}),
-                @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedEntityObject.name}),
+                @UniqueConstraint(columnNames = {AbstractMultiTenantObject.Fields.tenantId, E_TestRole.code}),
+                @UniqueConstraint(columnNames = {AbstractMultiTenantObject.Fields.tenantId, E_AbstractNamedEntityObject.name}),
         }
 )
 
