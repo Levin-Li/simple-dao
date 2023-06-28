@@ -3,7 +3,7 @@
  * <p>
  * 定义ID生成器
  *
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @GenericGenerator(name = "guid", strategy = "org.hibernate.id.GUIDGenerator")

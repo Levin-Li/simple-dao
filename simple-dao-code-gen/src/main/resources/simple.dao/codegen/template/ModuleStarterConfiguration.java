@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 模块自举配置
  *
  * 模块需要自举加载的内容都需要配置在该类中
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Configuration(PLUGIN_PREFIX + "${className}")

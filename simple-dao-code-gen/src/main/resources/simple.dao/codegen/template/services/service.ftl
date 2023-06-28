@@ -23,7 +23,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 /**
  *  ${entityTitle}-服务接口
- *  @author Auto gen by simple-dao-codegen ${.now}
+ *  @author Auto gen by simple-dao-codegen, @Time: ${.now}
  *  代码生成哈希校验码：[]
  */
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)

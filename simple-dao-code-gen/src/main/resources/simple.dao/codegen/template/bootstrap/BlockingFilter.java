@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  *
  * 支持的必要的时候，阻断新的请求
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

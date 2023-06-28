@@ -34,7 +34,7 @@ import org.springframework.security.web.firewall.*;
 /**
  * 模块Spring Security 配置
  *
- * @author auto gen by simple-dao-codegen ${.now}
+ * @author Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity>  {

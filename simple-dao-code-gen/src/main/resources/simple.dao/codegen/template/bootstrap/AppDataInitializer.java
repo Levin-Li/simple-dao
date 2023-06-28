@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  *  应用数据初始化
- *  @author Auto gen by simple-dao-codegen ${.now}
+ *  @author Auto gen by simple-dao-codegen, @Time: ${.now}
  *  代码生成哈希校验码：[]
  */
 

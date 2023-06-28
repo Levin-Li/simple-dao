@@ -28,14 +28,14 @@ import ${modulePackageName}.*;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-//Auto gen by simple-dao-codegen ${.now}
+//Auto gen by simple-dao-codegen, @Time: ${.now}
 
 
 /**
  * 抽象控制器
  *
  * @author lilw
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

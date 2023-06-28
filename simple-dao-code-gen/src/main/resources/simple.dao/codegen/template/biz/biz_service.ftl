@@ -40,7 +40,7 @@ import ${imp};
 /**
  *  ${entityTitle}-业务服务
  *
- * @author auto gen by simple-dao-codegen ${.now}
+ * @author Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 

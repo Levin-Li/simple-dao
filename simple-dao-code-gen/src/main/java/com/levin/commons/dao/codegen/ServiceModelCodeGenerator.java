@@ -1168,6 +1168,8 @@ public final class ServiceModelCodeGenerator {
 
         final String prefix = "代码生成哈希校验码：[";
 
+        final String keyword = "Auto gen by simple-dao-codegen, @Time: ";
+
         if (file.exists()) {
 
             boolean skip = true;
@@ -1177,6 +1179,8 @@ public final class ServiceModelCodeGenerator {
                     .stream()
                     //去除空行
                     .filter(StringUtils::hasText)
+                    //不包含生成标记行，里面有动态时间
+                    .filter(line -> !line.contains(keyword))
                     //去除空格
                     .map(StringUtils::trimAllWhitespace)
                     .collect(Collectors.joining());
@@ -1194,7 +1198,6 @@ public final class ServiceModelCodeGenerator {
 //                logger.info("MD5:" + md5 + " : " + file.getCanonicalPath());
 
                 fileOldCompactContent = fileOldCompactContent.substring(0, startIdx + prefix.length()) + fileOldCompactContent.substring(endIndex);
-
 
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
@@ -1226,11 +1229,12 @@ public final class ServiceModelCodeGenerator {
 
         if (startIdx != -1) {
 
-
             //需要hash的部分
             String newCompactContent = Stream.of(fileContent.split("[\r\n]"))
                     //去除空行
                     .filter(StringUtils::hasText)
+                    //不包含生成标记行，里面有动态时间
+                    .filter(line -> !line.contains(keyword))
                     //去除空格
                     .map(StringUtils::trimAllWhitespace)
                     .collect(Collectors.joining());

@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 /**
  * ${entityTitle}测试
  *
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 

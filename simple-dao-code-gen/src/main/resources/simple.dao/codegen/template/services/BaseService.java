@@ -33,7 +33,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  * 抽象服务类
  *
  * @author lilw
- * Auto gen by simple-dao-codegen ${.now}
+ * Auto gen by simple-dao-codegen, @Time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

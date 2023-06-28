@@ -50,7 +50,7 @@ import ${className};
 //@DataNeo4jTest //测试对Neo4j的操作
 /**
  *  测试类
- *  @author Auto gen by simple-dao-codegen ${.now}
+ *  @author Auto gen by simple-dao-codegen, @Time: ${.now}
  *  代码生成哈希校验码：[]
  */
 public class TestCase {

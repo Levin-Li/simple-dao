@@ -45,7 +45,7 @@ import ${imp};
 
 /**
  *  统计${entityTitle}
- *  @Author Auto gen by simple-dao-codegen ${.now}
+ *  @Author Auto gen by simple-dao-codegen, @Time: ${.now}
  *  代码生成哈希校验码：[]
  */
 @Schema(title = STAT_ACTION + BIZ_NAME)
