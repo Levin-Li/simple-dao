@@ -102,7 +102,6 @@ public class SelectDaoImpl<T>
 
         super(dao, isNative);
 
-
         this.fromStatement = fromStatement;
 
         if (!hasText(fromStatement)) {

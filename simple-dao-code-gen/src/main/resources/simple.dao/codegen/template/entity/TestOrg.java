@@ -56,6 +56,10 @@ import org.hibernate.annotations.Type;
 
 //@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
+//属性的字段定义可覆盖
+//@AttributeOverride(name="address", column=@Column(name="ADDR_ID"))
+//@AssociationOverride
+
 //关于 JPA 继承模型
 //@DiscriminatorColumn
 //@DiscriminatorValue

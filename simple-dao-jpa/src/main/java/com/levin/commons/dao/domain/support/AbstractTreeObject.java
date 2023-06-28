@@ -37,6 +37,7 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     @Schema(title = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
     @OrderBy(value = " orderCode ASC , name  ASC ")
+    //@OrderColumn
     //@Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 

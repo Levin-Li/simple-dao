@@ -1,6 +1,8 @@
 package com.levin.commons.dao.support;
 
 
+import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.util.ClassUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
@@ -25,6 +27,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,17 +36,16 @@ import org.springframework.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.*;
+import javax.persistence.Parameter;
 import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.getFieldsFromCache;
 
@@ -311,7 +313,6 @@ public class JpaDaoImpl
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
-
 
     @Override
     public ParameterNameDiscoverer getParameterNameDiscoverer() {
@@ -927,7 +928,6 @@ public class JpaDaoImpl
         return Optional.ofNullable(field.getAnnotation(Schema.class))
                 .map(schema -> findFirst(schema.title(), schema.description()).orElse(field.getName()))
                 .orElse(field.getName());
-
     }
 
 
@@ -1089,7 +1089,28 @@ public class JpaDaoImpl
                     }
                 });
 
-        //3、自动生成描述信息
+
+        //3、查找 unique 属性
+        ReflectionUtils.doWithFields(entityClass, field -> {
+
+            Boolean unique = (Boolean) Stream.of(field.getAnnotations())
+                    .filter(Objects::nonNull)
+                    //1、过滤出JPA 注解
+                    .filter(annotation -> annotation.annotationType().getName().startsWith(Column.class.getPackage().getName()))
+                    //2、读取unique属性值
+                    .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "unique", false))
+                    .filter(v -> v instanceof Boolean || boolean.class.isInstance(v))
+                    .findFirst()
+                    .orElse(null);
+
+            if (Boolean.TRUE.equals(unique)) {
+                //加入字段
+                uniqueFields.add(new UniqueField().addField(field));
+            }
+
+        }, field -> !Modifier.isStatic(field.getModifiers()));
+
+        //4、自动生成描述信息
         uniqueFields.forEach(UniqueField::finish);
 
         return uniqueFields;
