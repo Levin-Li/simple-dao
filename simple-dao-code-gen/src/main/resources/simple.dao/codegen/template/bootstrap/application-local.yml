@@ -1,4 +1,4 @@
-#Auto gen by simple-dao-codegen, @Time: ${.now}
+#@author Auto gen by simple-dao-codegen, @time: ${.now}
 
 spring:
   datasource:

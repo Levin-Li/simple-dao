@@ -1168,7 +1168,7 @@ public final class ServiceModelCodeGenerator {
 
         final String prefix = "代码生成哈希校验码：[";
 
-        final String keyword = "Auto gen by simple-dao-codegen, @Time: ";
+        final String keyword = "@author Auto gen by simple-dao-codegen, @time:";
 
         if (file.exists()) {
 

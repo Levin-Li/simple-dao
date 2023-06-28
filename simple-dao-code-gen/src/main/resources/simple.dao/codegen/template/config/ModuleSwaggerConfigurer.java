@@ -23,7 +23,7 @@ import javax.annotation.Resource;
 
 /**
  * 模块文档配置
- * Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

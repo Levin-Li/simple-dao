@@ -67,7 +67,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 /**
  * ${entityTitle}业务控制器
  *
- * @author Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 public class ${className} extends ${entityName}Controller{

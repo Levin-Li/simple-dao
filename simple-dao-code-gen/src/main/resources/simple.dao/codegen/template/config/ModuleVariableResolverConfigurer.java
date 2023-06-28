@@ -19,7 +19,7 @@ import java.util.*;
 
 /**
  * 模块变量解析器配置
- * Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

@@ -29,7 +29,7 @@ import ${clazz.name};
 /**
  * 模块初始化器
  *
- * Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

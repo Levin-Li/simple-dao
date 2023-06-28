@@ -60,7 +60,7 @@ import ${imp};
 /**
  *  ${entityTitle}-服务实现
  *
- *  @author Auto gen by simple-dao-codegen, @Time: ${.now}
+ *  @author Auto gen by simple-dao-codegen, @time: ${.now}
  *  代码生成哈希校验码：[]
  */
 

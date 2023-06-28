@@ -44,7 +44,7 @@ import ${imp};
 
 /**
  *  查询${entityTitle}
- *  @Author Auto gen by simple-dao-codegen, @Time: ${.now}
+ *  @author Auto gen by simple-dao-codegen, @time: ${.now}
  *  代码生成哈希校验码：[]
  */
 @Schema(title = QUERY_ACTION + BIZ_NAME)

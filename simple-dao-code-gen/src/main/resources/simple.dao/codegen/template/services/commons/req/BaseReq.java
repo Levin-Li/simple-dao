@@ -28,7 +28,7 @@ import java.util.*;
 
 /**
  *  基本查询对象
- *  @Author Auto gen by simple-dao-codegen, @Time: ${.now}
+ *  @author Auto gen by simple-dao-codegen, @time: ${.now}
  *  代码生成哈希校验码：[]
  */
 @Schema(title = "基本查询对象")

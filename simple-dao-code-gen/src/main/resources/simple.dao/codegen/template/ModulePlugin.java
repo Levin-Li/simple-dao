@@ -22,7 +22,7 @@ import java.util.stream.*;
 /**
  * 模块插件
  *
- * Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j

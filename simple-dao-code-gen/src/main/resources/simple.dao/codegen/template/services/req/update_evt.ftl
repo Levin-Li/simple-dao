@@ -38,7 +38,7 @@ import ${imp};
 
 /**
  *  更新${entityTitle}
- *  Auto gen by simple-dao-codegen, @Time: ${.now}
+ *  @author Auto gen by simple-dao-codegen, @time: ${.now}
  *  代码生成哈希校验码：[]
  */
 @Schema(title = UPDATE_ACTION + BIZ_NAME)

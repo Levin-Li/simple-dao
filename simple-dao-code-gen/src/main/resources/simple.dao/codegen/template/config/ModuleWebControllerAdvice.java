@@ -48,7 +48,7 @@ import java.text.SimpleDateFormat;
  *
  * 注意：默认不启用，启用请取消注释
  *
- * Auto gen by simple-dao-codegen, @Time: ${.now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 @Slf4j
