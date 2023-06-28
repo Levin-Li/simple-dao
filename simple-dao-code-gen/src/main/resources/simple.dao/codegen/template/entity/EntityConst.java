@@ -7,7 +7,7 @@ package ${CLASS_PACKAGE_NAME};
  * <p>
  * @Entity(name = EntityConst.PREFIX + "exam_tasks")
  * @Table(name = EntityConst.PREFIX + "exam_tasks")
- * Auto gen by simple-dao-codegen ${now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 public interface EntityConst

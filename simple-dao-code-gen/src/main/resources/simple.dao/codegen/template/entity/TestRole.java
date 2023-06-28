@@ -17,7 +17,7 @@ import org.hibernate.annotations.Type;
 
 /**
  * 示例代码
- * Auto gen by simple-dao-codegen ${now}
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}
  * 代码生成哈希校验码：[]
  */
 

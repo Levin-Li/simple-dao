@@ -16,8 +16,12 @@ import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
 
-//代码生成哈希校验码：[]
 
+/**
+*
+* @author Auto gen by simple-dao-codegen, @time: ${.now}
+* 代码生成哈希校验码：[]
+*/
 @Data
 <#if entityPkName??>@EqualsAndHashCode(of = {"${entityPkName}"})</#if>
 @Accessors(chain = true)

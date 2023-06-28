@@ -11,7 +11,7 @@
         <version>${r"${revision}"}</version>
     </parent>
 
-<#--  Auto gen by simple-dao-codegen ${now} -->
+<#--  @author Auto gen by simple-dao-codegen, @time: ${.now} -->
     <!--    代码生成哈希校验码：[] -->
     <artifactId>${artifactId}</artifactId>
 

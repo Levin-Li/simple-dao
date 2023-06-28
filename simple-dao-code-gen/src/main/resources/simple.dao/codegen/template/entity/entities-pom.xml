@@ -15,7 +15,7 @@
         <version>${revision}</version>
     </parent>
 
-<!--    //Auto gen by simple-dao-codegen ${now}-->
+<!--    @author Auto gen by simple-dao-codegen, @time: ${.now} -->
 
 <!--    <groupId>${project.groupId}</groupId> -->
 <!--    <version>${project.version}</version> -->
