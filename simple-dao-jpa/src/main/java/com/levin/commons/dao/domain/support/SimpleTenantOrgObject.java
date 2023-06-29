@@ -9,10 +9,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 import java.util.Date;
 
 //1、lobmok get set
@@ -49,4 +46,10 @@ public abstract class SimpleTenantOrgObject
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createTime;
 
+    @PrePersist
+    public void prePersist() {
+        if (createTime == null) {
+            createTime = new Date();
+        }
+    }
 }
