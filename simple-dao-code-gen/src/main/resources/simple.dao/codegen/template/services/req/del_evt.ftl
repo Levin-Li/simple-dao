@@ -3,6 +3,7 @@ package ${packageName};
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 import static ${modulePackageName}.entities.EntityConst.*;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.service.domain.*;
@@ -67,7 +68,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#if pkField?exists>
 
-    @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)
     @In(value = E_${entityName}.${pkField.name})
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;

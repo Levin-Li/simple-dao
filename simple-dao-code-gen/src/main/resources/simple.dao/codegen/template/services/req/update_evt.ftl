@@ -3,6 +3,7 @@ package ${packageName};
 <#--import static ${modulePackageName}.ModuleOption.*;-->
 import static ${modulePackageName}.entities.EntityConst.*;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.service.domain.*;
@@ -58,7 +59,7 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-    @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
