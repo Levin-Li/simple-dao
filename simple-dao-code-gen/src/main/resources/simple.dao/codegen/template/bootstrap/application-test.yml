@@ -1,4 +1,4 @@
-#@author Auto gen by simple-dao-codegen, @time: ${.now}
+#@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/${moduleName}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8

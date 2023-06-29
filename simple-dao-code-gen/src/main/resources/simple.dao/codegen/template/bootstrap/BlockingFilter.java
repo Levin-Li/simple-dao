@@ -15,8 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  *
  * 支持的必要的时候，阻断新的请求
- * @author Auto gen by simple-dao-codegen, @time: ${.now}
- * 代码生成哈希校验码：[]
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 @Slf4j
 public class BlockingFilter extends OncePerRequestFilter {

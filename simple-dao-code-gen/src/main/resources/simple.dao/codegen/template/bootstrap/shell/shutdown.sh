@@ -1,6 +1,6 @@
 <#noparse>#!/bin/bash
 #Author Lilw @2012
-#代码生成哈希校验码：[]
+### 代码生成哈希校验码：[], 请不要修改和删除此行内容。
 
 execDir=`pwd`
 

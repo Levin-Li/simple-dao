@@ -4,8 +4,8 @@ import java.util.Map;
 
 /**
  * 注入变量服务
- * @author Auto gen by simple-dao-codegen, @time: ${.now}
- * 代码生成哈希校验码：[]
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 public interface InjectVarService {
 

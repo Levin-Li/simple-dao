@@ -37,8 +37,8 @@ import ${imp};
 
 /**
  *  删除${entityTitle}
- *  //@author Auto gen by simple-dao-codegen, @time: ${.now}
- * 代码生成哈希校验码：[]
+ *  //@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 @Schema(title = DELETE_ACTION + BIZ_NAME)
 @Data
