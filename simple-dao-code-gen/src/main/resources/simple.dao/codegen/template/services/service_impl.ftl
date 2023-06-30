@@ -66,6 +66,8 @@ import ${imp};
 
 //@Service(PLUGIN_PREFIX + "${serviceName}")
 @DubboService
+
+@ConditionalOnMissingBean({${serviceName}.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${serviceName}", matchIfMissing = true)
 @Slf4j
 

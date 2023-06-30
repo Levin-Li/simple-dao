@@ -34,6 +34,7 @@ import java.util.Map;
  * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 //@Service(PLUGIN_PREFIX + "InjectVarService")
+@ConditionalOnMissingBean({InjectVarService.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "InjectVarService", matchIfMissing = true)
 @Slf4j
 public class InjectVarServiceImpl implements InjectVarService {
