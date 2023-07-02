@@ -41,7 +41,7 @@ public class JdbcMiniDao implements MiniDao {
     }
 
     @Override
-    public Object create(Object entity, boolean isCheckUnionValue) {
+    public Object create(Object entity, boolean isCheckUniqueValue) {
 
 
         String table = getTableName(entity.getClass());

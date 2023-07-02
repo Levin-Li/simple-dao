@@ -31,7 +31,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     @Transactional
-    <E> E save(Object entity, boolean isCheckUnionValue);
+    <E> E save(Object entity, boolean isCheckUniqueValue);
 
     /**
      * 删除一个实体对象

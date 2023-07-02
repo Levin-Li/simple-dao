@@ -186,12 +186,12 @@ public interface MiniDao extends DeepCopier {
      * 创建对象
      *
      * @param entityOrDto
-     * @param isCheckUnionValue
+     * @param isCheckUniqueValue
      * @param <E>
      * @return
      */
     @Transactional
-    <E> E create(Object entityOrDto, boolean isCheckUnionValue);
+    <E> E create(Object entityOrDto, boolean isCheckUniqueValue);
 
     /**
      * @param start       <1 表示不限制

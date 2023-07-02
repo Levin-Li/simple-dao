@@ -610,11 +610,11 @@ public class JpaDaoImpl
 
     @Override
     @Transactional
-    public <E> E create(Object entityOrDto, boolean isCheckUnionValue) {
+    public <E> E create(Object entityOrDto, boolean isCheckUniqueValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
-        if (isCheckUnionValue) {
+        if (isCheckUniqueValue) {
             //查询重复
             checkUniqueEntity(entityOrDto);
         }
@@ -641,7 +641,7 @@ public class JpaDaoImpl
 
     @Override
     @Transactional(rollbackFor = {PersistenceException.class})
-    public <E> E save(Object entityOrDto, boolean isCheckUnionValue) {
+    public <E> E save(Object entityOrDto, boolean isCheckUniqueValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
@@ -657,7 +657,7 @@ public class JpaDaoImpl
             if (entityId != null) {
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
 
-                if (isCheckUnionValue) {
+                if (isCheckUniqueValue) {
                     checkUniqueEntity(entityOrDto);
                 }
 
@@ -677,7 +677,7 @@ public class JpaDaoImpl
 
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
-            if (isCheckUnionValue) {
+            if (isCheckUniqueValue) {
                 checkUniqueEntity(entityOrDto);
             }
 
