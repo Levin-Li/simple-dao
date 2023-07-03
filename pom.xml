@@ -98,7 +98,8 @@
             <activation>
                 <file>
                     <!--  关键字：jitpack 表示是在 gitpack 打包-->
-                    <missing>/home/jitpack/build/${project.artifactId}/pom.xml</missing>
+                    <missing>/home/jitpack/build/pom.xml</missing>
+                    <!--  <missing>/home/jitpack/build/${project.artifactId}/pom.xml</missing> -->
                 </file>
             </activation>
 
