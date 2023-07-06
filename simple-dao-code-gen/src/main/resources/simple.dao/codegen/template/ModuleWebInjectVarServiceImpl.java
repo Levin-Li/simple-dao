@@ -1,8 +1,8 @@
 package ${modulePackageName}.aspect;
 
 import static ${modulePackageName}.ModuleOption.*;
-import static ${modulePackageName}.entities.EntityConst.*;
-import ${modulePackageName}.*;
+{modulePackageName}.entities.EntityConst.*;
+{modulePackageName}.*;
 
 import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.DaoContext;
@@ -34,11 +34,11 @@ import java.util.Map;
  */
 
 //默认不启用
-//@Service(PLUGIN_PREFIX + "WebInjectVarService")
+//@Service(PLUGIN_PREFIX + "ModuleWebInjectVarService")
 @ConditionalOnMissingBean({InjectVarService.class}) //默认只有在无对应服务才启用
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "WebInjectVarService", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebInjectVarService", matchIfMissing = true)
 @Slf4j
-public class WebInjectVarServiceImpl implements InjectVarService {
+public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
     public static final RbacUserInfo anonymous = new RbacUserInfo() {
         @Override

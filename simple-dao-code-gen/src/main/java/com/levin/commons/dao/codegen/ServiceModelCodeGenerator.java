@@ -349,10 +349,10 @@ public final class ServiceModelCodeGenerator {
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
         Arrays.asList("ModulePlugin"
+                ,"ModuleWebInjectVarServiceImpl"
         ).forEach(className -> genJavaFile(controllerDir, "", className, params));
 
         genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
-        genJavaFile(controllerDir, "aspect", "WebInjectVarServiceImpl", params);
 
         //生成服务模块的文件
         Arrays.asList(
