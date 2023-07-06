@@ -34,6 +34,8 @@ import java.util.Map;
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
  * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
+
+//默认不启用
 //@Service(PLUGIN_PREFIX + "InjectVarService")
 @ConditionalOnMissingBean({InjectVarService.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "InjectVarService", matchIfMissing = true)
@@ -96,7 +98,7 @@ public class InjectVarServiceImpl implements InjectVarService {
 
     @PostConstruct
     public void init() {
-
+        log.info("启用模块注入服务...");
         //设置上下文
         variableResolverManager.add(VariableInjector.newResolverByMap(() -> Arrays.asList(getInjectVars())));
     }

@@ -4,6 +4,7 @@ import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 import ${modulePackageName}.*;
 
+import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.DaoContext;
 //import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.rbac.RbacRoleObject;
@@ -93,6 +94,7 @@ public class WebInjectVarServiceImpl implements InjectVarService {
 
     @PostConstruct
     public void init() {
+        log.info("启用模块Web注入服务...");
         //设置上下文
         variableResolverManager.add(VariableInjector.newResolverByMap(() -> Arrays.asList(getInjectVars())));
     }
