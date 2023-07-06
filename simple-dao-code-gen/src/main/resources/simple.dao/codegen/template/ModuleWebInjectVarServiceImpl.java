@@ -1,8 +1,7 @@
-package ${modulePackageName}.aspect;
+package ${modulePackageName};
 
 import static ${modulePackageName}.ModuleOption.*;
-{modulePackageName}.entities.EntityConst.*;
-{modulePackageName}.*;
+import static ${modulePackageName}.entities.EntityConst.*;
 
 import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.DaoContext;

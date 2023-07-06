@@ -3,7 +3,6 @@ package ${modulePackageName}.biz;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-
 import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.rbac.RbacRoleObject;
