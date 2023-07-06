@@ -27,7 +27,7 @@ import ${modulePackageName}.*;
 
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
- 
+
 /**
  * 抽象控制器
  *
@@ -49,9 +49,6 @@ public abstract class BaseController {
 
     @Autowired
     protected ApplicationContext applicationContext;
-
-    @Autowired
-    protected SimpleDao simpleDao;
 
     protected Object selfProxy = null;
 
