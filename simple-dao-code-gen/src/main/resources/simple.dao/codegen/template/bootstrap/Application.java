@@ -150,7 +150,7 @@ public class Application {
                 public <T> ValueHolder<T> resolve(String key, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
 
                     if (!key.startsWith("env:")) {
-                        return ValueHolder.notValue();
+                        return ValueHolder.notValue(key);
                     }
 
                     key = key.substring(4);
