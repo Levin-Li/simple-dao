@@ -38,7 +38,7 @@ public abstract class SimpleTenantOrgObject
 
     @Schema(title = "组织机构ID")
     @Column(length = 128)
-    @InjectVar(value = InjectConsts.ORG_ID, isRequired = "false")
+    @InjectVar(value = InjectConsts.ORG_ID)
     protected String orgId;
 
     @Schema(title = "创建时间")
