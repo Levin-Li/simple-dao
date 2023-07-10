@@ -49,8 +49,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 // 所以一般插入新数据的时候使用post方法，更新数据库时用put方法
 // @Valid只能用在controller。@Validated可以用在其他被spring管理的类上。
 
-//生成的控制器默认不开启，请手动取消注释
-//@RestController(PLUGIN_PREFIX + "${className}")
+//生成的控制器
+@RestController(PLUGIN_PREFIX + "${className}")
 <#if isCreateBizController>//</#if>@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
