@@ -58,9 +58,9 @@
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.source.skip>true</maven.source.skip>
 
-        <maven-source-plugin.attach>false</maven-source-plugin.attach>
+        <maven.source.skip>true</maven.source.skip>
+        <maven.source.attach>false</maven.source.attach>
 
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
@@ -421,9 +421,15 @@
 
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
-                <configuration>
-                    <attach>${maven-source-plugin.attach}</attach>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-source</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <inherited>true</inherited>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
