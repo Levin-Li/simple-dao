@@ -75,11 +75,11 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
     //@Autowired
     @DubboReference
-    ${serviceName} ${serviceName?uncap_first};
+    protected ${serviceName} ${serviceName?uncap_first};
 
     //@Autowired
     @DubboReference
-    Biz${serviceName} biz${serviceName};
+    protected Biz${serviceName} biz${serviceName};
 
     /**
      * 分页列表查找
