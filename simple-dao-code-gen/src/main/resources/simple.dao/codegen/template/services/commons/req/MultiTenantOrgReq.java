@@ -39,4 +39,15 @@ public class MultiTenantOrgReq
     @Eq
     protected String orgId;
 
+    /**
+     * 设置部门ID
+     * @param orgId
+     * @return
+     * @param <T>
+     */
+    public <T extends MultiTenantOrgReq> T setOrgId(String orgId) {
+        this.orgId = orgId;
+        return (T) this;
+    }
+
 }

@@ -50,6 +50,12 @@ public class MultiTenantReq
         return false;
     }
 
+    /**
+     * 设置租户ID
+     * @param tenantId
+     * @return
+     * @param <T>
+     */
     public <T extends MultiTenantReq> T setTenantId(String tenantId) {
         this.tenantId = tenantId;
         return (T) this;
