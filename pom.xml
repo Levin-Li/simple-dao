@@ -50,6 +50,8 @@
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>
         <hutool.version>5.8.10</hutool.version>
 
+        <mica-auto.version>2.3.0</mica-auto.version>
+
     </properties>
 
     <modules>

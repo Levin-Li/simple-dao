@@ -67,6 +67,8 @@
         <spring-boot.repackage-not-single-jar>false</spring-boot.repackage-not-single-jar>
         <spring-boot.repackage-single-jar>true</spring-boot.repackage-single-jar>
 
+        <mica-auto.version>2.3.0</mica-auto.version>
+
     </properties>
 
 
@@ -341,6 +343,12 @@
                 <version>${openfeign.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>net.dreamlu</groupId>
+                <artifactId>mica-auto</artifactId>
+                <version>${mica-auto.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

@@ -27,7 +27,12 @@
             <version>${project.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>net.dreamlu</groupId>
+            <artifactId>mica-auto</artifactId>
+            <version>${mica-auto.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
 <!--
         <dependency>

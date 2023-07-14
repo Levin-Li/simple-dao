@@ -73,7 +73,14 @@
             <scope>provided</scope>
         </dependency>
         </#if>
-
+        <#if moduleType == 'starter'>
+        <dependency>
+            <!-- 编译时自动生成spring的自举配置文件，支持2.7以后的规则（org.springframework.boot.autoconfigure.AutoConfiguration.imports） -->
+            <groupId>net.dreamlu</groupId>
+            <artifactId>mica-auto</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        </#if>
         <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller'>
             <dependency>
                 <artifactId>${service.artifactId}</artifactId>
