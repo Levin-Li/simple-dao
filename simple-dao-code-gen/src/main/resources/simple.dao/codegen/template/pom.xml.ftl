@@ -74,6 +74,7 @@
         </dependency>
         </#if>
         <#if moduleType == 'starter'>
+
         <dependency>
             <!-- 编译时自动生成spring的自举配置文件，支持2.7以后的规则（org.springframework.boot.autoconfigure.AutoConfiguration.imports） -->
             <groupId>net.dreamlu</groupId>
@@ -82,13 +83,13 @@
         </dependency>
         </#if>
         <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller'>
-            <dependency>
-                <artifactId>${service.artifactId}</artifactId>
-                <groupId>${r"${project.groupId}"}</groupId>
-                <version>${r"${project.version}"}</version>
-            </dependency>
-        </#if>
 
+        <dependency>
+            <artifactId>${service.artifactId}</artifactId>
+            <groupId>${r"${project.groupId}"}</groupId>
+            <version>${r"${project.version}"}</version>
+        </dependency>
+        </#if>
         <#if moduleType == 'bootstrap'>
 
         <dependency>
@@ -110,7 +111,6 @@
         </dependency>
 
         </#if>
-
         <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller')>
 
         <dependency>
