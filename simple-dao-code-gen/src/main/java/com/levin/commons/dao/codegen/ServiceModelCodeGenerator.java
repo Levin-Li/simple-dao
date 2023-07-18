@@ -510,7 +510,9 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceImplDir, "services", "BaseService.java");
         genFileByTemplate(genParams, serviceImplDir, "services", "基础服务类开发规范.md");
 
+        genFileByTemplate(genParams, serviceImplDir, "job", "DemoJob.java");
         genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarServiceImpl.java");
+
         genFileByTemplate(genParams, serviceImplDir, "biz", "业务服务类开发规范.md");
 
 
