@@ -37,8 +37,9 @@ import ${imp};
 
 
 /**
- *  新增${entityTitle}
- *  //@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 新增${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
  * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 @Schema(title = CREATE_ACTION + BIZ_NAME)
@@ -72,9 +73,7 @@ public class ${className} extends ${reqExtendClass} {
 
     @PostConstruct
     public void prePersist() {
-
-       //@todo 保存之前初始化数据
-
+       //@todo 保存之前初始化数据，比如时间，初始状态等
 <#list fields as field>
     <#if field.name == 'sn' && field.typeName == 'String'>
 
@@ -102,7 +101,6 @@ public class ${className} extends ${reqExtendClass} {
         }
     </#if>
 </#list>
-
     }
 
 }
