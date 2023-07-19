@@ -52,18 +52,15 @@ public class ${className} implements Serializable {
 
 <#list fields as field>
 
-    <#if (field.required && !field.baseEntityField)>
-    <#if field.typeName == 'String'>@NotBlank<#else>@NotNull</#if>
-    </#if>
    <#if field.lazy!>
     //@Fetch //默认不加载，请通过查询对象控制
    </#if>
    <#list field.annotations as annotation>
     ${annotation}
    </#list>
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = REQUIRED', '')})
+<#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = REQUIRED', '')})-->
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
-
 </#list>
 
 }
