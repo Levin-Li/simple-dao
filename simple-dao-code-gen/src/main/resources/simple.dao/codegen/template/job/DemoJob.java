@@ -1,5 +1,7 @@
 package ${modulePackageName}.job;
 
+import static ${modulePackageName}.ModuleOption.*;
+
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -7,6 +9,7 @@ import com.levin.commons.service.support.AbstractDistributionJob;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +21,8 @@ import java.util.concurrent.Executor;
 
 /**
  * 分布式定时任务
+ * 通过Redis锁支持分布式，允许在多个节点同时。
+ *
  *
  *
  */
@@ -38,6 +43,9 @@ public class DemoJob
     /**
      * 定时任务入口
      *
+     * 在同一个JVM中，如果定时时间到，但上次的任务还在执行中，则会跳过本次的执行
+     *
+     *
      */
     //@Scheduled(fixedRate = 2 * 60 * 1000, initialDelay = 45 * 1000)
     protected void doTask() {
@@ -52,13 +60,17 @@ public class DemoJob
     /**
      * 整个定时任务的锁
      *
+     * 通常同一个定时任务，不允许并发。
+     *
+     *
+     *
      * 返回null 则表示不锁定
      *
      * @return
      */
     @Override
     protected String getJobLockKey() {
-        return null;
+        return getClass().getName();
     }
 
     /**
