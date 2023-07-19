@@ -58,10 +58,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  ${entityTitle}-服务实现
+ * ${entityTitle}-服务实现
  *
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 
 @Service(PLUGIN_PREFIX + "${serviceName}")

@@ -22,9 +22,10 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 
 /**
- *  ${entityTitle}-服务接口
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * ${entityTitle}-服务接口
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
+ * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
  */
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 public interface ${className} {
@@ -145,19 +146,19 @@ public interface ${className} {
     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
     ${entityName}Info findOne(@NotNull Query${entityName}Req req);
 
-     /**
+    /**
      * 查询并返回唯一一条数据
      * 如果有多余1条数据，将抛出异常
      * @param req
      * @return data
      */
-     @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
-     ${entityName}Info findUnique(Query${entityName}Req req);
+    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    ${entityName}Info findUnique(Query${entityName}Req req);
 
     /**
-    * 清除缓存
-    * @param key 缓存Key
-    */
+     * 清除缓存
+     * @param key 缓存Key
+     */
     @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是主键ID")
     void clearCache(@NotNull Object key);
 

@@ -40,27 +40,20 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @ResAuthorize(domain = ID, type = TYPE_NAME)
 @MenuResTag(domain = ID)
 public abstract class BaseController {
-
     @Autowired
     protected HttpServletRequest httpRequest;
-
     @Autowired
     protected HttpServletResponse httpResponse;
-
     @Autowired
     protected ApplicationContext applicationContext;
-
     protected Object selfProxy = null;
-
     public final String getModuleId() {
         return ModuleOption.ID;
     }
-
     protected boolean isNotEmpty(Object value) {
         return value != null
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
-
     protected <T> T getSelfProxy(Class<T> type) {
 
         if (selfProxy == null) {

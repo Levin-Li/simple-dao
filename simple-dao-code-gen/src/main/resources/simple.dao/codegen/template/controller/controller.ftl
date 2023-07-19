@@ -129,10 +129,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
 <#if pkField?exists>
     /**
-    * 查看详情
-    *
-    * @param req Query${entityName}ByIdReq
-    */
+     * 查看详情
+     *
+     * @param req Query${entityName}ByIdReq
+     */
     @GetMapping({"","{${pkField.name}}"})
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
     @CRUD.Op
@@ -145,12 +145,12 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 更新
      * @param req Update${entityName}Req
      */
-     @PutMapping({"","{${pkField.name}}"})
-     @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
-     @CRUD.Op
-     public ApiResp<Boolean> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
-         return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
+    @PutMapping({"","{${pkField.name}}"})
+    @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @CRUD.Op
+    public ApiResp<Boolean> update(@RequestBody Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+        return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -198,9 +198,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     /**
      * 批量更新
      */
-     @PutMapping("/batchUpdate")
-     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
-     public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
+    @PutMapping("/batchUpdate")
+    @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
+    public ApiResp<Integer> batchUpdate(@RequestBody List<Update${entityName}Req> reqList) {
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
@@ -215,7 +215,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
         return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
-     /**
+    /**
      * 批量删除2
      * @param req @RequestBody Delete${entityName}Req
      */
@@ -224,5 +224,4 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     public ApiResp<Integer> batchDelete2(@RequestBody Delete${entityName}Req req) {
         return batchDelete(req);
     }
-
 }
