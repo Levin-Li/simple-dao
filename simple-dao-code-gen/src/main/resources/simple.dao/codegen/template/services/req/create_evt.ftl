@@ -56,18 +56,18 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-
     <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoIdentity)>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
-    <#if (field.baseEntityField && field.name =='creator')>
-    @InjectVar(InjectConsts.USER_ID)
-    </#if>
+<#--    <#if (field.baseEntityField && field.name =='creator')>-->
+<#--    @InjectVar(InjectConsts.USER_ID)-->
+<#--    </#if>-->
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     </#if>
+
 </#list>
 
     @PostConstruct
