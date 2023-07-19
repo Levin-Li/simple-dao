@@ -52,6 +52,9 @@ public class ${className} implements Serializable {
 
 <#list fields as field>
 
+    <#if (field.required && !field.baseEntityField)>
+    <#if field.typeName == 'String'>@NotBlank<#else>@NotNull</#if>
+    </#if>
    <#if field.lazy!>
     //@Fetch //默认不加载，请通过查询对象控制
    </#if>
