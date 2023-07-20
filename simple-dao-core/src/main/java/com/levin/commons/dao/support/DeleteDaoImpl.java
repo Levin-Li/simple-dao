@@ -186,7 +186,6 @@ public class DeleteDaoImpl<T>
         if (n != 1) {
             throw new NonUniqueResultException(n + "条记录被删除，预期有且仅有1条");
         }
-
     }
 
     /**

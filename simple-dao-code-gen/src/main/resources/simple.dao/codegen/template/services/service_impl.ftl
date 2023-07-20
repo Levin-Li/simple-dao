@@ -82,7 +82,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = {RuntimeException.class})
     @Override
 <#if pkField?exists>
     public ${pkField.typeName} create(Create${entityName}Req req){
@@ -108,7 +108,8 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION)
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
 <#if pkField?exists>
     public List<${pkField.typeName}> batchCreate(List<Create${entityName}Req> reqList){
@@ -140,14 +141,14 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
     @Override
     //@CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = RuntimeException.class)
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleUpdateByQueryObj(req);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
@@ -157,14 +158,14 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
     @Override
     //@CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = RuntimeException.class)
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleDeleteByQueryObj(req);
     }
 
     @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
-    @Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
