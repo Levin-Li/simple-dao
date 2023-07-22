@@ -93,6 +93,13 @@ spring:
     #关闭视图事务，避免jpa 出现 N + 1 查询
     open-in-view: false
     hibernate:
+      #jdbc 批量操作，提升性能
+      jdbc:
+        batch_size: 512
+        fetch_size: 512
+        order_inserts: true
+        order_updates: true
+
       ddl-auto: update
 #      实体@GeneratedValue()ID生成策略自动时，会根据数据库自动选择
       use-new-id-generator-mappings: false
