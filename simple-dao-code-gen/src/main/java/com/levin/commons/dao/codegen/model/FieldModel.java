@@ -1,12 +1,10 @@
 package com.levin.commons.dao.codegen.model;
 
-import cn.hutool.core.bean.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -79,7 +77,7 @@ public class FieldModel implements Cloneable {
 
     private boolean required = false;//是否必填
 
-    private boolean autoIdentity; //是否自动增长主键
+    private boolean autoGenValue =false; //是否自动生成值
 
     private boolean notUpdate = false;//是否不需要更新
 
@@ -130,7 +128,11 @@ public class FieldModel implements Cloneable {
      * @return
      */
     public boolean isBaseEntityField() {
-        return field.getDeclaringClass().getName().equals("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
+        return isClassField("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
+    }
+
+    public boolean isClassField(String className) {
+        return field.getDeclaringClass().getName().equals(className);
     }
 
     public FieldModel addImport(Class type) {

@@ -81,7 +81,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return getSelfProxy(${serviceName}.class);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
+    @Operation(summary = CREATE_ACTION)
     @Transactional(rollbackFor = {RuntimeException.class})
     @Override
 <#if pkField?exists>
@@ -107,7 +107,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 </#if>
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION)
+    @Operation(summary = BATCH_CREATE_ACTION)
     //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
@@ -120,7 +120,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
 <#if pkField?exists>
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //Srping 4.3提供了一个sync参数。是当缓存失效后，为了避免多个请求打到数据库,系统做了一个并发控制优化，同时只有一个线程会去数据库取数据其它线程会被阻塞。
     //@Cacheable(condition = "#${pkField.name} != null", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
@@ -128,7 +128,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //只更新缓存
     //@CachePut(unless = "#result == null" , condition = "#req.${pkField.name} != null" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
@@ -138,7 +138,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 </#if>
 
-    @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
+    @Operation(summary = UPDATE_ACTION)
     @Override
     //@CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = RuntimeException.class)
@@ -147,7 +147,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.singleUpdateByQueryObj(req);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
+    @Operation(summary = BATCH_UPDATE_ACTION)
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int batchUpdate(List<Update${entityName}Req> reqList){
@@ -155,7 +155,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n?1:0).sum();
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
+    @Operation(summary = DELETE_ACTION)
     @Override
     //@CacheEvict(condition = "#req.${pkField.name} != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     @Transactional(rollbackFor = RuntimeException.class)
@@ -164,7 +164,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.singleDeleteByQueryObj(req);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
+    @Operation(summary = BATCH_DELETE_ACTION)
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public int batchDelete(Delete${entityName}Req req){
@@ -176,9 +176,21 @@ public class ${className} extends BaseService implements ${serviceName} {
             .sum();
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     @Override
     public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
+        return simpleDao.findPagingDataByQueryObj(req, paging);
+    }
+
+    /**
+     * 指定选择列查询
+     *
+     * @param req
+     * @param paging 分页设置，可空
+     * @return pagingData 分页数据
+     */
+    @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
+    public PagingData<Simple${entityName}Info> simpleQuery(@NotNull Query${entityName}Req req, Paging paging){
         return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
@@ -189,7 +201,7 @@ public class ${className} extends BaseService implements ${serviceName} {
      * @param paging 分页设置，可空
      * @return pagingData 分页数据
      */
-    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    @Operation(summary = STAT_ACTION)
     @Override
     public PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req , Paging paging){
         return simpleDao.findPagingDataByQueryObj(req, paging);
@@ -202,25 +214,25 @@ public class ${className} extends BaseService implements ${serviceName} {
      * @return record count
      */
     @Override
-    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    @Operation(summary = STAT_ACTION)
     public int count(Query${entityName}Req req){
         return (int) simpleDao.countByQueryObj(req);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findOne(Query${entityName}Req req){
         return simpleDao.findOneByQueryObj(req);
     }
 
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findUnique(Query${entityName}Req req){
         return simpleDao.findUnique(req);
     }
 
     @Override
-    @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
     @CacheEvict(condition = "#key != null && #key.toString().trim().length() > 0", key = E_${entityName}.CACHE_KEY_PREFIX + "#key")
     public void clearCache(Object key) {
     }

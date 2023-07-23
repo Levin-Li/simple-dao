@@ -56,7 +56,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
 <#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
-    <#if (field.baseType && (!field.lazy || field.baseType) && !field.autoGenValue)>
+    <#if (field.baseType && !field.baseEntityField && (!field.lazy || field.baseType) && !field.autoGenValue)>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')})
     <#list field.annotations as annotation>
@@ -73,32 +73,5 @@ public class ${className} extends ${reqExtendClass} {
     @PostConstruct
     public void prePersist() {
        //@todo 保存之前初始化数据，比如时间，初始状态等
-<#list fields as field>
-    <#if field.name == 'sn' && field.typeName == 'String'>
-
-        if(getSn() == null){
-            String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-            setSn(sn);
-        }
-    </#if>
-    <#if field.name == 'addTime'>
-
-        if(getAddTime() == null){
-            setAddTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'occurTime'>
-
-        if(getOccurTime() == null){
-            setOccurTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'createTime'>
-
-        if(getCreateTime() == null){
-            setCreateTime(new Date());
-        }
-    </#if>
-</#list>
     }
 }

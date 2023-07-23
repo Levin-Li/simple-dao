@@ -1,7 +1,6 @@
 package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.HashUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
@@ -49,12 +48,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,6 +61,7 @@ public final class ServiceModelCodeGenerator {
 
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
+    public static final String SIMPLE_UPDATE_EVT_FTL = "services/req/simple_update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
     public static final String STAT_EVT_FTL = "services/req/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
@@ -77,7 +73,9 @@ public final class ServiceModelCodeGenerator {
 
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
+    public static final String SIMPLE_CREATE_EVT_FTL = "services/req/simple_create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
+    public static final String SELECT_INFO_FTL = "services/info/select_info.ftl";
 
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
     public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";
@@ -919,6 +917,9 @@ public final class ServiceModelCodeGenerator {
                 servicePackage() + ".info",
                 entityClass.getSimpleName() + "Info", mapConsumer);
 
+        genCode(entityClass, SELECT_INFO_FTL, fields, srcDir,
+                servicePackage() + ".info",
+                "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
     }
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
@@ -936,8 +937,16 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
+
+        genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
+                pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+
         genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
                 pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
+                pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
@@ -1446,12 +1455,15 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
-                fieldModel.setAutoIdentity(field.isAnnotationPresent(GeneratedValue.class)
+                fieldModel.setAutoGenValue(field.isAnnotationPresent(GeneratedValue.class)
                         && !field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.AUTO));
             } else {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
                 fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
             }
+
+            //是否是自动生成字段
+            fieldModel.setAutoGenValue(field.isAnnotationPresent(GeneratedValue.class));
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {

@@ -37,7 +37,7 @@ public interface ${className} {
      * @param req
      * @return pkId 主键ID
      */
-    @Operation(tags = {BIZ_NAME}, summary = CREATE_ACTION)
+    @Operation(summary = CREATE_ACTION)
 <#if pkField?exists>
     ${pkField.typeName} create(@NotNull Create${entityName}Req req);
 <#else>
@@ -49,7 +49,7 @@ public interface ${className} {
      * @param reqList
      * @return pkId 主键ID列表
      */
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_CREATE_ACTION)
+    @Operation(summary = BATCH_CREATE_ACTION)
 <#if pkField?exists>
     List<${pkField.typeName}> batchCreate(@NotNull List<Create${entityName}Req> reqList);
 <#else>
@@ -62,7 +62,7 @@ public interface ${className} {
      * @param ${pkField.name} 主键ID
      * @return data 数据详情
      */
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(@NotNull ${pkField.typeName} ${pkField.name});
 
     /**
@@ -70,7 +70,7 @@ public interface ${className} {
     * @param req
     * @return data 数据详情
     */
-    @Operation(tags = {BIZ_NAME}, summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION)
     ${entityName}Info findById(@NotNull ${entityName}IdReq req);
 </#if>
 
@@ -80,7 +80,7 @@ public interface ${className} {
      * @param req
      * @return num 更新记录数
      */
-    @Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
+    @Operation(summary = UPDATE_ACTION)
     boolean update(@NotNull Update${entityName}Req req);
 
     /**
@@ -89,7 +89,7 @@ public interface ${className} {
      * @param reqList
      * @return num 更新记录数
      */
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_UPDATE_ACTION)
+    @Operation(summary = BATCH_UPDATE_ACTION)
     int batchUpdate(@NotNull List<Update${entityName}Req> reqList);
 
     /**
@@ -97,7 +97,7 @@ public interface ${className} {
      * @param req
      * @return num 删除记录数
      */
-    @Operation(tags = {BIZ_NAME}, summary = DELETE_ACTION)
+    @Operation(summary = DELETE_ACTION)
     boolean delete(@NotNull ${entityName}IdReq req);
 
     /**
@@ -105,7 +105,7 @@ public interface ${className} {
      * @param req
      * @return num 删除记录数
      */
-    @Operation(tags = {BIZ_NAME}, summary = BATCH_DELETE_ACTION)
+    @Operation(summary = BATCH_DELETE_ACTION)
     int batchDelete(@NotNull Delete${entityName}Req req);
 
     /**
@@ -115,8 +115,18 @@ public interface ${className} {
      * @param paging 分页设置，可空
      * @return pagingData 分页数据
      */
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
+
+    /**
+     * 指定选择列查询
+     *
+     * @param req
+     * @param paging 分页设置，可空
+     * @return pagingData 分页数据
+     */
+    @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
+    PagingData<Simple${entityName}Info> simpleQuery(@NotNull Query${entityName}Req req, Paging paging);
 
     /**
      * 简单统计
@@ -125,7 +135,7 @@ public interface ${className} {
      * @param paging 分页设置，可空
      * @return pagingData 分页数据
      */
-    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    @Operation(summary = STAT_ACTION)
     PagingData<Stat${entityName}Req.Result> stat(@NotNull Stat${entityName}Req req, Paging paging);
 
     /**
@@ -134,7 +144,7 @@ public interface ${className} {
      * @param req
      * @return record count
      */
-    @Operation(tags = {BIZ_NAME}, summary = STAT_ACTION)
+    @Operation(summary = STAT_ACTION)
     int count(@NotNull Query${entityName}Req req);
 
     /**
@@ -143,7 +153,7 @@ public interface ${className} {
      * @param req
      * @return data 第一条数据
      */
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     ${entityName}Info findOne(@NotNull Query${entityName}Req req);
 
     /**
@@ -152,14 +162,14 @@ public interface ${className} {
      * @param req
      * @return data
      */
-    @Operation(tags = {BIZ_NAME}, summary = QUERY_ACTION)
+    @Operation(summary = QUERY_ACTION)
     ${entityName}Info findUnique(Query${entityName}Req req);
 
     /**
      * 清除缓存
      * @param key 缓存Key
      */
-    @Operation(tags = {BIZ_NAME}, summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是主键ID")
+    @Operation(summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是主键ID")
     void clearCache(@NotNull Object key);
 
 }
