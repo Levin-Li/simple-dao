@@ -91,14 +91,15 @@ public class ${className} extends BaseService implements ${serviceName} {
 </#if>
     <#list fields as field>
         <#if !field.notUpdate && field.uk>
-        long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
-                .select(E_${entityName}.${field.name})
-                .eq(E_${entityName}.${field.name}, req.get${field.name?cap_first}())
-                .count();
-        Assert.isTrue(${field.name}Cnt <= 0, () -> new EntityExistsException("${field.title}已经存在"));
-
+        //long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
+        //        .select(E_${entityName}.${field.name})
+        //        .eq(E_${entityName}.${field.name}, req.get${field.name?cap_first}())
+        //        .count();
+        //Assert.isTrue(${field.name}Cnt <= 0, () -> new EntityExistsException("${field.title}已经存在"));
+        //
         </#if>
     </#list>
+        //保存自动先查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
 <#if pkField?exists>
         return entity.get${pkField.name?cap_first}();
