@@ -224,7 +224,25 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return 返回分页对象
      * @since 2.2.27 新增方法
      */
-    <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs);
+    default <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs) {
+        return findPageByQueryObj(null, pagingHolderInstanceOrClass, queryObjs);
+    }
+
+    /**
+     * 查询分页数据
+     * <p>
+     * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
+     * <p>
+     * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+     *
+     * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
+     * @param queryObjs                   查询对象
+     *                                    如果查询对象中没有分页设置，默认 new SimplePaging {@link com.levin.commons.dao.support.SimplePaging}
+     * @param <P>
+     * @return 返回分页对象
+     * @since 2.5.1 新增方法
+     */
+    <P> P findPageByQueryObj(Class<?> resultType, Object pagingHolderInstanceOrClass, Object... queryObjs);
 
     /**
      * 查询并统计行数

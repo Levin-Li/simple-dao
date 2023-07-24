@@ -192,7 +192,7 @@ public class ${className} extends BaseService implements ${serviceName} {
      */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
     public PagingData<Simple${entityName}Info> simpleQuery(Query${entityName}Req req, Paging paging){
-        return simpleDao.findPagingDataByQueryObj(req, paging);
+        return simpleDao.findPagingDataByQueryObj(Simple${entityName}Info.class, req, paging);
     }
 
     /**

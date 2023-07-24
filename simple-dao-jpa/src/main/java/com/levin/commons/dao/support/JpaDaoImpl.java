@@ -1441,11 +1441,11 @@ public class JpaDaoImpl
      * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
      * @param queryObjs                   查询对象
      * @return 返回分页对象
-     * @since 2.2.27 新增方法
+     * @since 2.5.1 新增方法
      */
     @Override
-    public <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs) {
-        return PagingQueryHelper.findPageByQueryObj(this, pagingHolderInstanceOrClass, queryObjs);
+    public <P> P findPageByQueryObj(Class<?> resultType, Object pagingHolderInstanceOrClass, Object... queryObjs) {
+        return PagingQueryHelper.findPageByQueryObj(this, resultType, pagingHolderInstanceOrClass, queryObjs);
     }
 
     @Override

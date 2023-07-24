@@ -42,9 +42,12 @@ public abstract class PagingQueryHelper {
      * @return
      */
     @Deprecated
-    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto, @Nullable Paging paging, Object... otherQueryObjs) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Class<?> resultType, Object pagingData, Object queryDto, @Nullable Paging paging, Object... otherQueryObjs) {
+        return findPageByQueryObj(simpleDao, resultType, pagingData, queryDto, paging, otherQueryObjs);
+    }
 
-        return findPageByQueryObj(simpleDao, pagingData, queryDto, paging, otherQueryObjs);
+    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Object pagingData, Object... queryObjs) {
+        return findPageByQueryObj(simpleDao, null, pagingData, queryObjs);
     }
 
     /**
@@ -59,7 +62,7 @@ public abstract class PagingQueryHelper {
      * @param <T>        查询结果
      * @return
      */
-    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Object pagingData, Object... queryObjs) {
+    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Class<?> resultType, Object pagingData, Object... queryObjs) {
 
         List flattenQueryObjs = QueryAnnotationUtil.flattenParams(new LinkedList(), queryObjs);
 
@@ -121,7 +124,7 @@ public abstract class PagingQueryHelper {
         //需要结果集
         if (isRequireResultList(paging)) {
 
-            final Object resultList = simpleDao.findByQueryObj(queryObjs);
+            final Object resultList = simpleDao.findByQueryObj(resultType, queryObjs);
 
             int index = paging.getPageIndex();
             setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
