@@ -211,6 +211,18 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     }
 
     /**
+     * 查找分页数据
+     *
+     * @param resultType
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    default <E> PagingData<E> findPagingDataByQueryObj(Class<?> resultType, Object... queryObjs) {
+        return findPageByQueryObj(resultType, PagingData.class, queryObjs);
+    }
+
+    /**
      * 查询分页数据
      * <p>
      * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
