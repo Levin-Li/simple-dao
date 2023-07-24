@@ -153,7 +153,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
-        return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n?1:0).sum();
+        return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n ? 1 : 0).sum();
     }
 
     @Operation(summary = DELETE_ACTION)
@@ -173,7 +173,7 @@ public class ${className} extends BaseService implements ${serviceName} {
         return Stream.of(req.get${pkField.name?cap_first}List())
             .map(${pkField.name} -> simpleDao.copy(req, new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name})))
             .map(idReq -> getSelfProxy().delete(idReq))
-            .mapToInt(n -> n?1:0)
+            .mapToInt(n -> n ? 1 : 0)
             .sum();
     }
 
