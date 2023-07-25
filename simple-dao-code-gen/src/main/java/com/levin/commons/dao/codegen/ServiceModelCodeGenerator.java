@@ -347,7 +347,7 @@ public final class ServiceModelCodeGenerator {
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
         Arrays.asList("ModulePlugin"
-                ,"ModuleWebInjectVarServiceImpl"
+                , "ModuleWebInjectVarServiceImpl"
         ).forEach(className -> genJavaFile(controllerDir, "", className, params));
 
         genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
@@ -1127,7 +1127,7 @@ public final class ServiceModelCodeGenerator {
 
         params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
 
-        params.put("classModel", new ClassModel().setEntityType(entityClass));
+        params.put("classModel", new ClassModel().setEntityType(entityClass).setFieldModels(fields));
 
         //分解字段类型
 

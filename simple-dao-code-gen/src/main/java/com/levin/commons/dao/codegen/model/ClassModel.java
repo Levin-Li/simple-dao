@@ -23,6 +23,16 @@ public class ClassModel {
 
     List<FieldModel> fieldModels;
 
+    public boolean hasAttr(String attrName) {
+        return fieldModels != null
+                && !fieldModels.isEmpty()
+                && fieldModels.stream().anyMatch(fm -> fm.name.contains(attrName));
+    }
+
+    public String attrName(String attrName, String prefix, String suffix) {
+        return hasAttr(attrName) ? (prefix + attrName + suffix) : "";
+    }
+
     @SneakyThrows
     public boolean isType(String className) {
         return Class.forName(className).isAssignableFrom(entityType);
