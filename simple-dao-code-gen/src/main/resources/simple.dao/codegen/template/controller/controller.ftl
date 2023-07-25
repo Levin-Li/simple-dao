@@ -56,11 +56,12 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Slf4j
 <#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
 
-//默认需要权限访问
+//默认需要权限访问，默认从父类继承
 //@ResAuthorize(domain = ID, type = ENTITY_TYPE_NAME)
 
 //类注解
-<#if isCreateBizController>//</#if>@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+<#if isCreateBizController>//默认生成控制器类，@Tag的name属性关联权限的资源标识</#if>
+@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
 /**

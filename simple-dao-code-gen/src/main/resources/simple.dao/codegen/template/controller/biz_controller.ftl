@@ -60,7 +60,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 //默认需要权限访问
 //@ResAuthorize(domain = ID, type = ENTITY_TYPE_NAME)
 
-//类注解
+//类注解，@Tag的name属性关联权限的资源标识
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Valid
 @CRUD
