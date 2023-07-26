@@ -8,7 +8,8 @@ import java.util.stream.Collectors;
  * 查询结果类
  */
 @FunctionalInterface
-public interface EntityClassSupplier extends Supplier<Class<?>> {
+public interface EntityClassSupplier
+        extends Supplier<Class<?>> {
 
     /**
      * 获取别名

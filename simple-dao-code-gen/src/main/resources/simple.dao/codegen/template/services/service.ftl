@@ -75,10 +75,10 @@ public interface ${className} {
 </#if>
 
     /**
-     * 更新记录，并返回更新记录数
+     * 更新记录，并返回更新是否成功
      *
      * @param req
-     * @return num 更新记录数
+     * @return boolean 是否成功
      */
     @Operation(summary = UPDATE_ACTION)
     boolean update(@NotNull Update${entityName}Req req);
@@ -93,9 +93,9 @@ public interface ${className} {
     int batchUpdate(@NotNull List<Update${entityName}Req> reqList);
 
     /**
-     * 删除记录，并返回删除记录数
+     * 删除记录，并返回删除是否成功
      * @param req
-     * @return num 删除记录数
+     * @return boolean 删除是否成功
      */
     @Operation(summary = DELETE_ACTION)
     boolean delete(@NotNull ${entityName}IdReq req);

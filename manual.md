@@ -1097,12 +1097,31 @@ Dao 类逻辑框图，如下图所示。
     dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
-                  
+
+#### 12.3 SimpleDao 动态指定目标表
+
+     1、通过实现 QueryOption 接口动态指定
+
+        simpleDao.findByQueryObj(new SimpleQueryOption().setEntityClass(User.class), new QueryUserReq());
+
+     2、通过提供 EntityClassSupplier 指定
+        
+        EntityClassSupplier entityClassSupplier = () -> User.class;
+        simpleDao.findByQueryObj( entityClassSupplier , new QueryUserReq());
+
+     3、直接指定目标表的类名
+
+        simpleDao.findByQueryObj(new QueryUserReq(),User.class);
+
                                
-#### 12.2 DTO 数据初始化
+#### 12.3 DTO 数据初始化
  
    有标记 javax.annotation.PostConstruct 注解的Dto对象方法，将会在查询之前被执行。
    可以做些初始化的事情，比如初始化时间。
+
+   注解 @PrePersist 的方法会在保存之前被执行。
+
+   注解 @PreUpdate 的方法会再更新之前被执行。
    
      class UserDto{
      
@@ -1131,6 +1150,7 @@ Dao 类逻辑框图，如下图所示。
      
      }
    
+     
      
    
 #### 12.3 注解的语句生成规则
