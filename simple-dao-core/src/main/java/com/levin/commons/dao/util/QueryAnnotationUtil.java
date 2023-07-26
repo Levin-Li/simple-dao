@@ -814,6 +814,11 @@ public abstract class QueryAnnotationUtil {
                 .collect(Collectors.toList());
     }
 
+    private static boolean isJpaEntityClass(Object o) {
+        return o instanceof Class
+                && (((Class<?>) o).isAnnotationPresent(Entity.class) || ((Class<?>) o).isAnnotationPresent(MappedSuperclass.class));
+    }
+
     /**
      * 获取查询的目标对象，同时清除
      *
@@ -830,10 +835,8 @@ public abstract class QueryAnnotationUtil {
         //如果主体类还没有定义，则尝试设置实体类，优先级低于 @TargetOption，会被覆盖
         if (onEntityClassConsumer != null) {
             onEntityClassConsumer.accept(
-                    queryObjList.stream()
-                            .filter(o -> o instanceof Class)
-                            .map(o -> (Class<?>) o)
-                            .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                    (Class<?>) queryObjList.stream()
+                            .filter(QueryAnnotationUtil::isJpaEntityClass)
                             .findFirst()
                             .orElse(null)
             );
@@ -841,9 +844,9 @@ public abstract class QueryAnnotationUtil {
 
         //清除实体类
         return queryObjList.stream()
-                .filter(o -> o instanceof Class)
-                .map(o -> (Class<?>) o)
-                .filter(c -> !c.isAnnotationPresent(Entity.class) && !c.isAnnotationPresent(MappedSuperclass.class))
+                .filter(Objects::nonNull)
+                //剔除jpa 实体类
+                .filter(o -> !isJpaEntityClass(o))
                 .collect(Collectors.toList());
     }
 
