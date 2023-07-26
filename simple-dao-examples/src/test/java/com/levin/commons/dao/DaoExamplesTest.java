@@ -1379,7 +1379,7 @@ public class DaoExamplesTest {
 
         EntityClassSupplier entityClassSupplier = () -> User.class;
 
-        List<UserInfo> objects = dao.findByQueryObj(classSupplier, User.class, new CommDto());
+        List<UserInfo> objects = dao.findByQueryObj(entityClassSupplier, classSupplier, Group.class, new CommDto());
 
         Assert.notNull(objects);
 
