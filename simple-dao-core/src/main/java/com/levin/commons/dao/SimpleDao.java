@@ -72,6 +72,8 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     @Transactional
     int update(boolean isNative, String statement, Object... paramValues);
 
+    /////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * 通过查询对象更新
      *
@@ -79,7 +81,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     int updateByQueryObj(Object... queryObjs);
-
 
     /**
      * 更新一条记录
@@ -100,7 +101,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     @Transactional
     int deleteByQueryObj(Object... queryObjs);
 
-
     /**
      * 删除一条记录
      * <p>
@@ -111,6 +111,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     boolean singleDeleteByQueryObj(Object... queryObjs);
+
     ////////////////////////////////////////////////////////////////////////////////////////
 
     /**

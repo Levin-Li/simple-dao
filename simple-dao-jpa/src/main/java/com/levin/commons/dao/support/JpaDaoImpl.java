@@ -47,7 +47,8 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.levin.commons.dao.util.QueryAnnotationUtil.getFieldsFromCache;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.expandAndFilterNull;
 
 
 /**
@@ -891,18 +892,19 @@ public class JpaDaoImpl
 
         Object fieldOrMethod = idFields.get(key);
 
-        if (fieldOrMethod == null) {
-            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
-            if (fieldOrMethod != null) {
-                ((Field) fieldOrMethod).setAccessible(true);
-                idFields.put(key, fieldOrMethod);
-            }
-        }
 
         if (fieldOrMethod == null) {
             String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
             fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
             if (fieldOrMethod != null) {
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        if (fieldOrMethod == null) {
+            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
+            if (fieldOrMethod != null) {
+                ((Field) fieldOrMethod).setAccessible(true);
                 idFields.put(key, fieldOrMethod);
             }
         }
@@ -1138,6 +1140,8 @@ public class JpaDaoImpl
     @Override
     public String getEntityIdAttrName(Object entityOrClass) {
 
+        Assert.notNull(entityOrClass, "entityOrClass is null");
+
         Class entityClass = null;
 
         if (entityOrClass instanceof Class) {
@@ -1357,33 +1361,61 @@ public class JpaDaoImpl
 
     private Class tryFindResultClass(Object... queryObjs) {
 
-        Class resultClazz = null;
+        Class resultClass = null;
 
-        for (Object queryObj : queryObjs) {
+        if (queryObjs == null
+                || queryObjs.length == 0) {
+            return resultClass;
+        }
+
+        List<Object> queryObjList = tryGetEntityClassAndClear(
+                //展开嵌套参数，过滤简单的类型，
+                filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs))), null
+        );
+
+        for (Object queryObj : queryObjList) {
 
             if (queryObj == null) {
                 continue;
+            }
+
+            if (queryObj instanceof QueryResultClassSupplier) {
+                resultClass = ((QueryResultClassSupplier) queryObj).get();
+                if (isValidClass(resultClass)) {
+                    break;
+                }
+            }
+
+            if (queryObj instanceof QueryOption) {
+                resultClass = ((QueryOption) queryObj).getResultClass();
+                if (isValidClass(resultClass)) {
+                    break;
+                }
             }
 
             TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
 
             //注解优先
             if (targetOption != null) {
-                resultClazz = targetOption.resultClass();
-                if (isValidClass(resultClazz)) {
+                resultClass = targetOption.resultClass();
+                if (isValidClass(resultClass)) {
                     break;
                 }
             }
 
-            if (queryObj instanceof QueryOption) {
-                resultClazz = ((QueryOption) queryObj).getResultClass();
-                if (isValidClass(resultClazz)) {
+            QueryResultOption resultOption = queryObj.getClass().getAnnotation(QueryResultOption.class);
+
+            //注解优先
+            if (resultOption != null) {
+                resultClass = resultOption.resultClass();
+                if (isValidClass(resultClass)) {
                     break;
                 }
             }
+
         }
 
-        return resultClazz;
+        return resultClass;
     }
 
     private boolean isValidClass(Class clazz) {

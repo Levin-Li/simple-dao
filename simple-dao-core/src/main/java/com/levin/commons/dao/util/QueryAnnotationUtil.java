@@ -26,16 +26,14 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,7 +52,7 @@ public abstract class QueryAnnotationUtil {
     private final static Logger logger = LoggerFactory.getLogger(QueryAnnotationUtil.class);
 
 
-    public static final String ANNOTITION_VALUE = "value";
+    public static final String ANNOTATION_VALUE_KEY = "value";
 
 
     @Eq
@@ -113,14 +111,14 @@ public abstract class QueryAnnotationUtil {
     //缓存属性
     private static final Map<String, List<Field>> cacheFields = new ConcurrentReferenceHashMap<>();
 
-
     private static final Map<String, Boolean> hasSelectAnnotationCache = new ConcurrentReferenceHashMap<>();
 
-
     public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+
     private static final Locker cacheEntityOptionMapLocker = Locker.build();
 
     public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
+
     public static final Map<String, Class<?>> tableNameMappingEntityClassCaches = new ConcurrentReferenceHashMap<>();
 
     /**
@@ -487,7 +485,6 @@ public abstract class QueryAnnotationUtil {
      * 过滤出指定包的注解
      * <p>
      *
-     *
      * @param packageName  精确相等的包名，不包含子包
      * @param annotations
      * @param excludeTypes
@@ -661,7 +658,7 @@ public abstract class QueryAnnotationUtil {
         String newName = null;
 
         try {
-            newName = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTITION_VALUE).invoke(opAnno);
+            newName = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTATION_VALUE_KEY).invoke(opAnno);
         } catch (Exception e) {
 //            ReflectionUtils.rethrowRuntimeException(e);
         }
@@ -746,6 +743,108 @@ public abstract class QueryAnnotationUtil {
 
     }
 
+
+    /**
+     * 展开嵌套对象
+     *
+     * @param resultList
+     * @param queryObjs
+     * @return
+     */
+    public static List<Object> expandAndFilterNull(List<Object> resultList, Iterable<Object> queryObjs) {
+
+        if (resultList == null) {
+            resultList = new ArrayList<>();
+        }
+
+        if (queryObjs == null) {
+            return resultList;
+        }
+
+        for (Object queryObj : queryObjs) {
+
+            if (queryObj == null) {
+                //忽略空值
+                continue;
+            }
+            //如果是类
+            if (queryObj instanceof Class) {
+                resultList.add(queryObj);
+            } else if (queryObj.getClass().isArray()) {
+                //数组
+                expandAndFilterNull(resultList, Arrays.asList((Object[]) queryObj));
+            } else if (queryObj instanceof Iterable) {
+                //可迭代对象
+                expandAndFilterNull(resultList, ((Iterable) queryObj));
+            } else {
+                resultList.add(queryObj);
+            }
+
+        }
+
+        return resultList;
+    }
+
+
+    /**
+     * 过滤调查询对象不需要的类型
+     *
+     * @param queryObjList
+     * @return
+     */
+    public static List<Object> filterQueryObjSimpleType(List<Object> queryObjList) {
+
+        if (queryObjList == null || queryObjList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        //过滤不需要的类
+        return queryObjList.stream()
+                .filter(Objects::nonNull)
+                .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
+                //不是简单的类型
+                .filter(c ->
+                        !BeanUtils.isSimpleProperty(c)
+                                && !c.isAnnotation()
+                                && !c.isEnum()
+                                && !QueryAnnotationUtil.isRootObjectType(c)
+                                && !QueryAnnotationUtil.isIgnore(c)
+                )
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取查询的目标对象，同时清除
+     *
+     * @param queryObjList
+     * @param onEntityClassConsumer
+     * @return
+     */
+    public static List<Object> tryGetEntityClassAndClear(List<Object> queryObjList, Consumer<Class<?>> onEntityClassConsumer) {
+
+        if (queryObjList == null || queryObjList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        //如果主体类还没有定义，则尝试设置实体类，优先级低于 @TargetOption，会被覆盖
+        if (onEntityClassConsumer != null) {
+            onEntityClassConsumer.accept(
+                    queryObjList.stream()
+                            .filter(o -> o instanceof Class)
+                            .map(o -> (Class<?>) o)
+                            .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                            .findFirst()
+                            .orElse(null)
+            );
+        }
+
+        //清除实体类
+        return queryObjList.stream()
+                .filter(o -> o instanceof Class)
+                .map(o -> (Class<?>) o)
+                .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                .collect(Collectors.toList());
+    }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 

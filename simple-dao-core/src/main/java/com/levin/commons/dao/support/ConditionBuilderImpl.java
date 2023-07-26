@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -1093,7 +1094,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
-
         if (targetOption == null) {
             return (CB) this;
         }
@@ -1105,6 +1105,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         targetOptionList.add(targetOption);
 
+        //
         if (hasValidQueryEntity()) {
             return (CB) this;
         }
@@ -1125,7 +1126,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //        }
 
         //  this.where(targetOption.fixedCondition());
-
 
         if (targetOption.maxResults() > 0) {
             this.rowCount = targetOption.maxResults();
@@ -1174,32 +1174,33 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected CB setQueryOption(Object... queryObjs) {
 
-        if (hasValidQueryEntity()) {
+        if (queryObjs == null
+                || queryObjs.length == 0
+                || hasValidQueryEntity()) {
             return (CB) this;
         }
 
-        Optional.ofNullable(queryObjs).ifPresent((Object[] objs) -> {
-            Arrays.stream(queryObjs)
-                    .filter(o -> o instanceof QueryOption)
-                    .map(o -> (QueryOption) o).forEach(queryOption -> {
+        Arrays.stream(queryObjs)
+                .filter(o -> o instanceof QueryOption)
+                .map(o -> (QueryOption) o).forEach(queryOption -> {
 
-                        if (hasValidQueryEntity()) {
-                            return;
-                        }
+                    if (hasValidQueryEntity()) {
+                        return;
+                    }
 
-                        entityClass = queryOption.getEntityClass();
+                    this.entityClass = (Class<T>) queryOption.getEntityClass();
 
-                        this.setNative(queryOption.isNative());
+                    this.setNative(queryOption.isNative());
 
-                        // tableName = queryOption.getEntityName();
+                    // tableName = queryOption.getEntityName();
 
-                        setTableName(queryOption.getEntityName());
+                    setTableName(queryOption.getEntityName());
 
-                        alias = queryOption.getAlias();
+                    alias = queryOption.getAlias();
 
-                        tryUpdateTableName();
+                    tryUpdateTableName();
 
-                        if (hasValidQueryEntity()) {
+                    if (hasValidQueryEntity()) {
 
 //                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
 //                            , aliasMap::put
@@ -1209,13 +1210,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //                        join(true, joinStatement);
 //                    }
 
-                            join(true, queryOption.getJoinOptions());
+                        join(true, queryOption.getJoinOptions());
 
-                            join(true, queryOption.simpleJoinOptions());
-                        }
+                        join(true, queryOption.simpleJoinOptions());
+                    }
 
-                    });
-        });
+                });
+
 
         return (CB) this;
     }
@@ -1319,52 +1320,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-
-    /**
-     * 展开嵌套对象
-     *
-     * @param resultList
-     * @param queryObjs
-     * @return
-     */
-    protected static List<Object> expand(List resultList, Object... queryObjs) {
-
-        if (resultList == null) {
-            resultList = new ArrayList();
-        }
-
-        if (queryObjs == null) {
-            return resultList;
-        }
-
-        for (Object queryObj : queryObjs) {
-
-            if (queryObj == null) {
-                continue;
-            }
-
-            //如果是类，则实例化
-            if (queryObj instanceof Class) {
-//                不实例化
-                // queryObj = BeanUtils.instantiateClass((Class<? extends Object>) queryObj);
-            }
-
-            if (queryObj.getClass().isArray()) {
-                expand(resultList, (Object[]) queryObj);
-            } else if (queryObj instanceof Iterable) {
-                ///////////////////////////////////////
-                for (Object o : ((Iterable) queryObj)) {
-                    expand(resultList, o);
-                }
-            } else {
-                resultList.add(queryObj);
-            }
-
-        }
-
-        return resultList;
-    }
-
     /**
      * 解析对象所有的属性，过滤并调用回调
      *
@@ -1372,28 +1327,39 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void walkObject(Object... queryObjs) {
 
-        if (queryObjs == null) {
+        if (queryObjs == null || queryObjs.length == 0) {
             return;
         }
 
-        //如果主体类还没有定义，则尝试设置实体类，优先级低于 @TargetOption，会被覆盖
-        if (this.entityClass == null) {
-            for (Object queryObj : queryObjs) {
-                if (queryObj instanceof Class && ((Class<?>) queryObj).isAnnotationPresent(Entity.class)) {
-                    this.entityClass = (Class<T>) queryObj;
-                    break;
-                }
-            }
+        //转换为List
+        List<Object> queryObjList = Arrays.asList(queryObjs);
+
+        //1、设置并清除参数中的实体类，第1优先级
+        queryObjList = tryGetEntityClassAndClear(
+
+                //展开嵌套参数，过滤简单的类型，
+                filterQueryObjSimpleType(expandAndFilterNull(null, queryObjList)),
+
+                //试图设置
+                hasValidQueryEntity() ? null : (c -> this.entityClass = (Class<T>) c)
+        );
+
+        if (queryObjList.isEmpty()) {
+            return;
         }
 
-        //
-        List<Object> expand = expand(new ArrayList(queryObjs.length), queryObjs);
-
-        queryObjs = expand.toArray();
-
+        //覆盖原有的参数
+        queryObjs = queryObjList.toArray();
+        // 2、QueryOption 第1优先级 设置查询目标
         setQueryOption(queryObjs);
 
-        for (Object queryValueObj : queryObjs) {
+        //3、设置参数实体类，第3优先级
+        queryObjList.stream().filter(Objects::nonNull)
+                .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
+                .filter(c -> c.isAnnotationPresent(TargetOption.class))
+                .forEach(c -> setTargetOption(null, c.getAnnotation(TargetOption.class)));
+
+        for (Object queryValueObj : queryObjList) {
 
             if (queryValueObj == null) {
                 continue;
@@ -1410,32 +1376,24 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             Class<?> typeClass = isClassCurrQueryObj ? (Class<?>) queryValueObj : queryValueObj.getClass();
 
-            if (typeClass.isPrimitive()
-                    || QueryAnnotationUtil.isRootObjectType(typeClass)
-                    || QueryAnnotationUtil.isArray(typeClass)
-                    || QueryAnnotationUtil.isIgnore(typeClass)
-                    || typeClass.isAnnotation()) {
-                continue;
-            }
-
             if (!isClassCurrQueryObj) {
 
                 //对注解的支持 PostConstruct
                 ClassUtils.invokePostConstructMethod(queryValueObj);
 
                 if (this instanceof UpdateDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreUpdate.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreUpdate.class);
                 } else if (this instanceof DeleteDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreRemove.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreRemove.class);
                 }
 
                 //没有回调时，表示本地调用
-
                 //尝试设置分页
                 setPaging(queryValueObj);
 
                 //尝试设置查询目标实体
-                setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
+                //
+                //  setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
 
                 //特别处理
                 if (queryValueObj instanceof Map) {

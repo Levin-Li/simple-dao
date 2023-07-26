@@ -22,7 +22,7 @@ public interface QueryOption {
      *
      * @return
      */
-    default Class getEntityClass() {
+    default Class<?> getEntityClass() {
         return null;
     }
 
@@ -74,7 +74,7 @@ public interface QueryOption {
      *
      * @return
      */
-    default Class getResultClass() {
+    default Class<?> getResultClass() {
         return null;
     }
 
