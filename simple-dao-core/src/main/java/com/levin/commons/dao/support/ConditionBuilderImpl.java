@@ -1352,7 +1352,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
         }
 
-        //1、设置并清除参数中的实体类，第1优先级
+        //1、设置并清除参数中的实体类，第2优先级
         queryObjList = tryGetEntityClassAndClear(
                 //展开嵌套参数，过滤简单的类型，
                 queryObjList,
@@ -1369,10 +1369,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         //覆盖原有的参数
         queryObjs = queryObjList.toArray();
-        // 2、QueryOption 第1优先级 设置查询目标
+        // 2、QueryOption 第3优先级 设置查询目标
         setQueryOption(queryObjs);
 
-        //3、设置参数实体类，第3优先级
+        //3、设置参数实体类，第4优先级
         queryObjList.stream().filter(Objects::nonNull)
                 .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
                 .filter(c -> c.isAnnotationPresent(TargetOption.class))
