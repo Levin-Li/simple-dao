@@ -842,7 +842,7 @@ public abstract class QueryAnnotationUtil {
         return queryObjList.stream()
                 .filter(o -> o instanceof Class)
                 .map(o -> (Class<?>) o)
-                .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                .filter(c -> !c.isAnnotationPresent(Entity.class) && !c.isAnnotationPresent(MappedSuperclass.class))
                 .collect(Collectors.toList());
     }
 

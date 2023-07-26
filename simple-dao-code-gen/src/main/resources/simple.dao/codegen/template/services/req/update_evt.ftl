@@ -64,14 +64,14 @@ public class ${className} extends ${reqExtendClass} {
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
-</#if>
 
+</#if>
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
     @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
     final boolean eqEditable = true;
-</#if>
 
+</#if>
 <#list UPDATE_fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
@@ -81,9 +81,9 @@ public class ${className} extends ${reqExtendClass} {
     </#list>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+
     </#if>
 </#list>
-
 <#list fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>

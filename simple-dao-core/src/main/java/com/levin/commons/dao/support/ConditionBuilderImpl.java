@@ -1341,7 +1341,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 filterQueryObjSimpleType(expandAndFilterNull(null, queryObjList)),
 
                 //试图设置
-                hasValidQueryEntity() ? null : (c -> this.entityClass = (Class<T>) c)
+                hasValidQueryEntity() ? null : c -> this.entityClass = (Class<T>) c
         );
 
         if (queryObjList.isEmpty()) {

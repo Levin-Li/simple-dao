@@ -54,7 +54,6 @@ public class DaoExamplesTest {
     @Autowired
     SimpleDao dao;
 
-
     @Autowired
     UserDao userDao;
 
@@ -1142,9 +1141,8 @@ public class DaoExamplesTest {
 
             long st = System.currentTimeMillis();
 
-            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,
+            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,null,
                     new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
-
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
 
@@ -1155,7 +1153,7 @@ public class DaoExamplesTest {
     @Test
     public void testPagingQueryHelper2() throws Exception {
 
-        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,
+        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,null,
                 PagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
