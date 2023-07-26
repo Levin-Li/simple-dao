@@ -13,7 +13,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface QueryResultOption {
+public @interface ResultOption {
 
     /**
      * 预期的结果集数据

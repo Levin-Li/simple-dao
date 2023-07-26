@@ -6,6 +6,7 @@ package com.levin.commons.dao;
  * <p>
  * 如果查询实体实现这个接口，将自动会被处理
  */
+@FunctionalInterface
 public interface QueryOption {
 
     /**
@@ -22,9 +23,7 @@ public interface QueryOption {
      *
      * @return
      */
-    default Class<?> getEntityClass() {
-        return null;
-    }
+    Class<?> getEntityClass();
 
     /**
      * 获取查询的实体（或是表）的名字

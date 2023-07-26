@@ -1332,14 +1332,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         //转换为List
-        List<Object> queryObjList = Arrays.asList(queryObjs);
+        List<Object> queryObjList = filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)));
+
+        if (queryObjList.isEmpty()) {
+            return;
+        }
+
+        if (!hasValidQueryEntity()) {
+            //如果没有有效的查询实体
+            this.entityClass = (Class<T>) queryObjList.stream()
+                    .filter(o -> o instanceof EntityClassSupplier)
+                    .map(o -> ((EntityClassSupplier) o).get())
+                    .filter(Objects::nonNull)
+                    .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                    .findFirst()
+                    .orElse(null);
+        }
 
         //1、设置并清除参数中的实体类，第1优先级
         queryObjList = tryGetEntityClassAndClear(
-
                 //展开嵌套参数，过滤简单的类型，
-                filterQueryObjSimpleType(expandAndFilterNull(null, queryObjList)),
-
+                queryObjList,
                 //试图设置
                 hasValidQueryEntity() ? null : c -> this.entityClass = (Class<T>) c
         );

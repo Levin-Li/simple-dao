@@ -1141,7 +1141,7 @@ public class DaoExamplesTest {
 
             long st = System.currentTimeMillis();
 
-            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,null,
+            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, null,
                     new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
@@ -1153,7 +1153,7 @@ public class DaoExamplesTest {
     @Test
     public void testPagingQueryHelper2() throws Exception {
 
-        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,null,
+        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao, null,
                 PagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
@@ -1373,6 +1373,18 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testEntityClassSet() throws Exception {
+
+
+        List<User> objects = dao.findByQueryObj(User.class,()-> User.info, new CommDto());
+
+
+        Assert.notNull(objects);
+
+    }
+
+
+    @Test
     public void testTableJoinStatDTO() throws Exception {
 
 
@@ -1380,7 +1392,7 @@ public class DaoExamplesTest {
 
         String sql = selectDao.genFinalStatement();
 
-        Assert.isTrue(sql.contains(E_Group.ALIAS+".name Desc"),"预期的排序语句不存在");
+        Assert.isTrue(sql.contains(E_Group.ALIAS + ".name Desc"), "预期的排序语句不存在");
 
         List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO(), new PagingQueryReq(1, 10));
 //        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
@@ -1536,7 +1548,7 @@ public class DaoExamplesTest {
 
 
         List<Object> objects = dao.selectFrom(User.class, "u")
-                .leftJoin( Group.class, "g")
+                .leftJoin(Group.class, "g")
                 .select(true, "u")
                 .where("u.group.id = g.id ")
                 .isNotNull(E_User.id)

@@ -1,8 +1,6 @@
 package com.levin.commons.dao.support;
 
 
-import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.util.ClassUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
@@ -27,7 +25,6 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -1379,8 +1376,8 @@ public class JpaDaoImpl
                 continue;
             }
 
-            if (queryObj instanceof QueryResultClassSupplier) {
-                resultClass = ((QueryResultClassSupplier) queryObj).get();
+            if (queryObj instanceof ResultClassSupplier) {
+                resultClass = ((ResultClassSupplier) queryObj).get();
                 if (isValidClass(resultClass)) {
                     break;
                 }
@@ -1403,7 +1400,7 @@ public class JpaDaoImpl
                 }
             }
 
-            QueryResultOption resultOption = queryObj.getClass().getAnnotation(QueryResultOption.class);
+            ResultOption resultOption = queryObj.getClass().getAnnotation(ResultOption.class);
 
             //注解优先
             if (resultOption != null) {

@@ -7,6 +7,6 @@ import java.util.function.Supplier;
  * 查询结果类
  */
 @FunctionalInterface
-public interface QueryResultClassSupplier extends Supplier<Class<?>> {
+public interface ResultClassSupplier extends Supplier<Class<?>> {
 
 }
