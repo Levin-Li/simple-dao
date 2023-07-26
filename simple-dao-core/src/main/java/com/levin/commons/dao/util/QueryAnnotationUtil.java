@@ -801,14 +801,15 @@ public abstract class QueryAnnotationUtil {
         //过滤不需要的类
         return queryObjList.stream()
                 .filter(Objects::nonNull)
-                .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
-                //不是简单的类型
-                .filter(c ->
-                        !BeanUtils.isSimpleProperty(c)
-                                && !c.isAnnotation()
-                                && !c.isEnum()
-                                && !QueryAnnotationUtil.isRootObjectType(c)
-                                && !QueryAnnotationUtil.isIgnore(c)
+                .filter(o -> {
+                            Class<?> c = (o instanceof Class) ? (Class<?>) o : o.getClass();
+                            //不是简单的类型
+                            return !BeanUtils.isSimpleProperty(c)
+                                    && !c.isAnnotation()
+                                    && !c.isEnum()
+                                    && !QueryAnnotationUtil.isRootObjectType(c)
+                                    && !QueryAnnotationUtil.isIgnore(c);
+                        }
                 )
                 .collect(Collectors.toList());
     }

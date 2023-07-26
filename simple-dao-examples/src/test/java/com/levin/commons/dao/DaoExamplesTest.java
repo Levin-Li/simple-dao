@@ -1375,9 +1375,9 @@ public class DaoExamplesTest {
     @Test
     public void testEntityClassSet() throws Exception {
 
+        ResultClassSupplier classSupplier = () -> UserInfo.class;
 
-        List<User> objects = dao.findByQueryObj(User.class,()-> User.info, new CommDto());
-
+        List<UserInfo> objects = dao.findByQueryObj(classSupplier, User.class, new CommDto());
 
         Assert.notNull(objects);
 

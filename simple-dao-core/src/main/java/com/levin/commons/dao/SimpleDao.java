@@ -266,7 +266,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     <E> RS<E> findTotalsAndResultList(Object... queryObjs);
 
-
     /**
      * @param resultType
      * @param queryObjs
@@ -274,7 +273,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <E> List<E> findByQueryObj(Class<E> resultType, Object... queryObjs);
-
 
     /**
      * @param queryObjs
@@ -332,7 +330,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     PlatformTransactionManager getTransactionManager();
-
 
     /**
      * jsr Validator
