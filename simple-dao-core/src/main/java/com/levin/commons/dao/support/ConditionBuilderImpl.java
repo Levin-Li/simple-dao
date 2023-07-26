@@ -1212,7 +1212,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                         join(true, queryOption.getJoinOptions());
 
-                        join(true, queryOption.simpleJoinOptions());
+                        join(true, queryOption.getSimpleJoinOptions());
                     }
 
                 });
@@ -1340,13 +1340,16 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         if (!hasValidQueryEntity()) {
             //如果没有有效的查询实体
-            this.entityClass = (Class<T>) queryObjList.stream()
+            EntityClassSupplier supplier = (EntityClassSupplier) queryObjList.stream()
                     .filter(o -> o instanceof EntityClassSupplier)
-                    .map(o -> ((EntityClassSupplier) o).get())
-                    .filter(Objects::nonNull)
-                    .filter(c -> c.isAnnotationPresent(Entity.class) || c.isAnnotationPresent(MappedSuperclass.class))
+                    .filter(o -> isJpaEntityClass(o.getClass()))
                     .findFirst()
                     .orElse(null);
+
+            if (supplier != null) {
+                this.entityClass = (Class<T>) supplier.get();
+                this.alias = supplier.getAlias();
+            }
         }
 
         //1、设置并清除参数中的实体类，第1优先级
@@ -1354,7 +1357,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //展开嵌套参数，过滤简单的类型，
                 queryObjList,
                 //试图设置
-                hasValidQueryEntity() ? null : c -> this.entityClass = (Class<T>) c
+                hasValidQueryEntity() ? null : c -> {
+                    this.entityClass = (Class<T>) c;
+                    this.alias = EntityClassSupplier.getAlias(this.entityClass);
+                }
         );
 
         if (queryObjList.isEmpty()) {

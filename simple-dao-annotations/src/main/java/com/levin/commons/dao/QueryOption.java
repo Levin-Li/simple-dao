@@ -64,7 +64,7 @@ public interface QueryOption {
      *
      * @return
      */
-    default SimpleJoinOption[] simpleJoinOptions() {
+    default SimpleJoinOption[] getSimpleJoinOptions() {
         return null;
     }
 
