@@ -140,9 +140,7 @@ import static com.levin.commons.dao.util.QueryAnnotationUtil.expandAndFilterNull
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
-
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
-
     private final Integer hibernateVersion;
 
     @Autowired
@@ -942,7 +940,6 @@ public class JpaDaoImpl
 
         Assert.notNull(queryObj, "查询对象为空");
 
-
         //尝试自动获取实体类
         if (entityClass == null) {
 
@@ -1012,9 +1009,18 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
+
+                //部分数据库支持空字符串等同于Null空值
+
+                //@todo 考虑根据数据库类型进行优化处理
+
                 //目前 MySql 支持空值忽略，唯一约束
                 //暂时 忽略空值
                 // selectDao.isNull(fieldName);
+
+                //暂时做法，只要有一个空值，就忽略本功能
+                hasWhere = false;
+                break;
             } else {
                 selectDao.eq(fieldName, value);
                 hasWhere = true;
