@@ -1163,6 +1163,16 @@ public final class ServiceModelCodeGenerator {
     }
 
 
+    /**
+     *
+     * 生成文件，如果文件存在已经被修改，则直接返回。
+     *
+     *
+     * @param template
+     * @param params
+     * @param fileName
+     * @throws Exception
+     */
     public static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
         //复制
@@ -1183,7 +1193,11 @@ public final class ServiceModelCodeGenerator {
 
         final String keyword = "@author Auto gen by simple-dao-codegen, @time:";
 
+
         if (file.exists()) {
+
+            //如果文件存在，将自动去除空行后然后比较文件内容，通过md5校验文件是否被修改过
+            //如果被修改过，则直接放回，如果没有被修改，则继续
 
             boolean skip = true;
 
@@ -1236,12 +1250,17 @@ public final class ServiceModelCodeGenerator {
 
         getTemplate(template).process(params, stringWriter);
 
+        //文件内容
         String fileContent = stringWriter.toString();
+
+        if (fileName.endsWith(".java")) {
+            //如果是Java类文件，自动格式化
+            fileContent = new com.google.googlejavaformat.java.Formatter().formatSource(fileContent);
+        }
 
         int startIdx = fileContent.indexOf(prefix);
 
         if (startIdx != -1) {
-
             //需要hash的部分
             String newCompactContent = Stream.of(fileContent.split("[\r\n]"))
                     //去除空行
@@ -1252,7 +1271,7 @@ public final class ServiceModelCodeGenerator {
                     .map(StringUtils::trimAllWhitespace)
                     .collect(Collectors.joining());
 
-            //如果文件内容相同，则直接返回
+            //如果文件内容相同，没有变化，则直接返回
             if (newCompactContent.equals(fileOldCompactContent)) {
                 return;
             }
@@ -1266,6 +1285,7 @@ public final class ServiceModelCodeGenerator {
 
         //写入文件
         FileUtil.writeString(fileContent, file, "utf-8");
+
         logger.info("目标文件：" + path + "写入成功。");
     }
 
