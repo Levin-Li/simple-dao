@@ -1232,6 +1232,8 @@ public final class ServiceModelCodeGenerator {
                 } else {
                     logger.info("目标文件：" + path + " 已经存在，并且被修改过，不覆盖。");
                 }
+            } else {
+                logger.warn("目标文件：" + path + "已经存在，但没有发现生成关键字<{}>，将被忽略。", prefix);
             }
 
             if (skip) {
@@ -1273,7 +1275,8 @@ public final class ServiceModelCodeGenerator {
                     .collect(Collectors.joining());
 
             //如果文件内容相同，没有变化，则直接返回
-            if (newCompactContent.equals(fileOldCompactContent)) {
+            if (newCompactContent.contentEquals(fileOldCompactContent)) {
+                logger.debug("目标文件：" + path + "已经存在，且新旧内容相同，跳过。");
                 return;
             }
 
