@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
@@ -1164,9 +1165,7 @@ public final class ServiceModelCodeGenerator {
 
 
     /**
-     *
      * 生成文件，如果文件存在已经被修改，则直接返回。
-     *
      *
      * @param template
      * @param params
@@ -1255,7 +1254,9 @@ public final class ServiceModelCodeGenerator {
 
         if (fileName.endsWith(".java")) {
             //如果是Java类文件，自动格式化
-            fileContent = new com.google.googlejavaformat.java.Formatter().formatSource(fileContent);
+            fileContent = new com.google.googlejavaformat.java.Formatter(
+                    JavaFormatterOptions.builder().style(JavaFormatterOptions.Style.AOSP).build()
+            ).formatSource(fileContent);
         }
 
         int startIdx = fileContent.indexOf(prefix);
