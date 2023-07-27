@@ -44,12 +44,6 @@ spring:
     time-zone: GMT+8
     locale: zh_CN
 
-  mvc:
-    format:
-      date-time: yyyy-MM-dd HH:mm:ss
-      date: yyyy-MM-dd
-      time: HH:mm:ss
-
   # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
