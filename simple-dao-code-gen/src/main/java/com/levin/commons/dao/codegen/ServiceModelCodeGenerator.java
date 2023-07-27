@@ -75,7 +75,7 @@ public final class ServiceModelCodeGenerator {
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String SIMPLE_CREATE_EVT_FTL = "services/req/simple_create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
-    public static final String SELECT_INFO_FTL = "services/info/select_info.ftl";
+    public static final String SELECT_INFO_FTL = "services/info/simple_info.ftl";
 
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
     public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";

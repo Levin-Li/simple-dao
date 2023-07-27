@@ -163,5 +163,4 @@ public class ${className} extends ${reqExtendClass}{
         //Double sumGmv;
 
     }
-
 }

@@ -59,13 +59,6 @@ public class ${className} extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
-<#if pkField?exists>
-    @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
-    @NotNull
-    @Eq(require = true)
-    ${pkField.typeName} ${pkField.name};
-
-</#if>
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
     @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
@@ -98,19 +91,6 @@ public class ${className} extends ${reqExtendClass} {
     </#if>
 </#list>
 
-<#if pkField?exists>
-    public ${className}(${pkField.typeName} ${pkField.name}) {
-        this.${pkField.name} = ${pkField.name};
-    }
-
-    public ${className} update${pkField.name?cap_first}WhenNotBlank(${pkField.typeName} ${pkField.name}){
-        if(isNotBlank(${pkField.name})){
-        this.${pkField.name} = ${pkField.name};
-        }
-        return this;
-    }
-
-</#if>
     @PostConstruct
     public void preUpdate() {
         //@todo 更新之前初始化数据

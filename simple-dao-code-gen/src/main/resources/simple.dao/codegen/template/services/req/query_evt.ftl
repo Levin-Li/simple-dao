@@ -128,5 +128,4 @@ public class ${className} extends ${reqExtendClass}{
     public void preQuery() {
         //@todo 查询之前初始化数据
     }
-
 }

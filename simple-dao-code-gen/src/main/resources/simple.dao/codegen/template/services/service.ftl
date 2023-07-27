@@ -56,24 +56,6 @@ public interface ${className} {
     List<Boolean> batchCreate(@NotNull List<Create${entityName}Req> reqList);
 </#if>
 
-<#if pkField?exists>
-    /**
-     * 通过主键查找记录，建议在服务内部调用，不要在控制器中调用
-     * @param ${pkField.name} 主键ID
-     * @return data 数据详情
-     */
-    @Operation(summary = VIEW_DETAIL_ACTION)
-    ${entityName}Info findById(@NotNull ${pkField.typeName} ${pkField.name});
-
-    /**
-    * 通过主键查找记录，同时可能注入其它过滤条件（如租户过滤，部门过滤，人员过滤），试图增加数据安全性
-    * @param req
-    * @return data 数据详情
-    */
-    @Operation(summary = VIEW_DETAIL_ACTION)
-    ${entityName}Info findById(@NotNull ${entityName}IdReq req);
-</#if>
-
     /**
      * 更新记录，并返回更新是否成功
      *
@@ -82,6 +64,16 @@ public interface ${className} {
      */
     @Operation(summary = UPDATE_ACTION)
     boolean update(@NotNull Update${entityName}Req req);
+
+    /**
+     * 更新记录，并返回更新记录数
+     *
+     * @param updateReq
+     * @param whereReq
+     * @return int 记录数
+     */
+    @Operation(summary = UPDATE_ACTION)
+    int update(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq);
 
     /**
      * 批量更新记录，并返回更新记录数
@@ -146,6 +138,24 @@ public interface ${className} {
      */
     @Operation(summary = STAT_ACTION)
     int count(@NotNull Query${entityName}Req req);
+
+<#if pkField?exists>
+    /**
+     * 通过主键查找记录，建议在服务内部调用，不要在控制器中调用
+     * @param ${pkField.name} 主键ID
+     * @return data 数据详情
+     */
+    @Operation(summary = VIEW_DETAIL_ACTION)
+    ${entityName}Info findById(@NotNull ${pkField.typeName} ${pkField.name});
+
+    /**
+    * 通过主键查找记录，同时可能注入其它过滤条件（如租户过滤，部门过滤，人员过滤），试图增加数据安全性
+    * @param req
+    * @return data 数据详情
+    */
+    @Operation(summary = VIEW_DETAIL_ACTION)
+    ${entityName}Info findById(@NotNull ${entityName}IdReq req);
+</#if>
 
     /**
      * 查询并返回第一条数据

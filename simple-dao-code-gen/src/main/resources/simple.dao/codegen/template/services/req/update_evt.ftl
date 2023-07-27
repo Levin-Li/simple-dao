@@ -128,5 +128,4 @@ public class ${className} extends ${reqExtendClass} {
     </#if>
 </#list>
     }
-
 }
