@@ -131,7 +131,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
+    public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
 
@@ -170,37 +170,17 @@ public class ${className} extends BaseService implements ${serviceName} {
         return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
-    /**
-     * 指定选择列查询
-     *
-     * @param req
-     * @param paging 分页设置，可空
-     * @return pagingData 分页数据
-     */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
     public PagingData<Simple${entityName}Info> simpleQuery(Query${entityName}Req req, Paging paging){
         return simpleDao.findPagingDataByQueryObj(Simple${entityName}Info.class, req, paging);
     }
 
-    /**
-     * 简单统计
-     *
-     * @param req
-     * @param paging 分页设置，可空
-     * @return pagingData 分页数据
-     */
     @Operation(summary = STAT_ACTION)
     @Override
     public PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req , Paging paging){
         return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
-    /**
-     * 统计记录数
-     *
-     * @param req
-     * @return record count
-     */
     @Override
     @Operation(summary = STAT_ACTION)
     public int count(Query${entityName}Req req){
