@@ -1235,7 +1235,7 @@ public final class ServiceModelCodeGenerator {
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     skip = false;
-                    logger.info("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5);
+                    logger.debug("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5);
                 } else {
                     logger.info("目标文件：" + path + " 已经存在，并且被修改过，不覆盖。");
                 }
