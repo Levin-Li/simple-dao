@@ -131,7 +131,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    int update(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
+    int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
 
