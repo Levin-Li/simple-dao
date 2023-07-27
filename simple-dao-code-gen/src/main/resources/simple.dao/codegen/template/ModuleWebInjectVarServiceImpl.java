@@ -28,8 +28,8 @@ import java.util.Map;
  * web模块注入服务
  *
  * 正常情况下，一个项目只需要一个注入服务，为项目提供注入上下文。
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ * 
  */
 
 //默认不启用

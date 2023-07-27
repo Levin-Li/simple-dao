@@ -24,8 +24,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 /**
  * ${entityTitle}-服务接口
  *
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 public interface ${className} {
@@ -68,7 +68,7 @@ public interface ${className} {
     /**
      * 更新记录，并返回更新记录数
      *
-     * @param updateReq
+     * @param setReq
      * @param whereReq
      * @return int 记录数
      */

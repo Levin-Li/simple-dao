@@ -32,8 +32,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
  * 抽象控制器
  *
  * @author lilw
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ * 
  */
 @Slf4j
 //默认需要权限访问
