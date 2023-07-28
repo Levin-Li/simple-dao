@@ -90,9 +90,9 @@ public class ${className} extends ${reqExtendClass} {
 
     </#if>
 </#list>
-
+<#-- 基类的更新字段 -->
 <#list fields as field>
-    <#if field.name == 'updateTime' || field.name == 'lastUpdateTime' || field.name == 'modifyTime'>
+    <#if field.baseEntityField && (field.name == 'updateTime' || field.name == 'lastUpdateTime')>
         @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
         ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
@@ -106,7 +106,7 @@ public class ${className} extends ${reqExtendClass} {
     <#if field.name == 'updateTime' || field.name == 'lastUpdateTime' || field.name == 'modifyTime'>
 
         if(get${field.name?cap_first}() == null){
-            set${field.name?cap_first}(new ${field.typeName}());
+            set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
         }
     </#if>
 </#list>

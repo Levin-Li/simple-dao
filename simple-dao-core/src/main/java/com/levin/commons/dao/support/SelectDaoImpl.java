@@ -1326,11 +1326,13 @@ public class SelectDaoImpl<T>
             return (E) data;
         }
 
+        //获取注入的属性
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
 
+        //合并到忽略的属性
         ignoreProperties = QueryAnnotationUtil.mergeArray(daoInjectAttrs, ignoreProperties);
 
-        //先拷贝变量
+        //先拷贝变量，但不拷贝忽略嗯属性
         E e = (E) copy(data, targetType, maxCopyDeep, ignoreProperties);
 
         if (daoInjectAttrs != null
@@ -1406,9 +1408,11 @@ public class SelectDaoImpl<T>
 
     public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
+            ObjectUtil.variableInjector.set(DaoContext.getVariableInjector());
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
-            return (E) dao.copy(source, target, maxCopyDeep, ignoreProperties);
+            return dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
+            ObjectUtil.variableInjector.set(null);
             ObjectUtil.fetchPropertiesFilters.set(null);
         }
     }

@@ -1,11 +1,15 @@
 package com.levin.commons.dao.util;
 
 
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.DeepCopy;
 import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
+import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.ValueHolder;
+import com.levin.commons.service.support.VariableInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -44,6 +48,8 @@ public abstract class ObjectUtil {
     private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
 
     public static final ThreadLocal<List<Predicate<String>>> fetchPropertiesFilters = new ThreadLocal<>();
+
+    public static final ThreadLocal<VariableInjector> variableInjector = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -906,13 +912,12 @@ public abstract class ObjectUtil {
 
         ReflectionUtils.doWithFields(targetType, field -> fieldList.add(field), field -> !Modifier.isStatic(field.getModifiers()));
 
+        String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(target.getClass());
+
+        List<String> daoInjectAttrList = daoInjectAttrs != null ? Arrays.asList(daoInjectAttrs) : Collections.emptyList();
+
         //按字段复制
         for (Field field : fieldList) {
-
-//            //注入字段不做处理
-//            if (field.isAnnotationPresent(InjectVar.class)) {
-//                continue;
-//            }
 
             String fieldPropertyPath = "";
 
@@ -974,6 +979,7 @@ public abstract class ObjectUtil {
 
                 fieldPropertyPath = buildDeepPath(propertyPath, field.getName());
 
+                //忽略的属性
                 if (isIgnore(fieldPropertyPath, source, target, field, fieldType, ignoreProperties)) {
                     continue;
                 }
@@ -982,12 +988,21 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
+                Object value = null;
 
-                Object value = getIndexValue(source, propertyName);
+                //如果是注入变量
+                if (daoInjectAttrList.contains(field.getName())) {
 
-                value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);
+                    ValueHolder<Object> injectValue = DaoContext.getInjectValue(target, field, source);
 
-                value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
+                    //可能抛出异常
+                    value = injectValue.get();
+
+                } else {
+                    value = getIndexValue(source, propertyName);
+                    value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);
+                    value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
+                }
 
 
                 boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);

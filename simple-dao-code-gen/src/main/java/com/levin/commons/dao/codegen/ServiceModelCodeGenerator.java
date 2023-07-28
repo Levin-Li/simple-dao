@@ -1313,9 +1313,12 @@ public final class ServiceModelCodeGenerator {
     }
 
     public static void setLazy(FieldModel fieldModel) {
-        if (FetchType.LAZY.equals(tryGetFetchType(fieldModel.getField()))) {
-            fieldModel.setLazy(true);
-        }
+//        if (FetchType.LAZY.equals(tryGetFetchType(fieldModel.getField()))) {
+//            fieldModel.setLazy(true);
+//        }
+
+        //只要是支持 FetchType 的属性
+        fieldModel.setLazy(tryGetFetchType(fieldModel.getField()) != null);
     }
 
     public static FetchType tryGetFetchType(Field field) {
@@ -1427,6 +1430,8 @@ public final class ServiceModelCodeGenerator {
 
             }
 
+            setLazy(fieldModel);
+
             if (isCollection && subType != null) {
 
                 String subTypeName = subType.getSimpleName();
@@ -1444,7 +1449,6 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
             }
 
-            setLazy(fieldModel);
 
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);

@@ -117,7 +117,7 @@ public class ${className} extends ${reqExtendClass} {
     <#if field.name == 'updateTime' || field.name == 'lastUpdateTime' || field.name == 'modifyTime'>
 
         if(get${field.name?cap_first}() == null){
-        set${field.name?cap_first}(new ${field.typeName}());
+            set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
         }
     </#if>
 </#list>
