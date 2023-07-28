@@ -74,29 +74,17 @@ public class ${className} extends ${reqExtendClass} {
     public void prePersist() {
        //@todo 保存之前初始化数据，比如时间，初始状态等
 <#list fields as field>
-    <#if field.name == 'sn' && field.typeName == 'String'>
+    <#if field.typeName == 'String' && (field.name == 'sn' || field.name == 'uuid')>
 
-        if(getSn() == null){
-            String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-            setSn(sn);
+        if(get${field.name?cap_first}() == null){
+            set${field.name?cap_first}(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
         }
     </#if>
-    <#if field.name == 'addTime'>
 
-        if(getAddTime() == null){
-            setAddTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'occurTime'>
+    <#if field.name == 'createTime' || field.name == 'addTime' || field.name == 'occurTime' >
 
-        if(getOccurTime() == null){
-            setOccurTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'createTime'>
-
-        if(getCreateTime() == null){
-            setCreateTime(new Date());
+        if(get${field.name?cap_first}() == null){
+            set${field.name?cap_first}(new ${field.typeName}());
         }
     </#if>
 </#list>

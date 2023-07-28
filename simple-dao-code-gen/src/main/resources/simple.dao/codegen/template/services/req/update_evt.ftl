@@ -114,16 +114,10 @@ public class ${className} extends ${reqExtendClass} {
     public void preUpdate() {
         //@todo 更新之前初始化数据
 <#list fields as field>
-    <#if field.name == 'updateTime'>
+    <#if field.name == 'updateTime' || field.name == 'lastUpdateTime' || field.name == 'modifyTime'>
 
-        if(getUpdateTime() == null){
-            setUpdateTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'lastUpdateTime'>
-
-        if(getLastUpdateTime() == null){
-            setLastUpdateTime(new Date());
+        if(get${field.name?cap_first}() == null){
+        set${field.name?cap_first}(new ${field.typeName}());
         }
     </#if>
 </#list>
