@@ -80,7 +80,6 @@ public class ${className} extends ${reqExtendClass} {
             set${field.name?cap_first}(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
         }
     </#if>
-
     <#if field.name == 'createTime' || field.name == 'addTime' || field.name == 'occurTime' >
 
         if(get${field.name?cap_first}() == null){
