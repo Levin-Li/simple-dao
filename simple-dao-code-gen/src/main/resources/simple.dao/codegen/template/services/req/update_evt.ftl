@@ -114,7 +114,7 @@ public class ${className} extends ${reqExtendClass} {
     public void preUpdate() {
         //@todo 更新之前初始化数据
 <#list fields as field>
-    <#if classModel.defaultUpdateTime(field.name)>
+    <#if classModel.isDefaultUpdateTime(field.name)>
 
         if(get${field.name?cap_first}() == null){
             set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
