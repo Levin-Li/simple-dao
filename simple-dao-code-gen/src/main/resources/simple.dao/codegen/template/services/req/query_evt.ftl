@@ -69,6 +69,9 @@ public class ${className} extends ${reqExtendClass}{
     //@Ignore
     @Schema(title = "排序方向")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
+<#if classModel.findFirstAttr('createTime','addTime','occurTime') != null>
+    @OrderBy(value = ${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "orderBy == null || orderDir == null", order = Integer.MAX_VALUE)
+</#if>
     OrderBy.Type orderDir;
 
 <#list fields as field>

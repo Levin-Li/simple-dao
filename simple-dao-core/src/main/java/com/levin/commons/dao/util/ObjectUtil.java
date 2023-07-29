@@ -736,7 +736,6 @@ public abstract class ObjectUtil {
         }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
         //如果是原子属性，可以认为是同一级
         if (BeanUtils.isSimpleValueType(targetType)) //   || BeanUtils.isSimpleValueType(source.getClass())
         {
@@ -905,6 +904,7 @@ public abstract class ObjectUtil {
 
             //尝试实例话
             target = BeanUtils.instantiateClass(targetType);
+
         }
 
         final List<Field> fieldList = new ArrayList<>(15);
