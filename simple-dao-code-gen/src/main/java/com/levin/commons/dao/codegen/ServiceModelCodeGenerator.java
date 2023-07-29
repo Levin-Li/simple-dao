@@ -1324,6 +1324,8 @@ public final class ServiceModelCodeGenerator {
     public static FetchType tryGetFetchType(Field field) {
         return Stream.of(field.getAnnotations())
                 .filter(Objects::nonNull)
+                //排查 Basic 注解
+                .filter(an -> !(an instanceof Basic))
                 .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "fetch", false))
                 //.filter(Objects::nonNull)
                 .filter(v -> v instanceof FetchType)

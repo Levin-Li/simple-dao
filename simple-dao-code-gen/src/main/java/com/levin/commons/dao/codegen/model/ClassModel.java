@@ -34,6 +34,22 @@ public class ClassModel {
                 && fieldModels.stream().anyMatch(fm -> fm.name.contains(attrName));
     }
 
+    public boolean isDefaultUpdateTime(String attrName) {
+        return StringUtils.hasText(attrName) && (
+                attrName.endsWith("lastUpdateTime")
+                        || attrName.endsWith("updateTime")
+                        || attrName.endsWith("modifyTime")
+        );
+    }
+
+    public boolean isDefaultCreateTime(String attrName) {
+        return StringUtils.hasText(attrName) && (
+                attrName.endsWith("createTime")
+                        || attrName.endsWith("addTime")
+                        || attrName.endsWith("occurTime")
+        );
+    }
+
     /**
      * 查找第一个属性
      *

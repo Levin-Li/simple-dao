@@ -80,7 +80,7 @@ public class ${className} extends ${reqExtendClass} {
             set${field.name?cap_first}(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
         }
     </#if>
-    <#if field.name == 'createTime' || field.name == 'addTime' || field.name == 'occurTime' >
+    <#if calssModel.isDefaultCreateTime(field.name) >
 
         if(get${field.name?cap_first}() == null){
             set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);

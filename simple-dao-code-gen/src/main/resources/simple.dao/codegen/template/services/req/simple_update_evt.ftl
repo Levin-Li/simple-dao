@@ -92,7 +92,7 @@ public class ${className} extends ${reqExtendClass} {
 </#list>
 <#-- 基类的更新字段 -->
 <#list fields as field>
-    <#if field.baseEntityField && (field.name == 'updateTime' || field.name == 'lastUpdateTime')>
+    <#if field.baseEntityField && calssModel.isDefaultUpdateTime(field.name)>
         @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
         ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
@@ -103,7 +103,7 @@ public class ${className} extends ${reqExtendClass} {
     public void preUpdate() {
         //@todo 更新之前初始化数据
 <#list fields as field>
-    <#if field.name == 'updateTime' || field.name == 'lastUpdateTime' || field.name == 'modifyTime'>
+    <#if calssModel.isDefaultUpdateTime(field.name)>
 
         if(get${field.name?cap_first}() == null){
             set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
