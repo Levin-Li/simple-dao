@@ -5,7 +5,6 @@ import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -88,13 +87,13 @@ public abstract class DaoContext {
      * @param varSourceBeans 变量来源，注意顺序
      * @return
      */
-    public static List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+    public static List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
 
         if (targetBean == null) {
             return Collections.emptyList();
         }
 
-        return getVariableInjector().inject(targetBean, getContexts(varSourceBeans));
+        return getVariableInjector().injectByBean(targetBean, getContexts(varSourceBeans));
     }
 
     /**
@@ -104,7 +103,7 @@ public abstract class DaoContext {
      * @param contexts   变量来源，注意顺序
      * @return
      */
-    public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
+    public static ValueHolder<Object> getOutputValue(Object targetBean, Field field, List<?> contexts) {
         return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> contexts));
     }
 
@@ -116,6 +115,10 @@ public abstract class DaoContext {
      * @param varSourceBeans
      * @return
      */
+    public static ValueHolder<Object> getOutputValue(Object targetBean, Field field, Object... varSourceBeans) {
+        return getVariableInjector().getOutputValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
+    }
+
     public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, Object... varSourceBeans) {
         return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
     }

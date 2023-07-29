@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -1466,8 +1465,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                         //处理注入值
                         com.levin.commons.service.support.ValueHolder<Object> valueHolder =
-                                field.isAnnotationPresent(InjectVar.class) ? dao.getInjectValue(queryValueObj, field, contexts) : null;
-
+                                field.isAnnotationPresent(InjectVar.class) ? dao.getOutputValue(queryValueObj, field, contexts) : null;
 
                         if (valueHolder != null) {
 

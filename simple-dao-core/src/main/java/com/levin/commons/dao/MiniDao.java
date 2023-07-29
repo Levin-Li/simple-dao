@@ -156,7 +156,7 @@ public interface MiniDao extends DeepCopier {
      * @param varSourceBeans
      * @return
      */
-    default List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+    default List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
         return DaoContext.injectVars(targetBean, varSourceBeans);
     }
 
@@ -166,8 +166,8 @@ public interface MiniDao extends DeepCopier {
      * @param targetBean
      * @return
      */
-    default ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
-        return DaoContext.getInjectValue(targetBean, field, contexts);
+    default ValueHolder<Object> getOutputValue(Object targetBean, Field field, List<?> contexts) {
+        return DaoContext.getOutputValue(targetBean, field, contexts);
     }
 
     /**

@@ -7,7 +7,6 @@ import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
-import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
 import org.slf4j.Logger;
@@ -1004,7 +1003,6 @@ public abstract class ObjectUtil {
                     value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
                 }
 
-
                 boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);
 
                 if (value == null) {
@@ -1048,7 +1046,11 @@ public abstract class ObjectUtil {
 
                 logger.error(errInfo, error);
             }
-        }
+        }//end fields
+
+
+        //考虑  @TODO 注入
+
 
         if (!objectStack.empty()) {
             objectStack.pop();
