@@ -84,16 +84,6 @@ public class ${className} extends BaseService implements Biz${serviceName} {
         return getSelfProxy(${className}.class);
     }
 
-    //示例方法
-    //@Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
-    //@Override
-    //@CacheEvict(condition = "#req.id != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.id")
-    //@Transactional(rollbackFor = RuntimeException.class)
-    //public boolean update(Update${entityName}Req req) {
-    //    Assert.notNull(req.getId(), BIZ_NAME + " id 不能为空");
-    //    return simpleDao.singleUpdateByQueryObj(req);
-    //}
-
     //@Transactional(rollbackFor = RuntimeException.class)
     //public void update(UpdateReq req){
     //    ${serviceName?uncap_first}.update(req);
