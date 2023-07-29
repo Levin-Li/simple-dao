@@ -3,6 +3,7 @@ package ${modulePackageName}.aspect;
 import static  ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
+import cn.hutool.core.lang.Assert;
 import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.service.support.*;
@@ -32,7 +33,7 @@ import java.util.*;
 /**
  * 模块控制器切面拦截器
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
+ *
  */
 @Aspect
 @Slf4j
@@ -119,6 +120,8 @@ public class ModuleWebControllerAspect {
      */
     private List<VariableResolver> getModuleResolverList(JoinPoint joinPoint) {
 
+        Assert.isTrue(isInit, "系统初始化还未完成");
+
         Signature signature = joinPoint.getSignature();
 
         final String className = signature.getDeclaringTypeName();
@@ -126,19 +129,30 @@ public class ModuleWebControllerAspect {
         //获取当前插件
         Plugin plugin = pluginManager.getInstalledPlugins()
                 .stream()
-                .filter(plugin1 -> className.startsWith(plugin1.getPackageName() + "."))
+                //找出类归属的插件
+                .filter(p -> className.startsWith(p.getPackageName() + "."))
                 .findFirst()
                 .orElse(null);
+
+        if (plugin == null) {
+            log.warn("AOP拦截，类：{} --> 模块：未知, signature:{}", className, signature);
+        }
 
         if (plugin == null) {
             return Collections.emptyList();
         }
 
-        final String packageName = plugin.getPackageName();
+        return getVariableResolvers(plugin.getPackageName());
+    }
 
+    private synchronized List<VariableResolver> getVariableResolvers(String packageName) {
+
+        //final String packageName = plugin.getPackageName();
+
+        //如果当前模块不存在解析器
         if (!moduleResolverMap.containsKey(packageName)) {
 
-            //放入一个空
+            //放入一个空，防止解析变量出现错误
             moduleResolverMap.addAll(packageName, Collections.emptyList());
 
 //            Supplier<List<Map<String, ?>>>
@@ -153,6 +167,7 @@ public class ModuleWebControllerAspect {
             SpringContextHolder.<VariableResolver>findBeanByBeanName(context
                             , ResolvableType.forClass(VariableResolver.class).getType()
                             , "plugin." + packageName, packageName)
+                    .stream().filter(Objects::nonNull)
                     .forEach(v -> moduleResolverMap.add(packageName, v));
 
             //按包名查找
@@ -231,7 +246,7 @@ public class ModuleWebControllerAspect {
 
                                 tempList.addAll(variableResolverList);
 
-                                variableInjector.injectByVariableResolvers(param, tempList);
+                                variableInjector.injectValues(param, tempList);
                             });
 
                 });
