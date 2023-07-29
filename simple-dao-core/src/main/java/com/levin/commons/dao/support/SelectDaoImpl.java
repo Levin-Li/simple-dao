@@ -1217,7 +1217,7 @@ public class SelectDaoImpl<T>
             return find();
         }
 
-        return find(targetType, 2);
+        return find(targetType, 3);
     }
 
     /**

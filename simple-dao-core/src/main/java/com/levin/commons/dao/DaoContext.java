@@ -123,6 +123,10 @@ public abstract class DaoContext {
         return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
     }
 
+    public static ValueHolder<Object> injectValue(Object targetBean, Field field, Object... varSourceBeans) {
+        return getVariableInjector().injectValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
+    }
+
     /**
      * 获取上下文
      *

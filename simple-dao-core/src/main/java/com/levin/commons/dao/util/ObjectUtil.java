@@ -752,9 +752,9 @@ public abstract class ObjectUtil {
 
         if (maxCopyDeep > 0
                 && invokeDeep > maxCopyDeep) {
-            //如果超出拷贝层数，买家返回Null
-            return null;
-            //   throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
+            //如果超出拷贝层数，返回Null
+            // return null;
+            throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
         }
 ///////////////////////////////////////////////////////////////
 
@@ -992,10 +992,10 @@ public abstract class ObjectUtil {
                 //如果是注入变量
                 if (daoInjectAttrList.contains(field.getName())) {
 
-                    ValueHolder<Object> injectValue = DaoContext.getInjectValue(target, field, source);
+                    ValueHolder<Object> injectValue = DaoContext.injectValue(target, field, source);
 
-                    //可能抛出异常
-                    value = injectValue.get();
+                    //下一个字段
+                    continue;
 
                 } else {
                     value = getIndexValue(source, propertyName);
