@@ -431,7 +431,7 @@ public abstract class ObjectUtil {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, ? super Object>... contexts) {
+    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, Object>... contexts) {
         return ExprUtils.evalSpEL(rootObject, expression, contexts != null ? Arrays.asList(contexts) : Collections.emptyList());
     }
 

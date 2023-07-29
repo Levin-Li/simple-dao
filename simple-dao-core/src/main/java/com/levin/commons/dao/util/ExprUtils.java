@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 import cn.hutool.core.date.DateUtil;
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
@@ -12,6 +13,7 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.service.support.SpringContextHolder;
+import com.levin.commons.utils.ExpressionUtils;
 import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.expression.BeanFactoryResolver;
@@ -66,7 +68,7 @@ public abstract class ExprUtils {
     /**
      * 线程安全的解析器
      */
-    private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+//    private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -752,22 +754,20 @@ public abstract class ExprUtils {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, List<Map<String, ? extends Object>> contexts) {
+    public static <T> T evalSpEL(Object rootObject, String expression, List<Map<String, ?>> contexts) {
 
-        final StandardEvaluationContext ctx = new StandardEvaluationContext(rootObject);
-
-        Optional.ofNullable(contexts).ifPresent(
-                maps -> {
-                    maps.stream().filter(Objects::nonNull)
-                            .forEachOrdered(map -> (ctx).setVariables((Map<String, Object>) map));
-                }
-        );
-
-        if (SpringContextHolder.getBeanFactory() != null) {
-            ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+        if (contexts == null) {
+            contexts = Arrays.asList(DaoContext.getThreadContext(), DaoContext.getGlobalContext());
         }
 
-        return (T) spelExpressionParser.parseExpression(expression).getValue(ctx);
+        //类型转换
+        final Object temp = contexts;
+
+        return ExpressionUtils.evalSpEL(rootObject, expression, ctx -> {
+            if (SpringContextHolder.getBeanFactory() != null) {
+                ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+            }
+        }, (List<Map<String, Object>>) temp);
 
     }
 

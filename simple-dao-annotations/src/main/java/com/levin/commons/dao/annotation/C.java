@@ -52,6 +52,8 @@ public @interface C {
     /**
      * 首先不是 NUll 对象 ，也不是空字符串
      * 如果是数组或是集合或是 Map 也不是空
+     * <p>
+     * 也可以使用函数：isEmpty  和 isNotEmpty
      */
     String VALUE_EMPTY = "VALUE_EMPTY";
 
@@ -78,7 +80,7 @@ public @interface C {
      * <p>
      * 如：
      * F$:u.userId
-     *
+     * <p>
      * 原生查询 --->   u.user_id
      * JPA查询 --->   u.userId
      */
