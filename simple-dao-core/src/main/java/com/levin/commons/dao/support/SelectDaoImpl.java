@@ -1009,7 +1009,7 @@ public class SelectDaoImpl<T>
             if (isNative()) {
                 builder.insert(0, "Select 1");
             }
-        } else if (selectColumns.length() > 0) {
+        } else if (selectColumns.isNotEmpty()) {
             builder.insert(0, "Select " + selectColumns);
         } else if (isNative()) {
             builder.append("Select *");
@@ -1038,7 +1038,7 @@ public class SelectDaoImpl<T>
         builder.append(" ").append(whereStatement);
 
         //如果GroupBy子句有内容，Having子句才有效，则否Having中的条件将被忽略
-        if (groupByColumns.length() > 0) {
+        if (groupByColumns.isNotEmpty()) {
 
             builder.append(" Group By  " + groupByColumns);
 
@@ -1055,11 +1055,36 @@ public class SelectDaoImpl<T>
         //如果只是统计总数，则不把排序语句加入，可以提升速度
         if (!isCountQueryResult) {
             //以下代理是处理排序语句
-            if (orderByColumns.length() > 0) {
+            if (orderByColumns.isNotEmpty()) {
                 //按升序排序，从小到大
                 Collections.sort(orderByColumns.getList());
+
+                //@TODO 分组统计语句，自动去除非法的排序字段
+                if (groupByColumns.isNotEmpty()) {
+
+                    List<OrderByObj> orderByQL = orderByColumns.getList().stream()
+                            .filter(Objects::nonNull)
+                            .filter(orderByObj -> StringUtils.hasText(orderByObj.orderByStatement))
+                            .filter(orderByObj ->
+                                    //分组语句中包含，可能不精准
+                                    groupByColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
+
+                                            //选择语句中包含，可能不精准
+                                            || selectColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
+                            )
+                            .collect(Collectors.toList());
+
+                    //清除并从新加入
+                    orderByColumns.clear().getList().addAll(orderByQL);
+
+                }
+
                 builder.append(" Order By  " + orderByColumns);
-            } else if (defaultOrderByStatement.length() > 0) {
+
+            } else if (defaultOrderByStatement.length() > 0
+                    && groupByColumns.isEmpty()) {
+
+                //groupBy 不能加入默认
                 //加入默认排序语句
                 builder.append(" Order By  " + defaultOrderByStatement);
             }
