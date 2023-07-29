@@ -2,6 +2,7 @@ package ${modulePackageName}.controller;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.rbac.*;
+import com.levin.commons.utils.*;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  * @author lilw
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
+ *
  */
 @Slf4j
 //默认需要权限访问
@@ -51,8 +52,7 @@ public abstract class BaseController {
         return ModuleOption.ID;
     }
     protected boolean isNotEmpty(Object value) {
-        return value != null
-                && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
+        return ExpressionUtils.isNotEmpty(value);
     }
     protected <T> T getSelfProxy(Class<T> type) {
 

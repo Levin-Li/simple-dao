@@ -68,9 +68,9 @@ public class ${className} extends ${reqExtendClass}{
 
     //@Ignore
     @Schema(title = "排序方向")
-    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "isNotEmpty(orderBy) && isNotEmpty(orderDir)", remark = "生成排序表达式")
+    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "#isNotEmpty(orderBy) && #isNotEmpty(orderDir)", remark = "生成排序表达式")
 <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-    @OrderBy(value = ${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "isEmpty(orderBy) || isEmpty(orderDir)", order = Integer.MAX_VALUE, desc = "默认按时间排序")
+    @OrderBy(value = ${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "#isEmpty(orderBy) || #isEmpty(orderDir)", order = Integer.MAX_VALUE, desc = "默认按时间排序")
 </#if>
     OrderBy.Type orderDir;
 

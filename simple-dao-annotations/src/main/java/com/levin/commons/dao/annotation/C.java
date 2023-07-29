@@ -53,7 +53,7 @@ public @interface C {
      * 首先不是 NUll 对象 ，也不是空字符串
      * 如果是数组或是集合或是 Map 也不是空
      * <p>
-     * 也可以使用函数：isEmpty  和 isNotEmpty
+     * 也可以使用函数：#isEmpty  和 #isNotEmpty
      */
     String VALUE_EMPTY = "VALUE_EMPTY";
 
