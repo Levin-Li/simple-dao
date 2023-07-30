@@ -368,8 +368,38 @@ public final class ServiceModelCodeGenerator {
         Arrays.asList("ModuleStarterConfiguration"
         ).forEach(className -> genJavaFile(starterDir, "", className, params));
 
-        genFileByTemplate("spring.factories.ftl", params, starterDir + File.separator + ".."
-                + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+        simpleGen("starter/resources/META-INF/spring.factories.ftl", params, mavenProject);
+        simpleGen("starter/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports", params, mavenProject);
+    }
+
+    public static void simpleGen(final String templatePath, Map<String, Object> params, MavenProject mavenProject) throws Exception {
+
+        int idx = templatePath.indexOf("/");
+
+        String targetDir = null;
+        if (idx != -1) {
+            targetDir = ServiceModelCodeGenerator.dirMap().get(templatePath.substring(0, idx).trim());
+        }
+
+        String filePath = templatePath;
+
+        //如果没有目录
+        if (StringUtils.hasText(targetDir)) {
+            //默认这个值是Java源码的值，项目目录在上一级
+            filePath = targetDir + "/../" + filePath.substring(idx + 1);
+        } else {
+            //默认路径
+            filePath = mavenProject.getBasedir().getCanonicalPath() + "/" + filePath;
+        }
+
+        if (filePath.endsWith(".ftl")) {
+            filePath = filePath.substring(0, filePath.length() - 4);
+        }
+
+        //转换成本地路径
+        filePath = filePath.replace("/", File.separator);
+
+        genFileByTemplate(templatePath, params, filePath);
 
     }
 
@@ -691,6 +721,15 @@ public final class ServiceModelCodeGenerator {
     }
 
     ///////////////////////////////////////////////////
+
+    public static Map<String, String> dirMap(Map<String, String> newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static Map<String, String> dirMap() {
+        return getThreadVar(Collections.emptyMap());
+    }
+
     public static Boolean splitDir(boolean newValue) {
         return putThreadVar(newValue);
     }
