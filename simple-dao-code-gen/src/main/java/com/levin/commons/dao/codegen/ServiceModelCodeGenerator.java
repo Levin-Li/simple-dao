@@ -1242,7 +1242,7 @@ public final class ServiceModelCodeGenerator {
                 }
 
             } else {
-                logger.warn("目标文件：" + path + " 已经存在，但没有发现生成关键字<{}>, {}, 将被忽略。", prefix, startIdx);
+                logger.warn("目标文件：" + path + " 已经存在，但没有发现生成关键字<<<{}>>>, {}, 将被忽略。", prefix, startIdx);
             }
 
             if (skip) {
