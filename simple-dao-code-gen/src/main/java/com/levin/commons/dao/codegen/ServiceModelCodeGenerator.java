@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.google.googlejavaformat.java.FormatterException;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
@@ -1264,9 +1265,13 @@ public final class ServiceModelCodeGenerator {
 
         if (fileName.endsWith(".java")) {
             //如果是Java类文件，自动格式化
-            fileContent = new com.google.googlejavaformat.java.Formatter(
-                    JavaFormatterOptions.builder().style(JavaFormatterOptions.Style.AOSP).build()
-            ).formatSource(fileContent);
+            try {
+                fileContent = new com.google.googlejavaformat.java.Formatter(
+                        JavaFormatterOptions.builder().style(JavaFormatterOptions.Style.AOSP).build()
+                ).formatSource(fileContent);
+            } catch (Exception e) {
+                logger.warn("无法格式化生成的代码，" + path);
+            }
         }
 
         int startIdx = fileContent.indexOf(prefix);

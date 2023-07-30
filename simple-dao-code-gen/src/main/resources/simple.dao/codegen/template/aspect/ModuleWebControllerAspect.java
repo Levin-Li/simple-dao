@@ -120,8 +120,6 @@ public class ModuleWebControllerAspect {
      */
     private List<VariableResolver> getModuleResolverList(JoinPoint joinPoint) {
 
-        Assert.isTrue(isInit, "系统初始化还未完成");
-
         Signature signature = joinPoint.getSignature();
 
         final String className = signature.getDeclaringTypeName();
