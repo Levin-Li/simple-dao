@@ -275,6 +275,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.dirMap(
                     MapUtil.builder("services", serviceDir)
                             .put("starter", starterDir)
+                            .put("admin-ui", adminUiDir)
                             .put("api", controllerDir)
                             .put("bootstrap", bootstrapDir)
                             .put("services-impl", serviceImplDir)
