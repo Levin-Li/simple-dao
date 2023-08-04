@@ -8,6 +8,12 @@ spring:
     #允许Spring Bean循环应用
     allow-circular-references: true
 
+  #文件上传限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
   cache:
     type: redis
 

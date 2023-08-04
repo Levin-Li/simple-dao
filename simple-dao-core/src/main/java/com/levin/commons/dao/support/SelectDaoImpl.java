@@ -48,15 +48,15 @@ public class SelectDaoImpl<T>
 
     private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
 
-    //选择
-    final SimpleList<String> selectColumns = new SimpleList<>(true, new ArrayList(5), DELIMITER);
+    //选择，不允许重复
+    final SimpleList<String> selectColumns = new SimpleList<>(false, new ArrayList(5), DELIMITER);
 
     final Map<String, Object[/* 实体属性名，DTO 对象字段或方法 */]> selectColumnsMap = new LinkedHashMap<>(7);
 
     final List selectParamValues = new ArrayList(7);
 
     //GroupBy 自动忽略重复字符
-    final SimpleList<String> groupByColumns = new SimpleList<>(false, new ArrayList(5), DELIMITER);
+    final SimpleList<String> groupByColumns = new SimpleList<>(true, new ArrayList(5), DELIMITER);
 
     final List groupByParamValues = new ArrayList(5);
 
@@ -1003,7 +1003,6 @@ public class SelectDaoImpl<T>
         final StringBuilder builder = new StringBuilder();
 
         //目前如果没有要选择字段，不会加入select 子句
-
         if (isCountQueryResult) {
             //count 语句
             if (isNative()) {
@@ -1079,7 +1078,9 @@ public class SelectDaoImpl<T>
 
                 }
 
-                builder.append(" Order By  " + orderByColumns);
+                if (orderByColumns.isNotEmpty()) {
+                    builder.append(" Order By  " + orderByColumns);
+                }
 
             } else if (defaultOrderByStatement.length() > 0
                     && groupByColumns.isEmpty()) {
@@ -1259,16 +1260,12 @@ public class SelectDaoImpl<T>
             return find();
         }
 
-//        if (targetType == null) {
-//            throw new IllegalArgumentException("targetType is null");
-//        }
-
         autoSetFetch(targetType);
 
         // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
 
-        if (selectColumnsMap.size() == 0) {
-
+        if (selectColumnsMap.isEmpty()
+                && selectColumns.isEmpty()) {
         }
 
         List<E> queryResultList = this.findForResultClass(null);

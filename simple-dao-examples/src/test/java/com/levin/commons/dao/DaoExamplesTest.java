@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -416,10 +417,12 @@ public class DaoExamplesTest {
         System.out.println(byQueryObj);
 
 
+
     }
 
     @Test
     public void testFieldConvert() {
+
 
 
         User user = dao.find(User.class, 1L);
