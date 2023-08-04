@@ -211,7 +211,8 @@ public class SelectDaoImpl<T>
     @Override
     public SelectDao<T> join(Boolean isAppend, String... joinStatements) {
 
-        if (Boolean.TRUE.equals(isAppend) && joinStatements != null) {
+        if (Boolean.TRUE.equals(isAppend)
+                && joinStatements != null) {
 
             for (String statement : joinStatements) {
                 if (hasText(statement)) {
@@ -1265,7 +1266,11 @@ public class SelectDaoImpl<T>
         // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
 
         if (selectColumnsMap.isEmpty()
-                && selectColumns.isEmpty()) {
+                && selectColumns.isEmpty()
+                && isNative()) {
+
+            //加入选择条件
+            appendByQueryObj(targetType);
         }
 
         List<E> queryResultList = this.findForResultClass(null);
