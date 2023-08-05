@@ -7,6 +7,7 @@ import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
+import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public abstract class ObjectUtil {
 
     public static final ThreadLocal<List<Predicate<String>>> fetchPropertiesFilters = new ThreadLocal<>();
 
-    public static final ThreadLocal<VariableInjector> variableInjector = new ThreadLocal<>();
+    public static final ThreadLocal<VariableInjector> VARIABLE_INJECTOR_THREAD_LOCAL = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -987,16 +988,26 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
+                final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
+
                 Object value = null;
 
                 //如果是注入变量
-                if (daoInjectAttrList.contains(field.getName())) {
+                if (variableInjector != null
+                        && daoInjectAttrList.contains(field.getName())) {
 
-                    ValueHolder<Object> injectValue = DaoContext.injectValue(target, field, source);
+                    InjectVar injectVar = field.getAnnotation(InjectVar.class);
+
+                    //如果是dao
+                    if (DaoContext.getVariableInjector().getInjectDomain().equals(injectVar.domain())) {
+
+                        ValueHolder<Object> injectValue = DaoContext.injectValue(target, field, source);
+                    } else {
+                        ValueHolder<Object> injectValue = variableInjector.injectValue(target, field, VariableInjector.newResolverByBean(source));
+                    }
 
                     //下一个字段
                     continue;
-
                 } else {
                     value = getIndexValue(source, propertyName);
                     value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);

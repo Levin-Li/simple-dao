@@ -72,6 +72,10 @@ public abstract class DaoContext {
         return threadContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
     }
 
+    public static VariableInjector getCurrentThreadVarInjector() {
+        return threadContext.get(VARIABLE_INJECTOR_KEY);
+    }
+
     public static VariableInjector setCurrentThreadVar(String key, Object value) {
         return threadContext.put(key, value);
     }

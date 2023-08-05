@@ -1435,11 +1435,11 @@ public class SelectDaoImpl<T>
 
     public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
-            ObjectUtil.variableInjector.set(DaoContext.getVariableInjector());
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(DaoContext.getVariableInjector());
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
             return dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
-            ObjectUtil.variableInjector.set(null);
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(null);
             ObjectUtil.fetchPropertiesFilters.set(null);
         }
     }

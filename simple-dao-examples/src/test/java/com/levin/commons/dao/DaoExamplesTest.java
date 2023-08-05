@@ -509,7 +509,8 @@ public class DaoExamplesTest {
 
         System.out.println(byQueryObj);
 
-        String ql = new Case().column("status")
+        String ql = new Case()
+                .column("status")
                 .when("'A'", "0")
                 .when("'B'", "1")
                 .elseExpr("2")
