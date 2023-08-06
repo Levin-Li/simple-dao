@@ -13,13 +13,18 @@ import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
 import com.levin.commons.dao.repository.UserDao;
-import com.levin.commons.dao.service.UserService;
-import com.levin.commons.dao.service.dto.QueryUserEvt;
-import com.levin.commons.dao.service.dto.UserInfo;
-import com.levin.commons.dao.service.dto.UserUpdateEvt;
+import com.levin.commons.dao.services.UserService;
+import com.levin.commons.dao.services.dto.QueryUserEvt;
+import com.levin.commons.dao.services.dto.UserInfo;
+import com.levin.commons.dao.services.dto.UserUpdateEvt;
+import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
+import com.levin.commons.dao.services.testrole.req.CreateTestRoleReq;
+import com.levin.commons.dao.services.testrole.req.QueryTestRoleReq;
+import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
 import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
+import com.levin.commons.dao.services.testorg.req.UpdateTestOrgReq;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
@@ -35,7 +40,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -417,12 +421,10 @@ public class DaoExamplesTest {
         System.out.println(byQueryObj);
 
 
-
     }
 
     @Test
     public void testFieldConvert() {
-
 
 
         User user = dao.find(User.class, 1L);
@@ -518,6 +520,31 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testInjectForUpdate() {
+
+        TestRole role = dao.create(new CreateTestRoleReq()
+                .setCode("R_SA")
+                .setName("TestRole1")
+                .setAssignedOrgIdList(Arrays.asList("1", "2", "3"))
+                .setOrgDataScope(TestRole.OrgDataScope.Assigned)
+                .setPermissionList(Arrays.asList("P1", "P2", "p3"))
+        );
+
+
+        TestRoleInfo info = dao.findUnique(new QueryTestRoleReq().setId(role.getId()));
+
+
+        int i = dao.updateByQueryObj(new UpdateTestRoleReq().setId(info.getId())
+                .setPermissionList(Arrays.asList("P4", "P5", "P6")));
+
+        Assert.isTrue(i == 1, "更新失败");
+
+        info = dao.findUnique(new QueryTestRoleReq().setId(role.getId()));
+
+        Assert.isTrue(info.getPermissionList().contains("P5"), "dddd");
+
+    }
 
     @Test
     public void testJoinAndStat() {

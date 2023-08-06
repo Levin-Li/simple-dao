@@ -1,4 +1,4 @@
-package com.levin.commons.dao.service.dto;
+package com.levin.commons.dao.services.dto;
 
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.domain.User;

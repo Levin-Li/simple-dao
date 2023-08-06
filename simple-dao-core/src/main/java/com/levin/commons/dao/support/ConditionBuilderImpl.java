@@ -1430,7 +1430,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 processCtxVar(queryValueObj, fields);
             }
 
-            List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getContexts(queryValueObj);
+            List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getDaoContexts(queryValueObj);
 
             final String pkgStartsWith = BASE_PACKAGE_NAME + ".";
 
@@ -1466,7 +1466,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                         //处理注入值
                         com.levin.commons.service.support.ValueHolder<Object> valueHolder =
-                                field.isAnnotationPresent(InjectVar.class) ? dao.getOutputValue(queryValueObj, field, contexts) : null;
+                                field.isAnnotationPresent(InjectVar.class) ?
+                                        DaoContext.getVariableInjector().getOutputValueByBean(queryValueObj, field, contexts) : null;
 
                         if (valueHolder != null) {
 

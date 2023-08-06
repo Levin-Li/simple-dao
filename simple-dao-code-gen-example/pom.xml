@@ -335,10 +335,12 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${project.version}</version>
-
                 <configuration>
                     <skip>${simple-dao-codegen.skip}</skip>
                     <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
+                    <ignoreEntities>
+                        <entity>QQQ</entity>
+                    </ignoreEntities>
                 </configuration>
 
                 <dependencies>

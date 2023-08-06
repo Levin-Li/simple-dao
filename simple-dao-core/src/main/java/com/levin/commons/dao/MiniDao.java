@@ -5,7 +5,6 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ValueHolder;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 public interface MiniDao extends DeepCopier {
@@ -147,27 +146,6 @@ public interface MiniDao extends DeepCopier {
      */
     default DeepCopier getDeepCopier() {
         return this;
-    }
-
-    /**
-     * 注入变量
-     *
-     * @param targetBean
-     * @param varSourceBeans
-     * @return
-     */
-    default List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
-        return DaoContext.injectVars(targetBean, varSourceBeans);
-    }
-
-    /**
-     * 注入变量
-     *
-     * @param targetBean
-     * @return
-     */
-    default ValueHolder<Object> getOutputValue(Object targetBean, Field field, List<?> contexts) {
-        return DaoContext.getOutputValue(targetBean, field, contexts);
     }
 
     /**

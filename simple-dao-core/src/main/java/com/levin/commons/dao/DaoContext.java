@@ -91,24 +91,13 @@ public abstract class DaoContext {
      * @param varSourceBeans 变量来源，注意顺序
      * @return
      */
-    public static List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
+    public static List<ValueHolder<Object>> injectValues(Object targetBean, Object... varSourceBeans) {
 
         if (targetBean == null) {
             return Collections.emptyList();
         }
 
-        return getVariableInjector().injectByBean(targetBean, getContexts(varSourceBeans));
-    }
-
-    /**
-     * 从变量来源注入变量到目标变量中
-     *
-     * @param targetBean
-     * @param contexts   变量来源，注意顺序
-     * @return
-     */
-    public static ValueHolder<Object> getOutputValue(Object targetBean, Field field, List<?> contexts) {
-        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> contexts));
+        return getVariableInjector().injectByBean(targetBean, getDaoContexts(varSourceBeans));
     }
 
     /**
@@ -120,15 +109,19 @@ public abstract class DaoContext {
      * @return
      */
     public static ValueHolder<Object> getOutputValue(Object targetBean, Field field, Object... varSourceBeans) {
-        return getVariableInjector().getOutputValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
+        return getVariableInjector().getOutputValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
     }
 
     public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, Object... varSourceBeans) {
-        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
+        return getVariableInjector().getInjectValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
     }
 
     public static ValueHolder<Object> injectValue(Object targetBean, Field field, Object... varSourceBeans) {
-        return getVariableInjector().injectValue(targetBean, field, VariableInjector.newResolverByBean(() -> getContexts(varSourceBeans)));
+        return getVariableInjector().injectValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
+    }
+
+    public static List<?> getDaoContexts(Object... varSourceBeans) {
+        return getDaoContexts(Arrays.asList(varSourceBeans));
     }
 
     /**
@@ -137,14 +130,14 @@ public abstract class DaoContext {
      * @param varSourceBeans
      * @return
      */
-    public static List<?> getContexts(Object... varSourceBeans) {
+    public static List<?> getDaoContexts(List<Object> varSourceBeans) {
 
         // Assert.notNull(varSourceBeans, "varSourceBeans is null");
 
         List<Object> contexts = new ArrayList<>(5);
 
-        if (varSourceBeans != null && varSourceBeans.length > 0) {
-            contexts.addAll(Arrays.asList(varSourceBeans));
+        if (varSourceBeans != null && varSourceBeans.size() > 0) {
+            contexts.addAll(varSourceBeans);
         }
 
         //加上线程

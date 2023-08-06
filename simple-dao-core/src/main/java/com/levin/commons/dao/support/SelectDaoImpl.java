@@ -1365,7 +1365,7 @@ public class SelectDaoImpl<T>
         if (daoInjectAttrs != null
                 && daoInjectAttrs.length > 0) {
             //注入变量
-            getDao().injectVars(e, data, getContext());
+            DaoContext.injectValues(e, data, getContext());
         }
 
         //属性属性拷贝后，进行初始化
@@ -1435,11 +1435,9 @@ public class SelectDaoImpl<T>
 
     public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
-            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(DaoContext.getVariableInjector());
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
             return dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
-            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(null);
             ObjectUtil.fetchPropertiesFilters.set(null);
         }
     }

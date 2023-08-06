@@ -594,8 +594,7 @@ public class JpaDaoImpl
         if (daoInjectAttrs != null
                 && daoInjectAttrs.length > 0) {
             //3、注入变量,需要注入的变量
-            injectVars(entityOrDto, old);
-            // getDao().injectVars(entityOrDto, old, getContext());
+            DaoContext.injectValues(entityOrDto, old);
         }
 
         //新对象初始化参数

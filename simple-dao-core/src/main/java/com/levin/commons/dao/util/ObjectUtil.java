@@ -988,24 +988,24 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
-                final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
 
                 Object value = null;
 
+                final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
+
+                InjectVar injectVar = field.getAnnotation(InjectVar.class);
+
                 //如果是注入变量
-                if (variableInjector != null
-                        && daoInjectAttrList.contains(field.getName())) {
+                if (injectVar != null
+                        && variableInjector != null
+                        && variableInjector.isDomainMatch(injectVar.domain())) {
 
-                    InjectVar injectVar = field.getAnnotation(InjectVar.class);
+                    variableInjector.injectValueByBean(target, field, source);
 
+                    continue;
+                } else if (daoInjectAttrList.contains(field.getName())) {
                     //如果是dao
-                    if (DaoContext.getVariableInjector().getInjectDomain().equals(injectVar.domain())) {
-
-                        ValueHolder<Object> injectValue = DaoContext.injectValue(target, field, source);
-                    } else {
-                        ValueHolder<Object> injectValue = variableInjector.injectValue(target, field, VariableInjector.newResolverByBean(source));
-                    }
-
+                    DaoContext.injectValue(target, field, source);
                     //下一个字段
                     continue;
                 } else {

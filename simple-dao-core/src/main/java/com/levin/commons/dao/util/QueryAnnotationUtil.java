@@ -17,6 +17,7 @@ import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.Locker;
+import com.levin.commons.service.support.VariableInjector;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,7 +175,9 @@ public abstract class QueryAnnotationUtil {
      */
     public static String[] getDaoInjectAttrs(final Class entityClass) {
 
-        final String injectDomain = DaoContext.getVariableInjector().getInjectDomain();
+        final VariableInjector variableInjector = DaoContext.getVariableInjector();
+
+        final String injectDomain = variableInjector.getInjectDomain();
 
         String[] injectAttrs = entityInjectAttrNames.computeIfAbsent(entityClass.getName() + ":" + injectDomain, (key) -> {
 
@@ -185,7 +188,7 @@ public abstract class QueryAnnotationUtil {
                         attrs.add(field.getName());
                     }
                     , field -> field.isAnnotationPresent(InjectVar.class)
-                            && injectDomain.equals(field.getAnnotation(InjectVar.class).domain())
+                            && variableInjector.isDomainMatch(field.getAnnotation(InjectVar.class).domain())
             );
 
             return (String[]) attrs.toArray(new String[attrs.size()]);
