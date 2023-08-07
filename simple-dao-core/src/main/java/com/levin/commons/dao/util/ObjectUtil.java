@@ -993,12 +993,9 @@ public abstract class ObjectUtil {
 
                 final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
 
-                InjectVar injectVar = field.getAnnotation(InjectVar.class);
-
                 //如果是注入变量
-                if (injectVar != null
-                        && variableInjector != null
-                        && variableInjector.isDomainMatch(injectVar.domain())) {
+                if (variableInjector != null
+                        && variableInjector.isDomainMatch(field)) {
 
                     variableInjector.injectValueByBean(target, field, source);
 
