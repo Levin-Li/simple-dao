@@ -1,5 +1,7 @@
 package com.levin.commons.dao;
 
+import cn.hutool.core.map.MapUtil;
+import com.google.gson.Gson;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -7,6 +9,7 @@ import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.dto.task.CreateTask;
 import com.levin.commons.dao.dto.task.QueryTaskReq;
 import com.levin.commons.dao.dto.task.TaskInfo;
+import com.levin.commons.dao.inject.InjectTestObj;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
@@ -26,8 +29,10 @@ import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.dao.services.testorg.req.UpdateTestOrgReq;
 import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
+import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -1760,7 +1765,7 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testCtxVarQuery() throws Exception {
+    public void testCtxVarAndFetch() throws Exception {
 
         CtxVarTestReq req = new CtxVarTestReq();
 
@@ -1777,6 +1782,38 @@ public class DaoExamplesTest {
         Assert.isTrue(ok, "CtxVar err");
     }
 
+
+    @Test
+    public void testObjectUtils() {
+
+        String n = "" + System.currentTimeMillis();
+
+        List<InjectTestObj.QResult> list = Arrays.asList(
+                new InjectTestObj.QResult().setName(n),
+                new InjectTestObj.QResult().setName("2")
+        );
+
+        String json = new Gson().toJson(list);
+
+        Map<String, String> build = MapUtil.builder("product_infos", json).build();
+
+        InjectTestObj testObj = new InjectTestObj();
+
+        try {
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(DaoContext.getVariableInjector());
+            ObjectUtil.copyProperties(build, testObj, -1);
+        } finally {
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(null);
+        }
+
+        Assert.notNull(testObj.getProduct_infos());
+
+        Assert.isTrue(testObj.getProduct_infos().get(0).getName().equals(n));
+
+
+
+
+    }
 
     @Test
     public void testQueryFrom2() throws Exception {

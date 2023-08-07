@@ -144,6 +144,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     private static final ThreadLocal<BiFunction<String, Map<String, Object>[], Object>> elEvalFuncThreadLocal = new ThreadLocal<>();
 
+
+    private final List<Class<?>> walkClasses = new ArrayList<>(5);
+
     protected ConditionBuilderImpl(MiniDao miniDao, boolean isNative) {
 
         dao = miniDao;
@@ -1334,6 +1337,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //转换为List
         List<Object> queryObjList = filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)));
 
+        queryObjList = queryObjList.stream()
+                .filter(obj -> !walkClasses.contains(obj))
+                .collect(Collectors.toList());
+
         if (queryObjList.isEmpty()) {
             return;
         }
@@ -1419,6 +1426,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     walkMap("", (Map) queryValueObj);
                     continue;
                 }
+            } else {
+                walkClasses.add(typeClass);
             }
 
             //关键方法，必须保证返回的顺序是，父类字段优先出现，然后才是子类的字段

@@ -25,7 +25,9 @@ public class UserJoinFetchDTO {
     @Fetch(domain = E_User.ALIAS, value = "group.name")
     String groupName;
 
+    @Fetch(domain = E_User.ALIAS, value = "group")
+    GroupInfo groupInfo;
+
     @Fetch
     String name;
-
 }

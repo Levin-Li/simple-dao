@@ -1446,6 +1446,7 @@ public class JpaDaoImpl
 
         if (hasSelectAnnotationField && !hasType(resultType, queryObjs)) {
             selectDao = newDao(SelectDao.class, queryObjs, resultType);
+//            selectDao = newDao(SelectDao.class, queryObjs);
         } else {
             selectDao = newDao(SelectDao.class, queryObjs);
         }
@@ -1517,6 +1518,7 @@ public class JpaDaoImpl
 
         if (hasSelectStatementField && !hasType(resultType, queryObjs)) {
             return (E) newDao(SelectDao.class, queryObjs, resultType).findOne(isExpectUnique, resultType);
+//            return (E) newDao(SelectDao.class, queryObjs).findOne(isExpectUnique, resultType);
         }
 
         return (E) newDao(SelectDao.class, queryObjs).findOne(isExpectUnique, resultType);

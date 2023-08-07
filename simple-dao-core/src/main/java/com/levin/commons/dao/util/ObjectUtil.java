@@ -7,8 +7,6 @@ import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
-import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -914,7 +912,7 @@ public abstract class ObjectUtil {
 
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(target.getClass());
 
-        List<String> daoInjectAttrList = daoInjectAttrs != null ? Arrays.asList(daoInjectAttrs) : Collections.emptyList();
+        //List<String> daoInjectAttrList = daoInjectAttrs != null ? Arrays.asList(daoInjectAttrs) : Collections.emptyList();
 
         //按字段复制
         for (Field field : fieldList) {
@@ -988,7 +986,6 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
-
                 Object value = null;
 
                 final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
@@ -996,14 +993,7 @@ public abstract class ObjectUtil {
                 //如果是注入变量
                 if (variableInjector != null
                         && variableInjector.isDomainMatch(field)) {
-
                     variableInjector.injectValueByBean(target, field, source);
-
-                    continue;
-                } else if (daoInjectAttrList.contains(field.getName())) {
-                    //如果是dao
-                    DaoContext.injectValue(target, field, source);
-                    //下一个字段
                     continue;
                 } else {
                     value = getIndexValue(source, propertyName);

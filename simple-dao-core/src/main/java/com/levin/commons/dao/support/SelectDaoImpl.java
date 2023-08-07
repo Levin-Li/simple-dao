@@ -388,10 +388,10 @@ public class SelectDaoImpl<T>
 
     @Override
     public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
-        return joinFetch(false, null, joinType, setAttrs);
+        return joinFetch(null, null, joinType, setAttrs);
     }
 
-    protected SelectDao<T> joinFetch(boolean isAppendToSelect, String domain, Fetch.JoinType joinType, String... setAttrs) {
+    protected SelectDao<T> joinFetch(Object fieldOrMethodOrName, String domain, Fetch.JoinType joinType, String... setAttrs) {
 
         //仅对 JPA dao 有效
         if ((dao != null && !dao.isJpa()) || setAttrs == null || setAttrs.length < 1) {
@@ -406,11 +406,16 @@ public class SelectDaoImpl<T>
             joinType = Fetch.JoinType.Inner;
         }
 
+        if (!hasText(domain)) {
+        }
+
         for (String attr : setAttrs) {
 
             if (!hasText(attr)) {
                 continue;
             }
+
+            final String selectExpr = aroundColumnPrefix(domain, attr);
 
             if (hasText(domain) && !domain.equalsIgnoreCase(getAlias())) {
                 attr = getExprForJpaJoinFetch(aliasMap.get(domain), domain, attr);
@@ -424,6 +429,29 @@ public class SelectDaoImpl<T>
             }
 
             attr = aroundColumnPrefix(domain, attr);
+
+            if (fieldOrMethodOrName != null) {
+
+                String columnAlias = "";
+
+                Object fieldOrMethod = null;
+
+                if (fieldOrMethodOrName instanceof CharSequence) {
+                    columnAlias = fieldOrMethodOrName.toString();
+                } else if (fieldOrMethodOrName instanceof Field) {
+                    columnAlias = ((Field) fieldOrMethodOrName).getName();
+                    fieldOrMethod = fieldOrMethodOrName;
+                } else if (fieldOrMethodOrName instanceof Method) {
+                    columnAlias = ((Method) fieldOrMethodOrName).getName();
+                    fieldOrMethod = fieldOrMethodOrName;
+                } else {
+                    throw new StatementBuildException("@Fetch(attrs=" + attr + ") on " + fieldOrMethodOrName);
+                }
+
+                select("(" + selectExpr + ") AS " + columnAlias);
+
+                appendColumnMap(selectExpr, columnAlias, fieldOrMethod, columnAlias);
+            }
 
             //如果是相同的字段，会覆盖旧抓取属性
             fetchAttrs.put(attr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + attr);
@@ -630,34 +658,35 @@ public class SelectDaoImpl<T>
      */
     protected void processFetchSetByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
-        if ((opAnnotation instanceof Fetch)) {
-
-            if (isNative()) {
-                logger.warn("native query can't support [Fetch] annotation, it will be ignore");
-                return;
-            }
-
-            Fetch fetch = (Fetch) opAnnotation;
-
-            String domain = evalTextByThreadLocal(fetch.domain());
-
-            if (fetch.isBindToField()
-                    && fetch.joinType() != Fetch.JoinType.None
-                    && fieldOrMethod instanceof Field) {
-
-                String attrName = hasText(fetch.value()) ? fetch.value() : ((Field) fieldOrMethod).getName();
-
-
-                joinFetch(true, domain, fetch.joinType(), attrName);
-
-                attrFetchList.put(((Field) fieldOrMethod).getDeclaringClass().getName() + "|" + attrName, true);
-
-            }
-
-            //增加集合抓取
-            joinFetch(false, domain, fetch.joinType(), fetch.attrs());
-
+        if (!(opAnnotation instanceof Fetch)) {
+            return;
         }
+
+        if (isNative()) {
+            logger.warn("native query can't support [Fetch] annotation, it will be ignore");
+            return;
+        }
+
+        Fetch fetch = (Fetch) opAnnotation;
+
+        String domain = evalTextByThreadLocal(fetch.domain());
+
+        if (fetch.isBindToField()
+                && fetch.joinType() != Fetch.JoinType.None
+                && fieldOrMethod instanceof Field) {
+
+            String attrName = hasText(fetch.value()) ? fetch.value() : ((Field) fieldOrMethod).getName();
+
+            joinFetch(fieldOrMethod, domain, fetch.joinType(), attrName);
+
+            attrFetchList.put(((Field) fieldOrMethod).getDeclaringClass().getName() + "|" + attrName, true);
+
+        }else {
+            joinFetch(null, domain, fetch.joinType(), fetch.value());
+        }
+
+        //增加集合抓取
+        joinFetch(null, domain, fetch.joinType(), fetch.attrs());
 
     }
 
@@ -1175,18 +1204,8 @@ public class SelectDaoImpl<T>
      *
      * @return
      */
-    @Override
-    public <E> List<E> find() {
-        return findForResultClass(null);
-    }
-
-    /**
-     * 获取结果集
-     *
-     * @return
-     */
 //    @Override
-    public <E> List<E> findForResultClass(Class<E> resultClass) {
+    public <E> List<E> findList(Class<E> resultClass) {
 
         if (resultClass == null && hasSelectColumns()) {
             //如果没有指定结果类，又有选择列
@@ -1230,57 +1249,37 @@ public class SelectDaoImpl<T>
         }
     }
 
-
     /**
      * 获取结果集，并转换成指定的对对象
      * 数据转换采用spring智能转换器
      *
-     * @param targetType@return
-     */
-    @Override
-    public <E> List<E> find(Class<E> targetType) {
-
-        if (targetType == null || targetType == Void.class) {
-            return find();
-        }
-
-        return find(targetType, 3);
-    }
-
-    /**
-     * 获取结果集，并转换成指定的对对象
-     * 数据转换采用spring智能转换器
-     *
-     * @param targetType
+     * @param resultType
      * @return
      */
     @Override
-    public <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties) {
+    public <E> List<E> find(Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
 
-        if (targetType == null || targetType == Void.class) {
-            return find();
-        }
+        boolean noResultType = resultType == null || resultType == Void.class;
 
-        autoSetFetch(targetType);
-
-        // //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
-
-        if (selectColumnsMap.isEmpty()
-                && selectColumns.isEmpty()
-                && isNative()) {
-
+        if (!noResultType
+                && selectColumnsMap.isEmpty()
+                && selectColumns.isEmpty()) {
             //加入选择条件
-            appendByQueryObj(targetType);
+            appendByQueryObj(resultType);
         }
 
-        List<E> queryResultList = this.findForResultClass(null);
+        List<E> queryResultList = this.findList(null);
 
         if (queryResultList == null || queryResultList.isEmpty()) {
             return Collections.emptyList();
         }
 
+        if (noResultType) {
+            return queryResultList;
+        }
+
         //如果是已经需要的类型
-        if (targetType.isInstance(queryResultList.get(0))) {
+        if (resultType.isInstance(queryResultList.get(0))) {
             return queryResultList;
         }
 
@@ -1296,7 +1295,7 @@ public class SelectDaoImpl<T>
                 data = new Object[]{data};
             }
 
-            returnList.add(tryConvertData(data, targetType, valueHolder, maxCopyDeep, ignoreProperties));
+            returnList.add(tryConvertData(data, resultType, valueHolder, maxCopyDeep, ignoreProperties));
 
         }
 
@@ -1304,24 +1303,6 @@ public class SelectDaoImpl<T>
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public <E> E findOne(boolean isExpectUnique) {
-
-        setRowCount(isExpectUnique ? 2 : 1);
-
-        List<E> list = find();
-
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-
-        //预期唯一值，但结果超过一条记录
-        if (isExpectUnique && list.size() > 1) {
-            throw new NonUniqueResultException();
-        }
-
-        return list.get(0);
-    }
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -1333,13 +1314,33 @@ public class SelectDaoImpl<T>
     @Override
     public <E> E findOne(boolean isExpectUnique, Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
 
-        E result = findOne(isExpectUnique);
+        boolean notResultType = resultType == null || resultType == Void.class;
 
-        if (resultType == null || resultType == Void.class) {
-            return result;
+        if (!notResultType
+                && selectColumnsMap.isEmpty()
+                && selectColumns.isEmpty()) {
+            //加入选择条件
+            appendByQueryObj(resultType);
         }
 
-        autoSetFetch(resultType);
+        setRowCount(isExpectUnique ? 2 : 1);
+
+        List<E> list = findList(null);
+
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+
+        //预期唯一值，但结果超过一条记录
+        if (isExpectUnique && list.size() > 1) {
+            throw new NonUniqueResultException();
+        }
+
+        E result = list.get(0);
+
+        if (notResultType) {
+            return result;
+        }
 
         return tryConvertData(result, resultType, null, maxCopyDeep, ignoreProperties);
 
@@ -1412,7 +1413,7 @@ public class SelectDaoImpl<T>
 
                     attrFetchList.put(field.getDeclaringClass().getName() + "|" + attrName, true);
 
-                    joinFetch(true, fetch.domain(), fetch.joinType(), attrName);
+                    joinFetch(field, fetch.domain(), fetch.joinType(), attrName);
 
                 }, field -> field.isAnnotationPresent(Fetch.class)
         );
@@ -1435,10 +1436,12 @@ public class SelectDaoImpl<T>
 
     public <E> E copy(Object source, E target, int maxCopyDeep, String... ignoreProperties) {
         try {
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(DaoContext.getVariableInjector());
             ObjectUtil.fetchPropertiesFilters.set(Arrays.asList((key) -> attrFetchList.getOrDefault(key, false)));
             return dao.copy(source, target, maxCopyDeep, ignoreProperties);
         } finally {
             ObjectUtil.fetchPropertiesFilters.set(null);
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(null);
         }
     }
 
@@ -1539,7 +1542,6 @@ public class SelectDaoImpl<T>
 
             Object[] keys = selectColumnsMap.get(expr);
 
-
             String fieldName = (keys != null) ? (String) keys[0] : null;
 
             Object fieldOrMethod = (keys != null) ? keys[1] : null;
@@ -1560,7 +1562,6 @@ public class SelectDaoImpl<T>
                     key = removeAlias((String) fieldOrMethod);
                 }
 
-
                 if (hasText(key)) {
                     aliases.add(key);
                 }
@@ -1576,10 +1577,7 @@ public class SelectDaoImpl<T>
             } else {
                 aliases.add(expr);
             }
-
-
         }
-
 
         return columnNames;
     }

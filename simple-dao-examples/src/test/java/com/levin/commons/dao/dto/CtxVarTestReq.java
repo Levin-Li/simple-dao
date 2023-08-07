@@ -24,7 +24,6 @@ public class CtxVarTestReq implements Serializable {
     String id;
 
     //    @Ignore
-    @Fetch(value = "parent.name", joinType = Fetch.JoinType.Left, isBindToField = false)
     String parentName;
 
 
@@ -42,7 +41,7 @@ public class CtxVarTestReq implements Serializable {
         @Select(condition = "#isQueryName")
         String name;
 
-        @Fetch(value = "parent.name", joinType = Fetch.JoinType.Left)
+        @Fetch(value = "parent.name", isBindToField = false)
         String parentName;
 
     }
