@@ -79,7 +79,7 @@ public class ${className} {
     private ${serviceName} ${serviceName?uncap_first};
 
     @Autowired
-    private Biz${serviceName} biz${serviceName?uncap_first};
+    private Biz${serviceName} biz${serviceName};
 
 <#if pkField?exists>
     private ${pkField.typeName} ${pkField.name};
