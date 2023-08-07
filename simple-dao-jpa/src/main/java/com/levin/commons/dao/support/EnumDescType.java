@@ -7,6 +7,7 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 
 import java.lang.reflect.Field;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 /**
  * 枚举装换
@@ -41,7 +42,6 @@ public class EnumDescType extends EnumType {
 
     }
 
-
     static class MyEnumJavaTypeDescriptor<T extends Enum> extends EnumJavaTypeDescriptor<T> {
         public MyEnumJavaTypeDescriptor(Class<T> type) {
             super(type);
@@ -58,15 +58,24 @@ public class EnumDescType extends EnumType {
         }
 
         @Override
-        public <E extends Enum> E fromOrdinal(Integer relationalForm) {
-
-            Class<T> javaType = getJavaType();
-
-            if (EnumDesc.class.isAssignableFrom(javaType)) {
-                return (E) EnumDesc.parse(javaType, relationalForm);
-            }
-
-            return super.fromOrdinal(relationalForm);
+        public String toName(T domainForm) {
+            return super.toName(domainForm);
         }
+
+        @Override
+        public <E extends Enum> E fromOrdinal(Integer relationalForm) {
+            return (E) EnumDesc.parse(getJavaType(), relationalForm);
+        }
+
+        @Override
+        public T fromName(String relationalForm) {
+            return EnumDesc.parse(getJavaType(), relationalForm);
+        }
+
+        @Override
+        public T fromString(String relationalForm) {
+            return EnumDesc.parse(getJavaType(), relationalForm);
+        }
+
     }
 }

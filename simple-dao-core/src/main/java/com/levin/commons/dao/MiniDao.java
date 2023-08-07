@@ -156,7 +156,7 @@ public interface MiniDao extends DeepCopier {
      * @param varSourceBeans
      * @return
      */
-    default List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+    default List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
         return DaoContext.injectVars(targetBean, varSourceBeans);
     }
 

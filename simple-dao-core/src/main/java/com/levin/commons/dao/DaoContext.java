@@ -90,13 +90,13 @@ public abstract class DaoContext {
      * @param varSourceBeans 变量来源，注意顺序
      * @return
      */
-    public static List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+    public static List<ValueHolder<Object>> injectVars(Object targetBean, Object... varSourceBeans) {
 
         if (targetBean == null) {
             return Collections.emptyList();
         }
 
-        return getVariableInjector().inject(targetBean, getContexts(varSourceBeans));
+        return getVariableInjector().injectByBean(targetBean, getContexts(varSourceBeans));
     }
 
     /**
