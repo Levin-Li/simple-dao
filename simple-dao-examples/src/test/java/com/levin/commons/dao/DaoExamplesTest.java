@@ -1759,6 +1759,24 @@ public class DaoExamplesTest {
         System.out.println("Group E_User:" + n);
     }
 
+    @Test
+    public void testCtxVarQuery() throws Exception {
+
+        CtxVarTestReq req = new CtxVarTestReq();
+
+        List<CtxVarTestReq.Info> infoList = dao.findByQueryObj(req.setIsQueryName(true));
+
+        boolean ok = infoList.stream().allMatch(info -> StringUtils.hasText(info.getName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+
+        infoList = dao.findByQueryObj(req.setIsQueryName(false));
+
+        ok = infoList.stream().allMatch(info -> !StringUtils.hasText(info.getName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+    }
+
 
     @Test
     public void testQueryFrom2() throws Exception {
