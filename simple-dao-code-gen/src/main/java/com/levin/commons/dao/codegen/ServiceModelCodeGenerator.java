@@ -469,8 +469,6 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
-        //
-        classList.forEach(c -> entityClassList(c));
 
         hasEntityClass(true);
 
@@ -571,7 +569,7 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-//            entityClassList(clazz);
+            entityClassList(clazz);
 
             logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
 
