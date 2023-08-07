@@ -34,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
@@ -472,8 +469,8 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
-       //
-        classList.forEach(c-> entityClassList(c));
+        //
+        classList.forEach(c -> entityClassList(c));
 
         hasEntityClass(true);
 
@@ -1576,9 +1573,26 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
+                                        String domainStr = "";
+
+                                        String[] domain = injectVar.domain();
+
+                                        if (domain == null || domain.length == 0) {
+                                        } else if (domain.length == 1) {
+                                            if (!"default".equals(domain[0])) {
+                                                domainStr = "domain = \"" + domain[0] + "\"";
+                                            }
+                                        } else {
+                                            //加上挂号
+                                            for (int i = 0; i < domain.length; i++) {
+                                                domain[i] = "\"" + domain[i] + "\"";
+                                            }
+                                            domainStr = "domain = {" + String.join(",", domain) + "}";
+                                        }
+
                                         if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
-                                            String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
+                                            //  String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
 
                                             String params = "";
 
@@ -1592,15 +1606,21 @@ public final class ServiceModelCodeGenerator {
 
                                                 String simpleName = injectVar.converter().getSimpleName();
 
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, simpleName));
+                                                if (StringUtils.hasText(domainStr)) {
+                                                    domainStr = domainStr + ",";
+                                                }
+                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s %s converter = %s.class, isRequired = \"false\")", domainStr, params, simpleName));
                                             } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
+                                                if (StringUtils.hasText(domainStr)) {
+                                                    domainStr = String.format("(%s)", domainStr);
+                                                }
+                                                annotations.add("@" + annotationClass.getSimpleName() + domainStr);
                                             }
                                         }
 
                                         //默认类型
                                         if (injectVar.expectBaseType() != Void.class
-                                                && ("dao".equalsIgnoreCase(injectVar.domain()) || injectVar.expectBaseType() != Object.class)) {
+                                                && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || injectVar.expectBaseType() != Object.class)) {
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 

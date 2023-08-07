@@ -187,8 +187,7 @@ public abstract class QueryAnnotationUtil {
             ReflectionUtils.doWithFields(entityClass, field -> {
                         attrs.add(field.getName());
                     }
-                    , field -> field.isAnnotationPresent(InjectVar.class)
-                            && variableInjector.isDomainMatch(field.getAnnotation(InjectVar.class).domain())
+                    , field -> field.isAnnotationPresent(InjectVar.class) && variableInjector.isDomainMatch(field)
             );
 
             return (String[]) attrs.toArray(new String[attrs.size()]);
