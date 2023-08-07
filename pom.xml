@@ -206,7 +206,7 @@
                 <groupId>${levin.service-support.groupId}</groupId>
                 <artifactId>service-support</artifactId>
                 <version>${levin.service-support.version}</version>
-                <scope>provided</scope>
+<!--                <scope>provided</scope>-->
             </dependency>
 
             <dependency>

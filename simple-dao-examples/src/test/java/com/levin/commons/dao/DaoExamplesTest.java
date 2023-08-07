@@ -531,7 +531,6 @@ public class DaoExamplesTest {
                 .setPermissionList(Arrays.asList("P1", "P2", "p3"))
         );
 
-
         TestRoleInfo info = dao.findUnique(new QueryTestRoleReq().setId(role.getId()));
 
 
