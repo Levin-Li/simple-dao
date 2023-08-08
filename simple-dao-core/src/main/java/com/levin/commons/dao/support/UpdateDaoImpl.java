@@ -8,12 +8,13 @@ import com.levin.commons.dao.UpdateDao;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 更新Dao实现类
@@ -60,7 +61,7 @@ public class UpdateDaoImpl<T>
     public UpdateDao<T> setColumns(Boolean isAppend, String columns, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
-                && StringUtils.hasText(columns)) {
+                && hasText(columns)) {
             append(columns, paramValues);
         }
 
@@ -72,7 +73,7 @@ public class UpdateDaoImpl<T>
 
         if (Boolean.TRUE.equals(isAppend) && entityAttrNames != null) {
             for (String entityAttrName : entityAttrNames) {
-                if (StringUtils.hasText(entityAttrName)) {
+                if (hasText(entityAttrName)) {
                     append(aroundColumnPrefix(entityAttrName) + " = NULL");
                 }
             }
@@ -84,7 +85,7 @@ public class UpdateDaoImpl<T>
     @Override
     public UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {
         if (Boolean.TRUE.equals(isAppend)
-                && StringUtils.hasText(entityAttrName)) {
+                && hasText(entityAttrName)) {
             append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
         }
         return this;
@@ -210,8 +211,15 @@ public class UpdateDaoImpl<T>
 
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
                 setColumns(expr, holder.value);
+                //乐观锁条件
+                if (opAnnotation instanceof Update) {
+                    String whereCondition = ((Update) opAnnotation).whereCondition();
+                    if (hasText(whereCondition)) {
+                        whereCondition = tryEvalExprIfHasSeplExpr(bean, value, name, whereCondition, getDaoContextValues(), getContext());
+                        where(whereCondition);
+                    }
+                }
             });
-
         }
 
         //允许 Update 注解和其它注解同时存在

@@ -1257,9 +1257,7 @@ public class SelectDaoImpl<T>
 
         boolean noResultType = resultType == null || resultType == Void.class;
 
-        if (!noResultType
-                && selectColumnsMap.isEmpty()
-                && selectColumns.isEmpty()) {
+        if (!noResultType && selectColumns.isEmpty()) {
             //加入选择条件
             appendByQueryObj(resultType);
         }
@@ -1312,9 +1310,7 @@ public class SelectDaoImpl<T>
 
         boolean notResultType = resultType == null || resultType == Void.class;
 
-        if (!notResultType
-                && selectColumnsMap.isEmpty()
-                && selectColumns.isEmpty()) {
+        if (!notResultType && selectColumns.isEmpty()) {
             //加入选择条件
             appendByQueryObj(resultType);
         }

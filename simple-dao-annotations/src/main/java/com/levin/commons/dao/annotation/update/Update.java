@@ -28,7 +28,6 @@ import java.lang.annotation.*;
  */
 public @interface Update {
 
-
     /**
      *
      * 具体的变量替换，请参考 C 注解
@@ -52,15 +51,16 @@ public @interface Update {
      */
     String value() default "";
 
-
     /**
-     * 乐观锁条件
+     * 动态的 where 条件，通常用于乐观锁条件。
+     * <p>
+     * 可以支持SPEL_PREFIX，以"#!spel:"为前缀，表示是Spel表达式
+     * <p>
      *
      * @return
      * @todo
      */
-    String optimisticLocking() default "";
-
+    String whereCondition() default "";
 
     /**
      * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
