@@ -41,7 +41,7 @@ public class CtxVarTestReq implements Serializable {
         @Select(condition = "#isQueryName")
         String name;
 
-        @Select("parent.name")
+        @Select(domain = "g", value = "parent.name")
         String parentName;
 
     }

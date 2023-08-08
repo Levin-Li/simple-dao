@@ -1780,6 +1780,12 @@ public class DaoExamplesTest {
         ok = infoList.stream().allMatch(info -> !StringUtils.hasText(info.getName()));
 
         Assert.isTrue(ok, "CtxVar err");
+
+
+        ok = infoList.stream().anyMatch(info -> StringUtils.hasText(info.getParentName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+
     }
 
 
@@ -1809,9 +1815,6 @@ public class DaoExamplesTest {
         Assert.notNull(testObj.getProduct_infos());
 
         Assert.isTrue(testObj.getProduct_infos().get(0).getName().equals(n));
-
-
-
 
     }
 
