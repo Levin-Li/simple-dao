@@ -144,8 +144,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     private static final ThreadLocal<BiFunction<String, Map<String, Object>[], Object>> elEvalFuncThreadLocal = new ThreadLocal<>();
 
-
-    private final List<Class<?>> walkClasses = new ArrayList<>(5);
+    //已经处理过的类
+    private final List walkedObjects = new ArrayList<>(6);
 
     protected ConditionBuilderImpl(MiniDao miniDao, boolean isNative) {
 
@@ -1334,16 +1334,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return;
         }
 
-        //转换为List
-        List<Object> queryObjList = filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)));
-
-        queryObjList = queryObjList.stream()
-                .filter(obj -> !walkClasses.contains(obj))
-                .collect(Collectors.toList());
+        //转换为List，排查已经加载过的类
+        List<Object> queryObjList = filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)), walkedObjects::contains);
 
         if (queryObjList.isEmpty()) {
             return;
         }
+
+        //全部加入已经处理过的对象，防止对象被反复处理
+        walkedObjects.addAll(queryObjList);
 
         if (!hasValidQueryEntity()) {
             //如果没有有效的查询实体
@@ -1426,8 +1425,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     walkMap("", (Map) queryValueObj);
                     continue;
                 }
-            } else {
-                walkClasses.add(typeClass);
             }
 
             //关键方法，必须保证返回的顺序是，父类字段优先出现，然后才是子类的字段

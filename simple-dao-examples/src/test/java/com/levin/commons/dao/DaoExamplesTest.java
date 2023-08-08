@@ -1765,7 +1765,7 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testCtxVarAndFetch() throws Exception {
+    public void testCtxVar() throws Exception {
 
         CtxVarTestReq req = new CtxVarTestReq();
 

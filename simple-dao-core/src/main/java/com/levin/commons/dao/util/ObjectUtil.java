@@ -910,7 +910,7 @@ public abstract class ObjectUtil {
 
         ReflectionUtils.doWithFields(targetType, field -> fieldList.add(field), field -> !Modifier.isStatic(field.getModifiers()));
 
-        String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(target.getClass());
+        //String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(target.getClass());
 
         //List<String> daoInjectAttrList = daoInjectAttrs != null ? Arrays.asList(daoInjectAttrs) : Collections.emptyList();
 
@@ -946,7 +946,6 @@ public abstract class ObjectUtil {
                             .stream()
                             .filter(Objects::nonNull)
                             .noneMatch(predicate -> predicate.test(key))) {
-
                         continue;
                     }
                 }
@@ -962,7 +961,6 @@ public abstract class ObjectUtil {
                     fieldMaxCopyDeep = deepCopy.maxCopyDeep();
                     fieldIgnoreProperties = deepCopy.ignoreProperties();
                 }
-
 
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 
@@ -1001,14 +999,12 @@ public abstract class ObjectUtil {
                     value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
                 }
 
-                boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);
-
                 if (value == null) {
                     //优化处理，直接返回
-                    if (!isSimpleType) {
-                        field.set(target, null);
-                    }
-                } else if (isSimpleType) { //  || BeanUtils.isSimpleValueType(value.getClass())
+                    // if (!fieldType.isPrimitive()) {
+                    field.set(target, null);
+                    // }
+                } else if (BeanUtils.isSimpleValueType(fieldType)) {
                     //优化处理，直接返回
                     field.set(target, convert(value, fieldType));
                 } else {

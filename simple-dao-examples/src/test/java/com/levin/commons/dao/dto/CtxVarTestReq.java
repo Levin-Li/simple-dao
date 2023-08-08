@@ -41,7 +41,7 @@ public class CtxVarTestReq implements Serializable {
         @Select(condition = "#isQueryName")
         String name;
 
-        @Fetch(value = "parent.name", isBindToField = false)
+        @Select("parent.name")
         String parentName;
 
     }

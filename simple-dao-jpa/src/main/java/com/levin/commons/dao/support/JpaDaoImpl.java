@@ -1372,7 +1372,7 @@ public class JpaDaoImpl
 
         List<Object> queryObjList = tryGetEntityClassAndClear(
                 //展开嵌套参数，过滤简单的类型，
-                filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs))), null
+                filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)), null), null
         );
 
         for (Object queryObj : queryObjList) {

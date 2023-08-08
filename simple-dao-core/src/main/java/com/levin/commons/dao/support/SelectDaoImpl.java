@@ -207,7 +207,6 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-
     @Override
     public SelectDao<T> join(Boolean isAppend, String... joinStatements) {
 
@@ -219,7 +218,6 @@ public class SelectDaoImpl<T>
                     this.joinStatement.append(" ").append(statement).append(" ");
                 }
             }
-
         }
 
         return this;
@@ -406,9 +404,6 @@ public class SelectDaoImpl<T>
             joinType = Fetch.JoinType.Inner;
         }
 
-        if (!hasText(domain)) {
-        }
-
         for (String attr : setAttrs) {
 
             if (!hasText(attr)) {
@@ -430,7 +425,9 @@ public class SelectDaoImpl<T>
 
             attr = aroundColumnPrefix(domain, attr);
 
-            if (fieldOrMethodOrName != null) {
+            //不作为查询字段
+            //本断代码，暂时不用
+            if (fieldOrMethodOrName != null && false) {
 
                 String columnAlias = "";
 
@@ -449,13 +446,12 @@ public class SelectDaoImpl<T>
                 }
 
                 select("(" + selectExpr + ") AS " + columnAlias);
-
                 appendColumnMap(selectExpr, columnAlias, fieldOrMethod, columnAlias);
+
             }
 
             //如果是相同的字段，会覆盖旧抓取属性
             fetchAttrs.put(attr, (joinType == null ? "" : joinType.name()) + " Join Fetch " + attr);
-
         }
 
         return this;
@@ -681,7 +677,7 @@ public class SelectDaoImpl<T>
 
             attrFetchList.put(((Field) fieldOrMethod).getDeclaringClass().getName() + "|" + attrName, true);
 
-        }else {
+        } else {
             joinFetch(null, domain, fetch.joinType(), fetch.value());
         }
 

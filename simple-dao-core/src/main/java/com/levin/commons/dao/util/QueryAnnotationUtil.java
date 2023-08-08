@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -794,7 +795,7 @@ public abstract class QueryAnnotationUtil {
      * @param queryObjList
      * @return
      */
-    public static List<Object> filterQueryObjSimpleType(List<Object> queryObjList) {
+    public static List<Object> filterQueryObjSimpleType(List<?> queryObjList, Predicate excludePredicate) {
 
         if (queryObjList == null || queryObjList.isEmpty()) {
             return Collections.emptyList();
@@ -813,6 +814,7 @@ public abstract class QueryAnnotationUtil {
                                     && !QueryAnnotationUtil.isIgnore(c);
                         }
                 )
+                .filter(o -> excludePredicate == null || !excludePredicate.test(o))
                 .collect(Collectors.toList());
     }
 
