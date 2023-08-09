@@ -150,7 +150,7 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
      *
      * @return
      */
-    public synchronized ExprNode<OP, E> switchCurrentNodeToSelf() {
+    public  ExprNode<OP, E> switchCurrentNodeToSelf() {
         currentNode = this;
         return this;
     }

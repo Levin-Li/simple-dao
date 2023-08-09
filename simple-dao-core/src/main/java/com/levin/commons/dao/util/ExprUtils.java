@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -63,7 +64,7 @@ public abstract class ExprUtils {
     /**
      * 关联字段缓存
      */
-    private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, List<String>> refCache = new ConcurrentHashMap<>();
 
     /**
      * 线程安全的解析器

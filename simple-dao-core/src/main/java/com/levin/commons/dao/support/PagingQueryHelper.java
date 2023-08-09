@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -23,7 +24,7 @@ import java.util.function.Function;
  */
 public abstract class PagingQueryHelper {
 
-    private static final Map<String, Map<PageOption.Type, Field>> classFieldCached = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, Map<PageOption.Type, Field>> classFieldCached = new ConcurrentHashMap<>();
 
     private PagingQueryHelper() {
     }
@@ -240,9 +241,15 @@ public abstract class PagingQueryHelper {
      */
     private static Map<PageOption.Type, Field> getPageOptionFields(Class type) {
 
+        Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
+
+        if (fieldMap != null) {
+            return fieldMap;
+        }
+
         synchronized (locker.getLock(type)) {
 
-            Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
+            fieldMap = classFieldCached.get(type.getName());
 
             if (fieldMap == null) {
 

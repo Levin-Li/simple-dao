@@ -111,31 +111,31 @@ public abstract class QueryAnnotationUtil {
     //条件表达式
 
     //缓存属性
-    private static final Map<String, List<Field>> cacheFields = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, List<Field>> cacheFields = new ConcurrentHashMap<>();
 
-    private static final Map<String, Boolean> hasSelectAnnotationCache = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, Boolean> hasSelectAnnotationCache = new ConcurrentHashMap<>();
 
-    public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentReferenceHashMap<>();
+    public static final Map<String, Object> cacheEntityOptionMap = new ConcurrentHashMap<>();
 
     private static final Locker cacheEntityOptionMapLocker = Locker.build();
 
-    public static final Map<String, String> entityTableNameCaches = new ConcurrentReferenceHashMap<>();
+    public static final Map<String, String> entityTableNameCaches = new ConcurrentHashMap<>();
 
-    public static final Map<String, Class<?>> tableNameMappingEntityClassCaches = new ConcurrentReferenceHashMap<>();
+    public static final Map<String, Class<?>> tableNameMappingEntityClassCaches = new ConcurrentHashMap<>();
 
     /**
      * 实体类字段名和数据库字段名映射关系
      */
-    protected static final Map<String/* 类名 */, Map<String/* 类字段名 */, String /* 数据库列名 */>> entityFieldNameMap = new ConcurrentReferenceHashMap<>();
+    protected static final Map<String/* 类名 */, Map<String/* 类字段名 */, String /* 数据库列名 */>> entityFieldNameMap = new ConcurrentHashMap<>();
 
     private static final Locker entityFieldNameMapLocker = Locker.build();
 
-    private static final ContextHolder<String, String> propertyNameMapCaches = ContextHolder.buildContext(false);
+    private static final ContextHolder<String, String> propertyNameMapCaches = ContextHolder.buildContext(true);
 
     /**
      * 实体对象，可空字段缓存
      */
-    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentReferenceHashMap<>();
+    protected static final Map<String, Boolean> entityClassNullableFields = new ConcurrentHashMap<>();
 
 
     private static final Map<String, String[]> entityInjectAttrNames = new ConcurrentHashMap<>();
@@ -434,10 +434,12 @@ public abstract class QueryAnnotationUtil {
 
         Object value = cacheEntityOptionMap.get(className);
 
-        synchronized (cacheEntityOptionMapLocker.getLock(className)) {
-            if (value == null) {
-                value = entityClass.getAnnotation(EntityOption.class);
-                cacheEntityOptionMap.put(className, value != null ? value : Boolean.FALSE);
+        if (value == null) {
+            synchronized (cacheEntityOptionMapLocker.getLock(className)) {
+                if (value == null) {
+                    value = entityClass.getAnnotation(EntityOption.class);
+                    cacheEntityOptionMap.put(className, value != null ? value : Boolean.FALSE);
+                }
             }
         }
 

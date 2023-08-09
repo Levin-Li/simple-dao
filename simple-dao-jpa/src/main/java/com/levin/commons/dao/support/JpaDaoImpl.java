@@ -178,7 +178,7 @@ public class JpaDaoImpl
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
-    private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
+    private static final Map<String, Object> idFields = new ConcurrentHashMap<>(256);
 
     private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
@@ -360,7 +360,7 @@ public class JpaDaoImpl
 
             namingStrategy = new PhysicalNamingStrategy() {
 
-                final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
+                final Map<String, String> columnNameMapCaches = new ConcurrentHashMap<>();
 
                 org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
@@ -958,14 +958,15 @@ public class JpaDaoImpl
 
         final String className = entityClass.getName();
 
-        List<UniqueField> uniqueFields = null;
+        List<UniqueField> uniqueFields = uniqueFieldMap.get(className);
 
-        //同步
-        synchronized (uniqueFieldMapLocker.getLock(className)) {
-            uniqueFields = uniqueFieldMap.get(className);
-            if (uniqueFields == null) {
-                uniqueFields = getUniqueFields(entityClass);
-                uniqueFieldMap.put(className, uniqueFields);
+        if (uniqueFields == null) {
+            synchronized (uniqueFieldMapLocker.getLock(className)) {
+                uniqueFields = uniqueFieldMap.get(className);
+                if (uniqueFields == null) {
+                    uniqueFields = getUniqueFields(entityClass);
+                    uniqueFieldMap.put(className, uniqueFields);
+                }
             }
         }
 
