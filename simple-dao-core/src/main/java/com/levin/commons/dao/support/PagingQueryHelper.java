@@ -239,42 +239,27 @@ public abstract class PagingQueryHelper {
      * @param type
      * @return
      */
-    private static Map<PageOption.Type, Field> getPageOptionFields(Class type) {
+    private static Map<PageOption.Type, Field> getPageOptionFields(Class<?> type) {
 
-        Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
+        return classFieldCached.computeIfAbsent(type.getName(), key -> {
 
-        if (fieldMap != null) {
-            return fieldMap;
-        }
+            Map<PageOption.Type, Field> fieldMap = new LinkedHashMap<>();
 
-        synchronized (locker.getLock(type)) {
+            ReflectionUtils.doWithFields(type, field -> {
 
-            fieldMap = classFieldCached.get(type.getName());
+                field.setAccessible(true);
 
-            if (fieldMap == null) {
+                PageOption option = field.getAnnotation(PageOption.class);
+                if (option != null) {
+                    fieldMap.put(option.value(), field);
+                }
+            });
 
-                final Map tempMap = new LinkedHashMap<>();
+            //放回不可变的结果接
+            return Collections.unmodifiableMap(fieldMap);
 
-                ReflectionUtils.doWithFields(type, field -> {
-
-                    field.setAccessible(true);
-
-                    PageOption option = field.getAnnotation(PageOption.class);
-                    if (option != null) {
-                        tempMap.put(option.value(), field);
-                    }
-                });
-
-                fieldMap = tempMap.isEmpty() ? Collections.emptyMap() : tempMap;
-            }
-
-            //为了性能不做拷贝
-            return fieldMap;
-        }
+        });
 
     }
-
-
-    private static final Locker locker = Locker.build();
 
 }

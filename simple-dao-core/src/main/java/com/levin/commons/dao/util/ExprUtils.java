@@ -1194,7 +1194,7 @@ public abstract class ExprUtils {
      * @param fieldClass
      * @return
      */
-    public static List<String> getRefFieldNames(Class owner, Class fieldClass) {
+    public static List<String> getRefFieldNames(Class<?> owner, Class<?> fieldClass) {
 
         if (owner == null || fieldClass == null) {
             return null;
@@ -1230,7 +1230,6 @@ public abstract class ExprUtils {
 
             refCache.put(key, value);
         }
-
 
         return value;
     }

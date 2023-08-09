@@ -636,7 +636,7 @@ public class DaoExamplesTest {
     @Transactional
     public void testTransactional2() throws InterruptedException {
 
-        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+        EntityOption entityOption = TestEntity.class.getAnnotation(EntityOption.class);
 
         TestEntity entity = (TestEntity) dao.create(new TestEntity()
                 .setScore(random.nextInt(750))
@@ -1327,7 +1327,7 @@ public class DaoExamplesTest {
                 .find();
 
 
-        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+        EntityOption entityOption =  (TestEntity.class.getAnnotation(EntityOption.class));
 
 
         if (entityOption != null) {

@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
@@ -7,8 +8,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.springframework.util.StringUtils;
 
-import java.util.Collections;
-import java.util.List;
+import java.lang.annotation.Annotation;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,14 +19,31 @@ import java.util.stream.Stream;
 @Accessors(chain = true)
 public class ClassModel {
 
-    Class entityType = Void.class;
+    Class<?> entityType = Void.class;
 
     String name;
 
     //类的短名称
     String typeName;
 
+    private final Set<String> imports = new LinkedHashSet<>();
+    private final Set<String> annotations = new HashSet<>();
+
     List<FieldModel> fieldModels = Collections.emptyList();
+
+    public ClassModel(Class<?> entityType) {
+
+        this.entityType = entityType;
+
+        for (Annotation annotation : this.entityType.getAnnotations()) {
+            //加入Json的注解
+            if (annotation.annotationType().getPackage()
+                    .equals(JsonIgnore.class.getPackage())) {
+                imports.add(annotation.getClass().getName());
+                annotations.add("@" + annotation.annotationType().getSimpleName());
+            }
+        }
+    }
 
     public boolean hasAttr(String attrName) {
         return StringUtils.hasText(attrName)

@@ -46,7 +46,10 @@ import ${imp};
 </#if>
 @ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
-@JsonIgnoreProperties({<#if isMultiTenantObject>tenantId</#if>${classModel.attrName('password',', ','')}})
+<#--@JsonIgnoreProperties({<#if isMultiTenantObject>tenantId</#if>${classModel.attrName('password',', ','')}})-->
+<#list classModel.annotations as annotation>
+${annotation}
+</#list>
 @Select
 public class ${className} implements Serializable {
 

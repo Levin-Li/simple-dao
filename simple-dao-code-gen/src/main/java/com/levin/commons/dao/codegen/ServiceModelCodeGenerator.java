@@ -2,6 +2,8 @@ package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.googlejavaformat.java.FormatterException;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.annotation.Contains;
@@ -1167,17 +1169,30 @@ public final class ServiceModelCodeGenerator {
 
         params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
 
-        params.put("classModel", new ClassModel().setEntityType(entityClass).setFieldModels(fields));
+        ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
+
+        params.put("classModel", classModel);
+
+        if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
+            classModel.getImports().add(JsonIgnoreProperties.class.getName());
+            classModel.getAnnotations().add("@JsonIgnoreProperties({\"tenantId\"})");
+        }
 
         //分解字段类型
-
         LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
 
-        params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
+        Set<String> impList = fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<>(), (f, s) -> {
                     f.addAll(s);
                     return f;
-                }));
+                });
+
+        classModel.getImports().addAll(impList);
+
+        params.put("importList", classModel.getImports().stream()
+                .filter(t -> !t.trim().startsWith("java.lang."))
+                .collect(Collectors.toSet())
+        );
 
         for (FieldModel fieldModel : fields) {
             multiValueMap.add(fieldModel.crud.name(), fieldModel);
@@ -1668,6 +1683,18 @@ public final class ServiceModelCodeGenerator {
                     annotations.add("@Size(max = " + fieldModel.getLength() + ")");
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
+            }
+
+            if (field.isAnnotationPresent(JsonIgnore.class)
+                    || Stream.of("password", "pwd", "passwd")
+                    .anyMatch(n -> n.equalsIgnoreCase(field.getName()))) {
+                fieldModel.addImport(JsonIgnore.class);
+                annotations.add("@JsonIgnore");
+            }
+
+            if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
+                fieldModel.addImport(JsonIgnoreProperties.class);
+                annotations.add("@JsonIgnoreProperties");
             }
 
             //是否约定
