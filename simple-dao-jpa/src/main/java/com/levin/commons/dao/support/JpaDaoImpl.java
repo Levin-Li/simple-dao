@@ -172,9 +172,7 @@ public class JpaDaoImpl
     @Autowired
     private HibernateProperties hibernateProperties;
 
-    private static final Locker uniqueFieldMapLocker = Locker.build();
-
-    private static final Map<String, List<UniqueField>> uniqueFieldMap = new HashMap<>();
+    private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
@@ -956,19 +954,10 @@ public class JpaDaoImpl
 
         Assert.isTrue(isEntityClass(entityClass), "查询实体未明确");
 
-        final String className = entityClass.getName();
 
-        List<UniqueField> uniqueFields = uniqueFieldMap.get(className);
-
-        if (uniqueFields == null) {
-            synchronized (uniqueFieldMapLocker.getLock(className)) {
-                uniqueFields = uniqueFieldMap.get(className);
-                if (uniqueFields == null) {
-                    uniqueFields = getUniqueFields(entityClass);
-                    uniqueFieldMap.put(className, uniqueFields);
-                }
-            }
-        }
+        Class<?> finalEntityClass = entityClass;
+        List<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
+                key -> getUniqueFields(finalEntityClass));
 
         //开始查找
         for (UniqueField uniqueField : uniqueFields) {
