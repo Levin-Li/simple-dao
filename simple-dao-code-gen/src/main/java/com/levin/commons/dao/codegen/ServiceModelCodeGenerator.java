@@ -4,7 +4,6 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.googlejavaformat.java.FormatterException;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
@@ -39,17 +38,13 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -1685,18 +1680,23 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            if (field.isAnnotationPresent(JsonIgnore.class)
-                    || Stream.of("password", "pwd", "passwd")
-                    .anyMatch(n -> n.equalsIgnoreCase(field.getName()))) {
-                fieldModel.addImport(JsonIgnore.class);
-                annotations.add("@JsonIgnore");
+            //默认处理密码字段
+            if (field.isAnnotationPresent(JsonIgnore.class)) {
+                fieldModel.addAnnotation(field.getAnnotation(JsonIgnore.class));
+            } else if (Stream.of("password", "passwd", "pwd")
+                    .anyMatch(txt -> field.getName().toLowerCase().endsWith(txt))) {
+                fieldModel.addAnnotation(JsonIgnore.class);
             }
 
             if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
-                fieldModel.addImport(JsonIgnoreProperties.class);
-                annotations.add("@JsonIgnoreProperties");
+                fieldModel.addAnnotation(field.getAnnotation(JsonIgnoreProperties.class));
             }
 
+            //加入所有的校验规则
+            fieldModel.addAnnotations(
+                    an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                    , field.getAnnotations());
+/*
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
                 annotations.add("@Min(0)");
@@ -1720,7 +1720,7 @@ public final class ServiceModelCodeGenerator {
             } else if (field.isAnnotationPresent(Max.class)) {
                 annotations.add("@Max(" + field.getAnnotation(Max.class).value() + ")");
                 fieldModel.setTestValue(field.getAnnotation(Max.class).value() + "");
-            }
+            }*/
 
             fieldModel.getAnnotations().addAll(annotations);
 
@@ -1766,7 +1766,6 @@ public final class ServiceModelCodeGenerator {
         }
         return fieldModelList;
     }
-
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
 

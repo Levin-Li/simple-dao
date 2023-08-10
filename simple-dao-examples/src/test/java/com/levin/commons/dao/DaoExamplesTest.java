@@ -44,9 +44,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
 import java.net.URLDecoder;
 import java.util.*;
 import java.util.stream.Stream;
@@ -103,6 +105,7 @@ public class DaoExamplesTest {
 
     @BeforeEach
     public void injectCheck() throws Exception {
+
         Assert.notNull(dao, "通用DAO没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
@@ -214,6 +217,7 @@ public class DaoExamplesTest {
         } finally {
             //  DaoContext.setAutoFlush(false, true);
         }
+
     }
 
     public void initTestData2() throws Exception {
@@ -222,7 +226,6 @@ public class DaoExamplesTest {
         if (dao.selectFrom(User.class).count() > 0) {
             return;
         }
-
 
         //先删除旧数据
         dao.deleteFrom(Task.class)
@@ -385,7 +388,6 @@ public class DaoExamplesTest {
                 .setActions(Arrays.asList(12, 2, 3, 4, 55, 99))
         );
 
-
         Assert.hasText(task.getActions(), "字段转换错误1");
 
         TaskInfo one = dao.selectFrom(Task.class)
@@ -406,7 +408,6 @@ public class DaoExamplesTest {
 
     @Test
     public void testSimpleUserQO() {
-
 
 //        Assert.isTrue(Boolean.TRUE.equals(v),"");
 
@@ -459,11 +460,22 @@ public class DaoExamplesTest {
 
     }
 
+    public static String anToStr(Annotation an) {
+        Class<? extends Annotation> annotationType = an.annotationType();
+        String prefix = "@" + annotationType.getPackage().getName();
+        return "@" + an.toString().substring(prefix.length() + 1);
+    }
+
     @Test
     public void testFromStatementDTO() {
 
 //        List<FromStatementDTO> byQueryObj = dao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
 //        assert byQueryObj.size() > 0;
+
+        Entity an = User.class.getAnnotation(Entity.class);
+
+
+        final String prefix = anToStr(an);
 
 
         List<TableJoin3> byQueryObj1 = dao.findByQueryObj(TableJoin3.class, new TableJoin3());
@@ -474,6 +486,7 @@ public class DaoExamplesTest {
         assert byQueryObj1.size() > 0;
 
     }
+
 
     @Test
     public void testTableJoin4() {
@@ -1327,7 +1340,7 @@ public class DaoExamplesTest {
                 .find();
 
 
-        EntityOption entityOption =  (TestEntity.class.getAnnotation(EntityOption.class));
+        EntityOption entityOption = (TestEntity.class.getAnnotation(EntityOption.class));
 
 
         if (entityOption != null) {
