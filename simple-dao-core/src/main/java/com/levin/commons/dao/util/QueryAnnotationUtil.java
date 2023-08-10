@@ -941,7 +941,7 @@ public abstract class QueryAnnotationUtil {
 
         ReflectionUtils.doWithFields(type, fields::add);
 
-        Collections.reverse(fields);
+      //  Collections.reverse(fields);
 
         return Collections.unmodifiableList(fields);
     }
