@@ -917,7 +917,7 @@ public abstract class QueryAnnotationUtil {
      * @return
      */
     public static List<Field> getFieldsFromCache(Class<?> type) {
-        return cacheFields.computeIfAbsent(type.getName(), key -> Collections.unmodifiableList(getAllFields(type)));
+        return cacheFields.computeIfAbsent(type.getName(), key -> getAllFields(type));
     }
 
 
@@ -927,34 +927,23 @@ public abstract class QueryAnnotationUtil {
      * @param type
      * @return
      */
-    static synchronized List<Field> getAllFields(Class<?> type) {
+    public static List<Field> getAllFields(Class<?> type) {
 
         if (type == null
                 || isRootObjectType(type)
                 || isPrimitive(type)
                 || isArray(type)
                 || isIgnore(type)) {
-
             return Collections.emptyList();
         }
 
         List<Field> fields = new ArrayList<>(16);
 
-        //先加入父类的字段
-        Class<?> superclass = type.getSuperclass();
+        ReflectionUtils.doWithFields(type, fields::add);
 
-        if (superclass != null) {
-            fields.addAll(getFieldsFromCache(superclass));
-        }
+        Collections.reverse(fields);
 
-        for (Field field : type.getDeclaredFields()) {
-            //如果不是被过滤的类型
-//            if ((field.getModifiers() & excludeModifiers) == 0) {
-            fields.add(field);
-//            }
-        }
-
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
 
