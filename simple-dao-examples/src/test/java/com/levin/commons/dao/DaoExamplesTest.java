@@ -1746,6 +1746,13 @@ public class DaoExamplesTest {
 
     }
 
+
+    @Test
+    public void testLogicDto() throws Exception {
+
+
+    }
+
     @Test
     public void testUpdateFrom() throws Exception {
 

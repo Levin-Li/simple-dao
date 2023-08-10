@@ -1424,19 +1424,17 @@ public class JpaDaoImpl
         return forSelect(null, queryObjs);
     }
 
-    public <T> SelectDao<T> forSelect(Class resultType, Object... queryObjs) {
+    public <T> SelectDao<T> forSelect(Class<?> resultType, Object... queryObjs) {
 
         if (resultType == null) {
             resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(resultType);
-
         SelectDao selectDao = null;
 
-        if (hasSelectAnnotationField && !hasType(resultType, queryObjs)) {
+        if (!hasType(resultType, queryObjs)
+                && hasSelectStatementField(resultType)) {
             selectDao = newDao(SelectDao.class, queryObjs, resultType);
-//            selectDao = newDao(SelectDao.class, queryObjs);
         } else {
             selectDao = newDao(SelectDao.class, queryObjs);
         }
@@ -1504,11 +1502,9 @@ public class JpaDaoImpl
             resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(resultType);
-
-        if (hasSelectStatementField && !hasType(resultType, queryObjs)) {
+        if (!hasType(resultType, queryObjs)
+                && hasSelectStatementField(resultType)) {
             return (E) newDao(SelectDao.class, queryObjs, resultType).findOne(isExpectUnique, resultType);
-//            return (E) newDao(SelectDao.class, queryObjs).findOne(isExpectUnique, resultType);
         }
 
         return (E) newDao(SelectDao.class, queryObjs).findOne(isExpectUnique, resultType);
@@ -1520,20 +1516,16 @@ public class JpaDaoImpl
      * @param queryObjs
      * @return
      */
-    private static boolean hasType(Class type, Object... queryObjs) {
+    private static boolean hasType(Class<?> type, Object... queryObjs) {
 
-        if (type == null || queryObjs == null) {
+        if (type == null || queryObjs == null || queryObjs.length == 0) {
             return false;
         }
 
-        for (Object queryObj : queryObjs) {
-            if (type == queryObj
-                    || (queryObj != null && type.isAssignableFrom(queryObj.getClass()))) {
-                return true;
-            }
-        }
-
-        return false;
+        return Stream.of(queryObjs)
+                .filter(Objects::nonNull)
+                .map(o -> o instanceof Class ? (Class<?>) o : o.getClass())
+                .anyMatch(t -> t == type || type.isAssignableFrom(t));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////

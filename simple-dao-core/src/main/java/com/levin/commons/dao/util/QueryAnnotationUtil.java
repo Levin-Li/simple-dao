@@ -838,7 +838,7 @@ public abstract class QueryAnnotationUtil {
         return false;
     }
 
-    public static boolean hasSelectStatementField(Class type) {
+    public static boolean hasSelectStatementField(Class<?> type) {
         return hasSelectStatementField(type, null);
     }
 
@@ -885,7 +885,7 @@ public abstract class QueryAnnotationUtil {
 
                 Class<?> fieldType = forField.resolve(field.getType());
 
-                //防止递归
+                //防止无限递归
                 if (fieldType != type && isComplexType(fieldType, null)) {
                     hasAnno = hasSelectStatementField(fieldType, forField);
                 }
@@ -937,11 +937,19 @@ public abstract class QueryAnnotationUtil {
             return Collections.emptyList();
         }
 
+        List<Class<?>> parents = new ArrayList<>(5);
+
+        while (type != null && type != Object.class) {
+            parents.add(type);
+            type = type.getSuperclass();
+        }
+
+        //
+        Collections.reverse(parents);
+
+        //获取所有字段
         List<Field> fields = new ArrayList<>(16);
-
-        ReflectionUtils.doWithFields(type, fields::add);
-
-      //  Collections.reverse(fields);
+        parents.forEach(p -> ReflectionUtils.doWithLocalFields(p, fields::add));
 
         return Collections.unmodifiableList(fields);
     }

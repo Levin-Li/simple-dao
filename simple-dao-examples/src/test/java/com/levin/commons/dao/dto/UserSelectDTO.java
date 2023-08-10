@@ -2,6 +2,9 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.logic.AND;
+import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.select.Select;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -37,11 +40,13 @@ public class UserSelectDTO extends UserDTO {
     @NotExists
     SubQueryDTO subQueryDTO = new SubQueryDTO();
 
+
     @In("name")
     SubQueryDTO nameInDto = new SubQueryDTO();
 
     //子查询产生
     @Gt("score")
+
     SubQueryDTO gtSubQueryDTO = new SubQueryDTO();
 
 
