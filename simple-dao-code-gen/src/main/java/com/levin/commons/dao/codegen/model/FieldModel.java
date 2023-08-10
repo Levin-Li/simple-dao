@@ -139,7 +139,7 @@ public class FieldModel implements Cloneable {
     public void addAnnotation(Annotation... annotations) {
         Stream.of(annotations)
                 .filter(Objects::nonNull).forEach(an -> {
-                    imports.add(an.getClass().getName());
+                    imports.add(an.annotationType().getName());
                     this.annotations.add(anToStr(an));
                 });
     }
