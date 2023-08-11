@@ -601,8 +601,8 @@ public final class ServiceModelCodeGenerator {
 
     private static String controllerPackage() {
         return modulePackageName() + ".controller"
-                + (isCreateBizController() ? ".base" : "")
-                + (Boolean.FALSE.equals(isCreateControllerSubDir()) ? "" : ("." + subPkgName()));
+                + (Boolean.TRUE.equals(isCreateBizController()) ? ".base" : "")
+                + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? ("." + subPkgName()) : "");
     }
 
     private static String bizControllerPackage() {
@@ -1055,11 +1055,13 @@ public final class ServiceModelCodeGenerator {
         String className = entityClass.getSimpleName() + "Controller";
 
         controllerClassList((controllerPackage() + "." + className).replace("..", "."));
+
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
 
         if (isCreateBizController()) {
 
             String bizClassName = "Biz" + className;
+
             controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
 
             genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
