@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.validation.annotation.*;
 import org.springframework.util.*;
 import javax.validation.*;
 import java.util.*;

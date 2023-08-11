@@ -1053,13 +1053,15 @@ public final class ServiceModelCodeGenerator {
 
         //加入控制器类
         String className = entityClass.getSimpleName() + "Controller";
-        String bizClassName = "Biz" + className;
 
-        controllerClassList(((isCreateBizController() ? bizControllerPackage() : controllerPackage()) + "." + bizClassName).replace("..", "."));
-
+        controllerClassList((controllerPackage() + "." + className).replace("..", "."));
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
 
         if (isCreateBizController()) {
+
+            String bizClassName = "Biz" + className;
+            controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
+
             genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
         }
 

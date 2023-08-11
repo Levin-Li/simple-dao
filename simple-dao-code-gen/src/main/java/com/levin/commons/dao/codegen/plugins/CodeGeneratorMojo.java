@@ -118,7 +118,7 @@ public class CodeGeneratorMojo extends BaseMojo {
      * 生成的控制器类是否创建子目录
      */
     @Parameter
-    private boolean isCreateControllerSubDir = true;
+    private boolean isCreateControllerSubDir = false;
 
     /**
      * 生成的控制器类是否创建子目录
