@@ -11,18 +11,20 @@ public interface EntityOpConst {
     @Deprecated
     String TYPE_NAME = "实体数据";
 
-
+    /**
+     * 普通实体数据
+     */
     String ENTITY_TYPE_NAME = "实体数据";
 
     /**
      * 通用功能，通常登录就可使用
      */
-    String COMMON_TYPE_NAME = "系统通用";
+    String COMMON_TYPE_NAME = "通用数据";
 
     /**
      * 需要有管理员角色
      */
-    String SYS_TYPE_NAME = "系统管理";
+    String SYS_TYPE_NAME = "系统数据";
 
     /**
      *

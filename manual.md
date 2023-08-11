@@ -53,30 +53,39 @@ Dao 类逻辑框图，如下图所示。
 
 ##### 2.1 使用SimpleDao
 
-   在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
+   在服务层代码中通过Spring注入SimpleDao实例。
 
    使用示例：
 
       @Autowired
       SimpleDao dao;
 
-      SelectDao selectDao = dao.selectFrom("t_table_name","alias");
-
-      List<UserStatDTO> queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
+      List<UserStatDTO> queryResult = dao.findByQueryObjs(new UserStatDTO()).find();
 
 ##### 2.2 动态创建 SelectDao 、UpdateDao、DeleteDao
 
+    @Autowired
+    SimpleDao dao;
+
     //查询DAO
-    SelectDao dao = dao.selectFrom(Group.class);
-    dao.find()
+    //方式1：
+    SelectDao selectDao = dao.selectFrom(Group.class);
+    //方式2：
+    SelectDao selectDao = dao.forSelect(Group.class, queryObjs)
 
     //更新DAO
-    UpdateDao dao = dao.updateTo(Group.class);
-    dao.update()
+    //方式1：
+    UpdateDao updateDao = dao.updateTo(Group.class);
+    //方式1：
+    updateDao = dao.forUpdate(Group.class, queryObjs)
 
     //删除DAO
-    DeleteDao dao = dao.deleteFrom(Group.class)
-    dao.delete()
+    //方式1
+    DeleteDao deleteDao = dao.deleteFrom(Group.class)
+ 
+    //方式2
+    DeleteDao deleteDao = dao.forDelete(Group.class, queryObjs)
+
 
 ##### 2.3 回调使用 
     
