@@ -606,8 +606,12 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static String bizControllerPackage() {
+
+        //业务控制器不创建目录
         return modulePackageName() + ".controller"
-                + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? "." + subPkgName() : "");
+                //20230812 修改，业务控制器不分目录
+              //  + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? "." + subPkgName() : "")
+                ;
     }
 
     public static Boolean isCreateControllerSubDir(Boolean newValue) {
