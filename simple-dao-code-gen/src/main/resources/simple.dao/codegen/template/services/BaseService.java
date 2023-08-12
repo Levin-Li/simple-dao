@@ -74,11 +74,7 @@ public abstract class BaseService {
 
         if (selfProxy == null
                 || !type.isInstance(selfProxy)
-                || !(AopUtils.isCglibProxy(selfProxy)
-                     || AopUtils.isAopProxy(selfProxy)
-                     || AopUtils.isJdkDynamicProxy(selfProxy)
-                     )
-            ){
+                || !(AopUtils.isCglibProxy(selfProxy) || AopUtils.isAopProxy(selfProxy) || AopUtils.isJdkDynamicProxy(selfProxy))) {
             selfProxy = applicationContext.getBean(type);
         }
 
