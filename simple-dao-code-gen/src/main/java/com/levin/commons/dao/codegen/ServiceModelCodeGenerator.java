@@ -1256,7 +1256,7 @@ public final class ServiceModelCodeGenerator {
                 //不包含生成标记行，里面有动态时间
                 .filter(line -> !line.contains(keyword) && !line.contains(prefix))
                 //去除空格
-                .map(StringUtils::trimAllWhitespace)
+                .map(StringUtils::trimWhitespace)
                 .collect(Collectors.joining());
 
         if (file.exists()) {

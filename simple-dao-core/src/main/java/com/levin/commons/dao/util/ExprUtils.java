@@ -624,8 +624,8 @@ public abstract class ExprUtils {
 
         if (expr.length() > 0) {
 
-            prefix = StringUtils.trimAllWhitespace(prefix);
-            suffix = StringUtils.trimAllWhitespace(suffix);
+            prefix = StringUtils.trimWhitespace(prefix);
+            suffix = StringUtils.trimWhitespace(suffix);
 
             //如果
             if (!prefix.endsWith("(")
