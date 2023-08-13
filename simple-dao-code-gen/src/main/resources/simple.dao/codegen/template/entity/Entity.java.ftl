@@ -16,6 +16,8 @@ import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
 
+import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
+
 
 /**
 *
@@ -33,16 +35,13 @@ import java.math.*;
 <#if entitySchema??>        //schema = "${entitySchema}",</#if>
         indexes = {
                // 索引
-<#if !attrs.test('orderCode')></#if>//               @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-<#if !attrs.test('enable')>//</#if>                 @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-<#if !attrs.test('createTime')></#if>//              @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-<#if !attrs.test('lastUpdateTime')></#if>//                @Index(columnList = AbstractBaseEntityObject.Fields.lastUpdateTime),
-<#if !attrs.test('tenantId')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.tenantId),
-<#if !attrs.test('name')></#if>//                @Index(columnList = AbstractNamedMultiTenantObject.Fields.name),
+<#if !attrs.test('name')>//</#if>                 @Index(columnList = E_${entityName}.name),
 
 <#list fields as field>
-    <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,time,name,status,type,code,category') >
-               @Index(columnList = E_${entityName}.${field.camelCaseName}),
+    <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,no,time,date,name,status,state,type,code,category') >
+               @Index(columnList =  E_${entityName}.${field.camelCaseName}),
+    <#elseif field.isPk && attrs.test('tenantId')>
+               @Index(columnList = E_${entityName}.tenantId + "," + E_${entityName}.${field.camelCaseName}),
     </#if>
 </#list>
         },

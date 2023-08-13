@@ -14,10 +14,11 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 import org.hibernate.annotations.Type;
 
+
 /**
  * 示例代码
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
+ *
  */
 
 @Data
@@ -29,14 +30,12 @@ import org.hibernate.annotations.Type;
 @Entity(name = EntityConst.PREFIX + "TestOrg")
 @Table(
         indexes = {
-                @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-                @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-                @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-                @Index(columnList = AbstractBaseEntityObject.Fields.creator),
+                @Index(columnList = E_TestOrg.orderCode),
+                @Index(columnList = E_TestOrg.enable),
+                @Index(columnList = E_TestOrg.createTime),
+                @Index(columnList = E_TestOrg.creator),
 
-                @Index(columnList = AbstractNamedEntityObject.Fields.name),
-//                @Index(columnList = AbstractTreeObject.Fields.parentId),
-//                @Index(columnList = AbstractTreeObject.Fields.idPath),
+                @Index(columnList = E_TestOrg.name),
 
                 @Index(columnList = E_TestOrg.parentId),
                 @Index(columnList = E_TestOrg.code),
@@ -46,6 +45,10 @@ import org.hibernate.annotations.Type;
                 @Index(columnList = E_TestOrg.category),
                 @Index(columnList = E_TestOrg.state),
                 @Index(columnList = E_TestOrg.level),
+
+                //基于租户的复合索引
+                @Index(columnList = E_TestOrg.tenantId +"," + E_TestOrg.id),
+                @Index(columnList = E_TestOrg.tenantId +"," + E_TestOrg.parentId),
         }
         ,
         uniqueConstraints = {

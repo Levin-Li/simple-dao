@@ -18,7 +18,7 @@ import org.hibernate.annotations.Type;
 /**
  * 示例代码
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
+ *
  */
 
 @Data
@@ -30,17 +30,20 @@ import org.hibernate.annotations.Type;
 @Entity(name = EntityConst.PREFIX + "TestRole")
 @Table(
         indexes = {
-                @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-                @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-                @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-                @Index(columnList = AbstractMultiTenantObject.Fields.tenantId),
-                @Index(columnList = E_AbstractNamedEntityObject.name),
+                @Index(columnList = E_TestRole.orderCode),
+                @Index(columnList = E_TestRole.enable),
+                @Index(columnList = E_TestRole.createTime),
+                @Index(columnList = E_TestRole.tenantId),
+                @Index(columnList = E_TestRole.name),
                 @Index(columnList = E_TestRole.code),
+
+                //基于租户的复合索引
+                @Index(columnList = E_TestRole.tenantId +"," + E_TestRole.id),
         },
 
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {AbstractMultiTenantObject.Fields.tenantId, E_TestRole.code}),
-                @UniqueConstraint(columnNames = {AbstractMultiTenantObject.Fields.tenantId, E_AbstractNamedEntityObject.name}),
+                @UniqueConstraint(columnNames = {E_TestRole.tenantId, E_TestRole.code}),
+                @UniqueConstraint(columnNames = {E_TestRole.tenantId, E_TestRole.name}),
         }
 )
 

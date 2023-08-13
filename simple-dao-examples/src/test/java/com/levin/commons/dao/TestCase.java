@@ -10,6 +10,12 @@ public class TestCase {
     @Test
     public void testStat() throws InterruptedException {
 
+
+      long amount= (long) (1.0 * 41980 * 0.6 / 100);
+
+
+
+
         StatHelper statHelper = new StatHelper();
 
         while (true) {
