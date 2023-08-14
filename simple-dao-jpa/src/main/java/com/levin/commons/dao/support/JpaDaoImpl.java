@@ -420,7 +420,8 @@ public class JpaDaoImpl
                 List<Object> objects = find(true, null, -1, 1, "select IFNULL('Yes','No') from dual");
                 return "Yes".equals(objects.get(0));
             } catch (Exception e) {
-                return null;
+                //防止一直查询
+                return false;
             }
         }
 
