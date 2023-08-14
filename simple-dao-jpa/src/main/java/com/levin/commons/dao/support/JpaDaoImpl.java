@@ -4,6 +4,7 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
@@ -173,6 +174,7 @@ public class JpaDaoImpl
     private HibernateProperties hibernateProperties;
 
     private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
@@ -404,6 +406,27 @@ public class JpaDaoImpl
 
         return this;
     }
+
+
+    @Override
+    public Boolean isSupportFunction(String funName) {
+        return funSupportMap.computeIfAbsent(funName.toUpperCase(), this::testSupportFunction);
+    }
+
+    private Boolean testSupportFunction(String funcName) {
+
+        if ("IFNULL".equalsIgnoreCase(funcName)) {
+            try {  //使用哑表测试
+                List<Object> objects = find(true, null, 1, 1, "select IFNULL('Yes','No') from dual");
+                return "Yes".equals(objects.get(0));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
 
     @Override
     public DeepCopier getDeepCopier() {

@@ -6,6 +6,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.NonUniqueResultException;
@@ -231,7 +232,7 @@ public class UpdateDaoImpl<T>
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
                             && expr.indexOf('=') != -1) {
 
-                        expr = genExpr(updateOp, varType, value, expr, holder);
+                        expr = genAssignExpr(getDao(), updateOp, varType, expr, holder);
                     }
                 }
 
@@ -247,18 +248,19 @@ public class UpdateDaoImpl<T>
 
     }
 
+
     /**
      * 生成增量更新语句
      *
      * @param varType
-     * @param value
      * @param expr
      * @return
      */
-    private static String genExpr(Update updateOp, Class<?> varType, Object value, String expr, ValueHolder holder) {
+    private static String genAssignExpr(MiniDao dao, Update updateOp, Class<?> varType, String expr, ValueHolder<Object> holder) {
 
         //数据库字段的类型
-        final Class<?> dbColumnType = varType != null ? varType : (value != null ? value.getClass() : null);
+        final Class<?> dbColumnType = varType != null ? varType
+                : (holder.value != null && BeanUtils.isSimpleValueType(holder.value.getClass()) ? holder.value.getClass() : null);
 
         final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("increment update can't support type[" + dbColumnType + "]，only Number and String");
 
@@ -272,6 +274,8 @@ public class UpdateDaoImpl<T>
         String colExpr = trimWhitespace(expr.substring(0, indexOf));
         String paramExpr = trimWhitespace(expr.substring(indexOf + 1));
 
+        boolean isSupportIFNULL = Boolean.TRUE.equals(dao.isSupportFunction("IFNULL"));
+
         //如果是数字
         if (Number.class.isAssignableFrom(dbColumnType)) {
             //
@@ -279,11 +283,17 @@ public class UpdateDaoImpl<T>
             // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
             // 使用加号
             if (updateOp.convertNullValueForIncrementMode()) {
-                expr = colExpr + " = (" + new Case().when(colExpr + " IS NULL ", "0").elseExpr(colExpr)
-                        + ") + (" + new Case().when(paramExpr + " IS NULL ", "0").elseExpr(paramExpr) + ")";
 
-                //双份的参数
-                holder.value = new Object[]{holder.value, holder.value};
+                if (isSupportIFNULL) {
+                    //语句简化
+                    expr = colExpr + " = IFNULL(" + colExpr + " , 0) + IFNULL(" + paramExpr + " , 0)";
+                } else {
+                    expr = colExpr + " = (" + new Case().when(colExpr + " IS NULL ", "0").elseExpr(colExpr)
+                            + ") + (" + new Case().when(paramExpr + " IS NULL ", "0").elseExpr(paramExpr) + ")";
+
+                    //双份的参数
+                    holder.value = new Object[]{holder.value, holder.value};
+                }
 
             } else {
                 expr = colExpr + " = (" + colExpr + " + " + paramExpr + ")";
@@ -296,11 +306,15 @@ public class UpdateDaoImpl<T>
             // expr = colExpr + " = CONCAT( IFNULL(" + colExpr + ",'') , IFNULL(" + paramExpr + ",'') )";
 
             if (updateOp.convertNullValueForIncrementMode()) {
-                expr = colExpr + " = CONCAT(" + new Case().when(colExpr + " IS NULL ", "''").elseExpr(colExpr)
-                        + " , " + new Case().when(paramExpr + " IS NULL ", "''").elseExpr(paramExpr) + ")";
 
-                //双份的参数
-                holder.value = new Object[]{holder.value, holder.value};
+                if (isSupportIFNULL) {
+                    expr = colExpr + " = CONCAT( IFNULL(" + colExpr + " , '') , IFNULL(" + paramExpr + " , ''))";
+                } else {
+                    expr = colExpr + " = CONCAT(" + new Case().when(colExpr + " IS NULL ", "''").elseExpr(colExpr)
+                            + " , " + new Case().when(paramExpr + " IS NULL ", "''").elseExpr(paramExpr) + ")";
+                    //双份的参数
+                    holder.value = new Object[]{holder.value, holder.value};
+                }
 
             } else {
                 expr = colExpr + " = CONCAT(" + colExpr + " , " + paramExpr + ")";

@@ -140,6 +140,17 @@ public interface MiniDao extends DeepCopier {
     }
 
     /**
+     * 是否支持特定函数
+     * 返回 null 表示未知
+     *
+     * @param funName
+     * @return
+     */
+    default Boolean isSupportFunction(String funName) {
+        return null;
+    }
+
+    /**
      * 深度拷贝器
      *
      * @return

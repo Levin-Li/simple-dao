@@ -438,6 +438,8 @@ public class DaoExamplesTest {
         Assert.isTrue(!ok, "错误的更新，但并没有抛出异常");
 
 
+        incrUpdateUserDTO.setCreateTime(null);
+
         UpdateDao<Object> objectUpdateDao = dao.forUpdate(incrUpdateUserDTO);
 
 
