@@ -92,6 +92,9 @@ public class FieldModel implements Cloneable {
 
     private boolean hidden = false;//是否有默认值
 
+    //是否是乐观锁字段
+    private boolean optimisticLock;
+
     private String infoClassName;
 
     private String testValue;

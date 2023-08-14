@@ -405,6 +405,55 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testIncrementUpdate() {
+
+        User user = dao.findOneByQueryObj(User.class);
+
+        Assert.notNull(user, "user is null");
+
+        IncrUpdateUserDTO incrUpdateUserDTO = new IncrUpdateUserDTO();
+
+        //
+        incrUpdateUserDTO.setId(user.getId());
+
+        boolean ok = dao.singleUpdateByQueryObj(incrUpdateUserDTO);
+
+        Assert.isTrue(ok);
+
+
+        try {
+            incrUpdateUserDTO.setCreateTime(new Date());
+
+            dao.singleUpdateByQueryObj(incrUpdateUserDTO);
+
+            ok = true;
+
+            //如果没有抛出异常
+        } catch (Exception e) {
+            ok = false;
+            //发生异常才是正确逻辑
+        }
+
+        Assert.isTrue(!ok, "错误的更新，但并没有抛出异常");
+
+
+        UpdateDao<Object> objectUpdateDao = dao.forUpdate(incrUpdateUserDTO);
+
+
+        String statement = objectUpdateDao.genFinalStatement();
+
+
+        Assert.isTrue(statement.contains(" = CONCAT(")
+                && statement.contains(" IS NULL")
+                && statement.contains(" + ")
+                && statement.contains("''")
+                && statement.contains("0")
+        );
+
+        System.out.println(statement);
+    }
+
 
     @Test
     public void testSimpleUserQO() {

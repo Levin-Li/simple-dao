@@ -2193,7 +2193,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
                                      PrimitiveValue primitiveValue, Annotation opAnnotation,
-                                     BiConsumer<String, ValueHolder<? extends Object>> consumer) {
+                                     BiConsumer<String, ValueHolder<Object>> consumer) {
 
         boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
 

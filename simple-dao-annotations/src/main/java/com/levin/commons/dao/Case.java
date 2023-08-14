@@ -13,6 +13,14 @@ import java.util.Map;
 /**
  * SQL case
  * <p>
+ * Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
+ * <p>
+ * CASE可用于允许有效表达式的任何语句或子句中。
+ * 例如，可以在SELECT、UPDATE、DELETE和SET等语句中使用CASE，
+ * 也可以在SELECT\U list、in、WHERE、ORDER BY和HAVING等子句中使用CASE。
+ *
+ *
+ * <p>
  * 1、简单 CASE
  * 2、Case 搜索函数
  * <p>

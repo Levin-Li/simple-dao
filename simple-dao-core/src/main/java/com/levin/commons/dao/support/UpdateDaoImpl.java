@@ -1,11 +1,10 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.EntityOption;
-import com.levin.commons.dao.MiniDao;
-import com.levin.commons.dao.StatementBuildException;
-import com.levin.commons.dao.UpdateDao;
+import cn.hutool.core.lang.Assert;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,8 +12,10 @@ import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.trimWhitespace;
 
 /**
  * 更新Dao实现类
@@ -209,16 +210,34 @@ public class UpdateDaoImpl<T>
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
+
             genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
-                setColumns(expr, holder.value);
-                //乐观锁条件
-                if (opAnnotation instanceof Update) {
-                    String whereCondition = ((Update) opAnnotation).whereCondition();
+
+                Update updateOp = (opAnnotation instanceof Update) ? (Update) opAnnotation : null;
+
+                if (updateOp != null) {
+
+                    //设置更新的where条件
+                    String whereCondition = updateOp.whereCondition();
+
                     if (hasText(whereCondition)) {
                         whereCondition = tryEvalExprIfHasSeplExpr(bean, value, name, whereCondition, getDaoContextValues(), getContext());
                         where(whereCondition);
                     }
+
+                    //如果是增量更新
+                    if (updateOp.incrementMode()
+                            //去除成对的小括号
+                            && hasText(expr = ExprUtils.trimParenthesesPair(expr))
+                            && expr.indexOf('=') != -1) {
+
+                        expr = genExpr(updateOp, varType, value, expr, holder);
+                    }
                 }
+
+                //设置更新的列
+                setColumns(expr, holder.value);
+
             });
         }
 
@@ -226,6 +245,72 @@ public class UpdateDaoImpl<T>
 
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
 
+    }
+
+    /**
+     * 生成增量更新语句
+     *
+     * @param varType
+     * @param value
+     * @param expr
+     * @return
+     */
+    private static String genExpr(Update updateOp, Class<?> varType, Object value, String expr, ValueHolder holder) {
+
+        //数据库字段的类型
+        final Class<?> dbColumnType = varType != null ? varType : (value != null ? value.getClass() : null);
+
+        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("increment update can't support type[" + dbColumnType + "]，only Number and String");
+
+        Assert.notNull(dbColumnType, exSupplier);
+
+        //检查是否非法的语句
+        //Assert.isTrue(expr.charAt(0) != '(',() -> new StatementBuildException("非法的语句"));
+
+        int indexOf = expr.indexOf('=');
+
+        String colExpr = trimWhitespace(expr.substring(0, indexOf));
+        String paramExpr = trimWhitespace(expr.substring(indexOf + 1));
+
+        //如果是数字
+        if (Number.class.isAssignableFrom(dbColumnType)) {
+            //
+            //SQL 条件语句 (IF, CASE WHEN, IFNULL)
+            // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
+            // 使用加号
+            if (updateOp.convertNullValueForIncrementMode()) {
+                expr = colExpr + " = (" + new Case().when(colExpr + " IS NULL ", "0").elseExpr(colExpr)
+                        + ") + (" + new Case().when(paramExpr + " IS NULL ", "0").elseExpr(paramExpr) + ")";
+
+                //双份的参数
+                holder.value = new Object[]{holder.value, holder.value};
+
+            } else {
+                expr = colExpr + " = (" + colExpr + " + " + paramExpr + ")";
+            }
+
+        } else if (CharSequence.class.isAssignableFrom(dbColumnType)) {
+
+            //字符串相加 使用 CONCAT 函数
+
+            // expr = colExpr + " = CONCAT( IFNULL(" + colExpr + ",'') , IFNULL(" + paramExpr + ",'') )";
+
+            if (updateOp.convertNullValueForIncrementMode()) {
+                expr = colExpr + " = CONCAT(" + new Case().when(colExpr + " IS NULL ", "''").elseExpr(colExpr)
+                        + " , " + new Case().when(paramExpr + " IS NULL ", "''").elseExpr(paramExpr) + ")";
+
+                //双份的参数
+                holder.value = new Object[]{holder.value, holder.value};
+
+            } else {
+                expr = colExpr + " = CONCAT(" + colExpr + " , " + paramExpr + ")";
+            }
+
+        } else {
+            throw exSupplier.get();
+        }
+
+        return expr;
     }
 
 }

@@ -72,6 +72,7 @@ public class ${className} extends ${reqExtendClass} {
     final boolean eqEditable = true;
 
 </#if>
+<#-- 字段分组，参考 CRUD枚举，UPDATE_fields 表示更新分组 -->
 <#list UPDATE_fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
@@ -84,6 +85,7 @@ public class ${className} extends ${reqExtendClass} {
 
     </#if>
 </#list>
+<#-- 字段分组，参考 CRUD枚举，默认是 CRUD.DEFAULT 分组，没有前缀 -->
 <#list fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
@@ -91,6 +93,10 @@ public class ${className} extends ${reqExtendClass} {
     ${annotation}
     </#if>
     </#list>
+    <#if field.optimisticLock>
+    @Eq(desc = "乐观锁更新条件")
+    @Update(incrementMode = true, paramExpr = "1", condition = "", desc = "乐观锁版本号 + 1")
+    </#if>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 

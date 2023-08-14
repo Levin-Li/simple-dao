@@ -18,8 +18,6 @@ import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 
@@ -28,7 +26,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +39,7 @@ import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
 import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.trimWhitespace;
 
 public abstract class ExprUtils {
 
@@ -459,6 +457,27 @@ public abstract class ExprUtils {
         return data;
     }
 
+    /**
+     * 去除成对的小括号
+     *
+     * @param expr
+     * @return
+     */
+    public static String trimParenthesesPair(String expr) {
+
+        while (hasText(expr)
+                && (expr = trimWhitespace(expr)).charAt(0) == '(') {
+            if (expr.charAt(expr.length() - 1) == ')') {
+                // (abc)
+                expr = expr.substring(1, expr.length() - 1);
+            } else {
+                //退出循环
+                break;
+            }
+        }
+
+        return expr;
+    }
 
     public static String surroundNotExpr(C c, String expr) {
 
