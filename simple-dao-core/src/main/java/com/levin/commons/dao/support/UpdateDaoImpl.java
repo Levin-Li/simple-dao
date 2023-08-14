@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
@@ -13,6 +14,7 @@ import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -256,23 +258,12 @@ public class UpdateDaoImpl<T>
      * @param expr
      * @return
      */
-    private String genAssignExpr(MiniDao dao, Update updateOp, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+    private String genAssignExpr(MiniDao dao, final Update updateOp, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
 
-        Class<?> fieldType = fieldType = QueryAnnotationUtil.getFieldType(entityClass, name);
+        //数据库字段的类型，必须存在更新的对象
+        final Class<?> dbColumnType = QueryAnnotationUtil.getFieldType(entityClass, name);
 
-        if (fieldType == null) {
-            fieldType = (holder.value != null && BeanUtils.isSimpleValueType(holder.value.getClass()) ? holder.value.getClass() : null);
-        }
-
-        //如果类型正确
-        if (fieldType == null && varType != null && BeanUtils.isSimpleValueType(varType)) {
-            fieldType = varType;
-        }
-
-        //数据库字段的类型
-        final Class<?> dbColumnType = fieldType;
-
-        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("increment update can't support type[" + dbColumnType + "]，only Number or String");
+        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("Increment update can't support type[" + dbColumnType + "]，Only Number or String");
 
         Assert.notNull(dbColumnType, exSupplier);
 
@@ -281,60 +272,55 @@ public class UpdateDaoImpl<T>
 
         int indexOf = expr.indexOf('=');
 
-        String colExpr = trimWhitespace(expr.substring(0, indexOf));
-        String paramExpr = trimWhitespace(expr.substring(indexOf + 1));
+        final String colExpr = ExprUtils.trimParenthesesPair(expr.substring(0, indexOf));
+        final String paramExpr = ExprUtils.trimParenthesesPair(expr.substring(indexOf + 1));
 
-        boolean isSupportIFNULL = Boolean.TRUE.equals(dao.isSupportFunction("IFNULL"));
+        //是否支持 IFNULL 函数
+        final boolean isSupportIFNULL = Boolean.TRUE.equals(dao.isSupportFunction("IFNULL"));
+
+        //生成语句
+        final BiFunction<String, String, String> genFunc = (fun, defaultValue) -> {
+
+            String tempExpr = "";
+
+            String delim = hasText(fun) ? " , " : " + ";
+
+            if (updateOp.convertNullValueForIncrementMode()) {
+
+                //SQL 条件语句 (IF, CASE WHEN, IFNULL)
+                // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
+
+                if (isSupportIFNULL) {
+                    //IFNULL 简化语句
+                    tempExpr = colExpr + " = " + fun + "( IFNULL(" + colExpr + " , " + defaultValue + ") " + delim + " IFNULL(" + paramExpr + " , " + defaultValue + ") )";
+                } else {
+                    tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
+                            + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";
+                    //双份的参数
+                    holder.value = new Object[]{holder.value, holder.value};
+                }
+
+            } else {
+                //QL:
+                tempExpr = colExpr + " = " + fun + "(" + colExpr + delim + paramExpr + ")";
+            }
+
+            return tempExpr;
+
+        };
 
         //如果是数字
         if (Number.class.isAssignableFrom(dbColumnType)) {
-            //
-            //SQL 条件语句 (IF, CASE WHEN, IFNULL)
-            // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
-            // 使用加号
-            if (updateOp.convertNullValueForIncrementMode()) {
-
-                if (isSupportIFNULL) {
-                    //语句简化
-                    expr = colExpr + " = IFNULL(" + colExpr + " , 0) + IFNULL(" + paramExpr + " , 0)";
-                } else {
-                    expr = colExpr + " = (" + new Case().when(colExpr + " IS NULL ", "0").elseExpr(colExpr)
-                            + ") + (" + new Case().when(paramExpr + " IS NULL ", "0").elseExpr(paramExpr) + ")";
-
-                    //双份的参数
-                    holder.value = new Object[]{holder.value, holder.value};
-                }
-
-            } else {
-                expr = colExpr + " = (" + colExpr + " + " + paramExpr + ")";
-            }
-
+            expr = genFunc.apply("", "0");
         } else if (CharSequence.class.isAssignableFrom(dbColumnType)) {
-
             //字符串相加 使用 CONCAT 函数
-
-            // expr = colExpr + " = CONCAT( IFNULL(" + colExpr + ",'') , IFNULL(" + paramExpr + ",'') )";
-
-            if (updateOp.convertNullValueForIncrementMode()) {
-
-                if (isSupportIFNULL) {
-                    expr = colExpr + " = CONCAT( IFNULL(" + colExpr + " , '') , IFNULL(" + paramExpr + " , ''))";
-                } else {
-                    expr = colExpr + " = CONCAT(" + new Case().when(colExpr + " IS NULL ", "''").elseExpr(colExpr)
-                            + " , " + new Case().when(paramExpr + " IS NULL ", "''").elseExpr(paramExpr) + ")";
-                    //双份的参数
-                    holder.value = new Object[]{holder.value, holder.value};
-                }
-
-            } else {
-                expr = colExpr + " = CONCAT(" + colExpr + " , " + paramExpr + ")";
-            }
-
+            expr = genFunc.apply("CONCAT", "''");
         } else {
             throw exSupplier.get();
         }
 
         return expr;
     }
+
 
 }

@@ -417,7 +417,7 @@ public class JpaDaoImpl
 
     private Boolean testSupportFunction(String funcName) {
 
-        if ("IFNULL".equalsIgnoreCase(funcName)) {
+        if ("IFNULL".equalsIgnoreCase(StringUtils.trimWhitespace(funcName))) {
             try {  //使用哑表测试
                 List<Object> objects = find(true, null, -1, 1, "select IFNULL('Yes','No') from dual");
                 return "Yes".equals(objects.get(0));
