@@ -232,7 +232,7 @@ public class UpdateDaoImpl<T>
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
                             && expr.indexOf('=') != -1) {
 
-                        expr = genAssignExpr(getDao(), updateOp, varType, expr, holder);
+                        expr = genAssignExpr(getDao(), updateOp, name, varType, expr, holder);
                     }
                 }
 
@@ -256,13 +256,23 @@ public class UpdateDaoImpl<T>
      * @param expr
      * @return
      */
-    private static String genAssignExpr(MiniDao dao, Update updateOp, Class<?> varType, String expr, ValueHolder<Object> holder) {
+    private String genAssignExpr(MiniDao dao, Update updateOp, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+
+        Class<?> fieldType = fieldType = QueryAnnotationUtil.getFieldType(entityClass, name);
+
+        if (fieldType == null) {
+            fieldType = (holder.value != null && BeanUtils.isSimpleValueType(holder.value.getClass()) ? holder.value.getClass() : null);
+        }
+
+        //如果类型正确
+        if (fieldType == null && varType != null && BeanUtils.isSimpleValueType(varType)) {
+            fieldType = varType;
+        }
 
         //数据库字段的类型
-        final Class<?> dbColumnType = varType != null ? varType
-                : (holder.value != null && BeanUtils.isSimpleValueType(holder.value.getClass()) ? holder.value.getClass() : null);
+        final Class<?> dbColumnType = fieldType;
 
-        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("increment update can't support type[" + dbColumnType + "]，only Number and String");
+        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("increment update can't support type[" + dbColumnType + "]，only Number or String");
 
         Assert.notNull(dbColumnType, exSupplier);
 

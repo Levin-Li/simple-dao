@@ -174,7 +174,9 @@ public class JpaDaoImpl
     private HibernateProperties hibernateProperties;
 
     private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
-    private static final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
+
+    //注意纸盒
+    private final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
