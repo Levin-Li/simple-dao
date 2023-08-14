@@ -175,7 +175,7 @@ public class JpaDaoImpl
 
     private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
 
-    //注意纸盒
+    //注意这个是数据库的函数支持缓存，不能静态化
     private final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
