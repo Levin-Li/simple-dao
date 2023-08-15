@@ -966,7 +966,6 @@ public abstract class ExprUtils {
                 && !(type == Void.class || type == void.class);
     }
 
-
     /**
      * 是否非空 null 或是空字符串
      *
@@ -974,23 +973,12 @@ public abstract class ExprUtils {
      * @return
      */
     public static boolean isNotEmpty(Object value) {
-
-        if (value == null) {
-            return false;
-        } else if (value instanceof CharSequence) {
-//            return (((CharSequence) value).toString().trim().length() > 0);
-            return hasText((CharSequence) value);
-        } else if (value.getClass().isArray()) {
-            return (Array.getLength(value) > 0);
-        } else if (value instanceof Collection) {
-            return (((Collection) value).size() > 0);
-        } else if (value instanceof Map) {
-            return (((Map) value).size() > 0);
-        }
-
-        return true;
+        return ExpressionUtils.isNotEmpty(value);
     }
 
+    public static boolean isEmpty(Object value) {
+        return ExpressionUtils.isEmpty(value);
+    }
 
     /**
      * 获取默认别名

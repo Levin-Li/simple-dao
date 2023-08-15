@@ -7,7 +7,6 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.NonUniqueResultException;
@@ -306,8 +305,8 @@ public class UpdateDaoImpl<T>
             }
 
             return tempExpr;
-
         };
+
 
         //如果是数字
         if (Number.class.isAssignableFrom(dbColumnType)) {

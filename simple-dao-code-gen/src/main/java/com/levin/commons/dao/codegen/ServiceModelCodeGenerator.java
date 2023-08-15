@@ -9,6 +9,7 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
@@ -1700,6 +1701,15 @@ public final class ServiceModelCodeGenerator {
 
             if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
                 fieldModel.addAnnotation(field.getAnnotation(JsonIgnoreProperties.class));
+            }
+
+            if (field.isAnnotationPresent(Update.class)) {
+                Update update = field.getAnnotation(Update.class);
+
+                //增量更新
+                if(update.incrementMode()){
+
+                }
             }
 
             //加入所有的校验规则

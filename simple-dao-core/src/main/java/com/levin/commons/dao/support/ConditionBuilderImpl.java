@@ -17,7 +17,6 @@ import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.ExceptionUtils;
-import com.levin.commons.utils.ExpressionUtils;
 import com.levin.commons.utils.MapUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -2470,11 +2469,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         //优化性能
         if (C.NOT_EMPTY.equals(expr) || expr.equals("#" + C.NOT_EMPTY)
                 || C.VALUE_NOT_EMPTY.equals(expr) || expr.equals("#" + C.VALUE_NOT_EMPTY)) {
-            return ExpressionUtils.isNotEmpty(value);
+            return ExprUtils.isNotEmpty(value);
         }
 
         if (C.VALUE_EMPTY.equals(expr) || expr.equals("#" + C.VALUE_EMPTY)) {
-            return ExpressionUtils.isEmpty(value);
+            return ExprUtils.isEmpty(value);
         }
 
         return evalExpr(root, value, name, expr, contexts);
