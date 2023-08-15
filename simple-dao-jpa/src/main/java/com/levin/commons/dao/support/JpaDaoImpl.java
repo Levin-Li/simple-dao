@@ -779,6 +779,11 @@ public class JpaDaoImpl
     }
 
     @Override
+    public void uniqueUpdateByQueryObj(Object... queryObjs) {
+        newDao(UpdateDao.class, queryObjs).uniqueUpdate();
+    }
+
+    @Override
     public int deleteByQueryObj(Object... queryObjs) {
         return newDao(DeleteDao.class, queryObjs).delete();
     }
@@ -786,6 +791,11 @@ public class JpaDaoImpl
     @Override
     public boolean singleDeleteByQueryObj(Object... queryObjs) {
         return newDao(DeleteDao.class, queryObjs).singleDelete();
+    }
+
+    @Override
+    public void uniqueDeleteByQueryObj(Object... queryObjs) {
+        newDao(DeleteDao.class, queryObjs).uniqueDelete();
     }
 
     /**
