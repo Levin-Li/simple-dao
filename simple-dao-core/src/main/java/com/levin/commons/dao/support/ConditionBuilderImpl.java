@@ -1777,7 +1777,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
-        if (!hasText(expr)) {
+        if (!hasText(expr)
+                || !expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
             return expr;
         }
 
@@ -1787,14 +1788,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return expr;
         }
 
-        if (expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
+        expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
 
-            expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
+        return (String) func.apply(expr, exMaps);
 
-            return (String) func.apply(expr, exMaps);
-        }
-
-        return expr;
     }
 
     boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
