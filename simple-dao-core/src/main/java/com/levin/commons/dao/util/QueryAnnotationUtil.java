@@ -597,6 +597,7 @@ public abstract class QueryAnnotationUtil {
         String newName = null;
 
         try {
+            //字段名称
             newName = (String) ReflectionUtils.findMethod(opAnno.annotationType(), ANNOTATION_VALUE_KEY).invoke(opAnno);
         } catch (Exception e) {
 //            ReflectionUtils.rethrowRuntimeException(e);

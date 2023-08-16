@@ -1777,13 +1777,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
-        BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
-
-        if (func == null) {
+        if (!hasText(expr)) {
             return expr;
         }
 
-        if (!hasText(expr)) {
+        BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
+
+        if (func == null) {
             return expr;
         }
 
@@ -1864,7 +1864,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return false;
         }
 
-        Method method = ReflectionUtils.findMethod(annotationType, "value");
+        Method method = ReflectionUtils.findMethod(annotationType, ANNOTATION_VALUE_KEY);
 
         if (method == null) {
             return false;
@@ -1986,6 +1986,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         for (Annotation annotation : daoAnnotations) {
 
             String newName = tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name);
+
+            //todo 是否尝试转换名称，表达式转换名称，支持 Spel
+            newName = evalTextByThreadLocal(newName);
 
             //如果是扩展参数的操作 或是 不是迭代类型
             Op op = getOp(annotation);
