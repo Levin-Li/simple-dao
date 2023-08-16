@@ -1790,7 +1790,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
 
-        return (String) func.apply(expr, exMaps);
+        return StringUtils.trimWhitespace((String) func.apply(expr, exMaps));
 
     }
 
