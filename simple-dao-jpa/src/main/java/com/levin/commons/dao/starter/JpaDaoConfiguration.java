@@ -185,6 +185,22 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
         log.info("JpaDaoConfiguration start init ...");
 
+
+        initJpaNamingStrategy();
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        try {
+            initTableComments();
+        } catch (Exception e) {
+            log.warn("update table comments error ", e);
+        }
+
+    }
+
+
+    private void initJpaNamingStrategy() throws ClassNotFoundException {
+
         String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
 
         if (StringUtils.hasText(physicalStrategy)
@@ -221,19 +237,8 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
             log.info("*** Entity class and table name mapping init ok. Mappings:" + QueryAnnotationUtil.tableNameMappingEntityClassCaches);
 
         } else {
-
             log.warn("*** Jpa naming strategy not config, you'd better config physical-strategy: " + EntityNamingStrategy.class.getName());
-
         }
-
-        ///////////////////////////////////////////////////////////////////////////////////////
-
-        try {
-            initTableComments();
-        } catch (Exception e) {
-            log.warn("update table comments error ", e);
-        }
-
 
     }
 
