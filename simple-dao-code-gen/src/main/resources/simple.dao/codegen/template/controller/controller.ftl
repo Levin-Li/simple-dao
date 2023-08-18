@@ -158,7 +158,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
-        return ApiResp.ok(checkResult(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -170,7 +170,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @CRUD.Op
     public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
-        return ApiResp.ok(checkResult(${serviceName?uncap_first}.delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -209,7 +209,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PutMapping("/batchUpdate")
     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchUpdate(@RequestBody @Valid List<Update${entityName}Req> reqList) {
-        return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -220,7 +220,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
     public ApiResp<Integer> batchDelete(@NotNull @Valid Delete${entityName}Req req) {
-        return ApiResp.ok(checkResult(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
