@@ -1717,7 +1717,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param attrType
      * @param value
      */
-    public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
+    public void processAttr(final Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         Assert.hasText(name, "name is empty");
 
@@ -1904,7 +1904,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param varType
      * @param value
      */
-    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
+    protected void processAttr(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
 
 //        if (isIgnore(varAnnotations)) {
 //            return;
@@ -2063,7 +2063,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param opAnnotation
      * @return 是否继续处理，true继续.false则停止
      */
-    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         //如果不是条件注解则忽略
         //但是允许空opAnnotation为 null，往下走
@@ -2173,7 +2173,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param primitiveValue
      * @param opAnnotation
      */
-    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value,
+    protected void processWhereCondition(final Object bean, Class<?> varType, String name, Object value,
                                          PrimitiveValue primitiveValue, Annotation opAnnotation) {
 
         genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
@@ -2192,7 +2192,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
+    protected void genExprAndProcess(final Object bean, Class<?> varType, String name, Object paramValue,
                                      PrimitiveValue primitiveValue, Annotation opAnnotation,
                                      BiConsumer<String, ValueHolder<Object>> consumer) {
 
