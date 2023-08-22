@@ -49,6 +49,9 @@
         <redission.version>3.19.3</redission.version>
         <redission.version>3.16.8</redission.version>
 
+        <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
+        <com.github.oshi.version>3.12.2</com.github.oshi.version>
+
         <openfeign.version>3.1.5</openfeign.version>
 
         <mysql-driver.version>8.0.32</mysql-driver.version>
@@ -277,6 +280,23 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${com.github.oshi.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${net.java.dev.jna.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${net.java.dev.jna.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.alibaba</groupId>

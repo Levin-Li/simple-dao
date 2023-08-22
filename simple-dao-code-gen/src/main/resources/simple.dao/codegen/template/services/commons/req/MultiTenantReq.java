@@ -20,7 +20,7 @@ import lombok.experimental.FieldNameConstants;
  * 多租户查询对象
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
+ *
  */
 @Schema(title = "多租户查询对象")
 @Data
@@ -37,7 +37,7 @@ public class MultiTenantReq
     )
     @OR(autoClose = true)
     @Eq
-    @IsNull(condition = "#_this.isContainsPublicData()") //如果是公共数据，允许包括非该租户的数据
+    @IsNull(condition = "#isNotEmpty(#_val) && isContainsPublicData()") //如果是公共数据，允许包括非该租户的数据
     protected String tenantId;
 
     /**

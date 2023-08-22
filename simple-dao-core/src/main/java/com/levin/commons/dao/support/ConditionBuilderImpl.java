@@ -45,8 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
-import static org.springframework.util.StringUtils.containsWhitespace;
-import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.*;
 
 
 /**
@@ -1769,16 +1768,19 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
     }
 
+
     /**
+     * 从当前线程变量中执行脚本
      * 表达式扩展或是替换
      *
+     * @see #evalExpr(Object, Object, String, String, List, Map[])
      * @param expr
      * @return
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
         if (!hasText(expr)
-                || !expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
+                || !trimWhitespace(expr).startsWith(ExpressionType.SPEL_PREFIX)) {
             return expr;
         }
 
@@ -1788,9 +1790,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return expr;
         }
 
-        expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
+        expr = trimWhitespace(expr).substring(ExpressionType.SPEL_PREFIX.length());
 
-        return StringUtils.trimWhitespace((String) func.apply(expr, exMaps));
+        return trimWhitespace((String) func.apply(expr, exMaps));
 
     }
 
