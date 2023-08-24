@@ -199,7 +199,14 @@ public interface MiniDao extends DeepCopier {
      * @param commitBatchSize
      */
     @Transactional
-    List<Object> batchCreate(List<Object> entityOrDtoList);
+    default List<Object> batchCreate(List<Object> entityOrDtoList) {
+
+        List<Object> result = new ArrayList<>(entityOrDtoList.size());
+
+        entityOrDtoList.forEach(data -> result.add(create(data)));
+
+        return result;
+    }
 
     /**
      * 批量提交
@@ -210,7 +217,40 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    List<Object> batchCreate(List<Object> entityOrDtoList, int commitBatchSize);
+    default List<Object> batchCreate(List<Object> entityOrDtoList, int commitBatchSize) {
+
+        if (commitBatchSize < 1) {
+            commitBatchSize = 512;
+        } else if (commitBatchSize > 512 * 10) {
+            commitBatchSize = 5120;
+        }
+
+        if (entityOrDtoList.size() < commitBatchSize) {
+            batchCreate(entityOrDtoList);
+        } else {
+
+            final List<Object> tempList = new ArrayList<>(commitBatchSize);
+
+            int i = 0;
+            for (Object data : entityOrDtoList) {
+
+                tempList.add(data);
+                //如果批次满
+                if (i++ % commitBatchSize == 0) {
+                    batchCreate(tempList);
+                    tempList.clear();
+                }
+            }
+
+            if (!tempList.isEmpty()) {
+                batchCreate(tempList);
+                tempList.clear();
+            }
+
+        }
+
+        return entityOrDtoList;
+    }
 
     /**
      * 更新

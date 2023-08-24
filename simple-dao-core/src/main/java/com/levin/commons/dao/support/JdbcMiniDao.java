@@ -9,9 +9,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,6 +68,19 @@ public class JdbcMiniDao implements MiniDao {
         return jdbcOperations.update(statement, paramValues);
     }
 
+    @Override
+    public void setCurrentThreadMaxLimit(Integer maxLimit) {
+    }
+
+    @Transactional
+    public List<Object> batchCreate(List<Object> entityOrDtoList) {
+
+        List<Object> result = new ArrayList<>(entityOrDtoList.size());
+
+        entityOrDtoList.forEach(data -> result.add(create(data)));
+
+        return result;
+    }
 
     private String addLimit(int start, int count, String statement) {
 
