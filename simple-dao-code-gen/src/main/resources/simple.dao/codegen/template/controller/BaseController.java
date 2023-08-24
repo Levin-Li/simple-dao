@@ -73,6 +73,14 @@ public abstract class BaseController {
     }
 
     /**
+     * @return
+     */
+    protected String getContextPath() {
+        return httpRequest.getServletContext().getContextPath();
+    }
+
+
+    /**
      * null2Empty
      * @param txt
      * @return
