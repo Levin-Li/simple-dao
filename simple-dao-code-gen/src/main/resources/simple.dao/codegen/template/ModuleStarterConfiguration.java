@@ -10,6 +10,8 @@ import com.levin.commons.service.support.*;
 import com.levin.commons.utils.*;
 
 import javax.annotation.*;
+
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.*;
 
@@ -37,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 // Spring 扫描
 //@ComponentScan({PACKAGE_NAME})
+@ConfigurationPropertiesScan({PACKAGE_NAME})
 
 // 自定义注解接口 扫描
 @ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
