@@ -46,6 +46,7 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
@@ -456,7 +457,6 @@ public class DaoExamplesTest {
 
 
     }
-
 
     @Test
     public void testSimpleUserQO() {

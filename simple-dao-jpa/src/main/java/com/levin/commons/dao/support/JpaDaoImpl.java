@@ -29,6 +29,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
 
@@ -170,6 +171,8 @@ public class JpaDaoImpl
     @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
     private int safeModeMaxLimit = 2000;
 
+    private static final ThreadLocal<Integer> safeModeMaxLimitThreadLocal = new ThreadLocal<>();
+
     @Autowired
     private HibernateProperties hibernateProperties;
 
@@ -288,10 +291,15 @@ public class JpaDaoImpl
         return true;
     }
 
-
     @Override
     public int getSafeModeMaxLimit() {
-        return safeModeMaxLimit;
+        Integer limit = safeModeMaxLimitThreadLocal.get();
+        return limit != null ? limit : safeModeMaxLimit;
+    }
+
+    @Override
+    public void setCurrentThreadMaxLimit(Integer maxLimit) {
+        safeModeMaxLimitThreadLocal.set(maxLimit);
     }
 
     public EntityManagerFactory getEntityManagerFactory() {
@@ -627,6 +635,53 @@ public class JpaDaoImpl
         return (E) entityOrDto;
     }
 
+    @Transactional
+    public List<Object> batchCreate(List<Object> entityOrDtoList) {
+
+        List<Object> result = new ArrayList<>(entityOrDtoList.size());
+
+        entityOrDtoList.forEach(data -> result.add(create(data)));
+
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public List<Object> batchCreate(List<Object> entityOrDtoList, int commitBatchSize) {
+
+        if (commitBatchSize < 1) {
+            commitBatchSize = 512;
+        } else if (commitBatchSize > 512 * 10) {
+            commitBatchSize = 5120;
+        }
+
+        if (entityOrDtoList.size() < commitBatchSize) {
+            getDao().batchCreate(entityOrDtoList);
+        } else {
+
+            final List<Object> tempList = new ArrayList<>(commitBatchSize);
+
+            int i = 0;
+            for (Object data : entityOrDtoList) {
+
+                tempList.add(data);
+                //如果批次满
+                if (i++ % commitBatchSize == 0) {
+                    getDao().batchCreate(tempList);
+                    tempList.clear();
+                }
+            }
+
+            if (!tempList.isEmpty()) {
+                getDao().batchCreate(tempList);
+                tempList.clear();
+            }
+
+        }
+
+        return entityOrDtoList;
+    }
+
     @Override
     @Transactional
     public <E> E create(Object entityOrDto, boolean isCheckUniqueValue) {
@@ -747,25 +802,6 @@ public class JpaDaoImpl
 
         return update("delete from " + entityClass.getName()
                 + " where " + getEntityIdAttrName(entityClass) + " = " + getParamPlaceholder(false), id) > 0;
-    }
-
-    @Override
-    public int update(String statement, Object... paramValues) {
-        return update(false, statement, paramValues);
-    }
-
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param isNative
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Override
-    public int update(boolean isNative, String statement, Object... paramValues) {
-        return update(isNative, -1, getSafeModeMaxLimit(), statement, paramValues);
     }
 
     @Override
@@ -1255,11 +1291,6 @@ public class JpaDaoImpl
         }
 
         return null;
-    }
-
-    @Override
-    public <T> List<T> find(String statement, Object... paramValues) {
-        return find(-1, -1, statement, paramValues);
     }
 
     @Override

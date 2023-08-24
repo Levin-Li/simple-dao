@@ -107,7 +107,6 @@ public class DeleteDaoImpl<T>
     }
 
 
-
     @Override
     @Transactional
     public int delete() {
@@ -194,7 +193,12 @@ public class DeleteDaoImpl<T>
      * @return
      */
     int batchDelete(String statement, List paramList) {
-        return dao.update(isNative(), rowStart, rowCount, statement, paramList);
+        try {
+            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            return dao.update(isNative(), rowStart, rowCount, statement, paramList);
+        } finally {
+            dao.setCurrentThreadMaxLimit(null);
+        }
     }
 
     private void reThrow(Exception ex) {

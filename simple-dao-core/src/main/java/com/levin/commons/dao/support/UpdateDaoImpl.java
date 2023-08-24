@@ -162,7 +162,12 @@ public class UpdateDaoImpl<T>
             return -1;
         }
 
-        return dao.update(isNative(), rowStart, rowCount, statement, genFinalParamList());
+        try {
+            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            return dao.update(isNative(), rowStart, rowCount, statement, genFinalParamList());
+        } finally {
+            dao.setCurrentThreadMaxLimit(null);
+        }
     }
 
     /**

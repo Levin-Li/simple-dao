@@ -1169,7 +1169,7 @@ public class SelectDaoImpl<T>
      */
     private long count(String ql, Object... paramValues) {
 
-        List<Number> list = dao.find(isNative(), null, -1, rowCount, ql, paramValues);
+        List<Number> list = dao.find(isNative(), null, -1, 1, ql, paramValues);
 
         if (list.isEmpty() || list.get(0) == null) {
             return 0;
@@ -1208,7 +1208,13 @@ public class SelectDaoImpl<T>
             //  resultClass = (Class<E>) Tuple.class;
         }
 
-        return dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
+        try {
+            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            return dao.find(isNative(), resultClass, rowStart, rowCount, genFinalStatement(), genFinalParamList());
+        } finally {
+            dao.setCurrentThreadMaxLimit(null);
+        }
+
     }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

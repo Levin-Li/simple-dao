@@ -109,6 +109,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected transient MiniDao dao;
 
+    @Getter
+    protected Integer safeModeMaxLimit = 2000;
+
     //默认不过滤空置的
     protected boolean disableEmptyValueFilter = true;
 
@@ -199,6 +202,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    @Override
+    public CB setSafeModeMaxLimit(Integer maxLimit) {
+        this.safeModeMaxLimit = maxLimit;
+        return (CB) this;
+    }
 
     public javax.validation.Validator getValidator() {
         return validator;
@@ -1773,9 +1781,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 从当前线程变量中执行脚本
      * 表达式扩展或是替换
      *
-     * @see #evalExpr(Object, Object, String, String, List, Map[])
      * @param expr
      * @return
+     * @see #evalExpr(Object, Object, String, String, List, Map[])
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
@@ -2452,12 +2460,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr  如果 expr 为 null
      * @return
      */
-    protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
+    protected boolean evalTrueExpr(final Object root, Object value, String name, String expr) {
         return evalTrueExpr(root, value, name, expr, buildContextValues(root, value, name));
     }
 
 
-    protected boolean evalTrueExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> contexts) {
+    protected boolean evalTrueExpr(final Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> contexts) {
 
         /**
          * 默认是无条件限制
@@ -2518,7 +2526,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param <T>
      * @return
      */
-    protected <T> T evalExpr(Object root, Object value, String name, String expr, List<Map<String, ?>> baseContexts, Map<String, ?>... exMaps) {
+    protected <T> T evalExpr(final Object root, Object value, String name, String expr, List<Map<String, ?>> baseContexts, Map<String, ?>... exMaps) {
 
         try {
 

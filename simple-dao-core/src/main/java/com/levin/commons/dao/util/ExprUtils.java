@@ -774,7 +774,7 @@ public abstract class ExprUtils {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, List<Map<String, ?>> contexts) {
+    public static <T> T evalSpEL(final Object rootObject, String expression, List<Map<String, ?>> contexts) {
 
         if (contexts == null) {
             contexts = Arrays.asList(DaoContext.getGlobalContext(), DaoContext.getThreadContext());

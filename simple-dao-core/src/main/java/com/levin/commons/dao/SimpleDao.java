@@ -12,6 +12,8 @@ import java.util.function.BiConsumer;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
+
+
     /**
      * 更新或是创建
      *
@@ -49,28 +51,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     boolean deleteById(Class entityClass, Object id);
-
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Transactional
-    int update(String statement, Object... paramValues);
-
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Transactional
-    int update(boolean isNative, String statement, Object... paramValues);
 
     /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -142,32 +122,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <T> T find(Class<T> entityClass, Object id);
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * 查询
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement
-     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
-     * @param <T>
-     * @return
-     */
-    <T> List<T> find(String statement, Object... paramValues);
-
-    /**
-     * 分页查询
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param start       要返回的结果集的开始位置 position，从0开始
-     * @param count       要返回的记录数
-     * @param statement
-     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
-     * @param <T>
-     * @return
-     */
-    <T> List<T> find(int start, int count, String statement, Object... paramValues);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
