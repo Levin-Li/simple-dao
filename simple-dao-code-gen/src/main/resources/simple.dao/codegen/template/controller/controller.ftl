@@ -81,12 +81,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    //@Autowired
-    @DubboReference
+    @DubboReference //@Autowired
     protected ${serviceName} ${serviceName?uncap_first};
 
-    //@Autowired
-    @DubboReference
+    @DubboReference //@Autowired
     protected Biz${serviceName} biz${serviceName};
 
     /**
