@@ -38,15 +38,14 @@ import org.springframework.web.bind.annotation.RestController;
 @EntityScan({PACKAGE_NAME})
 
 // Spring 扫描
-@ComponentScan({PACKAGE_NAME})
 @ConfigurationPropertiesScan({PACKAGE_NAME})
+@ComponentScan({PACKAGE_NAME})
 
 // 自定义注解接口 扫描
 @ProxyBeanScan(basePackages = {PACKAGE_NAME} , scanType = EntityRepository.class , factoryBeanClass = RepositoryFactoryBean.class)
 
 // FeignClients 扫描
 @EnableFeignClients({PACKAGE_NAME})
-
 
 // Dubbo 扫描，根据现有的 Dubbo 3.1.x 版本的机制， DubboComponentScan 会先自动先扫描 Spring 的注解, 所以 @ComponentScan 可以注释。
 @DubboComponentScan({PACKAGE_NAME})
