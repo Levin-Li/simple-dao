@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EntityScan({PACKAGE_NAME})
 
 // Spring 扫描
-//@ComponentScan({PACKAGE_NAME})
+@ComponentScan({PACKAGE_NAME})
 @ConfigurationPropertiesScan({PACKAGE_NAME})
 
 // 自定义注解接口 扫描
