@@ -5,6 +5,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
@@ -359,6 +360,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB or(Boolean valid) {
         beginLogic(OR.class.getSimpleName(), Boolean.TRUE.equals(valid));
+        return (CB) this;
+    }
+
+    @Override
+    public CB not() {
+        return not(true);
+    }
+
+    @Override
+    public CB not(Boolean valid) {
+        beginLogic(NOT.class.getSimpleName(), Boolean.TRUE.equals(valid));
         return (CB) this;
     }
 

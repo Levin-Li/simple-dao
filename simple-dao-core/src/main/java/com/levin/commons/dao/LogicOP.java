@@ -43,6 +43,22 @@ public interface LogicOP<T> {
     T or(Boolean valid);
 
     /**
+     * 开始非条件
+     *
+     * @return
+     */
+    T not();
+
+    /**
+     * 开始非条件
+     * <p>
+     * 为了保持链式调用而增加的方法
+     *
+     * @return
+     */
+    T not(Boolean valid);
+
+    /**
      * 结束
      *
      * @return
