@@ -449,7 +449,7 @@ public class DaoExamplesTest {
         System.out.println(statement);
 
         Assert.isTrue(statement.contains(" = CONCAT(")
-              //  && statement.contains(" IS NULL")
+                //  && statement.contains(" IS NULL")
                 && statement.contains(" + ")
                 && statement.contains("''")
                 && statement.contains("0")
@@ -975,6 +975,25 @@ public class DaoExamplesTest {
         Assert.isTrue(update == 1, "更新条数错误");
     }
 
+    @Test
+    public void testNotOp() throws Exception {
+
+        dao.selectFrom(User.class).not().eq(E_User.area, "test").end().find();
+
+        try {
+            dao.selectFrom(User.class).not().eq(E_User.area, "test").gt(E_User.score, 50).end().find();
+
+            throw new Exception("用例应该抛出异常");
+
+        } catch (RuntimeException e) {
+            System.out.println(""+e.getMessage());
+        }
+
+        String statement = dao.selectFrom(User.class).not().eq(E_User.area, "test").end().genFinalStatement();
+
+        Assert.isTrue(statement.contains(" NOT("));
+
+    }
 
     @Test
     public void testGetIdAttr() {

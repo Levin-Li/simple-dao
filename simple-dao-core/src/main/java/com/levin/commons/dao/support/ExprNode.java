@@ -239,7 +239,7 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
         }
 
         if (isNotOp() && subNodes.size() >= 1) {
-            throw new IllegalArgumentException("NOT 操作 只允许一个操作数");
+            throw new StatementBuildException("NOT操作只允许一个操作数");
         }
 
         if (addToFirst) {
@@ -291,7 +291,7 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
         return CollectionHelper.toString(
                 (valid ? subNodes : new Object[]{}), null, " " + getDelimiter() + " "
-                , false, true, true
+                , false, !isNotOp(), true
                 , getPrefix(), getSuffix()
         ).toString();
     }
