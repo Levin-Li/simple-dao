@@ -53,7 +53,6 @@ public class UserDTO2 {
     @Ignore
     protected Boolean enable = true;
 
-    @NOT
     @AND
     protected Boolean editable = true;
 

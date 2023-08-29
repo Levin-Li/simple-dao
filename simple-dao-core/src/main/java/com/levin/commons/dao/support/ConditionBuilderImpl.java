@@ -1756,8 +1756,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             //支持多个注解
             List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-            logicAnnotations.stream()
-                    .forEachOrdered(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+            logicAnnotations.forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
             //可以多次逻辑组
             try {
                 //如果是忽略的类型

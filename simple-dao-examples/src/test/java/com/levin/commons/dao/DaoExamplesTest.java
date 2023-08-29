@@ -1322,17 +1322,17 @@ public class DaoExamplesTest {
 //                .appendWhere("3333 < :lastUpdateTime")
                 .find();
 
-        String expectResult ="Select (u.state) AS state  From com.levin.commons.dao.domain.User u   Where u.name NOT IN ( :?, :?, :? ) AND NOT(u.enable =  :?) AND u.editable =  :? AND (u.createTime >  :? OR u.score Between  :? AND  :?) AND u.remark LIKE  :? AND u.createTime Between  :? AND  :? AND 222 != :orderCode  Group By u.state Having NOT( u.state IN ( :?, :?, :? ) )";
 
-        String statement = selectDao.genFinalStatement();
+       final String statement = selectDao.genFinalStatement();
 
-        //必须存在正确的Having字句
-        Assert.isTrue(statement.contains("Having NOT( u.state IN ( :?, :?, :? ) )"));
+        System.out.println("生成的语句：" + statement);
 
         //必须存在正确的Having字句
-        Assert.isTrue(statement.contains("Having NOT( u.state IN ( :?, :?, :? ) )"));
+        Assert.isTrue(statement.contains("Having NOT( u.state IN ( :?, :?, :? ) )"), "Having语句生成错误");
 
-        System.out.println(statement);
+        //必须存在正确的NOT 字句
+        Assert.isTrue(statement.contains("AND NOT((u.enable =  :? AND u.editable =  :? AND (u.createTime >  :? OR u.score Between  :? AND  :?) AND u.remark LIKE  :?)) AND u.createTime Between  :? AND  :?")
+                , "Where 语句生成错误");
 
     }
 

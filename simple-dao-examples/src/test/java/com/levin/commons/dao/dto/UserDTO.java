@@ -39,7 +39,7 @@ public class UserDTO {
     @NotIn(paramDelimiter = ",")
     String notInName = "A,B,C";
 
-    @NOT
+    @NOT(autoClose = false)
     @AND
     protected Boolean enable = true;
 
@@ -57,6 +57,7 @@ public class UserDTO {
     @END
     protected String remark = "desc";
 
+    @END(containCurrentField = false)//end NOT
     @Between(paramDelimiter = "-", patterns = "yyyyMMDD")
     String betweenCreateTime = "20190101-20220201";
 
