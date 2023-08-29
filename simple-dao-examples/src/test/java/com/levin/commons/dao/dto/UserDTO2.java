@@ -49,18 +49,19 @@ public class UserDTO2 {
     @OrderBy
     protected Integer orderCode;
 
-    @In()
-    String[] state = new String[]{"A", "B", "C"};
-
     @Ignore
     protected Boolean enable = true;
 
     @AND
     protected Boolean editable = true;
 
-    @Lt()
+    @Lt
     @OR(condition = "#_val!=null")
     protected Date createTime = new Date();
+
+    @In
+    String[] state = new String[]{"A", "B", "C"};
+
 
     @Between("score")
     @END
