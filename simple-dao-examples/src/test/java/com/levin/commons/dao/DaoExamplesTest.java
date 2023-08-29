@@ -1009,9 +1009,10 @@ public class DaoExamplesTest {
                 .end()
                 .genFinalStatement();
 
-        //   From com.levin.commons.dao.domain.User     Where NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))
+        // 预期生成的语句
+        // From com.levin.commons.dao.domain.User     Where NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))
 
-        Assert.isTrue(statement.contains(" NOT("));
+        Assert.isTrue(statement.contains("NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))"));
 
     }
 

@@ -2377,7 +2377,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             String propertyName = entityOption.logicalDeleteFieldName().trim();
 
             if (isNullable(entityClass, propertyName)) {
-                expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
+                expr = " ( " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
             }
 
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
