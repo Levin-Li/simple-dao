@@ -1203,7 +1203,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         Arrays.stream(queryObjs)
                 .filter(o -> o instanceof QueryOption)
-                .map(o -> (QueryOption) o).forEach(queryOption -> {
+                .map(o -> (QueryOption) o).forEachOrdered(queryOption -> {
 
                     if (hasValidQueryEntity()) {
                         return;
@@ -1400,7 +1400,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         queryObjList.stream().filter(Objects::nonNull)
                 .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
                 .filter(c -> c.isAnnotationPresent(TargetOption.class))
-                .forEach(c -> setTargetOption(null, c.getAnnotation(TargetOption.class)));
+                .forEachOrdered(c -> setTargetOption(null, c.getAnnotation(TargetOption.class)));
 
         for (Object queryValueObj : queryObjList) {
 
@@ -1757,7 +1757,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
             logicAnnotations.stream()
-                    .forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+                    .forEachOrdered(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
             //可以多次逻辑组
             try {
                 //如果是忽略的类型
@@ -1777,7 +1777,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //部分自动关闭
                 logicAnnotations.stream()
                         .filter(this::isLogicGroupAutoClose)
-                        .forEach(logicAnnotation -> end());
+                        .forEachOrdered(logicAnnotation -> end());
 
                 endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
             }
@@ -2365,7 +2365,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     && hasText(entityOption.deleteCondition())) {
                 appendToWhere(entityOption.deleteCondition(), Collections.emptyList(), true);
             }
-
         }
 
         //如果过滤逻辑删除的数据

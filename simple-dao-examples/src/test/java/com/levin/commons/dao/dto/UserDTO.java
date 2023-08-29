@@ -6,6 +6,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.GroupBy;
@@ -21,9 +22,7 @@ import java.util.Date;
 @TargetOption(entityClass = User.class, alias = "u", maxResults = 100, tableName = "jpa_dao_test_User")
 public class UserDTO {
 
-
     Paging paging = new PagingQueryReq(1, 20);
-
 
     Long id;
 
@@ -40,10 +39,10 @@ public class UserDTO {
     @NotIn(paramDelimiter = ",")
     String notInName = "A,B,C";
 
-    //    @Ignore
+    @NOT
+    @AND
     protected Boolean enable = true;
 
-    @AND
     protected Boolean editable = true;
 
     @C(op = Op.Gt)

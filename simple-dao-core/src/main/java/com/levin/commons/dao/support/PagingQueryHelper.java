@@ -230,7 +230,7 @@ public abstract class PagingQueryHelper {
         list.stream()
                 .filter(Objects::nonNull)
                 .map(o -> o.getClass())
-                .forEach(aClass -> resultMap.putAll(getPageOptionFields(aClass)));
+                .forEachOrdered(aClass -> resultMap.putAll(getPageOptionFields(aClass)));
 
         return resultMap;
     }

@@ -287,7 +287,7 @@ public abstract class ExprUtils {
             // 如果是一个不需参数的操作，把参数中的 Map 类型参数，加入到上下文
             flattenParams(null, holder.value).stream()
                     .filter(v -> v instanceof Map)
-                    .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
+                    .forEachOrdered((map) -> contexts.add((Map<String, ? extends Object>) map));
         }
 
         final List<Object> paramValues = new ArrayList<>(7);

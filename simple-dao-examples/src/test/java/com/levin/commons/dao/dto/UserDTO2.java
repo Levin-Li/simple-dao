@@ -6,6 +6,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
@@ -52,6 +53,7 @@ public class UserDTO2 {
     @Ignore
     protected Boolean enable = true;
 
+    @NOT
     @AND
     protected Boolean editable = true;
 
