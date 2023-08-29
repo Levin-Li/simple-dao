@@ -1,7 +1,6 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.StatementBuildException;
-import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.util.CollectionHelper;
 import lombok.Getter;
 import lombok.Setter;
@@ -108,6 +107,11 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
     }
 
+    /**
+     * 是否需要小挂号
+     *
+     * @return
+     */
     public boolean isNotNeedParentheses() {
         return parentNode == null || this.op.equals(parentNode.op) || subNodes.size() < 2;
     }
@@ -287,7 +291,6 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
     @Override
     public String toString() {
-
         return CollectionHelper.toString(
                 (valid ? subNodes : new Object[]{}), null, " " + getDelimiter() + " "
                 , false, !isNotOp(), true

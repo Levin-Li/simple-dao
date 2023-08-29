@@ -290,7 +290,7 @@ public abstract class ExprUtils {
                     .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
         }
 
-        final List<Object> paramValues = new ArrayList(7);
+        final List<Object> paramValues = new ArrayList<>(7);
 
         /// Function<String, String> genExpr = ql -> processParamPlaceholder(ql, paramPlaceholder, paramValues, contexts);
 
@@ -379,7 +379,7 @@ public abstract class ExprUtils {
      * @param op
      * @return
      */
-    private static Object convertValue(Class eleType, Object value, C c, Op op) {
+    private static Object convertValue(Class<?> eleType, Object value, C c, Op op) {
 
         if (eleType == null || value == null) {
             return value;

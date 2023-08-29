@@ -18,7 +18,6 @@ public interface SafeController<T> {
      */
     T setSafeModeMaxLimit(Integer maxLimit);
 
-
     /**
      * 禁用安全模式
      */

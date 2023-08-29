@@ -12,8 +12,6 @@ import java.util.function.BiConsumer;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
-
-
     /**
      * 更新或是创建
      *

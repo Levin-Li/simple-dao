@@ -986,10 +986,30 @@ public class DaoExamplesTest {
             throw new Exception("用例应该抛出异常");
 
         } catch (RuntimeException e) {
-            System.out.println(""+e.getMessage());
+            System.out.println("" + e.getMessage());
         }
 
-        String statement = dao.selectFrom(User.class).not().eq(E_User.area, "test").end().genFinalStatement();
+        String statement = dao.selectFrom(User.class)
+                .not()
+
+                .or()
+
+                .isNotNull(E_User.createTime)
+                .eq(E_User.area, "test")
+
+                //包含
+                .and()
+                .gt(E_User.score, 5)
+                .isNotNull(E_User.score)
+                .end()
+
+                //或结束
+                .end()
+
+                .end()
+                .genFinalStatement();
+
+        //   From com.levin.commons.dao.domain.User     Where NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))
 
         Assert.isTrue(statement.contains(" NOT("));
 
@@ -1325,11 +1345,9 @@ public class DaoExamplesTest {
 
         DaoContext.threadContext.put("id", "默认线程Id");
 
-
         HashMap<String, Object> context = new HashMap<>();
 
         context.put("env.jpaDao.P1", "Dao参数1");
-
 
         PagingData<Object> pagingData = dao.findPagingDataByQueryObj(new UserDTO2());
 

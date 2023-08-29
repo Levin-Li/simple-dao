@@ -1065,12 +1065,12 @@ public class SelectDaoImpl<T>
         //如果GroupBy子句有内容，Having子句才有效，则否Having中的条件将被忽略
         if (groupByColumns.isNotEmpty()) {
 
-            builder.append(" Group By  " + groupByColumns);
+            builder.append(" Group By " + groupByColumns);
 
             String havingStatement = havingExprRootNode.toString();
 
             if (havingStatement.length() > 0) {
-                builder.append(" Having  " + havingStatement);
+                builder.append(" Having " + havingStatement);
             }
 
         } else if (havingExprRootNode.toString().length() > 0) {
@@ -1105,7 +1105,7 @@ public class SelectDaoImpl<T>
                 }
 
                 if (orderByColumns.isNotEmpty()) {
-                    builder.append(" Order By  " + orderByColumns);
+                    builder.append(" Order By " + orderByColumns);
                 }
 
             } else if (defaultOrderByStatement.length() > 0
@@ -1113,7 +1113,7 @@ public class SelectDaoImpl<T>
 
                 //groupBy 不能加入默认
                 //加入默认排序语句
-                builder.append(" Order By  " + defaultOrderByStatement);
+                builder.append(" Order By " + defaultOrderByStatement);
             }
         }
 

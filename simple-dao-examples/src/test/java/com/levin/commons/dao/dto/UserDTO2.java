@@ -62,7 +62,6 @@ public class UserDTO2 {
     @In
     String[] state = new String[]{"A", "B", "C"};
 
-
     @Between("score")
     @END
     protected Integer[] scores = new Integer[]{200, 100, null, null};
