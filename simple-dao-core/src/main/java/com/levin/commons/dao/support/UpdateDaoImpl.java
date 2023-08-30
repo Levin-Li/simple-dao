@@ -2,7 +2,6 @@ package com.levin.commons.dao.support;
 
 
 import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
@@ -17,7 +16,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static org.springframework.util.StringUtils.hasText;
-import static org.springframework.util.StringUtils.trimWhitespace;
 
 /**
  * 更新Dao实现类
@@ -29,11 +27,9 @@ public class UpdateDaoImpl<T>
         extends ConditionBuilderImpl<T, UpdateDao<T>>
         implements UpdateDao<T> {
 
-
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
 
     final List updateParamValues = new ArrayList(7);
-
 
     static final String UPDATE_PACKAGE_NAME = Update.class.getPackage().getName();
 
@@ -85,12 +81,38 @@ public class UpdateDaoImpl<T>
         return this;
     }
 
+    /**
+     * 设置更新字段
+     *
+     * @param isAppend                             是否加入表达式，方便链式调
+     * @param incrementMode                        是否增量模式
+     * @param autoConvertNullValueForIncrementMode 增量模式时，是否自动转换空值
+     * @param entityAttrName                       需要更新的属性名，会自动尝试加上别名
+     * @param paramValue                           参数值
+     * @return
+     */
     @Override
-    public UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {
-        if (Boolean.TRUE.equals(isAppend)
-                && hasText(entityAttrName)) {
-            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
+    public UpdateDao<T> set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue) {
+
+        if (!Boolean.TRUE.equals(isAppend) && !hasText(entityAttrName)) {
+            return this;
         }
+
+        String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
+
+        //是否增量模式
+        if (incrementMode) {
+
+            ValueHolder<Object> holder = new ValueHolder<>(paramValue);
+
+            expr = genIncrementExpr(autoConvertNullValueForIncrementMode, entityAttrName, null, expr, holder);
+
+            //参数
+            paramValue = holder.value;
+        }
+
+        append(expr, paramValue);
+
         return this;
     }
 
@@ -99,7 +121,6 @@ public class UpdateDaoImpl<T>
             updateParamValues.add(values);
         }
     }
-
 
     @Override
     public UpdateDao<T> disableThrowExWhenNoColumnForUpdate() {
@@ -236,9 +257,9 @@ public class UpdateDaoImpl<T>
                     if (updateOp.incrementMode()
                             //去除成对的小括号
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
-                            && expr.indexOf('=') != -1) {
+                            && expr.contains("=")) {
 
-                        expr = genAssignExpr(getDao(), updateOp, name, varType, expr, holder);
+                        expr = genIncrementExpr(updateOp.convertNullValueForIncrementMode(), name, varType, expr, holder);
                     }
                 }
 
@@ -251,9 +272,7 @@ public class UpdateDaoImpl<T>
         //允许 Update 注解和其它注解同时存在
 
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
-
     }
-
 
     /**
      * 生成增量更新语句
@@ -262,7 +281,7 @@ public class UpdateDaoImpl<T>
      * @param expr
      * @return
      */
-    private String genAssignExpr(MiniDao dao, final Update updateOp, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+    protected String genIncrementExpr(boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
 
         //数据库字段的类型，必须存在更新的对象
         final Class<?> dbColumnType = QueryAnnotationUtil.getFieldType(entityClass, name);
@@ -280,7 +299,7 @@ public class UpdateDaoImpl<T>
         final String paramExpr = ExprUtils.trimParenthesesPair(expr.substring(indexOf + 1));
 
         //是否支持 IFNULL 函数
-        final boolean isSupportIFNULL = Boolean.TRUE.equals(dao.isSupportFunction("IFNULL"));
+        final boolean isSupportIFNULL = Boolean.TRUE.equals(getDao().isSupportFunction("IFNULL"));
 
         //生成语句
         final BiFunction<String, String, String> genFunc = (fun, defaultValue) -> {
@@ -289,7 +308,7 @@ public class UpdateDaoImpl<T>
 
             String delim = hasText(fun) ? " , " : " + ";
 
-            if (updateOp.convertNullValueForIncrementMode()) {
+            if (convertNullValueForIncrementMode) {
 
                 //SQL 条件语句 (IF, CASE WHEN, IFNULL)
                 // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
@@ -325,6 +344,5 @@ public class UpdateDaoImpl<T>
 
         return expr;
     }
-
 
 }

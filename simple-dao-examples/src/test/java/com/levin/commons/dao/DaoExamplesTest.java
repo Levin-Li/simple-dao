@@ -321,18 +321,8 @@ public class DaoExamplesTest {
 
 
         System.out.println(names);
-        //   Session session = entityManager.unwrap(Session.class);
-
-        // session.isDirty();
-
-        //  session.setHibernateFlushMode(null);
-
-//        List<Tuple> resultList = session
-//                .createQuery("select id,name,group from " + User.class.getName(), Tuple.class)
-//                .getResultList();
 
 
-//          System.out.println(resultList);
     }
 
     @Test
@@ -1200,9 +1190,24 @@ public class DaoExamplesTest {
 
         DaoContext.threadContext.put("orgId", 5L);
 
-
     }
 
+    @Test
+    public void testIncrementModeUpdateDTO() throws Exception {
+
+        UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
+
+        String statement = userUpdateDao
+                .set(true, true, E_User.score, 1)
+                .set(true, true, E_User.name, "name")
+                .eq(E_User.enable, false).genFinalStatement();
+
+        System.out.println(statement);
+        // Update com.levin.commons.dao.domain.User   Set score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') ) Where enable =  :?
+
+        Assert.isTrue(statement.contains("score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') )"));
+
+    }
 
     @Test
     public void testUpdateDTO() throws Exception {
@@ -1214,7 +1219,6 @@ public class DaoExamplesTest {
                 .eq(E_User.enable, false)
                 .update();
     }
-
 
     @Test
     public void testCount() throws Exception {
@@ -1323,7 +1327,7 @@ public class DaoExamplesTest {
                 .find();
 
 
-       final String statement = selectDao.genFinalStatement();
+        final String statement = selectDao.genFinalStatement();
 
         System.out.println("生成的语句：" + statement);
 
