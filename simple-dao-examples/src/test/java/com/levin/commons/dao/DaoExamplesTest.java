@@ -1197,16 +1197,19 @@ public class DaoExamplesTest {
 
         UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
 
-        String statement = userUpdateDao
+        userUpdateDao
                 .set(true, true, E_User.score, 1)
-                .set(true, true, E_User.name, "name")
-                .eq(E_User.enable, false).genFinalStatement();
+                .set(true, true, E_User.name, "+")
+                .eq(E_User.enable, false);
+
+        String statement = userUpdateDao.genFinalStatement();
 
         System.out.println(statement);
         // Update com.levin.commons.dao.domain.User   Set score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') ) Where enable =  :?
 
         Assert.isTrue(statement.contains("score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') )"));
 
+        userUpdateDao.update();
     }
 
     @Test
