@@ -24,7 +24,6 @@ import com.levin.commons.dao.annotation.order.*;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
-
 import ${entityClassPackage}.*;
 import static ${entityClassPackage}.E_${entityName}.*;
 import ${modulePackageName}.services.commons.req.*;
@@ -35,11 +34,11 @@ import ${imp};
 </#list>
 ////////////////////////////////////
 
-
 /**
- *  新增${entityTitle}
- *  //@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 新增${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = CREATE_ACTION + BIZ_NAME)
 @Data
@@ -56,52 +55,37 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoIdentity)>
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})
+<#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
+    <#if (field.baseType && (!field.lazy || field.baseType) && !field.autoGenValue)>
+<#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')})
     <#list field.annotations as annotation>
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
-    <#if (field.baseEntityField && field.name =='creator')>
-    @InjectVar(InjectConsts.USER_ID)
-    </#if>
+<#--    <#if (field.baseEntityField && field.name =='creator')>-->
+<#--    @InjectVar(InjectConsts.USER_ID)-->
+<#--    </#if>-->
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
-    </#if>
 
+    </#if>
 </#list>
 
     @PostConstruct
     public void prePersist() {
-
-       //@todo 保存之前初始化数据
-
+       //@todo 保存之前初始化数据，比如时间，初始状态等
 <#list fields as field>
-    <#if field.name == 'sn' && field.typeName == 'String'>
+    <#if field.typeName == 'String' && (field.name == 'sn' || field.name == 'uuid')>
 
-        if(getSn() == null){
-            String sn = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-            setSn(sn);
+        if(get${field.name?cap_first}() == null){
+            set${field.name?cap_first}(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
         }
     </#if>
-    <#if field.name == 'addTime'>
+    <#if classModel.isDefaultCreateTime(field.name) >
 
-        if(getAddTime() == null){
-            setAddTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'occurTime'>
-
-        if(getOccurTime() == null){
-            setOccurTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'createTime'>
-
-        if(getCreateTime() == null){
-            setCreateTime(new Date());
+        if(get${field.name?cap_first}() == null){
+            set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
         }
     </#if>
 </#list>
-
     }
-
 }

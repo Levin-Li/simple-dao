@@ -38,9 +38,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  更新${entityTitle}
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 更新${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = UPDATE_ACTION + BIZ_NAME)
 @Data
@@ -63,14 +64,15 @@ public class ${className} extends ${reqExtendClass} {
     @NotNull
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
-</#if>
 
+</#if>
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
     @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
     final boolean eqEditable = true;
-</#if>
 
+</#if>
+<#-- 字段分组，参考 CRUD枚举，UPDATE_fields 表示更新分组 -->
 <#list UPDATE_fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
@@ -80,9 +82,10 @@ public class ${className} extends ${reqExtendClass} {
     </#list>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+
     </#if>
 </#list>
-
+<#-- 字段分组，参考 CRUD枚举，默认是 CRUD.DEFAULT 分组，没有前缀 -->
 <#list fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
@@ -90,6 +93,10 @@ public class ${className} extends ${reqExtendClass} {
     ${annotation}
     </#if>
     </#list>
+    <#if field.optimisticLock>
+    @Eq(desc = "乐观锁更新条件")
+    @Update(incrementMode = true, paramExpr = "1", condition = "", desc = "乐观锁版本号 + 1")
+    </#if>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
@@ -113,19 +120,12 @@ public class ${className} extends ${reqExtendClass} {
     public void preUpdate() {
         //@todo 更新之前初始化数据
 <#list fields as field>
-    <#if field.name == 'updateTime'>
+    <#if classModel.isDefaultUpdateTime(field.name)>
 
-        if(getUpdateTime() == null){
-            setUpdateTime(new Date());
-        }
-    </#if>
-    <#if field.name == 'lastUpdateTime'>
-
-        if(getLastUpdateTime() == null){
-            setLastUpdateTime(new Date());
+        if(get${field.name?cap_first}() == null){
+            set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
         }
     </#if>
 </#list>
     }
-
 }

@@ -19,8 +19,8 @@ import lombok.experimental.FieldNameConstants;
 /**
  * 多租户查询对象
  *
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ * 
  */
 @Schema(title = "多租户查询对象")
 @Data
@@ -38,5 +38,16 @@ public class MultiTenantOrgReq
     @Schema(title = "机构ID" , hidden = true)
     @Eq
     protected String orgId;
+
+    /**
+     * 设置部门ID
+     * @param orgId
+     * @return
+     * @param <T>
+     */
+    public <T extends MultiTenantOrgReq> T setOrgId(String orgId) {
+        this.orgId = orgId;
+        return (T) this;
+    }
 
 }

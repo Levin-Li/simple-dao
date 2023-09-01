@@ -34,7 +34,7 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(title = "创建者")
     @Column(length = 128)
-    @InjectVar(InjectConsts.USER_ID)
+    @InjectVar(value = InjectConsts.USER_ID, isRequired = "false")
     protected String creator;
 
     @Schema(title = "创建时间")

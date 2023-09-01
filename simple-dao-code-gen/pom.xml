@@ -136,6 +136,12 @@
             <version>2.4.17</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.googlejavaformat</groupId>
+            <artifactId>google-java-format</artifactId>
+            <version>1.17.0</version>
+        </dependency>
+
 <!--        <dependency>-->
 <!--            <groupId>org.yaml</groupId>-->
 <!--            <artifactId>snakeyaml</artifactId> -->
@@ -179,7 +185,6 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-<!--            <version>8.4.1.jre8</version>-->
         </dependency>
 
         <dependency>
@@ -213,6 +218,10 @@
             <version>1.0.0-build221</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
@@ -258,8 +267,9 @@
             <id>only-for-gitpack-env</id>
             <activation>
                 <file>
-                    <!--  关键字：jitpack 表示是在 gitpack 打包-->
-                    <exists>/home/jitpack/build/${project.artifactId}/pom.xml</exists>
+                    <!--  关键字：jitpack 表示是在 gitpack 打包, eg./home/jitpack/build/simple-dao-id-generator/pom.xml-->
+                    <!--   <exists>/home/jitpack/build/${project.artifactId}/pom.xml</exists> -->
+                    <exists>/home/jitpack/build/pom.xml</exists>
                 </file>
             </activation>
 

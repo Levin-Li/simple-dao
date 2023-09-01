@@ -15,6 +15,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,8 +49,8 @@ import java.text.SimpleDateFormat;
  *
  * 注意：默认不启用，启用请取消注释
  *
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Slf4j
 //@Component(PLUGIN_PREFIX + "${className}")
@@ -69,12 +70,15 @@ public class ModuleWebControllerAdvice {
     }
 
     /**
-     * // @InitBinder标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
-     * // 日期格式的字符串转换成Date对象
+     * #@InitBinder 标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
+     * 日期格式的字符串转换成Date对象
      * @param binder
      */
     @InitBinder
     protected void initBinder(WebDataBinder binder) {
+
+          //@todo 可以设置模块统一的参数校验，参数转换等功能。
+
 //        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 //        dateFormat.setLenient(false);
 //        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
@@ -176,6 +180,7 @@ public class ModuleWebControllerAdvice {
             IllegalStateException.class,
             MethodArgumentNotValidException.class,
             ValidationException.class,
+            BindException.class,
             MissingServletRequestParameterException.class})
     public ApiResp onParameterException(Exception e) {
 

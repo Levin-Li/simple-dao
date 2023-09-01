@@ -43,9 +43,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  查询${entityTitle}
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 查询${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = QUERY_ACTION + BIZ_NAME)
 @Data
@@ -67,7 +68,10 @@ public class ${className} extends ${reqExtendClass}{
 
     //@Ignore
     @Schema(title = "排序方向")
-    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "orderBy != null && orderDir != null", remark = "生成排序表达式")
+    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "#isNotEmpty(orderBy) && #isNotEmpty(orderDir)", remark = "生成排序表达式")
+<#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
+    @OrderBy(value = ${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "#isEmpty(orderBy) || #isEmpty(orderDir)", order = Integer.MAX_VALUE, desc = "默认按时间排序")
+</#if>
     OrderBy.Type orderDir;
 
 <#list fields as field>
@@ -76,7 +80,7 @@ public class ${className} extends ${reqExtendClass}{
         <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
     @OR(autoClose = true)
     @Contains
-    @InjectVar(domain = "dao",  converter = JsonStrLikeConverter.class, isRequired = "false")
+    @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
         <#else>
     ${annotation}
         </#if>
@@ -127,5 +131,4 @@ public class ${className} extends ${reqExtendClass}{
     public void preQuery() {
         //@todo 查询之前初始化数据
     }
-
 }

@@ -20,7 +20,7 @@ public class GroupInfo implements Serializable {
     String id;
 
     //    @Ignore
-    @Fetch(value = "parent.name", joinType = Fetch.JoinType.Left, isBindToField = false)
+    @Fetch(value = "g.parent.name", joinType = Fetch.JoinType.Left, isBindToField = false)
     String parentName;
 
 

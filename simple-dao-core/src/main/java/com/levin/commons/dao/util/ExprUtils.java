@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 import cn.hutool.core.date.DateUtil;
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.StatementBuildException;
@@ -12,12 +13,11 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.service.support.SpringContextHolder;
+import com.levin.commons.utils.ExpressionUtils;
 import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 
@@ -26,9 +26,9 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
 import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.trimWhitespace;
 
 public abstract class ExprUtils {
 
@@ -61,12 +62,12 @@ public abstract class ExprUtils {
     /**
      * 关联字段缓存
      */
-    private static final Map<String, List<String>> refCache = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, List<String>> refCache = new ConcurrentHashMap<>();
 
     /**
      * 线程安全的解析器
      */
-    private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+//    private static final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 
     /**
      * 核心方法 生成语句，并返回参数
@@ -286,10 +287,10 @@ public abstract class ExprUtils {
             // 如果是一个不需参数的操作，把参数中的 Map 类型参数，加入到上下文
             flattenParams(null, holder.value).stream()
                     .filter(v -> v instanceof Map)
-                    .forEach((map) -> contexts.add((Map<String, ? extends Object>) map));
+                    .forEachOrdered((map) -> contexts.add((Map<String, ? extends Object>) map));
         }
 
-        final List<Object> paramValues = new ArrayList(7);
+        final List<Object> paramValues = new ArrayList<>(7);
 
         /// Function<String, String> genExpr = ql -> processParamPlaceholder(ql, paramPlaceholder, paramValues, contexts);
 
@@ -378,7 +379,7 @@ public abstract class ExprUtils {
      * @param op
      * @return
      */
-    private static Object convertValue(Class eleType, Object value, C c, Op op) {
+    private static Object convertValue(Class<?> eleType, Object value, C c, Op op) {
 
         if (eleType == null || value == null) {
             return value;
@@ -456,6 +457,27 @@ public abstract class ExprUtils {
         return data;
     }
 
+    /**
+     * 去除成对的小括号
+     *
+     * @param expr
+     * @return
+     */
+    public static String trimParenthesesPair(String expr) {
+
+        while (hasText(expr)
+                && (expr = trimWhitespace(expr)).charAt(0) == '(') {
+            if (expr.charAt(expr.length() - 1) == ')') {
+                // (abc)
+                expr = expr.substring(1, expr.length() - 1);
+            } else {
+                //退出循环
+                break;
+            }
+        }
+
+        return expr;
+    }
 
     public static String surroundNotExpr(C c, String expr) {
 
@@ -621,8 +643,8 @@ public abstract class ExprUtils {
 
         if (expr.length() > 0) {
 
-            prefix = StringUtils.trimAllWhitespace(prefix);
-            suffix = StringUtils.trimAllWhitespace(suffix);
+            prefix = StringUtils.trimWhitespace(prefix);
+            suffix = StringUtils.trimWhitespace(suffix);
 
             //如果
             if (!prefix.endsWith("(")
@@ -752,22 +774,20 @@ public abstract class ExprUtils {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, List<Map<String, ? extends Object>> contexts) {
+    public static <T> T evalSpEL(final Object rootObject, String expression, List<Map<String, ?>> contexts) {
 
-        final StandardEvaluationContext ctx = new StandardEvaluationContext(rootObject);
-
-        Optional.ofNullable(contexts).ifPresent(
-                maps -> {
-                    maps.stream().filter(Objects::nonNull)
-                            .forEachOrdered(map -> (ctx).setVariables((Map<String, Object>) map));
-                }
-        );
-
-        if (SpringContextHolder.getBeanFactory() != null) {
-            ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+        if (contexts == null) {
+            contexts = Arrays.asList(DaoContext.getGlobalContext(), DaoContext.getThreadContext());
         }
 
-        return (T) spelExpressionParser.parseExpression(expression).getValue(ctx);
+        //类型转换
+        final Object temp = contexts;
+
+        return ExpressionUtils.evalSpEL(rootObject, expression, ctx -> {
+            if (SpringContextHolder.getBeanFactory() != null) {
+                ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
+            }
+        }, (List<Map<String, Object>>) temp);
 
     }
 
@@ -946,7 +966,6 @@ public abstract class ExprUtils {
                 && !(type == Void.class || type == void.class);
     }
 
-
     /**
      * 是否非空 null 或是空字符串
      *
@@ -954,23 +973,12 @@ public abstract class ExprUtils {
      * @return
      */
     public static boolean isNotEmpty(Object value) {
-
-        if (value == null) {
-            return false;
-        } else if (value instanceof CharSequence) {
-//            return (((CharSequence) value).toString().trim().length() > 0);
-            return hasText((CharSequence) value);
-        } else if (value.getClass().isArray()) {
-            return (Array.getLength(value) > 0);
-        } else if (value instanceof Collection) {
-            return (((Collection) value).size() > 0);
-        } else if (value instanceof Map) {
-            return (((Map) value).size() > 0);
-        }
-
-        return true;
+        return ExpressionUtils.isNotEmpty(value);
     }
 
+    public static boolean isEmpty(Object value) {
+        return ExpressionUtils.isEmpty(value);
+    }
 
     /**
      * 获取默认别名
@@ -1193,7 +1201,7 @@ public abstract class ExprUtils {
      * @param fieldClass
      * @return
      */
-    public static List<String> getRefFieldNames(Class owner, Class fieldClass) {
+    public static List<String> getRefFieldNames(Class<?> owner, Class<?> fieldClass) {
 
         if (owner == null || fieldClass == null) {
             return null;
@@ -1229,7 +1237,6 @@ public abstract class ExprUtils {
 
             refCache.put(key, value);
         }
-
 
         return value;
     }

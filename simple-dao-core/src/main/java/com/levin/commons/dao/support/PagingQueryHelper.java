@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -23,7 +24,7 @@ import java.util.function.Function;
  */
 public abstract class PagingQueryHelper {
 
-    private static final Map<String, Map<PageOption.Type, Field>> classFieldCached = new ConcurrentReferenceHashMap<>();
+    private static final Map<String, Map<PageOption.Type, Field>> classFieldCached = new ConcurrentHashMap<>();
 
     private PagingQueryHelper() {
     }
@@ -42,9 +43,12 @@ public abstract class PagingQueryHelper {
      * @return
      */
     @Deprecated
-    public static <T> T findByPageOption(SimpleDao simpleDao, Object pagingData, Object queryDto, @Nullable Paging paging, Object... otherQueryObjs) {
+    public static <T> T findByPageOption(SimpleDao simpleDao, Class<?> resultType, Object pagingData, Object queryDto, @Nullable Paging paging, Object... otherQueryObjs) {
+        return findPageByQueryObj(simpleDao, resultType, pagingData, queryDto, paging, otherQueryObjs);
+    }
 
-        return findPageByQueryObj(simpleDao, pagingData, queryDto, paging, otherQueryObjs);
+    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Object pagingData, Object... queryObjs) {
+        return findPageByQueryObj(simpleDao, null, pagingData, queryObjs);
     }
 
     /**
@@ -59,7 +63,7 @@ public abstract class PagingQueryHelper {
      * @param <T>        查询结果
      * @return
      */
-    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Object pagingData, Object... queryObjs) {
+    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Class<?> resultType, Object pagingData, Object... queryObjs) {
 
         List flattenQueryObjs = QueryAnnotationUtil.flattenParams(new LinkedList(), queryObjs);
 
@@ -121,7 +125,7 @@ public abstract class PagingQueryHelper {
         //需要结果集
         if (isRequireResultList(paging)) {
 
-            final Object resultList = simpleDao.findByQueryObj(queryObjs);
+            final Object resultList = simpleDao.findByQueryObj(resultType, queryObjs);
 
             int index = paging.getPageIndex();
             setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
@@ -226,7 +230,7 @@ public abstract class PagingQueryHelper {
         list.stream()
                 .filter(Objects::nonNull)
                 .map(o -> o.getClass())
-                .forEach(aClass -> resultMap.putAll(getPageOptionFields(aClass)));
+                .forEachOrdered(aClass -> resultMap.putAll(getPageOptionFields(aClass)));
 
         return resultMap;
     }
@@ -235,36 +239,27 @@ public abstract class PagingQueryHelper {
      * @param type
      * @return
      */
-    private static Map<PageOption.Type, Field> getPageOptionFields(Class type) {
+    private static Map<PageOption.Type, Field> getPageOptionFields(Class<?> type) {
 
-        synchronized (locker.getLock(type)) {
+        return classFieldCached.computeIfAbsent(type.getName(), key -> {
 
-            Map<PageOption.Type, Field> fieldMap = classFieldCached.get(type.getName());
+            Map<PageOption.Type, Field> fieldMap = new LinkedHashMap<>();
 
-            if (fieldMap == null) {
+            ReflectionUtils.doWithFields(type, field -> {
 
-                final Map tempMap = new LinkedHashMap<>();
+                field.setAccessible(true);
 
-                ReflectionUtils.doWithFields(type, field -> {
+                PageOption option = field.getAnnotation(PageOption.class);
+                if (option != null) {
+                    fieldMap.put(option.value(), field);
+                }
+            });
 
-                    field.setAccessible(true);
+            //放回不可变的结果接
+            return Collections.unmodifiableMap(fieldMap);
 
-                    PageOption option = field.getAnnotation(PageOption.class);
-                    if (option != null) {
-                        tempMap.put(option.value(), field);
-                    }
-                });
-
-                fieldMap = tempMap.isEmpty() ? Collections.emptyMap() : tempMap;
-            }
-
-            //为了性能不做拷贝
-            return fieldMap;
-        }
+        });
 
     }
-
-
-    private static final Locker locker = Locker.build();
 
 }

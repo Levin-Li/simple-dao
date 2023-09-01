@@ -31,10 +31,12 @@ import ${imp};
 </#list>
 ////////////////////////////////////
 
+
 /**
  * ${entityTitle}
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = BIZ_NAME)
 @Data
@@ -45,7 +47,10 @@ import ${imp};
 </#if>
 @ToString(exclude = {<#list fields as field><#if field.lazy>"${field.name}"<#if field?has_next>,</#if></#if></#list>})
 @FieldNameConstants
-<#if isMultiTenantObject>@JsonIgnoreProperties(tenantId)</#if>
+<#--@JsonIgnoreProperties({<#if isMultiTenantObject>tenantId</#if>${classModel.attrName('password',', ','')}})-->
+<#list classModel.annotations as annotation>
+${annotation}
+</#list>
 public class ${className} implements Serializable {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
@@ -58,9 +63,9 @@ public class ${className} implements Serializable {
    <#list field.annotations as annotation>
     ${annotation}
    </#list>
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = REQUIRED', '')})
+<#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = REQUIRED', '')})-->
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
-
 </#list>
 
 }

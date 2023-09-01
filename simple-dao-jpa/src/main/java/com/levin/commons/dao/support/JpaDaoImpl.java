@@ -1,11 +1,10 @@
 package com.levin.commons.dao.support;
 
 
-import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.util.ClassUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
@@ -27,10 +26,10 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
 
@@ -47,7 +46,8 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.levin.commons.dao.util.QueryAnnotationUtil.getFieldsFromCache;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.expandAndFilterNull;
 
 
 /**
@@ -142,9 +142,7 @@ import static com.levin.commons.dao.util.QueryAnnotationUtil.getFieldsFromCache;
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
-
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
-
     private final Integer hibernateVersion;
 
     @Autowired
@@ -173,16 +171,19 @@ public class JpaDaoImpl
     @Value("${com.levin.commons.dao.safeModeMaxLimit:2000}")
     private int safeModeMaxLimit = 2000;
 
+    private static final ThreadLocal<Integer> safeModeMaxLimitThreadLocal = new ThreadLocal<>();
+
     @Autowired
     private HibernateProperties hibernateProperties;
 
-    private static final Locker uniqueFieldMapLocker = Locker.build();
+    private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
 
-    private static final Map<String, List<UniqueField>> uniqueFieldMap = new HashMap<>();
+    //注意这个是数据库的函数支持缓存，不能静态化
+    private final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
 
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
-    private static final Map<String, Object> idFields = new ConcurrentReferenceHashMap<>(256);
+    private static final Map<String, Object> idFields = new ConcurrentHashMap<>(256);
 
     private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
@@ -290,10 +291,15 @@ public class JpaDaoImpl
         return true;
     }
 
-
     @Override
     public int getSafeModeMaxLimit() {
-        return safeModeMaxLimit;
+        Integer limit = safeModeMaxLimitThreadLocal.get();
+        return limit != null ? limit : safeModeMaxLimit;
+    }
+
+    @Override
+    public void setCurrentThreadMaxLimit(Integer maxLimit) {
+        safeModeMaxLimitThreadLocal.set(maxLimit);
     }
 
     public EntityManagerFactory getEntityManagerFactory() {
@@ -364,7 +370,7 @@ public class JpaDaoImpl
 
             namingStrategy = new PhysicalNamingStrategy() {
 
-                final Map<String, String> columnNameMapCaches = new ConcurrentReferenceHashMap<>();
+                final Map<String, String> columnNameMapCaches = new ConcurrentHashMap<>();
 
                 org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
@@ -410,6 +416,28 @@ public class JpaDaoImpl
 
         return this;
     }
+
+
+    @Override
+    public Boolean isSupportFunction(String funName) {
+        return funSupportMap.computeIfAbsent(funName.toUpperCase(), this::testSupportFunction);
+    }
+
+    private Boolean testSupportFunction(String funcName) {
+
+        if ("IFNULL".equalsIgnoreCase(StringUtils.trimWhitespace(funcName))) {
+            try {  //使用哑表测试
+                List<Object> objects = find(true, null, -1, 1, "select IFNULL('Yes','No') from dual");
+                return "Yes".equals(objects.get(0));
+            } catch (Exception e) {
+                //防止一直查询
+                return false;
+            }
+        }
+
+        return null;
+    }
+
 
     @Override
     public DeepCopier getDeepCopier() {
@@ -598,14 +626,60 @@ public class JpaDaoImpl
         if (daoInjectAttrs != null
                 && daoInjectAttrs.length > 0) {
             //3、注入变量,需要注入的变量
-            injectVars(entityOrDto, old);
-            // getDao().injectVars(entityOrDto, old, getContext());
+            DaoContext.injectValues(entityOrDto, old);
         }
 
         //新对象初始化参数
         com.levin.commons.utils.ClassUtils.invokePostConstructMethod(entityOrDto);
 
         return (E) entityOrDto;
+    }
+
+    @Transactional
+    public List<Object> batchCreate(List<Object> entityOrDtoList) {
+
+        List<Object> result = new ArrayList<>(entityOrDtoList.size());
+
+        entityOrDtoList.forEach(data -> result.add(create(data)));
+
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public List<Object> batchCreate(List<Object> entityOrDtoList, int commitBatchSize) {
+
+        if (commitBatchSize < 1) {
+            commitBatchSize = 512;
+        } else if (commitBatchSize > 512 * 10) {
+            commitBatchSize = 5120;
+        }
+
+        if (entityOrDtoList.size() < commitBatchSize) {
+            getDao().batchCreate(entityOrDtoList);
+        } else {
+
+            final List<Object> tempList = new ArrayList<>(commitBatchSize);
+
+            int i = 0;
+            for (Object data : entityOrDtoList) {
+
+                tempList.add(data);
+                //如果批次满
+                if (i++ % commitBatchSize == 0) {
+                    getDao().batchCreate(tempList);
+                    tempList.clear();
+                }
+            }
+
+            if (!tempList.isEmpty()) {
+                getDao().batchCreate(tempList);
+                tempList.clear();
+            }
+
+        }
+
+        return entityOrDtoList;
     }
 
     @Override
@@ -731,25 +805,6 @@ public class JpaDaoImpl
     }
 
     @Override
-    public int update(String statement, Object... paramValues) {
-        return update(false, statement, paramValues);
-    }
-
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param isNative
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Override
-    public int update(boolean isNative, String statement, Object... paramValues) {
-        return update(isNative, -1, getSafeModeMaxLimit(), statement, paramValues);
-    }
-
-    @Override
     public int updateByQueryObj(Object... queryObjs) {
         return newDao(UpdateDao.class, queryObjs).update();
     }
@@ -760,6 +815,11 @@ public class JpaDaoImpl
     }
 
     @Override
+    public void uniqueUpdateByQueryObj(Object... queryObjs) {
+        newDao(UpdateDao.class, queryObjs).uniqueUpdate();
+    }
+
+    @Override
     public int deleteByQueryObj(Object... queryObjs) {
         return newDao(DeleteDao.class, queryObjs).delete();
     }
@@ -767,6 +827,11 @@ public class JpaDaoImpl
     @Override
     public boolean singleDeleteByQueryObj(Object... queryObjs) {
         return newDao(DeleteDao.class, queryObjs).singleDelete();
+    }
+
+    @Override
+    public void uniqueDeleteByQueryObj(Object... queryObjs) {
+        newDao(DeleteDao.class, queryObjs).uniqueDelete();
     }
 
     /**
@@ -891,18 +956,19 @@ public class JpaDaoImpl
 
         Object fieldOrMethod = idFields.get(key);
 
-        if (fieldOrMethod == null) {
-            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
-            if (fieldOrMethod != null) {
-                ((Field) fieldOrMethod).setAccessible(true);
-                idFields.put(key, fieldOrMethod);
-            }
-        }
 
         if (fieldOrMethod == null) {
             String mName = "get" + Character.toUpperCase(idAttrName.charAt(0)) + idAttrName.substring(1);
             fieldOrMethod = ReflectionUtils.findMethod(entityClass, mName);
             if (fieldOrMethod != null) {
+                idFields.put(key, fieldOrMethod);
+            }
+        }
+
+        if (fieldOrMethod == null) {
+            fieldOrMethod = ReflectionUtils.findField(entityClass, idAttrName);
+            if (fieldOrMethod != null) {
+                ((Field) fieldOrMethod).setAccessible(true);
                 idFields.put(key, fieldOrMethod);
             }
         }
@@ -943,7 +1009,6 @@ public class JpaDaoImpl
 
         Assert.notNull(queryObj, "查询对象为空");
 
-
         //尝试自动获取实体类
         if (entityClass == null) {
 
@@ -961,18 +1026,10 @@ public class JpaDaoImpl
 
         Assert.isTrue(isEntityClass(entityClass), "查询实体未明确");
 
-        final String className = entityClass.getName();
 
-        List<UniqueField> uniqueFields = null;
-
-        //同步
-        synchronized (uniqueFieldMapLocker.getLock(className)) {
-            uniqueFields = uniqueFieldMap.get(className);
-            if (uniqueFields == null) {
-                uniqueFields = getUniqueFields(entityClass);
-                uniqueFieldMap.put(className, uniqueFields);
-            }
-        }
+        Class<?> finalEntityClass = entityClass;
+        List<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
+                key -> getUniqueFields(finalEntityClass));
 
         //开始查找
         for (UniqueField uniqueField : uniqueFields) {
@@ -1013,9 +1070,18 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
+
+                //部分数据库支持空字符串等同于Null空值
+
+                //@todo 考虑根据数据库类型进行优化处理
+
                 //目前 MySql 支持空值忽略，唯一约束
                 //暂时 忽略空值
                 // selectDao.isNull(fieldName);
+
+                //暂时做法，只要有一个空值，就忽略本功能
+                hasWhere = false;
+                break;
             } else {
                 selectDao.eq(fieldName, value);
                 hasWhere = true;
@@ -1138,6 +1204,8 @@ public class JpaDaoImpl
     @Override
     public String getEntityIdAttrName(Object entityOrClass) {
 
+        Assert.notNull(entityOrClass, "entityOrClass is null");
+
         Class entityClass = null;
 
         if (entityOrClass instanceof Class) {
@@ -1223,11 +1291,6 @@ public class JpaDaoImpl
         }
 
         return null;
-    }
-
-    @Override
-    public <T> List<T> find(String statement, Object... paramValues) {
-        return find(-1, -1, statement, paramValues);
     }
 
     @Override
@@ -1357,33 +1420,61 @@ public class JpaDaoImpl
 
     private Class tryFindResultClass(Object... queryObjs) {
 
-        Class resultClazz = null;
+        Class resultClass = null;
 
-        for (Object queryObj : queryObjs) {
+        if (queryObjs == null
+                || queryObjs.length == 0) {
+            return resultClass;
+        }
+
+        List<Object> queryObjList = tryGetEntityClassAndClear(
+                //展开嵌套参数，过滤简单的类型，
+                filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)), null), null
+        );
+
+        for (Object queryObj : queryObjList) {
 
             if (queryObj == null) {
                 continue;
+            }
+
+            if (queryObj instanceof ResultClassSupplier) {
+                resultClass = ((ResultClassSupplier) queryObj).get();
+                if (isValidClass(resultClass)) {
+                    break;
+                }
+            }
+
+            if (queryObj instanceof QueryOption) {
+                resultClass = ((QueryOption) queryObj).getResultClass();
+                if (isValidClass(resultClass)) {
+                    break;
+                }
             }
 
             TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
 
             //注解优先
             if (targetOption != null) {
-                resultClazz = targetOption.resultClass();
-                if (isValidClass(resultClazz)) {
+                resultClass = targetOption.resultClass();
+                if (isValidClass(resultClass)) {
                     break;
                 }
             }
 
-            if (queryObj instanceof QueryOption) {
-                resultClazz = ((QueryOption) queryObj).getResultClass();
-                if (isValidClass(resultClazz)) {
+            ResultOption resultOption = queryObj.getClass().getAnnotation(ResultOption.class);
+
+            //注解优先
+            if (resultOption != null) {
+                resultClass = resultOption.resultClass();
+                if (isValidClass(resultClass)) {
                     break;
                 }
             }
+
         }
 
-        return resultClazz;
+        return resultClass;
     }
 
     private boolean isValidClass(Class clazz) {
@@ -1400,17 +1491,16 @@ public class JpaDaoImpl
         return forSelect(null, queryObjs);
     }
 
-    public <T> SelectDao<T> forSelect(Class resultType, Object... queryObjs) {
+    public <T> SelectDao<T> forSelect(Class<?> resultType, Object... queryObjs) {
 
         if (resultType == null) {
             resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectAnnotationField = QueryAnnotationUtil.hasSelectStatementField(resultType);
-
         SelectDao selectDao = null;
 
-        if (hasSelectAnnotationField && !hasType(resultType, queryObjs)) {
+        if (!hasType(resultType, queryObjs)
+                && hasSelectStatementField(resultType)) {
             selectDao = newDao(SelectDao.class, queryObjs, resultType);
         } else {
             selectDao = newDao(SelectDao.class, queryObjs);
@@ -1441,11 +1531,11 @@ public class JpaDaoImpl
      * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
      * @param queryObjs                   查询对象
      * @return 返回分页对象
-     * @since 2.2.27 新增方法
+     * @since 2.5.1 新增方法
      */
     @Override
-    public <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs) {
-        return PagingQueryHelper.findPageByQueryObj(this, pagingHolderInstanceOrClass, queryObjs);
+    public <P> P findPageByQueryObj(Class<?> resultType, Object pagingHolderInstanceOrClass, Object... queryObjs) {
+        return PagingQueryHelper.findPageByQueryObj(this, resultType, pagingHolderInstanceOrClass, queryObjs);
     }
 
     @Override
@@ -1479,9 +1569,8 @@ public class JpaDaoImpl
             resultType = tryFindResultClass(queryObjs);
         }
 
-        boolean hasSelectStatementField = QueryAnnotationUtil.hasSelectStatementField(resultType);
-
-        if (hasSelectStatementField && !hasType(resultType, queryObjs)) {
+        if (!hasType(resultType, queryObjs)
+                && hasSelectStatementField(resultType)) {
             return (E) newDao(SelectDao.class, queryObjs, resultType).findOne(isExpectUnique, resultType);
         }
 
@@ -1494,20 +1583,16 @@ public class JpaDaoImpl
      * @param queryObjs
      * @return
      */
-    private static boolean hasType(Class type, Object... queryObjs) {
+    private static boolean hasType(Class<?> type, Object... queryObjs) {
 
-        if (type == null || queryObjs == null) {
+        if (type == null || queryObjs == null || queryObjs.length == 0) {
             return false;
         }
 
-        for (Object queryObj : queryObjs) {
-            if (type == queryObj
-                    || (queryObj != null && type.isAssignableFrom(queryObj.getClass()))) {
-                return true;
-            }
-        }
-
-        return false;
+        return Stream.of(queryObjs)
+                .filter(Objects::nonNull)
+                .map(o -> o instanceof Class ? (Class<?>) o : o.getClass())
+                .anyMatch(t -> t == type || type.isAssignableFrom(t));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////

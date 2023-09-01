@@ -49,9 +49,9 @@ import ${className};
 //@DataMongoTest //测试对MongoDB的操作
 //@DataNeo4jTest //测试对Neo4j的操作
 /**
- *  测试类
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 测试类
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *  
  */
 public class TestCase {
 

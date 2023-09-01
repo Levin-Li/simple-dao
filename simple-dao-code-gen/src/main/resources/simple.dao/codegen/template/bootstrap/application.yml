@@ -1,5 +1,5 @@
-#@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
-#代码生成哈希校验码：[], 请不要修改和删除此行内容。
+#@author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+#
 spring:
   application:
     name: ${moduleName}
@@ -7,6 +7,12 @@ spring:
   main:
     #允许Spring Bean循环应用
     allow-circular-references: true
+
+  #文件上传限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
 
   cache:
     type: redis
@@ -43,12 +49,6 @@ spring:
     date-format: com.levin.commons.format.DefaultDateFormat
     time-zone: GMT+8
     locale: zh_CN
-
-  mvc:
-    format:
-      date-time: yyyy-MM-dd HH:mm:ss
-      date: yyyy-MM-dd
-      time: HH:mm:ss
 
   # 数据源配置
   datasource:
@@ -93,6 +93,13 @@ spring:
     #关闭视图事务，避免jpa 出现 N + 1 查询
     open-in-view: false
     hibernate:
+      #jdbc 批量操作，提升性能
+      jdbc:
+        batch_size: 512
+        fetch_size: 512
+        order_inserts: true
+        order_updates: true
+
       ddl-auto: update
 #      实体@GeneratedValue()ID生成策略自动时，会根据数据库自动选择
       use-new-id-generator-mappings: false
@@ -105,7 +112,22 @@ spring:
         properties:
           hibernate.id.new_generator_mappings: false
 
-public-key: xxxx
+############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
+sa-token:
+  # token 名称（同时也是 cookie 名称）
+  token-name: Authorization
+  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
+  timeout: 2592000
+  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  is-share: true
+  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
 
 #dubbo 配置
 dubbo:

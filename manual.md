@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.5.0.RELEASE</version>
+            <version>2.5.1-SNAPSHOT</version>
         </dependency>
         
        
@@ -53,30 +53,39 @@ Dao 类逻辑框图，如下图所示。
 
 ##### 2.1 使用SimpleDao
 
-   在服务层代码中通过Spring注入SimpleDao实例，通过SimpleDao动态创建。
+   在服务层代码中通过Spring注入SimpleDao实例。
 
    使用示例：
 
       @Autowired
       SimpleDao dao;
 
-      SelectDao selectDao = dao.selectFrom("t_table_name","alias");
-
-      List<UserStatDTO> queryResult = selectDao.appendByQueryObj(new UserStatDTO()).find();
+      List<UserStatDTO> queryResult = dao.findByQueryObjs(new UserStatDTO()).find();
 
 ##### 2.2 动态创建 SelectDao 、UpdateDao、DeleteDao
 
+    @Autowired
+    SimpleDao dao;
+
     //查询DAO
-    SelectDao dao = dao.selectFrom(Group.class);
-    dao.find()
+    //方式1：
+    SelectDao selectDao = dao.selectFrom(Group.class);
+    //方式2：
+    SelectDao selectDao = dao.forSelect(Group.class, queryObjs)
 
     //更新DAO
-    UpdateDao dao = dao.updateTo(Group.class);
-    dao.update()
+    //方式1：
+    UpdateDao updateDao = dao.updateTo(Group.class);
+    //方式1：
+    updateDao = dao.forUpdate(Group.class, queryObjs)
 
     //删除DAO
-    DeleteDao dao = dao.deleteFrom(Group.class)
-    dao.delete()
+    //方式1
+    DeleteDao deleteDao = dao.deleteFrom(Group.class)
+ 
+    //方式2
+    DeleteDao deleteDao = dao.forDelete(Group.class, queryObjs)
+
 
 ##### 2.3 回调使用 
     
@@ -206,7 +215,7 @@ Dao 类逻辑框图，如下图所示。
      
         }
  
-##### 4.1.1 列更新
+##### 4.1.1 列更新 + 增量更新
 
   更新注解：
 
@@ -216,9 +225,9 @@ Dao 类逻辑框图，如下图所示。
   产生的语句
 
          set lastUpdateTime = ?
-         
-         
-  使用例子1：字段加一       
+
+
+ 增量更新-使用例子1：字段加一       
   
              
          @Update(paramExpr = "${_name} + 1")
@@ -226,8 +235,8 @@ Dao 类逻辑框图，如下图所示。
          
          //以上生成的语句
          // set alarmCnt = alarmCnt + 1
-         
-  使用例子2：字段加参数值       
+
+ 增量更新-使用例子2：字段加参数值       
    
          @Update(paramExpr = "${_name} + ${:_val}")
          Integer alarmCnt = 5 ;
@@ -1097,12 +1106,31 @@ Dao 类逻辑框图，如下图所示。
     dao.selectFrom(TestEntity.class)
                   .filterLogicDeletedData(false)
                   .find(); 
-                  
+
+#### 12.3 SimpleDao 动态指定目标表
+
+     1、通过实现 QueryOption 接口动态指定
+
+        simpleDao.findByQueryObj(new SimpleQueryOption().setEntityClass(User.class), new QueryUserReq());
+
+     2、通过提供 EntityClassSupplier 指定
+        
+        EntityClassSupplier entityClassSupplier = () -> User.class;
+        simpleDao.findByQueryObj( entityClassSupplier , new QueryUserReq());
+
+     3、直接指定目标表的类名
+
+        simpleDao.findByQueryObj(new QueryUserReq(),User.class);
+
                                
-#### 12.2 DTO 数据初始化
+#### 12.3 DTO 数据初始化
  
    有标记 javax.annotation.PostConstruct 注解的Dto对象方法，将会在查询之前被执行。
    可以做些初始化的事情，比如初始化时间。
+
+   注解 @PrePersist 的方法会在保存之前被执行。
+
+   注解 @PreUpdate 的方法会再更新之前被执行。
    
      class UserDto{
      
@@ -1132,6 +1160,7 @@ Dao 类逻辑框图，如下图所示。
      }
    
      
+     
    
 #### 12.3 注解的语句生成规则
 
@@ -1153,8 +1182,8 @@ Dao 类逻辑框图，如下图所示。
              <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
              <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
      
-             <levin.simple-dao.version>2.5.0.RELEASE</levin.simple-dao.version>
-             <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
+             <levin.simple-dao.version>2.5.1-SNAPSHOT</levin.simple-dao.version>
+             <levin.service-support.version>1.2.27-SNAPSHOT</levin.service-support.version>
               
                <repositories>
            

@@ -5,6 +5,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
@@ -45,8 +46,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.*;
-import static org.springframework.util.StringUtils.containsWhitespace;
-import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.util.StringUtils.*;
 
 
 /**
@@ -110,6 +110,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected transient MiniDao dao;
 
+    @Getter
+    protected Integer safeModeMaxLimit = 2000;
+
     //默认不过滤空置的
     protected boolean disableEmptyValueFilter = true;
 
@@ -142,6 +145,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     private boolean autoAppendOperationCondition = true;
 
     private static final ThreadLocal<BiFunction<String, Map<String, Object>[], Object>> elEvalFuncThreadLocal = new ThreadLocal<>();
+
+    //已经处理过的类
+    private final List walkedObjects = new ArrayList<>(6);
 
     protected ConditionBuilderImpl(MiniDao miniDao, boolean isNative) {
 
@@ -197,6 +203,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return (CB) this;
     }
 
+    @Override
+    public CB setSafeModeMaxLimit(Integer maxLimit) {
+        this.safeModeMaxLimit = maxLimit;
+        return (CB) this;
+    }
 
     public javax.validation.Validator getValidator() {
         return validator;
@@ -349,6 +360,17 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     @Override
     public CB or(Boolean valid) {
         beginLogic(OR.class.getSimpleName(), Boolean.TRUE.equals(valid));
+        return (CB) this;
+    }
+
+    @Override
+    public CB not() {
+        return not(true);
+    }
+
+    @Override
+    public CB not(Boolean valid) {
+        beginLogic(NOT.class.getSimpleName(), Boolean.TRUE.equals(valid));
         return (CB) this;
     }
 
@@ -1093,7 +1115,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
 
-
         if (targetOption == null) {
             return (CB) this;
         }
@@ -1105,6 +1126,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         targetOptionList.add(targetOption);
 
+        //
         if (hasValidQueryEntity()) {
             return (CB) this;
         }
@@ -1125,7 +1147,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //        }
 
         //  this.where(targetOption.fixedCondition());
-
 
         if (targetOption.maxResults() > 0) {
             this.rowCount = targetOption.maxResults();
@@ -1174,32 +1195,33 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     protected CB setQueryOption(Object... queryObjs) {
 
-        if (hasValidQueryEntity()) {
+        if (queryObjs == null
+                || queryObjs.length == 0
+                || hasValidQueryEntity()) {
             return (CB) this;
         }
 
-        Optional.ofNullable(queryObjs).ifPresent((Object[] objs) -> {
-            Arrays.stream(queryObjs)
-                    .filter(o -> o instanceof QueryOption)
-                    .map(o -> (QueryOption) o).forEach(queryOption -> {
+        Arrays.stream(queryObjs)
+                .filter(o -> o instanceof QueryOption)
+                .map(o -> (QueryOption) o).forEachOrdered(queryOption -> {
 
-                        if (hasValidQueryEntity()) {
-                            return;
-                        }
+                    if (hasValidQueryEntity()) {
+                        return;
+                    }
 
-                        entityClass = queryOption.getEntityClass();
+                    this.entityClass = (Class<T>) queryOption.getEntityClass();
 
-                        this.setNative(queryOption.isNative());
+                    this.setNative(queryOption.isNative());
 
-                        // tableName = queryOption.getEntityName();
+                    // tableName = queryOption.getEntityName();
 
-                        setTableName(queryOption.getEntityName());
+                    setTableName(queryOption.getEntityName());
 
-                        alias = queryOption.getAlias();
+                    alias = queryOption.getAlias();
 
-                        tryUpdateTableName();
+                    tryUpdateTableName();
 
-                        if (hasValidQueryEntity()) {
+                    if (hasValidQueryEntity()) {
 
 //                    String joinStatement = ExprUtils.genJoinStatement(getDao(), isNative()
 //                            , aliasMap::put
@@ -1209,13 +1231,13 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 //                        join(true, joinStatement);
 //                    }
 
-                            join(true, queryOption.getJoinOptions());
+                        join(true, queryOption.getJoinOptions());
 
-                            join(true, queryOption.simpleJoinOptions());
-                        }
+                        join(true, queryOption.getSimpleJoinOptions());
+                    }
 
-                    });
-        });
+                });
+
 
         return (CB) this;
     }
@@ -1319,52 +1341,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-
-    /**
-     * 展开嵌套对象
-     *
-     * @param resultList
-     * @param queryObjs
-     * @return
-     */
-    protected static List<Object> expand(List resultList, Object... queryObjs) {
-
-        if (resultList == null) {
-            resultList = new ArrayList();
-        }
-
-        if (queryObjs == null) {
-            return resultList;
-        }
-
-        for (Object queryObj : queryObjs) {
-
-            if (queryObj == null) {
-                continue;
-            }
-
-            //如果是类，则实例化
-            if (queryObj instanceof Class) {
-//                不实例化
-                // queryObj = BeanUtils.instantiateClass((Class<? extends Object>) queryObj);
-            }
-
-            if (queryObj.getClass().isArray()) {
-                expand(resultList, (Object[]) queryObj);
-            } else if (queryObj instanceof Iterable) {
-                ///////////////////////////////////////
-                for (Object o : ((Iterable) queryObj)) {
-                    expand(resultList, o);
-                }
-            } else {
-                resultList.add(queryObj);
-            }
-
-        }
-
-        return resultList;
-    }
-
     /**
      * 解析对象所有的属性，过滤并调用回调
      *
@@ -1372,28 +1348,61 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      */
     public void walkObject(Object... queryObjs) {
 
-        if (queryObjs == null) {
+        if (queryObjs == null || queryObjs.length == 0) {
             return;
         }
 
-        //如果主体类还没有定义，则尝试设置实体类，优先级低于 @TargetOption，会被覆盖
-        if (this.entityClass == null) {
-            for (Object queryObj : queryObjs) {
-                if (queryObj instanceof Class && ((Class<?>) queryObj).isAnnotationPresent(Entity.class)) {
-                    this.entityClass = (Class<T>) queryObj;
-                    break;
-                }
+        //转换为List，排查已经加载过的类
+        List<Object> queryObjList = filterQueryObjSimpleType(expandAndFilterNull(null, Arrays.asList(queryObjs)), walkedObjects::contains);
+
+        if (queryObjList.isEmpty()) {
+            return;
+        }
+
+        //全部加入已经处理过的对象，防止对象被反复处理
+        walkedObjects.addAll(queryObjList);
+
+        if (!hasValidQueryEntity()) {
+            //如果没有有效的查询实体
+            EntityClassSupplier supplier = (EntityClassSupplier) queryObjList.stream()
+                    .filter(o -> o instanceof EntityClassSupplier)
+                    .filter(o -> isJpaEntityClass(o.getClass()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (supplier != null) {
+                this.entityClass = (Class<T>) supplier.get();
+                this.alias = supplier.getAlias();
             }
         }
 
-        //
-        List<Object> expand = expand(new ArrayList(queryObjs.length), queryObjs);
+        //1、设置并清除参数中的实体类，第2优先级
+        queryObjList = tryGetEntityClassAndClear(
+                //展开嵌套参数，过滤简单的类型，
+                queryObjList,
+                //试图设置
+                hasValidQueryEntity() ? null : c -> {
+                    this.entityClass = (Class<T>) c;
+                    this.alias = EntityClassSupplier.getAlias(this.entityClass);
+                }
+        );
 
-        queryObjs = expand.toArray();
+        if (queryObjList.isEmpty()) {
+            return;
+        }
 
+        //覆盖原有的参数
+        queryObjs = queryObjList.toArray();
+        // 2、QueryOption 第3优先级 设置查询目标
         setQueryOption(queryObjs);
 
-        for (Object queryValueObj : queryObjs) {
+        //3、设置参数实体类，第4优先级
+        queryObjList.stream().filter(Objects::nonNull)
+                .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
+                .filter(c -> c.isAnnotationPresent(TargetOption.class))
+                .forEachOrdered(c -> setTargetOption(null, c.getAnnotation(TargetOption.class)));
+
+        for (Object queryValueObj : queryObjList) {
 
             if (queryValueObj == null) {
                 continue;
@@ -1410,32 +1419,24 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             Class<?> typeClass = isClassCurrQueryObj ? (Class<?>) queryValueObj : queryValueObj.getClass();
 
-            if (typeClass.isPrimitive()
-                    || QueryAnnotationUtil.isRootObjectType(typeClass)
-                    || QueryAnnotationUtil.isArray(typeClass)
-                    || QueryAnnotationUtil.isIgnore(typeClass)
-                    || typeClass.isAnnotation()) {
-                continue;
-            }
-
             if (!isClassCurrQueryObj) {
 
                 //对注解的支持 PostConstruct
                 ClassUtils.invokePostConstructMethod(queryValueObj);
 
                 if (this instanceof UpdateDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreUpdate.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreUpdate.class);
                 } else if (this instanceof DeleteDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryObjs, false, PreRemove.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreRemove.class);
                 }
 
                 //没有回调时，表示本地调用
-
                 //尝试设置分页
                 setPaging(queryValueObj);
 
                 //尝试设置查询目标实体
-                setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
+                //
+                //  setTargetOption(queryValueObj, typeClass.getAnnotation(TargetOption.class));
 
                 //特别处理
                 if (queryValueObj instanceof Map) {
@@ -1453,7 +1454,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 processCtxVar(queryValueObj, fields);
             }
 
-            List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getContexts(queryValueObj);
+            List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getDaoContexts(queryValueObj);
 
             final String pkgStartsWith = BASE_PACKAGE_NAME + ".";
 
@@ -1489,8 +1490,8 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
                         //处理注入值
                         com.levin.commons.service.support.ValueHolder<Object> valueHolder =
-                                field.isAnnotationPresent(InjectVar.class) ? dao.getInjectValue(queryValueObj, field, contexts) : null;
-
+                                field.isAnnotationPresent(InjectVar.class) ?
+                                        DaoContext.getVariableInjector().getOutputValueByBean(queryValueObj, field, contexts) : null;
 
                         if (valueHolder != null) {
 
@@ -1736,7 +1737,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param attrType
      * @param value
      */
-    public void processAttr(Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
+    public void processAttr(final Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         Assert.hasText(name, "name is empty");
 
@@ -1755,8 +1756,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             //支持多个注解
             List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-            logicAnnotations.stream()
-                    .forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+            logicAnnotations.forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
             //可以多次逻辑组
             try {
                 //如果是忽略的类型
@@ -1776,7 +1776,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 //部分自动关闭
                 logicAnnotations.stream()
                         .filter(this::isLogicGroupAutoClose)
-                        .forEach(logicAnnotation -> end());
+                        .forEachOrdered(logicAnnotation -> end());
 
                 endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
             }
@@ -1787,13 +1787,21 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
     }
 
+
     /**
+     * 从当前线程变量中执行脚本
      * 表达式扩展或是替换
      *
      * @param expr
      * @return
+     * @see #evalExpr(Object, Object, String, String, List, Map[])
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
+
+        if (!hasText(expr)
+                || !trimWhitespace(expr).startsWith(ExpressionType.SPEL_PREFIX)) {
+            return expr;
+        }
 
         BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
 
@@ -1801,18 +1809,10 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return expr;
         }
 
-        if (!hasText(expr)) {
-            return expr;
-        }
+        expr = trimWhitespace(expr).substring(ExpressionType.SPEL_PREFIX.length());
 
-        if (expr.trim().startsWith(ExpressionType.SPEL_PREFIX)) {
+        return trimWhitespace((String) func.apply(expr, exMaps));
 
-            expr = expr.substring(ExpressionType.SPEL_PREFIX.length());
-
-            return (String) func.apply(expr, exMaps);
-        }
-
-        return expr;
     }
 
     boolean isLogicGroupAutoClose(Annotation logicAnnotation) {
@@ -1882,7 +1882,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return false;
         }
 
-        Method method = ReflectionUtils.findMethod(annotationType, "value");
+        Method method = ReflectionUtils.findMethod(annotationType, ANNOTATION_VALUE_KEY);
 
         if (method == null) {
             return false;
@@ -1923,7 +1923,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param varType
      * @param value
      */
-    protected void processAttr(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
+    protected void processAttr(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
 
 //        if (isIgnore(varAnnotations)) {
 //            return;
@@ -2005,6 +2005,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
             String newName = tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name);
 
+            //todo 是否尝试转换名称，表达式转换名称，支持 Spel
+            newName = evalTextByThreadLocal(newName);
+
             //如果是扩展参数的操作 或是 不是迭代类型
             Op op = getOp(annotation);
 
@@ -2079,7 +2082,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param opAnnotation
      * @return 是否继续处理，true继续.false则停止
      */
-    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
 
         //如果不是条件注解则忽略
         //但是允许空opAnnotation为 null，往下走
@@ -2189,7 +2192,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param primitiveValue
      * @param opAnnotation
      */
-    protected void processWhereCondition(Object bean, Class<?> varType, String name, Object value,
+    protected void processWhereCondition(final Object bean, Class<?> varType, String name, Object value,
                                          PrimitiveValue primitiveValue, Annotation opAnnotation) {
 
         genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
@@ -2208,9 +2211,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected void genExprAndProcess(Object bean, Class<?> varType, String name, Object paramValue,
+    protected void genExprAndProcess(final Object bean, Class<?> varType, String name, Object paramValue,
                                      PrimitiveValue primitiveValue, Annotation opAnnotation,
-                                     BiConsumer<String, ValueHolder<? extends Object>> consumer) {
+                                     BiConsumer<String, ValueHolder<Object>> consumer) {
 
         boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
 
@@ -2361,7 +2364,6 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     && hasText(entityOption.deleteCondition())) {
                 appendToWhere(entityOption.deleteCondition(), Collections.emptyList(), true);
             }
-
         }
 
         //如果过滤逻辑删除的数据
@@ -2373,7 +2375,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             String propertyName = entityOption.logicalDeleteFieldName().trim();
 
             if (isNullable(entityClass, propertyName)) {
-                expr = " (  " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
+                expr = " ( " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
             }
 
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
@@ -2468,12 +2470,12 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param expr  如果 expr 为 null
      * @return
      */
-    protected boolean evalTrueExpr(Object root, Object value, String name, String expr) {
+    protected boolean evalTrueExpr(final Object root, Object value, String name, String expr) {
         return evalTrueExpr(root, value, name, expr, buildContextValues(root, value, name));
     }
 
 
-    protected boolean evalTrueExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> contexts) {
+    protected boolean evalTrueExpr(final Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> contexts) {
 
         /**
          * 默认是无条件限制
@@ -2491,7 +2493,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         }
 
         if (C.VALUE_EMPTY.equals(expr) || expr.equals("#" + C.VALUE_EMPTY)) {
-            return !ExprUtils.isNotEmpty(value);
+            return ExprUtils.isEmpty(value);
         }
 
         return evalExpr(root, value, name, expr, contexts);
@@ -2534,7 +2536,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param <T>
      * @return
      */
-    protected <T> T evalExpr(Object root, Object value, String name, String expr, List<Map<String, ? extends Object>> baseContexts, Map<String, ? extends Object>... exMaps) {
+    protected <T> T evalExpr(final Object root, Object value, String name, String expr, List<Map<String, ?>> baseContexts, Map<String, ?>... exMaps) {
 
         try {
 

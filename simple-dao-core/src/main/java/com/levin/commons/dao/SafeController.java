@@ -11,6 +11,14 @@ package com.levin.commons.dao;
 public interface SafeController<T> {
 
     /**
+     * 设置最大结果集数量
+     *
+     * @param maxLimit
+     * @return
+     */
+    T setSafeModeMaxLimit(Integer maxLimit);
+
+    /**
      * 禁用安全模式
      */
     T disableSafeMode();

@@ -19,9 +19,9 @@
 
         <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
 
-        <!--           <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+        <!-- <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
 
-        <levin.service-support.version>1.2.26-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.27-SNAPSHOT</levin.service-support.version>
 
         <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
 
@@ -49,6 +49,8 @@
         <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>
         <hutool.version>5.8.10</hutool.version>
+
+        <mica-auto.version>2.3.0</mica-auto.version>
 
     </properties>
 
@@ -98,7 +100,8 @@
             <activation>
                 <file>
                     <!--  关键字：jitpack 表示是在 gitpack 打包-->
-                    <missing>/home/jitpack/build/${project.artifactId}/pom.xml</missing>
+                    <missing>/home/jitpack/build/pom.xml</missing>
+                    <!--  <missing>/home/jitpack/build/${project.artifactId}/pom.xml</missing> -->
                 </file>
             </activation>
 

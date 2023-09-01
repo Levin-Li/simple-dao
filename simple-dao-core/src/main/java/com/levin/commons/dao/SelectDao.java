@@ -357,21 +357,32 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     /**
-     * 获取结果集，并转换成指定的对对象
-     * 数据转换采用spring智能转换器
+     * 获取结果集
      *
-     * @param <E> targetType 要求的结果类型
+     * @param <E>
      * @return
      */
-    <E> List<E> find(Class<E> targetType);
+    default <E> List<E> find() {
+        return find((Class<E>) null);
+    }
 
     /**
      * 获取结果集，并转换成指定的对对象
      * 数据转换采用spring智能转换器
      *
-     * @param <E>              targetType 要求的结果类型
+     * @param <E> resultType 要求的结果类型
+     * @return
+     */
+    default <E> List<E> find(Class<E> resultType) {
+        return find(resultType, 3);
+    }
+
+    /**
+     * 获取结果集，并转换成指定的对对象
+     * 数据转换采用spring智能转换器
+     *
+     * @param <E>              resultType 要求的结果类型
      * @param maxCopyDeep      -1，表示不限层级
      * @param ignoreProperties 忽略目标对象的属性
      *                         a.b.c.name* *号表示忽略以什么开头的属性
@@ -379,7 +390,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
      */
-    <E> List<E> find(Class<E> targetType, int maxCopyDeep, String... ignoreProperties);
+    <E> List<E> find(Class<E> resultType, int maxCopyDeep, String... ignoreProperties);
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -388,15 +399,6 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @return
      */
     <I, E> List<E> find(Converter<I, E> converter);
-
-
-    /**
-     * 获取结果集
-     *
-     * @param <E>
-     * @return
-     */
-    <E> List<E> find();
 
     //////////////////////////////////////////////
 
@@ -429,7 +431,9 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @param <E>
      * @return
      */
-    <E> E findOne(boolean isExpectUnique);
+    default <E> E findOne(boolean isExpectUnique) {
+        return findOne(isExpectUnique, (Class<E>) null);
+    }
 
 
     /**
@@ -462,12 +466,7 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      * @return
      */
     default <E> E findOne(boolean isExpectUnique, Class<E> resultType) {
-
-        if (resultType == null || resultType == Void.class) {
-            return findOne(isExpectUnique);
-        }
-
-        return findOne(isExpectUnique, resultType, 2);
+        return findOne(isExpectUnique, resultType, 3);
     }
 
 

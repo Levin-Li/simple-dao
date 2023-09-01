@@ -48,7 +48,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-jpa</artifactId>
             <scope>provided</scope>
@@ -58,7 +58,7 @@
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-apt</artifactId>
             <scope>provided</scope>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -99,7 +99,7 @@
     </dependencies>
 
 
-    <build>
+ <!--   <build>
         <plugins>
             <plugin>
                 <groupId>com.mysema.maven</groupId>
@@ -117,16 +117,16 @@
                             <logOnlyOnError>true</logOnlyOnError>
                             <processors>
                                 <processor>com.querydsl.apt.QuerydslAnnotationProcessor</processor>
-<!--                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>-->
+&lt;!&ndash;                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>&ndash;&gt;
                                 <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
-                                <!--                                <processor>com.querydsl.apt.jdo.JDOAnnotationProcessor</processor> -->
-                                <!--                                <processor>com.querydsl.apt.roo.RooAnnotationProcessor</processor> -->
+                                &lt;!&ndash;                                <processor>com.querydsl.apt.jdo.JDOAnnotationProcessor</processor> &ndash;&gt;
+                                &lt;!&ndash;                                <processor>com.querydsl.apt.roo.RooAnnotationProcessor</processor> &ndash;&gt;
                             </processors>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
-    </build>
+    </build>-->
 
 </project>

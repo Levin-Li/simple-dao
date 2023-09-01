@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by echo on 2017/4/28.
@@ -13,7 +14,7 @@ import java.util.Map;
 public class MethodParameterNameDiscoverer
         extends DefaultParameterNameDiscoverer {
 
-    private static final Map<Method, String[]> methodParamNameCache = new ConcurrentReferenceHashMap<>();
+    private static final Map<Method, String[]> methodParamNameCache = new ConcurrentHashMap<>();
 
     @Override
     public String[] getParameterNames(Method method) {

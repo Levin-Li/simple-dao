@@ -27,7 +27,6 @@ public interface UpdateDao<T>
      */
     UpdateDao<T> setColumns(Boolean isAppend, String expr, Object... paramValues);
 
-
     /**
      * 对字段设置NUll值
      *
@@ -49,10 +48,10 @@ public interface UpdateDao<T>
     }
 
     /**
-     * 增加单个需要更新的属性
+     * 设置更新字段
      *
      * @param entityAttrName 需要更新的属性名，会自动尝试加上别名
-     * @param paramValue     属性值
+     * @param paramValue     参数值
      * @return
      */
     default UpdateDao<T> set(String entityAttrName, Object paramValue) {
@@ -60,14 +59,41 @@ public interface UpdateDao<T>
     }
 
     /**
-     * 增加单个需要更新的属性
+     * 设置更新字段
      *
-     * @param isAppend       是否增加，方便保持链式调用
+     * @param isAppend       是否加入表达式，方便链式调
      * @param entityAttrName 需要更新的属性名，会自动尝试加上别名
-     * @param paramValue     属性值
+     * @param paramValue     参数值
      * @return
      */
-    UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue);
+    default UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {
+        return set(isAppend, false, entityAttrName, paramValue);
+    }
+
+    /**
+     * 设置更新字段
+     *
+     * @param isAppend       是否加入表达式，方便链式调
+     * @param incrementMode  是否增量模式
+     * @param entityAttrName 需要更新的属性名，会自动尝试加上别名
+     * @param paramValue     参数值
+     * @return
+     */
+    default UpdateDao<T> set(Boolean isAppend, boolean incrementMode, String entityAttrName, Object paramValue) {
+        return set(isAppend, incrementMode, true, entityAttrName, paramValue);
+    }
+
+    /**
+     * 设置更新字段
+     *
+     * @param isAppend                             是否加入表达式，方便链式调
+     * @param incrementMode                        是否增量模式
+     * @param autoConvertNullValueForIncrementMode 增量模式时，是否自动转换空值
+     * @param entityAttrName                       需要更新的属性名，会自动尝试加上别名
+     * @param paramValue                           参数值
+     * @return
+     */
+    UpdateDao<T> set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue);
 
     /**
      * 是否有要更新的列
@@ -78,14 +104,12 @@ public interface UpdateDao<T>
      */
     boolean hasColumnsForUpdate();
 
-
     /**
      * 禁止抛出异常当没有要更新的列时
      *
      * @return
      */
     UpdateDao<T> disableThrowExWhenNoColumnForUpdate();
-
 
     /**
      * 执行更新动作，并返回受影响的记录数

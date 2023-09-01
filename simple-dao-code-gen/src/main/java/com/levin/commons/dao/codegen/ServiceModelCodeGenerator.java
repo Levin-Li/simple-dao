@@ -1,12 +1,15 @@
 package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.HashUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
@@ -33,28 +36,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,6 +60,7 @@ public final class ServiceModelCodeGenerator {
 
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
+    public static final String SIMPLE_UPDATE_EVT_FTL = "services/req/simple_update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
     public static final String STAT_EVT_FTL = "services/req/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
@@ -77,7 +72,9 @@ public final class ServiceModelCodeGenerator {
 
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
+    public static final String SIMPLE_CREATE_EVT_FTL = "services/req/simple_create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
+    public static final String SELECT_INFO_FTL = "services/info/simple_info.ftl";
 
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
     public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";
@@ -331,8 +328,7 @@ public final class ServiceModelCodeGenerator {
 
         String starterDir = starterDir();
 
-
-        params.putAll(threadContext.getAll(false));
+        params.putAll(threadContext.getAll(true));
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
@@ -349,6 +345,7 @@ public final class ServiceModelCodeGenerator {
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
         Arrays.asList("ModulePlugin"
+                , "ModuleWebInjectVarServiceImpl"
         ).forEach(className -> genJavaFile(controllerDir, "", className, params));
 
         genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
@@ -365,8 +362,38 @@ public final class ServiceModelCodeGenerator {
         Arrays.asList("ModuleStarterConfiguration"
         ).forEach(className -> genJavaFile(starterDir, "", className, params));
 
-        genFileByTemplate("spring.factories.ftl", params, starterDir + File.separator + ".."
-                + File.separator + "resources" + File.separator + "META-INF" + File.separator + "spring.factories");
+        simpleGen("starter/resources/META-INF/spring.factories.ftl", params, mavenProject);
+        simpleGen("starter/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports", params, mavenProject);
+    }
+
+    public static void simpleGen(final String templatePath, Map<String, Object> params, MavenProject mavenProject) throws Exception {
+
+        int idx = templatePath.indexOf("/");
+
+        String targetDir = null;
+        if (idx != -1) {
+            targetDir = ServiceModelCodeGenerator.dirMap().get(templatePath.substring(0, idx).trim());
+        }
+
+        String filePath = templatePath;
+
+        //如果没有目录
+        if (StringUtils.hasText(targetDir)) {
+            //默认这个值是Java源码的值，项目目录在上一级
+            filePath = targetDir + "/../" + filePath.substring(idx + 1);
+        } else {
+            //默认路径
+            filePath = mavenProject.getBasedir().getCanonicalPath() + "/" + filePath;
+        }
+
+        if (filePath.endsWith(".ftl")) {
+            filePath = filePath.substring(0, filePath.length() - 4);
+        }
+
+        //转换成本地路径
+        filePath = filePath.replace("/", File.separator);
+
+        genFileByTemplate(templatePath, params, filePath);
 
     }
 
@@ -440,6 +467,7 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
+
         hasEntityClass(true);
 
         //获取包名最端的类，把最短的包名，做为模块的包名
@@ -509,7 +537,10 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceImplDir, "services", "BaseService.java");
         genFileByTemplate(genParams, serviceImplDir, "services", "基础服务类开发规范.md");
 
-        genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarServiceImpl.java");
+        genFileByTemplate(genParams, serviceImplDir, "job", "DemoJob.java");
+
+        //genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarServiceImpl.java");
+
         genFileByTemplate(genParams, serviceImplDir, "biz", "业务服务类开发规范.md");
 
 
@@ -571,13 +602,17 @@ public final class ServiceModelCodeGenerator {
 
     private static String controllerPackage() {
         return modulePackageName() + ".controller"
-                + (isCreateBizController() ? ".base" : "")
-                + (Boolean.FALSE.equals(isCreateControllerSubDir()) ? "" : ("." + subPkgName()));
+                + (Boolean.TRUE.equals(isCreateBizController()) ? ".base" : "")
+                + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? ("." + subPkgName()) : "");
     }
 
     private static String bizControllerPackage() {
+
+        //业务控制器不创建目录
         return modulePackageName() + ".controller"
-                + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? "." + subPkgName() : "");
+                //20230812 修改，业务控制器不分目录
+                //  + (Boolean.TRUE.equals(isCreateControllerSubDir()) ? "." + subPkgName() : "")
+                ;
     }
 
     public static Boolean isCreateControllerSubDir(Boolean newValue) {
@@ -685,6 +720,15 @@ public final class ServiceModelCodeGenerator {
     }
 
     ///////////////////////////////////////////////////
+
+    public static Map<String, String> dirMap(Map<String, String> newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static Map<String, String> dirMap() {
+        return getThreadVar(Collections.emptyMap());
+    }
+
     public static Boolean splitDir(boolean newValue) {
         return putThreadVar(newValue);
     }
@@ -915,6 +959,9 @@ public final class ServiceModelCodeGenerator {
                 servicePackage() + ".info",
                 entityClass.getSimpleName() + "Info", mapConsumer);
 
+        genCode(entityClass, SELECT_INFO_FTL, fields, srcDir,
+                servicePackage() + ".info",
+                "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
     }
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
@@ -932,8 +979,16 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                 pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
+
+        genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
+                pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+
         genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
                 pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
+                pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         //删除
         genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
@@ -1003,13 +1058,17 @@ public final class ServiceModelCodeGenerator {
 
         //加入控制器类
         String className = entityClass.getSimpleName() + "Controller";
-        String bizClassName = "Biz" + className;
 
-        controllerClassList(((isCreateBizController() ? bizControllerPackage() : controllerPackage()) + "." + bizClassName).replace("..", "."));
+        controllerClassList((controllerPackage() + "." + className).replace("..", "."));
 
         genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
 
         if (isCreateBizController()) {
+
+            String bizClassName = "Biz" + className;
+
+            controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
+
             genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
         }
 
@@ -1114,17 +1173,30 @@ public final class ServiceModelCodeGenerator {
 
         params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
 
-        params.put("classModel", new ClassModel().setEntityType(entityClass));
+        ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
+
+        params.put("classModel", classModel);
+
+        if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
+            classModel.getImports().add(JsonIgnoreProperties.class.getName());
+            classModel.getAnnotations().add("@JsonIgnoreProperties({\"tenantId\"})");
+        }
 
         //分解字段类型
-
         LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
 
-        params.put("importList", fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
+        Set<String> impList = fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<>(), (f, s) -> {
                     f.addAll(s);
                     return f;
-                }));
+                });
+
+        classModel.getImports().addAll(impList);
+
+        params.put("importList", classModel.getImports().stream()
+                .filter(t -> !t.trim().startsWith("java.lang."))
+                .collect(Collectors.toSet())
+        );
 
         for (FieldModel fieldModel : fields) {
             multiValueMap.add(fieldModel.crud.name(), fieldModel);
@@ -1150,6 +1222,14 @@ public final class ServiceModelCodeGenerator {
     }
 
 
+    /**
+     * 生成文件，如果文件存在已经被修改，则直接返回。
+     *
+     * @param template
+     * @param params
+     * @param fileName
+     * @throws Exception
+     */
     public static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
 
         //复制
@@ -1170,42 +1250,54 @@ public final class ServiceModelCodeGenerator {
 
         final String keyword = "@author Auto gen by simple-dao-codegen, @time:";
 
+        //内容过滤器
+        final Function<List<String>, String> linesFilter = lines -> lines.stream()
+                //去除空行
+                .filter(StringUtils::hasText)
+                //不包含生成标记行，里面有动态时间
+                .filter(line -> !line.contains(keyword) && !line.contains(prefix))
+                //去除空格
+                .map(StringUtils::trimWhitespace)
+                .collect(Collectors.joining());
+
         if (file.exists()) {
+
+            //读取旧文件内容
+            List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("utf-8"));
+
+            //如果文件存在，将自动去除空行后然后比较文件内容，通过md5校验文件是否被修改过
+            //如果被修改过，则直接放回，如果没有被修改，则继续
 
             boolean skip = true;
 
-            //文件内容，去除空格，空行
-            fileOldCompactContent = Files.readAllLines(file.toPath(), Charset.forName("utf-8"))
-                    .stream()
-                    //去除空行
-                    .filter(StringUtils::hasText)
-                    //不包含生成标记行，里面有动态时间
-                    .filter(line -> !line.contains(keyword))
-                    //去除空格
-                    .map(StringUtils::trimAllWhitespace)
-                    .collect(Collectors.joining());
+            //文件内容
+            final String md5Line = lines.stream().filter(StringUtils::hasText)
+                    .filter(line -> line.contains(prefix))
+                    .findFirst().orElse(null);
 
-            int startIdx = fileOldCompactContent.indexOf(prefix);
+            int startIdx = StringUtils.hasText(md5Line) ? md5Line.indexOf(prefix) : -1;
 
             if (startIdx != -1) {
 
-                int endIndex = fileOldCompactContent.indexOf("]", startIdx);
+                final String md5 = md5Line.substring(startIdx, md5Line.indexOf("]", startIdx))
+                        .substring(prefix.length());
 
-                String codeContent = fileOldCompactContent.substring(startIdx, endIndex);
+                //去除空行，去除关键字后的文件内容
+                fileOldCompactContent = linesFilter.apply(lines);
 
-                String md5 = codeContent.substring(prefix.length());
-
-//                logger.info("MD5:" + md5 + " : " + file.getCanonicalPath());
-
-                fileOldCompactContent = fileOldCompactContent.substring(0, startIdx + prefix.length()) + fileOldCompactContent.substring(endIndex);
+                //垃圾回收
+                lines = null;
 
                 //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     skip = false;
-                    logger.info("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5);
+                    logger.debug("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5);
                 } else {
                     logger.info("目标文件：" + path + " 已经存在，并且被修改过，不覆盖。");
                 }
+
+            } else {
+                logger.warn("目标文件：" + path + " 已经存在，但没有发现生成关键字<<<{}>>>, {}, 将被忽略。", prefix, startIdx);
             }
 
             if (skip) {
@@ -1223,24 +1315,29 @@ public final class ServiceModelCodeGenerator {
 
         getTemplate(template).process(params, stringWriter);
 
+        //文件内容
         String fileContent = stringWriter.toString();
+
+        if (fileName.endsWith(".java")) {
+            //如果是Java类文件，自动格式化
+            try {
+                fileContent = new com.google.googlejavaformat.java.Formatter(
+                        JavaFormatterOptions.builder().style(JavaFormatterOptions.Style.AOSP).build()
+                ).formatSource(fileContent);
+            } catch (Exception e) {
+                logger.warn("无法格式化生成的代码，" + path);
+            }
+        }
 
         int startIdx = fileContent.indexOf(prefix);
 
         if (startIdx != -1) {
-
             //需要hash的部分
-            String newCompactContent = Stream.of(fileContent.split("[\r\n]"))
-                    //去除空行
-                    .filter(StringUtils::hasText)
-                    //不包含生成标记行，里面有动态时间
-                    .filter(line -> !line.contains(keyword))
-                    //去除空格
-                    .map(StringUtils::trimAllWhitespace)
-                    .collect(Collectors.joining());
+            String newCompactContent = linesFilter.apply(Arrays.asList(fileContent.split("[\r\n]")));
 
-            //如果文件内容相同，则直接返回
-            if (newCompactContent.equals(fileOldCompactContent)) {
+            //如果文件内容相同，没有变化，则直接返回
+            if (newCompactContent.contentEquals(fileOldCompactContent)) {
+                logger.debug("目标文件：" + path + " 已经存在，且新旧内容相同，跳过。");
                 return;
             }
 
@@ -1253,7 +1350,11 @@ public final class ServiceModelCodeGenerator {
 
         //写入文件
         FileUtil.writeString(fileContent, file, "utf-8");
-        logger.info("目标文件：" + path + "写入成功。");
+
+        fileContent = null;
+        fileOldCompactContent = null;
+
+        logger.info("目标文件：" + path + " 写入成功。");
     }
 
     private static String getInfoClassImport(Class entity) {
@@ -1272,14 +1373,19 @@ public final class ServiceModelCodeGenerator {
     }
 
     public static void setLazy(FieldModel fieldModel) {
-        if (FetchType.LAZY.equals(tryGetFetchType(fieldModel.getField()))) {
-            fieldModel.setLazy(true);
-        }
+//        if (FetchType.LAZY.equals(tryGetFetchType(fieldModel.getField()))) {
+//            fieldModel.setLazy(true);
+//        }
+
+        //只要是支持 FetchType 的属性
+        fieldModel.setLazy(tryGetFetchType(fieldModel.getField()) != null);
     }
 
     public static FetchType tryGetFetchType(Field field) {
         return Stream.of(field.getAnnotations())
                 .filter(Objects::nonNull)
+                //排查 Basic 注解
+                .filter(an -> !(an instanceof Basic))
                 .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "fetch", false))
                 //.filter(Objects::nonNull)
                 .filter(v -> v instanceof FetchType)
@@ -1386,6 +1492,8 @@ public final class ServiceModelCodeGenerator {
 
             }
 
+            setLazy(fieldModel);
+
             if (isCollection && subType != null) {
 
                 String subTypeName = subType.getSimpleName();
@@ -1403,7 +1511,8 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
             }
 
-            setLazy(fieldModel);
+            //是否乐观锁字段
+            fieldModel.setOptimisticLock(field.isAnnotationPresent(Version.class));
 
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
@@ -1442,12 +1551,15 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
-                fieldModel.setAutoIdentity(field.isAnnotationPresent(GeneratedValue.class)
+                fieldModel.setAutoGenValue(field.isAnnotationPresent(GeneratedValue.class)
                         && !field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.AUTO));
             } else {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
                 fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
             }
+
+            //是否是自动生成字段
+            fieldModel.setAutoGenValue(field.isAnnotationPresent(GeneratedValue.class));
 
             if (field.isAnnotationPresent(ManyToOne.class) ||
                     field.isAnnotationPresent(OneToOne.class)) {
@@ -1480,9 +1592,26 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
+                                        String domainStr = "";
+
+                                        String[] domain = injectVar.domain();
+
+                                        if (domain == null || domain.length == 0) {
+                                        } else if (domain.length == 1) {
+                                            if (!"default".equals(domain[0])) {
+                                                domainStr = "domain = \"" + domain[0] + "\"";
+                                            }
+                                        } else {
+                                            //加上挂号
+                                            for (int i = 0; i < domain.length; i++) {
+                                                domain[i] = "\"" + domain[i] + "\"";
+                                            }
+                                            domainStr = "domain = {" + String.join(",", domain) + "}";
+                                        }
+
                                         if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
-                                            String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
+                                            //  String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
 
                                             String params = "";
 
@@ -1496,15 +1625,21 @@ public final class ServiceModelCodeGenerator {
 
                                                 String simpleName = injectVar.converter().getSimpleName();
 
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s, %s converter = %s.class, isRequired = \"false\")", domain, params, simpleName));
+                                                if (StringUtils.hasText(domainStr)) {
+                                                    domainStr = domainStr + ",";
+                                                }
+                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s %s converter = %s.class, isRequired = \"false\")", domainStr, params, simpleName));
                                             } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s)", domain));
+                                                if (StringUtils.hasText(domainStr)) {
+                                                    domainStr = String.format("(%s)", domainStr);
+                                                }
+                                                annotations.add("@" + annotationClass.getSimpleName() + domainStr);
                                             }
                                         }
 
                                         //默认类型
                                         if (injectVar.expectBaseType() != Void.class
-                                                && ("dao".equalsIgnoreCase(injectVar.domain()) || injectVar.expectBaseType() != Object.class)) {
+                                                && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || injectVar.expectBaseType() != Object.class)) {
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 
@@ -1556,6 +1691,32 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
+            //默认处理密码字段
+            if (field.isAnnotationPresent(JsonIgnore.class)) {
+                fieldModel.addAnnotation(field.getAnnotation(JsonIgnore.class));
+            } else if (Stream.of("password", "passwd", "pwd")
+                    .anyMatch(txt -> field.getName().toLowerCase().endsWith(txt))) {
+                fieldModel.addAnnotation(JsonIgnore.class);
+            }
+
+            if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
+                fieldModel.addAnnotation(field.getAnnotation(JsonIgnoreProperties.class));
+            }
+
+            if (field.isAnnotationPresent(Update.class)) {
+                Update update = field.getAnnotation(Update.class);
+
+                //增量更新
+                if(update.incrementMode()){
+
+                }
+            }
+
+            //加入所有的校验规则
+            fieldModel.addAnnotations(
+                    an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                    , field.getAnnotations());
+/*
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
                 annotations.add("@Min(0)");
@@ -1579,7 +1740,7 @@ public final class ServiceModelCodeGenerator {
             } else if (field.isAnnotationPresent(Max.class)) {
                 annotations.add("@Max(" + field.getAnnotation(Max.class).value() + ")");
                 fieldModel.setTestValue(field.getAnnotation(Max.class).value() + "");
-            }
+            }*/
 
             fieldModel.getAnnotations().addAll(annotations);
 
@@ -1625,7 +1786,6 @@ public final class ServiceModelCodeGenerator {
         }
         return fieldModelList;
     }
-
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
 

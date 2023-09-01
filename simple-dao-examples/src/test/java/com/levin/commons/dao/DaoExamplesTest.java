@@ -1,5 +1,7 @@
 package com.levin.commons.dao;
 
+import cn.hutool.core.map.MapUtil;
+import com.google.gson.Gson;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
@@ -7,22 +9,30 @@ import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.dto.task.CreateTask;
 import com.levin.commons.dao.dto.task.QueryTaskReq;
 import com.levin.commons.dao.dto.task.TaskInfo;
+import com.levin.commons.dao.inject.InjectTestObj;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
 import com.levin.commons.dao.proxy.UserApi3;
 import com.levin.commons.dao.repository.Group2Dao;
 import com.levin.commons.dao.repository.GroupDao;
 import com.levin.commons.dao.repository.UserDao;
-import com.levin.commons.dao.service.UserService;
-import com.levin.commons.dao.service.dto.QueryUserEvt;
-import com.levin.commons.dao.service.dto.UserInfo;
-import com.levin.commons.dao.service.dto.UserUpdateEvt;
+import com.levin.commons.dao.services.UserService;
+import com.levin.commons.dao.services.dto.QueryUserEvt;
+import com.levin.commons.dao.services.dto.UserInfo;
+import com.levin.commons.dao.services.dto.UserUpdateEvt;
+import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
+import com.levin.commons.dao.services.testrole.req.CreateTestRoleReq;
+import com.levin.commons.dao.services.testrole.req.QueryTestRoleReq;
+import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
 import com.levin.commons.dao.support.PagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
+import com.levin.commons.dao.services.testorg.req.UpdateTestOrgReq;
 import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
+import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,9 +44,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
 import java.net.URLDecoder;
 import java.util.*;
 import java.util.stream.Stream;
@@ -53,7 +66,6 @@ public class DaoExamplesTest {
 
     @Autowired
     SimpleDao dao;
-
 
     @Autowired
     UserDao userDao;
@@ -94,6 +106,7 @@ public class DaoExamplesTest {
 
     @BeforeEach
     public void injectCheck() throws Exception {
+
         Assert.notNull(dao, "通用DAO没有注入");
         Assert.notNull(userDao, "userDao没有注入");
         Assert.notNull(groupDao, "groupDao没有注入");
@@ -205,6 +218,7 @@ public class DaoExamplesTest {
         } finally {
             //  DaoContext.setAutoFlush(false, true);
         }
+
     }
 
     public void initTestData2() throws Exception {
@@ -213,7 +227,6 @@ public class DaoExamplesTest {
         if (dao.selectFrom(User.class).count() > 0) {
             return;
         }
-
 
         //先删除旧数据
         dao.deleteFrom(Task.class)
@@ -308,18 +321,8 @@ public class DaoExamplesTest {
 
 
         System.out.println(names);
-        //   Session session = entityManager.unwrap(Session.class);
-
-        // session.isDirty();
-
-        //  session.setHibernateFlushMode(null);
-
-//        List<Tuple> resultList = session
-//                .createQuery("select id,name,group from " + User.class.getName(), Tuple.class)
-//                .getResultList();
 
 
-//          System.out.println(resultList);
     }
 
     @Test
@@ -376,7 +379,6 @@ public class DaoExamplesTest {
                 .setActions(Arrays.asList(12, 2, 3, 4, 55, 99))
         );
 
-
         Assert.hasText(task.getActions(), "字段转换错误1");
 
         TaskInfo one = dao.selectFrom(Task.class)
@@ -394,10 +396,60 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testIncrementUpdate() {
+
+        User user = dao.findOneByQueryObj(User.class);
+
+        Assert.notNull(user, "user is null");
+
+        IncrUpdateUserDTO incrUpdateUserDTO = new IncrUpdateUserDTO();
+
+        //
+        incrUpdateUserDTO.setId(user.getId());
+
+        boolean ok = dao.singleUpdateByQueryObj(incrUpdateUserDTO);
+
+        Assert.isTrue(ok);
+
+
+        try {
+            incrUpdateUserDTO.setCreateTime(new Date());
+
+            dao.singleUpdateByQueryObj(incrUpdateUserDTO);
+
+            ok = true;
+
+            //如果没有抛出异常
+        } catch (Exception e) {
+            ok = false;
+            //发生异常才是正确逻辑
+        }
+
+        Assert.isTrue(!ok, "错误的更新，但并没有抛出异常");
+
+
+        incrUpdateUserDTO.setCreateTime(null);
+
+        UpdateDao<Object> objectUpdateDao = dao.forUpdate(incrUpdateUserDTO);
+
+
+        String statement = objectUpdateDao.genFinalStatement();
+
+        System.out.println(statement);
+
+        Assert.isTrue(statement.contains(" = CONCAT(")
+                //  && statement.contains(" IS NULL")
+                && statement.contains(" + ")
+                && statement.contains("''")
+                && statement.contains("0")
+        );
+
+
+    }
 
     @Test
     public void testSimpleUserQO() {
-
 
 //        Assert.isTrue(Boolean.TRUE.equals(v),"");
 
@@ -450,11 +502,22 @@ public class DaoExamplesTest {
 
     }
 
+    public static String anToStr(Annotation an) {
+        Class<? extends Annotation> annotationType = an.annotationType();
+        String prefix = "@" + annotationType.getPackage().getName();
+        return "@" + an.toString().substring(prefix.length() + 1);
+    }
+
     @Test
     public void testFromStatementDTO() {
 
 //        List<FromStatementDTO> byQueryObj = dao.findByQueryObj(FromStatementDTO.class, new FromStatementDTO());
 //        assert byQueryObj.size() > 0;
+
+        Entity an = User.class.getAnnotation(Entity.class);
+
+
+        final String prefix = anToStr(an);
 
 
         List<TableJoin3> byQueryObj1 = dao.findByQueryObj(TableJoin3.class, new TableJoin3());
@@ -465,6 +528,7 @@ public class DaoExamplesTest {
         assert byQueryObj1.size() > 0;
 
     }
+
 
     @Test
     public void testTableJoin4() {
@@ -507,7 +571,8 @@ public class DaoExamplesTest {
 
         System.out.println(byQueryObj);
 
-        String ql = new Case().column("status")
+        String ql = new Case()
+                .column("status")
                 .when("'A'", "0")
                 .when("'B'", "1")
                 .elseExpr("2")
@@ -515,6 +580,30 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testInjectForUpdate() {
+
+        TestRole role = dao.create(new CreateTestRoleReq()
+                .setCode("R_SA")
+                .setName("TestRole1")
+                .setAssignedOrgIdList(Arrays.asList("1", "2", "3"))
+                .setOrgDataScope(TestRole.OrgDataScope.Assigned)
+                .setPermissionList(Arrays.asList("P1", "P2", "p3"))
+        );
+
+        TestRoleInfo info = dao.findUnique(new QueryTestRoleReq().setId(role.getId()));
+
+
+        int i = dao.updateByQueryObj(new UpdateTestRoleReq().setId(info.getId())
+                .setPermissionList(Arrays.asList("P4", "P5", "P6")));
+
+        Assert.isTrue(i == 1, "更新失败");
+
+        info = dao.findUnique(new QueryTestRoleReq().setId(role.getId()));
+
+        Assert.isTrue(info.getPermissionList().contains("P5"), "dddd");
+
+    }
 
     @Test
     public void testJoinAndStat() {
@@ -602,7 +691,7 @@ public class DaoExamplesTest {
     @Transactional
     public void testTransactional2() throws InterruptedException {
 
-        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+        EntityOption entityOption = TestEntity.class.getAnnotation(EntityOption.class);
 
         TestEntity entity = (TestEntity) dao.create(new TestEntity()
                 .setScore(random.nextInt(750))
@@ -876,6 +965,46 @@ public class DaoExamplesTest {
         Assert.isTrue(update == 1, "更新条数错误");
     }
 
+    @Test
+    public void testNotOp() throws Exception {
+
+        dao.selectFrom(User.class).not().eq(E_User.area, "test").end().find();
+
+        try {
+            dao.selectFrom(User.class).not().eq(E_User.area, "test").gt(E_User.score, 50).end().find();
+
+            throw new Exception("用例应该抛出异常");
+
+        } catch (RuntimeException e) {
+            System.out.println("" + e.getMessage());
+        }
+
+        String statement = dao.selectFrom(User.class)
+                .not()
+
+                .or()
+
+                .isNotNull(E_User.createTime)
+                .eq(E_User.area, "test")
+
+                //包含
+                .and()
+                .gt(E_User.score, 5)
+                .isNotNull(E_User.score)
+                .end()
+
+                //或结束
+                .end()
+
+                .end()
+                .genFinalStatement();
+
+        // 预期生成的语句
+        // From com.levin.commons.dao.domain.User     Where NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))
+
+        Assert.isTrue(statement.contains("NOT((createTime IS NOT NULL OR area =  :? OR (score >  :? AND score IS NOT NULL)))"));
+
+    }
 
     @Test
     public void testGetIdAttr() {
@@ -1061,9 +1190,27 @@ public class DaoExamplesTest {
 
         DaoContext.threadContext.put("orgId", 5L);
 
-
     }
 
+    @Test
+    public void testIncrementModeUpdateDTO() throws Exception {
+
+        UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
+
+        userUpdateDao
+                .set(true, true, E_User.score, 1)
+                .set(true, true, E_User.name, "+")
+                .eq(E_User.enable, false);
+
+        String statement = userUpdateDao.genFinalStatement();
+
+        System.out.println(statement);
+        // Update com.levin.commons.dao.domain.User   Set score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') ) Where enable =  :?
+
+        Assert.isTrue(statement.contains("score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') )"));
+
+        userUpdateDao.update();
+    }
 
     @Test
     public void testUpdateDTO() throws Exception {
@@ -1075,7 +1222,6 @@ public class DaoExamplesTest {
                 .eq(E_User.enable, false)
                 .update();
     }
-
 
     @Test
     public void testCount() throws Exception {
@@ -1142,9 +1288,8 @@ public class DaoExamplesTest {
 
             long st = System.currentTimeMillis();
 
-            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao,
+            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, null,
                     new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
-
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
 
@@ -1155,7 +1300,7 @@ public class DaoExamplesTest {
     @Test
     public void testPagingQueryHelper2() throws Exception {
 
-        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao,
+        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao, null,
                 PagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
@@ -1185,12 +1330,16 @@ public class DaoExamplesTest {
                 .find();
 
 
-//        System.out.println(selectDao.genFinalStatement());
-//
-//        System.out.println(selectDao.genFinalParamList());
+        final String statement = selectDao.genFinalStatement();
 
+        System.out.println("生成的语句：" + statement);
 
-        //   System.out.println(entities);
+        //必须存在正确的Having字句
+        Assert.isTrue(statement.contains("Having NOT( u.state IN ( :?, :?, :? ) )"), "Having语句生成错误");
+
+        //必须存在正确的NOT 字句
+        Assert.isTrue(statement.contains("AND NOT((u.enable =  :? AND u.editable =  :? AND (u.createTime >  :? OR u.score Between  :? AND  :?) AND u.remark LIKE  :?)) AND u.createTime Between  :? AND  :?")
+                , "Where 语句生成错误");
 
     }
 
@@ -1208,11 +1357,9 @@ public class DaoExamplesTest {
 
         DaoContext.threadContext.put("id", "默认线程Id");
 
-
         HashMap<String, Object> context = new HashMap<>();
 
         context.put("env.jpaDao.P1", "Dao参数1");
-
 
         PagingData<Object> pagingData = dao.findPagingDataByQueryObj(new UserDTO2());
 
@@ -1294,7 +1441,7 @@ public class DaoExamplesTest {
                 .find();
 
 
-        EntityOption entityOption = QueryAnnotationUtil.getEntityOption(TestEntity.class);
+        EntityOption entityOption = (TestEntity.class.getAnnotation(EntityOption.class));
 
 
         if (entityOption != null) {
@@ -1375,6 +1522,20 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testEntityClassSet() throws Exception {
+
+        ResultClassSupplier classSupplier = () -> UserInfo.class;
+
+        EntityClassSupplier entityClassSupplier = () -> User.class;
+
+        List<UserInfo> objects = dao.findByQueryObj(entityClassSupplier, classSupplier, Group.class, new CommDto());
+
+        Assert.notNull(objects);
+
+    }
+
+
+    @Test
     public void testTableJoinStatDTO() throws Exception {
 
 
@@ -1382,7 +1543,7 @@ public class DaoExamplesTest {
 
         String sql = selectDao.genFinalStatement();
 
-        Assert.isTrue(sql.contains(E_Group.ALIAS+".name Desc"),"预期的排序语句不存在");
+        Assert.isTrue(sql.contains(E_Group.ALIAS + ".name Desc"), "预期的排序语句不存在");
 
         List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO(), new PagingQueryReq(1, 10));
 //        List<TableJoinStatDTO> objects = jpaDao.findByQueryObj(new TableJoinStatDTO() );
@@ -1538,7 +1699,7 @@ public class DaoExamplesTest {
 
 
         List<Object> objects = dao.selectFrom(User.class, "u")
-                .leftJoin( Group.class, "g")
+                .leftJoin(Group.class, "g")
                 .select(true, "u")
                 .where("u.group.id = g.id ")
                 .isNotNull(E_User.id)
@@ -1686,6 +1847,13 @@ public class DaoExamplesTest {
 
     }
 
+
+    @Test
+    public void testLogicDto() throws Exception {
+
+
+    }
+
     @Test
     public void testUpdateFrom() throws Exception {
 
@@ -1717,6 +1885,59 @@ public class DaoExamplesTest {
         System.out.println("Group E_User:" + n);
     }
 
+    @Test
+    public void testCtxVar() throws Exception {
+
+        CtxVarTestReq req = new CtxVarTestReq();
+
+        List<CtxVarTestReq.Info> infoList = dao.findByQueryObj(req.setIsQueryName(true));
+
+        boolean ok = infoList.stream().allMatch(info -> StringUtils.hasText(info.getName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+
+        infoList = dao.findByQueryObj(req.setIsQueryName(false));
+
+        ok = infoList.stream().allMatch(info -> !StringUtils.hasText(info.getName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+
+
+        ok = infoList.stream().anyMatch(info -> StringUtils.hasText(info.getParentName()));
+
+        Assert.isTrue(ok, "CtxVar err");
+
+    }
+
+
+    @Test
+    public void testObjectUtils() {
+
+        String n = "" + System.currentTimeMillis();
+
+        List<InjectTestObj.QResult> list = Arrays.asList(
+                new InjectTestObj.QResult().setName(n),
+                new InjectTestObj.QResult().setName("2")
+        );
+
+        String json = new Gson().toJson(list);
+
+        Map<String, String> build = MapUtil.builder("product_infos", json).build();
+
+        InjectTestObj testObj = new InjectTestObj();
+
+        try {
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(DaoContext.getVariableInjector());
+            ObjectUtil.copyProperties(build, testObj, -1);
+        } finally {
+            ObjectUtil.VARIABLE_INJECTOR_THREAD_LOCAL.set(null);
+        }
+
+        Assert.notNull(testObj.getProduct_infos());
+
+        Assert.isTrue(testObj.getProduct_infos().get(0).getName().equals(n));
+
+    }
 
     @Test
     public void testQueryFrom2() throws Exception {

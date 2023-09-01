@@ -6,6 +6,7 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
@@ -49,18 +50,18 @@ public class UserDTO2 {
     @OrderBy
     protected Integer orderCode;
 
-    @In()
-    String[] state = new String[]{"A", "B", "C"};
-
     @Ignore
     protected Boolean enable = true;
 
     @AND
     protected Boolean editable = true;
 
-    @Lt()
+    @Lt
     @OR(condition = "#_val!=null")
     protected Date createTime = new Date();
+
+    @In
+    String[] state = new String[]{"A", "B", "C"};
 
     @Between("score")
     @END

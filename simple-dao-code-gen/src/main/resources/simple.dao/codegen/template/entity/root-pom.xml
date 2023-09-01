@@ -4,8 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <!-- 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}  -->
-    <!-- @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。 -->
-    <!-- 代码生成哈希校验码：[], 请不要修改和删除此行内容。 -->
+    <!-- @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。 -->
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -29,9 +28,9 @@
 
         <revision>${project.version}</revision>
 
-        <dubbo.version>3.1.8</dubbo.version>
+        <dubbo.version>3.2.4</dubbo.version>
 
-        <spring-boot.version>2.7.10</spring-boot.version>
+        <spring-boot.version>2.7.12</spring-boot.version>
 
         <levin.simple-dao.groupId>${codegen-plugin.groupId}</levin.simple-dao.groupId>
         <levin.simple-dao.version>${codegen-plugin.version}</levin.simple-dao.version>
@@ -41,13 +40,17 @@
 
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
+        <sa-token.version>1.35.0.RC</sa-token.version>
 
-        <knife4j.version>4.0.0</knife4j.version>
+        <knife4j.version>4.3.0</knife4j.version>
         <springdoc.version>1.6.14</springdoc.version>
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
         <redission.version>3.19.3</redission.version>
         <redission.version>3.16.8</redission.version>
+
+        <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
+        <com.github.oshi.version>3.12.2</com.github.oshi.version>
 
         <openfeign.version>3.1.5</openfeign.version>
 
@@ -58,14 +61,16 @@
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.source.skip>true</maven.source.skip>
 
-        <maven-source-plugin.attach>false</maven-source-plugin.attach>
+        <maven.source.skip>true</maven.source.skip>
+        <maven.source.attach>false</maven.source.attach>
 
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
 
         <spring-boot.repackage-not-single-jar>false</spring-boot.repackage-not-single-jar>
         <spring-boot.repackage-single-jar>true</spring-boot.repackage-single-jar>
+
+        <mica-auto.version>2.3.0</mica-auto.version>
 
     </properties>
 
@@ -275,6 +280,23 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${com.github.oshi.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${net.java.dev.jna.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${net.java.dev.jna.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.alibaba</groupId>
@@ -292,6 +314,41 @@
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redission.version}</version>
             </dependency>
+
+            <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-spring-boot-starter</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token 整合 Redis （使用 jackson 序列化方式） -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-redis-jackson</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-redisson-jackson</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token 整合 SpringAOP 实现注解鉴权 -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-spring-aop</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token-Quick-Login 插件 -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-quick-login</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
 
             <!-- 引入Swagger3依赖 -->
             <dependency>
@@ -341,6 +398,12 @@
                 <version>${openfeign.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>net.dreamlu</groupId>
+                <artifactId>mica-auto</artifactId>
+                <version>${mica-auto.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -389,6 +452,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -421,9 +490,15 @@
 
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
-                <configuration>
-                    <attach>${maven-source-plugin.attach}</attach>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-source</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <inherited>true</inherited>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>

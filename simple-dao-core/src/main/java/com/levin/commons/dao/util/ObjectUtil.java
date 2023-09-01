@@ -1,11 +1,13 @@
 package com.levin.commons.dao.util;
 
 
+import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.DeepCopy;
 import com.levin.commons.dao.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
+import com.levin.commons.service.support.VariableInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -44,6 +46,8 @@ public abstract class ObjectUtil {
     private static final AnnotationFormatterFactory<NumberFormat> numberFormatterFactory = new NumberFormatAnnotationFormatterFactory();
 
     public static final ThreadLocal<List<Predicate<String>>> fetchPropertiesFilters = new ThreadLocal<>();
+
+    public static final ThreadLocal<VariableInjector> VARIABLE_INJECTOR_THREAD_LOCAL = new ThreadLocal<>();
 
     /**
      * 属性拷贝器
@@ -426,7 +430,7 @@ public abstract class ObjectUtil {
      * @param <T>
      * @return
      */
-    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, ? super Object>... contexts) {
+    public static <T> T evalSpEL(Object rootObject, String expression, Map<String, Object>... contexts) {
         return ExprUtils.evalSpEL(rootObject, expression, contexts != null ? Arrays.asList(contexts) : Collections.emptyList());
     }
 
@@ -731,7 +735,6 @@ public abstract class ObjectUtil {
         }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
         //如果是原子属性，可以认为是同一级
         if (BeanUtils.isSimpleValueType(targetType)) //   || BeanUtils.isSimpleValueType(source.getClass())
         {
@@ -747,9 +750,9 @@ public abstract class ObjectUtil {
 
         if (maxCopyDeep > 0
                 && invokeDeep > maxCopyDeep) {
-            //如果超出拷贝层数，买家返回Null
-            return null;
-            //   throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
+            //如果超出拷贝层数，返回Null
+            // return null;
+            throw new WarnException(propertyPath + " copy deep over max num " + maxCopyDeep);
         }
 ///////////////////////////////////////////////////////////////
 
@@ -900,19 +903,19 @@ public abstract class ObjectUtil {
 
             //尝试实例话
             target = BeanUtils.instantiateClass(targetType);
+
         }
 
         final List<Field> fieldList = new ArrayList<>(15);
 
         ReflectionUtils.doWithFields(targetType, field -> fieldList.add(field), field -> !Modifier.isStatic(field.getModifiers()));
 
+        //String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(target.getClass());
+
+        //List<String> daoInjectAttrList = daoInjectAttrs != null ? Arrays.asList(daoInjectAttrs) : Collections.emptyList();
+
         //按字段复制
         for (Field field : fieldList) {
-
-//            //注入字段不做处理
-//            if (field.isAnnotationPresent(InjectVar.class)) {
-//                continue;
-//            }
 
             String fieldPropertyPath = "";
 
@@ -943,7 +946,6 @@ public abstract class ObjectUtil {
                             .stream()
                             .filter(Objects::nonNull)
                             .noneMatch(predicate -> predicate.test(key))) {
-
                         continue;
                     }
                 }
@@ -960,7 +962,6 @@ public abstract class ObjectUtil {
                     fieldIgnoreProperties = deepCopy.ignoreProperties();
                 }
 
-
                 ResolvableType fieldResolvableType = ResolvableType.forField(field, myResolvableType);
 
                 if (fieldResolvableType.resolve() == null) {
@@ -974,6 +975,7 @@ public abstract class ObjectUtil {
 
                 fieldPropertyPath = buildDeepPath(propertyPath, field.getName());
 
+                //忽略的属性
                 if (isIgnore(fieldPropertyPath, source, target, field, fieldType, ignoreProperties)) {
                     continue;
                 }
@@ -982,22 +984,27 @@ public abstract class ObjectUtil {
                     logger.warn("*** 递归拷贝调用层次过多 [" + fieldPropertyPath + "], 调用层次：" + invokeDeep + " ，当前字段：" + field);
                 }
 
+                Object value = null;
 
-                Object value = getIndexValue(source, propertyName);
+                final VariableInjector variableInjector = VARIABLE_INJECTOR_THREAD_LOCAL.get();
 
-                value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);
-
-                value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
-
-
-                boolean isSimpleType = BeanUtils.isSimpleValueType(fieldType);
+                //如果是注入变量
+                if (variableInjector != null
+                        && variableInjector.isDomainMatch(field)) {
+                    variableInjector.injectValueByBean(target, field, source);
+                    continue;
+                } else {
+                    value = getIndexValue(source, propertyName);
+                    value = convertDate(fieldType, field.getAnnotation(DateTimeFormat.class), value);
+                    value = convertNumber(fieldType, field.getAnnotation(NumberFormat.class), value);
+                }
 
                 if (value == null) {
                     //优化处理，直接返回
-                    if (!isSimpleType) {
-                        field.set(target, null);
-                    }
-                } else if (isSimpleType) { //  || BeanUtils.isSimpleValueType(value.getClass())
+                    // if (!fieldType.isPrimitive()) {
+                    field.set(target, null);
+                    // }
+                } else if (BeanUtils.isSimpleValueType(fieldType)) {
                     //优化处理，直接返回
                     field.set(target, convert(value, fieldType));
                 } else {
@@ -1033,7 +1040,11 @@ public abstract class ObjectUtil {
 
                 logger.error(errInfo, error);
             }
-        }
+        }//end fields
+
+
+        //考虑  @TODO 注入
+
 
         if (!objectStack.empty()) {
             objectStack.pop();

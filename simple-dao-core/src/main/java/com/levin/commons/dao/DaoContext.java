@@ -5,7 +5,6 @@ import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableInjector;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -73,15 +72,17 @@ public abstract class DaoContext {
         return threadContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
     }
 
-    public static VariableInjector setCurrentThreadVar(String key,Object value) {
+    public static VariableInjector getCurrentThreadVarInjector() {
+        return threadContext.get(VARIABLE_INJECTOR_KEY);
+    }
+
+    public static VariableInjector setCurrentThreadVar(String key, Object value) {
         return threadContext.put(key, value);
     }
 
     public static VariableInjector setGlobalVariableInjector(VariableInjector variableInjector) {
         return globalContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
     }
-
-
 
     /**
      * 从变量来源注入变量到目标变量中
@@ -90,24 +91,37 @@ public abstract class DaoContext {
      * @param varSourceBeans 变量来源，注意顺序
      * @return
      */
-    public static List<String> injectVars(Object targetBean, Object... varSourceBeans) {
+    public static List<ValueHolder<Object>> injectValues(Object targetBean, Object... varSourceBeans) {
 
         if (targetBean == null) {
             return Collections.emptyList();
         }
 
-        return getVariableInjector().inject(targetBean, getContexts(varSourceBeans));
+        return getVariableInjector().injectByBean(targetBean, getDaoContexts(varSourceBeans));
     }
 
     /**
-     * 从变量来源注入变量到目标变量中
+     * 获取注入值
      *
      * @param targetBean
-     * @param contexts   变量来源，注意顺序
+     * @param field
+     * @param varSourceBeans
      * @return
      */
-    public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
-        return getVariableInjector().getInjectValue(targetBean, field, VariableInjector.newResolverByBean(() -> contexts));
+    public static ValueHolder<Object> getOutputValue(Object targetBean, Field field, Object... varSourceBeans) {
+        return getVariableInjector().getOutputValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
+    }
+
+    public static ValueHolder<Object> getInjectValue(Object targetBean, Field field, Object... varSourceBeans) {
+        return getVariableInjector().getInjectValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
+    }
+
+    public static ValueHolder<Object> injectValue(Object targetBean, Field field, Object... varSourceBeans) {
+        return getVariableInjector().injectValueByBean(targetBean, field, getDaoContexts(varSourceBeans));
+    }
+
+    public static List<?> getDaoContexts(Object... varSourceBeans) {
+        return getDaoContexts(Arrays.asList(varSourceBeans));
     }
 
     /**
@@ -116,13 +130,15 @@ public abstract class DaoContext {
      * @param varSourceBeans
      * @return
      */
-    public static List<?> getContexts(Object... varSourceBeans) {
+    public static List<?> getDaoContexts(List<Object> varSourceBeans) {
 
-        Assert.notNull(varSourceBeans, "varSourceBeans is null");
+        // Assert.notNull(varSourceBeans, "varSourceBeans is null");
 
-        List<Object> contexts = new ArrayList<>(varSourceBeans.length + 2);
+        List<Object> contexts = new ArrayList<>(5);
 
-        contexts.addAll(Arrays.asList(varSourceBeans));
+        if (varSourceBeans != null && varSourceBeans.size() > 0) {
+            contexts.addAll(varSourceBeans);
+        }
 
         //加上线程
         contexts.add(getThreadContext());

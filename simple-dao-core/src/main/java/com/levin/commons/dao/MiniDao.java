@@ -3,9 +3,10 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ValueHolder;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 public interface MiniDao extends DeepCopier {
@@ -41,6 +42,14 @@ public interface MiniDao extends DeepCopier {
     default int getSafeModeMaxLimit() {
         return 2000;
     }
+
+    /**
+     * 设置当前线程 结果集的最大记录数
+     *
+     * @param maxLimit
+     * @return
+     */
+    void setCurrentThreadMaxLimit(Integer maxLimit);
 
     /**
      * 是否 JPA Dao
@@ -141,33 +150,23 @@ public interface MiniDao extends DeepCopier {
     }
 
     /**
+     * 是否支持特定函数
+     * 返回 null 表示未知
+     *
+     * @param funName
+     * @return
+     */
+    default Boolean isSupportFunction(String funName) {
+        return null;
+    }
+
+    /**
      * 深度拷贝器
      *
      * @return
      */
     default DeepCopier getDeepCopier() {
         return this;
-    }
-
-    /**
-     * 注入变量
-     *
-     * @param targetBean
-     * @param varSourceBeans
-     * @return
-     */
-    default List<String> injectVars(Object targetBean, Object... varSourceBeans) {
-        return DaoContext.injectVars(targetBean, varSourceBeans);
-    }
-
-    /**
-     * 注入变量
-     *
-     * @param targetBean
-     * @return
-     */
-    default ValueHolder<Object> getInjectValue(Object targetBean, Field field, List<?> contexts) {
-        return DaoContext.getInjectValue(targetBean, field, contexts);
     }
 
     /**
@@ -194,6 +193,93 @@ public interface MiniDao extends DeepCopier {
     <E> E create(Object entityOrDto, boolean isCheckUniqueValue);
 
     /**
+     * 批量创建
+     *
+     * @param entityOrDtoList
+     * @param commitBatchSize
+     */
+    @Transactional
+    default List<Object> batchCreate(List<Object> entityOrDtoList) {
+
+        List<Object> result = new ArrayList<>(entityOrDtoList.size());
+
+        entityOrDtoList.forEach(data -> result.add(create(data)));
+
+        return result;
+    }
+
+    /**
+     * 批量提交
+     * 本方法不支持外层事务
+     *
+     * @param entityOrDtoList
+     * @param commitBatchSize
+     * @return
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    default List<Object> batchCreate(List<Object> entityOrDtoList, int commitBatchSize) {
+
+        if (commitBatchSize < 1) {
+            commitBatchSize = 512;
+        } else if (commitBatchSize > 512 * 10) {
+            commitBatchSize = 5120;
+        }
+
+        if (entityOrDtoList.size() < commitBatchSize) {
+            batchCreate(entityOrDtoList);
+        } else {
+
+            final List<Object> tempList = new ArrayList<>(commitBatchSize);
+
+            int i = 0;
+            for (Object data : entityOrDtoList) {
+
+                tempList.add(data);
+                //如果批次满
+                if (i++ % commitBatchSize == 0) {
+                    batchCreate(tempList);
+                    tempList.clear();
+                }
+            }
+
+            if (!tempList.isEmpty()) {
+                batchCreate(tempList);
+                tempList.clear();
+            }
+
+        }
+
+        return entityOrDtoList;
+    }
+
+    /**
+     * 更新
+     * 查询参数可以是数组，也可以是Map会进行自动识别
+     *
+     * @param statement   更新或是删除语句
+     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
+     * @return
+     */
+    @Transactional
+    default int update(String statement, Object... paramValues) {
+        return update(false, statement, paramValues);
+    }
+
+    /**
+     * 更新
+     * 查询参数可以是数组，也可以是Map会进行自动识别
+     *
+     * @param isNative
+     * @param statement   更新或是删除语句
+     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
+     * @return
+     */
+    @Transactional
+    default int update(boolean isNative, String statement, Object... paramValues) {
+        return update(isNative, -1, getSafeModeMaxLimit(), statement, paramValues);
+    }
+
+    /**
      * @param start       <1 表示不限制
      * @param count       <1 表示不限制
      * @param statement   更新或是删除语句
@@ -207,6 +293,36 @@ public interface MiniDao extends DeepCopier {
      * 手动刷新事务，主要用于同个事务中先写后读的时候
      */
     default void flush() {
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 查询
+     * 查询参数可以是数组，也可以是Map会进行自动识别
+     *
+     * @param statement
+     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
+     * @param <T>
+     * @return
+     */
+    default <T> List<T> find(String statement, Object... paramValues) {
+        return find(-1, -1, statement, paramValues);
+    }
+
+    /**
+     * 分页查询
+     * 查询参数可以是数组，也可以是Map会进行自动识别
+     *
+     * @param start       要返回的结果集的开始位置 position，从0开始
+     * @param count       要返回的记录数
+     * @param statement
+     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
+     * @param <T>
+     * @return
+     */
+    default <T> List<T> find(int start, int count, String statement, Object... paramValues) {
+        return find(false, null, start, count, statement, paramValues);
     }
 
     /**

@@ -1,19 +1,20 @@
 package com.levin.commons.dao.codegen.model;
 
-import cn.hutool.core.bean.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @EqualsAndHashCode(of = "name")
@@ -79,7 +80,7 @@ public class FieldModel implements Cloneable {
 
     private boolean required = false;//是否必填
 
-    private boolean autoIdentity; //是否自动增长主键
+    private boolean autoGenValue = false; //是否自动生成值
 
     private boolean notUpdate = false;//是否不需要更新
 
@@ -90,6 +91,9 @@ public class FieldModel implements Cloneable {
     private boolean contains; //是否生成模糊查询
 
     private boolean hidden = false;//是否有默认值
+
+    //是否是乐观锁字段
+    private boolean optimisticLock;
 
     private String infoClassName;
 
@@ -106,7 +110,41 @@ public class FieldModel implements Cloneable {
     }
 
     public String getModifiersPrefix() {
-        return modifiers.stream().map(StringUtils::trimAllWhitespace).collect(Collectors.joining(" ")) + " ";
+        return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
+    }
+
+    public static String anToStr(Annotation an) {
+        Class<? extends Annotation> annotationType = an.annotationType();
+        String prefix = "@" + annotationType.getPackage().getName();
+        return "@" + an.toString().substring(prefix.length() + 1);
+    }
+
+    public void addAnnotation(Class<? extends Annotation> type, String... attrs) {
+
+        imports.add(type.getName());
+
+        String attr = String.join(",", attrs);
+        if (StringUtils.hasText(attr)) {
+            attr = "(" + attr + ")";
+        }
+
+        this.annotations.add("@" + type.getSimpleName() + attr);
+    }
+
+    public void addAnnotations(Predicate<Annotation> includePredicate, Annotation[] annotations) {
+
+        Stream.of(annotations)
+                .filter(Objects::nonNull)
+                .filter(includePredicate)
+                .forEach(this::addAnnotation);
+    }
+
+    public void addAnnotation(Annotation... annotations) {
+        Stream.of(annotations)
+                .filter(Objects::nonNull).forEach(an -> {
+                    imports.add(an.annotationType().getName());
+                    this.annotations.add(anToStr(an));
+                });
     }
 
     /**
@@ -130,7 +168,11 @@ public class FieldModel implements Cloneable {
      * @return
      */
     public boolean isBaseEntityField() {
-        return field.getDeclaringClass().getName().equals("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
+        return isClassField("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
+    }
+
+    public boolean isClassField(String className) {
+        return field.getDeclaringClass().getName().equals(className);
     }
 
     public FieldModel addImport(Class type) {

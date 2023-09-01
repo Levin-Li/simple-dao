@@ -16,6 +16,8 @@ import java.lang.annotation.*;
  *
  * 更新字段注解
  *
+ * 支持增量更新
+ *
  *
  * 语句的组成: value = op + prefix + ? + suffix
  * 如： name = to_date('',?)
@@ -27,7 +29,6 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 public @interface Update {
-
 
     /**
      *
@@ -52,15 +53,39 @@ public @interface Update {
      */
     String value() default "";
 
-
     /**
-     * 乐观锁条件
+     * 动态的 where 条件，通常用于乐观锁条件。
+     * <p>
+     * 可以支持SPEL_PREFIX，以"#!spel:"为前缀，表示是Spel表达式
+     * <p>
      *
      * @return
      * @todo
      */
-    String optimisticLocking() default "";
+    String whereCondition() default "";
 
+    /**
+     * 是否增量更新
+     * <p>
+     * 对于数值形，增量更语句为 v = v  +  参数值
+     * <p>
+     * 对应字符串，增量更语句为 v = CONCAT(v  ,  参数值)
+     * <p>
+     * 对于时间，不支持，将抛出异常
+     *
+     * @return
+     * @since 2.5.1
+     */
+    boolean incrementMode() default false;
+
+    /**
+     * 增量更新时，是否自动转换 NULL 值到 空字符串 或是 0
+     * <p>
+     * increment
+     *
+     * @return
+     */
+    boolean convertNullValueForIncrementMode() default true;
 
     /**
      * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常

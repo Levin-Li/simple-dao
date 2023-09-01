@@ -1,9 +1,7 @@
-package com.levin.commons.dao.service;
+package com.levin.commons.dao.services;
 
-import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginConfigurer;
 import com.levin.commons.plugin.PluginManager;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 

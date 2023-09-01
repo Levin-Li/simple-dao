@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.plugins;
 
+import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.plugins.Utils;
@@ -117,7 +118,7 @@ public class CodeGeneratorMojo extends BaseMojo {
      * 生成的控制器类是否创建子目录
      */
     @Parameter
-    private Boolean isCreateControllerSubDir = null;
+    private boolean isCreateControllerSubDir = false;
 
     /**
      * 生成的控制器类是否创建子目录
@@ -271,6 +272,16 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.starterDir(starterDir);
             ServiceModelCodeGenerator.bootstrapDir(bootstrapDir);
 
+            ServiceModelCodeGenerator.dirMap(
+                    MapUtil.builder("services", serviceDir)
+                            .put("starter", starterDir)
+                            .put("admin-ui", adminUiDir)
+                            .put("api", controllerDir)
+                            .put("bootstrap", bootstrapDir)
+                            .put("services-impl", serviceImplDir)
+                            .build()
+            );
+
             getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
 
             codeGenParams.putIfAbsent("mavenProject", mavenProject);
@@ -290,6 +301,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
+
             //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader(), outputDirectory, codeGenParams);
 
@@ -308,6 +320,5 @@ public class CodeGeneratorMojo extends BaseMojo {
             getLog().error(mavenProject.getArtifactId() + " 模块代码生成错误：" + e.getMessage(), e);
         }
     }
-
 
 }

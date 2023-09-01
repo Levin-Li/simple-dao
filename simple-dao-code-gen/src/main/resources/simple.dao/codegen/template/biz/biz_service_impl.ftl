@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.*;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
@@ -60,12 +61,21 @@ import ${imp};
 /**
  *  ${entityTitle}-业务服务实现类
  *
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 
+// 事务隔离级别
+// Propagation.REQUIRED：默认的事务传播级别，它表示如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。
+// Propagation.SUPPORTS：如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行。
+// Propagation.MANDATORY：（mandatory：强制性）如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。
+// Propagation.REQUIRES_NEW：表示创建一个新的事务，如果当前存在事务，则把当前事务挂起。也就是说不管外部方法是否开启事务，Propagation.REQUIRES_NEW 修饰的内部方法会新开启自己的事务，且开启的事务相互独立，互不干扰。
+// Propagation.NOT_SUPPORTED：以非事务方式运行，如果当前存在事务，则把当前事务挂起。
+// Propagation.NEVER：以非事务方式运行，如果当前存在事务，则抛出异常。
+// Propagation.NESTED：如果当前存在事务，则创建一个事务作为当前事务的嵌套事务来运行；如果当前没有事务，则该取值等价于 PROPAGATION_REQUIRED。
+
+@Service(PLUGIN_PREFIX + "${className}")
 @DubboService
-//@Service(PLUGIN_PREFIX + "${className}")
 
 @ConditionalOnMissingBean({Biz${serviceName}.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
@@ -84,14 +94,9 @@ public class ${className} extends BaseService implements Biz${serviceName} {
         return getSelfProxy(${className}.class);
     }
 
-    //示例方法
-    //@Operation(tags = {BIZ_NAME}, summary = UPDATE_ACTION)
-    //@Override
-    //@CacheEvict(condition = "#req.id != null", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.id")
-    //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
-    //public boolean update(Update${entityName}Req req) {
-    //    Assert.notNull(req.getId(), BIZ_NAME + " id 不能为空");
-    //    return simpleDao.singleUpdateByQueryObj(req);
+    //@Transactional(rollbackFor = RuntimeException.class)
+    //public void update(UpdateReq req){
+    //    ${serviceName?uncap_first}.update(req);
     //}
 
 }

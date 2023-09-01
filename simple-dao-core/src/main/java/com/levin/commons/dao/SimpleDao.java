@@ -50,27 +50,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     @Transactional
     boolean deleteById(Class entityClass, Object id);
 
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Transactional
-    int update(String statement, Object... paramValues);
-
-    /**
-     * 更新
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement   更新或是删除语句
-     * @param paramValues 参数可紧一个数组,或是Map，或是List，或是具体的参数值，会对参数进行递归处理
-     * @return
-     */
-    @Transactional
-    int update(boolean isNative, String statement, Object... paramValues);
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * 通过查询对象更新
@@ -79,7 +59,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     int updateByQueryObj(Object... queryObjs);
-
 
     /**
      * 更新一条记录
@@ -93,13 +72,22 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     boolean singleUpdateByQueryObj(Object... queryObjs);
 
     /**
+     * 更新一条记录
+     * <p>
+     * 要求有且仅有一条记录被更新，否则抛出异常
+     *
+     * @param queryObjs
+     */
+    @Transactional
+    void uniqueUpdateByQueryObj(Object... queryObjs);
+
+    /**
      * 通过查询对象删除
      *
      * @return
      */
     @Transactional
     int deleteByQueryObj(Object... queryObjs);
-
 
     /**
      * 删除一条记录
@@ -111,6 +99,16 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     @Transactional
     boolean singleDeleteByQueryObj(Object... queryObjs);
+
+    /**
+     * 删除一条记录
+     * <p>
+     * 要求有且仅有一条记录被更新，否则抛出异常
+     *
+     * @param queryObjs
+     */
+    @Transactional
+    void uniqueDeleteByQueryObj(Object... queryObjs);
     ////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -122,32 +120,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <T> T find(Class<T> entityClass, Object id);
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * 查询
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param statement
-     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
-     * @param <T>
-     * @return
-     */
-    <T> List<T> find(String statement, Object... paramValues);
-
-    /**
-     * 分页查询
-     * 查询参数可以是数组，也可以是Map会进行自动识别
-     *
-     * @param start       要返回的结果集的开始位置 position，从0开始
-     * @param count       要返回的记录数
-     * @param statement
-     * @param paramValues 数组中的元素可以是map，数组，或是list,或值对象
-     * @param <T>
-     * @return
-     */
-    <T> List<T> find(int start, int count, String statement, Object... paramValues);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -211,6 +183,18 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     }
 
     /**
+     * 查找分页数据
+     *
+     * @param resultType
+     * @param queryObjs
+     * @param <E>
+     * @return
+     */
+    default <E> PagingData<E> findPagingDataByQueryObj(Class<?> resultType, Object... queryObjs) {
+        return findPageByQueryObj(resultType, PagingData.class, queryObjs);
+    }
+
+    /**
      * 查询分页数据
      * <p>
      * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
@@ -224,7 +208,25 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return 返回分页对象
      * @since 2.2.27 新增方法
      */
-    <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs);
+    default <P> P findPageByQueryObj(Object pagingHolderInstanceOrClass, Object... queryObjs) {
+        return findPageByQueryObj(null, pagingHolderInstanceOrClass, queryObjs);
+    }
+
+    /**
+     * 查询分页数据
+     * <p>
+     * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
+     * <p>
+     * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+     *
+     * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
+     * @param queryObjs                   查询对象
+     *                                    如果查询对象中没有分页设置，默认 new SimplePaging {@link com.levin.commons.dao.support.SimplePaging}
+     * @param <P>
+     * @return 返回分页对象
+     * @since 2.5.1 新增方法
+     */
+    <P> P findPageByQueryObj(Class<?> resultType, Object pagingHolderInstanceOrClass, Object... queryObjs);
 
     /**
      * 查询并统计行数
@@ -235,7 +237,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     <E> RS<E> findTotalsAndResultList(Object... queryObjs);
 
-
     /**
      * @param resultType
      * @param queryObjs
@@ -243,7 +244,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     <E> List<E> findByQueryObj(Class<E> resultType, Object... queryObjs);
-
 
     /**
      * @param queryObjs
@@ -301,7 +301,6 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     PlatformTransactionManager getTransactionManager();
-
 
     /**
      * jsr Validator

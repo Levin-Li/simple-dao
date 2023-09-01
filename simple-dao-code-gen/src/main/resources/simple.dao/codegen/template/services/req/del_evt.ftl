@@ -37,9 +37,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  删除${entityTitle}
- *  //@author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 删除${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = DELETE_ACTION + BIZ_NAME)
 @Data
@@ -59,13 +60,12 @@ public class ${className} extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
-
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
     @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
     final boolean eqEditable = true;
-</#if>
 
+</#if>
 <#if pkField?exists>
 
     @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)

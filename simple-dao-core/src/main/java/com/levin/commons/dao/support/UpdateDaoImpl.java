@@ -1,19 +1,21 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.EntityOption;
-import com.levin.commons.dao.MiniDao;
-import com.levin.commons.dao.StatementBuildException;
-import com.levin.commons.dao.UpdateDao;
+import cn.hutool.core.lang.Assert;
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * 更新Dao实现类
@@ -25,11 +27,9 @@ public class UpdateDaoImpl<T>
         extends ConditionBuilderImpl<T, UpdateDao<T>>
         implements UpdateDao<T> {
 
-
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
 
     final List updateParamValues = new ArrayList(7);
-
 
     static final String UPDATE_PACKAGE_NAME = Update.class.getPackage().getName();
 
@@ -60,7 +60,7 @@ public class UpdateDaoImpl<T>
     public UpdateDao<T> setColumns(Boolean isAppend, String columns, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
-                && StringUtils.hasText(columns)) {
+                && hasText(columns)) {
             append(columns, paramValues);
         }
 
@@ -72,7 +72,7 @@ public class UpdateDaoImpl<T>
 
         if (Boolean.TRUE.equals(isAppend) && entityAttrNames != null) {
             for (String entityAttrName : entityAttrNames) {
-                if (StringUtils.hasText(entityAttrName)) {
+                if (hasText(entityAttrName)) {
                     append(aroundColumnPrefix(entityAttrName) + " = NULL");
                 }
             }
@@ -81,12 +81,38 @@ public class UpdateDaoImpl<T>
         return this;
     }
 
+    /**
+     * 设置更新字段
+     *
+     * @param isAppend                             是否加入表达式，方便链式调
+     * @param incrementMode                        是否增量模式
+     * @param autoConvertNullValueForIncrementMode 增量模式时，是否自动转换空值
+     * @param entityAttrName                       需要更新的属性名，会自动尝试加上别名
+     * @param paramValue                           参数值
+     * @return
+     */
     @Override
-    public UpdateDao<T> set(Boolean isAppend, String entityAttrName, Object paramValue) {
-        if (Boolean.TRUE.equals(isAppend)
-                && StringUtils.hasText(entityAttrName)) {
-            append(aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder(), paramValue);
+    public UpdateDao<T> set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue) {
+
+        if (!Boolean.TRUE.equals(isAppend) && !hasText(entityAttrName)) {
+            return this;
         }
+
+        String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
+
+        //是否增量模式
+        if (incrementMode) {
+
+            ValueHolder<Object> holder = new ValueHolder<>(paramValue);
+
+            expr = genIncrementExpr(autoConvertNullValueForIncrementMode, entityAttrName, null, expr, holder);
+
+            //参数
+            paramValue = holder.value;
+        }
+
+        append(expr, paramValue);
+
         return this;
     }
 
@@ -95,7 +121,6 @@ public class UpdateDaoImpl<T>
             updateParamValues.add(values);
         }
     }
-
 
     @Override
     public UpdateDao<T> disableThrowExWhenNoColumnForUpdate() {
@@ -158,7 +183,12 @@ public class UpdateDaoImpl<T>
             return -1;
         }
 
-        return dao.update(isNative(), rowStart, rowCount, statement, genFinalParamList());
+        try {
+            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            return dao.update(isNative(), rowStart, rowCount, statement, genFinalParamList());
+        } finally {
+            dao.setCurrentThreadMaxLimit(null);
+        }
     }
 
     /**
@@ -208,16 +238,111 @@ public class UpdateDaoImpl<T>
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-            genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
-                setColumns(expr, holder.value);
-            });
 
+            genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
+
+                Update updateOp = (opAnnotation instanceof Update) ? (Update) opAnnotation : null;
+
+                if (updateOp != null) {
+
+                    //设置更新的where条件
+                    String whereCondition = updateOp.whereCondition();
+
+                    if (hasText(whereCondition)) {
+                        whereCondition = tryEvalExprIfHasSeplExpr(bean, value, name, whereCondition, getDaoContextValues(), getContext());
+                        where(whereCondition);
+                    }
+
+                    //如果是增量更新
+                    if (updateOp.incrementMode()
+                            //去除成对的小括号
+                            && hasText(expr = ExprUtils.trimParenthesesPair(expr))
+                            && expr.contains("=")) {
+
+                        expr = genIncrementExpr(updateOp.convertNullValueForIncrementMode(), name, varType, expr, holder);
+                    }
+                }
+
+                //设置更新的列
+                setColumns(expr, holder.value);
+
+            });
         }
 
         //允许 Update 注解和其它注解同时存在
 
         super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+    }
 
+    /**
+     * 生成增量更新语句
+     *
+     * @param varType
+     * @param expr
+     * @return
+     */
+    protected String genIncrementExpr(boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+
+        //数据库字段的类型，必须存在更新的对象
+        final Class<?> dbColumnType = QueryAnnotationUtil.getFieldType(entityClass, name);
+
+        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("Increment update can't support type[" + dbColumnType + "]，Only Number or String");
+
+        Assert.notNull(dbColumnType, exSupplier);
+
+        //检查是否非法的语句
+        //Assert.isTrue(expr.charAt(0) != '(',() -> new StatementBuildException("非法的语句"));
+
+        int indexOf = expr.indexOf('=');
+
+        final String colExpr = ExprUtils.trimParenthesesPair(expr.substring(0, indexOf));
+        final String paramExpr = ExprUtils.trimParenthesesPair(expr.substring(indexOf + 1));
+
+        //是否支持 IFNULL 函数
+        final boolean isSupportIFNULL = Boolean.TRUE.equals(getDao().isSupportFunction("IFNULL"));
+
+        //生成语句
+        final BiFunction<String, String, String> genFunc = (fun, defaultValue) -> {
+
+            String tempExpr = "";
+
+            String delim = hasText(fun) ? " , " : " + ";
+
+            if (convertNullValueForIncrementMode) {
+
+                //SQL 条件语句 (IF, CASE WHEN, IFNULL)
+                // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
+
+                if (isSupportIFNULL) {
+                    //IFNULL 简化语句
+                    tempExpr = colExpr + " = " + fun + "( IFNULL(" + colExpr + " , " + defaultValue + ") " + delim + " IFNULL(" + paramExpr + " , " + defaultValue + ") )";
+                } else {
+                    tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
+                            + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";
+                    //双份的参数
+                    holder.value = new Object[]{holder.value, holder.value};
+                }
+
+            } else {
+                //QL:
+                tempExpr = colExpr + " = " + fun + "(" + colExpr + delim + paramExpr + ")";
+            }
+
+            return tempExpr;
+        };
+
+
+        //如果是数字
+        if (Number.class.isAssignableFrom(dbColumnType)) {
+            expr = genFunc.apply("", "0");
+        } else if (CharSequence.class.isAssignableFrom(dbColumnType)) {
+            //字符串相加 使用 CONCAT 函数
+            expr = genFunc.apply("CONCAT", "''");
+        } else {
+            throw exSupplier.get();
+        }
+
+        return expr;
     }
 
 }

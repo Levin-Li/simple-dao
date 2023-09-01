@@ -1,5 +1,6 @@
 package com.levin.commons.dao.support;
 
+import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.util.CollectionHelper;
 import lombok.Getter;
 import lombok.Setter;
@@ -64,12 +65,55 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
         this.op = op;
 
+
         this.valid = valid;
 
         this.parentNode = parentNode;
 
         //当前结点等于自己
         this.currentNode = this;
+
+    }
+
+    protected boolean isNotOp() {
+        return "NOT".equals(op);
+    }
+
+    protected String getDelimiter() {
+        return "" + op;
+    }
+
+    protected String getPrefix() {
+
+        if (isNotOp()) {
+            return op + prefix;
+        }
+
+        //操作符之间增加空格
+        //如果不需要小刮号
+        return isNotNeedParentheses() ? null : prefix;
+
+    }
+
+    protected String getSuffix() {
+
+        if (isNotOp()) {
+            return suffix;
+        }
+
+        //操作符之间增加空格
+        //如果不需要小刮号
+        return isNotNeedParentheses() ? null : suffix;
+
+    }
+
+    /**
+     * 是否需要小挂号
+     *
+     * @return
+     */
+    public boolean isNotNeedParentheses() {
+        return parentNode == null || this.op.equals(parentNode.op) || subNodes.size() < 2;
     }
 
     public synchronized ExprNode<OP, E> clear() {
@@ -141,7 +185,6 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
         //把
 
-
         return currentNode;
     }
 
@@ -150,7 +193,7 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
      *
      * @return
      */
-    public synchronized ExprNode<OP, E> switchCurrentNodeToSelf() {
+    public ExprNode<OP, E> switchCurrentNodeToSelf() {
         currentNode = this;
         return this;
     }
@@ -244,13 +287,16 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
 
     @Override
     public String toString() {
-        //操作符之间增加空格
-        //如果不需要小刮号
-        boolean noNeedParentheses = parentNode == null || this.op.equals(parentNode.op) || subNodes.size() < 2;
 
-        return CollectionHelper.toString((valid ? subNodes : new Object[]{}), null, " " + op + " "
-                , false, true, true
-                , (noNeedParentheses ? null : prefix), (noNeedParentheses ? null : suffix)).toString();
+        if (isNotOp() && subNodes.size() > 1) {
+            throw new StatementBuildException("NOT操作只允许一个操作数");
+        }
+
+        return CollectionHelper.toString(
+                (valid ? subNodes : new Object[]{}), null, " " + getDelimiter() + " "
+                , false, !isNotOp(), true
+                , getPrefix(), getSuffix()
+        ).toString();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

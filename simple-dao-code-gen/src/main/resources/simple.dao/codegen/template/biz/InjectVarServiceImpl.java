@@ -3,7 +3,6 @@ package ${modulePackageName}.biz;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-
 import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.rbac.RbacRoleObject;
@@ -16,7 +15,7 @@ import com.levin.commons.utils.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -29,10 +28,13 @@ import java.util.Map;
 
 /**
  * 注入服务
+ * 正常情况下该服务不需要应用，注入操作在web控制器中完成。
  * 正常情况下，一个项目只需要一个注入服务，为项目提供注入上下文。
- * @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- * 代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ * 
  */
+
+//默认不启用
 //@Service(PLUGIN_PREFIX + "InjectVarService")
 @ConditionalOnMissingBean({InjectVarService.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "InjectVarService", matchIfMissing = true)
@@ -89,14 +91,13 @@ public class InjectVarServiceImpl implements InjectVarService {
     SimpleDao dao;
 
     @Autowired
-    HttpServletRequest httpServletRequest;
-
-    @Autowired
     VariableResolverManager variableResolverManager;
+
+    private static ThreadLocal<Map<String, ?>> varCache = new ThreadLocal<>();
 
     @PostConstruct
     public void init() {
-
+        log.info("启用模块注入服务...");
         //设置上下文
         variableResolverManager.add(VariableInjector.newResolverByMap(() -> Arrays.asList(getInjectVars())));
     }
@@ -106,14 +107,14 @@ public class InjectVarServiceImpl implements InjectVarService {
      */
     @Override
     public void clearCache() {
-        httpServletRequest.removeAttribute(INJECT_VAR_CACHE_KEY);
+        varCache.set(null);
     }
 
     @Override
     public Map<String, ?> getInjectVars() {
 
         //缓存在请求中
-        Map<String, ?> result = (Map<String, ?>) httpServletRequest.getAttribute(INJECT_VAR_CACHE_KEY);
+        Map<String, ?> result = varCache.get();
 
         if (result != null) {
             return result;
@@ -143,7 +144,6 @@ public class InjectVarServiceImpl implements InjectVarService {
             builder.put(InjectConsts.USER, anonymous);
         }
 
-
         final Map<String, Object> ctx = builder.build();
 
         result = ctx;
@@ -152,7 +152,7 @@ public class InjectVarServiceImpl implements InjectVarService {
         DaoContext.threadContext.putAll(ctx);
 
         //缓存到请求对象重
-        httpServletRequest.setAttribute(INJECT_VAR_CACHE_KEY, result);
+        varCache.set(result);
 
         if (log.isTraceEnabled()) {
             log.trace("getInjectVars ok");

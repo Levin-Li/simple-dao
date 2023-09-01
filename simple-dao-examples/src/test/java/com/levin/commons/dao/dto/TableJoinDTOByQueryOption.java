@@ -28,6 +28,7 @@ public class TableJoinDTOByQueryOption implements QueryOption {
     @Select
     String name;
 
+    @Deprecated
     @Select(domain = "g", value = E_Group.name)
     String groupName;
 

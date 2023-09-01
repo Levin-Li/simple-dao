@@ -44,9 +44,10 @@ import ${imp};
 ////////////////////////////////////
 
 /**
- *  统计${entityTitle}
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 请不要修改和删除此行内容。
- *  代码生成哈希校验码：[], 请不要修改和删除此行内容。
+ * 统计${entityTitle}
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
  */
 @Schema(title = STAT_ACTION + BIZ_NAME)
 @Data
@@ -72,7 +73,7 @@ public class ${className} extends ${reqExtendClass}{
         <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
     @OR(autoClose = true)
     @Contains
-    @InjectVar(domain = "dao",  converter = JsonStrLikeConverter.class, isRequired = "false")
+    @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
         <#else>
     ${annotation}
         </#if>
@@ -162,5 +163,4 @@ public class ${className} extends ${reqExtendClass}{
         //Double sumGmv;
 
     }
-
 }
