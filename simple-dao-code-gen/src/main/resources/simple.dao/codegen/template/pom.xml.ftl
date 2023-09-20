@@ -441,6 +441,23 @@
                 </plugin>
 
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Add-Opens>
+                                        java.base/sun.util.calendar java.base/java.util java.base/java.lang java.base/java.io
+                                        java.base/java.math java.base/java.net java.base/java.nio java.base/java.security
+                                        java.base/java.text java.base/java.time java.base/java.util
+                                        java.base/jdk.internal.access java.base/jdk.internal.misc
+                                    </Add-Opens>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
 
