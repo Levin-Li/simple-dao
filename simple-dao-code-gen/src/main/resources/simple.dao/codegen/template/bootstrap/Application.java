@@ -35,12 +35,13 @@ import org.springframework.web.filter.CorsFilter;
 import org.apache.dubbo.config.spring.context.annotation.*;
 
 import java.lang.reflect.Type;
+import java.time.Duration;
 
 
 /**
  *  启动类
  *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- *  
+ *
  */
 @Slf4j
 
@@ -106,7 +107,19 @@ public class Application {
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
         return builder -> builder
                 .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
+                        //redis 默认缓存 60 分钟
+                        .entryTtl(Duration.of(60, ChronoUnit.MINUTES))
                         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())));
+    }
+
+    /**
+     * redisson 序列化
+     * @return
+     */
+    @Bean
+    public RedissonAutoConfigurationCustomizer redissonAutoConfigurationCustomizer() {
+        return config -> config
+                .setCodec(JsonJacksonCodec.INSTANCE);
     }
 
 //    @Bean
