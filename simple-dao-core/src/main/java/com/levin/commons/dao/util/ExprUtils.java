@@ -21,8 +21,6 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -936,27 +934,23 @@ public abstract class ExprUtils {
     }
 
 
-    /**
-     * @param entityClass
-     * @return
-     */
-    public static String getTableName(Class<?> entityClass) {
-
-        Table table = entityClass.getAnnotation(Table.class);
-
-        if (table != null && StringUtils.hasText(table.name())) {
-
-            return table.name();
-        }
-
-        Entity entity = entityClass.getAnnotation(Entity.class);
-
-        if (entity != null && StringUtils.hasText(entity.name())) {
-            return entity.name();
-        }
-
-        return null;
-    }
+//    public static String getTableName(Class<?> entityClass) {
+//
+//        Table table = entityClass.getAnnotation(Table.class);
+//
+//        if (table != null && StringUtils.hasText(table.name())) {
+//
+//            return table.name();
+//        }
+//
+//        Entity entity = entityClass.getAnnotation(Entity.class);
+//
+//        if (entity != null && StringUtils.hasText(entity.name())) {
+//            return entity.name();
+//        }
+//
+//        return null;
+//    }
 
 
     ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////

@@ -27,7 +27,7 @@ public @interface Validator {
     String value() default "";
 
     /**
-     * 验证表达式，目前支持 SPEL
+     * 验证表达式，默认为SPEL
      * <p>
      * 返回 true 表示验证通过
      * <p>

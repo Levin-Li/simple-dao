@@ -46,24 +46,9 @@ public class Case implements Serializable {
 
     private final Map<String, String> whenList = new LinkedHashMap<>();
 
-//    @Data
-//    @Accessors(chain = true)
-//    @FieldNameConstants
-//    public class When implements Serializable {
-//
-//        String when;
-//
-//        String then;
-//
-//        @Override
-//        public String toString() {
-//            return " WHEN " + when + " THEN " + when;
-//        }
-//    }
-
 
     /**
-     * 字段名/列名
+     * 字段名/列名/表达式
      *
      * @return
      */

@@ -6,6 +6,7 @@ import com.levin.commons.service.support.ValueHolder;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +71,24 @@ public interface MiniDao extends DeepCopier {
     }
 
     /**
+     * 是否是实体类
+     *
+     * @param type
+     * @return
+     */
+    default boolean isEntityClass(Class<?> type) {
+        return type != null && DaoContext.isEntityClass(type);
+    }
+
+    /**
+     * 获取枚举字段存储的类型
+     *
+     * @param field
+     * @return
+     */
+    Class<?> getEnumConvertType(Field field, Class<?> enumType);
+
+    /**
      * 通过表名获取实体类
      *
      * @param tableName
@@ -115,9 +134,7 @@ public interface MiniDao extends DeepCopier {
      * @param tableOrEntityClass
      * @return
      */
-    default String getPKName(Object tableOrEntityClass) {
-        return null;
-    }
+    String getPKName(Object tableOrEntityClass);
 
     /**
      * 获取参数的占位符
@@ -196,7 +213,6 @@ public interface MiniDao extends DeepCopier {
      * 批量创建
      *
      * @param entityOrDtoList
-     * @param commitBatchSize
      */
     @Transactional
     default List<Object> batchCreate(List<Object> entityOrDtoList) {

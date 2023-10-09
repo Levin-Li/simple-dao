@@ -235,6 +235,16 @@ public class JpaDaoImpl
     }
 
 
+    static {
+
+        DaoContext.setEntityClassFieldNullableFun(field -> {
+            Column column = field.getAnnotation(Column.class);
+            return column == null || column.nullable();
+        }, true);
+
+        DaoContext.setEntityClassFun(type -> type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class), true);
+    }
+
     @PostConstruct
     public void init() {
 
@@ -1477,13 +1487,28 @@ public class JpaDaoImpl
         return resultClass;
     }
 
-    private boolean isValidClass(Class clazz) {
-        return clazz != null && clazz != Void.class;
+    /**
+     * 获取枚举字段存储的类型
+     *
+     * @param field
+     * @param enumType
+     * @return
+     */
+    @Override
+    public Class<?> getEnumConvertType(Field field, Class<?> enumType) {
+
+        Enumerated e = field.getAnnotation(Enumerated.class);
+
+        if (e == null || EnumType.ORDINAL.equals(e.value())) {
+            return Integer.class;
+        } else {
+            return String.class;
+        }
+
     }
 
-    private boolean isEntityClass(Class clazz) {
-        return isValidClass(clazz)
-                && (clazz.isAnnotationPresent(Entity.class));
+    private boolean isValidClass(Class clazz) {
+        return clazz != null && clazz != Void.class;
     }
 
     @Override

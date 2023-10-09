@@ -19,11 +19,10 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Entity;
-import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -229,7 +228,7 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("join class " + targetClass + " fail");
         }
 
-        if (!targetClass.isAnnotationPresent(Entity.class)) {
+        if (!getDao().isEntityClass(targetClass)) {
             throw new StatementBuildException("join class " + targetClass.getName() + " not an entity class");
         }
 
@@ -1331,7 +1330,7 @@ public class SelectDaoImpl<T>
 
         //预期唯一值，但结果超过一条记录
         if (isExpectUnique && list.size() > 1) {
-            throw new NonUniqueResultException();
+            throw new IncorrectResultSizeDataAccessException(1, list.size());
         }
 
         E result = list.get(0);

@@ -6,9 +6,9 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.NonUniqueResultException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -204,7 +204,7 @@ public class UpdateDaoImpl<T>
         int n = update();
 
         if (n > 1) {
-            throw new NonUniqueResultException(n + "条记录被更新，预期1条");
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期1条",1,n);
         }
 
         return n == 1;
@@ -223,7 +223,7 @@ public class UpdateDaoImpl<T>
         int n = update();
 
         if (n != 1) {
-            throw new NonUniqueResultException(n + "条记录被更新，预期有且仅有1条");
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条",1,n);
         }
 
     }

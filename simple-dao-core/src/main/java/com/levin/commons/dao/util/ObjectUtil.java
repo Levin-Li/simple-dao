@@ -531,7 +531,7 @@ public abstract class ObjectUtil {
 
             //首先尝试和拷贝源相同的集合类
             //只使用标准的java.util包集合
-            //   && !sourceType.getName().startsWith("org.hibernate.")
+
             if (sourceType != null
                     && sourceType.getName().startsWith("java.util.")
                     && targetType.isAssignableFrom(sourceType)) {
@@ -573,7 +573,7 @@ public abstract class ObjectUtil {
         if (Map.class.isAssignableFrom(targetType)) {
             //首先尝试和拷贝源相同的类
             //只使用标准的java.util包集合
-            //   && !sourceType.getName().startsWith("org.hibernate.")
+
 
             if (sourceType != null
                     && targetType.isAssignableFrom(sourceType)

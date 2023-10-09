@@ -2,7 +2,6 @@ package com.levin.commons.dao.util;
 
 
 import com.levin.commons.dao.DaoContext;
-import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.StatementBuildException;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -15,7 +14,6 @@ import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.Locker;
 import com.levin.commons.service.support.VariableInjector;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -25,7 +23,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.*;
+//import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -233,12 +231,8 @@ public abstract class QueryAnnotationUtil {
                         throw new RuntimeException(new NoSuchFieldException(key));
                     }
 
-                    Column column = field.getAnnotation(Column.class);
-
-                    return column == null || column.nullable();
-
+                    return DaoContext.isFieldNullable(field);
                 });
-
     }
 
     /**
@@ -288,12 +282,12 @@ public abstract class QueryAnnotationUtil {
                     return;
                 }
 
-                String column = Optional.ofNullable(field.getAnnotation(Column.class))
-                        .map(Column::name)
+                String column = Optional.ofNullable(field.getAnnotation(javax.persistence.Column.class))
+                        .map(javax.persistence.Column::name)
                         .filter(StringUtils::hasText)
                         .orElse(
-                                Optional.ofNullable(field.getAnnotation(JoinColumn.class))
-                                        .map(JoinColumn::name)
+                                Optional.ofNullable(field.getAnnotation(javax.persistence.JoinColumn.class))
+                                        .map(javax.persistence.JoinColumn::name)
                                         .filter(StringUtils::hasText)
                                         //默认使用转换值
                                         .orElse(columnNameConvert.apply(field.getName()))
@@ -351,16 +345,16 @@ public abstract class QueryAnnotationUtil {
 
         return entityTableNameCaches.computeIfAbsent(entityClass.getName(), key ->
 
-                Optional.ofNullable(entityClass.getAnnotation(Table.class))
+                Optional.ofNullable(entityClass.getAnnotation(javax.persistence.Table.class))
                         .filter((t) -> hasText(t.name()))
-                        .map(Table::name)
+                        .map(javax.persistence.Table::name)
                         .orElse(
                                 //转换名称
                                 tableNameConvert.apply(
                                         //否则取实体名
-                                        Optional.ofNullable(entityClass.getAnnotation(Entity.class))
+                                        Optional.ofNullable(entityClass.getAnnotation(javax.persistence.Entity.class))
                                                 .filter(t -> hasText(t.name()))
-                                                .map(Entity::name).orElse(
+                                                .map(javax.persistence.Entity::name).orElse(
                                                         //否则取类名
                                                         entityClass.getSimpleName()
                                                 )
@@ -760,7 +754,9 @@ public abstract class QueryAnnotationUtil {
      */
     public static boolean isJpaEntityClass(Object o) {
         return o instanceof Class
-                && (((Class<?>) o).isAnnotationPresent(Entity.class) || ((Class<?>) o).isAnnotationPresent(MappedSuperclass.class));
+//                && (((Class<?>) o).isAnnotationPresent(Entity.class) || ((Class<?>) o).isAnnotationPresent(MappedSuperclass.class))
+                && DaoContext.isEntityClass((Class<?>) o)
+                ;
     }
 
     /**

@@ -4,6 +4,9 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
+/**
+ * 默认的查询选项
+ */
 @Data
 @Accessors(chain = true)
 @ToString

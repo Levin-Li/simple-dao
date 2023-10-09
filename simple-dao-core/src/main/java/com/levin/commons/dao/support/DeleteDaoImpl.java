@@ -8,9 +8,9 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.NonUniqueResultException;
 import java.util.List;
 
 /**
@@ -168,7 +168,7 @@ public class DeleteDaoImpl<T>
         int n = delete();
 
         if (n > 1) {
-            throw new NonUniqueResultException(n + "条记录被删除，预期1条");
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期1条", 1, n);
         }
 
         return n == 1;
@@ -183,7 +183,7 @@ public class DeleteDaoImpl<T>
         int n = delete();
 
         if (n != 1) {
-            throw new NonUniqueResultException(n + "条记录被删除，预期有且仅有1条");
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期有且仅有1条", 1, n);
         }
     }
 

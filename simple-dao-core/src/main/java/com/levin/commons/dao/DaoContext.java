@@ -1,6 +1,7 @@
 package com.levin.commons.dao;
 
 
+import cn.hutool.core.lang.Assert;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.ValueHolder;
@@ -8,6 +9,7 @@ import com.levin.commons.service.support.VariableInjector;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * DAO环境上下文
@@ -18,6 +20,9 @@ import java.util.*;
  */
 
 public abstract class DaoContext {
+
+    public static final String entityClassFieldNullableFun = "entityClassFieldNullableFun";
+    public static final String entityClassFun = "entityClassFun";
 
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
 
@@ -44,6 +49,28 @@ public abstract class DaoContext {
     }
 
     private static final String AUTO_FLUSH_AND_CLEAR_CACHE = DaoContext.class.getName() + "#AUTO_FLUSH_AND_CLEAR_CACHE";
+
+    public static boolean isFieldNullable(Field entityClassField) {
+
+        Function<Field, Boolean> fun = getValue(entityClassFieldNullableFun, null);
+
+        return fun == null || Boolean.TRUE.equals(fun.apply(entityClassField));
+    }
+
+
+    public static Function<Field, Boolean> setEntityClassFieldNullableFun(Function<Field, Boolean> fun, boolean isGlobal) {
+        return isGlobal ? setGlobalValue(entityClassFieldNullableFun, fun) : setCurrentThreadVar(entityClassFieldNullableFun, fun);
+    }
+
+    public static boolean isEntityClass(Class<?> entityClass) {
+        Function<Class<?>, Boolean> fun = getValue(entityClassFun, null);
+        Assert.notNull(fun, "entityClassFun unset");
+        return Boolean.TRUE.equals(fun.apply(entityClass));
+    }
+
+    public static Function<Class<?>, Boolean> setEntityClassFun(Function<Class<?>, Boolean> fun, boolean isGlobal) {
+        return isGlobal ? setGlobalValue(entityClassFun, fun) : setCurrentThreadVar(entityClassFun, fun);
+    }
 
     /**
      * 获取变量注入器
@@ -76,10 +103,6 @@ public abstract class DaoContext {
         return threadContext.get(VARIABLE_INJECTOR_KEY);
     }
 
-    public static VariableInjector setCurrentThreadVar(String key, Object value) {
-        return threadContext.put(key, value);
-    }
-
     public static VariableInjector setGlobalVariableInjector(VariableInjector variableInjector) {
         return globalContext.put(VARIABLE_INJECTOR_KEY, variableInjector);
     }
@@ -99,6 +122,7 @@ public abstract class DaoContext {
 
         return getVariableInjector().injectByBean(targetBean, getDaoContexts(varSourceBeans));
     }
+
 
     /**
      * 获取注入值
@@ -191,6 +215,18 @@ public abstract class DaoContext {
      */
     public static <T> T setGlobalValue(String key, T defaultValue) {
         return globalContext.put(key, defaultValue);
+    }
+
+    /**
+     * 设置线程变量
+     *
+     * @param key
+     * @param value
+     * @param <T>
+     * @return
+     */
+    public static <T> T setCurrentThreadVar(String key, T value) {
+        return threadContext.put(key, value);
     }
 
     /**

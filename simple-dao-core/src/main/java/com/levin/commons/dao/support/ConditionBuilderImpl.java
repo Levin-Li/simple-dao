@@ -7,6 +7,8 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
+import com.levin.commons.dao.annotation.misc.PreDelete;
+import com.levin.commons.dao.annotation.misc.PreUpdate;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderByList;
@@ -31,7 +33,6 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -1366,7 +1367,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             //如果没有有效的查询实体
             EntityClassSupplier supplier = (EntityClassSupplier) queryObjList.stream()
                     .filter(o -> o instanceof EntityClassSupplier)
-                    .filter(o -> isJpaEntityClass(o.getClass()))
+//                    .filter(o -> isJpaEntityClass(o.getClass()))
+                    .filter(o -> getDao().isEntityClass(o.getClass()))
+
                     .findFirst()
                     .orElse(null);
 
@@ -1427,7 +1430,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 if (this instanceof UpdateDao) {
                     ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreUpdate.class);
                 } else if (this instanceof DeleteDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreRemove.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreDelete.class);
                 }
 
                 //没有回调时，表示本地调用
@@ -2613,14 +2616,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     && type != null
                     && type.isEnum()
                     && field != null) {
-
-                Enumerated e = field.getAnnotation(Enumerated.class);
-
-                if (e == null || EnumType.ORDINAL.equals(e.value())) {
-                    type = Integer.class;
-                } else {
-                    type = String.class;
-                }
+                type = getDao().getEnumConvertType(field, type);
             }
             return type;
         }));
