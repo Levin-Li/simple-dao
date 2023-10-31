@@ -49,6 +49,7 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -1239,6 +1240,84 @@ public final class ServiceModelCodeGenerator {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 获取未变更的内容
+     *
+     * @param file
+     * @param skip
+     * @param prefix
+     * @param linesFilter
+     * @return
+     */
+    @SneakyThrows
+    public static String getCompactContent(File file, AtomicBoolean skip, String prefix, Function<List<String>, String> linesFilter) {
+
+        if (file == null || !file.exists()) {
+            return "";
+        }
+
+        //读取旧文件内容
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        final String md5Line = lines.stream().filter(StringUtils::hasText)
+                .filter(line -> line.contains(prefix))
+                .findFirst()
+                .orElse(null);
+
+        int startIdx = StringUtils.hasText(md5Line) ? md5Line.indexOf(prefix) : -1;
+
+        if (startIdx == -1) {
+            skip.set(true);
+            logger.warn("目标文件：" + file + " 已经存在，但没有发现生成关键字<<<{}>>>, {}, 将被忽略。", prefix, startIdx);
+            return null;
+        }
+
+        //提取md5
+        final String md5 = md5Line.substring(startIdx, md5Line.indexOf("]", startIdx))
+                .substring(prefix.length());
+
+        String fileOldCompactContent = linesFilter.apply(lines);
+
+        //1、去除空行，trim 去除关键字后的文件内容
+        if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
+            return fileOldCompactContent;
+        }
+
+        //如果是Java文件
+        if (file.getName().trim().toLowerCase().endsWith(".java")) {
+            try {
+
+                CompilationUnit cu = StaticJavaParser.parse(lines.stream().collect(Collectors.joining("\n")));
+
+                lines = Arrays.asList(cu.toString().split("[\r\n]"));
+
+                //2、格式化后比较
+                fileOldCompactContent = linesFilter.apply(lines);
+                if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
+                    return fileOldCompactContent;
+                }
+
+                //删除注释代码
+                cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
+                lines = Arrays.asList(cu.toString().split("[\r\n]"));
+
+                //3、删除注释代码后再比较
+                fileOldCompactContent = linesFilter.apply(lines);
+                if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
+                    return fileOldCompactContent;
+                }
+
+            } catch (Exception e) {
+                logger.warn("Java文件{}代码解析失败", file.getAbsolutePath());
+            }
+        }
+
+        skip.set(true);
+
+        logger.info("目标文件：{}已经存在，并且被修改过，跳过。校验的md5：{}", file, md5);
+
+        return null;
+    }
 
     /**
      * 生成文件，如果文件存在已经被修改，则直接返回。
@@ -1264,8 +1343,6 @@ public final class ServiceModelCodeGenerator {
             path = path.substring(baseDir.getCanonicalPath().length());
         }
 
-        String fileOldCompactContent = "";
-
         final String prefix = "代码生成哈希校验码：[";
 
         final String keyword = "@author Auto gen by simple-dao-codegen, @time:";
@@ -1280,70 +1357,12 @@ public final class ServiceModelCodeGenerator {
                 .map(StringUtils::trimWhitespace)
                 .collect(Collectors.joining());
 
-        if (file.exists()) {
+        final AtomicBoolean skip = new AtomicBoolean(false);
 
-            //读取旧文件内容
-            List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        final String fileOldCompactContent = getCompactContent(file, skip, prefix, linesFilter);
 
-            //如果文件存在，将自动去除空行后然后比较文件内容，通过md5校验文件是否被修改过
-            //如果被修改过，则直接放回，如果没有被修改，则继续
-
-            boolean skip = true;
-
-            //从文件内容中提取MD5
-            final String md5Line = lines.stream().filter(StringUtils::hasText)
-                    .filter(line -> line.contains(prefix))
-                    .findFirst()
-                    .orElse(null);
-
-            int startIdx = StringUtils.hasText(md5Line) ? md5Line.indexOf(prefix) : -1;
-
-            if (startIdx != -1) {
-
-                final String md5InFile = md5Line.substring(startIdx, md5Line.indexOf("]", startIdx))
-                        .substring(prefix.length());
-
-                if (isJavaSrcFile) {
-                    try {
-                        CompilationUnit cu = StaticJavaParser.parse(file);
-
-                        if (isIgnoreCodeCommentChange()) {
-                            //删除注释代码后再比较
-                            cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
-                        }
-
-                        //关键步骤，重新读取Java文件，并格式化输出
-                        lines = Arrays.asList(cu.toString().split("[\r\n]"));
-                    } catch (Exception e) {
-                        logger.warn("文件{}解析失败，跳过...", file.getAbsolutePath());
-                        return;
-                    }
-                }
-
-                //去除空行，去除关键字后的文件内容
-                fileOldCompactContent = linesFilter.apply(lines);
-
-                //垃圾回收
-                lines = null;
-
-                //关键逻辑，如果文件存在，但是文件没有被修改过，则可以覆盖
-                final String md52 = SecureUtil.md5(fileOldCompactContent);
-
-                if (md5InFile.equals(md52)) {
-                    skip = false;
-                    logger.debug("目标文件：" + path + "(MD5={}) 已经存在，但是没有被修改过。", md5InFile);
-
-                } else {
-                    logger.info("目标文件：{}已经存在，并且被修改过，不覆盖。读取的md5:{}，校验的md5：{}", path, md5InFile, md52);
-                }
-
-            } else {
-                logger.warn("目标文件：" + path + " 已经存在，但没有发现生成关键字<<<{}>>>, {}, 将被忽略。", prefix, startIdx);
-            }
-
-            if (skip) {
-                return;
-            }
+        if (skip.get()) {
+            return;
         }
 
         file.getParentFile().mkdirs();
@@ -1404,7 +1423,7 @@ public final class ServiceModelCodeGenerator {
 
             //如果文件内容相同，没有变化，则直接返回
             if (newCompactContent.contentEquals(fileOldCompactContent)) {
-                logger.info("目标文件：" + path + " 已经存在，且新旧内容相同，跳过...");
+                logger.info("目标文件：" + path + " 已经存在，且代码内容相同，跳过...");
                 return;
             }
 
@@ -1418,10 +1437,10 @@ public final class ServiceModelCodeGenerator {
         //写入文件
         FileUtil.writeString(fileContent, file, StandardCharsets.UTF_8);
 
+        logger.info("目标文件：{}({})写入成功，新内容：<<<{}>>>", path, newMd5, newCompactContent);
+
         fileContent = null;
         fileOldCompactContent = newCompactContent = null;
-
-        logger.info("目标文件：{}({})写入成功，新内容：<<<{}>>>", path, newMd5, newCompactContent);
 
     }
 

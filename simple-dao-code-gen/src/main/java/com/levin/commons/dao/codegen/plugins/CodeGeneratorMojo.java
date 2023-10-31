@@ -177,6 +177,8 @@ public class CodeGeneratorMojo extends BaseMojo {
                 return;
             }
 
+            logger.info("代码比较模式：忽略注释={}", isIgnoreCodeCommentChange);
+
             File basedir = mavenProject.getBasedir();
 
             ServiceModelCodeGenerator.baseDir(basedir.getParentFile());
