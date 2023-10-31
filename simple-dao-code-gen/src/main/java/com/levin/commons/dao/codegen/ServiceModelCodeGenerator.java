@@ -1437,10 +1437,9 @@ public final class ServiceModelCodeGenerator {
         //写入文件
         FileUtil.writeString(fileContent, file, StandardCharsets.UTF_8);
 
-        logger.info("目标文件：{}({})写入成功，新内容：<<<{}>>>", path, newMd5, newCompactContent);
+        logger.info("目标文件：{} 写入成功，新内容压缩后的MD5：<{}>。", path, newMd5);
 
-        fileContent = null;
-        fileOldCompactContent = newCompactContent = null;
+        fileContent = newCompactContent = null;
 
     }
 
