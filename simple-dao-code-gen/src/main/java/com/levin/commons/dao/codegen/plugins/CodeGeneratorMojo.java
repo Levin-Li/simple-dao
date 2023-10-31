@@ -121,6 +121,18 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean isCreateControllerSubDir = false;
 
     /**
+     * 是否输出格式化后Java代码
+     */
+    @Parameter
+    private boolean isOutputFormatCode = false;
+
+    /**
+     * 是否忽略代码注释的变更，代码注释变更，被认为代码没有变更
+     */
+    @Parameter
+    private boolean isIgnoreCodeCommentChange = true;
+
+    /**
      * 生成的控制器类是否创建子目录
      */
     @Parameter(defaultValue = "true")
@@ -255,6 +267,8 @@ public class CodeGeneratorMojo extends BaseMojo {
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
             }
 
+            ServiceModelCodeGenerator.isOutputFormatCode(this.isOutputFormatCode);
+            ServiceModelCodeGenerator.isIgnoreCodeCommentChange(this.isIgnoreCodeCommentChange);
             ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
             ServiceModelCodeGenerator.isCreateBizController(this.isCreateBizController);
             ServiceModelCodeGenerator.ignoreEntities(Arrays.asList(this.ignoreEntities));
