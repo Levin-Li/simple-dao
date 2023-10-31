@@ -1272,6 +1272,9 @@ public final class ServiceModelCodeGenerator {
             return null;
         }
 
+
+        StringBuilder info = new StringBuilder();
+
         //提取md5
         final String md5 = md5Line.substring(startIdx, md5Line.indexOf("]", startIdx))
                 .substring(prefix.length());
@@ -1281,31 +1284,34 @@ public final class ServiceModelCodeGenerator {
         //1、去除空行，trim 去除关键字后的文件内容
         if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
             return fileOldCompactContent;
+        } else {
+            info.append("去除空行 -> 裁剪空字符串");
         }
 
         //如果是Java文件
         if (file.getName().trim().toLowerCase().endsWith(".java")) {
             try {
 
-                CompilationUnit cu = StaticJavaParser.parse(lines.stream().collect(Collectors.joining("\n")));
-
-                lines = Arrays.asList(cu.toString().split("[\r\n]"));
+                CompilationUnit cu = StaticJavaParser.parse(String.join("\n", lines));
 
                 //2、格式化后比较
+                lines = Arrays.asList(cu.toString().split("[\r\n]"));
                 fileOldCompactContent = linesFilter.apply(lines);
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     return fileOldCompactContent;
                 }
 
-                //删除注释代码
-                cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
-                lines = Arrays.asList(cu.toString().split("[\r\n]"));
+                info.append(" -> ").append("格式化");
 
                 //3、删除注释代码后再比较
+                cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
+                lines = Arrays.asList(cu.toString().split("[\r\n]"));
                 fileOldCompactContent = linesFilter.apply(lines);
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     return fileOldCompactContent;
                 }
+
+                info.append(" -> ").append("去除代码所有注释");
 
             } catch (Exception e) {
                 logger.warn("Java文件{}代码解析失败", file.getAbsolutePath());
@@ -1314,7 +1320,7 @@ public final class ServiceModelCodeGenerator {
 
         skip.set(true);
 
-        logger.info("目标文件：{}已经存在，并且被修改过，跳过。校验的md5：{}", file, md5);
+        logger.info("目标文件：{}已经存在，并且被修改过，跳过。校验md5：{}，内容逐步校验逻辑：{}。", file, md5, info);
 
         return null;
     }
@@ -1423,7 +1429,7 @@ public final class ServiceModelCodeGenerator {
 
             //如果文件内容相同，没有变化，则直接返回
             if (newCompactContent.contentEquals(fileOldCompactContent)) {
-                logger.info("目标文件：" + path + " 已经存在，且代码内容相同，跳过...");
+                logger.info("目标文件：" + path + " 已经存在，新生成的代码内容和旧内容相同，跳过。");
                 return;
             }
 
