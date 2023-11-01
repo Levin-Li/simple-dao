@@ -177,11 +177,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                 return;
             }
 
-            logger.info("*** 开始生成代码..." +
-                            "\n\t代码比较忽略注释:{}" +
-                            "\n\t格式化输出:{}" +
-                            "\n\t生成的控制器类是否创建子目录:{}" +
-                            "\n\t是否生成业务控制器类:{}",
+            logger.info("*** 开始生成代码，代码比较忽略注释:{}，格式化输出:{}，生成的控制器类是否创建子目录:{}，是否生成业务控制器类:{}",
                     isIgnoreCodeCommentChange, isOutputFormatCode, isCreateControllerSubDir, isCreateBizController);
 
             File basedir = mavenProject.getBasedir();
