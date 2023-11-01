@@ -133,7 +133,7 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean isIgnoreCodeCommentChange = true;
 
     /**
-     * 生成的控制器类是否创建子目录
+     * 是否生成业务控制器类
      */
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
@@ -177,7 +177,12 @@ public class CodeGeneratorMojo extends BaseMojo {
                 return;
             }
 
-            logger.info("代码比较模式：忽略注释={}", isIgnoreCodeCommentChange);
+            logger.info("*** 开始生成代码..." +
+                            "\n\t代码比较忽略注释:{}" +
+                            "\n\t格式化输出:{}" +
+                            "\n\t生成的控制器类是否创建子目录:{}" +
+                            "\n\t是否生成业务控制器类:{}",
+                    isIgnoreCodeCommentChange, isOutputFormatCode, isCreateControllerSubDir, isCreateBizController);
 
             File basedir = mavenProject.getBasedir();
 
