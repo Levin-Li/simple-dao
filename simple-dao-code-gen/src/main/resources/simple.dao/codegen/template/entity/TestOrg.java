@@ -61,7 +61,7 @@ import org.hibernate.annotations.Type;
 
 //@AssociationOverride
 //默认情况下，JPA 持续性提供程序自动假设子类继承超类中定义的持久属性及其关联映射。
-// 如果继承的列定义对实体不正确（例如，如果继承的列名与已经存在的数据模型不兼容或作为数据库中的列名无效），请使用 @AssociationOverride 批注自定义从  @MappedSuperclass 或 @Embeddable 继承的  @OneToOne 或  @ManyToOne 映射，以更改与字段或属性关联的 @JoinColumn。
+// 如果继承的列定义对实体不正确（例如，如果继承的列名与已经存在的数据模型不兼容或作为数据库中的列名无效），请使用@AssociationOverride批注自定义从@MappedSuperclass或@Embeddable继承的@OneToOne或@ManyToOne映射，以更改与字段或属性关联的@JoinColumn。
 // 如果有多个要进行的@AssociationOverride更改，则必须使用@AssociationOverrides。
 //要自定义基本映射以更改它的@Column，请使用@AttributeOverride。
 //

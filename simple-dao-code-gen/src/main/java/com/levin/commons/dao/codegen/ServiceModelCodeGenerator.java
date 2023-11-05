@@ -1272,7 +1272,6 @@ public final class ServiceModelCodeGenerator {
             return null;
         }
 
-
         StringBuilder info = new StringBuilder();
 
         //提取md5

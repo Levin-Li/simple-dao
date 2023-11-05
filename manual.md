@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.5.1-SNAPSHOT</version>
+            <version>2.5.2-SNAPSHOT</version>
         </dependency>
         
        
@@ -1178,51 +1178,61 @@ Dao 类逻辑框图，如下图所示。
    代码会在编译阶段生成，生成后，再次编译运行即可。
    
    代码生成插件配置如下：
-   
-             <levin.simple-dao.groupId>${project.groupId}</levin.simple-dao.groupId>
-             <levin.service-support.groupId>${project.groupId}</levin.service-support.groupId>
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
      
-             <levin.simple-dao.version>2.5.1-SNAPSHOT</levin.simple-dao.version>
-             <levin.service-support.version>1.2.27-SNAPSHOT</levin.service-support.version>
-              
-               <repositories>
-           
-                   <repository>
-                       <id>jitpack.io</id>
-                       <url>https://www.jitpack.io</url>
-                   </repository>
-            
-               </repositories>
-           
-               <pluginRepositories>
-                   <pluginRepository>
-                       <!--  插件库 -->
-                       <id>jitpack.io</id>
-                       <url>https://www.jitpack.io</url>
-                   </pluginRepository>
-               </pluginRepositories>
-         
-      
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.levin.codegen.example</groupId>
+    <artifactId>codegen-example</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+   
+    <packaging>pom</packaging>
+     
+    <properties>
+
+        <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
+        <levin.simple-dao.version>2.5.2-SNAPSHOT</levin.simple-dao.version> 
+        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
+        <levin.service-support.version>1.2.28-SNAPSHOT</levin.service-support.version>
+
+    </properties>
+  
+    <repositories> 
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </repository> 
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <plugins>
+
             <plugin>
                 <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
                 <version>${levin.simple-dao.version}</version>
-                <executions>
-                    <execution>
+                <configuration>
+                    <!-- 生成的控制器代码是否包括目录-->
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
 
-                        <goals>
-                            <goal>gen-code</goal>
-                        </goals>
-                        <!--   编译阶段 -->
-                        <phase>compile</phase>
+                    <!-- 是否生成BizController -->
+                    <isCreateBizController>true</isCreateBizController>
 
-                        <configuration>
-                            <skip>${simple-dao-codegen.skip}</skip>
-                            <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
-                        </configuration>
-                    </execution>
-                </executions>
-
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>${levin.service-support.groupId}</groupId>
@@ -1231,6 +1241,11 @@ Dao 类逻辑框图，如下图所示。
                     </dependency>
                 </dependencies>
             </plugin>
+ 
+        </plugins>
+    </build>
+    
+    </project>
 
    
 ### 14 附录
