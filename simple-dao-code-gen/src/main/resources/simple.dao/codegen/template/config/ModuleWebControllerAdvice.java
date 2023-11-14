@@ -225,8 +225,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-        return ApiResp.error(AuthenticationError.getBaseErrorCode()
-                , "未登录：" + e.getMessage());
+        return ApiResp.error(AuthenticationError.getBaseErrorCode(), "未登录：" + getExMsg(e));
     }
 
     @ExceptionHandler({SaTokenException.class, UnauthorizedException.class})
@@ -234,8 +233,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-        return ApiResp.error(AuthenticationError.getBaseErrorCode()
-                , "认证异常：" + e.getMessage());
+        return ApiResp.error(AuthenticationError.getBaseErrorCode(), "认证异常：" + getExMsg(e));
     }
 
     @ExceptionHandler({AccessDeniedException.class,})
@@ -243,8 +241,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.FORBIDDEN.value());
 
-        return ApiResp.error(AuthenticationError.getBaseErrorCode()
-                , e.getMessage());
+        return ApiResp.error(AuthenticationError.getBaseErrorCode(), getExMsg(e));
     }
 
     @ExceptionHandler({BizException.class, DaoUniqueConstraintBizException.class})
@@ -252,8 +249,7 @@ public class ModuleWebControllerAdvice {
 
         log.error("业务参数异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e))
-                .setDetailMsg(getExDetailMsg(e));
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler({IllegalArgumentException.class,
@@ -265,8 +261,7 @@ public class ModuleWebControllerAdvice {
 
         log.error("请求参数异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e))
-                .setDetailMsg(getExDetailMsg(e));
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler(ServiceException.class)
@@ -274,8 +269,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e))
-                .setDetailMsg(getExDetailMsg(e));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
@@ -293,18 +287,15 @@ public class ModuleWebControllerAdvice {
     @ExceptionHandler({PersistenceException.class, SQLException.class, DataAccessException.class})
     public ApiResp onPersistenceException(Exception e) {
 
-        Throwable rootCause = ExceptionUtil.getRootCause(e);
-
-        if (rootCause instanceof ConstraintViolationException
-                || rootCause instanceof DataIntegrityViolationException
-                || rootCause instanceof SQLIntegrityConstraintViolationException) {
-            return onConstraintViolationException((Exception) rootCause);
+        if (ExceptionUtils.getCauseByTypes(e, ConstraintViolationException.class
+                , DataIntegrityViolationException.class
+                , SQLIntegrityConstraintViolationException.class) != null) {
+            return onConstraintViolationException(e);
         }
 
         log.error("发生数据库操作异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(),
-                "数据异常，请稍后重试").setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), "数据异常，请稍后重试").setDetailMsg(getExDetailMsg(e));
 
     }
 
@@ -316,8 +307,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode()
-                , getExMsg(e)).setDetailMsg(ExceptionUtils.getPrintInfo(e));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
 
     //    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
@@ -332,13 +322,12 @@ public class ModuleWebControllerAdvice {
             response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
             return (ApiResp) ApiResp.error(ResourceError.getBaseErrorCode(), getExMsg(e))
-                    .setDetailMsg(ExceptionUtils.getPrintInfo(e));
+                    .setDetailMsg(getExDetailMsg(e));
         }
 
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
 
-        return (ApiResp) ApiResp.error(UnknownError.getBaseErrorCode(), getExMsg(e))
-                .setDetailMsg(ExceptionUtils.getPrintInfo(e));
+        return (ApiResp) ApiResp.error(UnknownError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
 
 }
