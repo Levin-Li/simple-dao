@@ -997,7 +997,8 @@ public class JpaDaoImpl
         Class<?> fieldClass = field.getDeclaringClass();
 
         //特别处理，如何过多租户 或是 跨部门对象
-        if (MultiTenantObject.class.isAssignableFrom(fieldClass) || OrganizedObject.class.isAssignableFrom(fieldClass)) {
+        if ((MultiTenantObject.class.isAssignableFrom(fieldClass) && field.getName().equals("tenantId"))
+                || (OrganizedObject.class.isAssignableFrom(fieldClass) && field.getName().equals("orgId"))) {
             return null;
         }
 
