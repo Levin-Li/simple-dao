@@ -140,6 +140,13 @@ dubbo:
   registry:
 #    address: ${r"zookeeper://${zookeeper.address:127.0.0.1}:2181"}
 
+  provider:
+    # ① 如果异常类和接口类在同一个 jar 包中，那么不会走封装的逻辑，会直接返回；
+    # ② 如果异常类是以 java. 或者 javax. 开头的那么也会直接抛出。
+    # ③ 如果异常类和接口类不在同一个 jar 包中，那么会走封装的逻辑，会将异常类包装成一个 RuntimeException 并抛出。
+    filter: -exception
+
+
 #日志配置
 logging:
   level:
