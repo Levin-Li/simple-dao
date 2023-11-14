@@ -1,4 +1,4 @@
-package com.levin.commons.dao;
+package com.levin.commons.dao.exception;
 
 /**
  * Created by echo on 2017/4/1.

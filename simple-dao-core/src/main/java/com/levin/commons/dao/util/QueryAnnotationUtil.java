@@ -2,7 +2,7 @@ package com.levin.commons.dao.util;
 
 
 import com.levin.commons.dao.DaoContext;
-import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;

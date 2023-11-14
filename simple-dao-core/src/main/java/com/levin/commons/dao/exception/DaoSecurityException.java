@@ -1,4 +1,4 @@
-package com.levin.commons.dao;
+package com.levin.commons.dao.exception;
 
 import org.springframework.dao.DataAccessException;
 

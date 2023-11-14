@@ -8,6 +8,9 @@ import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.ServiceResp;
 import com.levin.commons.service.exception.*;
 import com.levin.commons.utils.ExceptionUtils;
+
+import com.levin.commons.dao.exception.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.annotation.Configuration;
@@ -166,7 +169,7 @@ public class ModuleWebControllerAdvice {
                 , e.getMessage());
     }
 
-    @ExceptionHandler({BizException.class})
+    @ExceptionHandler({BizException.class, DaoUniqueConstraintBizException.class})
     public ApiResp onBizException(Exception e) {
 
         log.error("业务参数异常," + request.getRequestURL(), e);

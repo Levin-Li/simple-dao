@@ -1,7 +1,7 @@
 package com.levin.commons.dao.support;
 
 
-import com.levin.commons.dao.DaoSecurityException;
+import com.levin.commons.dao.exception.DaoSecurityException;
 import com.levin.commons.dao.DeleteDao;
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.MiniDao;

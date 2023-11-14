@@ -1,4 +1,4 @@
-package com.levin.commons.dao;
+package com.levin.commons.dao.exception;
 
 public class PropertyNotFoundException extends IllegalArgumentException {
     public PropertyNotFoundException() {

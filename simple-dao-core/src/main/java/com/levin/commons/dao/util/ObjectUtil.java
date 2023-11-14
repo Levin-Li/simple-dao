@@ -1,9 +1,8 @@
 package com.levin.commons.dao.util;
 
 
-import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.DeepCopy;
-import com.levin.commons.dao.PropertyNotFoundException;
+import com.levin.commons.dao.exception.PropertyNotFoundException;
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;

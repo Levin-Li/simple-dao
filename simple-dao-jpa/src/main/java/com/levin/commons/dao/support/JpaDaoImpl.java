@@ -4,13 +4,13 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
-import com.levin.commons.dao.domain.support.TestEntity;
+import com.levin.commons.dao.exception.DaoSecurityException;
+import com.levin.commons.dao.exception.DaoUniqueConstraintBizException;
 import com.levin.commons.dao.util.ExceptionUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
-import com.levin.commons.service.support.Locker;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -780,7 +780,7 @@ public class JpaDaoImpl
 
         //默认不检查，否则耗费性能
         findUniqueEntityId(entityOrDto, null, (id, info) -> {
-            throw new NonUniqueResultException("[" + info + "]已经存在");
+            throw new DaoUniqueConstraintBizException("[" + info + "]已经存在");
         });
 
     }
@@ -994,7 +994,7 @@ public class JpaDaoImpl
 
     static String getDesc(Field field) {
 
-        Class<?> fieldClass = field.getClass();
+        Class<?> fieldClass = field.getDeclaringClass();
 
         //特别处理，如何过多租户 或是 跨部门对象
         if (MultiTenantObject.class.isAssignableFrom(fieldClass) || OrganizedObject.class.isAssignableFrom(fieldClass)) {

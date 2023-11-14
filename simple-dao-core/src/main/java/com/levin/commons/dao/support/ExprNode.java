@@ -1,6 +1,6 @@
 package com.levin.commons.dao.support;
 
-import com.levin.commons.dao.StatementBuildException;
+import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.util.CollectionHelper;
 import lombok.Getter;
 import lombok.Setter;
