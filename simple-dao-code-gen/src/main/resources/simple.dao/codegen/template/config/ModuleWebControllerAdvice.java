@@ -1,6 +1,8 @@
 package ${modulePackageName}.config;
 
-import static ${modulePackageName}.ModuleOption.*;
+import static $
+import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
+import static com.levin.commons.service.domain.ServiceResp.ErrorType.UnknownError;   {modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
@@ -14,10 +16,12 @@ import com.levin.commons.dao.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -43,6 +47,12 @@ import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import lombok.extern.slf4j.Slf4j;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
 
 /**
  *
@@ -61,31 +71,101 @@ import java.text.SimpleDateFormat;
 //@RestControllerAdvice(PACKAGE_NAME)
 public class ModuleWebControllerAdvice {
 
+
     @Autowired
     HttpServletRequest request;
 
     @Autowired
     HttpServletResponse response;
 
+    @Autowired
+    Environment env;
+
+    boolean isDev = false;
+
+    /**
+     * 项目启动时，初始化日志
+     */
     @PostConstruct
     void init() {
+        isDev = Arrays.stream(env.getActiveProfiles()).anyMatch(profile -> profile.equals("dev") || profile.equals("test") || profile.equals("local"));
         log.info("init...");
     }
 
     /**
-     * #@InitBinder 标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
-     * 日期格式的字符串转换成Date对象
+     * // @InitBinder标注的initBinder()方法表示注册一个Date类型的类型转换器，用于将类似这样的2019-06-10
+     * // 日期格式的字符串转换成Date对象
+     *
      * @param binder
      */
     @InitBinder
     protected void initBinder(WebDataBinder binder) {
-
-          //@todo 可以设置模块统一的参数校验，参数转换等功能。
-
 //        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 //        dateFormat.setLenient(false);
 //        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
 //        binder.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("MM-dd-yyyy"),false));
+    }
+
+
+    /**
+     * 获取异常的message
+     *
+     * @param exception
+     * @return
+     */
+    String getExMsg(Throwable exception) {
+
+        if (exception == null) {
+            return null;
+        }
+
+        String failover = exception.getClass().getSimpleName();
+
+        //循环获取异常的message,返回第一个有message的异常
+        while (exception != null) {
+            if (exception.getMessage() != null) {
+                return exception.getMessage();
+            }
+            //防止循环引用
+            if (exception.getCause() == exception) {
+                break;
+            }
+            exception = exception.getCause();
+        }
+
+        return failover;
+    }
+
+    /**
+     * 获取异常的详细信息
+     *
+     * @param exception
+     * @return
+     */
+    String getExDetailMsg(Throwable exception) {
+
+        if (exception == null) {
+            return null;
+        }
+
+        //开发模式下，返回异常的堆栈信息
+        if (isDev) {
+            return ExceptionUtils.getPrintInfo(exception);
+        }
+
+        //循环获取cause,保存到列表
+        List<Throwable> causeList = new ArrayList<>();
+
+        while (exception != null) {
+            causeList.add(exception);
+            //防止循环引用
+            if (exception.getCause() == exception) {
+                break;
+            }
+            exception = exception.getCause();
+        }
+
+        return causeList.stream().map(ex -> ex.getClass().getSimpleName() + (StringUtils.hasText(ex.getMessage()) ? ":" + ex.getMessage() : "")).collect(Collectors.joining(" -> "));
     }
 
 
@@ -127,7 +207,7 @@ public class ModuleWebControllerAdvice {
 //
 //        response.setStatus(HttpStatus.UNAUTHORIZED.value());
 //
-//        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+//        return ApiResp.error(ServiceResp.AuthenticationError.getBaseErrorCode()
 //                , "未登录：" + e.getMessage());
 //    }
 //
@@ -136,27 +216,25 @@ public class ModuleWebControllerAdvice {
 //
 //        response.setStatus(HttpStatus.UNAUTHORIZED.value());
 //
-//        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+//        return ApiResp.error(ServiceResp.AuthenticationError.getBaseErrorCode()
 //                , "认证异常：" + e.getMessage());
 //    }
 
-//    @ExceptionHandler({NotLoginException.class,})
-    @ExceptionHandler({UnauthorizedException.class,})
+    @ExceptionHandler({NotLoginException.class,})
     public ApiResp onNotLoginException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+        return ApiResp.error(AuthenticationError.getBaseErrorCode()
                 , "未登录：" + e.getMessage());
     }
 
-//    @ExceptionHandler({SaTokenException.class, UnauthorizedException.class})
-    @ExceptionHandler({AuthorizationException.class})
+    @ExceptionHandler({SaTokenException.class, UnauthorizedException.class})
     public ApiResp onAuthorizedException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+        return ApiResp.error(AuthenticationError.getBaseErrorCode()
                 , "认证异常：" + e.getMessage());
     }
 
@@ -165,7 +243,7 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.FORBIDDEN.value());
 
-        return ApiResp.error(ServiceResp.ErrorType.AuthenticationError.getBaseErrorCode()
+        return ApiResp.error(AuthenticationError.getBaseErrorCode()
                 , e.getMessage());
     }
 
@@ -174,24 +252,21 @@ public class ModuleWebControllerAdvice {
 
         log.error("业务参数异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                        , e.getMessage())
-                .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e))
+                .setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler({IllegalArgumentException.class,
             IllegalStateException.class,
             MethodArgumentNotValidException.class,
             ValidationException.class,
-            BindException.class,
             MissingServletRequestParameterException.class})
     public ApiResp onParameterException(Exception e) {
 
         log.error("请求参数异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                        , e.getMessage())
-                .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e))
+                .setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler(ServiceException.class)
@@ -199,22 +274,20 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
-                        , e.getMessage())
-                .setDetailMsg(ExceptionUtils.getAllCauseInfo(e, " -> "));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e))
+                .setDetailMsg(getExDetailMsg(e));
     }
 
-    @ExceptionHandler({ConstraintViolationException.class, NonUniqueResultException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
+    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
     public ApiResp onConstraintViolationException(Exception e) {
 
         log.error("发生数据约束异常," + request.getRequestURL(), e);
 
-        boolean used = e.getMessage().contains(" delete ")
-                || e.getMessage().contains(" update ");
+//        boolean used = e.getMessage().contains(" delete ")
+//                || e.getMessage().contains(" update ");
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.BizError.getBaseErrorCode()
-                        , used ? "操作失败，数据已经被使用" : "名称、编码或其它唯一值已经存在")
-                .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), "数据约束异常").setDetailMsg(getExDetailMsg(e));
+
     }
 
     @ExceptionHandler({PersistenceException.class, SQLException.class, DataAccessException.class})
@@ -230,9 +303,8 @@ public class ModuleWebControllerAdvice {
 
         log.error("发生数据库操作异常," + request.getRequestURL(), e);
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode(),
-                        "数据异常，请稍后重试")
-                .setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(),
+                "数据异常，请稍后重试").setDetailMsg(ExceptionUtils.getRootCauseInfo(e));
 
     }
 
@@ -244,9 +316,8 @@ public class ModuleWebControllerAdvice {
 
         response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.SystemInnerError.getBaseErrorCode()
-                        , e.getMessage())
-                .setDetailMsg(ExceptionUtils.getPrintInfo(e));
+        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode()
+                , getExMsg(e)).setDetailMsg(ExceptionUtils.getPrintInfo(e));
     }
 
     //    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
@@ -260,15 +331,14 @@ public class ModuleWebControllerAdvice {
 
             response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
 
-            return (ApiResp) ApiResp.error(ServiceResp.ErrorType.ResourceError.getBaseErrorCode()
-                            , e.getMessage())
+            return (ApiResp) ApiResp.error(ResourceError.getBaseErrorCode(), getExMsg(e))
                     .setDetailMsg(ExceptionUtils.getPrintInfo(e));
         }
 
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
 
-        return (ApiResp) ApiResp.error(ServiceResp.ErrorType.UnknownError.getBaseErrorCode()
-                        , e.getMessage())
+        return (ApiResp) ApiResp.error(UnknownError.getBaseErrorCode(), getExMsg(e))
                 .setDetailMsg(ExceptionUtils.getPrintInfo(e));
     }
+
 }
