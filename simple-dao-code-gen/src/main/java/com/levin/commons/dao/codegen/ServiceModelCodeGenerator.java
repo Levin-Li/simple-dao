@@ -1485,6 +1485,61 @@ public final class ServiceModelCodeGenerator {
                 .orElse(null);
     }
 
+
+    private static List<String> parseParams(InjectVar injectVar, FieldModel fieldModel) {
+
+        List<String> result = new ArrayList<>();
+
+        String[] domain = injectVar.domain();
+
+        if (domain == null || domain.length == 0) {
+        } else if (domain.length == 1) {
+            if (!"default".equals(domain[0])) {
+                result.add("domain = \"" + domain[0]+"\"");
+            }
+        } else {
+            for (int i = 0; i < domain.length; i++) {
+                if (!StringUtils.hasText(domain[i])) {
+                    continue;
+                }
+                domain[i] = "\"" + domain[i] + "\"";
+            }
+            //加上挂号
+            result.add("domain = {" + String.join(",", domain) + "}");
+        }
+
+        if (StringUtils.hasText(injectVar.value())) {
+
+            Map<String, String> injectConstsFieldMap = new LinkedHashMap<>();
+            //获取类InjectConsts的字段列表
+            ReflectionUtils.doWithFields(InjectConsts.class, tmpField -> {
+                Object v = tmpField.get(null);
+                if (v instanceof String) {
+                    injectConstsFieldMap.put((String) v, "InjectConsts." + tmpField.getName());
+                }
+            });
+
+            fieldModel.addImport(InjectConsts.class);
+
+            result.add("value = " + injectConstsFieldMap.getOrDefault(injectVar.value(), "\"" + injectVar.value() + "\""));
+        }
+
+        //
+        if (StringUtils.hasText(injectVar.isRequired()) && !"true".equals(injectVar.isRequired())) {
+            result.add("isRequired = \"" + injectVar.isRequired() + "\"");
+        }
+
+        if (StringUtils.hasText(injectVar.isOverride()) && !"true".equals(injectVar.isOverride())) {
+            result.add("isOverride = \"" + injectVar.isOverride() + "\"");
+        }
+
+        if (StringUtils.hasText(injectVar.outputVarName())) {
+            result.add("outputVarName = \"" + injectVar.outputVarName() + "\"");
+        }
+
+        return result;
+    }
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
         Object obj = entityClass.newInstance();
@@ -1683,52 +1738,33 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
-                                        String domainStr = "";
+                                        List<String> parsedParams = parseParams(injectVar, fieldModel);
 
-                                        String[] domain = injectVar.domain();
-
-                                        if (domain == null || domain.length == 0) {
-                                        } else if (domain.length == 1) {
-                                            if (!"default".equals(domain[0])) {
-                                                domainStr = "domain = \"" + domain[0] + "\"";
-                                            }
-                                        } else {
-                                            //加上挂号
-                                            for (int i = 0; i < domain.length; i++) {
-                                                domain[i] = "\"" + domain[i] + "\"";
-                                            }
-                                            domainStr = "domain = {" + String.join(",", domain) + "}";
-                                        }
-
-                                        if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
-
-                                            //  String domain = injectVar.domain().equals("default") ? "" : "domain = \"" + injectVar.domain() + "\"";
-
-                                            String params = "";
+                                        if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())
+                                                && !BeanUtils.isSimpleValueType(fieldType)
+                                                && injectVar.expectBaseType() != Object.class) {
 
                                             if ("evt".equalsIgnoreCase(action)) {
                                                 fieldModel.addImport(fieldType);
-                                                params = String.format(" expectBaseType = %s.class, ", fieldType.getSimpleName());
+                                                parsedParams.add(String.format(" expectBaseType = %s.class", fieldType.getSimpleName()));
                                             }
 
                                             if (GenericConverter.class != injectVar.converter()) {
+
                                                 fieldModel.addImport(injectVar.converter());
 
                                                 String simpleName = injectVar.converter().getSimpleName();
 
-                                                if (StringUtils.hasText(domainStr)) {
-                                                    domainStr = domainStr + ",";
-                                                }
-                                                annotations.add("@" + annotationClass.getSimpleName() + String.format("(%s %s converter = %s.class, isRequired = \"false\")", domainStr, params, simpleName));
+                                                parsedParams.add(String.format("converter = %s.class", simpleName));
+
                                             } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
-                                                if (StringUtils.hasText(domainStr)) {
-                                                    domainStr = String.format("(%s)", domainStr);
-                                                }
-                                                annotations.add("@" + annotationClass.getSimpleName() + domainStr);
+                                                //
                                             }
                                         }
 
-                                        //默认类型
+                                        annotations.add("@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
+
+
                                         if (injectVar.expectBaseType() != Void.class
                                                 && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || injectVar.expectBaseType() != Object.class)) {
                                             //转换数据类型
@@ -1747,6 +1783,7 @@ public final class ServiceModelCodeGenerator {
                                             }
                                             //转换数据类型
                                         }
+
 
                                         fieldModel.addImport(annotationClass);
                                     }
