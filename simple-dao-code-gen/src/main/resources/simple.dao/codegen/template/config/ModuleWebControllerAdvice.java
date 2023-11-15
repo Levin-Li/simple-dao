@@ -256,7 +256,7 @@ public class ModuleWebControllerAdvice {
 //                , "认证异常：" + e.getMessage());
 //    }
 
-    @ExceptionHandler({NotLoginException.class,})
+    @ExceptionHandler({UnauthorizedException.class,})
     public ApiResp onNotLoginException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -264,7 +264,7 @@ public class ModuleWebControllerAdvice {
         return ApiResp.error(AuthenticationError.getBaseErrorCode(), "未登录：" + getExMsg(e));
     }
 
-    @ExceptionHandler({SaTokenException.class, UnauthorizedException.class})
+    @ExceptionHandler({ AuthorizationException.class})
     public ApiResp onAuthorizedException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
