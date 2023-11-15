@@ -51,6 +51,8 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.http.converter.HttpMessageConversionException;
+
 import lombok.extern.slf4j.Slf4j;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -158,6 +160,8 @@ public class ModuleWebControllerAdvice {
                         return errorMessage + "-" + fieldError.getDefaultMessage();
 
                     }
+                } else if (exception instanceof HttpMessageConversionException) {
+                    return "数据转换异常";
                 }
 
                 return exception.getMessage();
