@@ -1,11 +1,13 @@
 package ${modulePackageName}.config;
 
-import static $
-import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
-import static com.levin.commons.service.domain.ServiceResp.ErrorType.UnknownError;   {modulePackageName}.ModuleOption.*;
+import static ${modulePackageName}.ModuleOption.*;
+
 import ${modulePackageName}.*;
 
+import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
+
 import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.util.ClassUtil;
 import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.ServiceResp;
 import com.levin.commons.service.exception.*;
@@ -13,6 +15,7 @@ import com.levin.commons.utils.ExceptionUtils;
 
 import com.levin.commons.dao.exception.*;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +42,7 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
+import java.lang.reflect.Field;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.sql.SQLException;
@@ -51,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
 
@@ -124,6 +131,35 @@ public class ModuleWebControllerAdvice {
         //循环获取异常的message,返回第一个有message的异常
         while (exception != null) {
             if (exception.getMessage() != null) {
+
+                if (exception instanceof BindException) {
+
+                    BindException ex = (BindException) exception;
+
+                    BindingResult br = ex.getBindingResult();
+
+                    Object target = br.getTarget();
+
+                    FieldError fieldError = br.getFieldError();
+
+                    if (fieldError != null && target != null) {
+
+                        Field field = ClassUtil.getDeclaredField(target.getClass(), fieldError.getField());
+
+                        Schema schema = field.getAnnotation(Schema.class);
+
+                        String errorMessage = fieldError.getField();
+
+                        if (schema != null) {
+                            errorMessage = Stream.of(schema.title(), schema.description())
+                                    .filter(StringUtils::hasText).findFirst().orElse(fieldError.getField());
+                        }
+
+                        return errorMessage + "-" + fieldError.getDefaultMessage();
+
+                    }
+                }
+
                 return exception.getMessage();
             }
             //防止循环引用
@@ -329,5 +365,4 @@ public class ModuleWebControllerAdvice {
 
         return (ApiResp) ApiResp.error(UnknownError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
     }
-
 }
