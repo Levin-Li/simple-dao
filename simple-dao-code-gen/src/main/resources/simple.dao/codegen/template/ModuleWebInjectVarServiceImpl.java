@@ -8,7 +8,7 @@ import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.rbac.RbacRoleObject;
 import com.levin.commons.rbac.RbacUserInfo;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.service.support.VariableInjector;
 import com.levin.commons.service.support.VariableResolverManager;
 import com.levin.commons.utils.MapUtils;
