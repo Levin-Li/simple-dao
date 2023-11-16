@@ -63,61 +63,9 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
     //joinOptions = { @JoinOption(entityClass = XXX.class,alias = E_XXX.ALIAS,joinColumn = E_XXX.joinColumn)},
     resultClass = ${className}.Result.class
 )
-public class ${className} extends ${reqExtendClass}{
+public class ${className} extends Query${entityName}Req{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
-
-<#list fields as field>
-
-    <#list field.annotations as annotation>
-        <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
-    @OR(autoClose = true)
-    @Contains
-    @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#else>
-    ${annotation}
-        </#if>
-    </#list>
-    <#-- 如果是日期类型 -->
-    <#if field.typeName == 'Date'>
-    @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
-    @Gte
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
-
-    @Schema(title = ${field.schemaTitle} , description = "小于等于" + ${field.schemaTitle})
-    @Lte
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
-
-    //@Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-    //@Between(paramDelimiter = "-")
-    //${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
-    <#-- 基本类型 -->
-    <#elseif field.baseType>
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
-    <#-- 模糊匹配 -->
-    <#if field.contains && field.typeName = 'String'>
-
-    @Schema(title = "模糊匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-    @${field.extras.nameSuffix}
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
-    </#if>
-    </#if>
-    <#if field.lazy!>
-
-    @Schema(title = "是否加载" + ${field.schemaTitle})
-    @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_val == true")
-    Boolean load${field.name?cap_first};
-    </#if>
-    <#-- 字段结束 -->
-</#list>
-
-
-<#if pkField?exists>
-    public ${className}(${pkField.typeName} ${pkField.name}) {
-        this.${pkField.name} = ${pkField.name};
-    }
-</#if>
 
     //
     //@Schema(description = "是否按状态分组统计")

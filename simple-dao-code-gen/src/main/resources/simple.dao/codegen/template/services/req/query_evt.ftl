@@ -87,17 +87,17 @@ public class ${className} extends ${reqExtendClass}{
     </#list>
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date'>
-    @Schema(title = ${field.schemaTitle} , description = "大于等于" + ${field.schemaTitle})
+    @Schema(title = ${field.schemaTitle} , description = ${field.schemaTitle} + "大于等于字段值")
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(title = ${field.schemaTitle} , description = "小于等于" + ${field.schemaTitle})
+    @Schema(title = ${field.schemaTitle} , description = ${field.schemaTitle} + "小于等于字段值")
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-    //@Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
-    //@Between(paramDelimiter = "-")
-    //${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+    @Schema(title = ${field.schemaTitle} + "-日期范围"<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Between
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
 
     <#-- 基本类型 -->
     <#elseif field.baseType>
