@@ -21,6 +21,7 @@ import com.levin.commons.plugins.Utils;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
+import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.service.support.InjectConsts;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.LangUtils;
@@ -1515,14 +1516,14 @@ public final class ServiceModelCodeGenerator {
 
             Map<String, String> injectConstsFieldMap = new LinkedHashMap<>();
             //获取类InjectConsts的字段列表
-            ReflectionUtils.doWithFields(InjectConsts.class, tmpField -> {
+            ReflectionUtils.doWithFields(InjectConst.class, tmpField -> {
                 Object v = tmpField.get(null);
                 if (v instanceof String) {
-                    injectConstsFieldMap.put((String) v, "InjectConsts." + tmpField.getName());
+                    injectConstsFieldMap.put((String) v, "InjectConst." + tmpField.getName());
                 }
             });
 
-            fieldModel.addImport(InjectConsts.class);
+            fieldModel.addImport(InjectConst.class);
 
             result.add("value = " + injectConstsFieldMap.getOrDefault(injectVar.value(), "\"" + injectVar.value() + "\""));
         }
@@ -1641,7 +1642,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setField(field)
                     .addImport(InjectVar.class)
-                    .addImport(InjectConsts.class);
+                    .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
             fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
 

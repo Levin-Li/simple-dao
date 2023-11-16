@@ -130,18 +130,18 @@ public class InjectVarServiceImpl implements InjectVarService {
 
             //暂时兼容
             //获取登录信息
-            builder.put(InjectConsts.USER_ID, userInfo.getId())
-                    .put(InjectConsts.USER_NAME, userInfo.getName())
-                    .put(InjectConsts.USER, userInfo)
-                    .put(InjectConsts.IS_SUPER_ADMIN, userInfo.isSuperAdmin())
-                    .put(InjectConsts.IS_TENANT_ADMIN, userInfo.getRoleList() != null && userInfo.getRoleList().contains(RbacRoleObject.ADMIN_ROLE))
-//                    .put(InjectConsts.ORG, userInfo.getOrg())
-//                    .put(InjectConsts.ORG_ID, userInfo.getOrgId())
+            builder.put(InjectConst.USER_ID, userInfo.getId())
+                    .put(InjectConst.USER_NAME, userInfo.getName())
+                    .put(InjectConst.USER, userInfo)
+                    .put(InjectConst.IS_SUPER_ADMIN, userInfo.isSuperAdmin())
+                    .put(InjectConst.IS_TENANT_ADMIN, userInfo.getRoleList() != null && userInfo.getRoleList().contains(RbacRoleObject.ADMIN_ROLE))
+//                    .put(InjectConst.ORG, userInfo.getOrg())
+//                    .put(InjectConst.ORG_ID, userInfo.getOrgId())
             ;
 
         } else {
             //匿名用户
-            builder.put(InjectConsts.USER, anonymous);
+            builder.put(InjectConst.USER, anonymous);
         }
 
         final Map<String, Object> ctx = builder.build();

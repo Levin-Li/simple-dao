@@ -63,7 +63,7 @@ public class ${className} extends ${reqExtendClass} {
     ${field.baseEntityField?string('//', '')}${annotation}
     </#list>
 <#--    <#if (field.baseEntityField && field.name =='creator')>-->
-<#--    @InjectVar(InjectConsts.USER_ID)-->
+<#--    @InjectVar(InjectConst.USER_ID)-->
 <#--    </#if>-->
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 

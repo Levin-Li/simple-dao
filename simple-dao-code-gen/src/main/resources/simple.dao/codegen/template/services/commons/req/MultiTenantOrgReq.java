@@ -31,9 +31,9 @@ public class MultiTenantOrgReq
         implements MultiTenantObject {
 
     //注意需要在注入服务中设置isTenantAdmin变量
-    @InjectVar(value = InjectConsts.ORG_ID
-            , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN  + " && !#" + InjectConsts.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN  + " && !#" + InjectConsts.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
+    @InjectVar(value = InjectConst.ORG_ID
+            , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN  + " && !#" + InjectConst.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN  + " && !#" + InjectConst.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "机构ID" , hidden = true)
     @Eq
