@@ -1334,6 +1334,8 @@ public class DaoExamplesTest {
 
         System.out.println("生成的语句：" + statement);
 
+        Assert.isTrue(statement.toLowerCase().contains(" between "), "Between语句生成错误");
+
         //必须存在正确的Having字句
         Assert.isTrue(statement.contains("Having NOT( u.state IN ( :?, :?, :? ) )"), "Having语句生成错误");
 

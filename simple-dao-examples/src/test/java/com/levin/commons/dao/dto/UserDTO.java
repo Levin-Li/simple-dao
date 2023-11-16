@@ -59,7 +59,7 @@ public class UserDTO {
 
     @END(containCurrentField = false)//end NOT
     @Between(paramDelimiter = "-", patterns = "yyyyMMDD")
-    String betweenCreateTime = "20190101-20220201";
+    final String betweenCreateTime = "20190101-20220201";
 
     @Update
     protected Date lastUpdateTime = new Date();
