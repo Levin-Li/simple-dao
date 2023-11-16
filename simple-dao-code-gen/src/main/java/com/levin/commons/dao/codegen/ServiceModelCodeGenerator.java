@@ -41,8 +41,10 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-import java.io.*;
+import javax.validation.constraints.NotBlank;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -1486,7 +1488,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static List<String> parseParams(InjectVar injectVar, FieldModel fieldModel) {
+    private static List<String> parseInjectAnnotationParams(InjectVar injectVar, FieldModel fieldModel) {
 
         List<String> result = new ArrayList<>();
 
@@ -1495,7 +1497,7 @@ public final class ServiceModelCodeGenerator {
         if (domain == null || domain.length == 0) {
         } else if (domain.length == 1) {
             if (!"default".equals(domain[0])) {
-                result.add("domain = \"" + domain[0]+"\"");
+                result.add("domain = \"" + domain[0] + "\"");
             }
         } else {
             for (int i = 0; i < domain.length; i++) {
@@ -1508,6 +1510,7 @@ public final class ServiceModelCodeGenerator {
             result.add("domain = {" + String.join(",", domain) + "}");
         }
 
+        //如果不是默认值，则添加
         if (StringUtils.hasText(injectVar.value())) {
 
             Map<String, String> injectConstsFieldMap = new LinkedHashMap<>();
@@ -1524,17 +1527,45 @@ public final class ServiceModelCodeGenerator {
             result.add("value = " + injectConstsFieldMap.getOrDefault(injectVar.value(), "\"" + injectVar.value() + "\""));
         }
 
-        //
+        //如果不是默认值，则添加
         if (StringUtils.hasText(injectVar.isRequired()) && !"true".equals(injectVar.isRequired())) {
             result.add("isRequired = \"" + injectVar.isRequired() + "\"");
         }
 
+        //如果不是默认值，则添加
         if (StringUtils.hasText(injectVar.isOverride()) && !"true".equals(injectVar.isOverride())) {
             result.add("isOverride = \"" + injectVar.isOverride() + "\"");
         }
 
+        //如果不是默认值，则添加
         if (StringUtils.hasText(injectVar.outputVarName())) {
             result.add("outputVarName = \"" + injectVar.outputVarName() + "\"");
+        }
+
+        // //如果不是默认值，则添加
+        if (StringUtils.hasText(injectVar.remark())) {
+            result.add("remark = \"" + injectVar.remark() + "\"");
+        }
+
+        //如果不是默认值，则添加
+        if (Object.class != injectVar.expectBaseType()) {
+            fieldModel.addImport(injectVar.expectBaseType());
+            result.add(String.format("expectBaseType = %s.class", injectVar.expectBaseType().getSimpleName()));
+        }
+
+        //如果不是默认值，则添加
+        if (injectVar.expectGenericTypes() == null || injectVar.expectGenericTypes().length > 0) {
+            for (Class<?> expectGenericType : injectVar.expectGenericTypes()) {
+                fieldModel.addImport(expectGenericType);
+            }
+            result.add(String.format("expectGenericTypes = {%s}"
+                    , Stream.of(injectVar.expectGenericTypes()).filter(Objects::nonNull).map(c -> c.getSimpleName() + ".class").collect(Collectors.joining(","))));
+        }
+
+        //如果不是默认值，则添加
+        if (GenericConverter.class != injectVar.converter()) {
+            fieldModel.addImport(injectVar.converter());
+            result.add(String.format("converter = %s.class", injectVar.converter().getSimpleName()));
         }
 
         return result;
@@ -1738,26 +1769,17 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
-                                        List<String> parsedParams = parseParams(injectVar, fieldModel);
+                                        List<String> parsedParams = parseInjectAnnotationParams(injectVar, fieldModel);
 
-                                        if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())
-                                                && !BeanUtils.isSimpleValueType(fieldType)
-                                                && injectVar.expectBaseType() != Object.class) {
+                                        if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
+                                            //如果是请求对象
                                             if ("evt".equalsIgnoreCase(action)) {
                                                 fieldModel.addImport(fieldType);
-                                                parsedParams.add(String.format(" expectBaseType = %s.class", fieldType.getSimpleName()));
+                                                parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
                                             }
 
-                                            if (GenericConverter.class != injectVar.converter()) {
-
-                                                fieldModel.addImport(injectVar.converter());
-
-                                                String simpleName = injectVar.converter().getSimpleName();
-
-                                                parsedParams.add(String.format("converter = %s.class", simpleName));
-
-                                            } else if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
+                                            if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
                                                 //
                                             }
                                         }
