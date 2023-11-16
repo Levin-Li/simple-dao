@@ -1769,17 +1769,24 @@ public final class ServiceModelCodeGenerator {
 
                                         InjectVar injectVar = field.getAnnotation(InjectVar.class);
 
+                                        boolean isDefaultType = injectVar.expectBaseType() == Object.class;
+                                        boolean isVoidType = injectVar.expectBaseType() == void.class || injectVar.expectBaseType() == Void.class;
+
                                         List<String> parsedParams = parseInjectAnnotationParams(injectVar, fieldModel);
 
                                         if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
                                             //如果是请求对象
-                                            if ("evt".equalsIgnoreCase(action)) {
+                                            if ("evt".equalsIgnoreCase(action) || "info".equalsIgnoreCase(action)) {
                                                 fieldModel.addImport(fieldType);
-                                                parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
-                                            }
 
-                                            if (!BeanUtils.isSimpleValueType(fieldType) && !"info".equalsIgnoreCase(action)) {
+                                                parsedParams.removeIf(s -> s.trim().startsWith("expectBaseType"));
+                                                parsedParams.removeIf(s -> s.trim().startsWith("expectGenericTypes"));
+
+                                                //如果有特别指定类型，则添加expectBaseType
+                                                if (!isDefaultType && !isVoidType) {
+                                                    parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
+                                                }
                                                 //
                                             }
                                         }
@@ -1787,8 +1794,9 @@ public final class ServiceModelCodeGenerator {
                                         annotations.add("@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
 
 
-                                        if (injectVar.expectBaseType() != Void.class
-                                                && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || injectVar.expectBaseType() != Object.class)) {
+                                        //如果是有效的类型，或是 domain 为 dao
+                                        if (!isVoidType && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || !isDefaultType)) {
+
                                             //转换数据类型
                                             fieldModel.addImport(injectVar.expectBaseType());
 
