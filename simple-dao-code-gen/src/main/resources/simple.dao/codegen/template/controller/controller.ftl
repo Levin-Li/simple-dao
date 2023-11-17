@@ -93,10 +93,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @GetMapping("/queryList")
+    @GetMapping("/list")
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     @CRUD.ListTable
-    public ApiResp<PagingData<${entityName}Info>> queryList(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
+    public ApiResp<PagingData<${entityName}Info>> list(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
         return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
     }
 
