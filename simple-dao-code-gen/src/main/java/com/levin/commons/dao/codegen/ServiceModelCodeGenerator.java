@@ -1765,7 +1765,7 @@ public final class ServiceModelCodeGenerator {
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
 
-            if (fieldModel.isRequired()) {
+            if (fieldModel.isRequired() && enableValidation) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
@@ -1844,19 +1844,6 @@ public final class ServiceModelCodeGenerator {
 
             addLikeAnnotation.accept(Arrays.asList(StartsWith.class, EndsWith.class, Contains.class));
 
-            if (fieldModel.getType().equals(String.class)
-                    && fieldModel.getLength() != -1
-                    && !fieldModel.getName().endsWith("Body")) {
-                boolean isLob = field.isAnnotationPresent(Lob.class);
-                if (isLob) {
-                    //fieldModel.setLength(4000);
-                    fieldModel.setTestValue("\"这是长文本正文\"");
-                }
-                if (fieldModel.getLength() != 255) {
-                    annotations.add("@Size(max = " + fieldModel.getLength() + ")");
-                    fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
-                }
-            }
 
             //默认处理密码字段
             if (field.isAnnotationPresent(JsonIgnore.class)) {
@@ -1881,6 +1868,20 @@ public final class ServiceModelCodeGenerator {
 
 
             if (enableValidation) {
+
+                if (fieldModel.getType().equals(String.class)
+                        && fieldModel.getLength() != -1
+                        && !fieldModel.getName().endsWith("Body")) {
+                    boolean isLob = field.isAnnotationPresent(Lob.class);
+                    if (isLob) {
+                        //fieldModel.setLength(4000);
+                        fieldModel.setTestValue("\"这是长文本正文\"");
+                    } else {
+                        annotations.add("@Size(max = " + fieldModel.getLength() + ")");
+                        fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
+                    }
+                }
+
                 //加入所有的校验规则
                 fieldModel.addAnnotations(
                         an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
