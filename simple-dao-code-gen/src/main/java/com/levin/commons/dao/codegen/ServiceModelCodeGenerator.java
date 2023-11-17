@@ -895,15 +895,19 @@ public final class ServiceModelCodeGenerator {
                 .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
                 .build();
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info", true);
 
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
 
         //请求对象会忽略继承的属性
-        fields = buildFieldModel(entityClass, entityMapping, true, "evt");
+        fields = buildFieldModel(entityClass, entityMapping, true, "evt", false);
 
-        buildEvt(entityClass, fields, serviceDir, params);
+        //查询相关的独立处理
+        buildEvt(entityClass, fields, serviceDir, params, true);
+
+        fields = buildFieldModel(entityClass, entityMapping, true, "evt", true);
+        buildEvt(entityClass, fields, serviceDir, params, false);
 
         buildService(entityClass, fields, params);
 
@@ -917,7 +921,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "test");
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "test", true);
 
         fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -986,7 +990,7 @@ public final class ServiceModelCodeGenerator {
                 "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
     }
 
-    private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+    private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap, boolean query) throws Exception {
 
         // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -997,36 +1001,40 @@ public final class ServiceModelCodeGenerator {
             map.put("servicePackageName", servicePackage());
         };
 
+        if (query) {
 
-        genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
-                pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
+            //查询
+            genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
+                    pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+            //统计
+            genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
+                    pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+        } else {
+            genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
+                    pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
 
-        genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
-                pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
+            genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
+                    pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
 
-        genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
-                pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
+            genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
+                    pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
-                pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
+            genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
+                    pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        //删除
-        genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
-                pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
+            //删除
+            genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
+                    pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        //ID查询
-        genCode(entityClass, BASE_ID_EVT_FTL, fields, srcDir,
-                pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
+            //ID查询
+            genCode(entityClass, BASE_ID_EVT_FTL, fields, srcDir,
+                    pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
 
-        //查询
-        genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
-                pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
-
-        //统计
-        genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
-                pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
+        }
 
 
     }
@@ -1572,7 +1580,7 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
-    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action, boolean enableValidation) throws Exception {
 
         Object obj = entityClass.newInstance();
 
@@ -1871,10 +1879,13 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            //加入所有的校验规则
-            fieldModel.addAnnotations(
-                    an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
-                    , field.getAnnotations());
+
+            if (enableValidation) {
+                //加入所有的校验规则
+                fieldModel.addAnnotations(
+                        an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                        , field.getAnnotations());
+            }
 /*
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
