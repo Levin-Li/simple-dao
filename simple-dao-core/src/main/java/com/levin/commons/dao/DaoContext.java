@@ -2,14 +2,14 @@ package com.levin.commons.dao;
 
 
 import cn.hutool.core.lang.Assert;
-import com.levin.commons.service.support.ContextHolder;
-import com.levin.commons.service.support.SimpleVariableInjector;
-import com.levin.commons.service.support.ValueHolder;
-import com.levin.commons.service.support.VariableInjector;
+import com.levin.commons.service.support.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * DAO环境上下文
@@ -26,11 +26,23 @@ public abstract class DaoContext {
 
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
 
+    @Getter
+    @Setter
+    private static Supplier<List<VariableResolver>> defaultVariableResolverSupplier = null;
+
     private static final VariableInjector defaultVariableInjector = new SimpleVariableInjector() {
         @Override
         public String getInjectDomain() {
+            //dao域注入器
             return "dao";
         }
+
+        @Override
+        public List<VariableResolver> getDefaultVariableResolvers() {
+            //默认变量解析器
+            return defaultVariableResolverSupplier != null ? defaultVariableResolverSupplier.get() : Collections.emptyList();
+        }
+
     };
 
     private static final String VARIABLE_INJECTOR_KEY = VariableInjector.class.getName() + defaultVariableInjector.hashCode();

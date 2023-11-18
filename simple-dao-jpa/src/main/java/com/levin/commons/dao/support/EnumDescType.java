@@ -21,7 +21,7 @@ public class EnumDescType extends EnumType {
             field = EnumType.class.getDeclaredField("enumValueConverter");
             field.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Current hibernate version incompatible", e);
         }
     }
 
@@ -36,7 +36,7 @@ public class EnumDescType extends EnumType {
             try {
                 field.set(this, new OrdinalEnumValueConverter(new MyEnumJavaTypeDescriptor(enumClass)));
             } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Current hibernate version incompatible", e);
             }
         }
 

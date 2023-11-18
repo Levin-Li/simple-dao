@@ -69,7 +69,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JpaDaoConfiguration implements ApplicationContextAware, ApplicationListener<ContextRefreshedEvent> {
 
-
 //    @DynamicInsert和@DynamicUpdate
 
     //特意提取加载ID生成器
