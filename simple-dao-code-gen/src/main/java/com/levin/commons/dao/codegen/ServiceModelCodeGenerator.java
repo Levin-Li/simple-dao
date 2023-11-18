@@ -904,7 +904,7 @@ public final class ServiceModelCodeGenerator {
         buildInfo(entityClass, fields, serviceDir, params);
 
         //请求对象会忽略继承的属性
-        fields = buildFieldModel(entityClass, entityMapping, true, "evt", false);
+        fields = buildFieldModel(entityClass, entityMapping, true, "query", false);
 
         //查询相关的独立处理
         buildEvt(entityClass, fields, serviceDir, params, true);
@@ -1600,6 +1600,10 @@ public final class ServiceModelCodeGenerator {
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
         boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
 
+        final boolean isQueryObj = "query".equals(action);
+        final boolean isInfoObj = "info".equals(action);
+        final boolean isEvtObj = "evt".equals(action);
+
         for (Field field : declaredFields) {
 
             field.setAccessible(true);
@@ -1777,7 +1781,8 @@ public final class ServiceModelCodeGenerator {
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
 
-            if (fieldModel.isRequired() && enableValidation) {
+
+            if (fieldModel.isRequired() && !isQueryObj) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
@@ -1798,7 +1803,7 @@ public final class ServiceModelCodeGenerator {
                                         if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
                                             //如果是请求对象
-                                            if ("evt".equalsIgnoreCase(action) || "info".equalsIgnoreCase(action)) {
+                                            if (isEvtObj || isInfoObj || isQueryObj) {
                                                 fieldModel.addImport(fieldType);
 
                                                 parsedParams.removeIf(s -> s.trim().startsWith("expectBaseType"));
@@ -1812,9 +1817,7 @@ public final class ServiceModelCodeGenerator {
                                             }
                                         }
 
-                                        if(enableValidation) {
-                                            annotations.add("@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
-                                        }
+                                        annotations.add((isQueryObj || isInfoObj ? "//" : "") + "@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
 
                                         //如果是有效的类型，或是 domain 为 dao
                                         if (!isVoidType && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || !isDefaultType)) {
@@ -1835,7 +1838,6 @@ public final class ServiceModelCodeGenerator {
                                             }
                                             //转换数据类型
                                         }
-
 
                                         fieldModel.addImport(annotationClass);
                                     }
