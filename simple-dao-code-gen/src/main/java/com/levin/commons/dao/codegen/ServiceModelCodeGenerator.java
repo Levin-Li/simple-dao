@@ -17,6 +17,7 @@ import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.domain.PersonalObject;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
@@ -554,6 +555,8 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgPersonalReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "PersonalReq.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1595,6 +1598,7 @@ public final class ServiceModelCodeGenerator {
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
+        boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
 
         for (Field field : declaredFields) {
 
@@ -1638,6 +1642,14 @@ public final class ServiceModelCodeGenerator {
                     && field.getName().equals("orgId")) {
                 //多租户字段
                 logger.info("*** " + entityClass + "[" + action + "] 忽略组织字段 orgId : " + field + " --> " + fieldType);
+                continue;
+            }
+
+            if (ignoreSpecificField
+                    && isPersonalObject
+                    && field.getName().equals("ownerId")) {
+                //多租户字段
+                logger.info("*** " + entityClass + "[" + action + "] 忽略个人字段 ownerId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1800,8 +1812,9 @@ public final class ServiceModelCodeGenerator {
                                             }
                                         }
 
-                                        annotations.add("@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
-
+                                        if(enableValidation) {
+                                            annotations.add("@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
+                                        }
 
                                         //如果是有效的类型，或是 domain 为 dao
                                         if (!isVoidType && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || !isDefaultType)) {

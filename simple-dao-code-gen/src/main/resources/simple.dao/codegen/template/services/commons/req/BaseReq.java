@@ -1,8 +1,12 @@
 package ${modulePackageName}.services.commons.req;
 
 
-import com.levin.commons.dao.domain.OrganizedObject;
-import com.levin.commons.service.support.InjectConst;
+import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.logic.*;
+import com.levin.commons.dao.domain.*;
+import com.levin.commons.service.domain.*;
+import com.levin.commons.service.support.*;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.levin.commons.dao.*;
