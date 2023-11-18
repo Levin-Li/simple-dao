@@ -1817,7 +1817,7 @@ public final class ServiceModelCodeGenerator {
                                             }
                                         }
 
-                                        annotations.add((isQueryObj || isInfoObj ? "//" : "") + "@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
+                                        annotations.add((isQueryObj ? "//" : "") + "@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
 
                                         //如果是有效的类型，或是 domain 为 dao
                                         if (!isVoidType && (PatternMatchUtils.simpleMatch(injectVar.domain(), "dao") || !isDefaultType)) {
