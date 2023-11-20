@@ -31,8 +31,8 @@ public class MultiTenantReq
 
     @Schema(title = "租户ID" , hidden = true)
     @InjectVar(value = InjectConst.TENANT_ID
-            , isOverride = InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
     )
     @OR(autoClose = true)
     @Eq

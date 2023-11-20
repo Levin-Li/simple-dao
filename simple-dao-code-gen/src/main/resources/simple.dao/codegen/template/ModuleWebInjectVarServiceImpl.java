@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.core.env.Environment;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;

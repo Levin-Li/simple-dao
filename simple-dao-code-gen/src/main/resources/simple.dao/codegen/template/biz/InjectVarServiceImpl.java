@@ -148,9 +148,6 @@ public class InjectVarServiceImpl implements InjectVarService {
 
         result = ctx;
 
-        //设置注入变量到Dao上下文中
-        DaoContext.threadContext.putAll(ctx);
-
         //缓存到请求对象重
         varCache.set(result);
 
