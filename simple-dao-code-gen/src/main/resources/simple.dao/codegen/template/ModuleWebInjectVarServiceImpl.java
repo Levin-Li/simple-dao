@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -109,6 +110,11 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
     @Override
     public Map<String, ?> getInjectVars() {
+
+        //如果当前不是web请求，则不注入
+        if (RequestContextHolder.getRequestAttributes() == null) {
+            return Collections.emptyMap();
+        }
 
         //缓存在请求中
         Map<String, ?> result = (Map<String, ?>) httpServletRequest.getAttribute(INJECT_VAR_CACHE_KEY);
