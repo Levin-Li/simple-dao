@@ -61,7 +61,7 @@ public class ${className} extends ${reqExtendClass} {
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} , required = true, requiredMode = REQUIRED)
     @Eq(require = true)
-    //@NotNull
+    <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     protected ${pkField.typeName} ${pkField.name};
 
     public ${className} update${pkField.name?cap_first}WhenNotBlank(${pkField.typeName} ${pkField.name}){

@@ -62,7 +62,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
-    @Eq(condition = "!#" + InjectConst.IS_SUPER_ADMIN + "?:false")
+    @Eq(condition = NOT_SUPER_ADMIN)
     final boolean eqEditable = true;
 
 </#if>
