@@ -990,7 +990,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             return entityClass.getName() + " " + getText(alias, " ");
         }
 
-        throw new IllegalArgumentException("entityClass or tableName is no valid");
+        throw new StatementBuildException("entityClass or tableName is no valid");
     }
 
     /**
