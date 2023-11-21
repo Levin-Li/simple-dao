@@ -61,14 +61,14 @@ public class ${className} extends ${reqExtendClass} {
 
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
-    @NotNull
+    <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     @Eq(require = true)
     ${pkField.typeName} ${pkField.name};
 
 </#if>
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件" , hidden = true)
-    @Eq(condition = "!(#" + InjectConst.IS_SUPER_ADMIN + "?:false)")
+    @Eq(condition = NOT_SUPER_ADMIN)
     final boolean eqEditable = true;
 
 </#if>
