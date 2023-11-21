@@ -126,6 +126,8 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
         MapUtils.Builder<String, Object> builder = MapUtils.newBuilder();
 
+        builder.put(InjectConst.IS_WEB_CONTEXT, true);
+
         //@todo  获取当前登录用户
         RbacUserInfo userInfo = null;
 

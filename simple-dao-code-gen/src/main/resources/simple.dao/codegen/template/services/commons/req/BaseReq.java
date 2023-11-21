@@ -41,6 +41,9 @@ import java.util.*;
 @FieldNameConstants
 public abstract class BaseReq implements ServiceReq {
 
+    //
+    public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
+
     public static final String NOT_SUPER_ADMIN = " !(#" + InjectConst.IS_SUPER_ADMIN + ") ";
 
     public static final String NOT_TENANT_ADMIN = " !(#" + InjectConst.IS_TENANT_ADMIN + ") ";
