@@ -1444,7 +1444,7 @@ public final class ServiceModelCodeGenerator {
 
             //如果文件内容相同，没有变化，则直接返回
             if (newCompactContent.contentEquals(fileOldCompactContent)) {
-                logger.info("目标文件：" + path + " 已经存在，新生成的代码内容和旧内容相同，跳过。");
+                logger.debug("目标文件：" + path + " 已经存在，新生成的代码内容和旧内容相同，跳过。");
                 return;
             }
 
