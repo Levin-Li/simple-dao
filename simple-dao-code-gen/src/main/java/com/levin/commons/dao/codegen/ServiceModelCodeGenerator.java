@@ -1335,7 +1335,7 @@ public final class ServiceModelCodeGenerator {
 
         skip.set(true);
 
-        logger.info("目标文件：{}已经存在，并且被修改过，跳过。校验md5：{}，内容逐步校验逻辑：{}。", file, md5, info);
+        logger.warn("目标文件：{}已经存在，并且被修改过，跳过。校验md5：{}，内容逐步校验逻辑：{}。", file, md5, info);
 
         return null;
     }
