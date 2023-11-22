@@ -240,7 +240,7 @@ public class ModuleWebControllerAspect {
 
                                 ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
 
-                                tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
+                                tempList.add(VariableInjector.newResolverByMap(param, MapUtils.put("_this", param).build(), injectVars));
 
                                 tempList.addAll(variableResolverList);
 

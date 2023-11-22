@@ -15,9 +15,7 @@ import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
-import com.levin.commons.dao.domain.MultiTenantObject;
-import com.levin.commons.dao.domain.OrganizedObject;
-import com.levin.commons.dao.domain.PersonalObject;
+import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
@@ -890,9 +888,13 @@ public final class ServiceModelCodeGenerator {
 
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
+
         Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
+                .put("entityClass", entityClass)
                 .put("isMultiTenantObject", isMultiTenant)
+                .put("isMultiTenantShareableObject", MultiTenantShareableObject.class.isAssignableFrom(entityClass))
+                .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
                 .put("isOrganizedObject", isOrg)
                 //设置请求对象继承的类
                 .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
@@ -1597,6 +1599,9 @@ public final class ServiceModelCodeGenerator {
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
+        boolean isMultiTenantShareableObject = MultiTenantShareableObject.class.isAssignableFrom(entityClass);
+        boolean isMultiTenantPublicObject = MultiTenantPublicObject.class.isAssignableFrom(entityClass);
+
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
         boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
 

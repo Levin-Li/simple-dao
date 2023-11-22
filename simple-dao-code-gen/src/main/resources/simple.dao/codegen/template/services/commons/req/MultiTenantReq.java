@@ -37,6 +37,7 @@ public class MultiTenantReq
     @OR(autoClose = true)
     @Eq
     @IsNull(condition = "#isNotEmpty(#_val) && isContainsPublicData()") //如果是公共数据，允许包括非该租户的数据
+    @Eq(value = "shareable", paramExpr = "true", condition = "isShareable()") // 如果有可共享的数据，允许包括非该租户的数据
     protected String tenantId;
 
     /**
@@ -46,6 +47,16 @@ public class MultiTenantReq
      */
     @Schema(title = "请求是否包含公共数据", hidden = true)
     public boolean isContainsPublicData() {
+        return false;
+    }
+
+    /**
+     * 是否为可分享的数据
+     *
+     * @return
+     */
+    @Schema(title = "请求是否包含可分享的数据", hidden = true)
+    public boolean isShareable() {
         return false;
     }
 

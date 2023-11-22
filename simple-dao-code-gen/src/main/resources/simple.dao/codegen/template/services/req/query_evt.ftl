@@ -62,6 +62,12 @@ public class ${className} extends ${reqExtendClass}{
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
+    @Schema(title = "是否包含公共数据")
+    @Ignore
+    boolean isContainsPublicData = true;
+
+</#if>
     @Ignore
     @Schema(title = "排序字段")
     String orderBy;
