@@ -1211,6 +1211,7 @@ public final class ServiceModelCodeGenerator {
         ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
 
         params.put("classModel", classModel);
+        params.put("isCacheableEntity", entityClass.isAnnotationPresent(Cacheable.class) && ((Cacheable)entityClass.getAnnotation(Cacheable.class)).value());
 
         if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(JsonIgnoreProperties.class.getName());

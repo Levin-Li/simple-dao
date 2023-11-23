@@ -27,6 +27,7 @@ import org.hibernate.annotations.Type;
 @FieldNameConstants
 
 @Schema(title = "测试机构", description = "示例代码")
+@Cacheable
 @Entity(name = EntityConst.PREFIX + "TestOrg")
 @Table(
         indexes = {
@@ -124,6 +125,10 @@ public class TestOrg
     @Column(length = 64)
     @Contains
     protected String code;
+
+    @Transient
+    @Schema(title = "未使用")
+    protected String unuseField;
 
     @Schema(title = "图标")
     protected String icon;

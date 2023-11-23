@@ -82,7 +82,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(summary = CREATE_ACTION)
-    @Transactional(rollbackFor = {RuntimeException.class})
+    @Transactional
     @Override
 <#if pkField?exists>
     public ${pkField.typeName} create(Create${entityName}Req req){
@@ -110,7 +110,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = BATCH_CREATE_ACTION)
     //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
-    @Transactional(rollbackFor = RuntimeException.class)
+    @Transactional
     @Override
 <#if pkField?exists>
     public List<${pkField.typeName}> batchCreate(List<Create${entityName}Req> reqList){
@@ -122,8 +122,8 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    //@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name})", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
-    @Transactional(rollbackFor = RuntimeException.class)
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name}) && #result", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    @Transactional
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleUpdateByQueryObj(req);
@@ -131,13 +131,15 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
+    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0") //Spring 缓存设计问题
     public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
 
     @Operation(summary = BATCH_UPDATE_ACTION)
-    @Transactional(rollbackFor = RuntimeException.class)
+    @Transactional
     @Override
+    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#isNotEmpty(#reqList)  && #result > 0")
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
         return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n ? 1 : 0).sum();
@@ -145,16 +147,17 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = DELETE_ACTION)
     @Override
-    //@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name})", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
-    @Transactional(rollbackFor = RuntimeException.class)
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name}) && #result", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    @Transactional
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleDeleteByQueryObj(req);
     }
 
     @Operation(summary = BATCH_DELETE_ACTION)
-    @Transactional(rollbackFor = RuntimeException.class)
+    @Transactional
     @Override
+                <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#isNotEmpty(#req.idList) && #result > 0")
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
         return Stream.of(req.get${pkField.name?cap_first}List())
@@ -190,8 +193,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 <#if pkField?exists>
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    //Srping 4.3提供了一个sync参数。是当缓存失效后，为了避免多个请求打到数据库,系统做了一个并发控制优化，同时只有一个线程会去数据库取数据其它线程会被阻塞。
-    //@Cacheable(condition = "#isNotEmpty(#${pkField.name})", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@Cacheable(condition = "#isNotEmpty(#${pkField.name})", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
@@ -199,7 +201,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //只更新缓存
-    //@CachePut(unless = "#result == null" , condition = "#isNotEmpty(#req.${pkField.name})" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CachePut(unless = "#result == null" , condition = "#isNotEmpty(#req.${pkField.name})" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);

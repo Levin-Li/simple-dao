@@ -40,12 +40,16 @@
 
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
-        <sa-token.version>1.35.0.RC</sa-token.version>
+
+        <sa-token.version>1.37.0</sa-token.version>
+
+        <j2cache.version>2.8.5-release</j2cache.version>
 
         <knife4j.version>4.3.0</knife4j.version>
         <springdoc.version>1.6.14</springdoc.version>
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
+
         <redission.version>3.19.3</redission.version>
         <redission.version>3.16.8</redission.version>
 
@@ -274,6 +278,12 @@
                 <groupId>${levin.service-support.groupId}</groupId>
                 <artifactId>service-support</artifactId>
                 <version>${levin.service-support.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.oschina.j2cache</groupId>
+                <artifactId>j2cache-core</artifactId>
+                <version>${j2cache.version}</version>
             </dependency>
 
             <dependency>

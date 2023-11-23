@@ -102,6 +102,17 @@ public class Application {
         return builder.build();
     }
 
+//    public CacheManager cacheManager() {
+//        // 引入配置
+//        J2CacheConfig config = J2CacheConfig.initFromConfig("/j2cache.properties");
+//        // 生成 J2CacheBuilder
+//        J2CacheBuilder j2CacheBuilder = J2CacheBuilder.init(config);
+//        // 构建适配器
+//        J2CacheSpringCacheManageAdapter j2CacheSpringCacheManageAdapter = new J2CacheSpringCacheManageAdapter(j2CacheBuilder, true);
+//
+//        return j2CacheSpringCacheManageAdapter;
+//    }
+
     /**
      * 使用json序列化
      * 默认过期时间

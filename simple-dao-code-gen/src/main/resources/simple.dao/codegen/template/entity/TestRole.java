@@ -28,6 +28,7 @@ import org.hibernate.annotations.Type;
 
 @Schema(title = "测试角色", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestRole")
+@Cacheable
 @Table(
         indexes = {
                 @Index(columnList = E_TestRole.orderCode),

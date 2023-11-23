@@ -124,6 +124,11 @@ public class ClassModel {
                 .collect(Collectors.toList());
     }
 
+    @SneakyThrows
+    public boolean hasAnno(String annoType) {
+        return entityType.isAnnotationPresent((Class<? extends Annotation>) Class.forName(annoType));
+    }
+
     public String attrName(String attrName, String prefix, String suffix) {
         return hasAttr(attrName) ? (prefix + attrName + suffix) : "";
     }
