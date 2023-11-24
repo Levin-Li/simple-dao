@@ -30,7 +30,7 @@ import cn.hutool.core.lang.*;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
-import org.apache.dubbo.config.annotation.*;
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
@@ -75,7 +75,7 @@ import ${imp};
 // Propagation.NESTED：如果当前存在事务，则创建一个事务作为当前事务的嵌套事务来运行；如果当前没有事务，则该取值等价于 PROPAGATION_REQUIRED。
 
 @Service(PLUGIN_PREFIX + "${className}")
-@DubboService
+<#if !enableDubbo>//</#if>@DubboService
 
 @ConditionalOnMissingBean({Biz${serviceName}.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)

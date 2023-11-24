@@ -57,6 +57,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.levin.commons.dao.E_JoinOption.entityClass;
+
 //import org.apache.maven.project.MavenProject;
 
 public final class ServiceModelCodeGenerator {
@@ -247,24 +249,25 @@ public final class ServiceModelCodeGenerator {
                 + modulePackageName().replace('.', File.separatorChar)
                 + File.separator;
 
-        genFileByTemplate("bootstrap/AppWebMvcConfigurer.java", params, prefix + "AppWebMvcConfigurer.java");
-        genFileByTemplate("bootstrap/AppDataInitializer.java", params, prefix + "AppDataInitializer.java");
+        genSameNameFileByTemplate("bootstrap/AppWebMvcConfigurer.java", params, prefix);
+        genSameNameFileByTemplate("bootstrap/AppDataInitializer.java", params, prefix);
 //        genFileByTemplate("bootstrap/PluginManagerController.java", params, prefix + "PluginManagerController.java");
-        genFileByTemplate("bootstrap/Application.java", params, prefix + "Application.java");
-        genFileByTemplate("bootstrap/BlockingFilter.java", params, prefix + "BlockingFilter.java");
+        genSameNameFileByTemplate("bootstrap/Application.java", params, prefix);
+        genSameNameFileByTemplate("bootstrap/BlockingFilter.java", params, prefix);
 
         String resPath = new File(bootstrapDir).getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
 
-        genFileByTemplate("bootstrap/application.properties", params, resPath + "application.properties");
-        genFileByTemplate("bootstrap/application.yml", params, resPath + "application.yml");
-        genFileByTemplate("bootstrap/application-local.yml", params, resPath + "application-local.yml");
-        genFileByTemplate("bootstrap/application-dev.yml", params, resPath + "application-dev.yml");
-        genFileByTemplate("bootstrap/application-test.yml", params, resPath + "application-test.yml");
-        genFileByTemplate("bootstrap/application-prod.yml", params, resPath + "application-prod.yml");
+        genSameNameFileByTemplate("bootstrap/application.properties", params, resPath);
+        genSameNameFileByTemplate("bootstrap/caffeine.properties", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application.yml", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application-local.yml", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application-dev.yml", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application-test.yml", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application-prod.yml", params, resPath);
 
-        genFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell" + File.separator + "startup.sh");
-        genFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell" + File.separator + "restart.sh");
-        genFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell" + File.separator + "shutdown.sh");
+        genSameNameFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell");
+        genSameNameFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell");
+        genSameNameFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell");
 
         final String resTemplateDir = "simple.dao/codegen/template/";
 
@@ -281,9 +284,9 @@ public final class ServiceModelCodeGenerator {
         bootstrapDir = bootstrapDir.replace(File.separator + "main" + File.separator, File.separator + "test" + File.separator);
         resPath = new File(bootstrapDir).getParentFile().getCanonicalPath() + File.separator + "resources" + File.separator;
 
-        genFileByTemplate("bootstrap/application.properties", params, resPath + "application.properties");
-        genFileByTemplate("bootstrap/application.yml", params, resPath + "application.yml");
-        genFileByTemplate("bootstrap/application-local.yml", params, resPath + "application-local.yml");
+        genSameNameFileByTemplate("bootstrap/application.properties", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application.yml", params, resPath);
+        genSameNameFileByTemplate("bootstrap/application-local.yml", params, resPath);
 
         Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
 
@@ -634,6 +637,14 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(false);
     }
 
+    public static Boolean enableDubbo(Boolean newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static boolean enableDubbo() {
+        return getThreadVar(false);
+    }
+
     public static Boolean isIgnoreCodeCommentChange(Boolean newValue) {
         return putThreadVar(newValue);
     }
@@ -886,6 +897,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
+
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
 
@@ -900,19 +912,50 @@ public final class ServiceModelCodeGenerator {
                 .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
                 .build();
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info", true);
+        boolean isCacheableEntity = !entityClass.isAnnotationPresent(Cacheable.class) || ((Cacheable) entityClass.getAnnotation(Cacheable.class)).value();
+        params.put("isCacheableEntity", isCacheableEntity);
+
+
+        if (isCacheableEntity) {
+            logger.info("默认缓存实体类：{} ，可以设置 @Cacheable(false) 禁用缓存", entityClass.getSimpleName());
+        }
+
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
 
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
 
+        //////////////////////////////////////////////////////////////
+        String action = "query";
+
         //请求对象会忽略继承的属性
-        fields = buildFieldModel(entityClass, entityMapping, true, "query", false);
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
 
         //查询相关的独立处理
-        buildEvt(entityClass, fields, serviceDir, params, true);
+        buildEvt(entityClass, fields, serviceDir, params, action);
 
-        fields = buildFieldModel(entityClass, entityMapping, true, "evt", true);
-        buildEvt(entityClass, fields, serviceDir, params, false);
+        /////////////////////////////////////////////////////////////////////////////////
+        action = "create";
+
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        ////////////////////////////////////////////////////////
+        action = "update";
+
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        ////////////////////////////////////////////////////////
+        action = "delete";
+
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        /////////////////////////////////////////////////////////////////
 
         buildService(entityClass, fields, params);
 
@@ -926,7 +969,7 @@ public final class ServiceModelCodeGenerator {
             entityMapping = new LinkedHashMap<>();
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "test", true);
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "test");
 
         fields = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -984,6 +1027,7 @@ public final class ServiceModelCodeGenerator {
 
         final Consumer<Map<String, Object>> mapConsumer = (map) -> {
             map.putAll(paramsMap);
+            map.put("servicePackageName", servicePackage());
         };
 
         genCode(entityClass, INFO_FTL, fields, srcDir,
@@ -995,7 +1039,7 @@ public final class ServiceModelCodeGenerator {
                 "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
     }
 
-    private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap, boolean query) throws Exception {
+    private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap, String type) throws Exception {
 
         // List<FieldModel> tempFiles = copyAndFilter(fields, "createTime", "updateTime", "lastUpdateTime");
 
@@ -1006,7 +1050,7 @@ public final class ServiceModelCodeGenerator {
             map.put("servicePackageName", servicePackage());
         };
 
-        if (query) {
+        if ("query".equalsIgnoreCase(type)) {
 
             //查询
             genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
@@ -1016,7 +1060,7 @@ public final class ServiceModelCodeGenerator {
             genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
                     pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-        } else {
+        } else if ("create".equalsIgnoreCase(type)) {
             genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                     pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
@@ -1024,23 +1068,22 @@ public final class ServiceModelCodeGenerator {
             genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
                     pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-
+        } else if ("update".equalsIgnoreCase(type)) {
             genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
                     pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
             genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
                     pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
+        } else if ("delete".equalsIgnoreCase(type)) {
+
             //删除
             genCode(entityClass, DEL_EVT_FTL, fields, srcDir,
                     pkgName, "Delete" + entityClass.getSimpleName() + "Req", mapConsumer);
-
             //ID查询
             genCode(entityClass, BASE_ID_EVT_FTL, fields, srcDir,
                     pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
-
         }
-
 
     }
 
@@ -1211,7 +1254,8 @@ public final class ServiceModelCodeGenerator {
         ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
 
         params.put("classModel", classModel);
-        params.put("isCacheableEntity", entityClass.isAnnotationPresent(Cacheable.class) && ((Cacheable)entityClass.getAnnotation(Cacheable.class)).value());
+
+        //默认
 
         if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(JsonIgnoreProperties.class.getName());
@@ -1340,6 +1384,17 @@ public final class ServiceModelCodeGenerator {
 
         return null;
     }
+
+    public static void genSameNameFileByTemplate(final String template, Map<String, Object> params, String path) throws Exception {
+
+        Assert.hasText(template, "模板不能为空");
+
+        Assert.hasText(path, "路径不能为空");
+
+        genFileByTemplate(template, params, new File(path, new File(template).getName()).getCanonicalPath());
+
+    }
+
 
     /**
      * 生成文件，如果文件存在已经被修改，则直接返回。
@@ -1586,7 +1641,8 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
-    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping, boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action, boolean enableValidation) throws Exception {
+    private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
+            , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
         Object obj = entityClass.newInstance();
 
@@ -1606,9 +1662,11 @@ public final class ServiceModelCodeGenerator {
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
         boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
 
-        final boolean isQueryObj = "query".equals(action);
-        final boolean isInfoObj = "info".equals(action);
-        final boolean isEvtObj = "evt".equals(action);
+        final boolean isQueryObj = "query".equalsIgnoreCase(action);
+        final boolean isInfoObj = "info".equalsIgnoreCase(action);
+        final boolean isCreateObj = "create".equalsIgnoreCase(action);
+        final boolean isUpdateObj = "update".equalsIgnoreCase(action);
+        final boolean isDeleteObj = "delete".equalsIgnoreCase(action);
 
         for (Field field : declaredFields) {
 
@@ -1787,8 +1845,7 @@ public final class ServiceModelCodeGenerator {
             //生成注解
             ArrayList<String> annotations = new ArrayList<>();
 
-
-            if (fieldModel.isRequired() && !isQueryObj) {
+            if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
@@ -1809,18 +1866,18 @@ public final class ServiceModelCodeGenerator {
                                         if (!BeanUtils.isSimpleValueType(injectVar.expectBaseType())) {
 
                                             //如果是请求对象
-                                            if (isEvtObj || isInfoObj || isQueryObj) {
-                                                fieldModel.addImport(fieldType);
 
-                                                parsedParams.removeIf(s -> s.trim().startsWith("expectBaseType"));
-                                                parsedParams.removeIf(s -> s.trim().startsWith("expectGenericTypes"));
+                                            fieldModel.addImport(fieldType);
 
-                                                //如果有特别指定类型，则添加expectBaseType
-                                                if (!isDefaultType && !isVoidType) {
-                                                    parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
-                                                }
-                                                //
+                                            parsedParams.removeIf(s -> s.trim().startsWith("expectBaseType"));
+                                            parsedParams.removeIf(s -> s.trim().startsWith("expectGenericTypes"));
+
+                                            //如果有特别指定类型，则添加expectBaseType
+                                            if (!isDefaultType && !isVoidType) {
+                                                parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
                                             }
+                                            //
+
                                         }
 
                                         annotations.add((isQueryObj ? "//" : "") + "@" + annotationClass.getSimpleName() + "(" + parsedParams.stream().collect(Collectors.joining(", ")) + ")");
@@ -1887,27 +1944,24 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
+            //加入所有的校验规则
+            fieldModel.addAnnotations(
+                    an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                    , field.getAnnotations());
 
-            if (enableValidation) {
-
-                if (fieldModel.getType().equals(String.class)
-                        && fieldModel.getLength() != -1
-                        && !fieldModel.getName().endsWith("Body")) {
-                    boolean isLob = field.isAnnotationPresent(Lob.class);
-                    if (isLob) {
-                        //fieldModel.setLength(4000);
-                        fieldModel.setTestValue("\"这是长文本正文\"");
-                    } else {
-                        annotations.add("@Size(max = " + fieldModel.getLength() + ")");
-                        fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
-                    }
+            if (fieldModel.getType().equals(String.class)
+                    && fieldModel.getLength() != -1
+                    && !fieldModel.getName().endsWith("Body")) {
+                boolean isLob = field.isAnnotationPresent(Lob.class);
+                if (isLob) {
+                    //fieldModel.setLength(4000);
+                    fieldModel.setTestValue("\"这是长文本正文\"");
+                } else {
+                    annotations.add("@Size(max = " + fieldModel.getLength() + ")");
+                    fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
-
-                //加入所有的校验规则
-                fieldModel.addAnnotations(
-                        an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
-                        , field.getAnnotations());
             }
+
 /*
             //是否约定
             if (fieldModel.getName().endsWith("Pct")) {
@@ -1971,6 +2025,12 @@ public final class ServiceModelCodeGenerator {
                 } else {
                     // fieldModel.setTestValue("null");
                 }
+            }
+
+            if (isQueryObj || isUpdateObj) {
+                //查询对象和更新对象，允许空值
+                fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotNull"));
+                fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));
             }
 
             fieldModelList.add(fieldModel);

@@ -133,6 +133,13 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean isIgnoreCodeCommentChange = true;
 
     /**
+     * 是否允许使用Dubbo，自动生成Dubbo相关的配置
+     *
+     */
+    @Parameter
+    private boolean enableDubbo = false;
+
+    /**
      * 是否生成业务控制器类
      */
     @Parameter(defaultValue = "true")
@@ -271,6 +278,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             }
 
             ServiceModelCodeGenerator.isOutputFormatCode(this.isOutputFormatCode);
+            ServiceModelCodeGenerator.enableDubbo(this.enableDubbo);
             ServiceModelCodeGenerator.isIgnoreCodeCommentChange(this.isIgnoreCodeCommentChange);
             ServiceModelCodeGenerator.isCreateControllerSubDir(this.isCreateControllerSubDir);
             ServiceModelCodeGenerator.isCreateBizController(this.isCreateBizController);
@@ -317,6 +325,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("controllerDir", controllerDir);
             codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
+
+            codeGenParams.putIfAbsent("enableDubbo", enableDubbo);
 
 
             //1、生成代码

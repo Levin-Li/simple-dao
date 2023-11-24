@@ -76,9 +76,9 @@ public class ${className} extends ${reqExtendClass} {
 <#list UPDATE_fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
-        <#if !(annotation?string)?contains("@NotNull")>
+<#--        <#if !(annotation?string)?contains("@NotNull")>-->
     ${annotation}
-        </#if>
+<#--        </#if>-->
     </#list>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.hidden?string(' , hidden = true', '')})
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
@@ -89,9 +89,9 @@ public class ${className} extends ${reqExtendClass} {
 <#list fields as field>
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     <#list field.annotations as annotation>
-    <#if !(annotation?string)?contains("@NotNull")>
+<#--    <#if !(annotation?string)?contains("@NotNull")>-->
     ${annotation}
-    </#if>
+<#--    </#if>-->
     </#list>
     <#if field.optimisticLock>
     @Eq(desc = "乐观锁更新条件")

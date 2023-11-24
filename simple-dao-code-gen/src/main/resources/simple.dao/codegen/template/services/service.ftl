@@ -31,6 +31,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 public interface ${className} {
 
     String BIZ_NAME = E_${entityName}.BIZ_NAME;
+    String CK_PREFIX = E_${entityName}.CACHE_KEY_PREFIX;
 
     /**
      * 创建记录，返回主键ID

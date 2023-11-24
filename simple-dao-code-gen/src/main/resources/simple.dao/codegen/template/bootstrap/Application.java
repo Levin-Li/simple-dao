@@ -35,12 +35,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import org.apache.dubbo.config.spring.context.annotation.*;
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-
 
 
 /**
@@ -56,7 +55,7 @@ import java.time.temporal.ChronoUnit;
 @EnableScheduling
 @EnableCaching
 @EnableAsync
-@EnableDubboConfig
+<#if !enableDubbo>//</#if>@EnableDubboConfig
 public class Application {
 
     public static void main(String... args) {
@@ -101,17 +100,6 @@ public class Application {
     public ThreadPoolTaskExecutor applicationTaskExecutor(@Autowired TaskExecutorBuilder builder) {
         return builder.build();
     }
-
-//    public CacheManager cacheManager() {
-//        // 引入配置
-//        J2CacheConfig config = J2CacheConfig.initFromConfig("/j2cache.properties");
-//        // 生成 J2CacheBuilder
-//        J2CacheBuilder j2CacheBuilder = J2CacheBuilder.init(config);
-//        // 构建适配器
-//        J2CacheSpringCacheManageAdapter j2CacheSpringCacheManageAdapter = new J2CacheSpringCacheManageAdapter(j2CacheBuilder, true);
-//
-//        return j2CacheSpringCacheManageAdapter;
-//    }
 
     /**
      * 使用json序列化

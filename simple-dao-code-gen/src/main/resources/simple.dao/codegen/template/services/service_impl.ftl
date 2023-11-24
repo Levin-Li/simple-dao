@@ -30,10 +30,11 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
 //import org.apache.dubbo.config.spring.context.annotation.*;
-import org.apache.dubbo.config.annotation.*;
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
+import static ${entityClassPackage}.E_${entityName}.*;
 
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
@@ -65,7 +66,7 @@ import ${imp};
  */
 
 @Service(PLUGIN_PREFIX + "${serviceName}")
-@DubboService
+<#if !enableDubbo>//</#if>@DubboService
 
 @ConditionalOnMissingBean({${serviceName}.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${serviceName}", matchIfMissing = true)
@@ -78,7 +79,8 @@ import ${imp};
 public class ${className} extends BaseService implements ${serviceName} {
 
     protected ${serviceName} getSelfProxy(){
-        return getSelfProxy(${serviceName}.class);
+        //return getSelfProxy(${serviceName}.class);
+        return getSelfProxy(${className}.class);
     }
 
     @Operation(summary = CREATE_ACTION)
@@ -120,9 +122,10 @@ public class ${className} extends BaseService implements ${serviceName} {
         return reqList.stream().map(this::create).collect(Collectors.toList());
     }
 
+
     @Operation(summary = UPDATE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name}) && #result", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")
     @Transactional
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -131,7 +134,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0") //Spring 缓存设计问题
+    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
@@ -139,7 +142,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_UPDATE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#isNotEmpty(#reqList)  && #result > 0")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#reqList)  && #result > 0")
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
         return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n ? 1 : 0).sum();
@@ -147,7 +150,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = DELETE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "#isNotEmpty(#req.${pkField.name}) && #result", key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
     @Transactional
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -157,7 +160,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_DELETE_ACTION)
     @Transactional
     @Override
-                <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#isNotEmpty(#req.idList) && #result > 0")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.idList) && #result > 0")
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
         return Stream.of(req.get${pkField.name?cap_first}List())
@@ -193,15 +196,15 @@ public class ${className} extends BaseService implements ${serviceName} {
 <#if pkField?exists>
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@Cacheable(condition = "#isNotEmpty(#${pkField.name})", unless = "#result == null ", key = E_${entityName}.CACHE_KEY_PREFIX + "#${pkField.name}")
+    //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
+    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@spelUtils.isNotEmpty(#${pkField.name})", key = CK_PREFIX + "#${pkField.name}")
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
 
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    //只更新缓存
-    <#if !isCacheableEntity>//</#if>@CachePut(unless = "#result == null" , condition = "#isNotEmpty(#req.${pkField.name})" , key = E_${entityName}.CACHE_KEY_PREFIX + "#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CachePut(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);
@@ -222,7 +225,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
-    @CacheEvict(condition = "#isNotEmpty(#key)", key = E_${entityName}.CACHE_KEY_PREFIX + "#key")
+    @CacheEvict(condition = "@spelUtils.isNotEmpty(#key)", key = CK_PREFIX + "#key")
     public void clearCache(Object key) {
     }
 

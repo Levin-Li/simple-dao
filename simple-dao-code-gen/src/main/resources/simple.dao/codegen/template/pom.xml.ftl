@@ -210,6 +210,7 @@
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
         </dependency>
+<#if enableDubbo>
 
         <dependency>
             <groupId>org.apache.dubbo</groupId>
@@ -236,6 +237,7 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
         </dependency>
+</#if>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -260,6 +262,11 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
         </dependency>
 
         <dependency>
@@ -345,10 +352,30 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
-<#--        <dependency>
+       <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-        </dependency>-->
+        </dependency>
+
+       <dependency>
+           <groupId>org.apache.commons</groupId>
+           <artifactId>commons-pool2</artifactId>
+       </dependency>
+
+       <dependency>
+           <groupId>io.lettuce</groupId>
+           <artifactId>lettuce-core</artifactId>
+       </dependency>
+
+        <dependency>
+            <groupId>net.oschina.j2cache</groupId>
+            <artifactId>j2cache-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.oschina.j2cache</groupId>
+            <artifactId>j2cache-spring-boot2-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
