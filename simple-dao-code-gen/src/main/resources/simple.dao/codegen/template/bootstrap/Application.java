@@ -19,6 +19,10 @@ import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCust
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.cache.annotation.EnableCaching;
+
+
+import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
+
 //import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
@@ -109,11 +113,13 @@ public class Application {
      */
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
+        GenericFastJsonRedisSerializer jsonRedisSerializer = new GenericFastJsonRedisSerializer();
         return builder -> builder
                 .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
-                        //redis 默认缓存 60 分钟
-                        .entryTtl(Duration.of(60, ChronoUnit.MINUTES))
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())));
+                        //redis 默认缓存 30 分钟
+                        .entryTtl(Duration.of(30, ChronoUnit.MINUTES))
+                        .disableCachingNullValues()
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonRedisSerializer)));
     }
 
     /**

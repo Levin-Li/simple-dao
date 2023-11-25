@@ -137,7 +137,9 @@ j2cache:
   #SpringJ2CacheConfigUtil
   sync_ttl_to_redis: false
 
-  serialization: fst
+  #序列化方法，参考SerializationUtils类 fst, json
+  serialization: fastjson
+
   #广播器
   broadcast: net.oschina.j2cache.cache.support.redis.SpringRedisPubSubPolicy
   #  broadcast: jgroups
