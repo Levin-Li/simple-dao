@@ -159,7 +159,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_DELETE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.idList) && #result > 0")
+    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.${pkField.name}List) && #result > 0")
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
         return Stream.of(req.get${pkField.name?cap_first}List())
