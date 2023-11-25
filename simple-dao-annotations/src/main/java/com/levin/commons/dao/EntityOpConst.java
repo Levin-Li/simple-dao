@@ -27,6 +27,11 @@ public interface EntityOpConst {
     String SYS_TYPE_NAME = "系统数据";
 
     /**
+     * 需要有管理员角色
+     */
+    String PLATFORM_TYPE_NAME = "平台数据";
+
+    /**
      *
      */
     String MAINTAIN_ACTION = "管理";
