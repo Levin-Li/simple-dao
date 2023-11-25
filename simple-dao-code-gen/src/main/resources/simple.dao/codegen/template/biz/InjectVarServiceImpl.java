@@ -36,7 +36,6 @@ import java.util.Map;
 
 //默认不启用
 //@Service(PLUGIN_PREFIX + "InjectVarService")
-@ConditionalOnMissingBean({InjectVarService.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "InjectVarService", matchIfMissing = true)
 @Slf4j
 public class InjectVarServiceImpl implements InjectVarService {

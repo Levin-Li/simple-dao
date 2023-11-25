@@ -1701,7 +1701,7 @@ public final class ServiceModelCodeGenerator {
                     && isMultiTenantObject
                     && field.getName().equals("tenantId")) {
                 //多租户字段
-                logger.info("*** " + entityClass + "[" + action + "] 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
+                logger.debug("*** " + entityClass + "[" + action + "] 忽略多租户字段 tenantId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1709,7 +1709,7 @@ public final class ServiceModelCodeGenerator {
                     && isOrganizedObject
                     && field.getName().equals("orgId")) {
                 //多租户字段
-                logger.info("*** " + entityClass + "[" + action + "] 忽略组织字段 orgId : " + field + " --> " + fieldType);
+                logger.debug("*** " + entityClass + "[" + action + "] 忽略组织字段 orgId : " + field + " --> " + fieldType);
                 continue;
             }
 
@@ -1717,7 +1717,7 @@ public final class ServiceModelCodeGenerator {
                     && isPersonalObject
                     && field.getName().equals("ownerId")) {
                 //多租户字段
-                logger.info("*** " + entityClass + "[" + action + "] 忽略个人字段 ownerId : " + field + " --> " + fieldType);
+                logger.debug("*** " + entityClass + "[" + action + "] 忽略个人字段 ownerId : " + field + " --> " + fieldType);
                 continue;
             }
 

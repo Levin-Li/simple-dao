@@ -16,7 +16,7 @@ import javax.annotation.*;
 
 import javax.servlet.http.*;
 
-import org.apache.dubbo.config.annotation.*;
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.dao.*;
@@ -81,11 +81,13 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    @DubboReference //@Autowired
+    //@DubboReference //@Autowired
+    <#if !enableDubbo>@Autowired<#else>@DubboReference</#if>
     protected ${serviceName} ${serviceName?uncap_first};
 
-    @DubboReference //@Autowired
-    protected Biz${serviceName} biz${serviceName};
+    //@DubboReference //@Autowired
+    <#if !enableDubbo>@Autowired<#else>@DubboReference</#if>
+    protected Biz${serviceName} biz${serviceName?uncap_first};
 
     /**
      * 分页列表查找

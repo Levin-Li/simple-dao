@@ -68,7 +68,6 @@ import ${imp};
 @Service(PLUGIN_PREFIX + "${serviceName}")
 <#if !enableDubbo>//</#if>@DubboService
 
-@ConditionalOnMissingBean({${serviceName}.class}) //默认只有在无对应服务才启用
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${serviceName}", matchIfMissing = true)
 @Slf4j
 
@@ -142,7 +141,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_UPDATE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#reqList)  && #result > 0")
+    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#reqList)  && #result > 0")
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
         return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n ? 1 : 0).sum();
@@ -160,7 +159,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_DELETE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.idList) && #result > 0")
+    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.idList) && #result > 0")
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
         return Stream.of(req.get${pkField.name?cap_first}List())
@@ -204,7 +203,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CachePut(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);
