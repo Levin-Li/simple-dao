@@ -28,7 +28,7 @@ import javax.annotation.Resource;
  */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass({GroupedOpenApi.class,})
 @Profile({"dev","test","local"})
 public class ModuleSwaggerConfigurer

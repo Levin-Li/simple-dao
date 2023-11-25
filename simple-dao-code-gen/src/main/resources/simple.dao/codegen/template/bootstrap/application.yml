@@ -126,7 +126,9 @@ j2cache:
   #  blend:两种模式一起运作，对于各个节点缓存准确性以及及时性要求高的可以使用（推荐使用前面两种模式中一种）
   cache-clean-mode: passive
 
-  allow-null-values: true
+  #尽量不要允许空值，虽然会导致缓存不命中，但是可以避免数据更新问题
+  allow-null-values: false
+  default_cache_null_object: false
 
   redis-client: lettuce #指定redis客户端使用lettuce，也可以使用Jedis
 
@@ -134,8 +136,6 @@ j2cache:
 
   #SpringJ2CacheConfigUtil
   sync_ttl_to_redis: false
-
-  default_cache_null_object: true
 
   serialization: fst
   #广播器

@@ -61,7 +61,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 <#if isCreateBizController>//</#if>@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
-<#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+<#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true",  matchIfMissing = true)
 
 //默认需要权限访问，默认从父类继承
 //@ResAuthorize(domain = ID, type = ENTITY_TYPE_NAME)
@@ -81,12 +81,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
-    //@DubboReference //@Autowired
-    <#if !enableDubbo>@Autowired<#else>@DubboReference</#if>
+    <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     protected ${serviceName} ${serviceName?uncap_first};
 
-    //@DubboReference //@Autowired
-    <#if !enableDubbo>@Autowired<#else>@DubboReference</#if>
+    <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     protected Biz${serviceName} biz${serviceName?uncap_first};
 
     /**
@@ -146,7 +144,13 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
-         return ApiResp.ok(${serviceName?uncap_first}.findById(req));
+
+         ${entityName}Info info = ${serviceName?uncap_first}.findById(req);
+         Assert.notNull(info, "记录不存在");
+         // 租户校验，因为数据可能是从缓存加载的
+         <#if !isMultiTenantObject>//</#if>Assert.isTrue(!StringUtils.hasText(req.getTenantId()) || req.getTenantId().equals(info.getTenantId()), "非法访问，租户不匹配");
+
+         return ApiResp.ok(info);
      }
 
     /**

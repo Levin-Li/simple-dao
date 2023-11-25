@@ -1,6 +1,6 @@
 package ${packageName};
 
-<#--import static ${modulePackageName}.ModuleOption.*;-->
+import static ${modulePackageName}.ModuleOption.*;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
@@ -31,7 +31,12 @@ import static ${modulePackageName}.entities.EntityConst.*;
 public interface ${className} {
 
     String BIZ_NAME = E_${entityName}.BIZ_NAME;
+
     String CK_PREFIX = E_${entityName}.CACHE_KEY_PREFIX;
+
+    String SERVICE_NAME = "${className}";
+
+    String SERVICE_BEAN_NAME = PLUGIN_PREFIX + SERVICE_NAME;
 
     /**
      * 创建记录，返回主键ID

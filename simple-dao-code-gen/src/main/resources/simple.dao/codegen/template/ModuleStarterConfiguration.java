@@ -20,7 +20,9 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.apache.dubbo.config.spring.context.annotation.*;
+
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,7 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableFeignClients({PACKAGE_NAME})
 
 // Dubbo 扫描，根据现有的 Dubbo 3.1.x 版本的机制， DubboComponentScan 会先自动先扫描 Spring 的注解, 所以 @ComponentScan 可以注释。
-@DubboComponentScan({PACKAGE_NAME})
+<#if !enableDubbo>//</#if>@DubboComponentScan({PACKAGE_NAME})
 
 public class ModuleStarterConfiguration {
 

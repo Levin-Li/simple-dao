@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  */
 @Slf4j
 //@Configuration(PLUGIN_PREFIX + "ModuleWebSocketConfigurer")
-//@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebSocketConfigurer", matchIfMissing = true)
+//@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebSocketConfigurer", havingValue = "true", matchIfMissing = true)
 //@EnableWebSocketMessageBroker
 public class ModuleWebSocketConfigurer
         implements WebSocketMessageBrokerConfigurer {

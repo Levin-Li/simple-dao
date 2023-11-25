@@ -74,10 +74,9 @@ import ${imp};
 // Propagation.NEVER：以非事务方式运行，如果当前存在事务，则抛出异常。
 // Propagation.NESTED：如果当前存在事务，则创建一个事务作为当前事务的嵌套事务来运行；如果当前没有事务，则该取值等价于 PROPAGATION_REQUIRED。
 
-@Service(PLUGIN_PREFIX + "${className}")
-<#if !enableDubbo>//</#if>@DubboService
+<#if enableDubbo>@DubboService<#else>@Service(PLUGIN_PREFIX + "Biz${serviceName}")</#if>
 
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "Biz${serviceName}", havingValue = "true", matchIfMissing = true)
 @Slf4j
 
 //@Valid只能用在controller，@Validated可以用在其他被spring管理的类上。
@@ -86,7 +85,7 @@ import ${imp};
 @CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
 public class ${className} extends BaseService implements Biz${serviceName} {
 
-    @Autowired
+    <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ${serviceName} ${serviceName?uncap_first};
 
     protected ${className} getSelfProxy(){

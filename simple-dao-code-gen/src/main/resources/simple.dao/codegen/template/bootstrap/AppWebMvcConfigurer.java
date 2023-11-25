@@ -24,7 +24,7 @@ import static ${modulePackageName}.ModuleOption.*;
  */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "AppWebMvcConfigurer")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "AppWebMvcConfigurer", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "AppWebMvcConfigurer", havingValue = "true", matchIfMissing = true)
 public class AppWebMvcConfigurer implements WebMvcConfigurer {
     @PostConstruct
     void init() {

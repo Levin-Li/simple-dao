@@ -76,7 +76,7 @@ import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
  */
 @Slf4j
 //@Component(PLUGIN_PREFIX + "${className}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 //@RestControllerAdvice(PACKAGE_NAME)
 public class ModuleWebControllerAdvice {
 

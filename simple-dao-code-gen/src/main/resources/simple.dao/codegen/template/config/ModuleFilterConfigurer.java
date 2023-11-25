@@ -17,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 //默认不启用
 @Slf4j
 //@Configuration(PLUGIN_PREFIX + "ModuleFilterConfigurer")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleFilterConfigurer", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleFilterConfigurer", havingValue = "true", matchIfMissing = true)
 public class ModuleFilterConfigurer
         implements
         WebMvcConfigurer {

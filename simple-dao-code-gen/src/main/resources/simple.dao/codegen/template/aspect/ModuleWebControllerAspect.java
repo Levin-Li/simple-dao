@@ -38,7 +38,7 @@ import java.util.*;
 @Aspect
 @Slf4j
 @Component(PLUGIN_PREFIX + "${className}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 public class ModuleWebControllerAspect {
 
     @Autowired

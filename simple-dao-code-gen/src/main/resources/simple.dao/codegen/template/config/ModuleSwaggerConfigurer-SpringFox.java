@@ -63,7 +63,7 @@ import javax.persistence.Enumerated;
 @Slf4j
 //注意：默认不启用
 @Configuration(PLUGIN_PREFIX + "${className}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 
 @ConditionalOnClass({Docket.class})
 public class ModuleSwaggerConfigurer implements ModelPropertyBuilderPlugin, WebMvcConfigurer {

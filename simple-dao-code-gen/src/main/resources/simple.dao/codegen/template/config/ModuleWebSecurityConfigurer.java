@@ -30,7 +30,7 @@ import org.springframework.security.web.firewall.*;
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableGlobalAuthentication
 @ConditionalOnClass({WebSecurityConfigurer.class})
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 /**
  * 模块Spring Security 配置
  *

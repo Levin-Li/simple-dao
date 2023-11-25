@@ -29,7 +29,7 @@ import cn.hutool.core.lang.*;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
-//import org.apache.dubbo.config.spring.context.annotation.*;
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
 import ${entityClassPackage}.*;
@@ -65,10 +65,9 @@ import ${imp};
  *
  */
 
-@Service(PLUGIN_PREFIX + "${serviceName}")
-<#if !enableDubbo>//</#if>@DubboService
+<#if enableDubbo>@DubboService<#else>@Service(${serviceName}.SERVICE_BEAN_NAME)</#if>
 
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${serviceName}", matchIfMissing = true)
+@ConditionalOnProperty(name = ${serviceName}.SERVICE_BEAN_NAME, havingValue = "true", matchIfMissing = true)
 @Slf4j
 
 //@Valid只能用在controller， @Validated可以用在其他被spring管理的类上。
@@ -124,7 +123,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")//, beforeInvocation = true
     @Transactional
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -133,6 +132,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
+    @Transactional
     <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
@@ -149,7 +149,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = DELETE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if> , beforeInvocation = true
     @Transactional
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -201,9 +201,10 @@ public class ${className} extends BaseService implements ${serviceName} {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
 
+    //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "<#if isMultiTenantObject>#req.tenantId + </#if>#req.${pkField.name}")
+    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);

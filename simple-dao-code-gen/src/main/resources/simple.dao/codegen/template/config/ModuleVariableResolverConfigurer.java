@@ -24,7 +24,7 @@ import java.util.*;
  */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "${className}")
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 public class ModuleVariableResolverConfigurer
         implements VariableResolverConfigurer {
 

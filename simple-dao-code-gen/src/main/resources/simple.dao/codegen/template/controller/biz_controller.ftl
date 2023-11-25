@@ -62,7 +62,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @Slf4j
-@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", matchIfMissing = true)
+@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
 
 //默认需要权限访问
 //@ResAuthorize(domain = ID, type = ENTITY_TYPE_NAME)
