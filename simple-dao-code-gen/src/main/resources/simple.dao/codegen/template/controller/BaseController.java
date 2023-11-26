@@ -83,6 +83,14 @@ public abstract class BaseController {
         return httpRequest.getServletContext().getContextPath();
     }
 
+    /**
+     * 不支持的操作
+     *
+     * @param info
+     */
+    protected void unsupportedOperation(String info) {
+        throw new UnsupportedOperationException(null2Empty(info, "不支持的操作"));
+    }
 
     /**
      * null2Empty
