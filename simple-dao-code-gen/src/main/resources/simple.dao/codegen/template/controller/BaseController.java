@@ -77,6 +77,15 @@ public abstract class BaseController {
     }
 
     /**
+     * 获取调用方法名
+     *
+     * @return
+     */
+    public static String getInvokeMethodName(int level) {
+        return (new Exception()).getStackTrace()[level].getMethodName();
+    }
+
+    /**
      * @return
      */
     protected String getContextPath() {
@@ -90,6 +99,32 @@ public abstract class BaseController {
      */
     protected void unsupportedOperation(String info) {
         throw new UnsupportedOperationException(StringUtils.hasText(info) ? info : "不支持的操作");
+    }
+
+    /**
+     * 检查请求
+     *
+     * @param action
+     * @param req
+     * @return
+     */
+    protected <T> T checkRequest(String action, T req) {
+
+        //控制器方法名
+        //String methodName = getInvokeMethodName(2);
+
+        return req;
+    }
+
+    /**
+     * 检查响应
+     *
+     * @param action
+     * @param resp
+     * @return
+     */
+    protected <T> T checkResponse(String action, T resp) {
+        return resp;
     }
 
     /**

@@ -93,7 +93,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     @CRUD.ListTable
     public ApiResp<PagingData<${entityName}Info>> list(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
-        return ApiResp.ok(${serviceName?uncap_first}.query(req,paging));
+
+        req = checkRequest(QUERY_LIST_ACTION, req);
+
+        return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, ${serviceName?uncap_first}.query(req,paging)));
     }
 
      /**
@@ -105,7 +108,10 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      //@GetMapping("/stat") //默认不开放
      @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
      public ApiResp<PagingData<Stat${entityName}Req.Result>> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
-         return ApiResp.ok(${serviceName?uncap_first}.stat(req,paging));
+
+         req = checkRequest(STAT_ACTION, req);
+
+         return ApiResp.ok(checkResponse(STAT_ACTION, ${serviceName?uncap_first}.stat(req,paging)));
      }
 
     /**
@@ -122,6 +128,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 <#else>
     public ApiResp<Boolean> create(@RequestBody @Valid Create${entityName}Req req) {
 </#if>
+
+        req = checkRequest(CREATE_ACTION, req);
+
    <#if pkField?exists>
         return ApiResp.ok(${serviceName?uncap_first}.create(req));
     <#else>
@@ -139,14 +148,17 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
     @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+
+         req = checkRequest(VIEW_DETAIL_ACTION, req);
 
          ${entityName}Info info = ${serviceName?uncap_first}.findById(req);
          Assert.notNull(info, "记录不存在");
          // 租户校验，因为数据可能是从缓存加载的
          <#if !isMultiTenantObject>//</#if>Assert.isTrue(!StringUtils.hasText(req.getTenantId()) || req.getTenantId().equals(info.getTenantId()), "非法访问，租户不匹配");
 
-         return ApiResp.ok(info);
+         return ApiResp.ok(checkResponse(VIEW_DETAIL_ACTION, info));
      }
 
     /**
@@ -157,7 +169,11 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+
+        req = checkRequest(UPDATE_ACTION, req);
+
         return ApiResp.ok(assertTrue(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
@@ -169,7 +185,11 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+
+        req = checkRequest(DELETE_ACTION, req);
+
         return ApiResp.ok(assertTrue(${serviceName?uncap_first}.delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
@@ -180,7 +200,11 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Boolean> delete2(@RequestBody @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+
+        req = checkRequest(DELETE_ACTION, req);
+
         return delete(req, ${pkField.name});
     }
 </#if>
@@ -200,6 +224,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 <#else>
     public ApiResp<List<Boolean>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 </#if>
+
+        reqList = checkRequest(BATCH_CREATE_ACTION, reqList);
+
         return ApiResp.ok(${serviceName?uncap_first}.batchCreate(reqList));
     }
 
@@ -209,6 +236,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PutMapping("/batchUpdate")
     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchUpdate(@RequestBody @Valid List<Update${entityName}Req> reqList) {
+
+        reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
+
         return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
@@ -220,6 +250,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
     public ApiResp<Integer> batchDelete(@NotNull @Valid Delete${entityName}Req req) {
+
+        req = checkRequest(BATCH_DELETE_ACTION, req);
+
         return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
@@ -230,6 +263,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete2(@RequestBody @Valid Delete${entityName}Req req) {
+
+        req = checkRequest(BATCH_DELETE_ACTION, req);
+
         return batchDelete(req);
     }
 }
