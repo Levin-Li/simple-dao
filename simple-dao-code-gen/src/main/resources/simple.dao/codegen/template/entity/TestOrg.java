@@ -78,6 +78,8 @@ import org.hibernate.annotations.Type;
 //现在，您要使用@Inheritance JPA注释的原因是要实施像“战略模式”这样的行为驱动模式 。另一方面， @MappedSuperclass只是一种重用基本属性，关联，甚至是使用公共基类的实体@Id方法。
 //不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
 
+@EntityCategory(EntityOpConst.SYS_TYPE_NAME)
+
 //@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class TestOrg
         extends AbstractTreeObject<String, TestOrg>

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
+import com.levin.commons.dao.EntityCategory;
+import com.levin.commons.dao.EntityOpConst;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
@@ -912,6 +914,23 @@ public final class ServiceModelCodeGenerator {
                 //设置请求对象继承的类
                 .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
                 .build();
+
+        EntityCategory category = (EntityCategory) entityClass.getAnnotation(EntityCategory.class);
+
+        if (category != null && StringUtils.hasText(category.value())) {
+
+            Map<String, String> map = MapUtils.put(EntityOpConst.BIZ_TYPE_NAME, "BIZ_TYPE_NAME")
+                    .put(EntityOpConst.COMMON_TYPE_NAME, "COMMON_TYPE_NAME")
+                    .put(EntityOpConst.SYS_TYPE_NAME, "SYS_TYPE_NAME")
+                    .put(EntityOpConst.PLATFORM_TYPE_NAME, "PLATFORM_TYPE_NAME")
+                    .build();
+
+            params.put("entityCategory", map.getOrDefault(category.value(), "\"" + category.value() + "\""));
+
+        } else {
+            //默认是业务类型
+            params.put("entityCategory", "BIZ_TYPE_NAME");
+        }
 
         boolean isCacheableEntity = !entityClass.isAnnotationPresent(Cacheable.class) || ((Cacheable) entityClass.getAnnotation(Cacheable.class)).value();
         params.put("isCacheableEntity", isCacheableEntity);

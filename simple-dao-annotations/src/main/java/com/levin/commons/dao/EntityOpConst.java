@@ -6,15 +6,15 @@ package com.levin.commons.dao;
 public interface EntityOpConst {
 
     /**
-     * ENTITY_TYPE_NAME
+     * 普通实体数据
      */
-    @Deprecated
-    String TYPE_NAME = "实体数据";
+    String BIZ_TYPE_NAME = "业务数据";
 
     /**
      * 普通实体数据
      */
-    String ENTITY_TYPE_NAME = "实体数据";
+    @Deprecated
+    String ENTITY_TYPE_NAME = BIZ_TYPE_NAME;
 
     /**
      * 通用功能，通常登录就可使用
