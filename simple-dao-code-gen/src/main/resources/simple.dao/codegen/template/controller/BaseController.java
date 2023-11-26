@@ -89,7 +89,7 @@ public abstract class BaseController {
      * @param info
      */
     protected void unsupportedOperation(String info) {
-        throw new UnsupportedOperationException(null2Empty(info, "不支持的操作"));
+        throw new UnsupportedOperationException(StringUtils.hasText(info) ? info : "不支持的操作");
     }
 
     /**
