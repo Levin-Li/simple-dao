@@ -5,7 +5,7 @@ import com.levin.commons.dao.annotation.IsNull;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -24,12 +24,12 @@ public class MultiTenantReq extends BaseReq implements MultiTenantObject {
 
     @Schema(title = "租户ID", hidden = true)
     @InjectVar(
-            value = InjectConsts.TENANT_ID,
+            value = InjectConst.TENANT_ID,
             isOverride =
-                    InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
+                    InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
             ,
             isRequired =
-                    InjectVar.SPEL_PREFIX + "!#" + InjectConsts.IS_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
+                    InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
             )
     @OR(autoClose = true)
     @Eq

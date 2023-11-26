@@ -3,7 +3,7 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -33,12 +33,12 @@ public abstract class SimpleTenantOrgObject
 
     @Schema(title = "租户ID")
     @Column(length = 128)
-    @InjectVar(InjectConsts.TENANT_ID)
+    @InjectVar(InjectConst.TENANT_ID)
     protected String tenantId;
 
     @Schema(title = "组织机构ID")
     @Column(length = 128)
-    @InjectVar(value = InjectConsts.ORG_ID)
+    @InjectVar(value = InjectConst.ORG_ID)
     protected String orgId;
 
     @Schema(title = "创建时间")

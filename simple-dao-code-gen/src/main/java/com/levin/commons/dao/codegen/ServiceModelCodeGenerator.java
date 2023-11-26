@@ -1604,7 +1604,7 @@ public final class ServiceModelCodeGenerator {
         if (StringUtils.hasText(injectVar.value())) {
 
             Map<String, String> injectConstsFieldMap = new LinkedHashMap<>();
-            //获取类InjectConsts的字段列表
+            //获取类InjectConst的字段列表
             ReflectionUtils.doWithFields(InjectConst.class, tmpField -> {
                 Object v = tmpField.get(null);
                 if (v instanceof String) {

@@ -3,7 +3,7 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -34,7 +34,7 @@ public abstract class AbstractMultiTenantOrgObject
 
     @Schema(title = "组织机构ID")
     @Column(length = 128)
-    @InjectVar(InjectConsts.ORG_ID)
+    @InjectVar(InjectConst.ORG_ID)
     protected String orgId;
 
 }

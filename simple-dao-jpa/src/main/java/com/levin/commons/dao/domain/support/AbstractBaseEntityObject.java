@@ -4,7 +4,7 @@ import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.BaseEntityObject;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -35,7 +35,7 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(title = "创建者")
     @Column(length = 128)
-    @InjectVar(value = InjectConsts.USER_ID, isRequired = "false")
+    @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     protected String creator;
 
     @Schema(title = "创建时间")

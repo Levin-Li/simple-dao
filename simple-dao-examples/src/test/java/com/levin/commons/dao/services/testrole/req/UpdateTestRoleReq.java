@@ -8,7 +8,7 @@ import com.levin.commons.dao.domain.TestRole;
 import com.levin.commons.dao.domain.TestRole.*;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -55,7 +55,7 @@ public class UpdateTestRoleReq extends MultiTenantReq {
     String id;
 
     //@Schema(description = "可编辑条件", hidden = true)
-    //@Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
+    //@Eq(condition = "!#" + InjectConst.IS_SUPER_ADMIN)
     //final boolean eqEditable = true;
 
     @NotBlank

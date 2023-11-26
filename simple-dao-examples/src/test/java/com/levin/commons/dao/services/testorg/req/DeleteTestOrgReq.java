@@ -6,7 +6,7 @@ import com.levin.commons.dao.annotation.In;
 import com.levin.commons.dao.domain.E_TestOrg;
 import com.levin.commons.dao.domain.TestOrg;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
-import com.levin.commons.service.support.InjectConsts;
+import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -46,7 +46,7 @@ public class DeleteTestOrgReq extends MultiTenantReq {
     private static final long serialVersionUID = 2127591268L;
 
     @Schema(description = "可编辑条件", hidden = true)
-    @Eq(condition = "!#" + InjectConsts.IS_SUPER_ADMIN)
+    @Eq(condition = "!#" + InjectConst.IS_SUPER_ADMIN)
     final boolean eqEditable = true;
 
     @Schema(title = L_id + "集合", required = true, requiredMode = REQUIRED)
