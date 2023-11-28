@@ -46,6 +46,10 @@ public abstract class SimpleTenantOrgObject
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createTime;
 
+    @Schema(title = "乐观锁")
+    @Version
+    protected Integer optimisticLock;
+
     @PrePersist
     public void prePersist() {
         if (createTime == null) {

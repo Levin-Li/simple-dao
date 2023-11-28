@@ -67,6 +67,10 @@ public abstract class AbstractBaseEntityObject
     @Contains
     protected String remark;
 
+    @Schema(title = "乐观锁")
+    @Version
+    protected Integer optimisticLock;
+
     @PrePersist
     public void prePersist() {
 
