@@ -1943,17 +1943,25 @@ public final class ServiceModelCodeGenerator {
             addLikeAnnotation.accept(Arrays.asList(StartsWith.class, EndsWith.class, Contains.class));
 
 
-            //默认处理密码字段
-            if (field.isAnnotationPresent(JsonIgnore.class)) {
-                fieldModel.addAnnotation(field.getAnnotation(JsonIgnore.class));
-            } else if (Stream.of("password", "passwd", "pwd")
-                    .anyMatch(txt -> field.getName().toLowerCase().endsWith(txt))) {
-                fieldModel.addAnnotation(JsonIgnore.class);
+            if (!isCreateObj && !isUpdateObj) {
+
+                //默认处理密码字段
+                if (field.isAnnotationPresent(JsonIgnore.class)) {
+                    fieldModel.addAnnotation(field.getAnnotation(JsonIgnore.class));
+                } else if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
+                    fieldModel.addAnnotation(field.getAnnotation(JsonIgnoreProperties.class));
+                } else if (Stream.of("password", "passwd", "pwd")
+                        .anyMatch(txt -> field.getName().toLowerCase().endsWith(txt))) {
+                    logger.warn("*** 类模型{}的密码字段({})，未加上忽略注解：@{}", entityClass.getSimpleName(), field.getName(), JsonIgnore.class.getSimpleName());
+                    //fieldModel.addAnnotation(JsonIgnore.class);
+                }
             }
 
-            if (field.isAnnotationPresent(JsonIgnoreProperties.class)) {
-                fieldModel.addAnnotation(field.getAnnotation(JsonIgnoreProperties.class));
+            //乐观锁字段， 不允许加上忽略注解
+            if (fieldModel.isOptimisticLock()) {
+                fieldModel.getAnnotations().removeIf(an -> an.startsWith("@JsonIgnore"));
             }
+
 
             if (field.isAnnotationPresent(Update.class)) {
                 Update update = field.getAnnotation(Update.class);
