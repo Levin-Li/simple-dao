@@ -561,6 +561,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgPersonalReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "PersonalReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseOperatorReq.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
