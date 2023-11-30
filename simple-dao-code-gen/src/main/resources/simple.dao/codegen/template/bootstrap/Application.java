@@ -113,24 +113,25 @@ public class Application {
      */
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-        GenericFastJsonRedisSerializer jsonRedisSerializer = new GenericFastJsonRedisSerializer();
         return builder -> builder
                 .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
                         //redis 默认缓存 30 分钟
                         .entryTtl(Duration.of(30, ChronoUnit.MINUTES))
                         .disableCachingNullValues()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonRedisSerializer)));
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())));
     }
 
     /**
      * redisson 序列化
+     *
      * @return
      */
     @Bean
     public RedissonAutoConfigurationCustomizer redissonAutoConfigurationCustomizer() {
         return config -> config
-                .setCodec(JsonJacksonCodec.INSTANCE);
+                .setCodec(new JsonJacksonCodec(getClass().getClassLoader()));
     }
+
 
 //    @Bean
 //    PluginManager pluginManager() {
