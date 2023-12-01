@@ -144,7 +144,7 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = CK_PREFIX + "#key")
     public void clearCache(Object key) {
-        return ${serviceName?uncap_first}.clearCache(key);
+        ${serviceName?uncap_first}.clearCache(key);
     }
 
 }
