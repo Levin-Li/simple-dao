@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.Properties;
 
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(EntityManagerFactory.class)
 @Service(ModuleOption.PLUGIN_PREFIX + "HibernateIDGenerator")
 @Slf4j
 public class HibernateUIDGenerator
