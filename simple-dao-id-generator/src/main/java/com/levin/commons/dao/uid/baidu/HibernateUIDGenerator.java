@@ -19,7 +19,7 @@ import javax.persistence.EntityManagerFactory;
 import java.io.Serializable;
 import java.util.Properties;
 
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+//@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Service(ModuleOption.PLUGIN_PREFIX + "HibernateIDGenerator")
 @Slf4j
 public class HibernateUIDGenerator
