@@ -105,7 +105,6 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(summary = BATCH_CREATE_ACTION)
-    //@Transactional(rollbackFor = {PersistenceException.class, DataAccessException.class})
     @Transactional
     @Override
 <#if pkField?exists>

@@ -110,7 +110,7 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX + "#${pkField.name}")
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return ${serviceName?uncap_first}.findById(${pkField.name}));
+        return ${serviceName?uncap_first}.findById(${pkField.name});
     }
 
     //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查

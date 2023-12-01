@@ -905,7 +905,9 @@ public final class ServiceModelCodeGenerator {
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
 
-        Map<String, Object> params = MapUtils.put(threadContext.getAll(true))
+        Map<String, Object> params = MapUtils
+                .put(entityMapping)
+                .put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
                 .put("entityClass", entityClass)
                 .put("isMultiTenantObject", isMultiTenant)
@@ -1395,7 +1397,7 @@ public final class ServiceModelCodeGenerator {
                 info.append(" -> ").append("去除代码所有注释");
 
             } catch (Exception e) {
-                logger.warn("Java文件{}代码解析失败", file.getAbsolutePath());
+                logger.error("Java文件{}代码解析失败，{}", file.getAbsolutePath(), e.getMessage());
             }
         }
 
@@ -1512,7 +1514,7 @@ public final class ServiceModelCodeGenerator {
                     newCompactContent = cu.toString();
 
                 } catch (Exception e) {
-                    logger.warn("文件{}的新内容解析失败，跳过...", file.getAbsolutePath());
+                    logger.error("文件{}的新内容解析失败,{}，新文件内容：<<<{}>>>", file.getAbsolutePath(), e.getMessage(), newCompactContent);
                     return;
                 }
             }
