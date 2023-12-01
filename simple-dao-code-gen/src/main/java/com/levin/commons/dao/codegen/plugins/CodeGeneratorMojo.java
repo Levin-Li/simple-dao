@@ -95,6 +95,14 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String moduleName = "";
 
     /**
+     * 缓存注解中，SpelUtils的bean名称
+     * <p>
+     * 默认自动获取
+     */
+    @Parameter
+    private String cacheSpelUtilsBeanName = "spelUtils";
+
+    /**
      * 是否强制拆分模块，就是强制把服务类和控制器类生成在 servicesModuleDirName 和  apiModuleDirName 自动的目录中
      * 默认不强制拆分，自动处理
      */
@@ -134,7 +142,6 @@ public class CodeGeneratorMojo extends BaseMojo {
 
     /**
      * 是否允许使用Dubbo，自动生成Dubbo相关的配置
-     *
      */
     @Parameter
     private boolean enableDubbo = false;
@@ -168,6 +175,11 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             if (codeGenParams == null) {
                 codeGenParams = new LinkedHashMap<>();
+            }
+
+            if (!StringUtils.hasText(cacheSpelUtilsBeanName)) {
+                logger.error("*** 代码生成插件 *** 插件属性[cacheSpelUtilsBeanName]不能为空");
+                return;
             }
 
             if ("pom".equalsIgnoreCase(mavenProject.getArtifact().getType())) {
@@ -327,6 +339,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
             codeGenParams.putIfAbsent("enableDubbo", enableDubbo);
+            codeGenParams.putIfAbsent("cacheSpelUtilsBeanName", cacheSpelUtilsBeanName);
 
 
             //1、生成代码

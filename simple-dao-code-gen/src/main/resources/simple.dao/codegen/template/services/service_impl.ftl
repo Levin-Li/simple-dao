@@ -81,25 +81,21 @@ public class ${className} extends BaseService implements ${serviceName} {
         return getSelfProxy(${className}.class);
     }
 
+    /**
+    * 创建记录，返回主键ID
+    * @param req
+    * @return pkId 主键ID
+    */
     @Operation(summary = CREATE_ACTION)
     @Transactional
     @Override
 <#if pkField?exists>
+    <#if pkField?exists && !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#result)", key = CK_PREFIX + "#result") //创建也清除缓存，防止空值缓存的情况
     public ${pkField.typeName} create(Create${entityName}Req req){
 <#else>
     public boolean create(Create${entityName}Req req){
 </#if>
-    <#list fields as field>
-        <#if !field.notUpdate && field.uk>
-        //long ${field.name}Cnt = simpleDao.selectFrom(${entityName}.class)
-        //        .select(E_${entityName}.${field.name})
-        //        .eq(E_${entityName}.${field.name}, req.get${field.name?cap_first}())
-        //        .count();
-        //Assert.isTrue(${field.name}Cnt <= 0, () -> new EntityExistsException("${field.title}已经存在"));
-        //
-        </#if>
-    </#list>
-        //保存自动先查询唯一约束，并给出错误信息
+        //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
 <#if pkField?exists>
         return entity.get${pkField.name?cap_first}();
@@ -123,7 +119,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = UPDATE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")//, beforeInvocation = true
+    <#if pkField?exists && !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")//, beforeInvocation = true
     @Transactional
     public boolean update(Update${entityName}Req req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -133,7 +129,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = UPDATE_ACTION)
     @Override
     @Transactional
-    <#if !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
+    <#if pkField?exists && !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
@@ -141,7 +137,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_UPDATE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#reqList)  && #result > 0")
+    <#if pkField?exists && !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#reqList)  && #result > 0")
     public int batchUpdate(List<Update${entityName}Req> reqList){
         //@Todo 优化批量提交
         return reqList.stream().map(req -> getSelfProxy().update(req)).mapToInt(n -> n ? 1 : 0).sum();
@@ -149,7 +145,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = DELETE_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@CacheEvict(condition = "@spelUtils.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if> , beforeInvocation = true
+    <#if pkField?exists && !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if> , beforeInvocation = true
     @Transactional
     public boolean delete(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
@@ -159,7 +155,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = BATCH_DELETE_ACTION)
     @Transactional
     @Override
-    <#if !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@spelUtils.isNotEmpty(#req.${pkField.name}List) && #result > 0")
+    <#if pkField?exists && !isCacheableEntity>//</#if>//@CacheEvict(allEntries = true, condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}List) && #result > 0")
     public int batchDelete(Delete${entityName}Req req){
         //@Todo 优化批量提交
         return Stream.of(req.get${pkField.name?cap_first}List())
@@ -196,7 +192,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
-    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@spelUtils.isNotEmpty(#${pkField.name})", key = CK_PREFIX + "#${pkField.name}")
+    <#if pkField?exists && !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX + "#${pkField.name}")
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
@@ -204,7 +200,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@spelUtils.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>
+    <#if pkField?exists && !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);
@@ -225,7 +221,7 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
-    @CacheEvict(condition = "@spelUtils.isNotEmpty(#key)", key = CK_PREFIX + "#key")
+    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = CK_PREFIX + "#key")
     public void clearCache(Object key) {
     }
 
