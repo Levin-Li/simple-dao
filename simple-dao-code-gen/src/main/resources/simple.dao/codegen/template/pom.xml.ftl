@@ -367,6 +367,11 @@
            <artifactId>lettuce-core</artifactId>
        </dependency>
 
+       <dependency>
+           <groupId>redis.clients</groupId>
+           <artifactId>jedis</artifactId>
+       </dependency>
+
         <dependency>
             <groupId>net.oschina.j2cache</groupId>
             <artifactId>j2cache-core</artifactId>

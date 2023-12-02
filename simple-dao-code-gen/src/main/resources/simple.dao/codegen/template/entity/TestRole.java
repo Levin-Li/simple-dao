@@ -1,10 +1,13 @@
 package ${CLASS_PACKAGE_NAME};
 
-import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.*;
+import com.levin.commons.dao.domain.*;
+import com.levin.commons.dao.annotation.*;
+import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.support.*;
-import com.levin.commons.service.domain.EnumDesc;
-import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
+
+import com.levin.commons.service.support.*;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -66,7 +69,7 @@ import org.hibernate.annotations.Type;
 //现在，您要使用@Inheritance JPA注释的原因是要实施像“战略模式”这样的行为驱动模式 。另一方面， @MappedSuperclass只是一种重用基本属性，关联，甚至是使用公共基类的实体@Id方法。
 //不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
 
-@EntityCategory(EntityOpConst.SYS_TYPE_NAME)
+@EntityCategory(EntityConst.SYS_TYPE_NAME)
 
 public class TestRole
         extends AbstractNamedMultiTenantObject {

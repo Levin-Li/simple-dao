@@ -1,9 +1,14 @@
 package ${CLASS_PACKAGE_NAME};
 
-import com.levin.commons.dao.domain.support.*;
+
+import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
+import com.levin.commons.dao.annotation.*;
 import com.levin.commons.service.domain.*;
-import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
+import com.levin.commons.dao.domain.support.*;
+
+import com.levin.commons.service.support.*;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
