@@ -116,7 +116,8 @@ public class DefaultUidGenerator
         workerId = workerIdAssigner.assignWorkerId();
 
         if (workerId > bitsAllocator.getMaxWorkerId()) {
-            throw new RuntimeException("Worker id " + workerId + " exceeds the max " + bitsAllocator.getMaxWorkerId());
+            workerId = workerId % bitsAllocator.getMaxWorkerId();
+            //throw new RuntimeException("Worker id " + workerId + " exceeds the max " + bitsAllocator.getMaxWorkerId());
         }
 
         LOGGER.info("Initialized bits(1, {}, {}, {}) for workerID:{}", timeBits, workerBits, seqBits, workerId);

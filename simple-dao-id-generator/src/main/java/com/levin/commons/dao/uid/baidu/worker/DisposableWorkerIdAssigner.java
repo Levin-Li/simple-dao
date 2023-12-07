@@ -51,8 +51,8 @@ public class DisposableWorkerIdAssigner
     @Autowired(required = false)
     JdbcOperations jdbcOperations;
 
-    @Autowired(required = false)
-    SimpleJdbcInsert jdbcInsert;
+//    @Autowired(required = false)
+//    SimpleJdbcInsert jdbcInsert;
 
     /**
      * Assign worker id base on database.<p>
@@ -80,7 +80,7 @@ public class DisposableWorkerIdAssigner
                 workerNodeDAO.save(node1);
             }
 
-        } else if (jdbcOperations != null && jdbcInsert != null) {
+        } else if (jdbcOperations != null) {
 
             Map<String, Object> node = findNode(node1);
 
@@ -90,14 +90,16 @@ public class DisposableWorkerIdAssigner
 
                 node1.prePersist();
 
-                jdbcInsert.withTableName("uuid_worker_node_entity")
-                        .usingGeneratedKeyColumns("id")
-                        .execute(MapUtils.putFirst("host_name", node1.getHostName())
-                                .put("port", node1.getPort())
-                                .put("type", node1.getType())
-                                .put("launch_date", node1.getLaunchDate())
-                                .put("created", node1.getCreated())
-                                .build());
+//                jdbcInsert.withTableName("uuid_worker_node_entity")
+//                        .usingGeneratedKeyColumns("id")
+//                        .execute(MapUtils.putFirst("host_name", node1.getHostName())
+//                                .put("port", node1.getPort())
+//                                .put("type", node1.getType())
+//                                .put("launch_date", node1.getLaunchDate())
+//                                .put("created", node1.getCreated())
+//                                .build());
+
+                int update = jdbcOperations.update("insert into uuid_worker_node_entity(host_name, port, type, launch_date, created) VALUES(?,?,?,?,?)", node1.getHostName(), node1.getPort(), node1.getType(), node1.getLaunchDate(), node1.getCreated());
 
                 node = findNode(node1);
 
@@ -106,7 +108,7 @@ public class DisposableWorkerIdAssigner
         }
 
         if (node1.getId() == null) {
-            node1.setId(System.currentTimeMillis() - 3600L * 1000 * 24 * 365 * 30);
+            node1.setId((System.currentTimeMillis() - 3600L * 1000 * 24 * 365 * 30));
         }
 
         return node1.getId();
@@ -132,7 +134,7 @@ public class DisposableWorkerIdAssigner
         } else {
             workerNodeEntity.setType(WorkerNodeType.ACTUAL.value());
             workerNodeEntity.setHostName(NetUtils.getLocalAddress());
-            workerNodeEntity.setPort(System.currentTimeMillis() + "-" + RandomUtils.nextInt(1,100000));
+            workerNodeEntity.setPort(System.currentTimeMillis() + "-" + RandomUtils.nextInt(1, 100000));
         }
 
         return workerNodeEntity;
