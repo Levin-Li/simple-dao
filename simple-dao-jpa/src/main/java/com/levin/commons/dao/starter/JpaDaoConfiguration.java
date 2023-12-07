@@ -85,6 +85,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     private DataSource dataSource;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private JpaProperties jpaProperties;
 
     @Autowired
@@ -97,23 +100,23 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
     public static final String TABLE_NAME_PREFIX_MAPPINGS = "table_name_prefix_mappings";
 
-    @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
-    JdbcTemplate jdbcTemplate(DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsert.class)
-    SimpleJdbcInsert simpleJdbcInsertOperations(JdbcTemplate jdbcTemplate) {
-        return new SimpleJdbcInsert(jdbcTemplate);
-    }
-
-    @Bean
-    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCall.class)
-    SimpleJdbcCall simpleJdbcCallOperations(JdbcTemplate jdbcTemplate) {
-        return new SimpleJdbcCall(jdbcTemplate);
-    }
+//    @Bean
+//    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = JdbcTemplate.class)
+//    JdbcTemplate jdbcTemplate(DataSource dataSource) {
+//        return new JdbcTemplate(dataSource);
+//    }
+//
+//    @Bean
+//    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcInsert.class)
+//    SimpleJdbcInsert simpleJdbcInsertOperations(JdbcTemplate jdbcTemplate) {
+//        return new SimpleJdbcInsert(jdbcTemplate);
+//    }
+//
+//    @Bean
+//    @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = SimpleJdbcCall.class)
+//    SimpleJdbcCall simpleJdbcCallOperations(JdbcTemplate jdbcTemplate) {
+//        return new SimpleJdbcCall(jdbcTemplate);
+//    }
 
 
     /**
@@ -314,7 +317,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
             if (sql.length() > 0 && jpaProperties.isGenerateDdl()) {
                 log.info("*** alter table and column comments...");
-                jdbcTemplate(dataSource).execute(sql.toString());
+                jdbcTemplate.execute(sql.toString());
             }
 
         });
