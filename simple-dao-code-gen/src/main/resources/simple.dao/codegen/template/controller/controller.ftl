@@ -96,7 +96,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(QUERY_LIST_ACTION, req);
 
-        return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, ${serviceName?uncap_first}.query(req,paging)));
+        return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, ${serviceName?uncap_first}.query(req, paging)));
     }
 
     /**
@@ -119,7 +119,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
    <#if pkField?exists>
         return ApiResp.ok(${serviceName?uncap_first}.create(req));
     <#else>
-        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok():ApiResp.error(CREATE_ACTION + " " + BIZ_NAME + "失败");
+        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok() : ApiResp.error(CREATE_ACTION + " " + BIZ_NAME + "失败");
     </#if>
     }
 
@@ -151,7 +151,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Update${entityName}Req
      */
     @PutMapping({"","{${pkField.name}}"})
-    @Operation(summary = UPDATE_ACTION + "(RequestBody方式)", description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
@@ -183,12 +183,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req ${entityName}IdReq
      */
     @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = DELETE_ACTION + "(RequestBody方式)", description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Boolean> delete2(@RequestBody @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-
-        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
-
-        req = checkRequest(DELETE_ACTION, req);
 
         return delete(req, ${pkField.name});
     }

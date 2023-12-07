@@ -88,4 +88,12 @@ public class DefaultPagingData<T> implements PagingData<T>, Serializable {
         this.items = items;
     }
 
+    public DefaultPagingData(PagingData<T> pagingData) {
+        this.items = pagingData.getItems();
+        this.pageIndex = pagingData.getPageIndex();
+        this.pageSize = pagingData.getPageSize();
+        this.totals = pagingData.getTotals();
+        this.pageToken = pagingData.getPageToken();
+    }
+
 }
