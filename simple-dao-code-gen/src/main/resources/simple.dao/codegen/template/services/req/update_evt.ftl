@@ -84,5 +84,6 @@ public class ${className} extends ${reqExtendClass} {
         return this;
     }
 
+
 </#if>
 }
