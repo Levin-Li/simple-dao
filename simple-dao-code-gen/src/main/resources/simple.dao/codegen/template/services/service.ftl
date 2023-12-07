@@ -4,7 +4,10 @@ import static ${modulePackageName}.ModuleOption.*;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
+
 //import org.springframework.cache.annotation.*;
+//import org.springframework.dao.*;
+
 import java.util.*;
 import javax.validation.constraints.*;
 
@@ -66,13 +69,14 @@ public interface ${className} {
      * 更新记录，并返回更新是否成功
      *
      * @param req
+     * @param queryObjs 附加的查询条件或是更新内容
      * @return boolean 是否成功
      */
     @Operation(summary = UPDATE_ACTION)
-    boolean update(@NotNull Update${entityName}Req req);
+    boolean update(@NotNull Update${entityName}Req req, Object... queryObjs);
 
     /**
-     * 更新记录，并返回更新记录数
+     * 无ID更新记录，并返回更新记录数，请小心使用
      *
      * @param setReq
      * @param whereReq
@@ -111,7 +115,7 @@ public interface ${className} {
      *
      * @param req
      * @param paging 分页设置，可空
-     * @return pagingData 分页数据
+     * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
@@ -121,20 +125,11 @@ public interface ${className} {
      *
      * @param req
      * @param paging 分页设置，可空
-     * @return pagingData 分页数据
+     * @param columnNames 列名
+     * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    PagingData<Simple${entityName}Info> simpleQuery(@NotNull Query${entityName}Req req, Paging paging);
-
-    /**
-     * 简单统计
-     *
-     * @param req
-     * @param paging 分页设置，可空
-     * @return pagingData 分页数据
-     */
-    @Operation(summary = STAT_ACTION)
-    PagingData<Stat${entityName}Req.Result> stat(@NotNull Stat${entityName}Req req, Paging paging);
+    PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, String... columnNames);
 
     /**
      * 统计记录数
@@ -175,8 +170,10 @@ public interface ${className} {
     /**
      * 查询并返回唯一一条数据
      * 如果有多余1条数据，将抛出异常
+     *
      * @param req
      * @return data
+     * @throws RuntimeException 多条数据时抛出异常
      */
     @Operation(summary = QUERY_ACTION)
     ${entityName}Info findUnique(Query${entityName}Req req);

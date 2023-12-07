@@ -29,6 +29,7 @@ import lombok.experimental.*;
 import java.util.*;
 import java.io.Serializable;
 
+import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 import ${entityClassName};
 
@@ -59,7 +60,7 @@ import ${imp};
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS,
-     //连接统计
+    //表连接
     //joinOptions = { @JoinOption(entityClass = XXX.class,alias = E_XXX.ALIAS,joinColumn = E_XXX.joinColumn)},
     resultClass = ${className}.Result.class
 )

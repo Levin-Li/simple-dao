@@ -43,7 +43,7 @@ import ${imp};
 @Schema(title = CREATE_ACTION + BIZ_NAME)
 @Data
 @Accessors(chain = true)
-@ToString
+@ToString(callSuper = true)
 //@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor

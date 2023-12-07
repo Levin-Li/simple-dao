@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
-import org.springframework.dao.*;
+//import org.springframework.dao.*;
 
 import javax.persistence.PersistenceException;
 import cn.hutool.core.lang.*;
@@ -115,14 +115,13 @@ public class ${className} extends BaseService implements ${serviceName} {
         return reqList.stream().map(this::create).collect(Collectors.toList());
     }
 
-
     @Operation(summary = UPDATE_ACTION)
     @Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}")//, beforeInvocation = true
     @Transactional
-    public boolean update(Update${entityName}Req req) {
+    public boolean update(Update${entityName}Req req, Object... queryObjs) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.singleUpdateByQueryObj(req);
+        return simpleDao.singleUpdateByQueryObj(req, queryObjs);
     }
 
     @Operation(summary = UPDATE_ACTION)
@@ -171,14 +170,8 @@ public class ${className} extends BaseService implements ${serviceName} {
     }
 
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    public PagingData<Simple${entityName}Info> simpleQuery(Query${entityName}Req req, Paging paging){
-        return simpleDao.findPagingDataByQueryObj(Simple${entityName}Info.class, req, paging);
-    }
-
-    @Operation(summary = STAT_ACTION)
-    @Override
-    public PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req , Paging paging){
-        return simpleDao.findPagingDataByQueryObj(req, paging);
+    public PagingData<${entityName}Info> selectQuery(Query${entityName}Req req, Paging paging, String... columnNames){
+        return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(null, paging);
     }
 
     @Override
@@ -215,6 +208,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findUnique(Query${entityName}Req req){
+        //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
         return simpleDao.findUnique(req);
     }
 

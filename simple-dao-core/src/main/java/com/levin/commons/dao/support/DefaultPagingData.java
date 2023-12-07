@@ -1,8 +1,8 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.PageOption;
+import com.levin.commons.dao.PagingData;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.service.domain.PageableData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Accessors(chain = true)
 //@Builder
 @FieldNameConstants
-public class PagingData<T> implements PageableData<T>, Serializable {
+public class DefaultPagingData<T> implements PagingData<T>, Serializable {
 
     @Ignore
     @Schema(description = "总记录数")
@@ -81,7 +81,11 @@ public class PagingData<T> implements PageableData<T>, Serializable {
         return items == null || items.isEmpty();
     }
 
-    public PagingData() {
+    public DefaultPagingData() {
+    }
+
+    public DefaultPagingData(List<T> items) {
+        this.items = items;
     }
 
 }

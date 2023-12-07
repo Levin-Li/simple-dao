@@ -32,7 +32,7 @@ import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
 <#if entityPkName??>@EqualsAndHashCode(of = {"${entityPkName}"})</#if>
 @Accessors(chain = true)
 @FieldNameConstants
-
+@ToString(callSuper = true)
 @Schema(description = "${entityComment}")
 @Entity(name = EntityConst.PREFIX + "${entityName}")
 @Table(

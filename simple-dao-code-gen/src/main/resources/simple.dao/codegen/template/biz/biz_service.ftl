@@ -48,4 +48,5 @@ import ${imp};
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 public interface ${className} {
 
+
 }

@@ -2,20 +2,20 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.PageOption;
 import com.levin.commons.dao.Paging;
+import com.levin.commons.dao.SelectDao;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import com.levin.commons.service.support.Locker;
 import org.springframework.beans.BeanUtils;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -36,7 +36,7 @@ public abstract class PagingQueryHelper {
      *
      * @param simpleDao  dao
      * @param pagingData 查询结果对象，可以是对象实例，也是可以是 Class 对象，对象的字段上有 PageOption {@link com.levin.commons.dao.PageOption}
-     *                   为 Null，则会被默认为 PagingData {@link com.levin.commons.dao.support.PagingData}
+     *                   为 Null，则会被默认为 PagingData {@link DefaultPagingData}
      * @param queryDto   查询 DTO
      * @param paging     如果 queryDto 本身也是 Paging对象，那么 paging参数将无效
      * @param <T>        查询结果
@@ -48,7 +48,13 @@ public abstract class PagingQueryHelper {
     }
 
     public static <T> T findPageByQueryObj(SimpleDao simpleDao, Object pagingData, Object... queryObjs) {
-        return findPageByQueryObj(simpleDao, null, pagingData, queryObjs);
+        return findPageByQueryObj(simpleDao, (Class<?>) null, pagingData, queryObjs);
+    }
+
+    public static <T> T findPageByQueryObj(SimpleDao dao, Class<?> resultType, Object pagingData, Object... queryObjs) {
+        return findPageByQueryObj(params -> dao.countByQueryObj(params),
+                (type, params) -> dao.findByQueryObj(type, params)
+                , resultType, pagingData, queryObjs);
     }
 
     /**
@@ -56,14 +62,28 @@ public abstract class PagingQueryHelper {
      * <p>
      * 通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。
      *
-     * @param simpleDao  dao
+     * @param dao        dao
      * @param pagingData 查询结果对象，可以是对象实例，也是可以是 Class 对象，对象的字段上有 PageOption {@link com.levin.commons.dao.PageOption}
-     *                   为 Null，则会被默认为 PagingData {@link com.levin.commons.dao.support.PagingData}
+     **/
+    public static <T> T findPageByQueryObj(SelectDao dao, Class<?> resultType, Object pagingData, Object... queryObjs) {
+        return findPageByQueryObj(
+                (params) -> dao.count(),
+                (type, params) -> dao.find(type)
+                , resultType, pagingData, queryObjs);
+    }
+
+    /**
+     * 分页查询
+     * <p>
+     * 通过 PageOption 注解 实现分页大小、分页码，是否查询总数的参数的获取，查询成功后，也通过注解自动把查询结果注入到返回对象中。
+     *
+     * @param pagingData 查询结果对象，可以是对象实例，也是可以是 Class 对象，对象的字段上有 PageOption {@link com.levin.commons.dao.PageOption}
+     *                   为 Null，则会被默认为 PagingData {@link DefaultPagingData}
      * @param queryObjs  查询 DTO
      * @param <T>        查询结果
      * @return
      */
-    public static <T> T findPageByQueryObj(SimpleDao simpleDao, Class<?> resultType, Object pagingData, Object... queryObjs) {
+    public static <T> T findPageByQueryObj(Function<Object[], Long> countFunc, BiFunction<Class<?>, Object[], Object> queryFunc, Class<?> resultType, Object pagingData, Object... queryObjs) {
 
         List flattenQueryObjs = QueryAnnotationUtil.flattenParams(new LinkedList(), queryObjs);
 
@@ -77,8 +97,10 @@ public abstract class PagingQueryHelper {
             flattenQueryObjs.stream()
                     .filter(Objects::nonNull)
                     //忽略消费着
-                    .filter(o -> o instanceof Consumer)
+                    .filter(o -> !(o instanceof Consumer))
                     .forEachOrdered(queryObj -> {
+
+                        //试图获取分页参数
 
                         Map<PageOption.Type, Field> pageOptionFields = getPageOptionFields(queryObj);
 
@@ -110,7 +132,7 @@ public abstract class PagingQueryHelper {
 //        }
 
         if (pagingData == null) {
-            pagingData = PagingData.class;
+            pagingData = DefaultPagingData.class;
         }
 
         if (pagingData instanceof Class) {
@@ -119,13 +141,11 @@ public abstract class PagingQueryHelper {
 
         //需要总记录数
         if (isRequireRecordTotals(paging)) {
-            setValueByPageOption(pagingData, PageOption.Type.RequireTotals, false, (field) -> simpleDao.countByQueryObj(queryObjs));
+            setValueByPageOption(pagingData, PageOption.Type.RequireTotals, false, (field) -> countFunc.apply(queryObjs));
         }
 
         //需要结果集
         if (isRequireResultList(paging)) {
-
-            final Object resultList = simpleDao.findByQueryObj(resultType, queryObjs);
 
             int index = paging.getPageIndex();
             setValueByPageOption(pagingData, PageOption.Type.PageIndex, true, field -> index);
@@ -133,7 +153,8 @@ public abstract class PagingQueryHelper {
             int size = paging.getPageSize();
             setValueByPageOption(pagingData, PageOption.Type.PageSize, true, field -> size);
 
-            setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> resultList);
+            //查询并且设置查询结果
+            setValueByPageOption(pagingData, PageOption.Type.RequireResultList, false, field -> queryFunc.apply(resultType, queryObjs));
 
         }
 

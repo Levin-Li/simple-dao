@@ -1552,7 +1552,7 @@ public class JpaDaoImpl
      * <p>
      * 参考注解类PageOption {@link PageOption}
      * <p>
-     * 参考 PagingData  {@link PagingData}
+     * 参考 PagingData  {@link DefaultPagingData}
      *
      * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
      * @param queryObjs                   查询对象

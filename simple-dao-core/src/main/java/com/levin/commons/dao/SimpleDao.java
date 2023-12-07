@@ -1,6 +1,6 @@
 package com.levin.commons.dao;
 
-import com.levin.commons.dao.support.PagingData;
+import com.levin.commons.dao.support.DefaultPagingData;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -179,7 +179,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     default <E> PagingData<E> findPagingDataByQueryObj(Object... queryObjs) {
-        return findPageByQueryObj(PagingData.class, queryObjs);
+        return findPageByQueryObj(DefaultPagingData.class, queryObjs);
     }
 
     /**
@@ -191,7 +191,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * @return
      */
     default <E> PagingData<E> findPagingDataByQueryObj(Class<?> resultType, Object... queryObjs) {
-        return findPageByQueryObj(resultType, PagingData.class, queryObjs);
+        return findPageByQueryObj(resultType, DefaultPagingData.class, queryObjs);
     }
 
     /**
@@ -199,7 +199,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * <p>
      * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
      * <p>
-     * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+     * 参考 PagingData  {@link DefaultPagingData}
      *
      * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
      * @param queryObjs                   查询对象
@@ -217,7 +217,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      * <p>
      * 参考注解类PageOption {@link com.levin.commons.dao.PageOption}
      * <p>
-     * 参考 PagingData  {@link com.levin.commons.dao.support.PagingData}
+     * 参考 PagingData  {@link DefaultPagingData}
      *
      * @param pagingHolderInstanceOrClass 分页结果存放对象，分页对象必须使用 PageOption 进行注解
      * @param queryObjs                   查询对象
@@ -256,7 +256,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 
     /**
      * 查找唯一
-     *
+     * //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
      * @param queryObjs
      * @param <E>
      * @return
@@ -278,6 +278,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     /**
      * 查找唯一值
      *
+     * 记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
      * @param resultType
      * @param queryObjs
      * @param <E>

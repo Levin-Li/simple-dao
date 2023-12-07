@@ -24,6 +24,7 @@ import lombok.experimental.FieldNameConstants;
 @Schema(title = "多租户个人查询对象")
 @Data
 @Accessors(chain = true)
+@ToString(callSuper = true)
 @FieldNameConstants
 public class PersonalReq
         extends MultiTenantReq

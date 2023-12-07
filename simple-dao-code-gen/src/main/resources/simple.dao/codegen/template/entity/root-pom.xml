@@ -571,7 +571,7 @@
                     <!--  <isCreateControllerSubDir>false</isCreateControllerSubDir> -->
 
                     <!-- 是否生成BizController -->
-                    <isCreateBizController>false</isCreateBizController>
+                    <isCreateBizController>true</isCreateBizController>
 
                     <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
                     <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>

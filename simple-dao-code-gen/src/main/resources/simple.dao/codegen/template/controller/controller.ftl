@@ -81,7 +81,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     protected ${serviceName} ${serviceName?uncap_first};
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
-    protected Biz${serviceName} biz${serviceName?uncap_first};
+    protected Biz${serviceName} biz${serviceName};
 
     /**
      * 分页列表查找
@@ -98,21 +98,6 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, ${serviceName?uncap_first}.query(req,paging)));
     }
-
-     /**
-      * 简单统计
-      *
-      * @param req Query${entityName}Req
-      * @return  ApiResp<PagingData<Stat${entityName}Req.Result>>
-      */
-     //@GetMapping("/stat") //默认不开放
-     @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
-     public ApiResp<PagingData<Stat${entityName}Req.Result>> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
-
-         req = checkRequest(STAT_ACTION, req);
-
-         return ApiResp.ok(checkResponse(STAT_ACTION, ${serviceName?uncap_first}.stat(req,paging)));
-     }
 
     /**
      * 新增

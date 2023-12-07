@@ -1179,7 +1179,6 @@ public class SelectDaoImpl<T>
         return list.get(0).longValue();
     }
 
-
     @Override
     public String genFinalStatement() {
         return genQL(false);

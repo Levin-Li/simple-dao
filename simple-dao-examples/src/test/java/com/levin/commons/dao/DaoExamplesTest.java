@@ -24,15 +24,12 @@ import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
 import com.levin.commons.dao.services.testrole.req.CreateTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.QueryTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
-import com.levin.commons.dao.support.PagingData;
+import com.levin.commons.dao.support.DefaultPagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
-import com.levin.commons.dao.services.testorg.req.UpdateTestOrgReq;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
-import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.plugin.PluginManager;
-import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +43,6 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
@@ -1288,8 +1284,8 @@ public class DaoExamplesTest {
 
             long st = System.currentTimeMillis();
 
-            PagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, null,
-                    new PagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
+            DefaultPagingData<TableJoinDTO> resp = PagingQueryHelper.findByPageOption(dao, null,
+                    new DefaultPagingData<TableJoinDTO>(), new TableJoinDTO().setRequireTotals(true), null);
 
             System.out.println(n + " response takes " + (System.currentTimeMillis() - st) + " , totals" + resp.getTotals());
 
@@ -1300,8 +1296,8 @@ public class DaoExamplesTest {
     @Test
     public void testPagingQueryHelper2() throws Exception {
 
-        PagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao, null,
-                PagingData.class, new TableJoin3().setRequireTotals(true), null);
+        DefaultPagingData<TableJoin3> resp = PagingQueryHelper.findByPageOption(dao, null,
+                DefaultPagingData.class, new TableJoin3().setRequireTotals(true), null);
 
         System.out.println(resp.getTotals());
     }
@@ -1363,7 +1359,7 @@ public class DaoExamplesTest {
 
         context.put("env.jpaDao.P1", "Dao参数1");
 
-        PagingData<Object> pagingData = dao.findPagingDataByQueryObj(new UserDTO2());
+        DefaultPagingData<Object> defaultPagingData = dao.findPagingDataByQueryObj(new UserDTO2());
 
         System.out.println("ok");
 

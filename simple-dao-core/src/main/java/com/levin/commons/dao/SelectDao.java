@@ -2,6 +2,8 @@ package com.levin.commons.dao;
 
 import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.support.DefaultPagingData;
+import com.levin.commons.service.domain.PageableData;
 
 import java.util.List;
 
@@ -355,6 +357,22 @@ public interface SelectDao<T> extends ConditionBuilder<SelectDao<T>>, SimpleStat
      */
     long count();
 
+    /**
+     * 分页查询
+     *
+     * @param resultType
+     * @param paging
+     * @param <E>
+     * @return
+     */
+    default <E> PagingData<E> findPaging(Class<? extends E> resultType, Paging paging) {
+        return new DefaultPagingData<E>()
+                .setItems(paging.isRequireResultList() ? (List<E>) find(resultType) : null)
+                .setTotals(paging.isRequireTotals() ? count() : -1L)
+                .setPageIndex(paging.getPageIndex())
+                .setPageSize(paging.getPageSize())
+                ;
+    }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**

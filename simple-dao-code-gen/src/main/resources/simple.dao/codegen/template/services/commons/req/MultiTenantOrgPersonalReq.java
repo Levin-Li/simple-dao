@@ -25,6 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
+@ToString(callSuper = true)
 public class MultiTenantOrgPersonalReq
         extends MultiTenantOrgReq
         implements PersonalObject {

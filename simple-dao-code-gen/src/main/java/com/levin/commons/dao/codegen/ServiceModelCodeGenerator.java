@@ -23,7 +23,6 @@ import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
-import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
@@ -59,8 +58,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.levin.commons.dao.E_JoinOption.entityClass;
-
 //import org.apache.maven.project.MavenProject;
 
 public final class ServiceModelCodeGenerator {
@@ -69,9 +66,10 @@ public final class ServiceModelCodeGenerator {
 
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
+
     public static final String SIMPLE_UPDATE_EVT_FTL = "services/req/simple_update_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
-    public static final String STAT_EVT_FTL = "services/req/stat_evt.ftl";
+    public static final String STAT_EVT_FTL = "biz/bo/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
@@ -83,7 +81,7 @@ public final class ServiceModelCodeGenerator {
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String SIMPLE_CREATE_EVT_FTL = "services/req/simple_create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
-    public static final String SELECT_INFO_FTL = "services/info/simple_info.ftl";
+    public static final String SIMPLE_INFO_FTL = "services/info/simple_info.ftl";
 
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
     public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";
@@ -101,22 +99,13 @@ public final class ServiceModelCodeGenerator {
 
     static {
 
-//        baseTypes.add(String.class);
-//        baseTypes.add(Date.class);
-
-//        collectionsTypes.add(Collection.class);
-//        collectionsTypes.add(Map.class);
-
-        notUpdateNames.add("addTime");
         notUpdateNames.add("creator");
         notUpdateNames.add("createBy");
+
+        notUpdateNames.add("addTime");
         notUpdateNames.add("createTime");
         notUpdateNames.add("createDate");
 
-//        notUpdateNames.add("updateTime");
-//        notUpdateNames.add("lastUpdateTime");
-
-        notUpdateNames.add("sn");
     }
 
 
@@ -902,6 +891,7 @@ public final class ServiceModelCodeGenerator {
         }
 
 
+
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
 
@@ -910,6 +900,7 @@ public final class ServiceModelCodeGenerator {
                 .put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
                 .put("entityClass", entityClass)
+                .put("entityClass", entityClass)
                 .put("isMultiTenantObject", isMultiTenant)
                 .put("isMultiTenantShareableObject", MultiTenantShareableObject.class.isAssignableFrom(entityClass))
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
@@ -917,6 +908,11 @@ public final class ServiceModelCodeGenerator {
                 //设置请求对象继承的类
                 .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
                 .build();
+
+        String boDir = File.separator + "bo" + File.separator + entityClass.getSimpleName().toLowerCase();
+
+        params.put("bizBoPackageName", bizServicePackage() + boDir.replace(File.separator, "."));
+        params.put("bizBoSubPackageName", boDir.replace(File.separator, "."));
 
         EntityCategory category = (EntityCategory) entityClass.getAnnotation(EntityCategory.class);
 
@@ -1057,9 +1053,9 @@ public final class ServiceModelCodeGenerator {
                 servicePackage() + ".info",
                 entityClass.getSimpleName() + "Info", mapConsumer);
 
-        genCode(entityClass, SELECT_INFO_FTL, fields, srcDir,
-                servicePackage() + ".info",
-                "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
+//        genCode(entityClass, SIMPLE_INFO_FTL, fields, srcDir,
+//                servicePackage() + ".info",
+//                "Simple" + entityClass.getSimpleName() + "Info", mapConsumer);
     }
 
     private static void buildEvt(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap, String type) throws Exception {
@@ -1079,24 +1075,31 @@ public final class ServiceModelCodeGenerator {
             genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
                     pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-            //统计
-            genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
-                    pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
+//            //统计
+//            genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
+//                    pkgName, "Stat" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         } else if ("create".equalsIgnoreCase(type)) {
             genCode(entityClass, CREATE_EVT_FTL, fields, srcDir,
                     pkgName, "Create" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-
-            genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
-                    pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
+//            genCode(entityClass, SIMPLE_CREATE_EVT_FTL, fields, srcDir,
+//                    pkgName, "SimpleCreate" + entityClass.getSimpleName() + "Req", mapConsumer);
 
         } else if ("update".equalsIgnoreCase(type)) {
+
+            final String tempName = "SimpleUpdate" + entityClass.getSimpleName() + "Req";
+            genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir, pkgName, tempName, mapConsumer);
+
+
+            Object reqExtendClass = paramsMap.get("reqExtendClass");
+
+            paramsMap.put("reqExtendClass", tempName);
+
             genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
                     pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-            genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir,
-                    pkgName, "SimpleUpdate" + entityClass.getSimpleName() + "Req", mapConsumer);
+            paramsMap.put("reqExtendClass", reqExtendClass);
 
         } else if ("delete".equalsIgnoreCase(type)) {
 
@@ -1114,6 +1117,13 @@ public final class ServiceModelCodeGenerator {
 
         final String pkgName = servicePackage();
 
+
+        String serviceDir = serviceDir();
+        String serviceImplDir = serviceImplDir();
+        String starterDir = starterDir();
+
+        String boDir = File.separator + "bo" + File.separator + entityClass.getSimpleName().toLowerCase();
+
         final String serviceName = entityClass.getSimpleName() + "Service";
 
         final Consumer<Map<String, Object>> setVars = params -> {
@@ -1123,15 +1133,16 @@ public final class ServiceModelCodeGenerator {
             params.put("isService", true);
         };
 
-        String serviceDir = serviceDir();
-        String serviceImplDir = serviceImplDir();
-        String starterDir = starterDir();
 
         //生成通用服务类
         genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, setVars);
 
         //生成业务服务类
         genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, setVars);
+
+        //统计
+        genCode(entityClass, STAT_EVT_FTL, fields, serviceDir,
+                bizServicePackage() + boDir.replace(File.separator, "."), "Stat" + entityClass.getSimpleName() + "Req", setVars);
 
         genCode(entityClass, BIZ_SERVICE_IMPL_FTL, fields, serviceImplDir, bizServicePackage(), "Biz" + serviceName + "Impl", setVars);
 
@@ -1223,7 +1234,8 @@ public final class ServiceModelCodeGenerator {
             }
         }
 
-        String genFilePath = srcDir + File.separator
+        String genFilePath = srcDir.replace(File.separator + File.separator, File.separator)
+                + File.separator
                 + classPackageName.replace(".", File.separator)
                 + File.separator + className + ".java";
 
@@ -1510,6 +1522,8 @@ public final class ServiceModelCodeGenerator {
                         //删除注释代码后再比较
                         cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
                     }
+
+                    //@todo 优化无用的导入语句
 
                     newCompactContent = cu.toString();
 

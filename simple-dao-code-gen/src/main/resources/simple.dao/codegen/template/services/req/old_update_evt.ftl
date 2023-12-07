@@ -5,7 +5,6 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 import io.swagger.v3.oas.annotations.media.Schema;
-import com.levin.commons.dao.annotation.Ignore;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -47,30 +46,26 @@ import ${imp};
 @Schema(title = UPDATE_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
-<#--@NoArgsConstructor-->
-//@Builder
+@NoArgsConstructor
+@Builder
 //@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@ToString
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
-
-//字段更新策略，强制更新时，只要字段被调用set方法，则会被更新，不管是否空值。否则只有值不为[null，空字符串, 空数组，空集合]时才会被更新。
-@Update(condition = "forceUpdate ? isUpdateField(#_fieldName) : #" + C.VALUE_NOT_EMPTY)
+//默认更新注解
+@Update
 public class ${className} extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
-    //需要更新的字段
-    @Ignore //dao 忽略
-    protected final List<String> needUpdateFields = new ArrayList<>(5);
+<#if pkField?exists>
+    @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
+    <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
+    @Eq(require = true)
+    ${pkField.typeName} ${pkField.name};
 
-    @Schema(title = "是否强制更新", description = "强制更新模式时，只要字段被调用set方法，则会被更新，不管是否空值" , hidden = true)
-    @Ignore //dao 忽略
-    protected final boolean forceUpdate;
-
-    //////////////////////////////////////////////////////////////////
-
+</#if>
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件，如果是web环境需要增加可编辑的过滤条件" , hidden = true)
     @Eq(condition = IS_WEB_CONTEXT + " && " + NOT_SUPER_ADMIN)
@@ -108,19 +103,19 @@ public class ${className} extends ${reqExtendClass} {
     </#if>
 </#list>
 
-    public ${className}() {
-        this.forceUpdate = false;
+<#if pkField?exists>
+    public ${className}(${pkField.typeName} ${pkField.name}) {
+        this.${pkField.name} = ${pkField.name};
     }
 
-    /**
-    * 强制更新
-    *
-    * @param forceUpdate
-    */
-    public ${className}(boolean forceUpdate) {
-        this.forceUpdate = forceUpdate;
+    public ${className} update${pkField.name?cap_first}WhenNotBlank(${pkField.typeName} ${pkField.name}){
+        if(isNotBlank(${pkField.name})){
+        this.${pkField.name} = ${pkField.name};
+        }
+        return this;
     }
 
+</#if>
     @PostConstruct
     public void preUpdate() {
         //@todo 更新之前初始化数据
@@ -133,49 +128,4 @@ public class ${className} extends ${reqExtendClass} {
     </#if>
 </#list>
     }
-
-<#list fields as field>
-    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
-    public <T extends ${className}> T set${field.name?cap_first}(${field.typeName} ${field.name}) {
-        this.${field.name} = ${field.name};
-        return addUpdateField(E_${entityName}.${field.name});
-    }
-   </#if>
-</#list>
-
-
-
-    /**
-    * 是否更新字段
-    *
-    * @param fieldName
-    * @return
-    */
-    public boolean isUpdateField(String fieldName) {
-        return needUpdateFields.contains(fieldName);
-    }
-
-    /**
-    * 是否更新字段，并删除更新标记，下次调用将不再更新
-    *
-    * @param fieldName
-    * @return 需要更新字段返回 true
-    */
-    public <T extends ${className}> T removeUpdateField(String fieldName) {
-          needUpdateFields.remove(fieldName);
-        return (T) this;
-    }
-
-    /**
-    * 添加更新字段
-    *
-    * @param fieldName
-    * @return
-    */
-    public <T extends ${className}> T addUpdateField(String fieldName) {
-        boolean isAdd = needUpdateFields.contains(fieldName) || needUpdateFields.add(fieldName);
-        return (T) this;
-    }
-
-
 }

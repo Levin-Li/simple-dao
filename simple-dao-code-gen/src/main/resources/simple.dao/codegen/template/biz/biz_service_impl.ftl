@@ -23,7 +23,7 @@ import org.springframework.validation.annotation.*;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
-import org.springframework.dao.*;
+//import org.springframework.dao.*;
 
 import javax.persistence.PersistenceException;
 import cn.hutool.core.lang.*;
@@ -36,6 +36,7 @@ import ${entityClassPackage}.*;
 import ${entityClassName};
 
 import ${servicePackageName}.*;
+import ${bizBoPackageName}.*;
 import static ${servicePackageName}.${serviceName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
@@ -131,13 +132,24 @@ public class ${className} extends BaseService implements Biz${serviceName} {
         return ${serviceName?uncap_first}.update(req);
     }
 
-
     @Operation(summary = DELETE_ACTION)
     //@Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if> , beforeInvocation = true
     @Transactional
     public boolean delete(${entityName}IdReq req) {
         return ${serviceName?uncap_first}.delete(req);
+    }
+
+    /**
+    * 简单统计demo
+    *
+    * @param req
+    * @param paging 分页设置，可空
+    * @return defaultPagingData 分页数据
+    */
+    @Operation(summary = STAT_ACTION)
+    PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req, Paging paging){
+        return simpleDao.findPagingDataByQueryObj(req, paging);
     }
 
     //@Override

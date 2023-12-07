@@ -2662,12 +2662,14 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         final boolean notEmpty = ExprUtils.isNotEmpty(value);
 
         contextValues.add(MapUtils
+                .put("_this", root)
+                .put("_name", fieldName)
+                .put("_fieldName", fieldName)
                 .put("_val", value)
+                .put("_fieldVal", value)
                 .put(C.NOT_EMPTY, notEmpty)
                 .put(C.VALUE_NOT_EMPTY, notEmpty)
                 .put(C.VALUE_EMPTY, !notEmpty)
-                .put("_this", root)
-                .put("_name", fieldName)
                 .put("_isSelect", (this instanceof SelectDao))
                 .put("_isUpdate", (this instanceof UpdateDao))
                 .put("_isDelete", (this instanceof DeleteDao))

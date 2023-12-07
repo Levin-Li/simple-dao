@@ -96,6 +96,12 @@ public class TestOrg
         Freeze,
         @Schema(title = "注销")
         Cancellation,
+
+        ;
+        @Override
+        public String toString() {
+            return nameAndDesc();
+        }
     }
 
     @Schema(title = "机构类型")
@@ -110,6 +116,12 @@ public class TestOrg
         Group,
         @Schema(title = "其它")
         Other,
+
+        ;
+        @Override
+        public String toString() {
+            return nameAndDesc();
+        }
     }
 
     @Id

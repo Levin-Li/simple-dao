@@ -81,6 +81,12 @@ public class TestRole
         @Schema(title = "仅本部门（不含子部门）") MyDept,
         @Schema(title = "本部门及子部门") MyDeptAndChildren,
         @Schema(title = "仅本人数据") MySelf,
+
+        ;
+        @Override
+        public String toString() {
+            return nameAndDesc();
+        }
     }
 
     @Id
