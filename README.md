@@ -172,7 +172,11 @@
     <properties>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
+
+        <!-- 本地版本包名，请先在本机maven安装simple-dao -->
+        <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
         <levin.simple-dao.version>2.5.3-SNAPSHOT</levin.simple-dao.version> 
+
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.2.28-SNAPSHOT</levin.service-support.version>
 
