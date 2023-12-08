@@ -1,4 +1,4 @@
-package com.levin.oak.base;
+package ${modulePackageName};
 
 import com.levin.commons.utils.ExpressionUtils;
 import lombok.extern.slf4j.Slf4j;
