@@ -84,6 +84,9 @@ public class ${className} extends ${reqExtendClass} {
         return this;
     }
 
+    public static ${className} of(${pkField.typeName} ${pkField.name}, boolean forceUpdate){
+        return new ${className}(${pkField.name}, forceUpdate);
+    }
 
 </#if>
 }
