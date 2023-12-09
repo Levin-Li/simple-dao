@@ -128,7 +128,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Override
     @Transactional
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
-    public int update(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
+    public int batchUpdate(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
        return simpleDao.updateByQueryObj(setReq, whereReq);
     }
 
@@ -216,6 +216,12 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = CK_PREFIX + "#key")
     public void clearCache(Object key) {
+    }
+
+    @Override
+    @Operation(summary = CLEAR_CACHE_ACTION,  description = "清除所有缓存")
+    @CacheEvict(allEntries = true)
+    public void clearAllCache() {
     }
 
 }

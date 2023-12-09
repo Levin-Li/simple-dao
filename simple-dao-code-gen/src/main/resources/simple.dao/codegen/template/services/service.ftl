@@ -76,14 +76,14 @@ public interface ${className} {
     boolean update(@NotNull Update${entityName}Req req, Object... queryObjs);
 
     /**
-     * 无ID更新记录，并返回更新记录数，请小心使用
+     * 批量无ID更新记录，并返回更新记录数，请小心使用
      *
      * @param setReq
      * @param whereReq
      * @return int 记录数
      */
     @Operation(summary = UPDATE_ACTION)
-    int update(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq);
+    int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq);
 
     /**
      * 批量更新记录，并返回更新记录数
@@ -184,5 +184,12 @@ public interface ${className} {
      */
     @Operation(summary = CLEAR_CACHE_ACTION,  description = "缓存Key通常是主键ID")
     void clearCache(@NotNull Object key);
+
+    /**
+     * 清除所有缓存
+     * 
+     */
+    @Operation(summary = CLEAR_CACHE_ACTION,  description = "清除所有缓存")
+    void clearAllCache();
 
 }
