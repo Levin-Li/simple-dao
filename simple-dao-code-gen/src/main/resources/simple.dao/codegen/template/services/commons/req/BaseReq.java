@@ -61,4 +61,13 @@ public abstract class BaseReq implements ServiceReq {
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
 
+    /**
+     * 强制转换
+     * @param <T>
+     * @return
+     */
+    public <T extends BaseReq> T cast() {
+        return (T) this;
+    }
+
 }

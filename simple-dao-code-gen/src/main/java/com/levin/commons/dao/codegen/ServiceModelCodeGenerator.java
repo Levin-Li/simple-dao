@@ -1101,7 +1101,7 @@ public final class ServiceModelCodeGenerator {
 
         } else if ("update".equalsIgnoreCase(type)) {
 
-            final String tempName = "SimpleUpdate" + entityClass.getSimpleName() + "Req<";
+            final String tempName = "SimpleUpdate" + entityClass.getSimpleName() + "Req";
             genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir, pkgName, tempName, mapConsumer);
 
 
