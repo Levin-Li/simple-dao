@@ -58,9 +58,10 @@ public class ${className} extends ${reqExtendClass} {
 <#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
     <#if (field.baseType && (!field.lazy || field.baseType) && !field.autoGenValue)>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${(field.baseEntityField && field.notUpdate)?string(', hidden = true', '')})
     <#list field.annotations as annotation>
-    ${field.baseEntityField?string('//', '')}${annotation}
+<#--        默认创建请求不处理-->
+    ${( false && field.baseEntityField && field.notUpdate)?string('//', '')}${annotation}
     </#list>
 <#--    <#if (field.baseEntityField && field.name =='creator')>-->
 <#--    @InjectVar(InjectConst.USER_ID)-->

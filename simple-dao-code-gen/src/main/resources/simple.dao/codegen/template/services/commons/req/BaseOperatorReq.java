@@ -27,7 +27,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class BaseOperatorReq
-        extends MultiTenantOrgReq {
+        extends MultiTenantOrgReq<BaseOperatorReq> {
 
     @InjectVar(value = InjectConst.USER_ID)
     @Schema(title = "操作用户ID" , hidden = true)

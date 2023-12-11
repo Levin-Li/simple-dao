@@ -891,9 +891,22 @@ public final class ServiceModelCodeGenerator {
         }
 
 
-
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
+        boolean isPersonal = PersonalObject.class.isAssignableFrom(entityClass);
+
+
+        String reqExtendClass = "BaseReq";
+
+        if (isMultiTenant) {
+            if (isPersonal) {
+                reqExtendClass = isOrg ? "MultiTenantOrgPersonalReq<" : "PersonalReq<";
+            } else if (isOrg) {
+                reqExtendClass = "MultiTenantOrgReq<";
+            } else {
+                reqExtendClass = "MultiTenantReq<";
+            }
+        }
 
         Map<String, Object> params = MapUtils
                 .put(entityMapping)
@@ -906,7 +919,7 @@ public final class ServiceModelCodeGenerator {
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
                 .put("isOrganizedObject", isOrg)
                 //设置请求对象继承的类
-                .put("reqExtendClass", ((isMultiTenant && isOrg) ? "MultiTenantOrgReq" : (isMultiTenant ? "MultiTenantReq" : "BaseReq")))
+                .put("reqExtendClass", reqExtendClass)
                 .build();
 
         String boDir = File.separator + "bo" + File.separator + entityClass.getSimpleName().toLowerCase();
@@ -1232,6 +1245,11 @@ public final class ServiceModelCodeGenerator {
             for (Consumer<Map<String, Object>> callback : callbacks) {
                 callback.accept(params);
             }
+        }
+
+        if (params.containsKey("reqExtendClass")
+                && params.get("reqExtendClass").toString().trim().endsWith("<")) {
+            params.put("reqExtendClass", params.get("reqExtendClass") + className + ">");
         }
 
         String genFilePath = srcDir.replace(File.separator + File.separator, File.separator)
@@ -2072,7 +2090,7 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            if (isQueryObj || isUpdateObj) {
+            if (isQueryObj || isUpdateObj || (isCreateObj && fieldModel.isBaseEntityField())) {
                 //查询对象和更新对象，允许空值
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotNull"));
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));

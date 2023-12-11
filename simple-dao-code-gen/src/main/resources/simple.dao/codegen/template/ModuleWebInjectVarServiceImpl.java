@@ -81,6 +81,11 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
             //throw new IllegalStateException("anonymous user");
             return null;
         }
+
+        @Override
+        public <ID extends Serializable> ID getOrgId() {
+            return null;
+        }
     };
 
     @Autowired

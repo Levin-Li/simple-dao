@@ -26,8 +26,8 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @FieldNameConstants
-public class PersonalReq
-        extends MultiTenantReq
+public class PersonalReq<T extends PersonalReq>
+        extends MultiTenantReq<T>
         implements PersonalObject {
 
     //注意需要在注入服务中设置isTenantAdmin变量
@@ -43,9 +43,8 @@ public class PersonalReq
      * 设置个人ID
      * @param ownerId
      * @return
-     * @param <T>
      */
-    public <T extends PersonalReq> T setOwnerId(String ownerId) {
+    public T setOwnerId(String ownerId) {
         this.ownerId = ownerId;
         return (T) this;
     }

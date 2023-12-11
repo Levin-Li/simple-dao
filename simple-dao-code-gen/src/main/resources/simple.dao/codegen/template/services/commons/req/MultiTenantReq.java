@@ -26,7 +26,7 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 @FieldNameConstants
 @ToString(callSuper = true)
-public class MultiTenantReq
+public class MultiTenantReq<T extends MultiTenantReq>
         extends BaseReq
         implements MultiTenantObject {
 
@@ -65,9 +65,8 @@ public class MultiTenantReq
      * 设置租户ID
      * @param tenantId
      * @return
-     * @param <T>
      */
-    public <T extends MultiTenantReq> T setTenantId(String tenantId) {
+    public T setTenantId(String tenantId) {
         this.tenantId = tenantId;
         return (T) this;
     }
