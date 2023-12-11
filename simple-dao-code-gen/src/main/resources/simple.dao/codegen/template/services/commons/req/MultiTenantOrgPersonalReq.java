@@ -48,5 +48,4 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq>
         this.ownerId = ownerId;
         return (T) this;
     }
-
 }
