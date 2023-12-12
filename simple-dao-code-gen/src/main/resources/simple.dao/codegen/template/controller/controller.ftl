@@ -64,7 +64,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 <#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true",  matchIfMissing = true)
 
 //默认需要权限访问，默认从父类继承
-@ResAuthorize(domain = ID, type = ${entityCategory} + "-" + E_${entityName}.BIZ_NAME)
+@ResAuthorize(domain = ID, type = ${entityCategory} + "-")
 
 //类注解
 <#if isCreateBizController>//默认生成控制器类，@Tag的name属性关联权限的资源标识</#if>
