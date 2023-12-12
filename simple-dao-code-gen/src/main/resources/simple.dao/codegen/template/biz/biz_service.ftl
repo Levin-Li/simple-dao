@@ -48,5 +48,13 @@ import ${imp};
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 public interface ${className} {
 
-
+    /**
+    * 统计
+    *
+    * @param req
+    * @param paging 分页设置，可空
+    * @return defaultPagingData 分页数据
+    */
+    @Operation(summary = STAT_ACTION)
+    Stat${entityName}Req.Result stat(Stat${entityName}Req req, Paging paging);
 }

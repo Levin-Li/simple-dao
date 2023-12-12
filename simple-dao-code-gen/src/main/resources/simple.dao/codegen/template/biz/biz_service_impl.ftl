@@ -141,15 +141,15 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     }
 
     /**
-    * 简单统计demo
+    * 统计
     *
     * @param req
     * @param paging 分页设置，可空
     * @return defaultPagingData 分页数据
     */
     @Operation(summary = STAT_ACTION)
-    PagingData<Stat${entityName}Req.Result> stat(Stat${entityName}Req req, Paging paging){
-        return simpleDao.findPagingDataByQueryObj(req, paging);
+    public Stat${entityName}Req.Result stat(Stat${entityName}Req req, Paging paging){
+        return simpleDao.findOne(req, paging);
     }
 
     //@Override

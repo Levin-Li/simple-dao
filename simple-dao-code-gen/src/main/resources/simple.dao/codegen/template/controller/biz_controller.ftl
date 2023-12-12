@@ -79,20 +79,18 @@ import static ${modulePackageName}.entities.EntityConst.*;
 public class ${className} extends ${entityName}Controller{
 
     /**
-    * 简单统计
+    * 统计
     *
     * @param req Query${entityName}Req
     * @return  ApiResp<PagingData<Stat${entityName}Req.Result>>
     */
     //@GetMapping("/stat") //默认不开放
     @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
-    public ApiResp<PagingData<Stat${entityName}Req.Result>> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
+    public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
 
         req = checkRequest(STAT_ACTION, req);
 
-        //return ApiResp.ok(checkResponse(STAT_ACTION, biz${serviceName}.stat(req, paging)));
-
-        return ApiResp.error("暂不可用");
+        return ApiResp.ok(checkResponse(STAT_ACTION, biz${serviceName}.stat(req, paging)));
     }
 
 }
