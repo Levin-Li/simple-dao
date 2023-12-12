@@ -39,7 +39,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  */
 @Slf4j
 //默认需要权限访问
-@ResAuthorize(domain = ID, type = BIZ_TYPE_NAME)
+@ResAuthorize(domain = ID, type = BIZ_TYPE_NAME + "-")
 @MenuResTag(domain = ID)
 public abstract class BaseController {
 
