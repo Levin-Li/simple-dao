@@ -70,7 +70,7 @@ import org.hibernate.annotations.Type;
 //不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
 
 @EntityCategory(EntityConst.SYS_TYPE_NAME)
-
+//@Cacheable(false) //JPA二级缓存注解
 public class TestRole
         extends AbstractNamedMultiTenantObject {
 

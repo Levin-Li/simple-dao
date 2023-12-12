@@ -73,7 +73,7 @@ import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
 //不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
 
 @EntityCategory(EntityOpConst.BIZ_TYPE_NAME)
-
+//@Cacheable(false) //JPA二级缓存
 public class ${entityName}
  //    extends AbstractBaseEntityObject
  //    extends AbstractMultiTenantObject

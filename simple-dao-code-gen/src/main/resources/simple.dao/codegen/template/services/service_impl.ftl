@@ -184,6 +184,7 @@ public class ${className} extends BaseService implements ${serviceName} {
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
+    //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX + "#${pkField.name}")
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
