@@ -84,7 +84,7 @@ public class ${className} extends ${entityName}Controller{
     * @param req Query${entityName}Req
     * @return  ApiResp<Stat${entityName}Req.Result>
     */
-    @GetMapping("/stat") //默认不开放
+    @GetMapping("/stat") //默认开放
     @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
     public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
 
