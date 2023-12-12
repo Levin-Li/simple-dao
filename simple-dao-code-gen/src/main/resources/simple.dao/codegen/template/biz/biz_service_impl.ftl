@@ -145,11 +145,11 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     *
     * @param req
     * @param paging 分页设置，可空
-    * @return defaultPagingData 分页数据
+    * @return Stat${entityName}Req.Result
     */
     @Operation(summary = STAT_ACTION)
     public Stat${entityName}Req.Result stat(Stat${entityName}Req req, Paging paging){
-        return simpleDao.findOne(req, paging);
+        return simpleDao.findOneByQueryObj(req, paging);
     }
 
     //@Override

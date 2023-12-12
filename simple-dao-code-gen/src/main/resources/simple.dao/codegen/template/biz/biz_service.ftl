@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.*;
 
 import ${entityClassPackage}.*;
 import ${entityClassName};
-
+import ${bizBoPackageName}.*;
 import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
@@ -53,7 +53,7 @@ public interface ${className} {
     *
     * @param req
     * @param paging 分页设置，可空
-    * @return defaultPagingData 分页数据
+    * @return Stat${entityName}Req.Result
     */
     @Operation(summary = STAT_ACTION)
     Stat${entityName}Req.Result stat(Stat${entityName}Req req, Paging paging);
