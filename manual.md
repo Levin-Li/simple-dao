@@ -987,8 +987,15 @@ Dao 类逻辑框图，如下图所示。
       
       @In(not = true, having = true)
       String[] state = new String[]{"A", "B", "C"};   //生成语句 Not(state in (:?,:?,:?)) 
-        
+
+
+##### 10.5 注解的语句生成规则
+
+   操作枚举类：[com.levin.commons.dao.annotation.Op](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/Op.java)，定义了常见的 sql 表达式。
     
+   语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
+
+
 ### 11  避免 N + 1 查询        
 
 
@@ -1183,14 +1190,6 @@ Dao 类逻辑框图，如下图所示。
      
      
    
-#### 12.3 注解的语句生成规则
-
-  操作枚举类：[com.levin.commons.dao.annotation.Op](./simple-dao-annotations/src/main/java/com/levin/commons/dao/annotation/Op.java)，定义了常见的 sql 表达式。
-  
-
-  语句表达式生成规则： surroundPrefix + op.gen( funcs(fieldName), funcs([ paramExpr(优先) or 参数占位符 ])) +  surroundSuffix
-
-               
        
 ### 13 代码生成
 
