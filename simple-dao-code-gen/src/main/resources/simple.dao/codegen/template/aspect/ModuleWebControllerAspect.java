@@ -244,7 +244,12 @@ public class ModuleWebControllerAspect {
 
                                 tempList.addAll(variableResolverList);
 
-                                variableInjector.injectValues(param, tempList);
+                                try {
+                                    VariableInjector.setVariableResolversForCurrentThread(tempList);
+                                    variableInjector.injectValues(param, tempList);
+                                } finally {
+                                    VariableInjector.setVariableResolversForCurrentThread(null);
+                                }
                             });
 
                 });

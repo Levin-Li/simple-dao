@@ -53,17 +53,12 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
         @Override
         public String getTelephone() {
-            return null;
+            return "18912345678";
         }
 
         @Override
         public String getAvatar() {
             return "anonymous";
-        }
-
-        @Override
-        public boolean isSuperAdmin() {
-            return false;
         }
 
         @Override
@@ -73,18 +68,18 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
         @Override
         public String getTenantId() {
-            return null;
+            return "tenant-anonymous";
         }
 
         @Override
         public <ID extends Serializable> ID getId() {
             //throw new IllegalStateException("anonymous user");
-            return null;
+            return "id-anonymous";
         }
 
         @Override
         public <ID extends Serializable> ID getOrgId() {
-            return null;
+            return "org-anonymous";
         }
     };
 
@@ -133,7 +128,7 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
         builder.put(InjectConst.IS_WEB_CONTEXT, true);
 
         //@todo  获取当前登录用户
-        RbacUserInfo userInfo = null;
+        RbacUserInfo userInfo = null; //加载当前用户
 
         //当前登录用户
         if (userInfo != null) {

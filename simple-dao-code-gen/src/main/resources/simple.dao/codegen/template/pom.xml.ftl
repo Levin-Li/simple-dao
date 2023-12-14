@@ -194,7 +194,7 @@
         </dependency>
         </#if>
 
-        <#if moduleType?? && moduleType == 'bootstrap' >
+<#if moduleType?? && moduleType == 'bootstrap' >
 
         <dependency>
             <groupId>com.github.oshi</groupId>
@@ -210,7 +210,7 @@
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
         </dependency>
-<#if enableDubbo>
+     <#if enableDubbo>
 
         <dependency>
             <groupId>org.apache.dubbo</groupId>
@@ -237,7 +237,7 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
         </dependency>
-</#if>
+    </#if>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

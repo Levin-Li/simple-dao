@@ -38,6 +38,7 @@
         <levin.service-support.groupId>${service-support.groupId}</levin.service-support.groupId>
         <levin.service-support.version>${service-support.version}</levin.service-support.version>
 
+        <easyexcel.version>3.2.1</easyexcel.version>
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
 
@@ -463,6 +464,13 @@
                 <artifactId>mica-auto</artifactId>
                 <version>${mica-auto.version}</version>
                 <scope>provided</scope>
+            </dependency>
+
+
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel</artifactId>
+                <version>${easyexcel.version}</version>
             </dependency>
 
         </dependencies>
