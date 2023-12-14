@@ -74,12 +74,12 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
         @Override
         public <ID extends Serializable> ID getId() {
             //throw new IllegalStateException("anonymous user");
-            return "id-anonymous";
+            return  (ID)  "id-anonymous";
         }
 
         @Override
         public <ID extends Serializable> ID getOrgId() {
-            return "org-anonymous";
+            return  (ID)  "org-anonymous";
         }
     };
 
