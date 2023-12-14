@@ -1137,6 +1137,8 @@ Dao 类逻辑框图，如下图所示。
 
 #### 12.3 SimpleDao 动态指定目标表
 
+    Dao查询的目标表可以通过以下几种方式指定：
+
      1、通过实现 QueryOption 接口动态指定
 
         simpleDao.findByQueryObj(new SimpleQueryOption().setEntityClass(User.class), new QueryUserReq());
@@ -1148,8 +1150,9 @@ Dao 类逻辑框图，如下图所示。
 
      3、直接指定目标表的类名
 
-        simpleDao.findByQueryObj(new QueryUserReq(),User.class);
+        simpleDao.findByQueryObj(User.class, new QueryUserReq());
 
+    当存在多个目标表时，以第一个为准，分页参数也是如此。
                                
 #### 12.3 DTO 数据初始化
  
