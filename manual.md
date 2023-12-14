@@ -49,7 +49,7 @@ Dao 类逻辑框图，如下图所示。
 
 *    4 - [DeleteDao](./simple-dao-core/src/main/java/com/levin/commons/dao/DeleteDao.java)
        
-### 2  组件的使用
+### 2  组件的基本使用
 
 ##### 2.1 使用SimpleDao
 
@@ -87,12 +87,12 @@ Dao 类逻辑框图，如下图所示。
     DeleteDao deleteDao = dao.forDelete(Group.class, queryObjs)
 
 
-##### 2.3 回调使用 
+##### 2.3 动态消费回调使用 
     
-       //1、回调接口定义：java.util.function.Consumer<SelectDao/UpdateDao/DeleteDao>
-       //支持3种dao回调
+       //1、消费接口定义：java.util.function.Consumer<SelectDao/UpdateDao/DeleteDao>
+       //支持3种dao消费回调
        
-       //2、回调实例
+       //2、消费回调实例
        Consumer<SelectDao<?>> callback = dao -> {
             //在回调中动态增加查询条件
             dao.orderBy(OrderBy.Type.Desc,E_AfterSaleOrder.create_time);
@@ -101,6 +101,7 @@ Dao 类逻辑框图，如下图所示。
        
       //3、回调使用
       simpleDao.findPagingDataByQueryObj(req,callback,paging);
+
 
 ### 4 基础查询
     
@@ -243,7 +244,14 @@ Dao 类逻辑框图，如下图所示。
          
          //以上生成的语句
          // set alarmCnt = alarmCnt + ?     
-                     
+
+增量更新-使用例子3：@Update(incrementMode = true)
+
+          @Eq(desc = "乐观锁更新条件")
+          @Update(incrementMode = true, paramExpr = "1", condition = "", desc = "乐观锁版本号 + 1")
+          @Schema(title = L_optimisticLock)
+          Integer optimisticLock;
+
  @Select 和 @Update 可以定义在类上，当字段上没有注解时表示，将默认使用类上定义的注解，如下：
  
        @Schema(title = "增量更新设备数据")
@@ -382,26 +390,39 @@ Dao 类逻辑框图，如下图所示。
         
 ##### 4.4.2 变量
         
-   默认变量-1：
+   默认内置变量和函数：
 
-       _val 表示被注解字段的值
+       _this  : 表示字段所在的DTO对象
     
-       _this 表示DTO对象
+       _name, _fieldName : String 值， 表示被注解字段的字段名
+
+       _val, _fieldVal  : 表示被注解字段的值
     
-       _name 表示被注解字段的字段名
+       _isSelect  : Boolean 值，表示当前是否是SelectDao
     
-       _isSelect 表示当前是否是SelectDao
+       _isUpdate  : Boolean 值，表示当前是否是UpdateDao
     
-       _isUpdate 表示当前是否是UpdateDao
-    
-       _isDelete 表示当前是否是DeleteDao
-       
-       
+       _isDelete  : Boolean 值，表示当前是否是DeleteDao
+
+       VALUE_NOT_EMPTY  : Boolean 值，表示被注解字段的值不为空时，值为 true
+
+       VALUE_EMPTY  : Boolean 值，表示被注解字段的值为空时，值为 true
+
+       #isEmpty(param)：内置函数，检查参数是否为空，如果为空，则返回 true
+
+       #isNotEmpty(param)：内置函数，检测参数是否不为空，如果不为空，则返回 true
+
        使用例子：
        @Eq(condition="#_val != null") // 变量 #_val 的值为 "Echo"
        String name = "Echo";     
+
+       //函数使用
+       @Schema(title = "排序方向")
+       @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "#isNotEmpty(orderBy) && #isNotEmpty(orderDir)", remark = "生成排序表达式")
+       @OrderBy(value = createTime, condition = "#isEmpty(orderBy) || #isEmpty(orderDir)", order = Integer.MAX_VALUE, desc = "默认按时间排序")
+       OrderBy.Type orderDir;   
   
-   默认变量-2：查询对象的字段名做为变量名
+   字段变量-2：查询对象的字段名做为变量名
    
    例：
    
@@ -906,19 +927,19 @@ Dao 类逻辑框图，如下图所示。
      ...
      }
 
-#### 10.3 有条件忽略(SPEL表达式)
+#### 10.3 注解的动态生效(Spel表达式)
 
    大部分的注解都有 condition 属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解生效，如下：
 
       @Eq(condition="#_val != null")
       String name = "Echo";
       
-  当 condition 设置为空字符串时，表示没有条件，默认为注解生效，如下：
+  当 condition 设置为空字符串时，表示没有要求的条件，默认为注解生效，如下：
   
       @Eq(condition="")
       String name = "Echo";
-
-    
+ 
+   重点参考 4.4 章节的 SpEL 表达式。
  
 #### 10.4 字段值自动转换
 
