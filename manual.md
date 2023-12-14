@@ -103,9 +103,9 @@ Dao 类逻辑框图，如下图所示。
       simpleDao.findPagingDataByQueryObj(req,callback,paging);
 
 
-### 4 基础查询
+### 4 Dao注解
     
-   查询注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
+   注解主要在 com.levin.commons.dao.annotation 包中，包括常见的 SQL 操作符，具体如下图：
    
    ![类逻辑框图](./public/dao-annotation.jpg)     
    
@@ -521,34 +521,61 @@ Dao 类逻辑框图，如下图所示。
         
         @Gt(condition="#_val != null") //_val 变量名前要加#号
         Integer age = 18;
-           
-   例如：组校验，基于 SPEL 实现跨字段的参数验证，通过 @Validator 注解实现。
-   
-     public class DeleteCustomerReq extends BaseTreeQueryReq implements ServiceReq {
-     
-         private static final long serialVersionUID = -350965260L;
-     
+
+
+#### 4.5 数据校验注解 @Validator
+   在查询和更新之前，可以通过 @Validator 的expr属性实现数据校验，基于 SPEL 实现跨字段的参数验证。
+   例如：
+
          @Schema(title = "ID")
          private Long id;
      
          @Schema(title = "ID集合")
          @In(E_Customer.id)
-         @Validator(expr = "id != null || ( ids != null &&  ids.length > 0)" , promptInfo = "删除客户信息表必须指定ID")
+         //删除必须指定ID 或是 ID 列表
+         @Validator(expr = "#isNotEmpty(id) || #isNotEmpty(ids)" , promptInfo = "删除客户信息表必须指定ID")
          private Long[] ids;
+
+#### 4.6 数据初始化注解
+
+   1、使用javax.persistence包下的 PreUpdate ，PreRemove 实现在更新和删除之前，自动执行方法。
+   2、使用注解javax.annotation.PostConstruct ，实现在查询、更新和删除之前自动执行方法。
+
+
+     class UserDto{
+     
+       String name;
+       
+       Date createTime;
+       
+       Date updateTime;
+       
+       //1、查询，更新，删除之前执行
+       @PostConstruct
+       public void init(){
+          createTime = new Date();
+       }
+       
+       //2、保存之前执行
+        @PrePersist
+        public void preUpdate(){
+            updateTime = new Date();
+        }
          
-         //删除客户信息表必须指定ID或是 ID 列表
-     
-         public DeleteCustomerReq(Long id) {
-             this.id = id;
-         }
-     
-         public DeleteCustomerReq(Long... ids) {
-             this.ids = ids;
-         }
-     
+       //3、更新之前执行
+       @PreUpdate
+       public void prePersist(){
+          createTime = new Date();
+       }      
+
+       //4、删除之前执行
+       @PreRemove
+       public void prePersist(){
+          createTime = new Date();
+       }  
+
      }
-   
-         
+
 ### 5 统计查询
 
    统计注解在com.levin.commons.dao.annotation.stat 包中，主要包括以下注解：
@@ -1154,45 +1181,7 @@ Dao 类逻辑框图，如下图所示。
 
     当存在多个目标表时，以第一个为准，分页参数也是如此。
                                
-#### 12.3 DTO 数据初始化
- 
-   有标记 javax.annotation.PostConstruct 注解的Dto对象方法，将会在查询之前被执行。
-   可以做些初始化的事情，比如初始化时间。
 
-   注解 @PrePersist 的方法会在保存之前被执行。
-
-   注解 @PreUpdate 的方法会再更新之前被执行。
-   
-     class UserDto{
-     
-       String name;
-       
-       Date createTime;
-       
-       Date updateTime;
-       
-       @PostConstruct
-       public void init(){
-          createTime = new Date();
-       }
-       
-       //更新之前执行
-        @PreUpdate
-        public void preUpdate(){
-            updateTime = new Date();
-        }
-         
-       //持久化之前执行
-       @PrePersist
-       public void prePersist(){
-          createTime = new Date();
-       }              
-     
-     }
-   
-     
-     
-   
        
 ### 13 代码生成
 

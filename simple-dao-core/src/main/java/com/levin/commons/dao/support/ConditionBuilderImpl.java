@@ -1,5 +1,6 @@
 package com.levin.commons.dao.support;
 
+import javax.persistence.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -7,8 +8,7 @@ import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
-import com.levin.commons.dao.annotation.misc.PreDelete;
-import com.levin.commons.dao.annotation.misc.PreUpdate;
+
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderByList;
@@ -1432,7 +1432,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 if (this instanceof UpdateDao) {
                     ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreUpdate.class);
                 } else if (this instanceof DeleteDao) {
-                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreDelete.class);
+                    ClassUtils.invokeMethodByAnnotationTag(queryValueObj, false, PreRemove.class);
                 }
 
                 //没有回调时，表示本地调用
@@ -2128,7 +2128,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 && hasText(validator.expr())) {
             //如果验证识别
             if (!evalTrueExpr(bean, value, name, validator.expr())) {
-                throw new StatementBuildException(bean.getClass() + " group verify fail: "
+                throw new StatementBuildException(bean.getClass() + " dao verify fail: "
                         + validator.promptInfo() + " on field " + name, validator.promptInfo());
             }
         }
