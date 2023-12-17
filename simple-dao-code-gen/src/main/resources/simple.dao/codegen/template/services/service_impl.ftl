@@ -73,7 +73,7 @@ import ${imp};
 //@Valid只能用在controller， @Validated可以用在其他被spring管理的类上。
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
-@CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME})
+@CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME}, cacheResolver = PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 public class ${className} extends BaseService implements ${serviceName} {
 
     protected ${serviceName} getSelfProxy(){
