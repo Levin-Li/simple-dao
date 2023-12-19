@@ -5,7 +5,7 @@ import com.levin.commons.dao.annotation.E_Func;
 import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.annotation.misc.E_Case;
-import com.levin.commons.dao.annotation.misc.E_When;
+import com.levin.commons.dao.annotation.misc.E_Case_When;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
 import org.junit.jupiter.api.Test;
@@ -27,16 +27,16 @@ class ExprUtilsTest {
 
 
         Map<String, Object> whenMap = MapUtils
-                .put(E_When.whenExpr, (Object) "'A'")
-                .put(E_When.thenExpr, (Object) "1")
+                .put(E_Case_When.whenExpr, (Object) "'A'")
+                .put(E_Case_When.thenExpr, (Object) "1")
                 .build();
 
         Case.When when1 = (Case.When) ClassUtils.newAnnotation(Case.When.class, null, whenMap, false);
 
-        whenMap.put(E_When.whenExpr, "'B'");
+        whenMap.put(E_Case_When.whenExpr, "'B'");
         Case.When when2 = (Case.When) ClassUtils.newAnnotation(Case.When.class, null, whenMap, false);
 
-        whenMap.put(E_When.whenExpr, "'C'");
+        whenMap.put(E_Case_When.whenExpr, "'C'");
         Case.When when3 = (Case.When) ClassUtils.newAnnotation(Case.When.class, null, whenMap, false);
 
         Case.When[] whenOptions = {when1, when2, when3};

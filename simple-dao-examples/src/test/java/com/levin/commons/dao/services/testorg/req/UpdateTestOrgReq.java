@@ -116,8 +116,8 @@ public class UpdateTestOrgReq extends MultiTenantReq {
     String zipCode;
 
     @Size(max = 1800)
-    @Schema(title = L_idPath, description = D_idPath)
-    String idPath;
+    @Schema(title = L_nodePath, description = D_nodePath)
+    String nodePath;
 
     @NotBlank
     @Size(max = 128)

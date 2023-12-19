@@ -1359,7 +1359,7 @@ public class DaoExamplesTest {
 
         context.put("env.jpaDao.P1", "Dao参数1");
 
-        DefaultPagingData<Object> defaultPagingData = dao.findPagingDataByQueryObj(new UserDTO2());
+        PagingData<Object>  data = dao.findPagingDataByQueryObj(new UserDTO2());
 
         System.out.println("ok");
 

@@ -105,9 +105,9 @@ public class CreateTestOrgReq extends MultiTenantReq {
     @Size(max = 32)
     String zipCode;
 
-    @Schema(title = L_idPath, description = D_idPath)
+    @Schema(title = L_nodePath, description = D_nodePath)
     @Size(max = 1800)
-    String idPath;
+    String nodePath;
 
     @Schema(title = L_name)
     @NotBlank
