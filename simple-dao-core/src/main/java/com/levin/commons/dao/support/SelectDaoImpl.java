@@ -1,6 +1,7 @@
 package com.levin.commons.dao.support;
 
 
+import cn.hutool.core.lang.Assert;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.E_C;
@@ -21,6 +22,7 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -1289,11 +1291,11 @@ public class SelectDaoImpl<T>
 
         for (Object data : queryResultList) {
 
-            if (this.selectColumnsMap.size() > 0
-                    && data != null
-                    && !data.getClass().isArray()) {
-                data = new Object[]{data};
-            }
+//            if (this.selectColumnsMap.size() > 0
+//                    && data != null
+//                    && !data.getClass().isArray()) {
+//                data = new Object[]{data};
+//            }
 
             returnList.add(tryConvertData(data, resultType, valueHolder, maxCopyDeep, ignoreProperties));
 
@@ -1346,11 +1348,27 @@ public class SelectDaoImpl<T>
 
     private <E> E tryConvertData(Object data, Class<E> targetType, ValueHolder<List<List<String>>> valueHolder, int maxCopyDeep, String... ignoreProperties) {
 
-        data = tryConvertArray2Map(data, valueHolder);
-
         if (data == null || targetType.isInstance(data)) {
             return (E) data;
         }
+
+        //如果需要的结果是简单类型
+        if (QueryAnnotationUtil.isPrimitive(targetType)) {
+
+            //如果需要的结果不是数组，但是数据是数组
+            if (!targetType.isArray() && data.getClass().isArray()) {
+
+                Assert.isTrue(Array.getLength(data) == 1, "预期{}，实际是数组且元素多余1", targetType.getName());
+
+                //获取第一个元素
+                data = Array.get(data, 0);
+            }
+
+            return (E) ObjectUtil.convert(data, targetType);
+        }
+
+        //数组转换到map
+        data = tryConvertArray2Map(data, valueHolder);
 
         //获取注入的属性
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
@@ -1371,6 +1389,60 @@ public class SelectDaoImpl<T>
         ClassUtils.invokePostConstructMethod(e);
 
         return e;
+    }
+
+    /**
+     * 单查询返回值是数组时，尝试自动转换成 Map
+     *
+     * @param data        数组对象
+     * @param valueHolder 数据缓存
+     * @return
+     * @todo 优化性能，直接转换成对象
+     */
+    public Object tryConvertArray2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
+
+        if (data == null) {
+            return data;
+        }
+
+        //只有一个元素时，hibernate不会返回数组，直接返回数据
+        if (this.selectColumns.size() == 1
+                && !data.getClass().isArray()) {
+            data = new Object[]{data};
+        }
+
+        if (!data.getClass().isArray()) {
+            return data;
+        }
+
+        final int arrayLen = Array.getLength(data);
+
+
+        if (valueHolder == null) {
+            valueHolder = new ValueHolder<>(null);
+        }
+
+
+        if (valueHolder.value == null) {
+            valueHolder.value = getAliases(arrayLen);
+        }
+
+
+        //如果已经缓存字段对应关系，优化性能
+        Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
+
+        for (int i = 0; i < arrayLen; i++) {
+
+            Object value = Array.get(data, i);
+
+            for (String key : valueHolder.value.get(i)) {
+                dataMap.put(key, value);
+            }
+
+        }
+
+        return dataMap;
+
     }
 
     /**
@@ -1461,60 +1533,6 @@ public class SelectDaoImpl<T>
         return column;
     }
 
-
-    /**
-     * 单查询返回值是数组时，尝试自动转换成 Map
-     *
-     * @param data        数组对象
-     * @param valueHolder 数据缓存
-     * @return
-     * @todo 优化性能，直接转换成对象
-     */
-    public Object tryConvertArray2Map(Object data, ValueHolder<List<List<String>>> valueHolder) {
-
-        if (data == null) {
-            return data;
-        }
-
-        //只有一个元素时，hibernate不会返回数组，直接返回数据
-        if (this.selectColumns.size() == 1
-                && !data.getClass().isArray()) {
-            data = new Object[]{data};
-        }
-
-        if (!data.getClass().isArray()) {
-            return data;
-        }
-
-        final int arrayLen = Array.getLength(data);
-
-
-        if (valueHolder == null) {
-            valueHolder = new ValueHolder<>(null);
-        }
-
-
-        if (valueHolder.value == null) {
-            valueHolder.value = getAliases(arrayLen);
-        }
-
-
-        //如果已经缓存字段对应关系，优化性能
-        Map<String, Object> dataMap = new LinkedHashMap<>(selectColumns.size());
-
-        for (int i = 0; i < arrayLen; i++) {
-
-            Object value = Array.get(data, i);
-
-            for (String key : valueHolder.value.get(i)) {
-                dataMap.put(key, value);
-            }
-
-        }
-
-        return dataMap;
-
-    }
 
     private List<List<String>> getAliases(int arrayLen) {
 

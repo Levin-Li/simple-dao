@@ -29,6 +29,8 @@ public class ClassModel {
     private final Set<String> imports = new LinkedHashSet<>();
     private final Set<String> annotations = new HashSet<>();
 
+    private final Set<String> implementsList = new HashSet<>();
+
     List<FieldModel> fieldModels = Collections.emptyList();
 
     public ClassModel(Class<?> entityType) {

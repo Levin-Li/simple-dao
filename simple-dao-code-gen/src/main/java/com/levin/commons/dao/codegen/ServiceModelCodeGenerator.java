@@ -45,6 +45,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -1310,7 +1311,20 @@ public final class ServiceModelCodeGenerator {
 
         ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
 
+        classModel.getImports().add(Serializable.class.getName());
+        classModel.getImplementsList().add("Serializable");
+
+
+        if (TreeObject.class.isAssignableFrom(entityClass)) {
+            classModel.getImports().add(TreeObject.class.getName());
+            classModel.getImplementsList().add("TreeObject<" + genClassName + ", " + genClassName + ">");
+        }
+
         params.put("classModel", classModel);
+
+        params.put("implementsListStr", classModel.getImplementsList().stream().collect(Collectors.joining(", ")));
+        params.put("implementsList", classModel.getImplementsList());
+
 
         //默认
 

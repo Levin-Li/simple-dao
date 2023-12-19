@@ -51,7 +51,7 @@ import ${imp};
 <#list classModel.annotations as annotation>
 ${annotation}
 </#list>
-public class ${className} implements Serializable {
+public class ${className} implements ${implementsListStr} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
