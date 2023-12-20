@@ -1477,6 +1477,29 @@ public class DaoExamplesTest {
 
 
     @Test
+    public void tesSelectSimpleType() throws Exception {
+
+
+        Boolean one = dao.selectFrom(Group.class).select(E_Group.enable).findOne(Boolean.class);
+
+        String  name  = dao.selectFrom(Group.class).select(E_Group.name).findOne(String.class);
+
+        List<String>  names  = dao.selectFrom(Group.class).select(E_Group.name).limit(0,8).find(String.class);
+
+        Group  parent  = dao.selectFrom(Group.class).select(E_Group.parent).findOne(Group.class);
+
+
+        GroupInfo  info  = dao.selectFrom(Group.class).select(E_Group.id, E_Group.name).findOne(GroupInfo.class);
+
+        Assert.notNull(info);
+        Assert.hasText(info.getId());
+        Assert.hasText(info.getName());
+
+        System.out.println(names);
+    }
+
+
+    @Test
     public void testStat() throws Exception {
 
         Object commDto = dao.selectFrom(Group.class).appendByQueryObj(new CommDto()).find(CommDto.class);
