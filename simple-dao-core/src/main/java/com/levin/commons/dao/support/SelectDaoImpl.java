@@ -22,7 +22,6 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -1353,7 +1352,7 @@ public class SelectDaoImpl<T>
         }
 
         //如果需要的结果是简单类型
-        if (QueryAnnotationUtil.isPrimitive(targetType)) {
+        if (QueryAnnotationUtil.isSimpleType(targetType)) {
 
             //如果需要的结果不是数组，但是数据是数组
             if (!targetType.isArray() && data.getClass().isArray()) {

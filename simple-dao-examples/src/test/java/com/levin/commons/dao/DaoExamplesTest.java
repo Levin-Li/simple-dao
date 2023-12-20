@@ -1481,6 +1481,7 @@ public class DaoExamplesTest {
 
 
         Boolean one = dao.selectFrom(Group.class).select(E_Group.enable).findOne(Boolean.class);
+        boolean one2 = dao.selectFrom(Group.class).select(E_Group.enable).findOne(boolean.class);
 
         String  name  = dao.selectFrom(Group.class).select(E_Group.name).findOne(String.class);
 

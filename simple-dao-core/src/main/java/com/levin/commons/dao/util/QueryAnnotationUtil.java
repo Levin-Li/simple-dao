@@ -811,7 +811,7 @@ public abstract class QueryAnnotationUtil {
 
                 if (!isOnlyCopyPrimitive
                         || entry.getValue() == null
-                        || isPrimitive(entry.getValue().getClass())) {
+                        || isSimpleType(entry.getValue().getClass())) {
 
                     output.put(entry.getKey(), entry.getValue());
 
@@ -928,7 +928,7 @@ public abstract class QueryAnnotationUtil {
 
         if (type == null
                 || isRootObjectType(type)
-                || isPrimitive(type)
+                || isSimpleType(type)
                 || isArray(type)
                 || isIgnore(type)) {
             return Collections.emptyList();
@@ -1011,7 +1011,7 @@ public abstract class QueryAnnotationUtil {
                 //不是数组
                 && !varType.isArray()
 
-                && !QueryAnnotationUtil.isPrimitive(varType)
+                && !QueryAnnotationUtil.isSimpleType(varType)
 
                 //不是 Object.class
                 && !varType.getName().equals(Object.class.getName())
@@ -1114,7 +1114,7 @@ public abstract class QueryAnnotationUtil {
         }
 
         Class<?> componentType = value.getClass().getComponentType();
-        if (isPrimitive(componentType)) {
+        if (isSimpleType(componentType)) {
             return true;
         }
 
@@ -1122,7 +1122,7 @@ public abstract class QueryAnnotationUtil {
 
         while (--length >= 0) {
             Object ele = Array.get(value, length);
-            if (ele != null && isPrimitive(ele.getClass())) {
+            if (ele != null && isSimpleType(ele.getClass())) {
                 return true;
             }
         }
@@ -1131,16 +1131,18 @@ public abstract class QueryAnnotationUtil {
     }
 
     /**
-     * 复杂类型的判定条件为：对象，对象数组（数组元素为非原子对象）
+     *
      * <p>
      * <p>
      * 注意：
-     * 原子类型包括 Date和枚举
+     * 简单类型包括：原子类型，String , Date , 枚举 ,Url ,Class，简单数组类型
+     *
+     * 复杂类型的判定条件为：对象，对象数组（数组元素为非原子对象）
      *
      * @param type
      * @return
      */
-    public static boolean isPrimitive(Class<?> type) {
+    public static boolean isSimpleType(Class<?> type) {
         return BeanUtils.isSimpleProperty(type);
     }
 
