@@ -78,6 +78,23 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Slf4j
 public class ${className} extends ${entityName}Controller{
 
+    List<String> allowOpList = Arrays.asList(QUERY_LIST_ACTION, CREATE_ACTION, UPDATE_ACTION, DELETE_ACTION, VIEW_DETAIL_ACTION, BATCH_CREATE_ACTION, BATCH_UPDATE_ACTION, BATCH_DELETE_ACTION);
+
+    /**
+    * 检查请求
+    *
+    * @param action
+    * @param req
+    * @return
+    */
+    @Override
+    protected <T> T checkRequest(String action, T req) {
+
+        Assert.isTrue(allowOpList.contains(action), "不支持的操作{}", action);
+
+        return super.checkRequest(action, req);
+    }
+
     /**
     * 统计
     *
