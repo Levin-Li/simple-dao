@@ -80,6 +80,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Slf4j
 public class ${className} extends ${entityName}Controller{
 
+    //允许的操作
     List<String> allowOpList = Arrays.asList(QUERY_LIST_ACTION, CREATE_ACTION, UPDATE_ACTION, DELETE_ACTION, VIEW_DETAIL_ACTION, BATCH_CREATE_ACTION, BATCH_UPDATE_ACTION, BATCH_DELETE_ACTION);
 
     /**
