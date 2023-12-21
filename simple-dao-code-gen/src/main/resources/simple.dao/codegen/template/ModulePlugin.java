@@ -71,7 +71,7 @@ public class ModulePlugin implements Plugin, PluginManagerAware {
 
     @Override
     public <M extends MenuItem> List<M> getMenuList() {
-        return (List<M>) RbacUtils.getMenuItemByController(context, ModuleOption.ID, EntityConst.QUERY_ACTION);
+        return (List<M>) RbacUtils.getMenuItemByController(context, ModuleOption.ID, EntityConst.QUERY_LIST_ACTION);
     }
 
     @Override
