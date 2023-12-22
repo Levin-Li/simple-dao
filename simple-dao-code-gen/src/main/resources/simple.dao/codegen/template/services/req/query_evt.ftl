@@ -80,6 +80,13 @@ public class ${className} extends ${reqExtendClass} {
 </#if>
     OrderBy.Type orderDir;
 
+<#if pkField?exists>
+    @Schema(title = ${pkField.schemaTitle} + "集合")
+    @In(E_${entityName}.${pkField.name})
+    ${pkField.typeName}[] ${pkField.name}List;
+
+</#if>
+
 <#list fields as field>
 
     <#list field.annotations as annotation>
@@ -131,6 +138,7 @@ public class ${className} extends ${reqExtendClass} {
     public ${className}(${pkField.typeName} ${pkField.name}) {
         this.${pkField.name} = ${pkField.name};
     }
+
 </#if>
     <#-- 查询前的动作 -->
     @PostConstruct

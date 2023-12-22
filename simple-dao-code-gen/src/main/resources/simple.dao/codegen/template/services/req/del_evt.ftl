@@ -69,7 +69,7 @@ public class ${className} extends ${reqExtendClass} {
 <#if pkField?exists>
 
     @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)
-    @In(value = E_${entityName}.${pkField.name})
+    @In(E_${entityName}.${pkField.name})
     @NotEmpty
     private ${pkField.typeName}[] ${pkField.name}List;
 
