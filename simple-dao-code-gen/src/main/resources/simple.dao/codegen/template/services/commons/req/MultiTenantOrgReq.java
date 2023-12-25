@@ -30,19 +30,14 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
         extends MultiTenantReq<T>
         implements OrganizedObject {
 
-    //注意需要在注入服务中设置isTenantAdmin变量
-    @InjectVar(value = InjectConst.ORG_ID
+    //注入当前用户有权限的机构ID列表
+    @InjectVar(value = InjectConst.ORG_ID_LIST
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID" , hidden = true)
-    @OR(desc = "过滤出指定的机构的数据")
-    @Eq
-    protected String orgId;
-
     @Schema(title = "机构ID列表", description = "过滤出指定的机构的数据")
     @In(InjectConst.ORG_ID)
-    @END
+    @Validator(expr= NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN + " || !isNotEmpty(#_fieldVal) ")
     protected List<String> orgIdList;
 
     /**
