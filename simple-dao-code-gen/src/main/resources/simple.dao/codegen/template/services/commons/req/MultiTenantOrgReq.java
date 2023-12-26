@@ -2,6 +2,7 @@ package ${modulePackageName}.services.commons.req;
 
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.*;
+import com.levin.commons.dao.annotation.misc.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-
+import java.util.List;
 
 /**
  * 多租户查询对象
@@ -27,26 +28,61 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
-        extends MultiTenantReq<T>
-        implements OrganizedObject {
+        extends MultiTenantReq<T> {
+
+    public static final String  IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
+    public static final String NOT_ALL_ORG_SCOPE = " !" + IS_ALL_ORG_SCOPE;
 
     //注入当前用户有权限的机构ID列表
     @InjectVar(value = InjectConst.ORG_ID_LIST
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID列表", description = "过滤出指定的机构的数据")
+    @Schema(title = "机构ID列表", description = "有权限的访问的数据, 只对查询有效")
+    @OR(autoClose = true, condition = "#_isQuery")
     @In(InjectConst.ORG_ID)
-    @Validator(expr= NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN + " || !isNotEmpty(#_fieldVal) ")
+    @IsNull(condition = "#_isQuery && isContainsOrgPublicData() && " + NOT_ALL_ORG_SCOPE, desc = "如果是公共数据，允许包括非该租户的数据") //
+    @Eq(condition = "#_isQuery && isOrgShared() && " + NOT_ALL_ORG_SCOPE, value = "orgShared", paramExpr = "true", desc = "如果有可共享的数据，允许包括非该租户的数据") //
+    @Validator(expr = "!#_isQuery || !#isNotEmpty(#_fieldVal) || " + IS_ALL_ORG_SCOPE , promptInfo = "如果不是超管 也不是 租户管理员，那么值是必须的")
     protected List<String> orgIdList;
 
+
+    //注入当前用户有权限的机构ID列表
+    @InjectVar(value = InjectConst.ORG_ID
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
+    )
+    @Schema(title = "机构ID", description = "更新指定的机构的数据, 只对非查询有效", hidden = true)
+    @Eq(condition = "!(#_isQuery) && " + NOT_ALL_ORG_SCOPE)
+    @Validator(expr = "(#_isQuery) || !#isNotEmpty(#_fieldVal) || " + IS_ALL_ORG_SCOPE , promptInfo = "orgId-不能为空")
+    protected String orgId;
+
     /**
-     * 设置部门ID
-     * @param orgId
+     * 是否为公共数据
+     *
      * @return
      */
-    public T setOrgId(String orgId) {
-        this.orgId = orgId;
+    @Schema(title = "是否包含组织的公共的数据", hidden = true)
+    public boolean isContainsOrgPublicData() {
+        return false;
+    }
+
+    /**
+     * 是否为可分享的数据
+     *
+     * @return
+     */
+    @Schema(title = "请求是否包含组织可共享的数据", hidden = true)
+    public boolean isOrgShared() {
+        return false;
+    }
+    /**
+     * 设置部门ID列表
+     * @param orgIdList
+     * @return
+     */
+    public T setOrgIdList(List<String> orgIdList) {
+        this.orgIdList = orgIdList;
         return (T) this;
     }
 

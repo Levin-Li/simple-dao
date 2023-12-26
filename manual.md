@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.Levin-Li.simple-dao</groupId>
             <artifactId>simple-dao-jpa-starter</artifactId>
-            <version>2.5.3-SNAPSHOT</version>
+            <version>2.5.5-SNAPSHOT</version>
         </dependency>
         
        
@@ -398,7 +398,7 @@ Dao 类逻辑框图，如下图所示。
 
        _val, _fieldVal  : 表示被注解字段的值
     
-       _isSelect  : Boolean 值，表示当前是否是SelectDao
+       _isQuery  : Boolean 值，表示当前是否是查询操作，SelectDao
     
        _isUpdate  : Boolean 值，表示当前是否是UpdateDao
     
@@ -1210,7 +1210,7 @@ Dao 类逻辑框图，如下图所示。
 
         <!-- 本地版本包名，请先在本机maven安装simple-dao -->
         <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId> 
-        <levin.simple-dao.version>2.5.3-SNAPSHOT</levin.simple-dao.version> 
+        <levin.simple-dao.version>2.5.5-SNAPSHOT</levin.simple-dao.version> 
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
         <levin.service-support.version>1.2.28-SNAPSHOT</levin.service-support.version>

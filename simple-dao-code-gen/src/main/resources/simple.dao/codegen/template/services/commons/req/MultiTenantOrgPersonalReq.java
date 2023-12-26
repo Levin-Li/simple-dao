@@ -21,7 +21,7 @@ import lombok.experimental.FieldNameConstants;
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  * 
  */
-@Schema(title = "多租户个人查询对象")
+@Schema(title = "多租户多部门个人查询对象")
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
@@ -48,4 +48,5 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq>
         this.ownerId = ownerId;
         return (T) this;
     }
+
 }

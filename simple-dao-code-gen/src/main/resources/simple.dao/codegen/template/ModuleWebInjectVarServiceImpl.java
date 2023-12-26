@@ -139,7 +139,8 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
                     .put(InjectConst.USER_NAME, userInfo.getName())
                     .put(InjectConst.USER, userInfo)
                     .put(InjectConst.IS_SUPER_ADMIN, userInfo.isSuperAdmin())
-                    .put(InjectConst.IS_TENANT_ADMIN, userInfo.getRoleList() != null && userInfo.getRoleList().contains(RbacRoleObject.ADMIN_ROLE))
+                    .put(InjectConst.IS_TENANT_ADMIN, userInfo.isTenantAdmin())
+
 //                    .put(InjectConst.ORG, userInfo.getOrg())
 //                    .put(InjectConst.ORG_ID, userInfo.getOrgId())
             ;

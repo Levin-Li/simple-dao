@@ -2,6 +2,7 @@ package ${modulePackageName}.services.commons.req;
 
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.*;
+import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -37,8 +38,9 @@ public class MultiTenantReq<T extends MultiTenantReq>
     )
     @OR(autoClose = true)
     @Eq
-    @IsNull(condition = "#isNotEmpty(#_val) && isContainsPublicData()") //如果是公共数据，允许包括非该租户的数据
-    @Eq(value = "shareable", paramExpr = "true", condition = "isShareable()") // 如果有可共享的数据，允许包括非该租户的数据
+    @IsNull(condition = "#_isQuery && isContainsPublicData() && " + NOT_SUPER_ADMIN, desc = "如果是公共数据，允许包括非该租户的数据") //
+    @Eq(condition = "#_isQuery && isTenantShared() && " + NOT_SUPER_ADMIN, value = "tenantShared", paramExpr = "true", desc = "如果有可共享的数据，允许包括非该租户的数据") //
+    @Validator(expr = IS_SUPER_ADMIN + " || !#isNotEmpty(#_fieldVal) " , promptInfo = "tenantId-不能为空")
     protected String tenantId;
 
     /**
@@ -46,7 +48,7 @@ public class MultiTenantReq<T extends MultiTenantReq>
      *
      * @return
      */
-    @Schema(title = "请求是否包含公共数据", hidden = true)
+    @Schema(title = "请求是否包含平台的公共数据", hidden = true)
     public boolean isContainsPublicData() {
         return false;
     }
@@ -57,7 +59,7 @@ public class MultiTenantReq<T extends MultiTenantReq>
      * @return
      */
     @Schema(title = "请求是否包含可分享的数据", hidden = true)
-    public boolean isShareable() {
+    public boolean isTenantShared() {
         return false;
     }
 

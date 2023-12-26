@@ -2671,6 +2671,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 .put(C.VALUE_NOT_EMPTY, notEmpty)
                 .put(C.VALUE_EMPTY, !notEmpty)
                 .put("_isSelect", (this instanceof SelectDao))
+                .put("_isQuery", (this instanceof SelectDao))
                 .put("_isUpdate", (this instanceof UpdateDao))
                 .put("_isDelete", (this instanceof DeleteDao))
                 .build());
