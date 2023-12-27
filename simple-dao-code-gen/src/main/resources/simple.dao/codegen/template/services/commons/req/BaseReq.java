@@ -2,6 +2,7 @@ package ${modulePackageName}.services.commons.req;
 
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
@@ -43,14 +44,24 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
 
-    public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + ") ";
-    public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + ") ";
+    public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
+    public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
 
-    public static final String NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN  + " && " + NOT_TENANT_ADMIN +") ";
+    public static final String NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
+
+    @Schema(title = "是否超级管理员", hidden = true)
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
+    @Ignore
+    protected boolean isSuperAdmin = false;
+
+    @Schema(title = "是否租户管理员", hidden = true)
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
+    @Ignore
+    protected boolean isTenantAdmin = false;
 
     /**
      * 是否非空

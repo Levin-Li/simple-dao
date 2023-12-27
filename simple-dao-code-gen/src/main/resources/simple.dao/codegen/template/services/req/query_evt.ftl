@@ -63,9 +63,15 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
-    @Schema(title = "是否包含公共数据")
+    @Schema(title = "是否包含平台公共数据")
     @Ignore
     boolean isContainsPublicData = true;
+
+</#if>
+<#if classModel.isType('com.levin.commons.dao.domain.OrganizedPublicObject')>
+    @Schema(title = "是否包含组织公共数据")
+    @Ignore
+    boolean isContainsOrgPublicData = true;
 
 </#if>
     @Ignore

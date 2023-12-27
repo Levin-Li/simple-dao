@@ -920,9 +920,11 @@ public final class ServiceModelCodeGenerator {
                 .put("entityClass", entityClass)
                 .put("entityClass", entityClass)
                 .put("isMultiTenantObject", isMultiTenant)
-                .put("isMultiTenantShareableObject", MultiTenantShareableObject.class.isAssignableFrom(entityClass))
+                .put("isMultiTenantSharedObject", MultiTenantSharedObject.class.isAssignableFrom(entityClass))
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
                 .put("isOrganizedObject", isOrg)
+                .put("isOrganizedPublicObject", OrganizedPublicObject.class.isAssignableFrom(entityClass))
+                .put("isOrganizedSharedObject", OrganizedSharedObject.class.isAssignableFrom(entityClass))
                 //设置请求对象继承的类
                 .put("reqExtendClass", reqExtendClass)
                 .build();
@@ -1729,8 +1731,6 @@ public final class ServiceModelCodeGenerator {
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
 
         boolean isMultiTenantObject = MultiTenantObject.class.isAssignableFrom(entityClass);
-        boolean isMultiTenantShareableObject = MultiTenantShareableObject.class.isAssignableFrom(entityClass);
-        boolean isMultiTenantPublicObject = MultiTenantPublicObject.class.isAssignableFrom(entityClass);
 
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
         boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
