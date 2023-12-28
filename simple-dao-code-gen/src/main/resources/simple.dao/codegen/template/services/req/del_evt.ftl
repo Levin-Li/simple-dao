@@ -71,7 +71,7 @@ public class ${className} extends ${reqExtendClass} {
     @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)
     @In(E_${entityName}.${pkField.name})
     @NotEmpty
-    private ${pkField.typeName}[] ${pkField.name}List;
+    ${pkField.typeName}[] ${pkField.name}List;
 
     public ${className}(${pkField.typeName}... ${pkField.name}List) {
         this.${pkField.name}List = ${pkField.name}List;

@@ -89,7 +89,7 @@ public class ${className} extends ${reqExtendClass} {
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} + "集合")
     @In(E_${entityName}.${pkField.name})
-    ${pkField.typeName}[] ${pkField.name}List;
+    List<${pkField.typeName}> ${pkField.name}List;
 
 </#if>
 

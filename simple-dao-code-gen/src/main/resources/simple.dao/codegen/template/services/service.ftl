@@ -118,7 +118,7 @@ public interface ${className} {
      * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION)
-    PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging);
+    PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging, Object... queryObjs);
 
     /**
      * 指定选择列查询

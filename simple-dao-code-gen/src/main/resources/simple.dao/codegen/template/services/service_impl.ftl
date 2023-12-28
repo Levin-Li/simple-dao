@@ -165,8 +165,8 @@ public class ${className} extends BaseService implements ${serviceName} {
 
     @Operation(summary = QUERY_ACTION)
     @Override
-    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging) {
-        return simpleDao.findPagingDataByQueryObj(req, paging);
+    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging, Object... queryObjs) {
+        return simpleDao.findPagingDataByQueryObj(req, paging, queryObjs);
     }
 
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
