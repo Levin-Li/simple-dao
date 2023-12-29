@@ -44,7 +44,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID列表", description = "有权限的访问的数据, 只对查询操作有效")
+    @Schema(title = "机构ID列表", description = "查询指定机构的数据，未指定时默认查询所有有权限的数据, 该参数只对查询操作有效")
     @OR(autoClose = true, condition = "#_isQuery")
     @In(InjectConst.ORG_ID)
     @IsNull(condition = "#_isQuery && isContainsOrgPublicData() && !isAllOrgScope", value = InjectConst.ORG_ID, desc = "如果是公共数据，允许包括非该租户的数据")
@@ -57,7 +57,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID", description = "更新指定的机构的数据, 只对非查询有效", hidden = true)
+    @Schema(title = "机构ID", description = "创建、更新或删除指定的机构的数据, 该参数只对非查询有效", hidden = true)
     @Eq(condition = "!(#_isQuery) && #isNotEmpty(#_fieldVal)")
     //@Validator(expr = "isAllOrgScope || (#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "orgId-不能为空")
     protected String orgId;
@@ -86,7 +86,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
     public boolean isAllOrgScope() {
         return this.isAllOrgScope;
     }
-    
+
     /**
      * 设置部门ID列表
      * @param orgIdList
