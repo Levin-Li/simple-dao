@@ -63,6 +63,11 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean isTenantAdmin = false;
 
+    @Schema(title = "操作员ID", hidden = true)
+    @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
+    @Ignore
+    protected String operatorId;
+
     /**
      * 是否非空
      * @param value

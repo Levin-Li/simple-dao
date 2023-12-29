@@ -44,7 +44,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID列表", description = "有权限的访问的数据, 只对查询有效")
+    @Schema(title = "机构ID列表", description = "有权限的访问的数据, 只对查询操作有效")
     @OR(autoClose = true, condition = "#_isQuery")
     @In(InjectConst.ORG_ID)
     @IsNull(condition = "#_isQuery && isContainsOrgPublicData() && !isAllOrgScope", value = InjectConst.ORG_ID, desc = "如果是公共数据，允许包括非该租户的数据")
