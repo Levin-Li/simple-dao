@@ -82,6 +82,11 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq>
         return false;
     }
 
+    @Schema(title = "是否能访问所有组织", hidden = true)
+    public boolean isAllOrgScope() {
+        return this.isAllOrgScope;
+    }
+    
     /**
      * 设置部门ID列表
      * @param orgIdList

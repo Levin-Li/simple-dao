@@ -44,14 +44,14 @@ public class BaseOperatorReq
     @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
     @Schema(title = "IP地址", hidden = true)
     protected String ipAddr;
-
-    @InjectVar(value = InjectConst.IS_TENANT_ADMIN, isRequired = "false")
-    @Schema(title = "是否是租户管理员", hidden = true)
-    protected boolean isTenantAdmin = false;
-
-    @InjectVar(value = InjectConst.IS_SUPER_ADMIN, isRequired = "false")
-    @Schema(title = "是否是超级管理员", hidden = true)
-    protected boolean isSuperAdmin = false;
+//
+//    @InjectVar(value = InjectConst.IS_TENANT_ADMIN, isRequired = "false")
+//    @Schema(title = "是否是租户管理员", hidden = true)
+//    protected boolean isTenantAdmin = false;
+//
+//    @InjectVar(value = InjectConst.IS_SUPER_ADMIN, isRequired = "false")
+//    @Schema(title = "是否是超级管理员", hidden = true)
+//    protected boolean isSuperAdmin = false;
 
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
     @Schema(title = "是否是web请求", hidden = true)

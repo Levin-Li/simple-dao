@@ -68,6 +68,17 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected String operatorId;
 
+
+    @Schema(title = "是否超级管理员", hidden = true)
+    public boolean isSuperAdmin() {
+        return this.isSuperAdmin;
+    }
+
+    @Schema(title = "是否租户管理员", hidden = true)
+    public boolean isTenantAdmin() {
+        return this.isTenantAdmin;
+    }
+
     /**
      * 是否非空
      * @param value
