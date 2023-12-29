@@ -174,7 +174,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return
     */
     public <T extends ${className}> T addUpdateField(String fieldName) {
-        boolean isAdd = needUpdateFields.add(fieldName);
+        boolean isAdd = this.forceUpdate && needUpdateFields.add(fieldName);
         return (T) this;
     }
 
