@@ -90,7 +90,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @GetMapping({"list", "query", "search", "page"})
+    @GetMapping({"list", "search"})
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     @CRUD.ListTable
     public ApiResp<PagingData<${entityName}Info>> list(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
@@ -106,7 +106,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Create${entityName}Evt
      * @return ApiResp
      */
-    @PostMapping({"add", "create", "new", ""})
+    @PostMapping({"create", ""})
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
 <#if pkField?exists>
@@ -130,7 +130,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      *
      * @param req Query${entityName}ByIdReq
      */
-    @GetMapping({"retrieve", "info", "detail", "view", "{${pkField.name}}", ""})
+    @GetMapping({"retrieve", "{${pkField.name}}", ""})
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
@@ -151,7 +151,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 更新
      * @param req Update${entityName}Req
      */
-    @PutMapping({"update", "modify", "modifyById", "{${pkField.name}}", ""})
+    @PutMapping({"update", "{${pkField.name}}", ""})
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
@@ -167,7 +167,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping({"delete", "remove", "del", "deleteById", "{${pkField.name}}", ""})
+    @DeleteMapping({"delete", "{${pkField.name}}", ""})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
