@@ -106,7 +106,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Create${entityName}Evt
      * @return ApiResp
      */
-    @PostMapping
+    @PostMapping({"", "add", "create"})
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
 <#if pkField?exists>
@@ -130,7 +130,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      *
      * @param req Query${entityName}ByIdReq
      */
-    @GetMapping({"","{${pkField.name}}"})
+    @GetMapping({"", "{${pkField.name}}"})
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
     @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
@@ -151,7 +151,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 更新
      * @param req Update${entityName}Req
      */
-    @PutMapping({"","{${pkField.name}}"})
+    @PutMapping({"", "{${pkField.name}}"})
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
@@ -167,7 +167,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping({"","{${pkField.name}}"})
+    @DeleteMapping({"", "{${pkField.name}}"})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + ", 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
@@ -183,7 +183,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping(value = {"","{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = {"", "{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
     public ApiResp<Boolean> delete2(@RequestBody @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
