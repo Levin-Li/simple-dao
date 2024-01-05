@@ -90,7 +90,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Query${entityName}Req
      * @return  ApiResp<PagingData<${entityName}Info>>
      */
-    @GetMapping("/list")
+    @GetMapping({"list", "query", "search", "page"})
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME)
     @CRUD.ListTable
     public ApiResp<PagingData<${entityName}Info>> list(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
@@ -106,7 +106,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param req Create${entityName}Evt
      * @return ApiResp
      */
-    @PostMapping({"", "add", "create"})
+    @PostMapping({"add", "create", "new", ""})
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
 <#if pkField?exists>
@@ -130,8 +130,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      *
      * @param req Query${entityName}ByIdReq
      */
-    @GetMapping({"", "{${pkField.name}}"})
-    @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME)
+    @GetMapping({"retrieve", "info", "detail", "view", "{${pkField.name}}", ""})
+    @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@NotNull @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
@@ -151,8 +151,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 更新
      * @param req Update${entityName}Req
      */
-    @PutMapping({"", "{${pkField.name}}"})
-    @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @PutMapping({"update", "modify", "modifyById", "{${pkField.name}}", ""})
+    @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
@@ -167,8 +167,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping({"", "{${pkField.name}}"})
-    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + ", 路径变量参数优先")
+    @DeleteMapping({"delete", "remove", "del", "deleteById", "{${pkField.name}}", ""})
+    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
@@ -183,8 +183,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping(value = {"", "{${pkField.name}}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + ", 路径变量参数优先")
+    @DeleteMapping(value = {"{${pkField.name}}", ""}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + "-2, 路径变量参数优先")
     public ApiResp<Boolean> delete2(@RequestBody @Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
         return delete(req, ${pkField.name});
@@ -199,7 +199,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * @param reqList List<Create${entityName}Evt>
      * @return ApiResp
      */
-    @PostMapping("/batchCreate")
+    @PostMapping("batchCreate")
     @Operation(summary = BATCH_CREATE_ACTION, description = BATCH_CREATE_ACTION + " " + BIZ_NAME)
 <#if pkField?exists>
     public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody @Valid List<Create${entityName}Req> reqList) {
@@ -215,7 +215,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     /**
      * 批量更新
      */
-    @PutMapping("/batchUpdate")
+    @PutMapping("batchUpdate")
     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchUpdate(@RequestBody @Valid List<Update${entityName}Req> reqList) {
 
@@ -228,7 +228,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 批量删除
      * @param req Delete${entityName}Req
      */
-    @DeleteMapping({"/batchDelete"})
+    @DeleteMapping({"batchDelete"})
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
     public ApiResp<Integer> batchDelete(@NotNull @Valid Delete${entityName}Req req) {
@@ -242,7 +242,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 批量删除2
      * @param req @RequestBody Delete${entityName}Req
      */
-    @DeleteMapping(value = {"/batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = {"batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     public ApiResp<Integer> batchDelete2(@RequestBody @Valid Delete${entityName}Req req) {
 
