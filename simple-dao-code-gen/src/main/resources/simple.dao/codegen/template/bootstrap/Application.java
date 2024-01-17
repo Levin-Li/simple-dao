@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+import org.h2.tools.Server;
 
 /**
  *  启动类
@@ -63,7 +64,13 @@ import java.time.temporal.ChronoUnit;
 public class Application {
 
     public static void main(String... args) {
+
+        Server server = Server.createTcpServer("-tcpAllowOthers", "-ifNotExists").start();
+        System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
+                + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
+
         SpringApplication.run(Application.class, args);
+
     }
 
     @Autowired
