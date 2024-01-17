@@ -31,9 +31,7 @@ import javax.annotation.Resource;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass({GroupedOpenApi.class,})
 @Profile({"dev","test","local"})
-public class ModuleSwaggerConfigurer
-        implements
-        WebMvcConfigurer {
+public class ModuleSwaggerConfigurer{
 
     /**
      * tokenName Authorization
