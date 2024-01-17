@@ -2,8 +2,15 @@
 
 spring:
   datasource:
-    #    url: jdbc:h2:./dev.db;MODE=MySQL;
-    url: jdbc:h2:mem:dev.db;MODE=MySQL;
+#    url: jdbc:h2:./dev.db;MODE=MySQL;
+
+#    url: jdbc:h2:mem:dev.db;MODE=MySQL;
+    #h2 内存数据库
+    url: jdbc:h2:tcp://localhost:9092/mem:dev;MODE=MySQL;
+
+    #h2 文件数据库
+#    url: jdbc:h2:tcp://localhost:9092/~/dev;MODE=MySQL;
+
     username: dev
     password: dev
 
