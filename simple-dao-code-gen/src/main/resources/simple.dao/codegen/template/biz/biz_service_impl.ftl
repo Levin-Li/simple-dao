@@ -94,6 +94,7 @@ public class ${className} extends BaseService implements Biz${serviceName} {
         return getSelfProxy(${className}.class);
     }
 
+    /**
     @Operation(summary = CREATE_ACTION)
     @Transactional
     //@Override
@@ -139,6 +140,8 @@ public class ${className} extends BaseService implements Biz${serviceName} {
     public boolean delete(${entityName}IdReq req) {
         return ${serviceName?uncap_first}.delete(req);
     }
+
+    */
 
     /**
     * 统计
