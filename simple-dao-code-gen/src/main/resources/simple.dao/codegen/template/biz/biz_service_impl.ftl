@@ -94,7 +94,7 @@ public class ${className} extends BaseService implements Biz${serviceName} {
         return getSelfProxy(${className}.class);
     }
 
-    /**
+    /** 参考示例
     @Operation(summary = CREATE_ACTION)
     @Transactional
     //@Override
