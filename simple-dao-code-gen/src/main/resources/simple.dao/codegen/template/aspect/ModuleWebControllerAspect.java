@@ -20,6 +20,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -102,23 +104,14 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * 拦截例子
-     *
-     * @param joinPoint
-     * @throws Throwable
-     */
-    //@Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public void before(JoinPoint joinPoint) {
-
-    }
-
-    /**
      * 获取JoinPoint所在模块的变量解析器
      *
      * @param joinPoint
      * @return
      */
     private List<VariableResolver> getModuleResolverList(JoinPoint joinPoint) {
+
+        Assert.isTrue(isInit, "系统初始化还未完成");
 
         Signature signature = joinPoint.getSignature();
 
@@ -153,8 +146,6 @@ public class ModuleWebControllerAspect {
             //放入一个空，防止解析变量出现错误
             moduleResolverMap.addAll(packageName, Collections.emptyList());
 
-//            Supplier<List<Map<String, ?>>>
-
             //按bean名查找 List<VariableResolver> bean
             SpringContextHolder.<List<VariableResolver>>findBeanByBeanName(context
                             , ResolvableType.forClassWithGenerics(Iterable.class, VariableResolver.class).getType()
@@ -168,11 +159,14 @@ public class ModuleWebControllerAspect {
                     .stream().filter(Objects::nonNull)
                     .forEach(v -> moduleResolverMap.add(packageName, v));
 
+
             //按包名查找
 //            SpringContextHolder.<VariableResolver>findBeanByPkgName(context
 //                    , ResolvableType.forClass(VariableResolver.class).getType()
 //                    , packageName)
 //                    .forEach(v -> moduleResolverMap.add(packageName, v));
+
+
         }
 
         return moduleResolverMap.getOrDefault(packageName, Collections.emptyList());
@@ -181,20 +175,73 @@ public class ModuleWebControllerAspect {
 
 
     /**
-     * AOP变量注入
-     * 默认是不启用的
+     * 变量注入
+     * <p>
+     * 目前对所有的路径都进行拦截处理
      *
      * @param joinPoint
      * @throws Throwable
      */
-    //@Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    public void injectVar(JoinPoint joinPoint) {
+//    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    @Order(0)
+//    @Around("modulePackagePointcut() && controllerPointcut()")
+    public Object injectVar(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        final Object[] requestArgs = joinPoint.getArgs();
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+
+        final String className = signature.getDeclaringTypeName();
+
+        if (className.startsWith("springfox.")
+                || className.startsWith("org.springframework.")
+                || className.startsWith("org.springdoc.")
+        ) {
+            return joinPoint.proceed();
+        }
+
+        final String path = getRequestPath();
+        //去除应用路径后，进行匹配
+        if (path.equals(serverProperties.getError().getPath())
+                || !frameworkProperties.getInject().isMatched(className, path)) {
+            return joinPoint.proceed();
+        }
+
+        //如果不是请求映射方法，直接返回
+        if (!AnnotatedElementUtils.hasAnnotation(signature.getMethod(), RequestMapping.class)) {
+            return joinPoint.proceed();
+        }
+
+        try {
+            List<VariableResolver> variableResolvers = tryInjectVar(joinPoint);
+
+            VariableInjector.setVariableResolversForCurrentThread(variableResolvers);
+
+            return log(joinPoint);
+
+        } finally {
+            VariableInjector.setVariableResolversForCurrentThread(null);
+        }
+    }
+
+    public List<VariableResolver> tryInjectVar(ProceedingJoinPoint joinPoint) {
+
+        final List<VariableResolver> variableResolverList = new ArrayList<>();
+        final Map<String, ?> injectVars = Collections.emptyMap();// injectVarService.getInjectVars();
+
+        List<VariableResolver> moduleResolverList = getModuleResolverList(joinPoint);
+
+        if (moduleResolverList != null && !moduleResolverList.isEmpty()) {
+            variableResolverList.addAll(moduleResolverList);
+        }
+
+        variableResolverList.addAll(variableResolverManager.getVariableResolvers());
+
+        Object[] requestArgs = joinPoint.getArgs();
+
         //如果没有参数,或是空参数 或是简单参数，直接返回
-        if (requestArgs == null || requestArgs.length == 0
+        if (requestArgs == null
+                || requestArgs.length == 0
                 || Arrays.stream(requestArgs).allMatch(arg -> arg == null || BeanUtils.isSimpleValueType(arg.getClass()))) {
-            return;
+            return variableResolverList;
         }
 
         final String path = getRequestPath();
@@ -203,31 +250,19 @@ public class ModuleWebControllerAspect {
 
         final String className = signature.getDeclaringTypeName();
 
-        if (className.startsWith("springfox.")
-                || className.startsWith("org.springdoc.")) {
-            return;
-        }
-
-        //去除应用路径后，进行匹配
-        if (path.equals(serverProperties.getError().getPath())) {
-            return;
-        }
-
         if (log.isDebugEnabled()) {
             log.debug("开始为方法 {} 注入变量...", signature);
         }
 
-        final List<VariableResolver> variableResolverList = new ArrayList<>();
-
-        //@todo 设计一个注入服务
-        final Map<String, ?> injectVars = Collections.emptyMap(); // injectVarService.getInjectVars();
-
-        variableResolverList.addAll(getModuleResolverList(joinPoint));
-        variableResolverList.addAll(variableResolverManager.getVariableResolvers());
+        if (moduleResolverList == null || moduleResolverList.isEmpty()) {
+            log.warn("AOP拦截，类：{}，URI:{}, signature:{} 没有找到模块变量解析器", className, path, signature);
+        }
 
         //对方法参数进行迭代
         Arrays.stream(requestArgs)
+                //不是Null的参数
                 .filter(Objects::nonNull)
+                //不是简单类型的参数
                 .filter(arg -> !BeanUtils.isSimpleValueType(arg.getClass()))
                 .forEachOrdered(arg -> {
 
@@ -240,7 +275,7 @@ public class ModuleWebControllerAspect {
 
                                 ArrayList<VariableResolver> tempList = new ArrayList<>(variableResolverList.size() + 1);
 
-                                tempList.add(VariableInjector.newResolverByMap(param, MapUtils.put("_this", param).build(), injectVars));
+                                tempList.add(VariableInjector.newResolverByMap(MapUtils.put("_this", param).build(), injectVars));
 
                                 tempList.addAll(variableResolverList);
 
@@ -254,6 +289,11 @@ public class ModuleWebControllerAspect {
 
                 });
 
+        return variableResolverList;
+    }
+
+    public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
+        return joinPoint.proceed();
     }
 
     /**
