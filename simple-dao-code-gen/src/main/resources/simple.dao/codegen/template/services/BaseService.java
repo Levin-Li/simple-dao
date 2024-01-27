@@ -76,7 +76,7 @@ public abstract class BaseService<S> {
      * @param <T>
      */
     @Deprecated
-    protected <T> T getSelfProxy(Class<T> type) {
+    protected <T extends S> T getSelfProxy(Class<T> type) {
 
         if (selfProxy == null) {
             selfProxy = applicationContext.getBean(type);
