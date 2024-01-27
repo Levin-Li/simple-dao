@@ -74,12 +74,12 @@ import ${imp};
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME}, cacheResolver = PLUGIN_PREFIX + "ModuleSpringCacheResolver")
-public class ${className} extends BaseService implements ${serviceName} {
+public class ${className} extends BaseService<${className}> implements ${serviceName} {
 
-    protected ${serviceName} getSelfProxy(){
-        //return getSelfProxy(${serviceName}.class);
-        return getSelfProxy(${className}.class);
-    }
+<#--    protected ${serviceName} getSelfProxy(){-->
+<#--        //return getSelfProxy(${serviceName}.class);-->
+<#--        return getSelfProxy(${className}.class);-->
+<#--    }-->
 
     /**
     * 创建记录，返回主键ID

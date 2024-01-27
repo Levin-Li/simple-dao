@@ -39,13 +39,14 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  */
 @Slf4j
-public abstract class BaseService {
+public abstract class BaseService<S> {
 
     @Autowired
     protected SimpleDao simpleDao;
 
     @Autowired
     protected ApplicationContext applicationContext;
+
 
     protected Object selfProxy = null;
 
@@ -59,22 +60,25 @@ public abstract class BaseService {
      * @param <T>
      * @return
      */
-    protected <T> T getSelfProxy() {
-        return (T) getSelfProxy(getClass());
+    protected <T extends S> T getSelfProxy() {
+
+        if (selfProxy == null) {
+            selfProxy = applicationContext.getBean(AopProxyUtils.ultimateTargetClass(this));
+        }
+
+        return (T) selfProxy;
     }
 
     /**
-     * 返回自身的代理
-     *
+     * 兼容旧代码，请不要调用
      * @param type
-     * @param <T>
      * @return
+     * @param <T>
      */
+    @Deprecated
     protected <T> T getSelfProxy(Class<T> type) {
 
-        if (selfProxy == null
-                || !type.isInstance(selfProxy)
-                || !(AopUtils.isCglibProxy(selfProxy) || AopUtils.isAopProxy(selfProxy) || AopUtils.isJdkDynamicProxy(selfProxy))) {
+        if (selfProxy == null) {
             selfProxy = applicationContext.getBean(type);
         }
 

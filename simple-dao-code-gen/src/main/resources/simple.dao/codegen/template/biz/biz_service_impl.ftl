@@ -85,14 +85,14 @@ import ${imp};
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 @CacheConfig(cacheNames = {ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME}, cacheResolver = PLUGIN_PREFIX + "ModuleSpringCacheResolver")
-public class ${className} extends BaseService implements Biz${serviceName} {
+public class ${className} extends BaseService<${className}> implements Biz${serviceName} {
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ${serviceName} ${serviceName?uncap_first};
 
-    protected ${className} getSelfProxy(){
-        return getSelfProxy(${className}.class);
-    }
+<#--    protected ${className} getSelfProxy(){-->
+<#--        return getSelfProxy(${className}.class);-->
+<#--    }-->
 
     /** 参考示例
     @Operation(summary = CREATE_ACTION)
