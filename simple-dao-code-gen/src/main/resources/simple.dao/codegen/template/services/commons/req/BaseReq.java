@@ -68,6 +68,10 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected String operatorId;
 
+    @Schema(title = "操作员名称", hidden = true)
+    @InjectVar(value = InjectConst.USER_NAME, isRequired = "false")
+    @Ignore
+    protected String operatorName;
 
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
