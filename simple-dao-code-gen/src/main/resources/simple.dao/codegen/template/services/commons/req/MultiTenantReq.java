@@ -1,6 +1,7 @@
 package ${modulePackageName}.services.commons.req;
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.domain.*;
@@ -42,6 +43,11 @@ public class MultiTenantReq<T extends MultiTenantReq>
     @Eq(condition = "#_isQuery && !isSuperAdmin && isTenantShared()", value = "tenantShared", paramExpr = "true", desc = "如果有可共享的数据，允许包括非该租户的数据")
     //@Validator(expr = "isSuperAdmin || #isNotEmpty(#_fieldVal) " , promptInfo = "tenantId-不能为空")
     protected String tenantId;
+
+    @Schema(title = "租户名称", hidden = true)
+    @InjectVar(value = InjectConst.TENANT_NAME, isRequired = "false")
+    @Ignore
+    protected String tenantName;
 
     /**
      * 是否为公共数据
