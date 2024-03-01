@@ -1098,6 +1098,17 @@ public abstract class ExprUtils {
 
             targetAlias = targetAlias.trim().toLowerCase();
 
+            builder.append(" ")
+                    .append(joinOption.type().name()).append(" Join ")
+                    .append(fromStatement).append(" On ");
+
+            //优先使用连接表达式
+            if (StringUtils.hasText(joinOption.onExpr())) {
+
+                builder.append(joinOption.onExpr()).append(" ");
+                continue;
+            }
+
             String targetColumn = joinOption.joinTargetColumn();
 
             if (!hasText(targetColumn) && hasJoinEntityClass) {
@@ -1148,9 +1159,22 @@ public abstract class ExprUtils {
 
             //
             builder.append(" ").append(joinOption.type().name()).append(" Join ")
-                    .append(fromStatement)
-                    .append(" On ").append(targetAlias).append(".").append(targetColumn)
-                    .append(" = ").append(selfAlias).append(".").append(joinColumn).append(" ");
+                    .append(fromStatement).append(" On ");
+
+            if (!targetColumn.contains(".")) {
+                //如果不包含表达式
+                builder.append(targetAlias).append(".");
+            }
+
+            builder.append(targetColumn).append(" = ");
+
+            if (!joinColumn.contains(".")) {
+                //如果不包含表达式
+                builder.append(selfAlias).append(".");
+            }
+
+            builder.append(joinColumn).append(" ");
+
         }
 
         return builder.toString();

@@ -22,8 +22,6 @@ public @interface JoinOption {
     /**
      * 连接类型
      *
-     *
-     *
      * @return
      */
     Fetch.JoinType type() default Fetch.JoinType.Left;
@@ -56,6 +54,13 @@ public @interface JoinOption {
      * @return
      */
     String alias();
+
+    /**
+     * on 的条件表达式
+     *
+     * @return
+     */
+    String onExpr() default "";
 
     /**
      * 本表的字段名，连接的列名或是字段名
