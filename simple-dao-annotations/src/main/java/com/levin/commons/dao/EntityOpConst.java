@@ -32,6 +32,11 @@ public interface EntityOpConst {
     String PLATFORM_TYPE_NAME = "平台数据";
 
     /**
+     * 需要有工程实施专家角色
+     */
+    String EXPERT_TYPE_NAME = "专家数据";
+
+    /**
      *
      */
     String MAINTAIN_ACTION = "管理";

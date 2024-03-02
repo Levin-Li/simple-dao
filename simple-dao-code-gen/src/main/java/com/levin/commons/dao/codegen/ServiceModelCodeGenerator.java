@@ -1326,11 +1326,20 @@ public final class ServiceModelCodeGenerator {
         ResolvableType root = ResolvableType.forClass(entityClass);
 
         for (Type si : entityClass.getGenericInterfaces()) {
+
             ResolvableType forType = ResolvableType.forType(si, root);
-            if (BaseTreeObject.class.isAssignableFrom(forType.resolve())) {
+            Class<?> resolve = forType.resolve();
+            if (BaseTreeObject.class.isAssignableFrom(resolve)) {
                 continue;
             }
-            classModel.getImplementsList().add(forType.getType().getTypeName());
+
+            if (!forType.hasUnresolvableGenerics()) {
+                classModel.getImports().add(resolve.getName());
+                classModel.getImplementsList().add(resolve.getSimpleName());
+            } else {
+                classModel.getImplementsList().add(forType.getType().getTypeName());
+            }
+
         }
 
         params.put("classModel", classModel);
