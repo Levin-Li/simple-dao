@@ -50,6 +50,7 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -555,7 +556,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgPersonalReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "PersonalReq.java");
-       // genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseOperatorReq.java");
+        // genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseOperatorReq.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1320,6 +1321,16 @@ public final class ServiceModelCodeGenerator {
         if (TreeObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(TreeObject.class.getName());
             classModel.getImplementsList().add("TreeObject<" + genClassName + ", " + genClassName + ">");
+        }
+
+        ResolvableType root = ResolvableType.forClass(entityClass);
+
+        for (Type si : entityClass.getGenericInterfaces()) {
+            ResolvableType forType = ResolvableType.forType(si, root);
+            if (BaseTreeObject.class.isAssignableFrom(forType.resolve())) {
+                continue;
+            }
+            classModel.getImplementsList().add(forType.getType().getTypeName());
         }
 
         params.put("classModel", classModel);
