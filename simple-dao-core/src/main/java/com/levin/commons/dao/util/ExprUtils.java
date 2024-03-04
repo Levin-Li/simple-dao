@@ -1157,10 +1157,6 @@ public abstract class ExprUtils {
                 joinColumn = miniDao.getColumnName(joinEntityClass, joinColumn);
             }
 
-            //
-            builder.append(" ").append(joinOption.type().name()).append(" Join ")
-                    .append(fromStatement).append(" On ");
-
             if (!targetColumn.contains(".")) {
                 //如果不包含表达式
                 builder.append(targetAlias).append(".");
