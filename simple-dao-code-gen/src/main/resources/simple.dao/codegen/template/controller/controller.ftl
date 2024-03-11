@@ -4,6 +4,7 @@ package ${packageName};
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -81,9 +82,11 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
+    @Getter
     protected ${serviceName} ${serviceName?uncap_first};
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
+    @Getter
     protected Biz${serviceName} biz${serviceName};
 
     /**
@@ -99,7 +102,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(QUERY_LIST_ACTION, req);
 
-        return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, ${serviceName?uncap_first}.query(req, paging)));
+        return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, get${serviceName}().query(req, paging)));
     }
 
     /**
@@ -120,9 +123,9 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
         req = checkRequest(CREATE_ACTION, req);
 
    <#if pkField?exists>
-        return ApiResp.ok(${serviceName?uncap_first}.create(req));
+        return ApiResp.ok(get${serviceName}().create(req));
     <#else>
-        return ${serviceName?uncap_first}.create(req) ? ApiResp.ok() : ApiResp.error(CREATE_ACTION + " " + BIZ_NAME + "失败");
+        return get${serviceName}().create(req) ? ApiResp.ok() : ApiResp.error(CREATE_ACTION + " " + BIZ_NAME + "失败");
     </#if>
     }
 
@@ -141,7 +144,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
          req = checkRequest(VIEW_DETAIL_ACTION, req);
 
-         ${entityName}Info info = ${serviceName?uncap_first}.findById(req);
+         ${entityName}Info info = get${serviceName}().findById(req);
          Assert.notNull(info, "记录不存在");
          // 租户校验，因为数据可能是从缓存加载的
          <#if !isMultiTenantObject>//</#if>Assert.isTrue(!StringUtils.hasText(req.getTenantId()) || req.getTenantId().equals(info.getTenantId()), "非法访问，租户不匹配");
@@ -162,7 +165,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(UPDATE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -178,7 +181,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -211,7 +214,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         reqList = checkRequest(BATCH_CREATE_ACTION, reqList);
 
-        return ApiResp.ok(${serviceName?uncap_first}.batchCreate(reqList));
+        return ApiResp.ok(get${serviceName}().batchCreate(reqList));
     }
 
     /**
@@ -223,7 +226,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
 
-        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
@@ -237,7 +240,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(${serviceName?uncap_first}.batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
     }
 
     /**
