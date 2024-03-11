@@ -83,6 +83,10 @@ public class ${className} extends ${entityName}Controller{
     //允许的操作
     List<String> allowOpList = Arrays.asList(QUERY_LIST_ACTION, CREATE_ACTION, UPDATE_ACTION, DELETE_ACTION, VIEW_DETAIL_ACTION, BATCH_CREATE_ACTION, BATCH_UPDATE_ACTION, BATCH_DELETE_ACTION);
 
+
+    //@Autowired
+    //AuthService authService;
+
     /**
     * 检查请求
     *
@@ -97,6 +101,12 @@ public class ${className} extends ${entityName}Controller{
 
         return super.checkRequest(action, req);
     }
+
+    //如果业务需要请覆盖父类的方法，父类方法上的Spring注解可以不需要重写，除非业务上有需要
+    //public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    //   处理业务逻辑...
+    //   return super.update(req, ${pkField.name});
+    // }
 
     /**
     * 统计

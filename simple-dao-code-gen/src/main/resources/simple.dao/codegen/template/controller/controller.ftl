@@ -72,8 +72,10 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 @Validated //@Valid
 @CRUD
-
 @Slf4j
+
+// *** 提示 *** 请尽量不要修改本类，如果需要修改，请在子类中重写业务逻辑
+
 public<#if isCreateBizController> abstract</#if> class ${className} extends BaseController{
 
     protected static final String BIZ_NAME = E_${entityName}.BIZ_NAME;
