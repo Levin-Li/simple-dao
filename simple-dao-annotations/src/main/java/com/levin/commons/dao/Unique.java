@@ -21,9 +21,9 @@ public @interface Unique {
 
     /**
      * 字段名列表
-     * 默认为被注解字段
+     * 默认为被注解字段名称
      */
-    String[] filedList() default "";
+    String[] value() default "";
 
     /**
      * 分组

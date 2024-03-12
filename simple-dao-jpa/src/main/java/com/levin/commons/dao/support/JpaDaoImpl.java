@@ -43,7 +43,6 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1112,7 +1111,7 @@ public class JpaDaoImpl
 
         BiConsumer<Field, Unique> uniqueConsumer = (field, unique) -> {
 
-            for (String column : unique.filedList()) {
+            for (String column : unique.value()) {
 
                 //如果字段
                 if (StringUtils.hasText(column)) {
