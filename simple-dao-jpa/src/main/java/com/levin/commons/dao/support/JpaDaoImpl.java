@@ -1073,8 +1073,7 @@ public class JpaDaoImpl
 //            selectDao.notEq(idAttrName, id);
 //        }
 
-        boolean hasWhere = false;
-
+        boolean hasValue = false;
 
         for (Field field : uniqueField.fieldList) {
 
@@ -1086,23 +1085,15 @@ public class JpaDaoImpl
                 //部分数据库支持空字符串等同于Null空值
                 //@todo 考虑根据数据库类型进行优化处理
                 //目前 MySql 支持空值忽略，唯一约束
-                //暂时 忽略空值
-                if (uniqueField.fieldList.size() > 1) {
-                    //如果多于一个字段，则加入条件
-                    selectDao.isNull(fieldName);
-                } else {
-                    //暂时做法，只要有一个空值，就忽略本功能
-                    hasWhere = false;
-                    break;
-                }
+                selectDao.isNull(fieldName);
             } else {
                 selectDao.eq(fieldName, value);
-                hasWhere = true;
+                hasValue = true;
             }
         }
 
-        //只查ID
-        return hasWhere ? selectDao.findOne() : null;
+        //只要有一个不是空值，则查询
+        return hasValue ? selectDao.findOne() : null;
     }
 
     private static List<UniqueField> getUniqueFields(Class<?> entityClass) {
