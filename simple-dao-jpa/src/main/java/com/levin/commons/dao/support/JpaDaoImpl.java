@@ -203,10 +203,16 @@ public class JpaDaoImpl
         String title;
         final List<Field> fieldList = new ArrayList<>(3);
 
-        UniqueField addField(Field field) {
+        UniqueField addField(Field field, String title) {
+
             if (!fieldList.contains(field)) {
                 fieldList.add(field);
             }
+
+            if (StringUtils.hasText(title)) {
+                this.title = title;
+            }
+
             return this;
         }
 
@@ -216,7 +222,9 @@ public class JpaDaoImpl
 
             key = fieldList.stream().map(Field::getName).filter(Objects::nonNull).collect(Collectors.joining(","));
 
-            title = fieldList.stream().map(JpaDaoImpl::getDesc).filter(Objects::nonNull).collect(Collectors.joining("+"));
+            if (!StringUtils.hasText(title)) {
+                title = fieldList.stream().map(JpaDaoImpl::getDesc).filter(Objects::nonNull).collect(Collectors.joining("+"));
+            }
 
             return this;
         }
@@ -1131,10 +1139,10 @@ public class JpaDaoImpl
                         uniqueFields.add(uniqueField);
                     }
 
-                    uniqueField.addField(field);
+                    uniqueField.addField(field, unique.prompt());
 
                 } else {
-                    uniqueFields.add(new UniqueField().addField(field));
+                    uniqueFields.add(new UniqueField().addField(field, unique.prompt()));
                 }
             }
         };
@@ -1159,7 +1167,7 @@ public class JpaDaoImpl
                         //唯一约束的列名必须和字段名相同
                         for (String column : constraint.columnNames()) {
                             try {
-                                uniqueField.addField(getRequireField(entityClass, column));
+                                uniqueField.addField(getRequireField(entityClass, column), null);
                             } catch (NoSuchFieldException e) {
                                 throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames{"
                                         + column + "} 中必须填入类的字段名而不是数据库的字段名", e);
@@ -1187,7 +1195,7 @@ public class JpaDaoImpl
 
             if (Boolean.TRUE.equals(unique)) {
                 //加入字段
-                uniqueFields.add(new UniqueField().addField(field));
+                uniqueFields.add(new UniqueField().addField(field, null));
             }
 
         }, field -> !Modifier.isStatic(field.getModifiers()));
