@@ -12,25 +12,47 @@ import java.lang.annotation.*;
  * @author llw
  * @version 2.3.2
  */
-@Target({ElementType.FIELD})
+@Repeatable(Unique.List.class)
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 public @interface Unique {
 
     /**
-     * 字段名
+     * 字段名列表
      * 默认为被注解字段
      */
-    String value() default "";
+    String[] filedList() default "";
 
     /**
      * 分组
      */
     String group() default "";
 
+
+    /**
+     * 错误提示
+     *
+     * @return
+     */
+    String prompt() default "";
+
     /**
      * 备注
      */
     String remark() default "";
+
+    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @interface List {
+        /**
+         * 注解列表
+         *
+         * @return
+         */
+        Unique[] value();
+    }
 }

@@ -43,6 +43,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1074,6 +1075,7 @@ public class JpaDaoImpl
 
         boolean hasWhere = false;
 
+
         for (Field field : uniqueField.fieldList) {
 
             String fieldName = field.getName();
@@ -1081,18 +1083,18 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
-
                 //部分数据库支持空字符串等同于Null空值
-
                 //@todo 考虑根据数据库类型进行优化处理
-
                 //目前 MySql 支持空值忽略，唯一约束
                 //暂时 忽略空值
-                // selectDao.isNull(fieldName);
-
-                //暂时做法，只要有一个空值，就忽略本功能
-                hasWhere = false;
-                break;
+                if (uniqueField.fieldList.size() > 1) {
+                    //如果多于一个字段，则加入条件
+                    selectDao.isNull(fieldName);
+                } else {
+                    //暂时做法，只要有一个空值，就忽略本功能
+                    hasWhere = false;
+                    break;
+                }
             } else {
                 selectDao.eq(fieldName, value);
                 hasWhere = true;
@@ -1109,41 +1111,53 @@ public class JpaDaoImpl
 
         Map<String, UniqueField> tmp = new LinkedHashMap<>();
 
-        //1、获取Unique注解要求的唯一约束
-        getFieldsFromCache(entityClass)
-                .stream()
-                .filter(field -> field.isAnnotationPresent(Unique.class))
-                .forEachOrdered(field -> {
+        BiConsumer<Field, Unique> uniqueConsumer = (field, unique) -> {
 
-                    Unique unique = field.getAnnotation(Unique.class);
+            for (String column : unique.filedList()) {
 
-                    //如果字段
-                    if (StringUtils.hasText(unique.value())) {
-                        try {
-                            field = getRequireField(entityClass, unique.value().trim());
-                        } catch (NoSuchFieldException e) {
-                            throw new RuntimeException(entityClass + field.getName() + "字段上的注解 Unique(value ="
-                                    + unique.value() + ") 指定的字段不存在", e);
-                        }
+                //如果字段
+                if (StringUtils.hasText(column)) {
+                    try {
+                        field = getRequireField(entityClass, column.trim());
+                    } catch (NoSuchFieldException e) {
+                        throw new RuntimeException(entityClass + field.getName() + "字段上的注解 Unique(value =" + column + ") 指定的字段不存在", e);
+                    }
+                }
+
+                if (field == null) {
+                    continue;
+                }
+
+                column = field.getName();
+
+                if (StringUtils.hasText(unique.group())) {
+
+                    UniqueField uniqueField = tmp.get(unique.group());
+
+                    if (uniqueField == null) {
+                        uniqueField = new UniqueField().setGroup(unique.group());
+                        tmp.put(unique.group(), uniqueField);
+                        uniqueFields.add(uniqueField);
                     }
 
-                    if (StringUtils.hasText(unique.group())) {
+                    uniqueField.addField(field);
 
-                        UniqueField uniqueField = tmp.get(unique.group());
+                } else {
+                    uniqueFields.add(new UniqueField().addField(field));
+                }
+            }
+        };
 
-                        if (uniqueField == null) {
-                            uniqueField = new UniqueField().setGroup(unique.group());
-                            tmp.put(unique.group(), uniqueField);
-                            uniqueFields.add(uniqueField);
-                        }
+        //查找类上是注解
+        for (Unique unique : entityClass.getAnnotationsByType(Unique.class)) {
+            uniqueConsumer.accept(null, unique);
+        }
 
-                        uniqueField.addField(field);
-
-                    } else {
-                        uniqueFields.add(new UniqueField().addField(field));
-                    }
-
-                });
+        for (Field field : getFieldsFromCache(entityClass)) {
+            for (Unique unique : field.getAnnotationsByType(Unique.class)) {
+                uniqueConsumer.accept(field, unique);
+            }
+        }
 
         //2、获取 Jpa Table 注解定义的唯一约束
         Optional.ofNullable(entityClass.getAnnotation(Table.class))
