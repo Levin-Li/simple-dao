@@ -36,8 +36,4 @@ public abstract class AbstractNamedMultiTenantObject
     @InjectVar(InjectConst.TENANT_ID)
     protected String tenantId;
 
-    @Schema(title = "系统域")
-    @Column(length = 128)
-    protected String domain;
-
 }
