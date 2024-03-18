@@ -1111,6 +1111,12 @@ public class JpaDaoImpl
 
         BiConsumer<Field, Unique> uniqueConsumer = (field, unique) -> {
 
+            String group = unique.group();
+
+            if (!StringUtils.hasText(group)) {
+                group = field.getName() + "_" + String.join(",", unique.value());
+            }
+
             for (String column : unique.value()) {
 
                 //如果字段
@@ -1128,21 +1134,16 @@ public class JpaDaoImpl
 
                 column = field.getName();
 
-                if (StringUtils.hasText(unique.group())) {
+                UniqueField uniqueField = tmp.get(group);
 
-                    UniqueField uniqueField = tmp.get(unique.group());
-
-                    if (uniqueField == null) {
-                        uniqueField = new UniqueField().setGroup(unique.group());
-                        tmp.put(unique.group(), uniqueField);
-                        uniqueFields.add(uniqueField);
-                    }
-
-                    uniqueField.addField(field, unique.prompt());
-
-                } else {
-                    uniqueFields.add(new UniqueField().addField(field, unique.prompt()));
+                if (uniqueField == null) {
+                    uniqueField = new UniqueField().setGroup(group);
+                    tmp.put(group, uniqueField);
+                    uniqueFields.add(uniqueField);
                 }
+
+                uniqueField.addField(field, unique.prompt());
+
             }
         };
 
