@@ -1043,10 +1043,10 @@ public class JpaDaoImpl
             }
         }
 
-        Assert.isTrue(isEntityClass(entityClass), "查询实体未明确");
-
+        Assert.isTrue(isEntityClass(entityClass), "查询目标实体未明确");
 
         Class<?> finalEntityClass = entityClass;
+
         List<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
                 key -> getUniqueFields(finalEntityClass));
 
@@ -1089,10 +1089,17 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
+
+
                 //部分数据库支持空字符串等同于Null空值
                 //@todo 考虑根据数据库类型进行优化处理
                 //目前 MySql 支持空值忽略，唯一约束
-                selectDao.isNull(fieldName);
+
+               // selectDao.isNull(fieldName);
+
+                //只要有一个是空值，就不违反约束条件
+
+                return null;
             } else {
                 selectDao.eq(fieldName, value);
                 hasValue = true;
