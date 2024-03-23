@@ -25,7 +25,7 @@ import java.util.Map;
  * @param <T>
  * @since 1.1.6
  */
-public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
+public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * count 函数
@@ -37,6 +37,10 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      */
     T count(String expr, String alias, Map<String, Object>... paramValues);
 
+    default T count(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return count(attrGetFunction.get(), alias);
+    }
+
     /**
      * avg 函数
      *
@@ -46,6 +50,10 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @return
      */
     T avg(String expr, String alias, Map<String, Object>... paramValues);
+
+    default T avg(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return avg(attrGetFunction.get(), alias);
+    }
 
     /**
      * sum 函数
@@ -57,6 +65,10 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      */
     T sum(String expr, String alias, Map<String, Object>... paramValues);
 
+    default T sum(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return sum(attrGetFunction.get(), alias);
+    }
+
     /**
      * max 函数
      *
@@ -67,6 +79,10 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      */
     T max(String expr, String alias, Map<String, Object>... paramValues);
 
+    default T max(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return max(attrGetFunction.get(), alias);
+    }
+
     /**
      * min 函数
      *
@@ -76,6 +92,10 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @return
      */
     T min(String expr, String alias, Map<String, Object>... paramValues);
+
+    default T min(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return min(attrGetFunction.get(), alias);
+    }
 
     /**
      * group by 字句
@@ -89,5 +109,9 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder> {
      * @return
      */
     T groupByAndSelect(String expr, String alias, Map<String, Object>... paramValues);
+
+    default T groupByAndSelect(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
+        return groupByAndSelect(attrGetFunction.get(), alias);
+    }
 
 }

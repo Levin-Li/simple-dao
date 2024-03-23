@@ -26,6 +26,17 @@ public @interface OrderBy {
         Desc
     }
 
+    enum Scope {
+        //没有GroupBy 字句时，生效
+        OnlyForNotGroupBy,
+
+        //有GroupBy 字句时，生效
+        OnlyForGroupBy,
+
+        //都生效
+        All
+    }
+
     /**
      * 查询字段名称，默认为字段的属性名称
      *
@@ -33,6 +44,13 @@ public @interface OrderBy {
      */
     String value() default "";
 
+
+    /**
+     * 排序条件默认在没有GroupBy语句时才生效
+     *
+     * @return
+     */
+    Scope scope() default Scope.OnlyForNotGroupBy;
 
     /**
      * case 支持

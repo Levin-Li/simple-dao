@@ -1,6 +1,5 @@
 package com.levin.commons.dao.annotation.order;
 
-import com.levin.commons.dao.annotation.misc.Case;
 
 import java.lang.annotation.*;
 
@@ -30,6 +29,13 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 public @interface SimpleOrderBy {
+
+    /**
+     * 排序条件默认在没有GroupBy语句时才生效
+     *
+     * @return
+     */
+    OrderBy.Scope scope() default OrderBy.Scope.OnlyForNotGroupBy;
 
     /**
      * 排序语句表达式

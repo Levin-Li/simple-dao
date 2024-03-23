@@ -94,6 +94,9 @@ public class DaoExamplesTest {
 
     Random random = new Random(this.hashCode());
 
+
+    SimpleConditionBuilder<User> simpleConditionBuilder;
+
     /**
      * 注意测试时，使用的是h2的内存数据库，所以没有使用事务
      *

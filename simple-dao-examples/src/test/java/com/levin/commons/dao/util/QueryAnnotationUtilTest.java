@@ -1,14 +1,23 @@
 package com.levin.commons.dao.util;
 
+import cn.hutool.core.lang.Assert;
+import com.levin.commons.dao.ConditionBuilder;
+import com.levin.commons.dao.DaoFactory;
+import com.levin.commons.dao.SimpleDao;
+import com.levin.commons.dao.UpdateDao;
+import org.h2.engine.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Created by echo on 2016/8/1.
@@ -46,7 +55,6 @@ public class QueryAnnotationUtilTest {
     private Map<String, Object> param = new LinkedHashMap<>();
 
 
-
     @BeforeAll
     public void init() {
 
@@ -76,8 +84,32 @@ public class QueryAnnotationUtilTest {
 
     }
 
+    public String getName(String implMethodName) {
+        return Stream.of("get", "is", "has", "can", "will")
+                //字母是大写
+                .filter(prefix -> implMethodName.length() > prefix.length() && Character.isUpperCase(implMethodName.charAt(prefix.length())))
+                .filter(implMethodName::startsWith)
+                .map(prefix -> Character.toUpperCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length()))
+                .findFirst()
+                .orElse(implMethodName);
+    }
+
     @Test
     public void testWalkMap() throws Exception {
+
+        boolean allMatch = Stream.of("get", "is", "has", "can", "will")
+                .map(p -> p + "Test")
+                .map(this::getName).allMatch("test"::equals);
+
+        Assert.isTrue(allMatch, "not matched");
+
+
+        SimpleDao dao;
+
+        UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
+
+
+        userUpdateDao.eq(User::getName,"dd");
 
 
         System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));

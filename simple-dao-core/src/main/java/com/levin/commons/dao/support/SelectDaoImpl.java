@@ -22,6 +22,9 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -45,7 +48,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @param <T>
  */
 public class SelectDaoImpl<T>
-        extends ConditionBuilderImpl<T, SelectDao<T>>
+        extends ConditionBuilderImpl<SelectDao<T>, T>
         implements SelectDao<T> {
 
     private static final String SELECT_PACKAGE_NAME = Select.class.getPackage().getName();
@@ -60,11 +63,16 @@ public class SelectDaoImpl<T>
     //GroupBy 自动忽略重复字符
     final SimpleList<String> groupByColumns = new SimpleList<>(true, new ArrayList(5), DELIMITER);
 
-    final List groupByParamValues = new ArrayList(5);
+    /**
+     * 排序参数值
+     */
+    final List orderByParamValues = new ArrayList(2);
+
+    final List groupByParamValues = new ArrayList(2);
 
     private ExprNode havingExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
 
-    final List havingParamValues = new ArrayList(5);
+    final List havingParamValues = new ArrayList(2);
 
     final SimpleList<OrderByObj> orderByColumns = new SimpleList<>(false, new ArrayList<OrderByObj>(5), DELIMITER);
 
@@ -131,26 +139,34 @@ public class SelectDaoImpl<T>
     }
 
 
+    /**
+     * 增加选择字段
+     * <p>
+     * 如果不填写，默认为 Desc
+     *
+     * @param isAppend
+     * @param columnNames 例：  "name" , "createTime"
+     * @return
+     */
     @Override
-    public SelectDao<T> select(Boolean isAppend, String expr, Object... paramValues) {
+    public SelectDao<T> select(Boolean isAppend, String... columnNames) {
 
-        if (Boolean.TRUE.equals(isAppend)
-                && selectColumns.add(expr)) {
-            selectParamValues.add(paramValues);
+        if (Boolean.TRUE.equals(isAppend) && columnNames != null) {
+            Stream.of(columnNames)
+                    .filter(StringUtils::hasText)
+                    .map(this::aroundColumnPrefix)
+                    .forEachOrdered(selectColumns::add);
         }
 
         return this;
     }
 
     @Override
-    public SelectDao<T> select(String... columnNames) {
+    public SelectDao<T> selectByStatement(Boolean isAppend, String expr, Object... paramValues) {
 
-        if (columnNames != null) {
-            for (String columnName : columnNames) {
-                if (hasText(columnName)) {
-                    selectColumns.add(aroundColumnPrefix(columnName));
-                }
-            }
+        if (Boolean.TRUE.equals(isAppend)
+                && selectColumns.add(expr)) {
+            selectParamValues.add(paramValues);
         }
 
         return this;
@@ -180,7 +196,7 @@ public class SelectDaoImpl<T>
         join(queryRequest.joinStatement());
 
         //增加抓取的子集合
-        joinFetch(Fetch.JoinType.Left, queryRequest.joinFetchSetAttrs());
+        joinFetch(true, Fetch.JoinType.Left, queryRequest.joinFetchSetAttrs());
 
         //设置默认的排序语句
         if (hasText(queryRequest.defaultOrderBy())) {
@@ -190,15 +206,14 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-
     @Override
     public boolean hasStatColumns() {
-        return hasStatColumns || this.groupByColumns.size() > 0;
+        return hasStatColumns || !this.groupByColumns.isEmpty();
     }
 
     @Override
     public boolean hasSelectColumns() {
-        return this.selectColumns.size() > 0;
+        return !this.selectColumns.isEmpty();
     }
 
     @Override
@@ -372,23 +387,13 @@ public class SelectDaoImpl<T>
 
 
     @Override
-    public SelectDao<T> joinFetch(String... setAttrs) {
-        return joinFetch(Fetch.JoinType.Left, setAttrs);
-    }
-
-    @Override
-    public SelectDao<T> joinFetch(Boolean isAppend, String... setAttrs) {
+    public SelectDao<T> joinFetch(Boolean isAppend, Fetch.JoinType joinType, String... setAttrs) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-            joinFetch(setAttrs);
+            joinFetch(null, null, joinType, setAttrs);
         }
 
         return this;
-    }
-
-    @Override
-    public SelectDao<T> joinFetch(Fetch.JoinType joinType, String... setAttrs) {
-        return joinFetch(null, null, joinType, setAttrs);
     }
 
     protected SelectDao<T> joinFetch(Object fieldOrMethodOrName, String domain, Fetch.JoinType joinType, String... setAttrs) {
@@ -462,18 +467,17 @@ public class SelectDaoImpl<T>
     /**
      * 设置group by
      *
-     * @param columns
+     * @param columnNames
      * @return
      */
     @Override
-    public SelectDao<T> groupBy(String... columns) {
+    public SelectDao<T> groupBy(Boolean isAppend, String... columnNames) {
 
-        if (columns != null) {
-            for (String column : columns) {
-                if (hasText(column)) {
-                    groupByColumns.add(aroundColumnPrefix(column));
-                }
-            }
+        if (Boolean.TRUE.equals(isAppend) && columnNames != null) {
+            Stream.of(columnNames)
+                    .filter(StringUtils::hasText)
+                    .map(this::aroundColumnPrefix)
+                    .forEachOrdered(groupByColumns::add);
         }
 
         return this;
@@ -481,11 +485,9 @@ public class SelectDaoImpl<T>
 
 
     @Override
-    public SelectDao<T> groupBy(Boolean isAppend, String expr, Object... paramValues) {
+    public SelectDao<T> groupByStatement(Boolean isAppend, String expr, Object... paramValues) {
 
-        if (Boolean.TRUE.equals(isAppend)
-                && hasText(expr)) {
-            groupByColumns.add(expr);
+        if (Boolean.TRUE.equals(isAppend) && groupByColumns.add(expr)) {
             groupByParamValues.add(paramValues);
         }
 
@@ -522,20 +524,6 @@ public class SelectDaoImpl<T>
         havingExprRootNode.endGroup(isContainLastField);
     }
 
-    @Override
-    public SelectDao<T> orderBy(Boolean isAppend, String... columnNames) {
-
-        if (Boolean.TRUE.equals(isAppend)
-                && columnNames != null) {
-            for (String column : columnNames) {
-                addOrderBy(0, column, null);
-            }
-        }
-
-        return this;
-    }
-
-
     /**
      * 增加排序字段
      *
@@ -544,34 +532,49 @@ public class SelectDaoImpl<T>
      * @return
      */
     @Override
-    public SelectDao<T> orderBy(OrderBy.Type type, String... columnNames) {
+    public SelectDao<T> orderBy(Boolean isAppend, OrderBy.Type type, String... columnNames) {
+
+        if (!Boolean.TRUE.equals(isAppend)
+                || columnNames == null
+                || columnNames.length < 1) {
+            return this;
+        }
 
         if (type == null) {
-            type = OrderBy.Type.Desc;
+            //数据默认排序
+            // type = OrderBy.Type.Desc;
         }
 
-        if (columnNames != null) {
-            for (String columnName : columnNames) {
-                addOrderBy(0, aroundColumnPrefix(columnName), type);
-            }
-        }
+        Stream.of(columnNames)
+                .filter(StringUtils::hasText)
+                .map(this::aroundColumnPrefix)
+                .forEachOrdered(columnName -> addOrderBy(0, aroundColumnPrefix(columnName), null, type));
 
         return this;
     }
 
     /**
-     * @param index
-     * @param expr
+     * 增加排序表达式，可设置参数
+     *
+     * @param isAppend
      * @param type
+     * @param statement
+     * @param paramValues
+     * @return
      */
-    protected void addOrderBy(int index, String expr, OrderBy.Type type) {
+    @Override
+    public SelectDao<T> orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues) {
 
-        if (StringUtils.hasText(expr)) {
-            orderByColumns.add(new OrderByObj(index, expr, type));
+        if (Boolean.TRUE.equals(isAppend)) {
+            addOrderBy(0, statement, null, type, paramValues);
         }
 
+        return this;
     }
 
+    protected boolean addOrderBy(int index, String expr, OrderBy.Scope scope, OrderBy.Type type, Object... paramValues) {
+        return hasText(expr) && orderByColumns.add(new OrderByObj(index, expr, type).setScope(scope).setParamValues(paramValues));
+    }
 
     /**
      * 处理字段的所有的注解
@@ -625,15 +628,15 @@ public class SelectDaoImpl<T>
 
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
 
-            SimpleOrderBy simpleOrderBy = (SimpleOrderBy) opAnnotation;
+            SimpleOrderBy orderBy = (SimpleOrderBy) opAnnotation;
 
-            if (StringUtils.hasText(simpleOrderBy.expr())) {
-                addOrderBy(simpleOrderBy.order(), evalExpr(bean, value, name, simpleOrderBy.expr(), null), null);
+            if (StringUtils.hasText(orderBy.expr())) {
+                addOrderBy(orderBy.order(), evalExpr(bean, value, name, orderBy.expr(), null), orderBy.scope(), null);
             } else if (value instanceof String) {
-                addOrderBy(simpleOrderBy.order(), (String) value, null);
+                addOrderBy(orderBy.order(), (String) value, orderBy.scope(), null);
             } else if (value instanceof String[]) {
                 for (String expr : (String[]) value) {
-                    addOrderBy(simpleOrderBy.order(), expr, null);
+                    addOrderBy(orderBy.order(), expr, orderBy.scope(), null);
                 }
             } else {
                 throw new StatementBuildException("SimpleOrderBy注解必须注释在字符串或是字符串数组字段上");
@@ -788,7 +791,7 @@ public class SelectDaoImpl<T>
 
                 expr = tryAppendDistinctAndAlias(expr, newAlias, opAnnotation);
 
-                select(expr, holder.value);
+                selectByStatement(expr, holder.value);
 
                 //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
                 appendColumnMap(expr, newAlias, fieldOrMethod, name);
@@ -845,7 +848,7 @@ public class SelectDaoImpl<T>
                 //SELECT子句
                 //ORDER BY子句
 
-                groupBy(useNewAlias ? newAlias : oldExpr, holder.value);
+                groupByStatement(useNewAlias ? newAlias : oldExpr, holder.value);
             }
 
             tryAppendHaving(bean, name, opAnnotation, useNewAlias ? newAlias : oldExpr, holder, value);
@@ -853,7 +856,7 @@ public class SelectDaoImpl<T>
             // ORDER BY 也不能使用别名
             tryAppendOrderBy(bean, name, holder.value, useNewAlias ? newAlias : oldExpr, newAlias, opAnnotation);
 
-            select(expr, holder.value);
+            selectByStatement(expr, holder.value);
 
             //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字段名称，只好通过 druid 解析 SQL 语句
             appendColumnMap(expr, newAlias, fieldOrMethod, name);
@@ -963,7 +966,7 @@ public class SelectDaoImpl<T>
             }
 
             if (hasText(expr)) {
-                addOrderBy(orderBy.order(), expr, orderBy.type());
+                addOrderBy(orderBy.order(), expr, orderBy.scope(), orderBy.type());
             }
         }
 
@@ -1079,6 +1082,9 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("found 'having' statement but not found 'group by' statement");
         }
 
+        //先排序参数
+        orderByParamValues.clear();
+
         //如果只是统计总数，则不把排序语句加入，可以提升速度
         if (!isCountQueryResult) {
             //以下代理是处理排序语句
@@ -1086,28 +1092,40 @@ public class SelectDaoImpl<T>
                 //按升序排序，从小到大
                 Collections.sort(orderByColumns.getList());
 
+                boolean hasGroupBy = groupByColumns.isNotEmpty();
+
                 //@TODO 分组统计语句，自动去除非法的排序字段
-                if (groupByColumns.isNotEmpty()) {
+                List<OrderByObj> orderByQL = orderByColumns.getList().stream()
+                        .filter(Objects::nonNull)
+                        .filter(orderByObj -> StringUtils.hasText(orderByObj.orderByStatement))
 
-                    List<OrderByObj> orderByQL = orderByColumns.getList().stream()
-                            .filter(Objects::nonNull)
-                            .filter(orderByObj -> StringUtils.hasText(orderByObj.orderByStatement))
-                            .filter(orderByObj ->
-                                    //分组语句中包含，可能不精准
-                                    groupByColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
+                        //过滤出符合条件的
+                        .filter(ob -> ob.scope == OrderBy.Scope.All || (hasGroupBy ? ob.scope == OrderBy.Scope.OnlyForGroupBy : ob.scope == OrderBy.Scope.OnlyForNotGroupBy))
 
-                                            //选择语句中包含，可能不精准
-                                            || selectColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
-                            )
-                            .collect(Collectors.toList());
+                        .filter(orderByObj ->
+                                //分组语句中包含，可能不精准
+                                groupByColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
 
-                    //清除并从新加入
-                    orderByColumns.clear().getList().addAll(orderByQL);
+                                        //选择语句中包含，可能不精准
+                                        || selectColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
+                        )
+                        .collect(Collectors.toList());
 
-                }
+                //按升序排序，从小到大，再排一次序
+
+                //清除并从新加入
+                orderByColumns.clear().getList().addAll(orderByQL);
 
                 if (orderByColumns.isNotEmpty()) {
+
                     builder.append(" Order By " + orderByColumns);
+                    //加入参数
+                    orderByColumns.getList().stream()
+                            .filter(ob -> ob.paramValues != null && ob.paramValues.length > 0)
+                            .forEach(ob -> orderByParamValues.add(ob.paramValues));
+                } else {
+                    //清楚排序参数
+                    orderByParamValues.clear();
                 }
 
             } else if (defaultOrderByStatement.length() > 0
@@ -1193,6 +1211,7 @@ public class SelectDaoImpl<T>
                 , whereParamValues
                 , groupByParamValues
                 , havingParamValues
+                , orderByParamValues
                 , getLastStatementParamValues());
     }
 
@@ -1657,13 +1676,20 @@ public class SelectDaoImpl<T>
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    @Data
+    @Accessors(chain = true)
     static class OrderByObj
             implements Comparable<OrderByObj> {
 
         int order = 0;
+
         String orderByStatement;
+
         OrderBy.Type type;
+
+        OrderBy.Scope scope = OrderBy.Scope.OnlyForNotGroupBy;
+
+        Object[] paramValues;
 
         public OrderByObj(String orderByStatement) {
             this.orderByStatement = orderByStatement;
@@ -1675,6 +1701,14 @@ public class SelectDaoImpl<T>
             this.type = type;
         }
 
+        public OrderByObj setScope(OrderBy.Scope scope) {
+            if (scope == null) {
+                scope = OrderBy.Scope.OnlyForNotGroupBy;
+            }
+            this.scope = scope;
+            return this;
+        }
+
         @Override
         public int compareTo(OrderByObj o) {
             return order - o.order;
@@ -1682,6 +1716,7 @@ public class SelectDaoImpl<T>
 
         @Override
         public boolean equals(Object obj) {
+
             if (obj == this) {
                 return true;
             }

@@ -4,7 +4,7 @@ package com.levin.commons.dao;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface DeleteDao<T>
-        extends ConditionBuilder<DeleteDao<T>> {
+        extends ConditionBuilder<DeleteDao<T>, T> {
 
     /**
      * 执行删除动作

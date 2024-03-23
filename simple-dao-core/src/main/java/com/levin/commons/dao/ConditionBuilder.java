@@ -6,11 +6,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-public interface ConditionBuilder<T extends ConditionBuilder>
+public interface ConditionBuilder<T extends ConditionBuilder<T, DOMAIN>, DOMAIN>
         extends
         SafeController<T>,
         LogicOP<T>,
-        SimpleConditionBuilder<T>,
+        SimpleConditionBuilder<T, DOMAIN>,
         StatementBuilder {
 
     /**

@@ -1,13 +1,12 @@
 package com.levin.commons.dao;
 
-
 /**
  * 简单条件构建器
  *
  * @param <T>
  * @since 1.1.6
  */
-public interface SimpleConditionBuilder<T> {
+public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * 禁用空值过滤
@@ -38,6 +37,9 @@ public interface SimpleConditionBuilder<T> {
      */
     T isNull(String entityAttrName);
 
+    default T isNull(PFunction<DOMAIN, ?> attrGetFunction) {
+        return isNull(attrGetFunction.get());
+    }
 
     /**
      * is not null
@@ -47,6 +49,9 @@ public interface SimpleConditionBuilder<T> {
      */
     T isNotNull(String entityAttrName);
 
+    default T isNotNull(PFunction<DOMAIN, ?> attrGetFunction) {
+        return isNotNull(attrGetFunction.get());
+    }
 
     /**
      * xx is null or xx = paramValue
@@ -55,6 +60,10 @@ public interface SimpleConditionBuilder<T> {
      * @return
      */
     T isNullOrEq(String entityAttrName, Object paramValue);
+
+    default T isNullOrEq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return isNullOrEq(attrGetFunction.get(), paramValue);
+    }
 
     /**
      * =
@@ -66,6 +75,10 @@ public interface SimpleConditionBuilder<T> {
      */
     T eq(String entityAttrName, Object paramValue);
 
+    default T eq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return eq(attrGetFunction.get(), paramValue);
+    }
+
 
     /**
      * !=
@@ -76,6 +89,10 @@ public interface SimpleConditionBuilder<T> {
      */
     T notEq(String entityAttrName, Object paramValue);
 
+    default T notEq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return notEq(attrGetFunction.get(), paramValue);
+    }
+
     /**
      * > 操作
      *
@@ -85,6 +102,9 @@ public interface SimpleConditionBuilder<T> {
      */
     T gt(String entityAttrName, Object paramValue);
 
+    default T gt(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return gt(attrGetFunction.get(), paramValue);
+    }
 
     /**
      * < 操作
@@ -95,6 +115,9 @@ public interface SimpleConditionBuilder<T> {
      */
     T lt(String entityAttrName, Object paramValue);
 
+    default T lt(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return lt(attrGetFunction.get(), paramValue);
+    }
 
     /**
      * >= 操作
@@ -105,6 +128,9 @@ public interface SimpleConditionBuilder<T> {
      */
     T gte(String entityAttrName, Object paramValue);
 
+    default T gte(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return gte(attrGetFunction.get(), paramValue);
+    }
 
     /**
      * <= 操作
@@ -115,6 +141,10 @@ public interface SimpleConditionBuilder<T> {
      */
     T lte(String entityAttrName, Object paramValue);
 
+    default T lte(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
+        return lte(attrGetFunction.get(), paramValue);
+    }
+
     /**
      * field between ? and ? and ?
      * or
@@ -124,12 +154,20 @@ public interface SimpleConditionBuilder<T> {
      */
     T between(String entityAttrName, Object... paramValues);
 
+    default T between(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
+        return between(attrGetFunction.get(), paramValues);
+    }
+
     /**
      * field in (?...)
      *
      * @return
      */
     T in(String entityAttrName, Object... paramValues);
+
+    default T in(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
+        return in(attrGetFunction.get(), paramValues);
+    }
 
 
     /**
@@ -139,6 +177,42 @@ public interface SimpleConditionBuilder<T> {
      */
     T notIn(String entityAttrName, Object... paramValues);
 
+    default T notIn(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
+        return notIn(attrGetFunction.get(), paramValues);
+    }
+
+    /**
+     * like %keyword%
+     *
+     * @return
+     */
+    T contains(String entityAttrName, String keyword);
+
+    default T contains(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
+        return contains(attrGetFunction.get(), keyword);
+    }
+
+    /**
+     * like keyword%
+     *
+     * @return
+     */
+    T startsWith(String entityAttrName, String keyword);
+
+    default T startsWith(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
+        return startsWith(attrGetFunction.get(), keyword);
+    }
+
+    /**
+     * like %keyword
+     *
+     * @return
+     */
+    T endsWith(String entityAttrName, String keyword);
+
+    default T endsWith(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
+        return endsWith(attrGetFunction.get(), keyword);
+    }
 
     /**
      * exists 操作
@@ -156,29 +230,5 @@ public interface SimpleConditionBuilder<T> {
      * @return
      */
     T notExists(Object exprOrQueryObj, Object... paramValues);
-
-
-    /**
-     * like %keyword%
-     *
-     * @return
-     */
-    T contains(String entityAttrName, String keyword);
-
-
-    /**
-     * like keyword%
-     *
-     * @return
-     */
-    T startsWith(String entityAttrName, String keyword);
-
-
-    /**
-     * like %keyword
-     *
-     * @return
-     */
-    T endsWith(String entityAttrName, String keyword);
 
 }

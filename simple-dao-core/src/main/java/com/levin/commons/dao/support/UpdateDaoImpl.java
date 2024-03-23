@@ -25,7 +25,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @param <T>
  */
 public class UpdateDaoImpl<T>
-        extends ConditionBuilderImpl<T, UpdateDao<T>>
+        extends ConditionBuilderImpl<UpdateDao<T>, T>
         implements UpdateDao<T> {
 
     final SimpleList<String> updateColumns = new SimpleList<>(true, new ArrayList(5), " , ");
@@ -58,11 +58,11 @@ public class UpdateDaoImpl<T>
     }
 
     @Override
-    public UpdateDao<T> setColumns(Boolean isAppend, String columns, Object... paramValues) {
+    public UpdateDao<T> setByStatement(Boolean isAppend, String statement, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
-                && hasText(columns)) {
-            append(columns, paramValues);
+                && hasText(statement)) {
+            append(statement, paramValues);
         }
 
         return this;
@@ -205,7 +205,7 @@ public class UpdateDaoImpl<T>
         int n = update();
 
         if (n > 1) {
-            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期1条",1,n);
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期1条", 1, n);
         }
 
         return n == 1;
@@ -224,7 +224,7 @@ public class UpdateDaoImpl<T>
         int n = update();
 
         if (n != 1) {
-            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条",1,n);
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);
         }
 
     }
@@ -265,7 +265,7 @@ public class UpdateDaoImpl<T>
                 }
 
                 //设置更新的列
-                setColumns(expr, holder.value);
+                setByStatement(expr, holder.value);
 
             });
         }

@@ -57,10 +57,10 @@ import static org.springframework.util.StringUtils.*;
  * 本类是一个非线程安全类，不要重复使用，应该重新创建使用。
  *
  * @param <T>
- * @param <CB>
+ * @param <DOMAIN>
  */
-public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
-        implements ConditionBuilder<CB> {
+public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>, DOMAIN>
+        implements ConditionBuilder<T, DOMAIN> {
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -69,7 +69,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     protected javax.validation.Validator validator;
 
     //////////////////////////////////////////////////////////
-    protected Class<T> entityClass;
+    protected Class<DOMAIN> entityClass;
 
     protected String tableName;
 
@@ -162,7 +162,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
     }
 
-    public ConditionBuilderImpl(MiniDao miniDao, boolean isNative, Class<T> entityClass, String alias) {
+    public ConditionBuilderImpl(MiniDao miniDao, boolean isNative, Class<DOMAIN> entityClass, String alias) {
 
         if (entityClass == null) {
             throw new IllegalArgumentException("entityClass is null");
@@ -201,15 +201,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return parameterNameDiscoverer;
     }
 
-    public CB setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
+    public T setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
         this.parameterNameDiscoverer = parameterNameDiscoverer;
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB setSafeModeMaxLimit(Integer maxLimit) {
+    public T setSafeModeMaxLimit(Integer maxLimit) {
         this.safeModeMaxLimit = maxLimit;
-        return (CB) this;
+        return (T) this;
     }
 
     public javax.validation.Validator getValidator() {
@@ -217,9 +217,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    public CB setValidator(javax.validation.Validator validator) {
+    public T setValidator(javax.validation.Validator validator) {
         this.validator = validator;
-        return (CB) this;
+        return (T) this;
     }
 
     protected EntityOption getEntityOption() {
@@ -285,9 +285,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * 在安全模式下，不允许无条件的更新或是删除
      */
     @Override
-    public CB disableSafeMode() {
+    public T disableSafeMode() {
         safeMode = false;
-        return (CB) this;
+        return (T) this;
     }
 
 
@@ -303,9 +303,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
 
     @Override
-    public CB setContext(Map<String, Object> context) {
+    public T setContext(Map<String, Object> context) {
         this.context = context;
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -337,73 +337,73 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     @Override
-    public CB disableNameConvert() {
+    public T disableNameConvert() {
 
         enableNameConvert = false;
 
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB and() {
+    public T and() {
         return and(true);
     }
 
     @Override
-    public CB and(Boolean valid) {
+    public T and(Boolean valid) {
         beginLogic(AND.class.getSimpleName(), Boolean.TRUE.equals(valid));
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB or() {
+    public T or() {
         return or(true);
     }
 
     @Override
-    public CB or(Boolean valid) {
+    public T or(Boolean valid) {
         beginLogic(OR.class.getSimpleName(), Boolean.TRUE.equals(valid));
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB not() {
+    public T not() {
         return not(true);
     }
 
     @Override
-    public CB not(Boolean valid) {
+    public T not(Boolean valid) {
         beginLogic(NOT.class.getSimpleName(), Boolean.TRUE.equals(valid));
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB end() {
+    public T end() {
         endLogic(true);
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB limit(int rowStartPosition, int rowCount) {
+    public T limit(int rowStartPosition, int rowCount) {
         this.rowStart = rowStartPosition;
         this.rowCount = rowCount;
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB enableAutoAppendLimitStatement(boolean enable) {
+    public T enableAutoAppendLimitStatement(boolean enable) {
 
         autoAppendLimitStatement = enable;
 
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB disableOperationCondition() {
+    public T disableOperationCondition() {
 
         autoAppendOperationCondition = false;
 
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -442,7 +442,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB page(int pageIndex, int pageSize) {
+    public T page(int pageIndex, int pageSize) {
 
 
         if (pageIndex < 1) {
@@ -454,43 +454,43 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         this.rowCount = pageSize;
 
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB page(Paging paging) {
+    public T page(Paging paging) {
 
         if (paging != null) {
             page(paging.getPageIndex(), paging.getPageSize());
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB filterLogicDeletedData(boolean enable) {
+    public T filterLogicDeletedData(boolean enable) {
 
         filterLogicDeletedData = enable;
 
-        return (CB) this;
+        return (T) this;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     @Override
-    public CB where(Boolean isAppend, String conditionExpr, Object... paramValues) {
+    public T where(Boolean isAppend, String conditionExpr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)) {
             appendToWhere(conditionExpr, paramValues, false);
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
 
     @Override
-    public CB appendToLast(Boolean isAppend, String expr, Object... paramValues) {
+    public T appendToLast(Boolean isAppend, String expr, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)
                 && hasText(expr)) {
@@ -498,7 +498,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             lastStatementParamValues.add(paramValues);
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     protected List getLastStatementParamValues() {
@@ -506,20 +506,20 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
     @Override
-    public CB appendByQueryObj(Object... queryObjs) {
+    public T appendByQueryObj(Object... queryObjs) {
 
         walkObject(queryObjs);
 
-        return (CB) this;
+        return (T) this;
     }
 
 
     @Override
-    public CB appendByMethodParams(Object methodOwnerBean, Method method, Object... args) {
+    public T appendByMethodParams(Object methodOwnerBean, Method method, Object... args) {
 
         walkMethod(methodOwnerBean, method, args);
 
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -557,26 +557,26 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB appendByEL(String paramPrefix, Map<String, Object>... queryParams) {
+    public T appendByEL(String paramPrefix, Map<String, Object>... queryParams) {
 
         walkMap(paramPrefix, queryParams);
 
-        return (CB) this;
+        return (T) this;
     }
 
 
     @Override
-    public CB appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
+    public T appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
 
         if (Boolean.TRUE.equals(isAppend)) {
             processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
 
-    private CB processAnno(int callMethodDeep, String expr, Object value) {
+    private T processAnno(int callMethodDeep, String expr, Object value) {
 
 //        if (!StringUtils.hasText(expr)) {
 //            throw new IllegalArgumentException("expr has no content");
@@ -610,24 +610,24 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     @Override
-    public CB disableEmptyValueFilter() {
+    public T disableEmptyValueFilter() {
 
         this.disableEmptyValueFilter = true;
 
-        return (CB) this;
+        return (T) this;
     }
 
 
     @Override
-    public CB enableEmptyValueFilter() {
+    public T enableEmptyValueFilter() {
 
         this.disableEmptyValueFilter = false;
 
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -637,7 +637,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB isNull(String entityAttrName) {
+    public T isNull(String entityAttrName) {
         return processAnno(2, entityAttrName, null);
     }
 
@@ -648,15 +648,15 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB isNotNull(String entityAttrName) {
+    public T isNotNull(String entityAttrName) {
         return processAnno(2, entityAttrName, null);
     }
 
 
     @Override
-    public CB isNullOrEq(String entityAttrName, Object paramValue) {
+    public T isNullOrEq(String entityAttrName, Object paramValue) {
         appendByAnnotations(true, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -668,7 +668,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB eq(String entityAttrName, Object paramValue) {
+    public T eq(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -680,7 +680,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB notEq(String entityAttrName, Object paramValue) {
+    public T notEq(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -692,7 +692,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB gt(String entityAttrName, Object paramValue) {
+    public T gt(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -704,7 +704,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB lt(String entityAttrName, Object paramValue) {
+    public T lt(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -716,7 +716,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB gte(String entityAttrName, Object paramValue) {
+    public T gte(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -728,7 +728,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB lte(String entityAttrName, Object paramValue) {
+    public T lte(String entityAttrName, Object paramValue) {
         return processAnno(2, entityAttrName, paramValue);
     }
 
@@ -742,7 +742,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB between(String entityAttrName, Object... paramValues) {
+    public T between(String entityAttrName, Object... paramValues) {
         return processAnno(2, entityAttrName, paramValues);
     }
 
@@ -754,7 +754,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB in(String entityAttrName, Object... paramValues) {
+    public T in(String entityAttrName, Object... paramValues) {
         return processAnno(2, entityAttrName, paramValues);
     }
 
@@ -766,7 +766,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB notIn(String entityAttrName, Object... paramValues) {
+    public T notIn(String entityAttrName, Object... paramValues) {
         return processAnno(2, entityAttrName, paramValues);
     }
 
@@ -778,7 +778,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB exists(Object exprOrQueryObj, Object... paramValues) {
+    public T exists(Object exprOrQueryObj, Object... paramValues) {
         return processOp(Op.Exists.getOperator(), exprOrQueryObj, paramValues);
     }
 
@@ -790,11 +790,11 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB notExists(Object exprOrQueryObj, Object... paramValues) {
+    public T notExists(Object exprOrQueryObj, Object... paramValues) {
         return processOp(Op.NotExists.getOperator(), exprOrQueryObj, paramValues);
     }
 
-    protected CB processOp(String op, Object exprOrQueryObj, Object paramValues) {
+    protected T processOp(String op, Object exprOrQueryObj, Object paramValues) {
 
         String expr = "";
 
@@ -824,7 +824,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
 
         appendToWhere(expr, paramValues, false);
 
-        return (CB) this;
+        return (T) this;
 
     }
 
@@ -837,7 +837,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB contains(String entityAttrName, String keyword) {
+    public T contains(String entityAttrName, String keyword) {
         return processAnno(2, entityAttrName, keyword);
     }
 
@@ -849,7 +849,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB startsWith(String entityAttrName, String keyword) {
+    public T startsWith(String entityAttrName, String keyword) {
         return processAnno(2, entityAttrName, keyword);
     }
 
@@ -861,7 +861,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @return
      */
     @Override
-    public CB endsWith(String entityAttrName, String keyword) {
+    public T endsWith(String entityAttrName, String keyword) {
         return processAnno(2, entityAttrName, keyword);
     }
 
@@ -881,7 +881,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected CB setTableName(String tableName) {
+    protected T setTableName(String tableName) {
 
         this.tableName = tableName;
 
@@ -893,7 +893,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 this.tableName = matcher.group(2);
             }
 
-            this.entityClass = (Class<T>) dao.getEntityClass(this.tableName.trim());
+            this.entityClass = (Class<DOMAIN>) dao.getEntityClass(this.tableName.trim());
 
             if (entityClass != null) {
                 //如果表名是类名，做个自动转换
@@ -901,7 +901,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             }
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -952,7 +952,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      *
      * @return
      */
-    protected CB tryUpdateTableName() {
+    protected T tryUpdateTableName() {
 
         if (isNative()
                 && hasEntityClass()
@@ -960,7 +960,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
             this.tableName = getDao().getTableName(entityClass);
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     /**
@@ -1116,25 +1116,25 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected CB setTargetOption(Object hostObj, TargetOption targetOption) {
+    protected T setTargetOption(Object hostObj, TargetOption targetOption) {
 
         if (targetOption == null) {
-            return (CB) this;
+            return (T) this;
         }
 
         //重复的不再处理
         if (targetOptionList.contains(targetOption)) {
-            return (CB) this;
+            return (T) this;
         }
 
         targetOptionList.add(targetOption);
 
         //
         if (hasValidQueryEntity()) {
-            return (CB) this;
+            return (T) this;
         }
 
-        this.entityClass = (Class<T>) targetOption.entityClass();
+        this.entityClass = (Class<DOMAIN>) targetOption.entityClass();
 
         setTableName(targetOption.tableName());
 
@@ -1170,7 +1170,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         join(true, targetOption.joinOptions());
         join(true, targetOption.simpleJoinOptions());
 
-        return (CB) this;
+        return (T) this;
     }
 
 
@@ -1182,26 +1182,26 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
      * @param joinOptions
      * @return
      */
-    protected CB join(Boolean isAppend, JoinOption... joinOptions) {
+    protected T join(Boolean isAppend, JoinOption... joinOptions) {
 
         //Nothing to do
 
-        return (CB) this;
+        return (T) this;
     }
 
-    protected CB join(Boolean isAppend, SimpleJoinOption... joinOptions) {
+    protected T join(Boolean isAppend, SimpleJoinOption... joinOptions) {
 
         //Nothing to do
 
-        return (CB) this;
+        return (T) this;
     }
 
-    protected CB setQueryOption(Object... queryObjs) {
+    protected T setQueryOption(Object... queryObjs) {
 
         if (queryObjs == null
                 || queryObjs.length == 0
                 || hasValidQueryEntity()) {
-            return (CB) this;
+            return (T) this;
         }
 
         Arrays.stream(queryObjs)
@@ -1212,7 +1212,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                         return;
                     }
 
-                    this.entityClass = (Class<T>) queryOption.getEntityClass();
+                    this.entityClass = (Class<DOMAIN>) queryOption.getEntityClass();
 
                     this.setNative(queryOption.isNative());
 
@@ -1242,27 +1242,27 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 });
 
 
-        return (CB) this;
+        return (T) this;
     }
 
 
-    protected CB setPaging(Object queryObj) {
+    protected T setPaging(Object queryObj) {
 
         //如果不是分页对象
         if ((queryObj instanceof Paging)) {
             page(Paging.class.cast(queryObj));
         }
 
-        return (CB) this;
+        return (T) this;
     }
 
     protected void setFromStatement(String fromStatement) {
         //  throw new UnsupportedOperationException(getClass().getName() + " setFromStatement");
     }
 
-    protected CB join(Boolean isAppend, String... joinStatements) {
+    protected T join(Boolean isAppend, String... joinStatements) {
 //        throw new StatementBuildException("Only SelectDao support this operation");
-        return (CB) this;
+        return (T) this;
     }
 
 //////////////////////////////////////////////
@@ -1376,7 +1376,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                     .orElse(null);
 
             if (supplier != null) {
-                this.entityClass = (Class<T>) supplier.get();
+                this.entityClass = (Class<DOMAIN>) supplier.get();
                 this.alias = supplier.getAlias();
             }
         }
@@ -1387,7 +1387,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
                 queryObjList,
                 //试图设置
                 hasValidQueryEntity() ? null : c -> {
-                    this.entityClass = (Class<T>) c;
+                    this.entityClass = (Class<DOMAIN>) c;
                     this.alias = EntityClassSupplier.getAlias(this.entityClass);
                 }
         );
@@ -2182,7 +2182,7 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
     }
 
 
-    protected CB having(String expr, Object... paramValues) {
+    protected T having(String expr, Object... paramValues) {
         throw new UnsupportedOperationException("appendHaving [" + expr + "]");
     }
 
@@ -2426,9 +2426,9 @@ public abstract class ConditionBuilderImpl<T, CB extends ConditionBuilder>
         return this.nativeQL;
     }
 
-    public CB setCanChangeNativeQL(boolean canChangeNativeQL) {
+    public T setCanChangeNativeQL(boolean canChangeNativeQL) {
         this.canChangeNativeQL = canChangeNativeQL;
-        return (CB) this;
+        return (T) this;
     }
 
     /**

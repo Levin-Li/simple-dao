@@ -20,9 +20,8 @@ import java.util.List;
  * @param <T>
  */
 public class DeleteDaoImpl<T>
-        extends ConditionBuilderImpl<T, DeleteDao<T>>
+        extends ConditionBuilderImpl<DeleteDao<T>, T>
         implements DeleteDao<T> {
-
 
     {
         //默认为安全模式

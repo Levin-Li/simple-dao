@@ -57,14 +57,14 @@ public final class SimpleList<E> {
         return this;
     }
 
-    public boolean isNullable() {
-        return nullable;
-    }
-
-    public SimpleList<E> setNullable(boolean nullable) {
-        this.nullable = nullable;
-        return this;
-    }
+//    public boolean isNullable() {
+//        return nullable;
+//    }
+//
+//    public SimpleList<E> setNullable(boolean nullable) {
+//        this.nullable = nullable;
+//        return this;
+//    }
 
     public String getDelimiter() {
         return delimiter;
