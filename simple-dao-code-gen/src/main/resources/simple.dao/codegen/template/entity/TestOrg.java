@@ -61,7 +61,6 @@ import org.hibernate.annotations.Type;
         }
 )
 
-//@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
 //@AssociationOverride
 //默认情况下，JPA 持续性提供程序自动假设子类继承超类中定义的持久属性及其关联映射。
@@ -84,6 +83,9 @@ import org.hibernate.annotations.Type;
 @EntityCategory(EntityConst.SYS_TYPE_NAME)
 //@Cacheable(false) //JPA二级缓存
 //@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+
+//逻辑删除配置
+//@EntityOption(disableActions = EntityOption.Action.Delete, logicalDeleteFieldName = "deleted", logicalDeleteValue = "true")
 public class TestOrg
         extends AbstractTreeObject<String, TestOrg>
         implements MultiTenantObject, StatefulObject {
