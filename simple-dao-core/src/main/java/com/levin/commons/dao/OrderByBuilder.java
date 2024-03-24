@@ -10,6 +10,56 @@ import java.util.stream.Stream;
  */
 public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
 
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param statement   排序表达式
+     * @param paramValues
+     * @return
+     */
+    default T orderByStatement(String statement, Object... paramValues) {
+        return orderByStatement(true, null, statement, paramValues);
+    }
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param type
+     * @param statement   排序表达式
+     * @param paramValues
+     * @return
+     */
+    default T orderByStatement(OrderBy.Type type, String statement, Object... paramValues) {
+        return orderByStatement(true, type, statement, paramValues);
+    }
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param isAppend
+     * @param type
+     * @param statement   排序表达式
+     * @param paramValues
+     * @return
+     */
+    default T orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues) {
+        return orderByStatement(isAppend, type, null, statement, paramValues);
+    }
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param isAppend
+     * @param type
+     * @param scope       生效的作用域
+     * @param statement   排序表达式
+     * @param paramValues
+     * @return
+     */
+    T orderByStatement(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String statement, Object... paramValues);
+
+
     /**
      * 增加排序字段
      *
@@ -225,42 +275,5 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * @return
      */
     T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String... columnNames);
-
-    /**
-     * 增加排序表达式，可设置参数
-     *
-     * @param type
-     * @param statement
-     * @param paramValues
-     * @return
-     */
-    default T orderByStatement(OrderBy.Type type, String statement, Object... paramValues) {
-        return orderByStatement(true, type, statement, paramValues);
-    }
-
-    /**
-     * 增加排序表达式，可设置参数
-     *
-     * @param isAppend
-     * @param type
-     * @param statement
-     * @param paramValues
-     * @return
-     */
-    default T orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues) {
-        return orderByStatement(isAppend, type, null, statement, paramValues);
-    }
-
-    /**
-     * 增加排序表达式，可设置参数
-     *
-     * @param isAppend
-     * @param type
-     * @param scope       生效的作用域
-     * @param statement
-     * @param paramValues
-     * @return
-     */
-    T orderByStatement(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String statement, Object... paramValues);
 
 }

@@ -2,6 +2,7 @@ package com.levin.commons.dao;
 
 import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
+import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
@@ -623,7 +624,7 @@ public class DaoExamplesTest {
 
                 //@todo 待修复bug
                 //支持别名处理，如果是排序别名，不能加点
-                .orderBy("ts2")
+                .orderByStatement(OrderBy.Type.Desc, "ts2")
                 .find(Map.class);
 
         Assert.isTrue(g.size() > 0);
