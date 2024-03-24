@@ -138,12 +138,12 @@ public interface SelectDao<T> extends
     /**
      * 获取一个结果
      *
-     * @param isExpectUnique 是否预期唯一，如果true，但是查询结果不唯一将抛出异常，
+     * @param isExpectUniqueResult 是否预期唯一，如果true，但是查询结果不唯一将抛出异常，
      * @param <E>
      * @return
      */
-    default <E> E findOne(boolean isExpectUnique) {
-        return findOne(isExpectUnique, (Class<E>) null);
+    default <E> E findOne(boolean isExpectUniqueResult) {
+        return findOne(isExpectUniqueResult, (Class<E>) null);
     }
 
 
@@ -176,8 +176,8 @@ public interface SelectDao<T> extends
      * @param <E> resultType 要求的结果类型
      * @return
      */
-    default <E> E findOne(boolean isExpectUnique, Class<E> resultType) {
-        return findOne(isExpectUnique, resultType, 3);
+    default <E> E findOne(boolean isExpectUniqueResult, Class<E> resultType) {
+        return findOne(isExpectUniqueResult, resultType, 3);
     }
 
 
@@ -209,7 +209,7 @@ public interface SelectDao<T> extends
      *                         a.b.c.{com.User}    大括号表示忽略User类型属性
      * @return
      */
-    <E> E findOne(boolean isExpectUnique, Class<E> resultType, int maxCopyDeep, String... ignoreProperties);
+    <E> E findOne(boolean isExpectUniqueResult, Class<E> resultType, int maxCopyDeep, String... ignoreProperties);
 
     /**
      * 获取结果集，并转换成指定的对对象
@@ -225,19 +225,19 @@ public interface SelectDao<T> extends
     /**
      * 获取结果集，并转换成指定的对对象
      *
-     * @param isExpectUnique
+     * @param isExpectUniqueResult
      * @param converter
      * @param <I>
      * @param <E>
      * @return
      */
-    default <I, E> E findOne(boolean isExpectUnique, Converter<I, E> converter) {
+    default <I, E> E findOne(boolean isExpectUniqueResult, Converter<I, E> converter) {
 
         if (converter == null) {
             throw new IllegalArgumentException("converter is null");
         }
 
-        Object data = findOne(isExpectUnique);
+        Object data = findOne(isExpectUniqueResult);
 
         return data != null ? converter.convert((I) data) : null;
     }

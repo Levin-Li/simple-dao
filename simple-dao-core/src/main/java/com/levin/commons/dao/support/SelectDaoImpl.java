@@ -1323,6 +1323,8 @@ public class SelectDaoImpl<T>
     ////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * 查询一个数据的唯一入口
+     * <p>
      * 获取结果集，并转换成指定的对对象
      * 数据转换采用spring智能转换器
      *
@@ -1330,16 +1332,20 @@ public class SelectDaoImpl<T>
      * @return
      */
     @Override
-    public <E> E findOne(boolean isExpectUnique, Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
+    public <E> E findOne(boolean isExpectUniqueResult, Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
 
         boolean notResultType = resultType == null || resultType == Void.class;
+
+        //是否预期唯一结果
+        //getContext().put("isExpectUniqueResult", isExpectUniqueResult);
 
         if (!notResultType && selectColumns.isEmpty()) {
             //加入选择条件
             appendByQueryObj(resultType);
         }
 
-        setRowCount(isExpectUnique ? 2 : 1);
+        //预期唯一结果时，故意允许查询2条记录，如果多余一条记录则视为异常情况
+        setRowCount(isExpectUniqueResult ? 2 : 1);
 
         List<E> list = findList(null);
 
@@ -1348,7 +1354,7 @@ public class SelectDaoImpl<T>
         }
 
         //预期唯一值，但结果超过一条记录
-        if (isExpectUnique && list.size() > 1) {
+        if (isExpectUniqueResult && list.size() > 1) {
             throw new IncorrectResultSizeDataAccessException(1, list.size());
         }
 
@@ -1503,20 +1509,6 @@ public class SelectDaoImpl<T>
 
                 }, field -> field.isAnnotationPresent(Fetch.class)
         );
-
-    }
-
-
-    //    @Override
-    public <E> E findOne(Function<? super Object, E> converter) {
-
-        if (converter == null) {
-            throw new IllegalArgumentException("converter is null");
-        }
-
-        Object data = findOne();
-
-        return data != null ? converter.apply(data) : null;
 
     }
 
