@@ -619,10 +619,12 @@ public class DaoExamplesTest {
                 .groupByAndSelect(AbstractNamedEntityObject::getName, "groupName")
 //                .groupBy("g.name")
 
-                //支持别名处理
+                //Select (Count( 1 )) AS cnt , (Avg( t.score + 5 )) AS ts , (Avg( u.score )) AS us , (Avg( g.score )) AS gs , (Sum( t.score )) AS ts2 , (g.name) AS groupName  From com.levin.commons.dao.domain.Group g left join com.levin.commons.dao.domain.User u on g.id = u.group.id  left join com.levin.commons.dao.domain.Task t on u.id = t.user.id    Group By g.name Order By g.ts2
+
+                //@todo 待修复bug
+                //支持别名处理，如果是排序别名，不能加点
                 .orderBy("ts2")
                 .find(Map.class);
-
 
         Assert.isTrue(g.size() > 0);
 
