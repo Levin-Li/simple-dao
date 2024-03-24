@@ -18,25 +18,25 @@ public interface SelectBuilder<T extends SelectBuilder<T, DOMAIN>, DOMAIN> {
         return select(true, columnNames);
     }
 
-    default T select(PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return select(true, attrGetFunctions);
+    default T select(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return select(true, attrReadFunctions);
     }
 
     /**
      * 增加选择字段
      *
      * @param isAppend
-     * @param attrGetFunctions
+     * @param attrReadFunctions
      * @return
      */
-    default T select(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
+    default T select(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
 
         //快速返回，优化性能
         if (!Boolean.TRUE.equals(isAppend)) {
             return (T) this;
         }
 
-        return select(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+        return select(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**

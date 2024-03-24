@@ -18,8 +18,8 @@ public interface GroupByBuilder<T extends GroupByBuilder<T, DOMAIN>, DOMAIN> {
         return groupBy(true, columnNames);
     }
 
-    default T groupBy(PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return groupBy(true, attrGetFunctions);
+    default T groupBy(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return groupBy(true, attrReadFunctions);
     }
 
     /**
@@ -36,17 +36,17 @@ public interface GroupByBuilder<T extends GroupByBuilder<T, DOMAIN>, DOMAIN> {
      * 增加分组字段
      *
      * @param isAppend
-     * @param attrGetFunctions
+     * @param attrReadFunctions
      * @return
      */
-    default T groupBy(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
+    default T groupBy(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
 
         //快速返回，优化性能
         if (!Boolean.TRUE.equals(isAppend)) {
             return (T) this;
         }
 
-        return groupBy(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+        return groupBy(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
 

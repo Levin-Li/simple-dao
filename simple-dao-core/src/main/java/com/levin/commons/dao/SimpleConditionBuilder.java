@@ -37,8 +37,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T isNull(String entityAttrName);
 
-    default T isNull(PFunction<DOMAIN, ?> attrGetFunction) {
-        return isNull(attrGetFunction.get());
+    default T isNull(PFunction<DOMAIN, ?> attrReadFunction) {
+        return isNull(attrReadFunction.get());
     }
 
     /**
@@ -49,8 +49,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T isNotNull(String entityAttrName);
 
-    default T isNotNull(PFunction<DOMAIN, ?> attrGetFunction) {
-        return isNotNull(attrGetFunction.get());
+    default T isNotNull(PFunction<DOMAIN, ?> attrReadFunction) {
+        return isNotNull(attrReadFunction.get());
     }
 
     /**
@@ -61,8 +61,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T isNullOrEq(String entityAttrName, Object paramValue);
 
-    default T isNullOrEq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return isNullOrEq(attrGetFunction.get(), paramValue);
+    default T isNullOrEq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return isNullOrEq(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -75,8 +75,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T eq(String entityAttrName, Object paramValue);
 
-    default T eq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return eq(attrGetFunction.get(), paramValue);
+    default T eq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return eq(attrReadFunction.get(), paramValue);
     }
 
 
@@ -89,8 +89,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T notEq(String entityAttrName, Object paramValue);
 
-    default T notEq(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return notEq(attrGetFunction.get(), paramValue);
+    default T notEq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return notEq(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -102,8 +102,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T gt(String entityAttrName, Object paramValue);
 
-    default T gt(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return gt(attrGetFunction.get(), paramValue);
+    default T gt(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return gt(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -115,8 +115,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T lt(String entityAttrName, Object paramValue);
 
-    default T lt(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return lt(attrGetFunction.get(), paramValue);
+    default T lt(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return lt(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -128,8 +128,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T gte(String entityAttrName, Object paramValue);
 
-    default T gte(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return gte(attrGetFunction.get(), paramValue);
+    default T gte(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return gte(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -141,8 +141,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T lte(String entityAttrName, Object paramValue);
 
-    default T lte(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return lte(attrGetFunction.get(), paramValue);
+    default T lte(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return lte(attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -154,8 +154,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T between(String entityAttrName, Object... paramValues);
 
-    default T between(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
-        return between(attrGetFunction.get(), paramValues);
+    default T between(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
+        return between(attrReadFunction.get(), paramValues);
     }
 
     /**
@@ -165,8 +165,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T in(String entityAttrName, Object... paramValues);
 
-    default T in(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
-        return in(attrGetFunction.get(), paramValues);
+    default T in(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
+        return in(attrReadFunction.get(), paramValues);
     }
 
 
@@ -177,8 +177,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T notIn(String entityAttrName, Object... paramValues);
 
-    default T notIn(PFunction<DOMAIN, ?> attrGetFunction, Object... paramValues) {
-        return notIn(attrGetFunction.get(), paramValues);
+    default T notIn(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
+        return notIn(attrReadFunction.get(), paramValues);
     }
 
     /**
@@ -188,8 +188,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T contains(String entityAttrName, String keyword);
 
-    default T contains(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
-        return contains(attrGetFunction.get(), keyword);
+    default T contains(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return contains(attrReadFunction.get(), keyword);
     }
 
     /**
@@ -199,8 +199,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T startsWith(String entityAttrName, String keyword);
 
-    default T startsWith(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
-        return startsWith(attrGetFunction.get(), keyword);
+    default T startsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return startsWith(attrReadFunction.get(), keyword);
     }
 
     /**
@@ -210,8 +210,8 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T endsWith(String entityAttrName, String keyword);
 
-    default T endsWith(PFunction<DOMAIN, ?> attrGetFunction, String keyword) {
-        return endsWith(attrGetFunction.get(), keyword);
+    default T endsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return endsWith(attrReadFunction.get(), keyword);
     }
 
     /**

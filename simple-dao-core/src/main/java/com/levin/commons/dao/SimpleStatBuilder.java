@@ -37,8 +37,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T count(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T count(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return count(attrGetFunction.get(), alias);
+    default T count(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return count(attrReadFunction.get(), alias);
     }
 
     /**
@@ -51,8 +51,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T avg(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T avg(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return avg(attrGetFunction.get(), alias);
+    default T avg(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return avg(attrReadFunction.get(), alias);
     }
 
     /**
@@ -65,8 +65,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T sum(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T sum(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return sum(attrGetFunction.get(), alias);
+    default T sum(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return sum(attrReadFunction.get(), alias);
     }
 
     /**
@@ -79,8 +79,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T max(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T max(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return max(attrGetFunction.get(), alias);
+    default T max(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return max(attrReadFunction.get(), alias);
     }
 
     /**
@@ -93,8 +93,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T min(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T min(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return min(attrGetFunction.get(), alias);
+    default T min(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return min(attrReadFunction.get(), alias);
     }
 
     /**
@@ -110,8 +110,8 @@ public interface SimpleStatBuilder<T extends SimpleStatBuilder<T, DOMAIN>, DOMAI
      */
     T groupByAndSelect(String expr, String alias, Map<String, Object>... paramValues);
 
-    default T groupByAndSelect(PFunction<DOMAIN, ?> attrGetFunction, String alias) {
-        return groupByAndSelect(attrGetFunction.get(), alias);
+    default T groupByAndSelect(PFunction<DOMAIN, ?> attrReadFunction, String alias) {
+        return groupByAndSelect(attrReadFunction.get(), alias);
     }
 
 }

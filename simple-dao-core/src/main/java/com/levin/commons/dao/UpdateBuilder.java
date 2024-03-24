@@ -19,11 +19,11 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * @param isAppend
-     * @param attrGetFunctions
+     * @param attrReadFunctions
      * @return
      */
-    default T setNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return setNull(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default T setNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return setNull(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**
@@ -38,11 +38,11 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
-     * @param attrGetFunctions
+     * @param attrReadFunctions
      * @return
      */
-    default T setNull(PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return setNull(true, attrGetFunctions);
+    default T setNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return setNull(true, attrReadFunctions);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -59,12 +59,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
-     * @param attrGetFunction
+     * @param attrReadFunction
      * @param paramValue
      * @return
      */
-    default T set(PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return set(true, attrGetFunction.get(), paramValue);
+    default T set(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return set(true, attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -81,12 +81,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * @param isAppend
-     * @param attrGetFunction
+     * @param attrReadFunction
      * @param paramValue
      * @return
      */
-    default T set(Boolean isAppend, PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return set(isAppend, false, attrGetFunction.get(), paramValue);
+    default T set(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return set(isAppend, false, attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -105,12 +105,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     /**
      * @param isAppend
      * @param incrementMode
-     * @param attrGetFunction
+     * @param attrReadFunction
      * @param paramValue
      * @return
      */
-    default T set(Boolean isAppend, boolean incrementMode, PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return set(isAppend, incrementMode, true, attrGetFunction.get(), paramValue);
+    default T set(Boolean isAppend, boolean incrementMode, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return set(isAppend, incrementMode, true, attrReadFunction.get(), paramValue);
     }
 
     /**
@@ -130,12 +130,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
      * @param isAppend
      * @param incrementMode
      * @param autoConvertNullValueForIncrementMode
-     * @param attrGetFunction
+     * @param attrReadFunction
      * @param paramValue
      * @return
      */
-    default T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, PFunction<DOMAIN, ?> attrGetFunction, Object paramValue) {
-        return set(isAppend, incrementMode, autoConvertNullValueForIncrementMode, attrGetFunction.get(), paramValue);
+    default T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
+        return set(isAppend, incrementMode, autoConvertNullValueForIncrementMode, attrReadFunction.get(), paramValue);
     }
 
     /**

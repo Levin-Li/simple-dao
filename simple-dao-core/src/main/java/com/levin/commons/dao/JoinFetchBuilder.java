@@ -23,8 +23,8 @@ public interface JoinFetchBuilder<T extends JoinFetchBuilder<T, DOMAIN>, DOMAIN>
         return joinFetch(true, setAttrs);
     }
 
-    default T joinFetch(PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return joinFetch(true, null, attrGetFunctions);
+    default T joinFetch(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return joinFetch(true, null, attrReadFunctions);
     }
 
     /**
@@ -38,8 +38,8 @@ public interface JoinFetchBuilder<T extends JoinFetchBuilder<T, DOMAIN>, DOMAIN>
         return joinFetch(isAppend, null, setAttrs);
     }
 
-    default T joinFetch(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return joinFetch(isAppend, null, attrGetFunctions);
+    default T joinFetch(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return joinFetch(isAppend, null, attrReadFunctions);
     }
 
     /**
@@ -51,8 +51,8 @@ public interface JoinFetchBuilder<T extends JoinFetchBuilder<T, DOMAIN>, DOMAIN>
      */
     T joinFetch(Boolean isAppend, Fetch.JoinType joinType, String... setAttrs);
 
-    default T joinFetch(Boolean isAppend, Fetch.JoinType joinType, PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return joinFetch(isAppend, joinType, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default T joinFetch(Boolean isAppend, Fetch.JoinType joinType, PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return joinFetch(isAppend, joinType, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
 }
