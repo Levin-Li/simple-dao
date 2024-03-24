@@ -578,9 +578,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     private T processAnno(int callMethodDeep, String expr, Object value) {
 
-//        if (!StringUtils.hasText(expr)) {
-//            throw new IllegalArgumentException("expr has no content");
-//        }
+        //2024.3.25 添加属性异常检查，不知道原来为啥注释这代码？？？
+        Assert.hasText(expr, "attr name or expr is empty");
 
         final Exception exception = new UnsupportedOperationException(expr);
 
@@ -633,23 +632,33 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     /**
      * is null
      *
-     * @param entityAttrName 如 name
+     * @param entityAttrNames 如 name
      * @return
      */
     @Override
-    public T isNull(String entityAttrName) {
-        return processAnno(2, entityAttrName, null);
+    public T isNull(String... entityAttrNames) {
+
+        for (String entityAttrName : entityAttrNames) {
+            processAnno(2, entityAttrName, null);
+        }
+
+        return (T) this;
     }
 
     /**
      * is not null
      *
-     * @param entityAttrName 如 name
+     * @param entityAttrNames 如 name
      * @return
      */
     @Override
-    public T isNotNull(String entityAttrName) {
-        return processAnno(2, entityAttrName, null);
+    public T isNotNull(String... entityAttrNames) {
+
+        for (String entityAttrName : entityAttrNames) {
+            processAnno(2, entityAttrName, null);
+        }
+
+        return (T) this;
     }
 
 

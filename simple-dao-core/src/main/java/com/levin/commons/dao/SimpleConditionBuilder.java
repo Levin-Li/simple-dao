@@ -1,5 +1,8 @@
 package com.levin.commons.dao;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 /**
  * 简单条件构建器
  *
@@ -29,28 +32,40 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      */
     T enableEmptyValueFilter();
 
+//    /**
+//     * is null
+//     *
+//     * @param entityAttrName 如 name
+//     * @return
+//     */
+//    T isNull(String entityAttrName);
+
     /**
-     * is null
-     *
-     * @param entityAttrName 如 name
+     * @param entityAttrNames
      * @return
      */
-    T isNull(String entityAttrName);
+    T isNull(String... entityAttrNames);
 
-    default T isNull(PFunction<DOMAIN, ?> attrReadFunction) {
-        return isNull(attrReadFunction.get());
+    default T isNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return isNull(Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
+//    /**
+//     * is not null
+//     *
+//     * @param entityAttrName 如 name
+//     * @return
+//     */
+//    T isNotNull(String entityAttrName);
+
     /**
-     * is not null
-     *
-     * @param entityAttrName 如 name
+     * @param entityAttrNames
      * @return
      */
-    T isNotNull(String entityAttrName);
+    T isNotNull(String... entityAttrNames);
 
-    default T isNotNull(PFunction<DOMAIN, ?> attrReadFunction) {
-        return isNotNull(attrReadFunction.get());
+    default T isNotNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
+        return isNotNull(Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**
