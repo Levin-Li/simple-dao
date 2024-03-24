@@ -25,31 +25,7 @@ import javax.persistence.*;
 @FieldNameConstants
 @Schema(title = "测试机构", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestOrg")
-@Table(
-        indexes = {
-            @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-            @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-            @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-            @Index(columnList = AbstractBaseEntityObject.Fields.creator),
-            @Index(columnList = AbstractNamedEntityObject.Fields.name),
-            //                @Index(columnList = AbstractTreeObject.Fields.parentId),
-            //                @Index(columnList = AbstractTreeObject.Fields.idPath),
 
-            @Index(columnList = E_TestOrg.parentId),
-            @Index(columnList = E_TestOrg.code),
-            @Index(columnList = E_TestOrg.areaCode),
-            @Index(columnList = E_TestOrg.tenantId),
-            @Index(columnList = E_TestOrg.type),
-            @Index(columnList = E_TestOrg.category),
-            @Index(columnList = E_TestOrg.state),
-            @Index(columnList = E_TestOrg.level),
-        },
-        uniqueConstraints = {
-            @UniqueConstraint(
-                    columnNames = {E_TestOrg.tenantId, E_TestOrg.parentId, E_TestOrg.name}),
-            @UniqueConstraint(
-                    columnNames = {E_TestOrg.tenantId, E_TestOrg.parentId, E_TestOrg.code}),
-        })
 
 // @EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName =
 // "deleted",logicalDeleteValue = "true")

@@ -52,7 +52,7 @@ public interface JoinFetchBuilder<T extends JoinFetchBuilder<T, DOMAIN>, DOMAIN>
     T joinFetch(Boolean isAppend, Fetch.JoinType joinType, String... setAttrs);
 
     default T joinFetch(Boolean isAppend, Fetch.JoinType joinType, PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return joinFetch(isAppend, joinType, (String[]) Stream.of(attrGetFunctions).filter(Objects::nonNull).map(f -> f.get()).toArray());
+        return joinFetch(isAppend, joinType, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
 }

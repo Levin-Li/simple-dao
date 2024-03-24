@@ -46,7 +46,7 @@ public interface GroupByBuilder<T extends GroupByBuilder<T, DOMAIN>, DOMAIN> {
             return (T) this;
         }
 
-        return groupBy(isAppend, (String[]) Stream.of(attrGetFunctions).filter(Objects::nonNull).map(f -> f.get()).toArray());
+        return groupBy(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
 

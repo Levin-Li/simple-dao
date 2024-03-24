@@ -73,9 +73,6 @@ public class CreateTestRoleReq extends MultiTenantReq {
             isRequired = "false")
     List<String> permissionList;
 
-    @Schema(title = L_domain)
-    @Size(max = 128)
-    String domain;
 
     @Schema(title = L_name)
     @NotBlank

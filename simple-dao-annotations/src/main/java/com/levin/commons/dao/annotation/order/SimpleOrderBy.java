@@ -31,11 +31,11 @@ import java.lang.annotation.*;
 public @interface SimpleOrderBy {
 
     /**
-     * 排序条件默认在没有GroupBy语句时才生效
+     * 排序条件生效作用域
      *
      * @return
      */
-    OrderBy.Scope scope() default OrderBy.Scope.OnlyForNotGroupBy;
+    OrderBy.Scope scope() default OrderBy.Scope.All;
 
     /**
      * 排序语句表达式

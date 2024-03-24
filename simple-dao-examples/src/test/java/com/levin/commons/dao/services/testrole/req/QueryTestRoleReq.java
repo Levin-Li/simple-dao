@@ -104,10 +104,6 @@ public class QueryTestRoleReq extends MultiTenantReq {
     @Schema(title = L_permissionList, description = D_permissionList)
     List<String> permissionList;
 
-    @Size(max = 128)
-    @Schema(title = L_domain)
-    String domain;
-
     @NotBlank
     @Size(max = 128)
     @Schema(title = L_name)

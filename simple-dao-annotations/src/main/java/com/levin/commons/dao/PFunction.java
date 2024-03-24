@@ -21,6 +21,9 @@ import java.util.stream.Stream;
 @FunctionalInterface
 public interface PFunction<T, R> extends Function<T, R>, Supplier<String>, Serializable {
 
+    /**
+     * 软引用缓存
+     */
     Map<Class<?>, String> attrNameCache = new ConcurrentReferenceHashMap<>();
 
     default SerializedLambda getSerializedLambda() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -45,15 +48,13 @@ public interface PFunction<T, R> extends Function<T, R>, Supplier<String>, Seria
 
             String implMethodName = serializedLambda.getImplMethodName();
 
-            return Stream.of("get", "is", "has", "can", "will")
+            return Stream.of("get", "set", "is", "has", "can", "will")
                     //字母是大写
                     .filter(prefix -> implMethodName.length() > prefix.length() && Character.isUpperCase(implMethodName.charAt(prefix.length())))
                     .filter(implMethodName::startsWith)
-                    .map(prefix -> Character.toUpperCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length()))
+                    .map(prefix -> Character.toLowerCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length() + 1))
                     .findFirst()
                     .orElse(implMethodName);
-
-
         });
     }
 

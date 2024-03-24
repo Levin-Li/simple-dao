@@ -60,8 +60,30 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(true, OrderBy.Type.Desc, columnNames);
     }
 
+    default T orderByDesc(OrderBy.Scope scope, String... columnNames) {
+        return orderBy(true, OrderBy.Type.Desc, scope, columnNames);
+    }
+
+
+    /**
+     * 增加降序排序
+     *
+     * @param attrGetFunctions
+     * @return
+     */
     default T orderByDesc(PFunction<DOMAIN, ?>... attrGetFunctions) {
         return orderBy(true, OrderBy.Type.Desc, attrGetFunctions);
+    }
+
+    /**
+     * 增加降序排序
+     *
+     * @param scope
+     * @param attrGetFunctions
+     * @return
+     */
+    default T orderByDesc(OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrGetFunctions) {
+        return orderBy(true, OrderBy.Type.Desc, scope, attrGetFunctions);
     }
 
     /**
@@ -78,6 +100,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
+     * 增加升序排序
+     *
      * @param isAppend
      * @param columnNames
      * @return
@@ -86,11 +110,20 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(isAppend, OrderBy.Type.Asc, columnNames);
     }
 
+
+    /**
+     * 增加升序排序
+     *
+     * @param attrGetFunctions
+     * @return
+     */
     default T orderByAsc(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
         return orderBy(isAppend, OrderBy.Type.Asc, attrGetFunctions);
     }
 
     /**
+     * 增加升序排序
+     *
      * @param columnNames
      * @return
      */
@@ -98,8 +131,22 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(true, OrderBy.Type.Asc, columnNames);
     }
 
+    default T orderByAsc(OrderBy.Scope scope, String... columnNames) {
+        return orderBy(true, OrderBy.Type.Asc, scope, columnNames);
+    }
+
+    /**
+     * 增加升序排序
+     *
+     * @param attrGetFunctions
+     * @return
+     */
     default T orderByAsc(PFunction<DOMAIN, ?>... attrGetFunctions) {
         return orderBy(true, OrderBy.Type.Asc, attrGetFunctions);
+    }
+
+    default T orderByAsc(OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrGetFunctions) {
+        return orderBy(true, OrderBy.Type.Asc, scope, attrGetFunctions);
     }
 
     /**
@@ -111,13 +158,7 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * @return
      */
     default T orderBy(Boolean isAppend, OrderBy.Type type, PFunction<DOMAIN, ?>... attrGetFunctions) {
-
-        //快速返回，优化性能
-        if (!Boolean.TRUE.equals(isAppend)) {
-            return (T) this;
-        }
-
-        return orderBy(isAppend, type, (String[]) Stream.of(attrGetFunctions).filter(Objects::nonNull).map(f -> f.get()).toArray());
+        return orderBy(isAppend, type, null, attrGetFunctions);
     }
 
     /**
@@ -127,8 +168,63 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * @param columnNames 例：  "name" , "createTime"
      * @return
      */
-    T orderBy(Boolean isAppend, OrderBy.Type type, String... columnNames);
+    default T orderBy(Boolean isAppend, OrderBy.Type type, String... columnNames) {
+        return orderBy(isAppend, type, null, columnNames);
+    }
 
+    /**
+     * 增加排序表达式
+     *
+     * @param type
+     * @param scope       生效的作用域
+     * @param columnNames
+     * @return
+     */
+    default T orderBy(OrderBy.Type type, OrderBy.Scope scope, String... columnNames) {
+        return orderBy(true, type, scope, columnNames);
+    }
+
+    /**
+     * 增加排序表达式
+     *
+     * @param type
+     * @param scope            生效的作用域
+     * @param attrGetFunctions
+     * @return
+     */
+    default T orderBy(OrderBy.Type type, OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrGetFunctions) {
+        return orderBy(true, type, scope, attrGetFunctions);
+    }
+
+    /**
+     * 增加排序字段
+     *
+     * @param isAppend
+     * @param type
+     * @param scope            生效的作用域
+     * @param attrGetFunctions
+     * @return
+     */
+    default T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrGetFunctions) {
+
+        //快速返回，优化性能
+        if (!Boolean.TRUE.equals(isAppend)) {
+            return (T) this;
+        }
+
+        return orderBy(isAppend, type, scope, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    }
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param isAppend
+     * @param type
+     * @param scope       生效的作用域
+     * @param columnNames
+     * @return
+     */
+    T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String... columnNames);
 
     /**
      * 增加排序表达式，可设置参数
@@ -151,5 +247,20 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * @param paramValues
      * @return
      */
-    T orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues);
+    default T orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues) {
+        return orderByStatement(isAppend, type, null, statement, paramValues);
+    }
+
+    /**
+     * 增加排序表达式，可设置参数
+     *
+     * @param isAppend
+     * @param type
+     * @param scope       生效的作用域
+     * @param statement
+     * @param paramValues
+     * @return
+     */
+    T orderByStatement(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String statement, Object... paramValues);
+
 }

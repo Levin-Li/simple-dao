@@ -43,7 +43,7 @@ public class TableJoinStatDTO {
     Long avgScore = 20L;
 
     //按部门分组统计，结果排序
-    @GroupBy(domain = E_Group.ALIAS, value = E_Group.name, orderBy = @OrderBy())
+    @GroupBy(domain = E_Group.ALIAS, value = E_Group.name, orderBy = @OrderBy(scope = OrderBy.Scope.OnlyForGroupBy))
     String groupName;
 
 }

@@ -1,6 +1,5 @@
 package com.levin.commons.dao.domain;
 
-import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;

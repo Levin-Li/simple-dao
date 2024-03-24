@@ -11,7 +11,7 @@ import com.levin.commons.dao.annotation.logic.OR;
 
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
-import com.levin.commons.dao.annotation.order.OrderByList;
+import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Immutable;
 import com.levin.commons.dao.exception.DaoSecurityException;
 import com.levin.commons.dao.exception.StatementBuildException;
@@ -1961,9 +1961,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 if (isValid(annotation, bean, name, value)) {
                     daoAnnotations.addAll(Arrays.asList(clist.value()));
                 }
-            } else if (annotation instanceof OrderByList) {
+            } else if (annotation instanceof OrderBy.List) {
                 if (isValid(annotation, bean, name, value)) {
-                    daoAnnotations.addAll(Arrays.asList(((OrderByList) annotation).value()));
+                    daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
                 }
             } else if (autoConsumerIfList(annotation, isValid(annotation, bean, name, value), daoAnnotations::add)) {
                 //该if 条件不能去除

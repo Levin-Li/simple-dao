@@ -3,6 +3,7 @@ package com.levin.commons.dao;
 import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
 import com.levin.commons.dao.domain.*;
+import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
@@ -94,8 +95,6 @@ public class DaoExamplesTest {
 
     Random random = new Random(this.hashCode());
 
-
-    SimpleConditionBuilder<User> simpleConditionBuilder;
 
     /**
      * 注意测试时，使用的是h2的内存数据库，所以没有使用事务
@@ -618,6 +617,8 @@ public class DaoExamplesTest {
 //                .where("u.name = :?","sss")
                 .groupByAndSelect(E_Group.name, "groupName")
 //                .groupBy("g.name")
+
+                //支持别名处理
                 .orderBy("ts2")
                 .find(Map.class);
 
@@ -910,11 +911,19 @@ public class DaoExamplesTest {
     @Test
     public void testOrderBy() {
 
-        String sql = dao.selectFrom(User.class).appendByQueryObj(new OrderByExam()).genFinalStatement();
+        String sql = dao.selectFrom(User.class)
+                .sum(User::getScore, "sumScore")
+                .avg(User::getScore, "avgScore")
+                .max(User::getScore, "maxScore")
+                .min(User::getScore, "minScore")
+                .appendByQueryObj(new OrderByExam())
+                .genFinalStatement();
 
+        Assert.isTrue(sql.contains(" sumScore "));
 
+        Assert.isTrue(sql.contains(" score "));
         Assert.isTrue(sql.contains(E_User.createTime));
-        Assert.isTrue(sql.contains(E_User.area));
+        Assert.isTrue(!sql.contains(E_User.area));
 
         System.out.println(sql);
     }
@@ -1362,7 +1371,7 @@ public class DaoExamplesTest {
 
         context.put("env.jpaDao.P1", "Dao参数1");
 
-        PagingData<Object>  data = dao.findPagingDataByQueryObj(new UserDTO2());
+        PagingData<Object> data = dao.findPagingDataByQueryObj(new UserDTO2());
 
         System.out.println("ok");
 
@@ -1486,14 +1495,14 @@ public class DaoExamplesTest {
         Boolean one = dao.selectFrom(Group.class).select(E_Group.enable).findOne(Boolean.class);
         boolean one2 = dao.selectFrom(Group.class).select(E_Group.enable).findOne(boolean.class);
 
-        String  name  = dao.selectFrom(Group.class).select(E_Group.name).findOne(String.class);
+        String name = dao.selectFrom(Group.class).select(E_Group.name).findOne(String.class);
 
-        List<String>  names  = dao.selectFrom(Group.class).select(E_Group.name).limit(0,8).find(String.class);
+        List<String> names = dao.selectFrom(Group.class).select(E_Group.name).limit(0, 8).find(String.class);
 
-        Group  parent  = dao.selectFrom(Group.class).select(E_Group.parent).findOne(Group.class);
+        Group parent = dao.selectFrom(Group.class).select(E_Group.parent).findOne(Group.class);
 
 
-        GroupInfo  info  = dao.selectFrom(Group.class).select(E_Group.id, E_Group.name).findOne(GroupInfo.class);
+        GroupInfo info = dao.selectFrom(Group.class).select(E_Group.id, E_Group.name).findOne(GroupInfo.class);
 
         Assert.notNull(info);
         Assert.hasText(info.getId());
@@ -1568,6 +1577,7 @@ public class DaoExamplesTest {
 
         String sql = selectDao.genFinalStatement();
 
+        //
         Assert.isTrue(sql.contains(E_Group.ALIAS + ".name Desc"), "预期的排序语句不存在");
 
         List<TableJoinStatDTO> objects = dao.findByQueryObj(new TableJoinStatDTO(), new PagingQueryReq(1, 10));
@@ -1725,7 +1735,7 @@ public class DaoExamplesTest {
 
         List<Object> objects = dao.selectFrom(User.class, "u")
                 .leftJoin(Group.class, "g")
-                .select(true, "u")
+                .selectByStatement(true, "u")
                 .where("u.group.id = g.id ")
                 .isNotNull(E_User.id)
                 .gt(E_User.score, 5)
@@ -1758,7 +1768,7 @@ public class DaoExamplesTest {
         EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
 
         int n = dao.updateTo(E_User.E_ENTITY_NAME, "u")
-                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .setByStatement(String.format("%s = %s + 1", E_User.score, E_User.score))
                 .set(E_User.lastUpdateTime, new Date())
                 .or()
                 .isNull(E_User.score)
@@ -1772,26 +1782,11 @@ public class DaoExamplesTest {
         Assert.isTrue(n == 3, "更新记录数错误1");
 
 
-        n = dao.updateTo(E_User.CLASS_NAME, "u")
-                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
-                .set(E_User.lastUpdateTime, new Date())
-                .or()
-                .isNull(E_User.score)
-                .isNotNull(E_User.createTime)
-                .end()
-                .limit(-1, 1)
-                .enableAutoAppendLimitStatement(true)
-                // .appendToLast(true,"order by id limit 1")
-                .update();
-
-        Assert.isTrue(n == 1, "更新记录数错误2");
-
-
         n = dao.updateByNative(User.class, E_User.ALIAS)
-                .setColumns(String.format("%s = %s + 1", E_User.score, E_User.score))
+                .set(true, true, User::getScore, 3)
                 .set(E_User.lastUpdateTime, new Date())
                 .or()
-                .isNull(E_User.score)
+                .isNull(User::getScore)
                 .isNotNull(E_User.createTime)
                 .end()
                 .limit(-1, 5)
@@ -1967,12 +1962,12 @@ public class DaoExamplesTest {
     @Test
     public void testQueryFrom2() throws Exception {
 
-        List<Object> list = dao
-                .selectFrom(Group.class)
+        List<Object> list = dao.selectFrom(Group.class)
+                .select(AbstractBaseEntityObject::getCreateTime)
                 .contains(E_Group.name, "2")
                 .find();
 
-        System.out.println(list);
+        Assert.isTrue(list.get(0) instanceof Date, "预期的第一列不是时间");
 
 
         dao.selectFrom("table").and().or().and().end().end().end();
@@ -1990,6 +1985,7 @@ public class DaoExamplesTest {
                 .appendByQueryObj(new UserDTO())
                 //  .appendWhereByQueryObj(c)
 //                .appendWhereByEL("Q_", elMap)
+                .isNull(User::getState)
                 .delete();
 
         //以上查询会生成条件，包括map对应的查询条件

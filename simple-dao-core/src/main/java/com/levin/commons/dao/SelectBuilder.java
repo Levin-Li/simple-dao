@@ -36,7 +36,7 @@ public interface SelectBuilder<T extends SelectBuilder<T, DOMAIN>, DOMAIN> {
             return (T) this;
         }
 
-        return select(isAppend, (String[]) Stream.of(attrGetFunctions).filter(Objects::nonNull).map(f -> f.get()).toArray());
+        return select(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**

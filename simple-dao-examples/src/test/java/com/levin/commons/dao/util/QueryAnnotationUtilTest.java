@@ -104,13 +104,6 @@ public class QueryAnnotationUtilTest {
         Assert.isTrue(allMatch, "not matched");
 
 
-        SimpleDao dao;
-
-        UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
-
-
-        userUpdateDao.eq(User::getName,"dd");
-
 
         System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));
         System.out.println(toSnapshotVersion("2.2.27-7f07bc4c8e-1"));

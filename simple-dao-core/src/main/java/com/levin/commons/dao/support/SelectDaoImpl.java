@@ -377,6 +377,7 @@ public class SelectDaoImpl<T>
                 .put(E_JoinOption.type, joinType)
                 .put(E_JoinOption.alias, alias)
                 .put(E_JoinOption.joinColumn, joinColumn)
+                .put(E_JoinOption.onExpr, "")
                 .put(E_JoinOption.joinTargetAlias, fallbackAlias(joinTargetAlias))
                 .put(E_JoinOption.joinTargetColumn, joinTargetColumn)
                 .put(E_JoinOption.tableOrStatement, "")
@@ -532,7 +533,7 @@ public class SelectDaoImpl<T>
      * @return
      */
     @Override
-    public SelectDao<T> orderBy(Boolean isAppend, OrderBy.Type type, String... columnNames) {
+    public SelectDao<T> orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String... columnNames) {
 
         if (!Boolean.TRUE.equals(isAppend)
                 || columnNames == null
@@ -548,7 +549,7 @@ public class SelectDaoImpl<T>
         Stream.of(columnNames)
                 .filter(StringUtils::hasText)
                 .map(this::aroundColumnPrefix)
-                .forEachOrdered(columnName -> addOrderBy(0, aroundColumnPrefix(columnName), null, type));
+                .forEachOrdered(columnName -> addOrderBy(0, aroundColumnPrefix(columnName), scope, type));
 
         return this;
     }
@@ -563,10 +564,10 @@ public class SelectDaoImpl<T>
      * @return
      */
     @Override
-    public SelectDao<T> orderByStatement(Boolean isAppend, OrderBy.Type type, String statement, Object... paramValues) {
+    public SelectDao<T> orderByStatement(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String statement, Object... paramValues) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-            addOrderBy(0, statement, null, type, paramValues);
+            addOrderBy(0, statement, scope, type, paramValues);
         }
 
         return this;
@@ -624,7 +625,7 @@ public class SelectDaoImpl<T>
 
             OrderBy orderBy = (OrderBy) opAnnotation;
 
-            appendOrderBy(bean, name, value, null, null, orderBy);
+            appendOrderBy(bean, name, value, null, null, null, orderBy);
 
         } else if ((opAnnotation instanceof SimpleOrderBy)) {
 
@@ -917,7 +918,7 @@ public class SelectDaoImpl<T>
         OrderBy[] orderByList = ClassUtils.getValue(opAnnotation, "orderBy", false);
 
         if (orderByList != null && orderByList.length > 0) {
-            appendOrderBy(root, name, value, expr, newAlias, orderByList);
+            appendOrderBy(root, name, value, expr, opAnnotation, newAlias, orderByList);
         }
 
     }
@@ -933,7 +934,7 @@ public class SelectDaoImpl<T>
      * @param orderByList
      * @return
      */
-    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, String oldExpr, final String newAlias, OrderBy... orderByList) {
+    protected SelectDao<T> appendOrderBy(Object root, String name, Object value, String oldExpr, Annotation opAnnotation, final String newAlias, OrderBy... orderByList) {
 
         if (orderByList == null)
             return this;
@@ -966,7 +967,10 @@ public class SelectDaoImpl<T>
             }
 
             if (hasText(expr)) {
-                addOrderBy(orderBy.order(), expr, orderBy.scope(), orderBy.type());
+                addOrderBy(orderBy.order(), expr
+                        //如果来源是 GroupBy注解，强行改成
+                        , (opAnnotation instanceof GroupBy) ? OrderBy.Scope.OnlyForGroupBy : orderBy.scope()
+                        , orderBy.type());
             }
         }
 
@@ -1102,13 +1106,7 @@ public class SelectDaoImpl<T>
                         //过滤出符合条件的
                         .filter(ob -> ob.scope == OrderBy.Scope.All || (hasGroupBy ? ob.scope == OrderBy.Scope.OnlyForGroupBy : ob.scope == OrderBy.Scope.OnlyForNotGroupBy))
 
-                        .filter(orderByObj ->
-                                //分组语句中包含，可能不精准
-                                groupByColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
 
-                                        //选择语句中包含，可能不精准
-                                        || selectColumns.getList().stream().anyMatch(gl -> gl.contains(orderByObj.orderByStatement))
-                        )
                         .collect(Collectors.toList());
 
                 //按升序排序，从小到大，再排一次序
@@ -1703,7 +1701,7 @@ public class SelectDaoImpl<T>
 
         public OrderByObj setScope(OrderBy.Scope scope) {
             if (scope == null) {
-                scope = OrderBy.Scope.OnlyForNotGroupBy;
+                scope = OrderBy.Scope.All;
             }
             this.scope = scope;
             return this;

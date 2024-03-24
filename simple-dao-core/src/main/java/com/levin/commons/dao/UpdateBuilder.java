@@ -23,7 +23,7 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
      * @return
      */
     default T setNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrGetFunctions) {
-        return setNull(isAppend, (String[]) Stream.of(attrGetFunctions).filter(Objects::nonNull).map(f -> f.get()).toArray());
+        return setNull(isAppend, Stream.of(attrGetFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**

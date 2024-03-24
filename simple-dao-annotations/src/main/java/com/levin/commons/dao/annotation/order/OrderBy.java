@@ -46,11 +46,11 @@ public @interface OrderBy {
 
 
     /**
-     * 排序条件默认在没有GroupBy语句时才生效
+     * 排序条件生效作用域
      *
      * @return
      */
-    Scope scope() default Scope.OnlyForNotGroupBy;
+    Scope scope() default Scope.All;
 
     /**
      * case 支持

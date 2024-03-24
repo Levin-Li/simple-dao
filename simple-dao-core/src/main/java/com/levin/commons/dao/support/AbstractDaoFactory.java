@@ -81,33 +81,33 @@ public abstract class AbstractDaoFactory implements DaoFactory {
 
     @Override
     public <T> SelectDao<T> selectFrom(Class<T> clazz, String... alias) {
-        return new SelectDaoImpl<T>(getDao(), false, clazz, checkAlias(alias));
+        return new SelectDaoImpl<T>(getDao(), false, clazz, getAlias(alias));
     }
 
     @Override
     public <T> SelectDao<T> selectByNative(@NotNull Class<T> clazz, String... alias) {
-        return new SelectDaoImpl<T>(getDao(), true, clazz, checkAlias(alias));
+        return new SelectDaoImpl<T>(getDao(), true, clazz, getAlias(alias));
     }
 
     @Override
     public <T> UpdateDao<T> updateTo(Class<T> clazz, String... alias) {
-        return new UpdateDaoImpl<T>(getDao(), false, clazz, checkAlias(alias));
+        return new UpdateDaoImpl<T>(getDao(), false, clazz, getAlias(alias));
     }
 
     @Override
     public <T> UpdateDao<T> updateByNative(@NotNull Class<T> clazz, String... alias) {
-        return new UpdateDaoImpl<T>(getDao(), true, clazz, checkAlias(alias));
+        return new UpdateDaoImpl<T>(getDao(), true, clazz, getAlias(alias));
     }
 
     @Override
     public <T> DeleteDao<T> deleteFrom(Class<T> clazz, String... alias) {
-        return new DeleteDaoImpl<T>(getDao(), false, clazz, checkAlias(alias))
+        return new DeleteDaoImpl<T>(getDao(), false, clazz, getAlias(alias))
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
     @Override
     public <T> DeleteDao<T> deleteByNative(@NotNull Class<T> clazz, String... alias) {
-        return new DeleteDaoImpl<T>(getDao(), true, clazz, checkAlias(alias))
+        return new DeleteDaoImpl<T>(getDao(), true, clazz, getAlias(alias))
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
@@ -118,7 +118,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
      */
     @Override
     public <T> SelectDao<T> selectFrom(String tableName, String... alias) {
-        return new SelectDaoImpl<T>(getDao(), true, checkTableName(tableName), checkAlias(alias))
+        return new SelectDaoImpl<T>(getDao(), true, checkTableName(tableName), getAlias(alias))
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
@@ -132,7 +132,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
      */
     @Override
     public <T> UpdateDao<T> updateTo(String tableName, String... alias) {
-        return new UpdateDaoImpl<T>(getDao(), true, checkTableName(tableName), checkAlias(alias))
+        return new UpdateDaoImpl<T>(getDao(), true, checkTableName(tableName), getAlias(alias))
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
@@ -146,18 +146,22 @@ public abstract class AbstractDaoFactory implements DaoFactory {
      */
     @Override
     public <T> DeleteDao<T> deleteFrom(String tableName, String... alias) {
-        return new DeleteDaoImpl<T>(getDao(), true, checkTableName(tableName), checkAlias(alias))
+        return new DeleteDaoImpl<T>(getDao(), true, checkTableName(tableName), getAlias(alias))
                 .setParameterNameDiscoverer(getParameterNameDiscoverer());
     }
 
 
-    private String checkAlias(String... alias) {
+    private String getAlias(String... alias) {
 
-        if (alias != null && alias.length > 1) {
-            throw new IllegalArgumentException("alias only allow one");
+        if (alias != null) {
+            for (String a : alias) {
+                if (hasText(a)) {
+                    return a;
+                }
+            }
         }
 
-        return (alias != null && alias.length > 0) ? alias[0] : null;
+        return null;
     }
 
     private String checkTableName(String tableName) {

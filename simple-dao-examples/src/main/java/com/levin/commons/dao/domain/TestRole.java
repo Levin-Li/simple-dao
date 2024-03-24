@@ -28,24 +28,7 @@ import java.util.List;
 @FieldNameConstants
 @Schema(title = "测试角色", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestRole")
-@Table(
-        indexes = {
-            @Index(columnList = AbstractBaseEntityObject.Fields.orderCode),
-            @Index(columnList = AbstractBaseEntityObject.Fields.enable),
-            @Index(columnList = AbstractBaseEntityObject.Fields.createTime),
-            @Index(columnList = AbstractMultiTenantObject.Fields.tenantId),
-            @Index(columnList = E_AbstractNamedEntityObject.name),
-            @Index(columnList = E_TestRole.code),
-        },
-        uniqueConstraints = {
-            @UniqueConstraint(
-                    columnNames = {AbstractMultiTenantObject.Fields.tenantId, E_TestRole.code}),
-            @UniqueConstraint(
-                    columnNames = {
-                        AbstractMultiTenantObject.Fields.tenantId,
-                        E_AbstractNamedEntityObject.name
-                    }),
-        })
+
 
 // 属性的字段定义可覆盖
 // @AssociationOverride
