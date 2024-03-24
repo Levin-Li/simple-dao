@@ -4,6 +4,7 @@ import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
+import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.dao.domain.support.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import com.levin.commons.dao.dto.*;
@@ -615,7 +616,7 @@ public class DaoExamplesTest {
                 .avg("g.score", "gs")
                 .sum("t.score", "ts2")
 //                .where("u.name = :?","sss")
-                .groupByAndSelect(E_Group.name, "groupName")
+                .groupByAndSelect(AbstractNamedEntityObject::getName, "groupName")
 //                .groupBy("g.name")
 
                 //支持别名处理
