@@ -29,7 +29,7 @@ import java.util.List;
 @Accessors(chain = true)
 @FieldNameConstants
 @ToString(callSuper = true)
-public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
+public class MultiTenantOrgReq<T extends MultiTenantOrgReq<?>>
         extends MultiTenantReq<T> implements OrganizedScopeObject {
 
     public static final String IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
