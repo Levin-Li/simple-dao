@@ -57,7 +57,7 @@ public @interface SimpleOrderBy {
     /**
      * 排序优先级
      * <p/>
-     * 按数值从大到小排序
+     * 升序排序，按数值从小到大排序，数值越小优先级越高
      * <p/>
      *
      * @return
