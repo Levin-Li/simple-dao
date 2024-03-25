@@ -65,6 +65,11 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     //@Validator(expr = "isAllOrgScope || (#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "orgId-不能为空")
     protected String orgId;
 
+    @Schema(title = "组织机构名称", hidden = true)
+    @InjectVar(value = InjectConst.ORG_NAME, isRequired = "false")
+    @Ignore
+    protected String orgName;
+
     /**
      * 是否为公共数据
      *
