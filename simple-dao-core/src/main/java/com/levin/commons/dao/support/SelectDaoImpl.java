@@ -1093,8 +1093,12 @@ public class SelectDaoImpl<T>
         if (!isCountQueryResult) {
             //以下代理是处理排序语句
             if (orderByColumns.isNotEmpty()) {
+
                 //按升序排序，从小到大
-                Collections.sort(orderByColumns.getList());
+                if (orderByColumns.size() > 1) {
+                    Collections.sort(orderByColumns.getList());
+                    // orderByColumns.getList().sort(null);
+                }
 
                 boolean hasGroupBy = groupByColumns.isNotEmpty();
 
@@ -1106,10 +1110,7 @@ public class SelectDaoImpl<T>
                         //过滤出符合条件的
                         .filter(ob -> ob.scope == OrderBy.Scope.All || (hasGroupBy ? ob.scope == OrderBy.Scope.OnlyForGroupBy : ob.scope == OrderBy.Scope.OnlyForNotGroupBy))
 
-
                         .collect(Collectors.toList());
-
-                //按升序排序，从小到大，再排一次序
 
                 //清除并从新加入
                 orderByColumns.clear().getList().addAll(orderByQL);
@@ -1701,7 +1702,7 @@ public class SelectDaoImpl<T>
 
         @Override
         public int compareTo(OrderByObj o) {
-            return order - o.order;
+            return (o == null || order > o.order) ? 1 : order == o.order ? 0 : -1;
         }
 
         @Override
