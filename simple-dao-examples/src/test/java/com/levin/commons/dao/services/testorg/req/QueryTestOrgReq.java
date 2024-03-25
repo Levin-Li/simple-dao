@@ -62,6 +62,7 @@ public class QueryTestOrgReq extends MultiTenantReq {
             value = createTime,
             condition = "#isEmpty(orderBy) || #isEmpty(orderDir)",
             order = Integer.MAX_VALUE,
+            scope = OrderBy.Scope.OnlyForNotGroupBy,
             desc = "默认按时间排序")
     OrderBy.Type orderDir;
 
