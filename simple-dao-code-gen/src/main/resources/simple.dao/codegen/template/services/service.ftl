@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.*;
 //import org.springframework.dao.*;
 
 import java.util.*;
+import java.util.stream.*;
+import javax.validation.*;
 import javax.validation.constraints.*;
 
 import com.levin.commons.dao.support.*;
@@ -144,7 +146,7 @@ public interface ${className} {
     *
     * @param req
     * @param paging 分页设置，可空
-    * @param attrReadFunctions 列名
+    * @param selectColumns 列名
     * @return defaultPagingData 分页数据
     */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
