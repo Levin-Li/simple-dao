@@ -132,6 +132,19 @@ public interface ${className} {
     PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, String... columnNames);
 
     /**
+    * 指定选择列查询
+    *
+    * @param req
+    * @param paging 分页设置，可空
+    * @param attrReadFunctions 列名
+    * @return defaultPagingData 分页数据
+    */
+    @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
+    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, PFunction<${entityName},?>... attrReadFunctions){
+        return selectQuery(req, paging, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    }
+
+    /**
      * 统计记录数
      *
      * @param req
