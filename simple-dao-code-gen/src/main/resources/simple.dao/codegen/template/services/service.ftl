@@ -42,6 +42,12 @@ public interface ${className} {
     String SERVICE_BEAN_NAME = PLUGIN_PREFIX + SERVICE_NAME;
 
     /**
+    */
+    default Class<?> getEntityClass() {
+        return ${entityName}.class;
+    }
+
+    /**
      * 创建记录，返回主键ID
      * @param req
      * @return pkId 主键ID
@@ -69,7 +75,7 @@ public interface ${className} {
      * 更新记录，并返回更新是否成功
      *
      * @param req
-     * @param queryObjs 附加的查询条件或是更新内容
+     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
      * @return boolean 是否成功
      */
     @Operation(summary = UPDATE_ACTION)
@@ -80,10 +86,11 @@ public interface ${className} {
      *
      * @param setReq
      * @param whereReq
+     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
      * @return int 记录数
      */
     @Operation(summary = UPDATE_ACTION)
-    int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq);
+    int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs);
 
     /**
      * 批量更新记录，并返回更新记录数
@@ -115,6 +122,7 @@ public interface ${className} {
      *
      * @param req
      * @param paging 分页设置，可空
+     * @param queryObjs 扩展的查询对象，可以是 Consumer<SelectDao<?>> 对象
      * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION)
@@ -125,11 +133,11 @@ public interface ${className} {
      *
      * @param req
      * @param paging 分页设置，可空
-     * @param columnNames 列名
+     * @param selectColumnNames 列名
      * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, String... columnNames);
+    PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, String... selectColumnNames);
 
     /**
     * 指定选择列查询
@@ -140,18 +148,19 @@ public interface ${className} {
     * @return defaultPagingData 分页数据
     */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, PFunction<${entityName},?>... attrReadFunctions){
-        return selectQuery(req, paging, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, PFunction<${entityName},?>... selectColumns){
+        return selectQuery(req, paging, Stream.of(selectColumns).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
     /**
      * 统计记录数
      *
      * @param req
+     * @param queryObjs 扩展的查询对象，可以是 Consumer<SelectDao<?>> 对象
      * @return record count
      */
     @Operation(summary = STAT_ACTION)
-    int count(@NotNull Query${entityName}Req req);
+    int count(@NotNull Query${entityName}Req req, Object... queryObjs);
 
 <#if pkField?exists>
     /**
@@ -175,10 +184,11 @@ public interface ${className} {
      * 查询并返回第一条数据
      *
      * @param req
+     * @param queryObjs 扩展的查询对象，可以是 Consumer<SelectDao<?>> 对象
      * @return data 第一条数据
      */
     @Operation(summary = QUERY_ACTION)
-    ${entityName}Info findOne(@NotNull Query${entityName}Req req);
+    ${entityName}Info findOne(@NotNull Query${entityName}Req req, Object... queryObjs);
 
     /**
      * 查询并返回唯一一条数据

@@ -131,8 +131,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     @Transactional
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
-    public int batchUpdate(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq){
-       return simpleDao.updateByQueryObj(setReq, whereReq);
+    public int batchUpdate(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs){
+       return simpleDao.updateByQueryObj(setReq, whereReq, queryObjs);
     }
 
     @Operation(summary = BATCH_UPDATE_ACTION)
@@ -179,8 +179,8 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     @Override
     @Operation(summary = STAT_ACTION)
-    public int count(Query${entityName}Req req){
-        return (int) simpleDao.countByQueryObj(req);
+    public int count(Query${entityName}Req req, Object... queryObjs){
+        return (int) simpleDao.countByQueryObj(req, queryObjs);
     }
 
 <#if pkField?exists>
@@ -205,8 +205,8 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     @Operation(summary = QUERY_ACTION)
     @Override
-    public ${entityName}Info findOne(Query${entityName}Req req){
-        return simpleDao.findOneByQueryObj(req);
+    public ${entityName}Info findOne(Query${entityName}Req req, Object... queryObjs){
+        return simpleDao.findOneByQueryObj(req, queryObjs);
     }
 
     @Operation(summary = QUERY_ACTION)

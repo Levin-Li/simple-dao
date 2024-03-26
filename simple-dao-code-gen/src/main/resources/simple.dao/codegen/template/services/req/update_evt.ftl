@@ -59,7 +59,6 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if pkField?exists>
-
     @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
     <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     @Eq(require = true)
