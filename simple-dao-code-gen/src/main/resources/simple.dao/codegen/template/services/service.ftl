@@ -37,7 +37,13 @@ public interface ${className} {
 
     String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
+    String CACHE_NAME = ModuleOption.ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME;
+
+    //缓存key前缀
     String CK_PREFIX = E_${entityName}.CACHE_KEY_PREFIX;
+
+    //缓存key前缀表达式
+    String CK_PREFIX_EXPR = E_${entityName}.CACHE_KEY_PREFIX_EXPR;
 
     String SERVICE_NAME = "${className}";
 
