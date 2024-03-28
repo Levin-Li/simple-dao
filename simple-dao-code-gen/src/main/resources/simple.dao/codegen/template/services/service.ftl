@@ -42,7 +42,7 @@ public interface ${className} {
     //缓存key前缀
     String CK_PREFIX = E_${entityName}.CACHE_KEY_PREFIX;
 
-    //缓存key前缀表达式
+    //缓存key前缀Spel表达式
     String CK_PREFIX_EXPR = E_${entityName}.CACHE_KEY_PREFIX_EXPR;
 
     String SERVICE_NAME = "${className}";

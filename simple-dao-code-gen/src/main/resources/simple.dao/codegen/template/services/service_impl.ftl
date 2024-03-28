@@ -237,6 +237,10 @@ public class ${className} extends BaseService<${className}> implements ${service
     public void clearCache(Object key) {
     }
 
+    /**
+    * 清除[${serviceName}.CACHE_NAME]缓存中的所有缓存
+    * @param key 缓存Key
+    */
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION,  description = "清除所有缓存")
     @CacheEvict(allEntries = true)
