@@ -346,12 +346,12 @@ public final class ServiceModelCodeGenerator {
                 , "ModuleWebSocketConfigurer"
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
-        //生成控制器配置文件
-        Arrays.asList("ModuleSpringCacheEventListener"
-        ).forEach(className -> genJavaFile(serviceDir, "listener", className, params));
 
+        Arrays.asList("ModuleCacheService"
+        ).forEach(className -> genJavaFile(serviceDir, "cache", className, params));
+        //生成控制器配置文件
         Arrays.asList("ModuleSpringCacheResolver"
-        ).forEach(className -> genJavaFile(serviceImplDir, "resolver", className, params));
+        ).forEach(className -> genJavaFile(serviceImplDir, "cache", className, params));
 
         Arrays.asList("ModulePlugin"
                 , "ModuleWebInjectVarServiceImpl"

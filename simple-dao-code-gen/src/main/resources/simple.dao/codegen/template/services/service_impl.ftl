@@ -220,12 +220,15 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     /**
     * 清除缓存
-    * @param keySuffix 缓存Key后缀，不包含前缀
+    * @param key
     */
-    @Operation(summary = CLEAR_CACHE_ACTION,  description = "通常是主键ID")
-    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#keySuffix)", key = CK_PREFIX_EXPR + "#keySuffix")
-    public void clearCacheByKeySuffix(Object keySuffix){
+    @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
+    @Cacheable(unless = "#result == null", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
+    public <T> T getCache(String key){
+        Assert.notBlank(key, "key is empty");
+        return null;
     }
+
 
     /**
     * 清除缓存
@@ -233,13 +236,14 @@ public class ${className} extends BaseService<${className}> implements ${service
     */
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
-    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "'' + #key")
-    public void clearCache(Object key) {
+    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
+    public void clearCache(String key) {
+        Assert.notBlank(key, "key is empty");
     }
 
     /**
     * 清除[${serviceName}.CACHE_NAME]缓存中的所有缓存
-    * @param key 缓存Key
+    *
     */
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION,  description = "清除所有缓存")

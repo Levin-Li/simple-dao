@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.*;
 
 //import org.springframework.cache.annotation.*;
 //import org.springframework.dao.*;
+import org.springframework.util.*;
 
 import java.util.*;
 import java.util.stream.*;
@@ -210,24 +211,49 @@ public interface ${className} {
     ${entityName}Info findUnique(Query${entityName}Req req);
 
     /**
+     * 获取缓存
+     *
+     * @param keySuffix 缓存Key后缀，不包含前缀
+     * @return 缓存数据
+     */
+    @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
+    default <T> T getCacheByKeySuffix(@NotNull String keySuffix) {
+        Assert.hasText(keySuffix, "keySuffix is empty");
+        return getCache(CK_PREFIX + keySuffix);
+    }
+
+    /**
+     * 获取缓存
+     *
+     * @param key 缓存Key
+     * @return 缓存数据
+     */
+    @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存Key")
+    <T> T getCache(@NotNull String key);
+
+    /**
      * 清除缓存
+     *
      * @param keySuffix 缓存Key后缀，不包含前缀
      */
-    @Operation(summary = CLEAR_CACHE_ACTION,  description = "通常是主键ID")
-    void clearCacheByKeySuffix(@NotNull Object keySuffix);
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "通常是主键ID")
+    default void clearCacheByKeySuffix(@NotNull String keySuffix) {
+        Assert.hasText(keySuffix, "keySuffix is empty");
+        clearCache(CK_PREFIX + keySuffix);
+    }
 
-     /**
-      * 清除缓存
-      * @param key 缓存Key
+    /**
+     * 清除缓存
+     *
+     * @param key 缓存Key
      */
-     @Operation(summary = CLEAR_CACHE_ACTION,  description = "完整的缓存Key")
-     void clearCache(@NotNull Object key);
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
+    void clearCache(@NotNull String key);
 
     /**
      * 清除所有缓存
-     * 
      */
-    @Operation(summary = CLEAR_CACHE_ACTION,  description = "清除所有缓存")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "清除所有缓存")
     void clearAllCache();
 
 }

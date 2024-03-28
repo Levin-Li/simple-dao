@@ -1,4 +1,4 @@
-package ${modulePackageName}.resolver;
+package ${modulePackageName}.cache;
 
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
@@ -20,6 +20,6 @@ import static com.levin.oak.base.ModuleOption.PLUGIN_PREFIX;
 @Slf4j
 @Component(PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSpringCacheResolver", matchIfMissing = true)
-public class ModuleSpringCacheResolver extends SpringCacheResolver {
+public class ModuleSpringCacheResolver extends SpringCacheResolver implements ModuleCacheService {
 
 }
