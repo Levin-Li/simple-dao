@@ -229,7 +229,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     /**
     * 清除缓存
-    * @param Key 缓存Key
+    * @param key 缓存Key
     */
     @Override
     @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
