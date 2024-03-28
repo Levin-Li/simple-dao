@@ -224,7 +224,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     */
     @Operation(summary = CLEAR_CACHE_ACTION,  description = "通常是主键ID")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#keySuffix)", key = CK_PREFIX + "#keySuffix")
-    public void clearCacheByKeySuffix(@NotNull Object keySuffix){
+    public void clearCacheByKeySuffix(Object keySuffix){
     }
 
     /**

@@ -215,7 +215,7 @@ public interface ${className} {
       * @param key 缓存Key
      */
      @Operation(summary = CLEAR_CACHE_ACTION,  description = "完整的缓存Key")
-     void clearCache(@NotNull String key);
+     void clearCache(@NotNull Object key);
 
     /**
      * 清除所有缓存
