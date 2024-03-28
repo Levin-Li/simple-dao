@@ -55,7 +55,12 @@ public interface EntityOpConst {
     /**
      *
      */
-    String CLEAR_CACHE_ACTION = "清楚缓存";
+    String GET_CACHE_ACTION = "读取缓存";
+
+    /**
+     *
+     */
+    String CLEAR_CACHE_ACTION = "清除缓存";
 
     /**
      *
