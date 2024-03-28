@@ -218,9 +218,22 @@ public class ${className} extends BaseService<${className}> implements ${service
         return simpleDao.findUnique(req);
     }
 
+    /**
+    * 清除缓存
+    * @param keySuffix 缓存Key后缀，不包含前缀
+    */
+    @Operation(summary = CLEAR_CACHE_ACTION,  description = "通常是主键ID")
+    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#keySuffix)", key = CK_PREFIX + "#keySuffix")
+    public void clearCacheByKeySuffix(@NotNull Object keySuffix){
+    }
+
+    /**
+    * 清除缓存
+    * @param Key 缓存Key
+    */
     @Override
-    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key通常是ID")
-    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = CK_PREFIX + "#key")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
+    @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "'' + #key")
     public void clearCache(Object key) {
     }
 
