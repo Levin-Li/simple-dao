@@ -347,6 +347,9 @@ public final class ServiceModelCodeGenerator {
         ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
 
         //生成控制器配置文件
+        Arrays.asList("ModuleSpringCacheEventListener"
+        ).forEach(className -> genJavaFile(serviceDir, "listener", className, params));
+
         Arrays.asList("ModuleSpringCacheResolver"
         ).forEach(className -> genJavaFile(serviceImplDir, "resolver", className, params));
 

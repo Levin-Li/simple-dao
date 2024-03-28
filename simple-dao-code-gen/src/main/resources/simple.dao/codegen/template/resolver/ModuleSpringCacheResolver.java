@@ -3,10 +3,10 @@ package ${modulePackageName}.resolver;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 
-import com.levin.commons.service.domain.EnumDesc;
-import io.swagger.v3.oas.annotations.media.Schema;
+import ${modulePackageName}.listener.ModuleSpringCacheEventListener;
+import ${modulePackageName}.listener.ModuleSpringCacheEventListener.Action;
+
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
@@ -16,8 +16,16 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.CacheOperationInvocationContext;
 import org.springframework.cache.interceptor.CacheResolver;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -32,49 +40,26 @@ import java.util.stream.Collectors;
  *
  */
 
+
 @Slf4j
 @Component(PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSpringCacheResolver", matchIfMissing = true)
-public class ModuleSpringCacheResolver implements CacheResolver, InitializingBean {
+public class ModuleSpringCacheResolver implements CacheResolver, InitializingBean, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
     CacheManager cacheManager;
 
-    @Getter
-    final Map<String, Cache> cacheList = new ConcurrentHashMap<>();
-
-    @Getter
-    final List<CacheEventListener> eventListeners = new ArrayList<>();
+    @Autowired
+    ApplicationContext applicationContext;
 
     private static final ThreadLocal<CacheOperationInvocationContext<?>> invocationContext = new ThreadLocal<>();
-
-    public enum Action implements EnumDesc {
-
-        @Schema(title = "读取")
-        Get,
-
-        @Schema(title = "放入")
-        Put,
-
-        @Schema(title = "剔除")
-        Evict,
-
-        @Schema(title = "清除所有")
-        Clear,
-
-    }
-
-    @FunctionalInterface
-    public interface CacheEventListener {
-        void onEvent(CacheOperationInvocationContext<?> cacheOperationInvocationContext, Cache cache, Action action, Object key, Object value);
-    }
 
     @AllArgsConstructor
     static class CacheProxy implements Cache {
 
         Cache delegate;
 
-        Supplier<List<CacheEventListener>> supplier;
+        Supplier<Collection<ModuleSpringCacheEventListener>> supplier;
 
         /**
          * Return the cache name.
@@ -95,7 +80,6 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
             onEvent(Action.Get, key, valueWrapper);
             return valueWrapper;
         }
-
 
         @Override
         public <T> T get(Object key, Class<T> type) {
@@ -133,10 +117,10 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
 
             try {
 
-                List<CacheEventListener> listeners = supplier != null ? supplier.get() : null;
+                Collection<ModuleSpringCacheEventListener> listeners = supplier != null ? supplier.get() : null;
 
                 if (listeners != null) {
-                    listeners.forEach(el -> el.onEvent(invocationContext.get(), delegate, action, key, value));
+                    listeners.forEach(el -> el.onCacheEvent(invocationContext.get(), delegate, action, key, value));
                 }
 
             } finally {
@@ -151,36 +135,6 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
      * @see #setCacheManager
      */
     public ModuleSpringCacheResolver() {
-    }
-
-
-    /**
-     * 增加监听器
-     *
-     * @param listener
-     * @return
-     */
-    public ModuleSpringCacheResolver addCacheEventListener(CacheEventListener listener) {
-        return addCacheEventListeners(listener);
-    }
-
-    /**
-     * 增加监听器
-     *
-     * @param listeners
-     * @return
-     */
-    public ModuleSpringCacheResolver addCacheEventListeners(CacheEventListener... listeners) {
-
-        if (listeners != null) {
-            for (CacheEventListener listener : listeners) {
-                if (listener != null) {
-                    getEventListeners().add(listener);
-                }
-            }
-        }
-
-        return this;
     }
 
     /**
@@ -203,6 +157,19 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
         Assert.notNull(this.cacheManager, "CacheManager is required");
     }
 
+
+    /**
+     * Handle an application event.
+     *
+     * @param event the event to respond to
+     */
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if (event.getApplicationContext() == applicationContext) {
+            event.getApplicationContext().getBeanProvider(ModuleSpringCacheEventListener.class).forEach(ModuleSpringCacheEventListener::add);
+        }
+    }
+
     @NotNull
     @Override
     public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context) {
@@ -217,7 +184,7 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
 
         return cacheNames.stream().map(cacheName ->
 
-                cacheList.computeIfAbsent(cacheName, key -> {
+                ModuleSpringCacheEventListener.cacheMap.computeIfAbsent(cacheName, key -> {
 
                     Cache cache = getCacheManager().getCache(cacheName);
 
@@ -225,7 +192,7 @@ public class ModuleSpringCacheResolver implements CacheResolver, InitializingBea
                         throw new IllegalArgumentException("Cannot find cache named '" + cacheName + "' for " + context.getOperation());
                     }
 
-                    return new CacheProxy(cache, this::getEventListeners);
+                    return new CacheProxy(cache, () -> ModuleSpringCacheEventListener.eventListeners);
 
                 })
 
