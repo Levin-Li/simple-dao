@@ -40,6 +40,15 @@ public class DemoJob
     @Resource(name = TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     TaskExecutor executor;
 
+
+    /**
+     * @return
+     */
+    @Override
+    protected String getName() {
+        return "XX定时任务";
+    }
+
     /**
      * 定时任务入口
      *
@@ -61,8 +70,6 @@ public class DemoJob
      * 整个定时任务的锁
      *
      * 通常同一个定时任务，不允许并发。
-     *
-     *
      *
      * 返回null 则表示不锁定
      *
@@ -87,7 +94,8 @@ public class DemoJob
     }
 
     /**
-     * 需要覆盖这个方法，放回任务执行器
+     * 需要覆盖这个方法，返回任务执行器
+     * 返回 null 则使用调度器的线程执行
      *
      * @return
      */

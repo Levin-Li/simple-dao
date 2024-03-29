@@ -190,7 +190,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
     //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}")
+    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
     }
@@ -198,7 +198,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(unless = "#result == null" , condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>
+    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
         Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.findUnique(req);
@@ -223,12 +223,11 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @param key
     */
     @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
-    @Cacheable(unless = "#result == null", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
-    public <T> T getCache(String key){
+    @Cacheable(unless = "#loadFunction == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
+    public <T> T getCache(String key, Function<T,String> loadFunction){
         Assert.notBlank(key, "key is empty");
-        return null;
+        return loadFunction == null ? null : loadFunction.apply(key);
     }
-
 
     /**
     * 清除缓存

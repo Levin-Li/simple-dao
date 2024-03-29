@@ -219,17 +219,18 @@ public interface ${className} {
     @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
     default <T> T getCacheByKeySuffix(@NotNull String keySuffix) {
         Assert.hasText(keySuffix, "keySuffix is empty");
-        return getCache(CK_PREFIX + keySuffix);
+        return getCache(CK_PREFIX + keySuffix, null);
     }
 
     /**
-     * 获取缓存
-     *
-     * @param key 缓存Key
-     * @return 缓存数据
-     */
+    * 获取缓存
+    *
+    * @param key 缓存Key
+    * @param loadFunction 缓存没有，则从加载函数加载
+    * @return 缓存数据
+    */
     @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存Key")
-    <T> T getCache(@NotNull String key);
+    <T> T getCache(@NotNull String key, Function<T,String> loadFunction);
 
     /**
      * 清除缓存
