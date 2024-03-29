@@ -10,6 +10,8 @@ import com.levin.commons.service.domain.*;
 import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
+import java.util.function.*;
+
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;

@@ -11,6 +11,7 @@ import org.springframework.util.*;
 
 import java.util.*;
 import java.util.stream.*;
+import java.util.function.*;
 import javax.validation.*;
 import javax.validation.constraints.*;
 
