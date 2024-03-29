@@ -16,7 +16,6 @@ import static com.levin.oak.base.ModuleOption.PLUGIN_PREFIX;
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  *
  */
-
 @Slf4j
 @Component(PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSpringCacheResolver", matchIfMissing = true)
