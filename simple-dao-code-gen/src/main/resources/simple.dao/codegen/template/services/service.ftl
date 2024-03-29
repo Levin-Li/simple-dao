@@ -227,11 +227,11 @@ public interface ${className} {
     * 获取缓存
     *
     * @param key 缓存Key
-    * @param loadFunction 缓存没有，则从加载函数加载
+    * @param valueLoader 缓存没有，则从加载函数加载
     * @return 缓存数据
     */
     @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存Key")
-    <T> T getCache(@NotNull String key, Function<String,T> loadFunction);
+    <T> T getCache(@NotNull String key, Function<String,T> valueLoader);
 
     /**
      * 清除缓存

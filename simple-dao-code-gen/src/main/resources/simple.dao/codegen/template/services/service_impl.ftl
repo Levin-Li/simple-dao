@@ -221,14 +221,17 @@ public class ${className} extends BaseService<${className}> implements ${service
     }
 
     /**
-    * 清除缓存
-    * @param key
+    * 获取缓存
+    *
+    * @param key 缓存Key
+    * @param valueLoader 缓存没有，则从加载函数加载
+    * @return 缓存数据
     */
     @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
-    @Cacheable(unless = "#loadFunction == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
-    public <T> T getCache(String key, Function<String,T> loadFunction){
+    @Cacheable(unless = "#valueLoader == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
+    public <T> T getCache(String key, Function<String,T> valueLoader){
         Assert.notBlank(key, "key is empty");
-        return loadFunction == null ? null : loadFunction.apply(key);
+        return valueLoader == null ? null : valueLoader.apply(key);
     }
 
     /**
