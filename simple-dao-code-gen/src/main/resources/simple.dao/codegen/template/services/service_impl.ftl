@@ -226,7 +226,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     */
     @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
     @Cacheable(unless = "#loadFunction == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
-    public <T> T getCache(String key, Function<T,String> loadFunction){
+    public <T> T getCache(String key, Function<String,T> loadFunction){
         Assert.notBlank(key, "key is empty");
         return loadFunction == null ? null : loadFunction.apply(key);
     }

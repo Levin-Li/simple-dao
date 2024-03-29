@@ -231,7 +231,7 @@ public interface ${className} {
     * @return 缓存数据
     */
     @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存Key")
-    <T> T getCache(@NotNull String key, Function<T,String> loadFunction);
+    <T> T getCache(@NotNull String key, Function<String,T> loadFunction);
 
     /**
      * 清除缓存
