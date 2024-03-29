@@ -178,7 +178,7 @@
         <levin.simple-dao.version>2.6.0-SNAPSHOT</levin.simple-dao.version> 
 
         <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.version>1.2.28-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.30-SNAPSHOT</levin.service-support.version>
 
     </properties>
   

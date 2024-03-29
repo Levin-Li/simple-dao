@@ -21,7 +21,7 @@
 
         <!-- <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
 
-        <levin.service-support.version>1.2.28-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.version>1.2.30-SNAPSHOT</levin.service-support.version>
 
         <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
 
