@@ -42,11 +42,7 @@ public interface GroupByBuilder<T extends GroupByBuilder<T, DOMAIN>, DOMAIN> {
     default T groupBy(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
 
         //快速返回，优化性能
-        if (!Boolean.TRUE.equals(isAppend)) {
-            return (T) this;
-        }
-
-        return groupBy(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+        return (!Boolean.TRUE.equals(isAppend)) ? (T) this : groupBy(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
     }
 
 
