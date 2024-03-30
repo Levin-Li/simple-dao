@@ -171,6 +171,18 @@ public class FieldModel implements Cloneable {
         return isClassField("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
     }
 
+    public boolean isType(String className){
+        return type.getName().equals(className);
+    }
+
+    public String getTypeName() {
+        return type.getName();
+    }
+
+    public boolean isTypeEndsWith(String className){
+        return type.getName().endsWith(className);
+    }
+
     public boolean isClassField(String className) {
         return field.getDeclaringClass().getName().equals(className);
     }

@@ -88,6 +88,56 @@ public class ${className} extends BaseService<${className}> implements ${service
 <#--        return getSelfProxy(${className}.class);-->
 <#--    }-->
 
+    @Operation(summary = QUERY_ACTION)
+    @Override
+    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging, Object... queryObjs) {
+        return simpleDao.findPagingDataByQueryObj(req, paging, queryObjs);
+    }
+
+    @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
+    public PagingData<${entityName}Info> selectQuery(Query${entityName}Req req, Paging paging, String... columnNames){
+        return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(null, paging);
+    }
+
+    @Override
+    @Operation(summary = STAT_ACTION)
+    public int count(Query${entityName}Req req, Object... queryObjs){
+        return (int) simpleDao.countByQueryObj(req, queryObjs);
+    }
+
+<#if pkField?exists>
+    @Operation(summary = VIEW_DETAIL_ACTION)
+    @Override
+    //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
+    //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
+    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
+    public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
+        return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
+    }
+
+    //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
+    @Operation(summary = VIEW_DETAIL_ACTION)
+    @Override
+    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
+    public ${entityName}Info findById(${entityName}IdReq req) {
+        Assert.${(pkField.typeName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
+        return simpleDao.findUnique(req);
+    }
+</#if>
+
+    @Operation(summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findOne(Query${entityName}Req req, Object... queryObjs){
+        return simpleDao.findOneByQueryObj(req, queryObjs);
+    }
+
+    @Operation(summary = QUERY_ACTION)
+    @Override
+    public ${entityName}Info findUnique(Query${entityName}Req req){
+        //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
+        return simpleDao.findUnique(req);
+    }
+
     /**
     * 创建记录，返回主键ID
     * @param req
@@ -127,7 +177,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX_EXPR + "#req.${pkField.name}")//, beforeInvocation = true
     @Transactional
     public boolean update(Update${entityName}Req req, Object... queryObjs) {
-        Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
+        Assert.${(pkField.typeName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleUpdateByQueryObj(req, queryObjs);
     }
 
@@ -153,7 +203,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if> , beforeInvocation = true
     @Transactional
     public boolean delete(${entityName}IdReq req) {
-        Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
+        Assert.${(pkField.typeName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         return simpleDao.singleDeleteByQueryObj(req);
     }
 
@@ -170,54 +220,12 @@ public class ${className} extends BaseService<${className}> implements ${service
             .sum();
     }
 
-    @Operation(summary = QUERY_ACTION)
+    @Operation(summary = BATCH_DELETE_ACTION)
+    @Transactional
     @Override
-    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging, Object... queryObjs) {
-        return simpleDao.findPagingDataByQueryObj(req, paging, queryObjs);
-    }
-
-    @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    public PagingData<${entityName}Info> selectQuery(Query${entityName}Req req, Paging paging, String... columnNames){
-        return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(null, paging);
-    }
-
-    @Override
-    @Operation(summary = STAT_ACTION)
-    public int count(Query${entityName}Req req, Object... queryObjs){
-        return (int) simpleDao.countByQueryObj(req, queryObjs);
-    }
-
-<#if pkField?exists>
-    @Operation(summary = VIEW_DETAIL_ACTION)
-    @Override
-    //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
-    //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
-    public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
-    }
-
-    //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
-    @Operation(summary = VIEW_DETAIL_ACTION)
-    @Override
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
-    public ${entityName}Info findById(${entityName}IdReq req) {
-        Assert.notNull(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.findUnique(req);
-    }
-</#if>
-
-    @Operation(summary = QUERY_ACTION)
-    @Override
-    public ${entityName}Info findOne(Query${entityName}Req req, Object... queryObjs){
-        return simpleDao.findOneByQueryObj(req, queryObjs);
-    }
-
-    @Operation(summary = QUERY_ACTION)
-    @Override
-    public ${entityName}Info findUnique(Query${entityName}Req req){
-        //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
-        return simpleDao.findUnique(req);
+    <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
+    public int batchDelete(Query${entityName}Req req, Object... queryObjs){
+        return simpleDao.deleteByQueryObj(req, queryObjs);
     }
 
     /**

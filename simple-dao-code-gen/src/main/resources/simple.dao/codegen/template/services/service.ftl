@@ -57,75 +57,6 @@ public interface ${className} {
         return ${entityName}.class;
     }
 
-    /**
-     * 创建记录，返回主键ID
-     * @param req
-     * @return pkId 主键ID
-     */
-    @Operation(summary = CREATE_ACTION)
-<#if pkField?exists>
-    ${pkField.typeName} create(@NotNull Create${entityName}Req req);
-<#else>
-    boolean create(@NotNull Create${entityName}Req req);
-</#if>
-
-    /**
-     * 创建记录，返回主键ID列表
-     * @param reqList
-     * @return pkId 主键ID列表
-     */
-    @Operation(summary = BATCH_CREATE_ACTION)
-<#if pkField?exists>
-    List<${pkField.typeName}> batchCreate(@NotNull List<Create${entityName}Req> reqList);
-<#else>
-    List<Boolean> batchCreate(@NotNull List<Create${entityName}Req> reqList);
-</#if>
-
-    /**
-     * 更新记录，并返回更新是否成功
-     *
-     * @param req
-     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
-     * @return boolean 是否成功
-     */
-    @Operation(summary = UPDATE_ACTION)
-    boolean update(@NotNull Update${entityName}Req req, Object... queryObjs);
-
-    /**
-     * 批量无ID更新记录，并返回更新记录数，请小心使用
-     *
-     * @param setReq
-     * @param whereReq
-     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
-     * @return int 记录数
-     */
-    @Operation(summary = UPDATE_ACTION)
-    int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs);
-
-    /**
-     * 批量更新记录，并返回更新记录数
-     *
-     * @param reqList
-     * @return num 更新记录数
-     */
-    @Operation(summary = BATCH_UPDATE_ACTION)
-    int batchUpdate(@NotNull List<Update${entityName}Req> reqList);
-
-    /**
-     * 删除记录，并返回删除是否成功
-     * @param req
-     * @return boolean 删除是否成功
-     */
-    @Operation(summary = DELETE_ACTION)
-    boolean delete(@NotNull ${entityName}IdReq req);
-
-    /**
-     * 批量删除记录，并返回删除记录数
-     * @param req
-     * @return num 删除记录数
-     */
-    @Operation(summary = BATCH_DELETE_ACTION)
-    int batchDelete(@NotNull Delete${entityName}Req req);
 
     /**
      * 查询记录
@@ -210,6 +141,84 @@ public interface ${className} {
      */
     @Operation(summary = QUERY_ACTION)
     ${entityName}Info findUnique(Query${entityName}Req req);
+
+    /**
+     * 创建记录，返回主键ID
+     * @param req
+     * @return pkId 主键ID
+     */
+    @Operation(summary = CREATE_ACTION)
+<#if pkField?exists>
+    ${pkField.typeName} create(@NotNull Create${entityName}Req req);
+<#else>
+    boolean create(@NotNull Create${entityName}Req req);
+</#if>
+
+    /**
+     * 创建记录，返回主键ID列表
+     * @param reqList
+     * @return pkId 主键ID列表
+     */
+    @Operation(summary = BATCH_CREATE_ACTION)
+<#if pkField?exists>
+    List<${pkField.typeName}> batchCreate(@NotNull List<Create${entityName}Req> reqList);
+<#else>
+    List<Boolean> batchCreate(@NotNull List<Create${entityName}Req> reqList);
+</#if>
+
+    /**
+     * 更新记录，并返回更新是否成功
+     *
+     * @param req
+     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
+     * @return boolean 是否成功
+     */
+    @Operation(summary = UPDATE_ACTION)
+    boolean update(@NotNull Update${entityName}Req req, Object... queryObjs);
+
+    /**
+     * 批量无ID更新记录，并返回更新记录数，请小心使用
+     *
+     * @param setReq
+     * @param whereReq
+     * @param queryObjs 附加的查询条件或是更新内容，如可以是 Consumer<UpdateDao<?>> 对象
+     * @return int 记录数
+     */
+    @Operation(summary = UPDATE_ACTION)
+    int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs);
+
+    /**
+     * 批量更新记录，并返回更新记录数
+     *
+     * @param reqList
+     * @return num 更新记录数
+     */
+    @Operation(summary = BATCH_UPDATE_ACTION)
+    int batchUpdate(@NotNull List<Update${entityName}Req> reqList);
+
+    /**
+     * 删除记录，并返回删除是否成功
+     * @param req
+     * @return boolean 删除是否成功
+     */
+    @Operation(summary = DELETE_ACTION)
+    boolean delete(@NotNull ${entityName}IdReq req);
+
+    /**
+     * 批量删除记录，并返回删除记录数
+     * @param req
+     * @return num 删除记录数
+     */
+    @Operation(summary = BATCH_DELETE_ACTION)
+    int batchDelete(@NotNull Delete${entityName}Req req);
+
+    /**
+     * 批量删除记录，并返回删除记录数
+     * @param req
+     * @return num 删除记录数
+     */
+    @Operation(summary = BATCH_DELETE_ACTION)
+    int batchDelete(Query${entityName}Req req, Object... queryObjs);
 
     /**
      * 获取缓存
