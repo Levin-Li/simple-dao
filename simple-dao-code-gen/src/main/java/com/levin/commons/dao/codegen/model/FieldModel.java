@@ -175,7 +175,7 @@ public class FieldModel implements Cloneable {
         return type.getName().equals(className);
     }
 
-    public String getTypeName() {
+    public String getTypeClsName() {
         return type.getName();
     }
 
