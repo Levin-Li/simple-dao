@@ -105,7 +105,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
 <#if pkField?exists>
-        return entity.get${pkField.name?cap_first}();
+        return req.set${pkField.name?cap_first}(entity.get${pkField.name?cap_first}()).get${pkField.name?cap_first}();
 <#else>
         return entity != null;
 </#if>
