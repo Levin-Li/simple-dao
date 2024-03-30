@@ -90,6 +90,26 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     protected Biz${serviceName} biz${serviceName};
 
     /**
+    * 清除缓存
+    */
+    @GetMapping("clearCache")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = CLEAR_CACHE_ACTION + "keySuffix 通常为记录的ID，如果keySuffix和cacheKey都为空，则清除所有缓存" + BIZ_NAME)
+    public ApiResp<Boolean> clearCache(String keySuffix, String cacheKey) {
+
+        cacheKey = checkRequest(CLEAR_CACHE_ACTION, cacheKey);
+
+        if(StringUtils.hasText(keySuffix)){
+            ${serviceName?uncap_first}.clearCacheByKeySuffix(keySuffix);
+        }else if(StringUtils.hasText(cacheKey)){
+            ${serviceName?uncap_first}.clearCache(cacheKey);
+        }else{
+            ${serviceName?uncap_first}.clearAllCache();
+        }
+
+        return ApiResp.ok(true);
+    }
+
+    /**
      * 分页列表查找
      *
      * @param req Query${entityName}Req
