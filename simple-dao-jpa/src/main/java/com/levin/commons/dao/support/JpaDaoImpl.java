@@ -879,7 +879,7 @@ public class JpaDaoImpl
     protected void checkLimit(int count) {
 
         //如果小于 0 则不做任何限制
-        if (this.getSafeModeMaxLimit() < 0) {
+        if (this.getSafeModeMaxLimit() <= 0) {
             return;
         }
 
