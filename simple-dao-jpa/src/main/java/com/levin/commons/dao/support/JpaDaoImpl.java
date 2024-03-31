@@ -317,7 +317,11 @@ public class JpaDaoImpl
 
     @Override
     public void setCurrentThreadMaxLimit(Integer maxLimit) {
-        safeModeMaxLimitThreadLocal.set(maxLimit);
+        if (maxLimit == null) {
+            safeModeMaxLimitThreadLocal.remove();
+        } else {
+            safeModeMaxLimitThreadLocal.set(maxLimit);
+        }
     }
 
     public EntityManagerFactory getEntityManagerFactory() {
@@ -873,6 +877,12 @@ public class JpaDaoImpl
     }
 
     protected void checkLimit(int count) {
+
+        //如果小于 0 则不做任何限制
+        if (this.getSafeModeMaxLimit() < 0) {
+            return;
+        }
+
         if (count < 1 || count > this.getSafeModeMaxLimit()) {
             throw new DaoSecurityException("no limit or limit over " + getSafeModeMaxLimit());
         }
@@ -1095,7 +1105,7 @@ public class JpaDaoImpl
                 //@todo 考虑根据数据库类型进行优化处理
                 //目前 MySql 支持空值忽略，唯一约束
 
-               // selectDao.isNull(fieldName);
+                // selectDao.isNull(fieldName);
 
                 //只要有一个是空值，就不违反约束条件
 
