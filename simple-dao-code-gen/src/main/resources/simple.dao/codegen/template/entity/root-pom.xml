@@ -57,6 +57,7 @@
         <redission.version>3.16.8</redission.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
+
         <com.github.oshi.version>3.12.2</com.github.oshi.version>
 
         <openfeign.version>3.1.5</openfeign.version>
@@ -339,12 +340,16 @@
                 <groupId>com.github.oshi</groupId>
                 <artifactId>oshi-core</artifactId>
                 <version>${com.github.oshi.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.java.dev.jna</groupId>
-                <artifactId>jna</artifactId>
-                <version>${net.java.dev.jna.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.java.dev.jna</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
