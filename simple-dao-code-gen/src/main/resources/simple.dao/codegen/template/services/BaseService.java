@@ -82,20 +82,4 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
         return (T) selfProxy;
     }
 
-    /**
-     * 兼容旧代码，请不要调用
-     * @param type
-     * @return
-     * @param <T>
-     */
-    @Deprecated
-    protected <T extends S> T getSelfProxy(Class<T> type) {
-
-        if (selfProxy == null) {
-            selfProxy = applicationContext.getBean(type);
-        }
-
-        return (T) selfProxy;
-    }
-
 }
