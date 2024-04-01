@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.*;
 
 import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.*;
 import javax.validation.*;
 import java.util.*;
@@ -39,7 +40,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  */
 @Slf4j
-public abstract class BaseService<S> {
+public abstract class BaseService<S> implements ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
     protected SimpleDao simpleDao;
@@ -47,11 +48,23 @@ public abstract class BaseService<S> {
     @Autowired
     protected ApplicationContext applicationContext;
 
-
     protected Object selfProxy = null;
 
     public final String getModuleId() {
         return ModuleOption.ID;
+    }
+
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+
+        if (event.getApplicationContext() == applicationContext) {
+            onApplicationContextReady(applicationContext);
+        }
+    }
+
+    protected void onApplicationContextReady(ApplicationContext context) {
+
     }
 
     /**
