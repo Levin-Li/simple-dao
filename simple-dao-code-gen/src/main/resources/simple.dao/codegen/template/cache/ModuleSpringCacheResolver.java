@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import static com.levin.oak.base.ModuleOption.PLUGIN_PREFIX;
+import static ${modulePackageName}.ModuleOption.PLUGIN_PREFIX;
 
 /**
  * 模块缓存解析器
