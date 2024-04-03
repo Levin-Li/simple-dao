@@ -9,6 +9,7 @@ import com.levin.commons.service.domain.*;
 
 import javax.annotation.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
@@ -20,6 +21,8 @@ import org.springframework.validation.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.*;
+
+import com.levin.commons.service.support.SpringCacheEventListener;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
@@ -97,9 +100,94 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
 
-<#--    protected ${className} getSelfProxy(){-->
-<#--        return getSelfProxy(${className}.class);-->
-<#--    }-->
+
+<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
+
+<#elseif isMultiTenantObject>
+    @PostConstruct
+    public void init() {
+
+        //启动先清除缓存
+        ${serviceName?uncap_first}.clearAllCache();
+
+//        规划缓存(N个，每个租户一个 + 公共一个)： 1. 公共${entityTitle}列表缓存 2. 租户${entityTitle}列表缓存
+
+        //如果缓存发生删除事件，则删除对应的缓存
+        SpringCacheEventListener.add((ctx, cache, action, key, value) -> {
+
+                    String tenantId = (value instanceof MultiTenantObject) ?
+                            ((MultiTenantObject) value).getTenantId() :
+                            (String) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().map(o -> ((MultiTenantObject) o).getTenantId()).orElse(null);
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("试图清除租户的${entityTitle}列表缓存：{} {}-{}", tenantId, key, value);
+                    }
+
+                    //试图清除租户的角色缓存
+                    cache.evict("T" + tenantId);
+                }
+                ,  ${serviceName}.CACHE_NAME,  ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict);
+    }
+
+    /**
+     * 加载租户的${entityTitle}列表
+     *
+     * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+     *
+     * tenantId 为 null 时加载公共${entityTitle}
+     *
+     * @param userPrincipal 操作者
+     * @param tenantId      可为null，为 null 时加载公共${entityTitle}
+     * @return
+     */
+    //@Override
+    List<${entityName}Info> load${entityName}List(Serializable userPrincipal, String tenantId) {
+
+        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T" + tenantId, (key) ->
+                simpleDao.selectFrom(${entityName}.class)
+                        .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
+                        .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
+
+                        //状态正常的
+                        //.eq(${entityName}::getState, ${entityName}.State.Normal)
+
+                        //启用的
+                        //.isNullOrEq(E_${entityName}.enable, true)
+
+                        //.orderBy(E_${entityName}.orderCode)
+
+                        .find(${entityName}Info.class)
+        );
+
+        //复制一个列表，防止列表被修改，因为有使用内存缓存
+        return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
+    }
+<#else>
+    @PostConstruct
+    public void init() {
+
+        //启动先清除缓存
+       ${serviceName?uncap_first}.clearAllCache();
+
+        SpringCacheEventListener.add(
+                (ctx, cache, action, key, value) -> cache.evict("${entityName}List"),
+               ${serviceName}.CACHE_NAME, ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict
+        );
+
+    }
+
+    //注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    //@Override
+    public List<${entityName}Info> load${entityName}List() {
+        return ${serviceName?uncap_first}.getCache("${entityName}List",
+                (key) -> {
+                    Consumer<SelectDao<?>> ex = dao -> dao.setSafeModeMaxLimit(-1).disableSafeMode();
+                    //最多10万条记录
+                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(10 * 10000), ex).getItems();
+                }
+        );
+    }   
+</#if>
 
     /** 参考示例
 

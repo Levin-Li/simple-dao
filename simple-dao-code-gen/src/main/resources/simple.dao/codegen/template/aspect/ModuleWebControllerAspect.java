@@ -8,6 +8,7 @@ import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
+
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -26,11 +27,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * 模块控制器切面拦截器
@@ -58,6 +63,9 @@ public class ModuleWebControllerAspect {
     @Autowired
     HttpServletResponse response;
 
+//    @Autowired
+//    FrameworkProperties frameworkProperties;
+
     @Autowired
     ServerProperties serverProperties;
 
@@ -67,7 +75,10 @@ public class ModuleWebControllerAspect {
     /**
      * 存储模块的变量解析器
      */
-    private MultiValueMap<String, VariableResolver> moduleResolverMap = new LinkedMultiValueMap<>();
+    private final MultiValueMap<String, VariableResolver> moduleResolverMap = new LinkedMultiValueMap<>();
+
+    private boolean isInit = false;
+
 
     @PostConstruct
     void init() {
@@ -201,7 +212,8 @@ public class ModuleWebControllerAspect {
         final String path = getRequestPath();
         //去除应用路径后，进行匹配
         if (path.equals(serverProperties.getError().getPath())
-                || !frameworkProperties.getInject().isMatched(className, path)) {
+            //    || !frameworkProperties.getInject().isMatched(className, path)
+        ) {
             return joinPoint.proceed();
         }
 

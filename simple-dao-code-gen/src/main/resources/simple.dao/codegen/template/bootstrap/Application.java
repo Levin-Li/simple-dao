@@ -1,17 +1,16 @@
 package ${modulePackageName};
 
 
-import com.levin.commons.service.support.*;
-import org.redisson.codec.JsonJacksonCodec;
-import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
-import org.springframework.core.env.*;
-import org.springframework.beans.factory.annotation.*;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableNotFoundException;
 import com.levin.commons.service.support.VariableResolver;
 import com.levin.commons.service.support.VariableResolverConfigurer;
 import lombok.extern.slf4j.Slf4j;
+
+import org.redisson.codec.JsonJacksonCodec;
+import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,19 +18,14 @@ import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCust
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.cache.annotation.EnableCaching;
-
-
-import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
-
-//import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -39,11 +33,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
-
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+
+<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
 
 import org.h2.tools.Server;
 
@@ -52,25 +46,25 @@ import org.h2.tools.Server;
  *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  *
  */
-@Slf4j
 
+<#if !enableDubbo>//</#if>@EnableDubboConfig
+@Slf4j
 @SpringBootApplication
 //@EnableWebSocketMessageBroker
 //@EnableWebSocket
 @EnableScheduling
 @EnableCaching
 @EnableAsync
-<#if !enableDubbo>//</#if>@EnableDubboConfig
+//@EnableDubboConfig
 public class Application {
 
-    public static void main(String... args) {
+    public static void main(String... args) throws Exception {
 
         Server server = Server.createTcpServer("-tcpAllowOthers", "-ifNotExists").start();
         System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
                 + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
 
         SpringApplication.run(Application.class, args);
-
     }
 
     @Autowired
@@ -120,12 +114,17 @@ public class Application {
      */
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-        return builder -> builder
-                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
-                        //redis 默认缓存 30 分钟
-                        .entryTtl(Duration.of(30, ChronoUnit.MINUTES))
-                        .disableCachingNullValues()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())));
+        return builder -> {
+            builder.cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
+                    //redis 默认缓存 60 分钟
+                    .entryTtl(Duration.of(60, ChronoUnit.MINUTES))
+                    .disableCachingNullValues()
+                    .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                            new GenericJackson2JsonRedisSerializer(
+                                    new ObjectMapper()
+                                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+                    )));
+        };
     }
 
     /**
@@ -138,7 +137,6 @@ public class Application {
         return config -> config
                 .setCodec(new JsonJacksonCodec(getClass().getClassLoader()));
     }
-
 
 //    @Bean
 //    PluginManager pluginManager() {
@@ -163,7 +161,7 @@ public class Application {
 
             //@todo 增加自定义变量解析器
             //加入
-            variableResolverManager.add( new VariableResolver() {
+            variableResolverManager.add(new VariableResolver() {
                 /**
                  * 获取变量
                  * <p>
