@@ -1213,6 +1213,11 @@ public class JpaDaoImpl
 
         BiConsumer<Field, Unique> uniqueConsumer = (field, unique) -> {
 
+            String group = unique.group();
+
+            if (!StringUtils.hasText(group)) {
+                group = (field != null ? field.getName() : "") + "_" + String.join(",", unique.value());
+            }
 
             for (String column : unique.value()) {
 
@@ -1231,11 +1236,6 @@ public class JpaDaoImpl
 
                 column = field.getName();
 
-                String group = unique.group();
-
-                if (!StringUtils.hasText(group)) {
-                    group = field.getName() + "_" + String.join(",", unique.value());
-                }
 
                 UniqueField uniqueField = tmp.get(group);
 
