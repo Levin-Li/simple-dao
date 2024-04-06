@@ -620,11 +620,8 @@ public abstract class BaseMojo extends AbstractMojo {
      * @param varMaps
      * @throws IOException
      */
-    protected void copyAndReplace(boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
-
+    protected void copyAndReplace(boolean overwrite, String templateRes, File target, Map<String, ?>... varMaps) throws IOException {
             Utils.copyAndReplace(mavenProject.getBasedir().getCanonicalPath(), overwrite, templateRes, target, varMaps);
-
-
     }
 
 

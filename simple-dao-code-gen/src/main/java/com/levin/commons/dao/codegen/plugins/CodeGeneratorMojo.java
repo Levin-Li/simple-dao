@@ -110,6 +110,30 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean forceSplitDir = false;
 
     /**
+     * 是否输出格式化后Java代码
+     */
+    @Parameter
+    private boolean isOutputFormatCode = false;
+
+    /**
+     * 是否忽略代码注释的变更，代码注释变更，被认为代码没有变更
+     */
+    @Parameter
+    private boolean isIgnoreCodeCommentChange = true;
+
+    /**
+     * 是否允许使用Dubbo，自动生成Dubbo相关的配置
+     */
+    @Parameter
+    private boolean enableDubbo = false;
+
+    /**
+     * 是否导入oak_base 框架
+     */
+    @Parameter
+    private boolean enableOakBaseFramework = false;
+
+    /**
      * 生成代码的字段上的Schema注解，描述是否使用常量引用，默认使用。
      * <p>
      * 例子：使用时
@@ -129,28 +153,12 @@ public class CodeGeneratorMojo extends BaseMojo {
     private boolean isCreateControllerSubDir = false;
 
     /**
-     * 是否输出格式化后Java代码
-     */
-    @Parameter
-    private boolean isOutputFormatCode = false;
-
-    /**
-     * 是否忽略代码注释的变更，代码注释变更，被认为代码没有变更
-     */
-    @Parameter
-    private boolean isIgnoreCodeCommentChange = true;
-
-    /**
-     * 是否允许使用Dubbo，自动生成Dubbo相关的配置
-     */
-    @Parameter
-    private boolean enableDubbo = false;
-
-    /**
      * 是否生成业务控制器类
      */
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
+
+
 
     /**
      * 忽略的实体类，类名正则表达式
@@ -339,6 +347,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
             codeGenParams.putIfAbsent("enableDubbo", enableDubbo);
+            codeGenParams.putIfAbsent("enableOakBaseFramework", enableOakBaseFramework);
+
             codeGenParams.putIfAbsent("cacheSpelUtilsBeanName", cacheSpelUtilsBeanName);
 
 

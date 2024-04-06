@@ -197,9 +197,14 @@ public class JpaDaoImpl
     @Accessors(chain = true)
     static class UniqueField {
 
+        Unique unique;
+
+        UniqueConstraint constraint;
+
         String group;
         String key;
         String title;
+
         final List<Field> fieldList = new ArrayList<>(3);
 
         UniqueField addField(Field field, String title) {
@@ -245,12 +250,12 @@ public class JpaDaoImpl
 
     static {
 
-        DaoContext.setEntityClassFieldNullableFun(field -> {
+        DaoContext.setEntityClassFieldNullableTestFun(field -> {
             Column column = field.getAnnotation(Column.class);
             return column == null || column.nullable();
         }, true);
 
-        DaoContext.setEntityClassFun(type -> type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class), true);
+        DaoContext.setEntityClassTestFun(type -> type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class), true);
     }
 
     @PostConstruct
@@ -1090,6 +1095,7 @@ public class JpaDaoImpl
 //            selectDao.notEq(idAttrName, id);
 //        }
 
+
         boolean hasValue = false;
 
         for (Field field : uniqueField.fieldList) {
@@ -1099,7 +1105,6 @@ public class JpaDaoImpl
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
             if (value == null) {
-
 
                 //部分数据库支持空字符串等同于Null空值
                 //@todo 考虑根据数据库类型进行优化处理
@@ -1154,7 +1159,7 @@ public class JpaDaoImpl
                 UniqueField uniqueField = tmp.get(group);
 
                 if (uniqueField == null) {
-                    uniqueField = new UniqueField().setGroup(group);
+                    uniqueField = new UniqueField().setUnique(unique).setGroup(group);
                     tmp.put(group, uniqueField);
                     uniqueFields.add(uniqueField);
                 }
@@ -1180,7 +1185,7 @@ public class JpaDaoImpl
                 .map(table -> table.uniqueConstraints())
                 .ifPresent(uniqueConstraints -> {
                     for (UniqueConstraint constraint : uniqueConstraints) {
-                        UniqueField uniqueField = new UniqueField();
+                        UniqueField uniqueField = new UniqueField().setConstraint(constraint);
                         //唯一约束的列名必须和字段名相同
                         for (String column : constraint.columnNames()) {
                             try {

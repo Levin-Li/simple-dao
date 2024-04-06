@@ -20,6 +20,15 @@ import java.lang.annotation.*;
 public @interface Unique {
 
     /**
+     * 是否是主要的唯一标识
+     * <p>
+     * 主要的唯一标识可以判断一条记录的重复性
+     *
+     * @return
+     */
+    boolean isPrimary() default false;
+
+    /**
      * 字段名列表
      * 默认为被注解字段名称
      */

@@ -158,6 +158,7 @@ public final class ServiceModelCodeGenerator {
 //        String bootstrapDir = bootstrapDir();
 
         Map<String, Object> params = MapUtils.put(threadContext.getAll(false))
+                .put(genParams)
                 .put("parent", mavenProject.getParent())
                 .put("groupId", mavenProject.getGroupId())
                 .put("version", mavenProject.getVersion())

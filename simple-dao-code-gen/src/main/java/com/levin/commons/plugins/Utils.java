@@ -42,7 +42,7 @@ public abstract class Utils {
      * @param varMaps
      * @throws IOException
      */
-    public static void copyAndReplace(String prefix, boolean overwrite, String templateRes, File target, Map<String, String>... varMaps) throws IOException {
+    public static void copyAndReplace(String prefix, boolean overwrite, String templateRes, File target, Map<String, ?>... varMaps) throws IOException {
 
         //String prefix = mavenProject.getBasedir().getCanonicalPath();
 
@@ -61,7 +61,7 @@ public abstract class Utils {
 
         ClassLoader classLoader = Utils.class.getClassLoader();
 
-       // templateRes= templateRes.replaceAll("")
+        // templateRes= templateRes.replaceAll("")
 
         while (templateRes.trim().startsWith("/")) {
             templateRes = templateRes.trim().substring(1);
@@ -70,10 +70,10 @@ public abstract class Utils {
         String resText = IOUtils.resourceToString(templateRes, Charset.forName("utf-8"), classLoader);
 
         if (varMaps != null) {
-            for (Map<String, String> varMap : varMaps) {
+            for (Map<String, ?> varMap : varMaps) {
                 if (varMap != null) {
-                    for (Map.Entry<String, String> entry : varMap.entrySet()) {
-                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue());
+                    for (Map.Entry<String, ?> entry : varMap.entrySet()) {
+                        resText = resText.replace("${" + entry.getKey().trim() + "}", entry.getValue() == null ? "" : entry.getValue().toString());
                     }
                 }
             }

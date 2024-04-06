@@ -85,6 +85,44 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     private String defaultJdbcPassword = "";
 
     /**
+     * 是否允许使用Dubbo，自动生成Dubbo相关的配置
+     */
+    @Parameter
+    private boolean enableDubbo = false;
+
+    /**
+     * 是否导入oak_base 框架
+     */
+    @Parameter
+    private boolean enableOakBaseFramework = false;
+
+    /**
+     * 生成代码的字段上的Schema注解，描述是否使用常量引用，默认使用。
+     * <p>
+     * 例子：使用时
+     *
+     * @Schema(description = L_planName )
+     * <p>
+     * 不使用时
+     * @Schema(description = "计划名称" )
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isSchemaDescUseConstRef = true;
+
+    /**
+     * 生成的控制器类是否创建子目录
+     */
+    @Parameter
+    private boolean isCreateControllerSubDir = false;
+
+    /**
+     * 是否生成业务控制器类
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isCreateBizController = true;
+
+
+    /**
      * 要忽略的表
      */
     @Parameter
@@ -139,20 +177,27 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             String resTemplateDir = TEMPLATE_PATH + "entity/";
 
             //拷贝 POM 文件
-
             MapUtils.Builder<String, String> mapBuilder =
-                    MapUtils.put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
-                            .put("modulePackageName", modulePackageName)
-                            .put("now", new Date().toString());
+                    MapUtils.put("now", new Date().toString())
+                            .put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
+                            .put("modulePackageName", modulePackageName);
+
+            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
+            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
+
+            mapBuilder.put("isCreateBizController", "" + isCreateBizController);
+            mapBuilder.put("isCreateControllerSubDir", "" + isCreateControllerSubDir);
+            mapBuilder.put("isSchemaDescUseConstRef", "" + isSchemaDescUseConstRef);
+
 
             copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
-           // copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
-           // copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
+            // copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
+            // copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 
-            Map<String,  Object> tempParams = new LinkedHashMap<>( mapBuilder.build());
+            Map<String, Object> tempParams = new LinkedHashMap<>(mapBuilder.build());
 
-            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", tempParams ,new File(entitiesDir, "package-info.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", tempParams ,new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", tempParams, new File(entitiesDir, "package-info.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", tempParams, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
 
 
             YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();

@@ -48,6 +48,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <#if enableOakBaseFramework>
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-services</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        </#if>
+
         <#if moduleType == 'service'>
         <dependency>
             <artifactId>${entities.artifactId}</artifactId>
@@ -205,6 +213,25 @@
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
         </dependency>
+
+    <#if enableOakBaseFramework>
+
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-services-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-starter</artifactId>
+        </dependency>
+
+    </#if>
      <#if enableDubbo>
 
         <dependency>

@@ -213,6 +213,11 @@
 
                     <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
                     <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+
+                    <enableOakBaseFramework>false</enableOakBaseFramework>
+
+                    <enableDubbo>false</enableDubbo>
+
                 </configuration>
                 <dependencies>
                     <dependency>

@@ -21,8 +21,8 @@ import java.util.function.Supplier;
 
 public abstract class DaoContext {
 
-    public static final String entityClassFieldNullableFun = "entityClassFieldNullableFun";
-    public static final String entityClassFun = "entityClassFun";
+    public static final String entityClassFieldNullableTestFun = "entityClassFieldNullableFun";
+    public static final String entityClassTestFun = "entityClassFun";
 
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
 
@@ -64,24 +64,40 @@ public abstract class DaoContext {
 
     public static boolean isFieldNullable(Field entityClassField) {
 
-        Function<Field, Boolean> fun = getValue(entityClassFieldNullableFun, null);
+        Function<Field, Boolean> fun = getValue(entityClassFieldNullableTestFun, null);
+
+        Assert.notNull(fun, "entityClassFun unset");
 
         return fun == null || Boolean.TRUE.equals(fun.apply(entityClassField));
     }
 
 
-    public static Function<Field, Boolean> setEntityClassFieldNullableFun(Function<Field, Boolean> fun, boolean isGlobal) {
-        return isGlobal ? setGlobalValue(entityClassFieldNullableFun, fun) : setCurrentThreadVar(entityClassFieldNullableFun, fun);
+    /**
+     * 设置字段是否可为空测试函数
+     *
+     * @param fun
+     * @param isGlobal
+     * @return
+     */
+    public static Function<Field, Boolean> setEntityClassFieldNullableTestFun(Function<Field, Boolean> fun, boolean isGlobal) {
+        return isGlobal ? setGlobalValue(entityClassFieldNullableTestFun, fun) : setCurrentThreadVar(entityClassFieldNullableTestFun, fun);
     }
 
     public static boolean isEntityClass(Class<?> entityClass) {
-        Function<Class<?>, Boolean> fun = getValue(entityClassFun, null);
+        Function<Class<?>, Boolean> fun = getValue(entityClassTestFun, null);
         Assert.notNull(fun, "entityClassFun unset");
         return Boolean.TRUE.equals(fun.apply(entityClass));
     }
 
-    public static Function<Class<?>, Boolean> setEntityClassFun(Function<Class<?>, Boolean> fun, boolean isGlobal) {
-        return isGlobal ? setGlobalValue(entityClassFun, fun) : setCurrentThreadVar(entityClassFun, fun);
+    /**
+     * 设置实体类测试函数
+     *
+     * @param fun
+     * @param isGlobal
+     * @return
+     */
+    public static Function<Class<?>, Boolean> setEntityClassTestFun(Function<Class<?>, Boolean> fun, boolean isGlobal) {
+        return isGlobal ? setGlobalValue(entityClassTestFun, fun) : setCurrentThreadVar(entityClassTestFun, fun);
     }
 
     /**

@@ -15,10 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +50,47 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     @Parameter
     private String springBootStarterParentVersion = "2.7.8";
 
+    /**
+     * 是否允许使用Dubbo，自动生成Dubbo相关的配置
+     */
+    @Parameter
+    private boolean enableDubbo = false;
+
+
+    /**
+     * 是否导入oak_base 框架
+     */
+    @Parameter(defaultValue = "true")
+    private boolean enableOakBaseFramework = false;
+
+
+    /**
+     * 生成代码的字段上的Schema注解，描述是否使用常量引用，默认使用。
+     * <p>
+     * 例子：使用时
+     *
+     * @Schema(description = L_planName )
+     * <p>
+     * 不使用时
+     * @Schema(description = "计划名称" )
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isSchemaDescUseConstRef = true;
+
+    /**
+     * 生成的控制器类是否创建子目录
+     */
+    @Parameter
+    private boolean isCreateControllerSubDir = false;
+
+    /**
+     * 是否生成业务控制器类
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isCreateBizController = true;
+
+
+
     {
         independentPluginClassLoader = false;
     }
@@ -74,6 +112,14 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                 modulePackageName = mavenProject.getGroupId();
             }
 
+            Map<Object,Object> mavenProperties = new HashMap<>();
+
+            mavenProperties.putAll(mavenSession.getSystemProperties());
+            mavenProperties.putAll(mavenSession.getUserProperties());
+
+            logger.info("系统变量:{}", mavenSession.getSystemProperties());
+            logger.info("用户变量:{}", mavenSession.getUserProperties());
+
             boolean hasSubModule = hasText(this.subModuleName);
 
             File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
@@ -84,7 +130,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
 
             entitiesDir.mkdirs();
 
-            new File(basedir,"docs").mkdirs();
+            new File(basedir, "docs").mkdirs();
 
             new File(entitiesModuleDir, "src/main/resources").mkdirs();
 
@@ -97,18 +143,26 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                             .put("modulePackageName", modulePackageName)
                             .put("now", new Date().toString());
 
+            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
+            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
+
+            mapBuilder.put("isCreateBizController", "" + isCreateBizController);
+            mapBuilder.put("isCreateControllerSubDir", "" + isCreateControllerSubDir);
+            mapBuilder.put("isSchemaDescUseConstRef", "" + isSchemaDescUseConstRef);
+
+
             copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateDir + "TestOrg.java", new File(entitiesDir, "TestOrg.java"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateDir + "TestRole.java", new File(entitiesDir, "TestRole.java"), mapBuilder.build());
 
-            Map<String,  Object> params = new LinkedHashMap<>( mapBuilder.build());
+            Map<String, Object> params = new LinkedHashMap<>(mapBuilder.build());
 
-            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params ,new File(entitiesDir, "package-info.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params ,new File(entitiesDir, "EntityConst.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/TestOrg.java", params ,new File(entitiesDir, "TestOrg.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/TestRole.java", params ,new File(entitiesDir, "TestRole.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params, new File(entitiesDir, "package-info.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/TestOrg.java", params, new File(entitiesDir, "TestOrg.java").getCanonicalPath());
+            ServiceModelCodeGenerator.genFileByTemplate("entity/TestRole.java", params, new File(entitiesDir, "TestRole.java").getCanonicalPath());
 
 
             if (!isPomModule) {
@@ -133,11 +187,11 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                                 .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
                                 .findAny().ifPresent(dependency -> {
 
-                            logger.info("find service-support: " + dependency);
+                                    logger.info("find service-support: " + dependency);
 
-                            pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
-                            pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
-                        });
+                                    pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
+                                    pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
+                                });
                     });
 
 
@@ -145,7 +199,12 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
                     .put("parent.groupId", mavenProject.getGroupId())
                     .put("parent.artifactId", mavenProject.getArtifactId())
                     .put("parent.version", mavenProject.getVersion())
+
                     .put(pluginInfo);
+
+
+            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
+            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
 
 
             if (hasSubModule) {

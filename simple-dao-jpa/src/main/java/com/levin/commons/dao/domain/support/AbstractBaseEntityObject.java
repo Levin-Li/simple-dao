@@ -89,6 +89,7 @@ public abstract class AbstractBaseEntityObject
         if (enable == null) {
             enable = true;
         }
+
     }
 
     @PreUpdate

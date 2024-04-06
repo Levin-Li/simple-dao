@@ -38,6 +38,8 @@
         <levin.service-support.groupId>${service-support.groupId}</levin.service-support.groupId>
         <levin.service-support.version>${service-support.version}</levin.service-support.version>
 
+        <levin-framework-base.version>2.6.0</levin-framework-base.version>
+
         <easyexcel.version>3.2.1</easyexcel.version>
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
@@ -284,6 +286,43 @@
                 <version>${levin.service-support.version}</version>
             </dependency>
 
+       <!--
+            <dependency>
+                <groupId>com.levin.oak.base</groupId>
+                <artifactId>framework-base-services</artifactId>
+                <version>${levin-framework-base.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.levin.oak.base</groupId>
+                <artifactId>framework-base-api</artifactId>
+                <version>${levin-framework-base.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.levin.oak.base</groupId>
+                <artifactId>framework-base-services-impl</artifactId>
+                <version>${levin-framework-base.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.levin.oak.base</groupId>
+                <artifactId>framework-base-admin-ui</artifactId>
+                <version>${levin-framework-base.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.levin.oak.base</groupId>
+                <artifactId>framework-base-starter</artifactId>
+                <version>${levin-framework-base.version}</version>
+                <scope>provided</scope>
+            </dependency>
+    -->
+
             <dependency>
                 <groupId>net.oschina.j2cache</groupId>
                 <artifactId>j2cache-core</artifactId>
@@ -507,6 +546,14 @@
             <scope>provided</scope>
         </dependency>
 
+<!--
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-services</artifactId>
+            <scope>provided</scope>
+        </dependency>
+-->
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -584,10 +631,15 @@
                     <!--  <isCreateControllerSubDir>false</isCreateControllerSubDir> -->
 
                     <!-- 是否生成BizController -->
-                    <isCreateBizController>true</isCreateBizController>
+                    <isCreateBizController>${isCreateBizController}</isCreateBizController>
 
                     <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
-                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+                    <isSchemaDescUseConstRef>${isSchemaDescUseConstRef}</isSchemaDescUseConstRef>
+
+                    <enableOakBaseFramework>${enableOakBaseFramework}</enableOakBaseFramework>
+
+                    <enableDubbo>${enableDubbo}</enableDubbo>
+
                 </configuration>
 
                 <dependencies>
