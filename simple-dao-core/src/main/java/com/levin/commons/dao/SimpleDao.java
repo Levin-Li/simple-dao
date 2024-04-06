@@ -8,7 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public interface SimpleDao extends MiniDao, DaoFactory {
 
@@ -141,6 +144,15 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     String getEntityIdAttrName(Object entity);
 
     /**
+     * 根据实体类获取自定义的唯一性列表
+     *
+     * @param entityClass 实体类
+     * @param filter      过滤器
+     * @return 返回唯一性列表
+     */
+    List<Unique> findEntityUniqueList(Class<?> entityClass, Predicate<Unique> filter);
+
+    /**
      * 通过查询对象查询唯一约束的对象ID
      *
      * @param queryObj
@@ -257,6 +269,7 @@ public interface SimpleDao extends MiniDao, DaoFactory {
     /**
      * 查找唯一
      * //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
+     *
      * @param queryObjs
      * @param <E>
      * @return
@@ -277,8 +290,9 @@ public interface SimpleDao extends MiniDao, DaoFactory {
 
     /**
      * 查找唯一值
-     *
+     * <p>
      * 记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
+     *
      * @param resultType
      * @param queryObjs
      * @param <E>

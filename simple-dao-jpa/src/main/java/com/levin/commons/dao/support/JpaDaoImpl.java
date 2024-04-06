@@ -1,6 +1,7 @@
 package com.levin.commons.dao.support;
 
 
+import cn.hutool.core.collection.CollUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
@@ -43,6 +44,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -176,7 +178,7 @@ public class JpaDaoImpl
     @Autowired
     private HibernateProperties hibernateProperties;
 
-    private static final Map<String, List<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
+    private static final Map<String, Set<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
 
     //注意这个是数据库的函数支持缓存，不能静态化
     private final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
@@ -232,6 +234,40 @@ public class JpaDaoImpl
 
             return this;
         }
+
+
+        public boolean equals(Object obj) {
+
+            // 检查是否是同一个对象
+            if (this == obj) {
+                return true;
+            }
+
+            // 检查传入的对象是否是 UniqueField 的实例
+            if (!(obj instanceof UniqueField)) {
+                return false;
+            }
+
+            // 获取当前对象的 fieldList 中非空字段的名称，并存储到 names 列表中
+            //
+            List<String> names = fieldList.stream().filter(Objects::nonNull).map(Field::getName).collect(Collectors.toList());
+
+            // 复制 names 列表到 namesCopy
+            List<String> namesCopy = new ArrayList<>(names);
+
+            // 获取传入对象的 fieldList 中非空字段的名称，并存储到 names2 列表中
+            List<String> names2 = ((UniqueField) obj).fieldList.stream().filter(Objects::nonNull).map(Field::getName).collect(Collectors.toList());
+
+            // 从 names 列表中移除 names2 中包含的元素
+            names.removeIf(names2::contains);
+
+            // 从 names2 列表中移除 namesCopy 中包含的元素
+            names2.removeIf(namesCopy::contains);
+
+            // 如果 names 和 names2 列表都为空，则两个对象相等，返回 true；否则返回 false
+            return names.isEmpty() && names2.isEmpty();
+        }
+
 
         @Override
         public String toString() {
@@ -1030,6 +1066,20 @@ public class JpaDaoImpl
                 .orElse(field.getName());
     }
 
+    /**
+     * 根据实体类获取自定义的唯一性列表
+     *
+     * @param entityClass 实体类
+     * @return 返回唯一性列表
+     */
+    @Override
+    public List<Unique> findEntityUniqueList(Class<?> entityClass, Predicate<Unique> filter) {
+        return uniqueFieldMap.computeIfAbsent(entityClass.getName(), key -> getUniqueFields(entityClass))
+                .stream().map(UniqueField::getUnique)
+                .filter(Objects::nonNull)
+                .filter(u -> filter == null || filter.test(u))
+                .collect(Collectors.toList());
+    }
 
     /**
      * 通过查询对象查询唯一约束的对象ID
@@ -1062,7 +1112,7 @@ public class JpaDaoImpl
 
         Class<?> finalEntityClass = entityClass;
 
-        List<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
+        Set<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
                 key -> getUniqueFields(finalEntityClass));
 
         //开始查找
@@ -1125,9 +1175,17 @@ public class JpaDaoImpl
         return hasValue ? selectDao.findOne() : null;
     }
 
-    private static List<UniqueField> getUniqueFields(Class<?> entityClass) {
+    /**
+     * 根据实体类获取唯一性字段集合
+     * <p>
+     * 排除重复的唯一字段，同时Unique注解优先采用
+     *
+     * @param entityClass 实体类
+     * @return 唯一性字段集合
+     */
+    private static Set<UniqueField> getUniqueFields(Class<?> entityClass) {
 
-        List<UniqueField> uniqueFields = new ArrayList<>(3);
+        Set<UniqueField> uniqueFields = new HashSet<>(3);
 
         Map<String, UniqueField> tmp = new LinkedHashMap<>();
 
