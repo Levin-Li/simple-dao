@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
@@ -1064,6 +1065,27 @@ public class JpaDaoImpl
         return Optional.ofNullable(field.getAnnotation(Schema.class))
                 .map(schema -> findFirst(schema.title(), schema.description()).orElse(field.getName()))
                 .orElse(field.getName());
+    }
+
+
+    /**
+     * 获取对象中指定属性名的属性值集合
+     *
+     * @param obj       要获取属性值的对象
+     * @param attrNames 属性名列表
+     * @return 包含指定属性名的属性值的集合
+     */
+    @Override
+    public List<Object> getAttrValues(Object source, List<String> attrNames) {
+
+        if (source == null) {
+            return Collections.emptyList();
+        }
+
+        return attrNames.stream()
+                .map(name -> ObjectUtil.getIndexValue(source, name, false))
+                .collect(Collectors.toList());
+
     }
 
     /**

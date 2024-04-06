@@ -143,6 +143,16 @@ public interface SimpleDao extends MiniDao, DaoFactory {
      */
     String getEntityIdAttrName(Object entity);
 
+
+    /**
+     * 获取对象中指定属性名的属性值集合
+     *
+     * @param obj       要获取属性值的对象
+     * @param attrNames 属性名列表
+     * @return 包含指定属性名的属性值的集合
+     */
+    List<Object> getAttrValues(Object obj, List<String> attrNames);
+
     /**
      * 根据实体类获取自定义的唯一性列表
      *
