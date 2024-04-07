@@ -1200,11 +1200,13 @@ Dao 类逻辑框图，如下图所示。
     
     <groupId>com.levin.codegen.example</groupId>
     <artifactId>codegen-example</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${revision}</version>
    
     <packaging>pom</packaging>
      
     <properties>
+
+        <revision>1.0.0-SNAPSHOT</revision>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
 
@@ -1249,8 +1251,13 @@ Dao 类逻辑框图，如下图所示。
                     <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
                     <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
 
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+
+                    <!-- 集成 OakBaseFramework -->
                     <enableOakBaseFramework>false</enableOakBaseFramework>
 
+                    <!-- 集成 DubboFramework -->
                     <enableDubbo>false</enableDubbo>
 
                 </configuration>
