@@ -225,7 +225,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                         //启用的
                         //.isNullOrEq(E_${entityName}.enable, true)
 
-                        //.orderBy(E_${entityName}.orderCode)
+                        .orderBy(SortableObject.class.isAssignableFrom(${entityName}.class), E_${entityName}.orderCode)
 
                         .find(${entityName}Info.class)
         );
