@@ -210,3 +210,33 @@ logging:
     root: warn
     com.levin: info
     ${modulePackageName}: debug
+
+<#if enableOakBaseFramework>
+# 插件系统配置
+plugin:
+  com:
+    levin:
+      oak:
+        base:
+          framework:
+            admin-path: /
+            api-doc-path: /api-docs
+
+            url-acl:
+              enable: true
+              onlyControllerMethod: true
+              useWebFilter: true
+              include-path-patterns: /com.levin.oak.base/**
+
+            sign:
+              enable: false
+
+            resources-acl:
+              - includePathPatterns: "/templates/com.levin.oak.base/**"
+                denied: true
+            #              - exclude-path-patterns: /swagger-ui/**,/webjars/**
+
+            enable-mock-sms-send: true
+            enableSmsVerificationCode: false
+
+</#if>

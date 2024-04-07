@@ -11,12 +11,12 @@
     <parent>
         <groupId>${parent.groupId}</groupId>
         <artifactId>${parent.artifactId}</artifactId>
-<!--        <version>${parent.version}</version>-->
+        <!--        <version>${parent.version}</version>-->
         <version>${revision}</version>
     </parent>
 
-<!--    <groupId>${project.groupId}</groupId> -->
-<!--    <version>${project.version}</version> -->
+    <!--    <groupId>${project.groupId}</groupId> -->
+    <!--    <version>${project.version}</version> -->
 
     <artifactId>${project.artifactId}</artifactId>
 
@@ -42,13 +42,11 @@
             <scope>provided</scope>
         </dependency>
 
-<!--
         <dependency>
             <groupId>${levin.simple-dao.groupId}</groupId>
             <artifactId>simple-dao-annotations</artifactId>
             <scope>provided</scope>
         </dependency>
--->
 
     </dependencies>
 
