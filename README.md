@@ -165,11 +165,13 @@
     
     <groupId>com.levin.codegen.example</groupId>
     <artifactId>codegen-example</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${revision}</version>
    
     <packaging>pom</packaging>
      
     <properties>
+
+        <revision>1.0.0-SNAPSHOT</revision>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
 
