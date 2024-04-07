@@ -6,6 +6,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
+import com.levin.commons.dao.domain.*;
 
 import javax.annotation.*;
 import java.util.*;
@@ -14,6 +15,8 @@ import java.util.stream.*;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.core.annotation.*;
+
 import org.springframework.util.StringUtils;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -100,15 +103,15 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
 
+<#--<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>   && classModel.hasAnno('') -->
 
-<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
-
-<#elseif isMultiTenantObject>
+<#if isCacheableEntity && isMultiTenantObject>
     @PostConstruct
     public void init() {
 
         //启动先清除缓存
-        ${serviceName?uncap_first}.clearAllCache();
+        //${serviceName?uncap_first}.clearAllCache();
+        moduleCacheService.getCache(${serviceName}.CACHE_NAME).clear();
 
 //        规划缓存(N个，每个租户一个 + 公共一个)： 1. 公共${entityTitle}列表缓存 2. 租户${entityTitle}列表缓存
 
@@ -129,19 +132,87 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                 ,  ${serviceName}.CACHE_NAME,  ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict);
     }
 
+<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
     /**
-     * 加载租户的${entityTitle}列表
+    * 加载租户的缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * tenantId 为 null 时加载公共${entityTitle}
+    *
+    * @param userPrincipal 操作者
+    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @return
+    */
+    @Override
+    public List<${entityName}Info> loadCacheList(Serializable userPrincipal, String tenantId) {
+
+        List<${entityName}Info> selfDataList = loadCacheListByTenant(userPrincipal, tenantId);
+
+        //如果当前不是加载公共数据
+        if (StringUtils.hasText(tenantId)
+                && MultiTenantPublicObject.class.isAssignableFrom(${entityName}.class)) { //如果支持公共数据
+
+            selfDataList = new ArrayList<>(selfDataList);
+
+            final boolean tenantSelfEmpty = selfDataList.isEmpty();
+
+            //加载公共数据
+            List<${entityName}Info> publicDataList = new ArrayList<>(loadCacheListByTenant(userPrincipal, null));
+
+            final boolean isPublicEmpty = publicDataList.isEmpty();
+
+            if (!isPublicEmpty && !tenantSelfEmpty) {
+
+                SelfOverridableObject selfOverridable = AnnotatedElementUtils.findMergedAnnotation(${entityName}.class, SelfOverridableObject.class);
+
+                if (selfOverridable != null
+                        && selfOverridable.overrideColumnNames() != null
+                        && selfOverridable.overrideColumnNames().length > 0) {
+
+                    //去除重复的记录
+                    List<String> attrs = Arrays.asList(selfOverridable.overrideColumnNames());
+
+                    final List<${entityName}Info> finalSelfDataList = selfDataList;
+                    publicDataList.removeIf(m1 -> {
+                                String key = simpleDao.getAttrValues(m1, attrs).stream().map(String::valueOf).collect(Collectors.joining(":"));
+
+                                return finalSelfDataList.stream().anyMatch(m2 ->
+                                        key.equals(simpleDao.getAttrValues(m2, attrs).stream().map(String::valueOf).collect(Collectors.joining(":")))
+                                );
+                            }
+
+                    );
+                }
+            }
+            selfDataList.addAll(publicDataList);
+
+            //去除空对象
+            selfDataList.removeIf(Objects::isNull);
+
+            //重新新排序
+            if (!isPublicEmpty && !tenantSelfEmpty && SortableObject.class.isAssignableFrom(${entityName}.class)) {
+                selfDataList.sort(Comparator.comparing(${entityName}Info::getOrderCode));
+            }
+        }
+
+        return selfDataList;
+    }
+</#if>
+
+    /**
+     * 加载租户的缓存${entityTitle}列表
      *
      * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
      *
      * tenantId 为 null 时加载公共${entityTitle}
      *
      * @param userPrincipal 操作者
-     * @param tenantId      可为null，为 null 时加载公共${entityTitle}
+     * @param tenantId 可为null，为 null 时加载公共${entityTitle}
      * @return
      */
-    //@Override
-    List<${entityName}Info> load${entityName}List(Serializable userPrincipal, String tenantId) {
+<#if !classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>@Override</#if>
+    public List<${entityName}Info> loadCacheListByTenant(Serializable userPrincipal, String tenantId) {
 
         List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T" + tenantId, (key) ->
                 simpleDao.selectFrom(${entityName}.class)
@@ -162,12 +233,13 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
         //复制一个列表，防止列表被修改，因为有使用内存缓存
         return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
     }
-<#else>
+<#elseif isCacheableEntity>
     @PostConstruct
     public void init() {
 
         //启动先清除缓存
-       ${serviceName?uncap_first}.clearAllCache();
+        //${serviceName?uncap_first}.clearAllCache();
+        moduleCacheService.getCache(${serviceName}.CACHE_NAME).clear();
 
         SpringCacheEventListener.add(
                 (ctx, cache, action, key, value) -> cache.evict("${entityName}List"),
@@ -176,8 +248,14 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
     }
 
-    //注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
-    //@Override
+    /**
+    * 加载${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * @return
+    */
+    @Override
     public List<${entityName}Info> load${entityName}List() {
         return ${serviceName?uncap_first}.getCache("${entityName}List",
                 (key) -> {
@@ -186,7 +264,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                     return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(10 * 10000), ex).getItems();
                 }
         );
-    }   
+    }
 </#if>
 
     /** 参考示例
