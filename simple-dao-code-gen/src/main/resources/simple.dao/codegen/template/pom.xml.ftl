@@ -478,7 +478,7 @@
 
                             <configuration>
                                 <!--  包含的业务包名  -->
-                                <includeGroupIds>${r"${parent.groupId}"}</includeGroupIds>
+                                <includeGroupIds>${r"${parent.groupId}"},${r"${levin.service-support.groupId}"},${r"${levin.simple-dao.groupId}"},com.levin.oak.base</includeGroupIds>
                                 <outputDirectory>${r"${project.build.directory}/biz-libs"}</outputDirectory>
                             </configuration>
                         </execution>
@@ -491,7 +491,7 @@
                             </goals>
                             <configuration>
                                 <!--  排除的业务包名  -->
-                                <excludeGroupIds>${r"${parent.groupId}"}</excludeGroupIds>
+                                <includeGroupIds>${r"${parent.groupId}"},${r"${levin.service-support.groupId}"},${r"${levin.simple-dao.groupId}"},com.levin.oak.base</includeGroupIds>
                                 <outputDirectory>${r"${project.build.directory}/third-libs"}</outputDirectory>
                             </configuration>
                         </execution>
