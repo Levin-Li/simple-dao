@@ -134,7 +134,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                     }
 
                     //试图清除租户的角色缓存
-                    cache.evict("T" + tenantId);
+                    cache.evict("T@" + tenantId);
                 }
                 ,  ${serviceName}.CACHE_NAME,  ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict);
     }
@@ -221,7 +221,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 <#if !classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>@Override</#if>
     public List<${entityName}Info> loadCacheListByTenant(Serializable userPrincipal, String tenantId) {
 
-        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T" + tenantId, (key) ->
+        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + tenantId, (key) ->
                 simpleDao.selectFrom(${entityName}.class)
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
