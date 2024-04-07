@@ -53,12 +53,6 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
-
-    @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
-    @Schema(title = "IP地址", hidden = true)
-    @Ignore
-    protected String ipAddr;
-
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
     @Schema(title = "是否是web请求", hidden = true)
     @Ignore
@@ -74,6 +68,11 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean isTenantAdmin = false;
 
+    @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
+    @Schema(title = "IP地址", hidden = true)
+    @Ignore
+    protected String ipAddr;
+
     @Schema(title = "操作员ID", hidden = true)
     @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     @Ignore
@@ -84,6 +83,10 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected String operatorName;
 
+    @Schema(title = "是否是web请求", hidden = true)
+    public boolean isWebContext() {
+        return this.isWebContext;
+    }
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
