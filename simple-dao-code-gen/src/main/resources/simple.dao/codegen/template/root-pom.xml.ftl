@@ -39,13 +39,15 @@
         <j2cache.version>2.8.5-release</j2cache.version>
         <j2cache_starter.version>2.8.0-release</j2cache_starter.version>
 
-        <knife4j.version>4.4.0</knife4j.version>
-        <springdoc.version>1.6.14</springdoc.version>
+        <knife4j.version>4.5.0</knife4j.version>
+        <springdoc.version>1.8.0</springdoc.version>
+        <springdoc.version>1.6.15</springdoc.version>
+
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
 
         <redission.version>3.19.3</redission.version>
-        <redission.version>3.16.8</redission.version>
+        <redission.version>3.23.5</redission.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
