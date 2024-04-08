@@ -44,14 +44,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <#if enableOakBaseFramework>
-        <dependency>
-            <groupId>com.levin.oak.base</groupId>
-            <artifactId>framework-base-entities</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        </#if>
-
     </dependencies>
 
     <build>

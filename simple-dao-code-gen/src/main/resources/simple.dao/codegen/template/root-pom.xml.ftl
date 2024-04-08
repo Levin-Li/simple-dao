@@ -535,11 +535,11 @@
         </dependency>
 
         <#if enableOakBaseFramework>
-                <dependency>
-                    <groupId>com.levin.oak.base</groupId>
-                    <artifactId>framework-base-services</artifactId>
-                    <scope>provided</scope>
-                </dependency>
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-services</artifactId>
+            <scope>provided</scope>
+        </dependency>
         </#if>
 
         <dependency>
