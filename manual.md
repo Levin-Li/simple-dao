@@ -1195,7 +1195,9 @@ Dao 类逻辑框图，如下图所示。
     <project xmlns="http://maven.apache.org/POM/4.0.0"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-     
+    
+    <!-- Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。 -->
+
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>com.levin.codegen.example</groupId>

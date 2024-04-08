@@ -90,190 +90,190 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     private boolean isCreateBizController = true;
 
 
-
     {
         independentPluginClassLoader = false;
     }
 
     @Override
-    public void executeMojo() throws MojoExecutionException, MojoFailureException {
-
-        try {
-
-            File basedir = mavenProject.getBasedir();
-
-            boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
-
-            if (this.subModuleName != null) {
-                subModuleName = subModuleName.trim();
-            }
-
-            if (!hasText(this.modulePackageName)) {
-                modulePackageName = mavenProject.getGroupId();
-            }
-
-            Map<Object,Object> mavenProperties = new HashMap<>();
-
-            mavenProperties.putAll(mavenSession.getSystemProperties());
-            mavenProperties.putAll(mavenSession.getUserProperties());
-
-            logger.info("系统变量:{}", mavenSession.getSystemProperties());
-            logger.info("用户变量:{}", mavenSession.getUserProperties());
-
-            boolean hasSubModule = hasText(this.subModuleName);
-
-            File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
-
-            entitiesModuleDir.mkdirs();
-
-            File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + modulePackageName.replace('.', '/') + "/entities");
-
-            entitiesDir.mkdirs();
-
-            new File(basedir, "docs").mkdirs();
-
-            new File(entitiesModuleDir, "src/main/resources").mkdirs();
-
-            String resTemplateDir = "simple.dao/codegen/template/entity/";
-
-            //拷贝 POM 文件
-
-            MapUtils.Builder<String, String> mapBuilder =
-                    MapUtils.put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
-                            .put("modulePackageName", modulePackageName)
-                            .put("now", new Date().toString());
-
-            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
-            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
-
-            mapBuilder.put("isCreateBizController", "" + isCreateBizController);
-            mapBuilder.put("isCreateControllerSubDir", "" + isCreateControllerSubDir);
-            mapBuilder.put("isSchemaDescUseConstRef", "" + isSchemaDescUseConstRef);
+    public void executeMojo() throws Exception {
 
 
-            copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
-//            copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
-//            copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
-//            copyAndReplace(false, resTemplateDir + "TestOrg.java", new File(entitiesDir, "TestOrg.java"), mapBuilder.build());
-//            copyAndReplace(false, resTemplateDir + "TestRole.java", new File(entitiesDir, "TestRole.java"), mapBuilder.build());
+        File basedir = mavenProject.getBasedir();
 
-            Map<String, Object> params = new LinkedHashMap<>(mapBuilder.build());
+        boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
 
-            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params, new File(entitiesDir, "package-info.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/TestOrg.java", params, new File(entitiesDir, "TestOrg.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/TestRole.java", params, new File(entitiesDir, "TestRole.java").getCanonicalPath());
-
-
-            if (!isPomModule) {
-                return;
-            }
-
-            final Map<String, String> pluginInfo = getPluginInfo("codegen-plugin.");
-
-            mavenProject.getBuildPlugins().stream()
-                    .filter(plugin -> "simple-dao-codegen".equalsIgnoreCase(plugin.getArtifactId()))
-                    .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                    .findAny()
-                    .ifPresent(plugin -> {
-
-                        logger.info("find codegen plugin: " + plugin);
-
-                        pluginInfo.putIfAbsent("codegen-plugin.groupId", plugin.getGroupId());
-                        pluginInfo.putIfAbsent("codegen-plugin.version", plugin.getVersion());
-
-                        plugin.getDependencies().stream()
-                                .filter(dependency -> "service-support".equalsIgnoreCase(dependency.getArtifactId()))
-                                .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                                .findAny().ifPresent(dependency -> {
-
-                                    logger.info("find service-support: " + dependency);
-
-                                    pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
-                                    pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
-                                });
-                    });
-
-
-            mapBuilder
-                    .put("parent.groupId", mavenProject.getGroupId())
-                    .put("parent.artifactId", mavenProject.getArtifactId())
-                    .put("parent.version", mavenProject.getVersion())
-
-                    .put(pluginInfo);
-
-
-            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
-            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
-
-
-            if (hasSubModule) {
-
-                //生成 POM 文件
-
-                mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
-                mapBuilder.put("project.artifactId", subModuleName);
-
-                mapBuilder.put("project.packaging", "pom");
-
-                copyAndReplace(false, resTemplateDir + "root-pom.xml", new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
-
-                //变更父构建名称
-                mapBuilder.put("parent.artifactId", subModuleName);
-
-            }
-
-            mapBuilder.put("modules", "");
-
-            mapBuilder.put("project.packaging", "jar");
-
-            //设置构建名称为：父节点的名称加上本节点的名称
-            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
-
-            copyAndReplace(false, resTemplateDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
-
-            String moduleName = hasSubModule ? this.subModuleName : entitiesModuleDir.getName();
-
-            //如果是 root 项目
-            if (mavenProject.isExecutionRoot() && mavenProject.getParentFile() == null) {
-
-                //直接整个覆盖
-                mapBuilder.put("modules", hasText(moduleName) ? "<module>" + moduleName + "</module>\n" : "");
-
-                if (mavenProject.getParent() == null
-                        || !hasText(mavenProject.getParent().getGroupId())) {
-
-                    mapBuilder.put("parent.groupId", "org.springframework.boot")
-                            .put("parent.artifactId", "spring-boot-starter-parent")
-                            .put("parent.version", springBootStarterParentVersion);
-                } else {
-                    mapBuilder.put("parent.groupId", mavenProject.getParent().getGroupId())
-                            .put("parent.artifactId", mavenProject.getParent().getArtifactId())
-                            .put("parent.version", mavenProject.getParent().getVersion());
-                }
-
-                //
-                mapBuilder.put("project.groupId", mavenProject.getGroupId())
-                        .put("project.artifactId", mavenProject.getArtifactId())
-                        .put("project.version", mavenProject.getVersion());
-
-
-                File pomFile = new File(basedir, "pom.xml");
-
-                // 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}
-                boolean overwrite = !FileUtils.readFileToString(pomFile, "utf-8").contains("simple-dao-codegen-flag=" + mapBuilder.build().get("parent.groupId"));
-
-                copyAndReplace(overwrite, resTemplateDir + "root-pom.xml", pomFile, mapBuilder.build());
-
-                ServiceModelCodeGenerator.genFileByTemplate("gitignore.ftl", new LinkedHashMap<>(mapBuilder.build()), new File(basedir, ".gitignore").getCanonicalPath());
-
-            } else {
-                updatePom(mavenProject, moduleName);
-            }
-
-        } catch (Exception e) {
-            getLog().error(mavenProject.getArtifactId() + " 模块模板生成错误：" + e.getMessage(), e);
+        if (this.subModuleName != null) {
+            subModuleName = subModuleName.trim();
         }
+
+        if (!hasText(this.modulePackageName)) {
+            modulePackageName = mavenProject.getGroupId();
+        }
+
+        Map<Object, Object> mavenProperties = new HashMap<>();
+
+        mavenProperties.putAll(mavenSession.getSystemProperties());
+        mavenProperties.putAll(mavenSession.getUserProperties());
+
+        logger.info("系统变量:{}", mavenSession.getSystemProperties());
+        logger.info("用户变量:{}", mavenSession.getUserProperties());
+
+        boolean hasSubModule = hasText(this.subModuleName);
+
+        File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
+
+        entitiesModuleDir.mkdirs();
+
+        File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + modulePackageName.replace('.', '/') + "/entities");
+
+        entitiesDir.mkdirs();
+
+        new File(basedir, "docs").mkdirs();
+
+        new File(entitiesModuleDir, "src/main/resources").mkdirs();
+
+        String resTemplateRootDir = "simple.dao/codegen/template/";
+        String resTemplateEntityDir = resTemplateRootDir + "entity/";
+
+        //拷贝 POM 文件
+
+        MapUtils.Builder<String, Object> mapBuilder =
+                MapUtils.put("CLASS_PACKAGE_NAME", (Object) (modulePackageName + ".entities"))
+                        .put("modulePackageName", modulePackageName)
+                        .put("now", new Date().toString());
+
+        mapBuilder.put("enableOakBaseFramework", this.enableOakBaseFramework);
+        mapBuilder.put("enableDubbo", this.enableDubbo);
+
+        mapBuilder.put("isCreateBizController", isCreateBizController);
+        mapBuilder.put("isCreateControllerSubDir", isCreateControllerSubDir);
+        mapBuilder.put("isSchemaDescUseConstRef", isSchemaDescUseConstRef);
+
+
+        copyAndReplace(false, resTemplateEntityDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+//            copyAndReplace(false, resTemplateEntityDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
+//            copyAndReplace(false, resTemplateEntityDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
+//            copyAndReplace(false, resTemplateEntityDir + "TestOrg.java", new File(entitiesDir, "TestOrg.java"), mapBuilder.build());
+//            copyAndReplace(false, resTemplateEntityDir + "TestRole.java", new File(entitiesDir, "TestRole.java"), mapBuilder.build());
+
+        Map<String, Object> params = new LinkedHashMap<>(mapBuilder.build());
+
+        ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", params, new File(entitiesDir, "package-info.java").getCanonicalPath());
+        ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", params, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+        ServiceModelCodeGenerator.genFileByTemplate("entity/TestOrg.java", params, new File(entitiesDir, "TestOrg.java").getCanonicalPath());
+        ServiceModelCodeGenerator.genFileByTemplate("entity/TestRole.java", params, new File(entitiesDir, "TestRole.java").getCanonicalPath());
+
+
+        if (!isPomModule) {
+            return;
+        }
+
+        final Map<String, String> pluginInfo = getPluginInfo("codegen-plugin.");
+
+        mavenProject.getBuildPlugins().stream()
+                .filter(plugin -> "simple-dao-codegen".equalsIgnoreCase(plugin.getArtifactId()))
+                .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
+                .findAny()
+                .ifPresent(plugin -> {
+
+                    logger.info("find codegen plugin: " + plugin);
+
+                    pluginInfo.putIfAbsent("codegen_plugin__groupId", plugin.getGroupId());
+                    pluginInfo.putIfAbsent("codegen_plugin__version", plugin.getVersion());
+
+                    plugin.getDependencies().stream()
+                            .filter(dependency -> "service-support".equalsIgnoreCase(dependency.getArtifactId()))
+                            .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
+                            .findAny().ifPresent(dependency -> {
+
+                                logger.info("find service-support: " + dependency);
+
+                                pluginInfo.putIfAbsent("service_support__groupId", dependency.getGroupId());
+                                pluginInfo.putIfAbsent("service_support__version", dependency.getVersion());
+                            });
+                });
+
+        mapBuilder
+                .put("parent__groupId", mavenProject.getGroupId())
+                .put("parent__artifactId", mavenProject.getArtifactId())
+                .put("parent__version", mavenProject.getVersion())
+
+                .put(new LinkedHashMap<>(pluginInfo));
+
+        if (hasSubModule) {
+
+            //生成 POM 文件
+
+            mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
+            mapBuilder.put("project__artifactId", subModuleName);
+
+            mapBuilder.put("project__packaging", "pom");
+
+            //copyAndReplace(false, resTemplateRootDir + "root-pom.xml", new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
+
+            //生成 POM 文件
+            ServiceModelCodeGenerator.genFileByTemplate(true, "root-pom.xml.ftl", new HashMap<>(mapBuilder.build()), new File(new File(basedir, subModuleName), "pom.xml"));
+
+            //变更父构建名称
+            mapBuilder.put("parent__artifactId", subModuleName);
+
+        }
+
+        mapBuilder.put("modules", "");
+
+        mapBuilder.put("project__packaging", "jar");
+
+        //设置构建名称为：父节点的名称加上本节点的名称
+        mapBuilder.put("project__artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
+
+        //替换旧的生成方式
+        //copyAndReplace(false, resTemplateEntityDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
+
+        //生成 POM 文件
+        ServiceModelCodeGenerator.genFileByTemplate("entity/entities-pom.xml.ftl", new HashMap<>(mapBuilder.build()), new File(entitiesModuleDir, "pom.xml").getCanonicalPath());
+
+        String moduleName = hasSubModule ? this.subModuleName : entitiesModuleDir.getName();
+
+        //如果是 root 项目
+        if (mavenProject.isExecutionRoot() && mavenProject.getParentFile() == null) {
+
+            //直接整个覆盖
+            mapBuilder.put("modules", hasText(moduleName) ? "<module>" + moduleName + "</module>\n" : "");
+
+            if (mavenProject.getParent() == null
+                    || !hasText(mavenProject.getParent().getGroupId())) {
+
+                mapBuilder.put("parent__groupId", "org.springframework.boot")
+                        .put("parent__artifactId", "spring-boot-starter-parent")
+                        .put("parent__version", springBootStarterParentVersion);
+            } else {
+                mapBuilder.put("parent__groupId", mavenProject.getParent().getGroupId())
+                        .put("parent__artifactId", mavenProject.getParent().getArtifactId())
+                        .put("parent__version", mavenProject.getParent().getVersion());
+            }
+
+            //
+            mapBuilder.put("project__groupId", mavenProject.getGroupId())
+                    .put("project__artifactId", mavenProject.getArtifactId())
+                    .put("project__version", mavenProject.getVersion());
+
+
+            File pomFile = new File(basedir, "pom.xml");
+
+            // 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}
+            boolean overwrite = !FileUtils.readFileToString(pomFile, "utf-8").contains("simple-dao-codegen-flag=" + mapBuilder.build().get("parent.groupId"));
+
+            //  copyAndReplace(overwrite, resTemplateRootDir + "root-pom.xml", pomFile, mapBuilder.build());
+
+            //生成 POM 文件
+            ServiceModelCodeGenerator.genFileByTemplate(true, "root-pom.xml.ftl", new HashMap<>(mapBuilder.build()), new File(basedir, "pom.xml"));
+
+            ServiceModelCodeGenerator.genFileByTemplate("gitignore.ftl", new LinkedHashMap<>(mapBuilder.build()), new File(basedir, ".gitignore").getCanonicalPath());
+
+        } else {
+            updatePom(mavenProject, moduleName);
+        }
+
     }
 
     private static void updatePom(MavenProject mavenProject, String... moduleNames) throws IOException {

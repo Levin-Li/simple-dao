@@ -54,12 +54,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     private String modulePackageName = "";
 
     /**
-     * springBootStarterParentVersion
-     */
-    @Parameter
-    private String springBootStarterParentVersion = "2.7.8";
-
-    /**
      * Spring boot 数据库配置的 profile
      */
     @Parameter
@@ -121,7 +115,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
 
-
     /**
      * 要忽略的表
      */
@@ -139,344 +132,192 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     }
 
     @Override
-    public void executeMojo() throws MojoExecutionException, MojoFailureException {
-
-        try {
-
-            File basedir = mavenProject.getBasedir();
-
-            boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
-
-            if (!isPomModule) {
-                logger.warn("***【表生成实体类插件】*** 请在Pom模块中执行本插件");
-                // return;
-            }
-
-            if (this.subModuleName != null) {
-                subModuleName = subModuleName.trim();
-            }
-
-            if (!hasText(this.modulePackageName)) {
-                modulePackageName = mavenProject.getGroupId();
-            }
-
-            boolean hasSubModule = hasText(this.subModuleName);
-
-            File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
-
-            entitiesModuleDir.mkdirs();
-
-            File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + modulePackageName.replace('.', '/') + "/entities");
-
-            entitiesDir.mkdirs();
-
-            new File(basedir, "docs").mkdirs();
-
-            new File(entitiesModuleDir, "src/main/resources").mkdirs();
-
-            String resTemplateDir = TEMPLATE_PATH + "entity/";
-
-            //拷贝 POM 文件
-            MapUtils.Builder<String, String> mapBuilder =
-                    MapUtils.put("now", new Date().toString())
-                            .put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
-                            .put("modulePackageName", modulePackageName);
-
-            mapBuilder.put("enableOakBaseFramework", "" + this.enableOakBaseFramework);
-            mapBuilder.put("enableDubbo", "" + this.enableDubbo);
-
-            mapBuilder.put("isCreateBizController", "" + isCreateBizController);
-            mapBuilder.put("isCreateControllerSubDir", "" + isCreateControllerSubDir);
-            mapBuilder.put("isSchemaDescUseConstRef", "" + isSchemaDescUseConstRef);
-
-
-            copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
-            // copyAndReplace(false, resTemplateDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
-            // copyAndReplace(false, resTemplateDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
-
-            Map<String, Object> tempParams = new LinkedHashMap<>(mapBuilder.build());
-
-            ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", tempParams, new File(entitiesDir, "package-info.java").getCanonicalPath());
-            ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", tempParams, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
-
-
-            YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
-
-            File resDir = new File(basedir, "src/main/resources");
-
-            if (!resDir.exists()) {
-                resDir.mkdirs();
-            }
-
-            FileSystemResource dbConfigRes = StringUtils.hasText(springbootProfile)
-                    ? new FileSystemResource(new File(resDir, "application-" + springbootProfile + ".yml"))
-                    : new FileSystemResource(new File(resDir, "application.yml"));
-
-            if (!dbConfigRes.exists()) {
-
-                FileUtil.writeString("spring.datasource:\n" +
-                                "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
-                                "  #需要生成实体类的表前缀\n" +
-                                "  genEntityTablePrefix: \n" +
-                                "  username: root\n" +
-                                "  password: \n",
-                        dbConfigRes.getFile(),
-                        "utf-8");
-
-                // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
-
-                logger.error("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
-
-                return;
-            }
-
-            yamlProperties.setResources(dbConfigRes);
-
-            yamlProperties.afterPropertiesSet();
-
-            Properties props = yamlProperties.getObject();
-
-            String dsPrefix = "spring.datasource.";
-
-            DbConfig dbConfig = new DbConfig()
-                    .setDbName(props.getProperty(dsPrefix + "dbName"))
-                    .setJdbcUrl(props.getProperty(dsPrefix + "url", defaultJdbcUrl))
-                    .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
-                    .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
-
-            if (StrUtil.isBlank(dbConfig.getJdbcUrl())) {
-                logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
-                return;
-            }
-
-            String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
-
-            if (!StringUtils.hasText(tablePrefix)) {
-                tablePrefix = defaultTableNamePrefix;
-            }
-
-            if (!StringUtils.hasText(tablePrefix)) {
-                logger.warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同时会去除前缀");
-            } else {
-                logger.info("需要生成实体类的表名前缀：{}", tablePrefix);
-            }
-
-            getLog().info("开始读取数据库：" + dbConfig);
-
-            SQLService sqlService = SQLServiceFactory.build(dbConfig);
-
-            TableSelector tableSelector = sqlService.getTableSelector(dbConfig);
-
-            for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
-
-                final String tableName = tableDefinition.getTableName();
-
-                if (ignoreTables != null && ignoreTables.length > 0
-                        && Stream.of(ignoreTables).anyMatch(ignoreTable -> tableName.equalsIgnoreCase(ignoreTable))) {
-                    continue;
-                }
-
-                if (StringUtils.hasText(tablePrefix)) {
-                    if (!tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
-                        //如果不是指定前缀的表
-                        logger.info("指定要求前缀[{}],忽略表:{}", tablePrefix, tableName);
-                        continue;
-                    }
-                }
-
-                final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tablePrefix) ? tableName.substring(tablePrefix.length()) : tableName));
-
-                File outFile = new File(entitiesDir, entityName + ".java");
-
-                if (outFile.exists()) {
-                    continue;
-                }
-
-                logger.info("开始生成实体类:{} -> {}", entityName, outFile);
-
-                /**
-                 *
-                 */
-                Predicate<String> fun = (name) -> tableDefinition.getColumnDefinitions()
-                        .parallelStream()
-                        .filter(columnDefinition -> columnDefinition.getCamelCaseName().equals(name))
-                        .findAny()
-                        .isPresent();
-
-                /**
-                 * 名称为关键字或是以关键字结尾
-                 */
-                BiPredicate<String, String> keywordFun = (name, keywords) -> StrUtil.split(keywords, ',').parallelStream()
-                        .map(keyword -> keyword.trim())
-                        .filter(keyword -> !StrUtil.isBlank(keyword))
-                        .filter(keyword -> name.equals(keyword) || name.endsWith(StrUtil.upperFirst(keyword)))
-                        .findAny()
-                        .isPresent();
-
-                Map<String, Object> params = MapUtil
-                        .builder("fields", (Object) tableDefinition.getColumnDefinitions())
-                        .put("attrs", fun)
-                        .put("keywordFun", keywordFun)
-                        .put("entityName", entityName)
-                        .put("serialVersionUID", "9876543210")
-                        .put("entityComment", tableDefinition.getComment())
-                        .put("entitySchema", tableDefinition.getSchema())
-                        .put("entityPkName", StrUtil.toCamelCase(tableDefinition.getPkColumn().getColumnName()))
-                        .map();
-
-                params.putAll(mapBuilder.build());
-
-                ServiceModelCodeGenerator.genFileByTemplate("entity/Entity.java.ftl", params, outFile.getCanonicalPath());
-            }
-
-
-            if (!isPomModule) {
-                return;
-            }
-
-            final Map<String, String> pluginInfo = getPluginInfo("codegen-plugin.");
-
-            mavenProject.getBuildPlugins().stream()
-                    .filter(plugin -> "simple-dao-codegen".equalsIgnoreCase(plugin.getArtifactId()))
-                    .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                    .findAny()
-                    .ifPresent(plugin -> {
-
-                        logger.info("find codegen plugin: " + plugin);
-
-                        pluginInfo.putIfAbsent("codegen-plugin.groupId", plugin.getGroupId());
-                        pluginInfo.putIfAbsent("codegen-plugin.version", plugin.getVersion());
-
-                        plugin.getDependencies().stream()
-                                .filter(dependency -> "service-support".equalsIgnoreCase(dependency.getArtifactId()))
-                                .filter(dependency -> dependency.getGroupId().toLowerCase().contains(".levin"))
-                                .findAny().ifPresent(dependency -> {
-
-                                    logger.info("find service-support: " + dependency);
-
-                                    pluginInfo.putIfAbsent("service-support.groupId", dependency.getGroupId());
-                                    pluginInfo.putIfAbsent("service-support.version", dependency.getVersion());
-                                });
-                    });
-
-
-            mapBuilder
-                    .put("parent.groupId", mavenProject.getGroupId())
-                    .put("parent.artifactId", mavenProject.getArtifactId())
-                    .put("parent.version", mavenProject.getVersion())
-                    .put(pluginInfo);
-
-
-            if (hasSubModule) {
-
-                //生成 POM 文件
-
-                mapBuilder.put("modules", "\n<module>" + entitiesModuleDir.getName() + "</module>\n");
-                mapBuilder.put("project.artifactId", subModuleName);
-
-                mapBuilder.put("project.packaging", "pom");
-
-                copyAndReplace(false, resTemplateDir + "root-pom.xml", new File(new File(basedir, subModuleName), "pom.xml"), mapBuilder.build());
-
-                //变更父构建名称
-                mapBuilder.put("parent.artifactId", subModuleName);
-
-            }
-
-            mapBuilder.put("modules", "");
-
-            mapBuilder.put("project.packaging", "jar");
-
-
-            //设置构建名称为：父节点的名称加上本节点的名称
-            mapBuilder.put("project.artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
-
-            copyAndReplace(false, resTemplateDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
-
-            String moduleName = hasSubModule ? this.subModuleName : entitiesModuleDir.getName();
-
-            //如果是 root 项目
-            if (mavenProject.isExecutionRoot() && mavenProject.getParentFile() == null) {
-
-                //直接整个覆盖
-                mapBuilder.put("modules", hasText(moduleName) ? "<module>" + moduleName + "</module>\n" : "");
-
-                if (mavenProject.getParent() == null
-                        || !hasText(mavenProject.getParent().getGroupId())) {
-
-                    mapBuilder.put("parent.groupId", "org.springframework.boot")
-                            .put("parent.artifactId", "spring-boot-starter-parent")
-                            .put("parent.version", springBootStarterParentVersion);
-                } else {
-                    mapBuilder.put("parent.groupId", mavenProject.getParent().getGroupId())
-                            .put("parent.artifactId", mavenProject.getParent().getArtifactId())
-                            .put("parent.version", mavenProject.getParent().getVersion());
-                }
-
-                //
-                mapBuilder.put("project.groupId", mavenProject.getGroupId())
-                        .put("project.artifactId", mavenProject.getArtifactId())
-                        .put("project.version", mavenProject.getVersion());
-
-
-                File pomFile = new File(basedir, "pom.xml");
-
-                // 自动生成标记，请不要删除本行 simple-dao-codegen-flag=${parent.groupId}
-                boolean overwrite = !FileUtils.readFileToString(pomFile, "utf-8").contains("simple-dao-codegen-flag=" + mapBuilder.build().get("parent.groupId"));
-
-                copyAndReplace(overwrite, resTemplateDir + "root-pom.xml", pomFile, mapBuilder.build());
-
-                ServiceModelCodeGenerator.genFileByTemplate("gitignore.ftl", new LinkedHashMap<>(mapBuilder.build()), new File(basedir, ".gitignore").getCanonicalPath());
-
-            } else {
-                updatePom(mavenProject, moduleName);
-            }
-
-        } catch (Exception e) {
-            getLog().error(mavenProject.getArtifactId() + " 模块模板生成错误：" + e.getMessage(), e);
-        }
-    }
-
-
-    private static void updatePom(MavenProject mavenProject, String... moduleNames) throws IOException {
-
-        List<String> stringList = Stream.of(moduleNames)
-                .filter(StringUtils::hasText)
-                .map(String::trim)
-                .collect(Collectors.toList());
-
-        if (stringList.isEmpty()) {
-            return;
-        }
+    public void executeMojo() throws Exception {
 
         File basedir = mavenProject.getBasedir();
 
-        //修改现有的 Pom 文件,增加模块名称
-        String genFlags = "###simple-dao-code-gen-module-flag###";
+        boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
 
-        String moduleList = "\n<!-- " + genFlags + " -->\n";
-
-        for (String moduleName : stringList) {
-            moduleList += "<module>" + moduleName + "</module>\n";
+        if (!isPomModule) {
+            logger.warn("***【表生成实体类插件】*** 请在Pom模块中执行本插件");
+            // return;
         }
 
-        File pomFile = new File(basedir, "pom.xml");
+        if (this.subModuleName != null) {
+            subModuleName = subModuleName.trim();
+        }
 
-        StringBuilder pomContent = new StringBuilder(FileUtils.readFileToString(pomFile, "utf-8"));
+        if (!hasText(this.modulePackageName)) {
+            modulePackageName = mavenProject.getGroupId();
+        }
 
-        //如果没有生成标记
-        if (pomContent.indexOf(genFlags) == -1) {
+        boolean hasSubModule = hasText(this.subModuleName);
 
-            int indexOf = pomContent.indexOf("</modules>");
+        File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
 
-            if (indexOf == -1) {
-                pomContent.insert(pomContent.indexOf("</project>"), "<modules>\n" + moduleList + "\n</modules>\n");
-            } else {
-                pomContent.insert(indexOf, moduleList);
+        entitiesModuleDir.mkdirs();
+
+        File entitiesDir = new File(entitiesModuleDir, "src/main/java/" + modulePackageName.replace('.', '/') + "/entities");
+
+        entitiesDir.mkdirs();
+
+        new File(basedir, "docs").mkdirs();
+
+        new File(entitiesModuleDir, "src/main/resources").mkdirs();
+
+        String resTemplateDir = TEMPLATE_PATH + "entity/";
+
+        //拷贝 POM 文件
+        MapUtils.Builder<String, Object> mapBuilder =
+                MapUtils.put("now", (Object) new Date().toString())
+                        .put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
+                        .put("modulePackageName", modulePackageName);
+
+        mapBuilder.put("enableOakBaseFramework", this.enableOakBaseFramework);
+        mapBuilder.put("enableDubbo", this.enableDubbo);
+
+        mapBuilder.put("isCreateBizController", isCreateBizController);
+        mapBuilder.put("isCreateControllerSubDir", isCreateControllerSubDir);
+        mapBuilder.put("isSchemaDescUseConstRef", isSchemaDescUseConstRef);
+
+
+        copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+
+
+        Map<String, Object> tempParams = new LinkedHashMap<>(mapBuilder.build());
+
+        ServiceModelCodeGenerator.genFileByTemplate("entity/package-info.java", tempParams, new File(entitiesDir, "package-info.java").getCanonicalPath());
+        ServiceModelCodeGenerator.genFileByTemplate("entity/EntityConst.java", tempParams, new File(entitiesDir, "EntityConst.java").getCanonicalPath());
+
+        YamlPropertiesFactoryBean yamlProperties = new YamlPropertiesFactoryBean();
+
+        File resDir = new File(basedir, "src/main/resources");
+
+        if (!resDir.exists()) {
+            resDir.mkdirs();
+        }
+
+        FileSystemResource dbConfigRes = StringUtils.hasText(springbootProfile)
+                ? new FileSystemResource(new File(resDir, "application-" + springbootProfile + ".yml"))
+                : new FileSystemResource(new File(resDir, "application.yml"));
+
+        if (!dbConfigRes.exists()) {
+
+            FileUtil.writeString("spring.datasource:\n" +
+                            "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
+                            "  #需要生成实体类的表前缀\n" +
+                            "  genEntityTablePrefix: \n" +
+                            "  username: root\n" +
+                            "  password: \n",
+                    dbConfigRes.getFile(),
+                    "utf-8");
+
+            // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
+
+            logger.error("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
+
+            return;
+        }
+
+        yamlProperties.setResources(dbConfigRes);
+
+        yamlProperties.afterPropertiesSet();
+
+        Properties props = yamlProperties.getObject();
+
+        String dsPrefix = "spring.datasource.";
+
+        DbConfig dbConfig = new DbConfig()
+                .setDbName(props.getProperty(dsPrefix + "dbName"))
+                .setJdbcUrl(props.getProperty(dsPrefix + "url", defaultJdbcUrl))
+                .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
+                .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
+
+        if (StrUtil.isBlank(dbConfig.getJdbcUrl())) {
+            logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
+            return;
+        }
+
+        String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
+
+        if (!StringUtils.hasText(tablePrefix)) {
+            tablePrefix = defaultTableNamePrefix;
+        }
+
+        if (!StringUtils.hasText(tablePrefix)) {
+            logger.warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同时会去除前缀");
+        } else {
+            logger.info("需要生成实体类的表名前缀：{}", tablePrefix);
+        }
+
+        getLog().info("开始读取数据库：" + dbConfig);
+
+        SQLService sqlService = SQLServiceFactory.build(dbConfig);
+
+        TableSelector tableSelector = sqlService.getTableSelector(dbConfig);
+
+        for (TableDefinition tableDefinition : tableSelector.getTableDefinitions()) {
+
+            final String tableName = tableDefinition.getTableName();
+
+            if (ignoreTables != null && ignoreTables.length > 0
+                    && Stream.of(ignoreTables).anyMatch(ignoreTable -> tableName.equalsIgnoreCase(ignoreTable))) {
+                continue;
             }
 
-            FileUtils.write(pomFile, pomContent, "utf-8");
+            if (StringUtils.hasText(tablePrefix)) {
+                if (!tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
+                    //如果不是指定前缀的表
+                    logger.info("指定要求前缀[{}],忽略表:{}", tablePrefix, tableName);
+                    continue;
+                }
+            }
+
+            final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tablePrefix) ? tableName.substring(tablePrefix.length()) : tableName));
+
+            File outFile = new File(entitiesDir, entityName + ".java");
+
+            if (outFile.exists()) {
+                continue;
+            }
+
+            logger.info("开始生成实体类:{} -> {}", entityName, outFile);
+
+            /**
+             *
+             */
+            Predicate<String> fun = (name) -> tableDefinition.getColumnDefinitions()
+                    .parallelStream()
+                    .filter(columnDefinition -> columnDefinition.getCamelCaseName().equals(name))
+                    .findAny()
+                    .isPresent();
+
+            /**
+             * 名称为关键字或是以关键字结尾
+             */
+            BiPredicate<String, String> keywordFun = (name, keywords) -> StrUtil.split(keywords, ',').parallelStream()
+                    .map(keyword -> keyword.trim())
+                    .filter(keyword -> !StrUtil.isBlank(keyword))
+                    .filter(keyword -> name.equals(keyword) || name.endsWith(StrUtil.upperFirst(keyword)))
+                    .findAny()
+                    .isPresent();
+
+            Map<String, Object> params = MapUtil
+                    .builder("fields", (Object) tableDefinition.getColumnDefinitions())
+                    .put("attrs", fun)
+                    .put("keywordFun", keywordFun)
+                    .put("entityName", entityName)
+                    .put("serialVersionUID", "9876543210")
+                    .put("entityComment", tableDefinition.getComment())
+                    .put("entitySchema", tableDefinition.getSchema())
+                    .put("entityPkName", StrUtil.toCamelCase(tableDefinition.getPkColumn().getColumnName()))
+                    .map();
+
+            params.putAll(mapBuilder.build());
+
+            ServiceModelCodeGenerator.genFileByTemplate("entity/Entity.java.ftl", params, outFile.getCanonicalPath());
         }
+
     }
 
 

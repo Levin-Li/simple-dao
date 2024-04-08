@@ -1401,6 +1401,7 @@ public final class ServiceModelCodeGenerator {
     /**
      * 获取未变更的内容
      *
+     * @param overwriteWhenMd5IsEmpty
      * @param file
      * @param skip
      * @param prefix
@@ -1408,7 +1409,7 @@ public final class ServiceModelCodeGenerator {
      * @return
      */
     @SneakyThrows
-    public static String getCompactContent(File file, AtomicBoolean skip, String prefix, Function<List<String>, String> linesFilter) {
+    public static String getCompactContent(boolean overwriteWhenMd5IsEmpty, File file, AtomicBoolean skip, String prefix, Function<List<String>, String> linesFilter) {
 
         if (file == null || !file.exists()) {
             return "";
@@ -1475,6 +1476,11 @@ public final class ServiceModelCodeGenerator {
             }
         }
 
+        if (overwriteWhenMd5IsEmpty && !StringUtils.hasText(md5)) {
+            logger.warn("目标文件：{}已经存在，但校验的MD5为空，文件内容将会被替换。", file);
+            return fileOldCompactContent;
+        }
+
         skip.set(true);
 
         logger.warn("目标文件：{}已经存在，并且被修改过，跳过。校验md5：{}，内容逐步校验逻辑：{}。", file, md5, info);
@@ -1488,8 +1494,12 @@ public final class ServiceModelCodeGenerator {
 
         Assert.hasText(path, "路径不能为空");
 
-        genFileByTemplate(template, params, new File(path, new File(template).getName()).getCanonicalPath());
+        genFileByTemplate(false, template, params, new File(path, new File(template).getName()));
 
+    }
+
+    public static void genFileByTemplate(final String template, Map<String, Object> params, String filePath) throws Exception {
+        genFileByTemplate(false, template, params, new File(filePath));
     }
 
 
@@ -1498,19 +1508,17 @@ public final class ServiceModelCodeGenerator {
      *
      * @param template
      * @param params
-     * @param fileName
+     * @param outFile
      * @throws Exception
      */
-    public static void genFileByTemplate(final String template, Map<String, Object> params, String fileName) throws Exception {
+    public static void genFileByTemplate(boolean overwriteWhenMd5IsEmpty, final String template, Map<String, Object> params, File outFile) throws Exception {
 
         //复制
         params = new LinkedHashMap<>(params);
 
-        File file = new File(fileName);
+        final boolean isJavaSrcFile = outFile.getName().trim().toLowerCase().endsWith(".java");
 
-        final boolean isJavaSrcFile = fileName.trim().toLowerCase().endsWith(".java");
-
-        String path = file.getAbsoluteFile().getCanonicalPath();
+        String path = outFile.getAbsoluteFile().getCanonicalPath();
 
         File baseDir = baseDir();
         if (baseDir != null && baseDir.exists()) {
@@ -1533,16 +1541,18 @@ public final class ServiceModelCodeGenerator {
 
         final AtomicBoolean skip = new AtomicBoolean(false);
 
-        final String fileOldCompactContent = getCompactContent(file, skip, prefix, linesFilter);
+        //获取旧文件内容，并且判断是否跳过，比如文件被修改过
+        final String fileOldCompactContent = getCompactContent(overwriteWhenMd5IsEmpty, outFile, skip, prefix, linesFilter);
+
 
         if (skip.get()) {
             return;
         }
 
-        file.getParentFile().mkdirs();
+        outFile.getParentFile().mkdirs();
 
         //文件名
-        params.put("fileName", file.getName());
+        params.put("fileName", outFile.getName());
         params.put("templateFileName", template.replace("\\", "/"));
 
         StringWriter stringWriter = new StringWriter();
@@ -1590,7 +1600,7 @@ public final class ServiceModelCodeGenerator {
                     newCompactContent = cu.toString();
 
                 } catch (Exception e) {
-                    logger.error("文件{}的新内容解析失败,{}，新文件内容：<<<{}>>>", file.getAbsolutePath(), e.getMessage(), newCompactContent);
+                    logger.error("文件{}的新内容解析失败,{}，新文件内容：<<<{}>>>", outFile.getAbsolutePath(), e.getMessage(), newCompactContent);
                     return;
                 }
             }
@@ -1611,7 +1621,7 @@ public final class ServiceModelCodeGenerator {
         }
 
         //写入文件
-        FileUtil.writeString(fileContent, file, StandardCharsets.UTF_8);
+        FileUtil.writeString(fileContent, outFile, StandardCharsets.UTF_8);
 
         logger.info("目标文件：{} 写入成功，新内容压缩后的MD5：<{}>。", path, newMd5);
 
