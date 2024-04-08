@@ -519,7 +519,7 @@
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
-
+                        <version>${r"${spring-boot.version}"}</version>
                         <executions>
                             <execution>
                                 <id>repackage</id>
