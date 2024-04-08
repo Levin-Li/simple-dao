@@ -44,11 +44,10 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     private String modulePackageName = "";
 
     /**
-     * springBootStarterParentVersion
-     * 默认  "2.3.5.RELEASE"
+     * springboot 版本
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.7.8";
+    private String springBootStarterParentVersion = "2.7.15";
 
     /**
      * 是否允许使用Dubbo，自动生成Dubbo相关的配置
@@ -97,7 +96,6 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     @Override
     public void executeMojo() throws Exception {
 
-
         File basedir = mavenProject.getBasedir();
 
         boolean isPomModule = "pom".equalsIgnoreCase(mavenProject.getPackaging());
@@ -110,13 +108,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
             modulePackageName = mavenProject.getGroupId();
         }
 
-        Map<Object, Object> mavenProperties = new HashMap<>();
 
-        mavenProperties.putAll(mavenSession.getSystemProperties());
-        mavenProperties.putAll(mavenSession.getUserProperties());
-
-        logger.info("系统变量:{}", mavenSession.getSystemProperties());
-        logger.info("用户变量:{}", mavenSession.getUserProperties());
 
         boolean hasSubModule = hasText(this.subModuleName);
 
@@ -135,12 +127,25 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
         String resTemplateRootDir = "simple.dao/codegen/template/";
         String resTemplateEntityDir = resTemplateRootDir + "entity/";
 
+
+        Map<Object, Object> mavenProperties = new HashMap<>();
+
+        mavenProperties.putAll(mavenSession.getSystemProperties());
+        mavenProperties.putAll(mavenSession.getUserProperties());
+
+        mavenProperties.putAll(mavenProject.getProperties());
         //拷贝 POM 文件
 
-        MapUtils.Builder<String, Object> mapBuilder =
-                MapUtils.put("CLASS_PACKAGE_NAME", (Object) (modulePackageName + ".entities"))
-                        .put("modulePackageName", modulePackageName)
-                        .put("now", new Date().toString());
+        MapUtils.Builder<String, Object> mapBuilder = MapUtils.putFirst("__mavenProject", mavenProject);
+
+        //
+        mavenProperties.forEach((k, v) -> mapBuilder.put(k.toString(), v));
+
+        mapBuilder.put("spring_boot__version", mavenProperties.getOrDefault("spring-boot.version", this.springBootStarterParentVersion))
+                .put("CLASS_PACKAGE_NAME", (modulePackageName + ".entities"))
+                .put("modulePackageName", modulePackageName)
+                .put("now", new Date().toString());
+
 
         mapBuilder.put("enableOakBaseFramework", this.enableOakBaseFramework);
         mapBuilder.put("enableDubbo", this.enableDubbo);

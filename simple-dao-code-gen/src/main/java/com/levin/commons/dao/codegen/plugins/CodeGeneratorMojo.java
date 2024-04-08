@@ -4,6 +4,7 @@ import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.plugins.Utils;
+import com.levin.commons.utils.MapUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -158,7 +160,11 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
 
-
+    /**
+     * springboot 版本
+     */
+    @Parameter
+    private String springBootStarterParentVersion = "2.7.15";
 
     /**
      * 忽略的实体类，类名正则表达式
@@ -184,6 +190,20 @@ public class CodeGeneratorMojo extends BaseMojo {
             if (codeGenParams == null) {
                 codeGenParams = new LinkedHashMap<>();
             }
+
+            Map<Object, Object> mavenProperties = new HashMap<>();
+
+            mavenProperties.putAll(mavenSession.getSystemProperties());
+            mavenProperties.putAll(mavenSession.getUserProperties());
+
+            mavenProperties.putAll(mavenProject.getProperties());
+
+            mavenProperties.putIfAbsent("spring_boot__version", mavenProperties.getOrDefault("spring-boot.version", this.springBootStarterParentVersion));
+
+            //拷贝 POM 文件
+            mavenProperties.putIfAbsent("__mavenProject", mavenProject);
+
+            mavenProperties.forEach((k, v) -> codeGenParams.putIfAbsent(k.toString(), v));
 
             if (!StringUtils.hasText(cacheSpelUtilsBeanName)) {
                 logger.error("*** 代码生成插件 *** 插件属性[cacheSpelUtilsBeanName]不能为空");

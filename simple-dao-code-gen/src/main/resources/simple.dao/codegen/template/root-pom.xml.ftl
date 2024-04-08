@@ -19,7 +19,7 @@
 
         <dubbo.version>3.2.4</dubbo.version>
 
-        <spring-boot.version>2.7.12</spring-boot.version>
+        <spring-boot.version>${spring_boot__version}</spring-boot.version>
 
         <levin.simple-dao.groupId>${codegen_plugin__groupId}</levin.simple-dao.groupId>
         <levin.simple-dao.version>${codegen_plugin__version}</levin.simple-dao.version>

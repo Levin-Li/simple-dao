@@ -116,6 +116,12 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     private boolean isCreateBizController = true;
 
     /**
+     * springboot 版本
+     */
+    @Parameter
+    private String springBootStarterParentVersion = "2.7.15";
+
+    /**
      * 要忽略的表
      */
     @Parameter
@@ -167,11 +173,23 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
         String resTemplateDir = TEMPLATE_PATH + "entity/";
 
+        Map<Object, Object> mavenProperties = new HashMap<>();
+
+        mavenProperties.putAll(mavenSession.getSystemProperties());
+        mavenProperties.putAll(mavenSession.getUserProperties());
+
+        mavenProperties.putAll(mavenProject.getProperties());
         //拷贝 POM 文件
-        MapUtils.Builder<String, Object> mapBuilder =
-                MapUtils.put("now", (Object) new Date().toString())
-                        .put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
-                        .put("modulePackageName", modulePackageName);
+
+        MapUtils.Builder<String, Object> mapBuilder = MapUtils.putFirst("__mavenProject", mavenProject);
+
+        //
+        mavenProperties.forEach((k, v) -> mapBuilder.put(k.toString(), v));
+
+        mapBuilder.put("spring_boot__version", mavenProperties.getOrDefault("spring-boot.version", this.springBootStarterParentVersion))
+                .put("now", (Object) new Date().toString())
+                .put("CLASS_PACKAGE_NAME", modulePackageName + ".entities")
+                .put("modulePackageName", modulePackageName);
 
         mapBuilder.put("enableOakBaseFramework", this.enableOakBaseFramework);
         mapBuilder.put("enableDubbo", this.enableDubbo);
