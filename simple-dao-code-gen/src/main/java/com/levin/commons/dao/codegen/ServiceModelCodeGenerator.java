@@ -947,6 +947,7 @@ public final class ServiceModelCodeGenerator {
                     .put(EntityOpConst.COMMON_TYPE_NAME, "COMMON_TYPE_NAME")
                     .put(EntityOpConst.SYS_TYPE_NAME, "SYS_TYPE_NAME")
                     .put(EntityOpConst.PLATFORM_TYPE_NAME, "PLATFORM_TYPE_NAME")
+                    .put(EntityOpConst.EXPERT_TYPE_NAME, "EXPERT_TYPE_NAME")
                     .build();
 
             params.put("entityCategory", map.getOrDefault(category.value(), "\"" + category.value() + "\""));
