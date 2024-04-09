@@ -1,32 +1,46 @@
 package ${modulePackageName};
 
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import com.levin.commons.dao.Paging;
+import com.levin.commons.dao.support.SimplePaging;
+import com.levin.commons.format.DefaultDateFormat;
 import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.BaseResp;
-import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.PageableData;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.config.annotation.*;
-import org.springframework.beans.factory.annotation.*;
-import com.levin.commons.format.DefaultDateFormat;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
 
 import static ${modulePackageName}.ModuleOption.*;
 
