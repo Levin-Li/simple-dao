@@ -219,24 +219,41 @@ plugin:
       oak:
         base:
           framework:
-            admin-path: /
+            admin-path: /admin
+            editor-path: /editor
             api-doc-path: /api-docs
 
+            #租户绑定域名的配置，默认启用，并且拦截所有的路径
+            tenantBindDomain:
+              enable: true
+
+            #access log 配置，默认启用，并且拦截所有的路径
+            log:
+              enable: true
+
+            # IP 地址白名单访问控制，默认启用，并且拦截所有的路径
             url-acl:
               enable: true
               onlyControllerMethod: true
               useWebFilter: true
-              include-path-patterns: /com.levin.oak.base/**
+              include-path-patterns: /**/api/**
 
             sign:
+              #签名，验签规则:md5(Utf8(clientId +  channelCode + clientSecret + timestamp + nonceStr ))
               enable: false
+              #默认所有的api路径都需要签名
+              include-path-patterns: /**/api/**
 
+            #静态资源访问控制列表
             resources-acl:
               - includePathPatterns: "/templates/com.levin.oak.base/**"
                 denied: true
-            #              - exclude-path-patterns: /swagger-ui/**,/webjars/**
+
+            # 是否开启登录验证码
+            enableLoginVerificationCode: true
 
             enable-mock-sms-send: true
+
             enableSmsVerificationCode: false
 
 </#if>
