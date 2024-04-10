@@ -300,9 +300,6 @@ public class UpdateDaoImpl<T>
         final String colExpr = ExprUtils.trimParenthesesPair(expr.substring(0, indexOf));
         final String paramExpr = ExprUtils.trimParenthesesPair(expr.substring(indexOf + 1));
 
-        //是否支持 IFNULL 函数
-       // final boolean isSupportIFNULL = Boolean.TRUE.equals(getDao().isSupportFunction("IFNULL"));
-
         //生成语句
         final BiFunction<String, String, String> genFunc = (fun, defaultValue) -> {
 
@@ -312,11 +309,12 @@ public class UpdateDaoImpl<T>
 
             if (convertNullValueForIncrementMode) {
 
-                //SQL 条件语句 (IF, CASE WHEN, IFNULL)
+                //SQL 条件语句 (IF, CASE WHEN,COALESCE)
                 // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
 
-                if (!isNative) {
-                    //IFNULL 简化语句
+                // 基本上大部分的数据库都支持 COALESCE 函数，不使用 CASE 语句
+                if (true) {
+                    //COALESCE 简化语句
                     tempExpr = colExpr + " = " + fun + "( COALESCE(" + colExpr + " , " + defaultValue + ") " + delim + " COALESCE(" + paramExpr + " , " + defaultValue + ") )";
                 } else {
                     tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)

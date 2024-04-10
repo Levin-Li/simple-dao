@@ -27,7 +27,7 @@ public class MySqlColumnSelector extends ColumnSelector {
 			"     WHEN 'int' THEN NUMERIC_PRECISION " +
 			"     WHEN 'varchar' THEN CHARACTER_MAXIMUM_LENGTH " +
 			" END AS 'MaxLength', " +
-			" IFNULL(NUMERIC_SCALE,0) AS 'Scale', " +
+			" COALESCE(NUMERIC_SCALE,0) AS 'Scale', " +
 			" COLUMN_TYPE AS 'Type', " +
 			" COLUMN_KEY 'KEY', " +
 			" EXTRA AS 'Extra', " +

@@ -1217,9 +1217,8 @@ public class DaoExamplesTest {
         String statement = userUpdateDao.genFinalStatement();
 
         System.out.println(statement);
-        // Update com.levin.commons.dao.domain.User   Set score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') ) Where enable =  :?
 
-        Assert.isTrue(statement.contains("score = ( IFNULL(score , 0)  +  IFNULL(:? , 0) ) , name = CONCAT( IFNULL(name , '')  ,  IFNULL(:? , '') )"));
+        Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )"));
 
         userUpdateDao.update();
     }
