@@ -106,7 +106,7 @@ public class UpdateDaoImpl<T>
 
             ValueHolder<Object> holder = new ValueHolder<>(paramValue);
 
-            expr = genIncrementExpr(autoConvertNullValueForIncrementMode, entityAttrName, null, expr, holder);
+            expr = genIncrementExpr(isNative(), autoConvertNullValueForIncrementMode, entityAttrName, null, expr, holder);
 
             //参数
             paramValue = holder.value;
@@ -260,7 +260,7 @@ public class UpdateDaoImpl<T>
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
                             && expr.contains("=")) {
 
-                        expr = genIncrementExpr(updateOp.convertNullValueForIncrementMode(), name, varType, expr, holder);
+                        expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType, expr, holder);
                     }
                 }
 
@@ -278,11 +278,12 @@ public class UpdateDaoImpl<T>
     /**
      * 生成增量更新语句
      *
+     * @param isNative
      * @param varType
      * @param expr
      * @return
      */
-    protected String genIncrementExpr(boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+    protected String genIncrementExpr(boolean isNative, boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
 
         //数据库字段的类型，必须存在更新的对象
         final Class<?> dbColumnType = QueryAnnotationUtil.getFieldType(entityClass, name);
@@ -300,7 +301,7 @@ public class UpdateDaoImpl<T>
         final String paramExpr = ExprUtils.trimParenthesesPair(expr.substring(indexOf + 1));
 
         //是否支持 IFNULL 函数
-        final boolean isSupportIFNULL = Boolean.TRUE.equals(getDao().isSupportFunction("IFNULL"));
+       // final boolean isSupportIFNULL = Boolean.TRUE.equals(getDao().isSupportFunction("IFNULL"));
 
         //生成语句
         final BiFunction<String, String, String> genFunc = (fun, defaultValue) -> {
@@ -314,9 +315,9 @@ public class UpdateDaoImpl<T>
                 //SQL 条件语句 (IF, CASE WHEN, IFNULL)
                 // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
 
-                if (isSupportIFNULL) {
+                if (!isNative) {
                     //IFNULL 简化语句
-                    tempExpr = colExpr + " = " + fun + "( IFNULL(" + colExpr + " , " + defaultValue + ") " + delim + " IFNULL(" + paramExpr + " , " + defaultValue + ") )";
+                    tempExpr = colExpr + " = " + fun + "( COALESCE(" + colExpr + " , " + defaultValue + ") " + delim + " COALESCE(" + paramExpr + " , " + defaultValue + ") )";
                 } else {
                     tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
                             + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";
