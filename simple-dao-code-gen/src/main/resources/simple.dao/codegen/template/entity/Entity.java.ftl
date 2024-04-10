@@ -57,9 +57,21 @@ import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
         }
 )
 
+//逻辑删除的例子
 //@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
 //@EntityListener(${entityName}Listener.class)
+
+//@Inheritance(strategy = InheritanceType.JOINED)//定义实体类的继承策略，这里表示使用Joined Table的继承策略，子类和父类分别映射到不同的数据库表
+//@DiscriminatorColumn(name = E_User.type)//DiscriminatorColumn注解指定了区分列的名称
+// 子类中需要配置注解 @DiscriminatorValue("Legal")
+
+//DiscriminatorColumn 字段例子
+//@Column(length = 64, nullable = false, insertable = false, updatable = false)
+//String type;
+
+//默认
+//@DiscriminatorValue("Default")
 
 //关于 JPA 继承模型
 //@DiscriminatorColumn
@@ -72,8 +84,11 @@ import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
 //现在，您要使用@Inheritance JPA注释的原因是要实施像“战略模式”这样的行为驱动模式 。另一方面， @MappedSuperclass只是一种重用基本属性，关联，甚至是使用公共基类的实体@Id方法。
 //不过，使用@Embeddabletypes可以达到几乎相同的目标。 唯一的区别是你不能重复@Embeddable的@Id定义，但你可以用@MappedSuperclass 。
 
+//实体模型的类别
 @EntityCategory(EntityOpConst.BIZ_TYPE_NAME)
-//@Cacheable(false) //JPA二级缓存
+
+//@Cacheable(false) //JPA缓存
+
 public class ${entityName}
  //    extends AbstractBaseEntityObject
  //    extends AbstractMultiTenantObject
