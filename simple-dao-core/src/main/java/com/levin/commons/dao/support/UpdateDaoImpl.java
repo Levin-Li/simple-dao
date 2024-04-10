@@ -311,17 +311,17 @@ public class UpdateDaoImpl<T>
 
                 //SQL 条件语句 (IF, CASE WHEN,COALESCE)
                 // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
-
+               //  COALESCE函数是SQL92标准中的一部分
                 // 基本上大部分的数据库都支持 COALESCE 函数，不使用 CASE 语句
-                if (true) {
+//                if (true) {
                     //COALESCE 简化语句
                     tempExpr = colExpr + " = " + fun + "( COALESCE(" + colExpr + " , " + defaultValue + ") " + delim + " COALESCE(" + paramExpr + " , " + defaultValue + ") )";
-                } else {
-                    tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
-                            + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";
-                    //双份的参数
-                    holder.value = new Object[]{holder.value, holder.value};
-                }
+//                } else {
+//                    tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
+//                            + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";
+//                    双份的参数
+//                    holder.value = new Object[]{holder.value, holder.value};
+//                }
 
             } else {
                 //QL:
