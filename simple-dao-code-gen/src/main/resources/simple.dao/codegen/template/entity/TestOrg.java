@@ -65,7 +65,7 @@ import org.hibernate.annotations.Type;
 //逻辑删除的例子
 //@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
-//@EntityListener(${entityName}Listener.class)
+//@EntityListener(xxListener.class)
 
 //@Inheritance(strategy = InheritanceType.JOINED)//定义实体类的继承策略，这里表示使用Joined Table的继承策略，子类和父类分别映射到不同的数据库表
 //@DiscriminatorColumn(name = E_User.type)//DiscriminatorColumn注解指定了区分列的名称

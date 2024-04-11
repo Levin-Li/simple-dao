@@ -558,9 +558,8 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantPersonalReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgPersonalReq.java");
-        genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "PersonalReq.java");
-        // genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseOperatorReq.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -906,16 +905,24 @@ public final class ServiceModelCodeGenerator {
         boolean isPersonal = PersonalObject.class.isAssignableFrom(entityClass);
 
 
-        String reqExtendClass = "BaseReq";
+        String reqExtendClass = "";
 
         if (isMultiTenant) {
-            if (isPersonal) {
-                reqExtendClass = isOrg ? "MultiTenantOrgPersonalReq<" : "PersonalReq<";
-            } else if (isOrg) {
-                reqExtendClass = "MultiTenantOrgReq<";
-            } else {
-                reqExtendClass = "MultiTenantReq<";
-            }
+            reqExtendClass = "MultiTenant";
+        }
+
+        if (isOrg) {
+            reqExtendClass += "Org";
+        }
+
+        if (isPersonal) {
+            reqExtendClass += "Personal";
+        }
+
+        if (!StringUtils.hasText(reqExtendClass)) {
+            reqExtendClass = "BaseReq";
+        } else {
+            reqExtendClass += "Req<";
         }
 
         Map<String, Object> params = MapUtils
@@ -923,11 +930,14 @@ public final class ServiceModelCodeGenerator {
                 .put(threadContext.getAll(true))
                 .put("modulePackageName", modulePackageName())
                 .put("entityClass", entityClass)
-                .put("entityClass", entityClass)
+
                 .put("isMultiTenantObject", isMultiTenant)
+                .put("isOrganizedObject", isOrg)
+                .put("isPersonal", isPersonal)
+
                 .put("isMultiTenantSharedObject", MultiTenantSharedObject.class.isAssignableFrom(entityClass))
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
-                .put("isOrganizedObject", isOrg)
+
                 .put("isOrganizedPublicObject", OrganizedPublicObject.class.isAssignableFrom(entityClass))
                 .put("isOrganizedSharedObject", OrganizedSharedObject.class.isAssignableFrom(entityClass))
                 //设置请求对象继承的类

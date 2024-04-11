@@ -1,15 +1,12 @@
 package ${modulePackageName}.services.commons.req;
 
 import com.levin.commons.dao.annotation.*;
-import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -26,7 +23,7 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @FieldNameConstants
-public class PersonalReq<T extends PersonalReq<?>>
+public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<?>>
         extends MultiTenantReq<T>
         implements PersonalObject {
 
