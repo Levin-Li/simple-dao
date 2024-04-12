@@ -124,7 +124,7 @@ public abstract class ExprUtils {
             if (!complexType
                     && C.FIELD_VALUE.equals(name)
                     && isNotEmpty(holder.value)) {
-                fieldExpr = holder.value.toString();
+                fieldExpr = expandExpr(", ", holder.value, fieldExpr);
             }
 
             //如果字段表达式中有CASE 函数
@@ -341,6 +341,20 @@ public abstract class ExprUtils {
 
         return surroundNotExpr(c, replace(ql, contexts, true,
                 column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
+    }
+
+
+    private static String expandExpr(String delimiter, Object value, String defaultValue) {
+
+        if (value == null) {
+            return defaultValue;
+        }
+
+        if (value instanceof CharSequence) {
+            return value.toString();
+        }
+
+        return QueryAnnotationUtil.tryExpandNestedObject(null, null, value).stream().map(String::valueOf).collect(Collectors.joining(delimiter));
     }
 
     /**

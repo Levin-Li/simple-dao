@@ -1,6 +1,7 @@
 package ${modulePackageName}.services.commons.req;
 
 
+import cn.hutool.core.lang.Assert;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
@@ -29,6 +30,7 @@ import lombok.experimental.*;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 
 /**
@@ -105,6 +107,27 @@ public abstract class BaseReq implements ServiceReq {
     protected boolean isNotBlank(Object value){
         return value != null
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
+    }
+
+    /**
+     * 简单的防止SQL注检查
+     * @param statements
+     */
+    protected <T extends BaseReq> T checkSQLInject(String... statements) {
+
+        for (String statement : statements) {
+            if (!StringUtils.hasText(statement)) {
+                continue;
+            }
+            //简单的防止SQL注检查
+            Assert.isTrue(Stream.of(" from ", " where ", " set ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
+
+            Assert.isTrue(Stream.of(" select ", " insert ", " update ", " delete ").noneMatch((" " + statement.toLowerCase())::contains), "不支持的语句：{}", statement);
+            Assert.isTrue(Stream.of("(select ", "(insert ", "(update ", "(delete ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
+            Assert.isTrue(Stream.of("'select ", "'insert ", "'update ", "'delete ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
+        }
+
+        return (T) this;
     }
 
     /**

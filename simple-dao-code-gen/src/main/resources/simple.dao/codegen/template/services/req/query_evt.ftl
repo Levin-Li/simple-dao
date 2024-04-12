@@ -78,6 +78,11 @@ public class ${className} extends ${reqExtendClass} {
     @Schema(title = "排序字段")
     String orderBy;
 
+    public ${className} setOrderBy(String orderBy) {
+        //要防止SQL注
+        return checkSQLInject(this.orderBy = orderBy);
+    }
+
     //@Ignore
     @Schema(title = "排序方向")
     @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "#isNotEmpty(orderBy) && #isNotEmpty(orderDir)", remark = "生成排序表达式")
@@ -85,6 +90,15 @@ public class ${className} extends ${reqExtendClass} {
     @OrderBy(value = ${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "#isEmpty(orderBy) || #isEmpty(orderDir)", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按时间排序")
 </#if>
     OrderBy.Type orderDir;
+
+    @Schema(title = "查询的字段列表", description = "逗号隔开，默认查询所有的字段")
+    @Select(value = C.FIELD_VALUE, condition = "#_isQuery && #isNotEmpty(#_fieldVal)")
+    String[] selectColumns;
+
+    public ${className} setSelectColumns(String... selectColumns) {
+        //要防止SQL注
+        return checkSQLInject(this.selectColumns = selectColumns);
+    }
 
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} + "集合")
