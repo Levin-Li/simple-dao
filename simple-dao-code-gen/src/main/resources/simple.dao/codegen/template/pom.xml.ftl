@@ -228,6 +228,11 @@
 
         <dependency>
             <groupId>com.levin.oak.base</groupId>
+            <artifactId>framework-base-admin-ui</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.levin.oak.base</groupId>
             <artifactId>framework-base-starter</artifactId>
         </dependency>
 
