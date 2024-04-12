@@ -82,6 +82,8 @@ public class FieldModel implements Cloneable {
 
     private boolean autoGenValue = false; //是否自动生成值
 
+    private boolean notCreate = false;//是否不需要更新
+
     private boolean notUpdate = false;//是否不需要更新
 
     private boolean hasDefValue = false;//是否有默认值
