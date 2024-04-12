@@ -153,7 +153,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return
     */
     public boolean isForceUpdateField(String fieldName) {
-        return isForceUpdate() && needForceUpdateFields != null && needForceUpdateFields.contains(fieldName);
+        return isForceUpdate() && getNeedForceUpdateFields() != null && getNeedForceUpdateFields().contains(fieldName);
     }
 
     /**
@@ -163,7 +163,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return 需要更新字段返回 true
     */
     public <T extends ${className}> T removeForceUpdateField(String fieldName) {
-        boolean ok = needForceUpdateFields != null &&  needForceUpdateFields.remove(fieldName);
+        boolean ok = getNeedForceUpdateFields() != null && getNeedForceUpdateFields().remove(fieldName);
         return (T) this;
     }
 
@@ -174,7 +174,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return
     */
     public <T extends ${className}> T addForceUpdateField(String fieldName) {
-        boolean ok = needForceUpdateFields != null && needForceUpdateFields.add(fieldName);
+        boolean ok = getNeedForceUpdateFields() != null && getNeedForceUpdateFields().add(fieldName);
         return (T) this;
     }
 
