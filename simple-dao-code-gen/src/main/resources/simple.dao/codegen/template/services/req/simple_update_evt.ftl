@@ -56,7 +56,7 @@ ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 
 //字段更新策略，强制更新时，只要字段被调用set方法，则会被更新，不管是否空值。否则只有值不为[null，空字符串, 空数组，空集合]时才会被更新。
-@Update(condition = "forceUpdate ? isUpdateField(#_fieldName) : #" + C.VALUE_NOT_EMPTY)
+@Update(condition = "isForceUpdateField(#_fieldName) || #" + C.VALUE_NOT_EMPTY)
 public class ${className} extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
@@ -64,11 +64,11 @@ public class ${className} extends ${reqExtendClass} {
     //需要更新的字段
     @Ignore //dao 忽略
     @Schema(title = "需要更新的字段", hidden = true)
-    protected final Set<String> needUpdateFields = new HashSet<>(5);
+    protected Set<String> needForceUpdateFields = new HashSet<>(5);
 
     @Schema(title = "是否强制更新", description = "强制更新模式时，只要字段被调用set方法，则会被更新，不管是否空值" , hidden = true)
     @Ignore //dao 忽略
-    protected final boolean forceUpdate;
+    protected boolean forceUpdate;
 
     //////////////////////////////////////////////////////////////////
 
@@ -139,7 +139,7 @@ public class ${className} extends ${reqExtendClass} {
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     public <T extends ${className}> T set${field.name?cap_first}(${field.typeName} ${field.name}) {
         this.${field.name} = ${field.name};
-        return addUpdateField(E_${entityName}.${field.name});
+        return addForceUpdateField(E_${entityName}.${field.name});
     }
    </#if>
 </#list>
@@ -152,8 +152,8 @@ public class ${className} extends ${reqExtendClass} {
     * @param fieldName
     * @return
     */
-    public boolean isUpdateField(String fieldName) {
-        return needUpdateFields.contains(fieldName);
+    public boolean isForceUpdateField(String fieldName) {
+        return isForceUpdate() && needForceUpdateFields != null && needForceUpdateFields.contains(fieldName);
     }
 
     /**
@@ -162,8 +162,8 @@ public class ${className} extends ${reqExtendClass} {
     * @param fieldName
     * @return 需要更新字段返回 true
     */
-    public <T extends ${className}> T removeUpdateField(String fieldName) {
-          needUpdateFields.remove(fieldName);
+    public <T extends ${className}> T removeForceUpdateField(String fieldName) {
+        boolean ok = needForceUpdateFields != null &&  needForceUpdateFields.remove(fieldName);
         return (T) this;
     }
 
@@ -173,8 +173,8 @@ public class ${className} extends ${reqExtendClass} {
     * @param fieldName
     * @return
     */
-    public <T extends ${className}> T addUpdateField(String fieldName) {
-        boolean isAdd = this.forceUpdate && needUpdateFields.add(fieldName);
+    public <T extends ${className}> T addForceUpdateField(String fieldName) {
+        boolean ok = needForceUpdateFields != null && needForceUpdateFields.add(fieldName);
         return (T) this;
     }
 
