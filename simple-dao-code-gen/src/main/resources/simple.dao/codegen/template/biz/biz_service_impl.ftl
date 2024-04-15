@@ -267,8 +267,8 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
         return ${serviceName?uncap_first}.getCache("${entityName}List",
                 (key) -> {
                     Consumer<SelectDao<?>> ex = dao -> dao.setSafeModeMaxLimit(-1).disableSafeMode();
-                    //最多10万条记录
-                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(10 * 10000), ex).getItems();
+                    //最多2万条记录
+                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
                 }
         );
     }

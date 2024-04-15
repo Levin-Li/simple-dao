@@ -29,7 +29,7 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 @FieldNameConstants
 @ToString(callSuper = true)
-public class MultiTenantReq<T extends MultiTenantReq<?>>
+public class MultiTenantReq<T extends MultiTenantReq<T>>
         extends BaseReq
         implements MultiTenantObject {
 
