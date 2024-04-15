@@ -33,12 +33,12 @@ public interface ModuleOption {
     /**
      * module name
      */
-    String NAME = "${projectName";
+    String NAME = "${projectName!}";
 
     /**
      * module desc
      */
-    String DESC = "${projectDesc}";
+    String DESC = "${projectDesc!}";
 
     /**
      * module package name
