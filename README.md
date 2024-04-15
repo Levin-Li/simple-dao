@@ -165,14 +165,19 @@
 
     <modelVersion>4.0.0</modelVersion>
     
+    <!-- 项目包名，将被作为模块的唯一标识  -->
     <groupId>com.levin.codegen.example</groupId>
+
     <artifactId>codegen-example</artifactId>
     <version>${revision}</version>
+
+    <name>XX项目名称</name>
+    <description>XX项目描述</description>
    
     <packaging>pom</packaging>
      
     <properties>
-
+        <!-- 项目版本号-->
         <revision>1.0.0-SNAPSHOT</revision>
 
         <!-- Spring Boot 版本，请根据需要修改 -->

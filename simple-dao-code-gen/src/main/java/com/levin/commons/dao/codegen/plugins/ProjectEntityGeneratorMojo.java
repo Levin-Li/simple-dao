@@ -198,6 +198,13 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
         mapBuilder.put("isCreateControllerSubDir", isCreateControllerSubDir);
         mapBuilder.put("isSchemaDescUseConstRef", isSchemaDescUseConstRef);
 
+        mapBuilder.put("mavenProject", mavenProject);
+        mapBuilder.put("mavenSession", mavenSession);
+        mapBuilder.put("artifactId", mavenSession.getCurrentProject().getArtifactId());
+        mapBuilder.put("basedir", mavenProject.getBasedir());
+        mapBuilder.put("projectName", mavenProject.getName());
+        mapBuilder.put("projectDesc", mavenProject.getDescription());
+
 
         copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
 

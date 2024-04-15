@@ -1,7 +1,7 @@
 package ${CLASS_PACKAGE_NAME};
 
 /**
- * module table prefix
+ * ${projectName} module table prefix
  * <p>
  * eg.
  * <p>

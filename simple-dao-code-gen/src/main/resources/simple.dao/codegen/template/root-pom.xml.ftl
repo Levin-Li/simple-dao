@@ -11,6 +11,9 @@
     <artifactId>${project__artifactId}</artifactId>
     <version>${r"${revision}"}</version>
 
+    <name>${projectName!}</name>
+    <description>${projectDesc!}</description>
+
     <packaging>pom</packaging>
 
     <properties>
