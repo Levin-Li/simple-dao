@@ -676,6 +676,32 @@ public abstract class QueryAnnotationUtil {
 
     }
 
+    public static List<Object> expandAndFilterNull(List<Object> resultList, Iterable<?> queryObjs) {
+        return expandNestedObject(resultList, Objects::nonNull, queryObjs);
+    }
+
+
+    public static List<Object> tryExpandNestedObject(List<Object> resultList, Predicate<Object> filter, Object queryObj) {
+
+        if (resultList == null) {
+            resultList = new ArrayList<>();
+        }
+
+        if (queryObj == null) {
+            return resultList;
+        }
+
+        if (queryObj instanceof Iterable) {
+            return expandNestedObject(resultList, filter, (Iterable<?>) queryObj);
+        } else if (queryObj.getClass().isArray()) {
+            return expandNestedObject(resultList, filter, (Object[]) queryObj);
+        } else {
+
+            resultList.add(queryObj);
+
+            return resultList;
+        }
+    }
 
     /**
      * 展开嵌套对象
@@ -684,7 +710,7 @@ public abstract class QueryAnnotationUtil {
      * @param queryObjs
      * @return
      */
-    public static List<Object> expandAndFilterNull(List<Object> resultList, Iterable<Object> queryObjs) {
+    public static List<Object> expandNestedObject(List<Object> resultList, Predicate<Object> filter, Iterable<?> queryObjs) {
 
         if (resultList == null) {
             resultList = new ArrayList<>();
@@ -696,19 +722,55 @@ public abstract class QueryAnnotationUtil {
 
         for (Object queryObj : queryObjs) {
 
-            if (queryObj == null) {
-                //忽略空值
+            if (filter != null
+                    && !filter.test(queryObj)) {
                 continue;
             }
+
             //如果是类
             if (queryObj instanceof Class) {
                 resultList.add(queryObj);
             } else if (queryObj.getClass().isArray()) {
                 //数组
-                expandAndFilterNull(resultList, Arrays.asList((Object[]) queryObj));
+                expandNestedObject(resultList, filter, (Object[]) queryObj);
             } else if (queryObj instanceof Iterable) {
                 //可迭代对象
-                expandAndFilterNull(resultList, ((Iterable) queryObj));
+                expandNestedObject(resultList, filter, ((Iterable) queryObj));
+            } else {
+                resultList.add(queryObj);
+            }
+
+        }
+
+        return resultList;
+    }
+
+    public static List<Object> expandNestedObject(List<Object> resultList, Predicate<Object> filter, Object[] queryObjs) {
+
+        if (resultList == null) {
+            resultList = new ArrayList<>();
+        }
+
+        if (queryObjs == null) {
+            return resultList;
+        }
+
+        for (Object queryObj : queryObjs) {
+
+            if (filter != null
+                    && !filter.test(queryObj)) {
+                continue;
+            }
+
+            //如果是类
+            if (queryObj instanceof Class) {
+                resultList.add(queryObj);
+            } else if (queryObj.getClass().isArray()) {
+                //数组
+                expandNestedObject(resultList, filter, (Object[]) queryObj);
+            } else if (queryObj instanceof Iterable) {
+                //可迭代对象
+                expandNestedObject(resultList, filter, ((Iterable) queryObj));
             } else {
                 resultList.add(queryObj);
             }
@@ -1131,12 +1193,11 @@ public abstract class QueryAnnotationUtil {
     }
 
     /**
-     *
      * <p>
      * <p>
      * 注意：
      * 简单类型包括：原子类型，String , Date , 枚举 ,Url ,Class，简单数组类型
-     *
+     * <p>
      * 复杂类型的判定条件为：对象，对象数组（数组元素为非原子对象）
      *
      * @param type

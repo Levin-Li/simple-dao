@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.*;
 
@@ -1786,6 +1787,8 @@ public final class ServiceModelCodeGenerator {
         final boolean isUpdateObj = "update".equalsIgnoreCase(action);
         final boolean isDeleteObj = "delete".equalsIgnoreCase(action);
 
+        final DiscriminatorColumn discriminatorColumn = AnnotatedElementUtils.findMergedAnnotation(entityClass, DiscriminatorColumn.class);
+
         for (Field field : declaredFields) {
 
             field.setAccessible(true);
@@ -1932,7 +1935,16 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
 
-            fieldModel.setNotUpdate(fieldModel.isPk() || notUpdateNames.contains(fieldModel.getName()) || fieldModel.isJpaEntity());
+
+            final boolean isDiscriminatorColumn = discriminatorColumn != null && fieldModel.getName().equals(discriminatorColumn.name());
+
+            fieldModel.setNotCreate(isDiscriminatorColumn);
+
+            fieldModel.setNotUpdate(fieldModel.isPk()
+                    || notUpdateNames.contains(fieldModel.getName())
+                    || fieldModel.isJpaEntity()
+                    || isDiscriminatorColumn);
+
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
                 fieldModel.setAutoGenValue(field.isAnnotationPresent(GeneratedValue.class)

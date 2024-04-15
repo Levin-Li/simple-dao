@@ -74,6 +74,12 @@ public @interface C {
     String ORIGIN_EXPR = "$$";
 
     /**
+     * 字段值
+     *
+     */
+    String FIELD_VALUE = "$$FIELD_VALUE";
+
+    /**
      * 替换字段前缀
      * <p>
      * 单原生查询时，可以用对象的属性自动转换成数据库列名

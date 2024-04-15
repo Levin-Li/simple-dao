@@ -201,7 +201,19 @@ public class CodeGeneratorMojo extends BaseMojo {
             mavenProperties.putIfAbsent("spring_boot__version", mavenProperties.getOrDefault("spring-boot.version", this.springBootStarterParentVersion));
 
             //拷贝 POM 文件
-            mavenProperties.putIfAbsent("__mavenProject", mavenProject);
+            codeGenParams.putIfAbsent("mavenProject", mavenProject);
+            codeGenParams.putIfAbsent("mavenSession", mavenSession);
+            codeGenParams.putIfAbsent("artifactId", mavenSession.getCurrentProject().getArtifactId());
+            codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
+
+            codeGenParams.putIfAbsent("moduleName", mavenProject.getName());
+            codeGenParams.putIfAbsent("moduleDesc", mavenProject.getDescription());
+
+            //父项目
+            if (mavenProject.getParent() != null) {
+                codeGenParams.putIfAbsent("projectName", mavenProject.getParent().getName());
+                codeGenParams.putIfAbsent("projectDesc", mavenProject.getParent().getDescription());
+            }
 
             mavenProperties.forEach((k, v) -> codeGenParams.putIfAbsent(k.toString(), v));
 
@@ -353,10 +365,12 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("mavenSession", mavenSession);
             codeGenParams.putIfAbsent("artifactId", mavenSession.getCurrentProject().getArtifactId());
             codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
-            codeGenParams.putIfAbsent("modulePackageName", modulePackageName);
-            codeGenParams.putIfAbsent("moduleName", moduleName);
             codeGenParams.putIfAbsent("projectName", mavenProject.getName());
             codeGenParams.putIfAbsent("projectDesc", mavenProject.getDescription());
+
+
+            codeGenParams.putIfAbsent("modulePackageName", modulePackageName);
+            codeGenParams.putIfAbsent("moduleName", moduleName);
 
 
             codeGenParams.putIfAbsent("serviceDir", serviceDir);
