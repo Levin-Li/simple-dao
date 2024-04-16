@@ -22,6 +22,8 @@ import com.levin.commons.dao.annotation.misc.*;
 import javax.validation.constraints.*;
 import javax.annotation.*;
 
+import com.fasterxml.jackson.annotation.*;
+
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
@@ -64,11 +66,13 @@ public class ${className} extends ${reqExtendClass} {
     //需要更新的字段
     @Ignore //dao 忽略
     @Schema(title = "需要更新的字段", hidden = true)
-    protected Set<String> needForceUpdateFields = new HashSet<>(5);
+    @JsonIgnore
+    transient protected Set<String> needForceUpdateFields = new HashSet<>(5);
 
     @Schema(title = "是否强制更新", description = "强制更新模式时，只要字段被调用set方法，则会被更新，不管是否空值" , hidden = true)
     @Ignore //dao 忽略
-    protected boolean forceUpdate;
+    @JsonIgnore
+    transient protected boolean forceUpdate;
 
     //////////////////////////////////////////////////////////////////
 
