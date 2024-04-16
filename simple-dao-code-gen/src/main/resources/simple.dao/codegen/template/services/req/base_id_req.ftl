@@ -19,6 +19,7 @@ import com.levin.commons.dao.annotation.misc.*;
 
 import javax.annotation.*;
 import javax.validation.constraints.*;
+import com.fasterxml.jackson.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -61,6 +62,7 @@ public class ${className} extends ${reqExtendClass} {
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件，如果是web环境需要增加可编辑的过滤条件" , hidden = true)
     @Eq(condition = IS_WEB_CONTEXT + " && !#_isQuery && " + NOT_SUPER_ADMIN)
+    @JsonIgnore
     final boolean eqEditable = true;
 
 </#if>
