@@ -16,16 +16,11 @@ import java.util.Set;
 @Accessors(chain = true)
 @FieldNameConstants
 @MappedSuperclass
-public abstract class AbstractTreeObject<ID extends Serializable, T extends Identifiable>
+public abstract class AbstractTreeObject<ID extends Serializable, T extends AbstractTreeObject<ID,T>>
         extends AbstractNamedEntityObject
         implements TreeObject<T, T>, Serializable {
 
     private static final long serialVersionUID = -123456789L;
-
-    //由子类去定义
-//    @Schema(title = "父ID")
-//    @Column(length = 128)
-//    protected ID parentId;
 
     public abstract AbstractTreeObject<ID, T> setParentId(ID parentId);
 
@@ -37,11 +32,11 @@ public abstract class AbstractTreeObject<ID extends Serializable, T extends Iden
     @Schema(title = "子节点")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
     @OrderBy(value = " orderCode ASC , name  ASC ")
-    //@OrderColumn
+    //@OrderColumn //@OrderColumn注解只适用于@OneToMany
     //@Fetch(value = FetchMode.JOIN)
     protected Set<T> children;
 
-    @Schema(title = "树节点路径", description = "建议使用|包围节点ID，如|1|3|15|")
+    @Schema(title = "树节点路径", description = "建议使用/包围节点ID，如/1/3/15/")
     @Column(length = 1800)
     protected String nodePath;
 
