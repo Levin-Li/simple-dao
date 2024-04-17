@@ -70,7 +70,7 @@ import ${imp};
 <#if enableDubbo>@DubboService<#else>@Service(${serviceName}.SERVICE_BEAN_NAME)</#if>
 
 @ConditionalOnProperty(name = ${serviceName}.SERVICE_BEAN_NAME, havingValue = "true", matchIfMissing = true)
-@Slf4j
+//@Slf4j
 
 //@Valid只能用在controller， @Validated可以用在其他被spring管理的类上。
 //@Validated
