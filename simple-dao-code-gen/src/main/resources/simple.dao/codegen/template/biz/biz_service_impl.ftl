@@ -223,17 +223,29 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
         List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + tenantId, (key) ->
                 simpleDao.selectFrom(${entityName}.class)
+
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
 
-                        //状态正常的
-                        //.eq(${entityName}::getState, ${entityName}.State.Normal)
+                         <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
+                         //启用的
+                         .isNullOrEq(E_${entityName}.enable, true)
+                         </#if>
 
-                        //启用的
-                        //.isNullOrEq(E_${entityName}.enable, true)
+                         <#if classModel.isType('com.levin.commons.dao.domain.StatefulObject')>
+                         //状态正常的
+                         //.eq(E_${entityName}.state, xxStatus)
+                         </#if>
 
-                        .orderBy(SortableObject.class.isAssignableFrom(${entityName}.class), E_${entityName}.orderCode)
+                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
+                         //排序码排序
+                         .orderBy(E_${entityName}.orderCode)
+                         </#if>
 
+                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
+                         //时间倒序
+                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
+                         </#if>
                         .find(${entityName}Info.class)
         );
 
