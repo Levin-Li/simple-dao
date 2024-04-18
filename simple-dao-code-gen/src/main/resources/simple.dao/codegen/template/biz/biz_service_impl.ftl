@@ -237,6 +237,14 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                          //.eq(E_${entityName}.state, xxStatus)
                          </#if>
 
+                         <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+                          //未过期的
+                          .or()
+                          .isNull(E_${entityName}.expiredTime)
+                          .gte(E_${entityName}.expiredTime, new java.util.Date())
+                          .end()
+                         </#if>
+
                          <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
                          //排序码排序
                          .orderBy(E_${entityName}.orderCode)
