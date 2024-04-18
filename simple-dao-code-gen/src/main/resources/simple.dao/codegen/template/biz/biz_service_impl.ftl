@@ -257,8 +257,12 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                         .find(${entityName}Info.class)
         );
 
-        //复制一个列表，防止列表被修改，因为有使用内存缓存
-        return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
+         <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+         return ${entityName?uncap_first}InfoList.stream().filter(r -> r.getExpiredDate() == null || r.getExpiredDate().after(new Date())).collect(Collectors.toList());
+         <#else>
+         //复制一个列表，防止列表被修改，因为有使用内存缓存
+         return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
+         </#if>
     }
 <#elseif isCacheableEntity>
     @PostConstruct
