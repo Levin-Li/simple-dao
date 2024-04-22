@@ -1049,7 +1049,7 @@ public class JpaDaoImpl
     /**
      * 获取对象中指定属性名的属性值集合
      *
-     * @param obj       要获取属性值的对象
+     * @param source    要获取属性值的对象
      * @param attrNames 属性名列表
      * @return 包含指定属性名的属性值的集合
      */
@@ -1154,17 +1154,34 @@ public class JpaDaoImpl
 
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
+            //空或是字符串
             if (value == null) {
 
                 //部分数据库支持空字符串等同于Null空值
                 //@todo 考虑根据数据库类型进行优化处理
                 //目前 MySql 支持空值忽略，唯一约束
 
-                // selectDao.isNull(fieldName);
+                if (uniqueField.unique == null || uniqueField.unique.ignoreNull()) {
+                    return null;
+                } else {
+                    selectDao.isNull(fieldName);
+                    //只要有一个是空值，就不违反约束条件
+                }
 
-                //只要有一个是空值，就不违反约束条件
+            } else if (value instanceof CharSequence) {
 
-                return null;
+                boolean ignoreEmptyStr = (uniqueField.unique == null || uniqueField.unique.ignoreEmptyStr())
+                        && !StringUtils.hasText((CharSequence) value);
+
+                if (ignoreEmptyStr) {
+                    return null;
+                }
+
+                //裁剪空格后的NULL或是空字符串
+                selectDao.eq("Trim(COALESCE(" + fieldName + ", ''))", value.toString().trim());
+
+                hasValue = true;
+
             } else {
                 selectDao.eq(fieldName, value);
                 hasValue = true;

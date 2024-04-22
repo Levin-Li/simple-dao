@@ -41,6 +41,20 @@ public @interface Unique {
 
 
     /**
+     * 是否忽略空值
+     *
+     * @return
+     */
+    boolean ignoreNull() default true;
+
+    /**
+     * 是否忽略空文本
+     *
+     * @return
+     */
+    boolean ignoreEmptyStr() default true;
+
+    /**
      * 错误提示
      *
      * @return
