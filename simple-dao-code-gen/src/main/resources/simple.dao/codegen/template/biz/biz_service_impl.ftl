@@ -129,12 +129,12 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                             ((MultiTenantObject) value).getTenantId() :
                             (String) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().map(o -> ((MultiTenantObject) o).getTenantId()).orElse(null);
 
-                    if (log.isDebugEnabled()) {
-                        log.debug("试图清除租户的${entityTitle}列表缓存：{} {}-{}", tenantId, key, value);
+                    if (log.isInfoEnabled()) {
+                        log.info("发生缓存Evict事件({})，试图清除租户({})的缓存列表", key, tenantId);
                     }
 
                     //试图清除租户的角色缓存
-                    cache.evict("T@" + tenantId);
+                    cache.evict("T@" + null2Empty(tenantId));
                 }
                 ,  ${serviceName}.CACHE_NAME,  ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict);
     }
@@ -221,7 +221,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 <#if !classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>@Override</#if>
     public List<${entityName}Info> loadCacheListByTenant(Serializable userPrincipal, String tenantId) {
 
-        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + tenantId, (key) ->
+        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + null2Empty(tenantId), (key) ->
                 simpleDao.selectFrom(${entityName}.class)
 
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
