@@ -129,6 +129,20 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                             ((MultiTenantObject) value).getTenantId() :
                             (String) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().map(o -> ((MultiTenantObject) o).getTenantId()).orElse(null);
 
+                    //如果没有租户ID
+                    if (!StringUtils.hasText(tenantId)) {
+
+                        // 是否是超级管理员
+                        boolean isSuperAdmin = Stream.of(ctx.getArgs()).filter(o -> o instanceof ServiceReq).anyMatch(o -> ((ServiceReq) o).isSuperAdmin());
+
+                        if (isSuperAdmin) {
+                            //超级管理员，允许不指定租户ID进行操作
+                            ${entityName}Info entityInfo = ${serviceName?uncap_first}.findById(key.toString().substring(${serviceName}.CK_PREFIX.length()));
+
+                            tenantId = entityInfo != null ? entityInfo.getTenantId() : null;
+                        }
+                    }
+
                     if (log.isInfoEnabled()) {
                         log.info("发生缓存Evict事件({})，试图清除租户({})的缓存列表", key, tenantId);
                     }
