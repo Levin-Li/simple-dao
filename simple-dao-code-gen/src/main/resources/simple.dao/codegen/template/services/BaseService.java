@@ -77,7 +77,7 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
         return StringUtils.hasText(txt) ? txt : null;
     }
 
-    public <S extends CharSequence> S null2Empty(S txt) {
+    public String null2Empty(String txt) {
         return txt == null ? "" : txt;
     }
 
