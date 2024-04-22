@@ -49,7 +49,7 @@ import ${imp};
 @Schema(title = UPDATE_ACTION + BIZ_NAME)
 @Data
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
-<#--@NoArgsConstructor-->
+@NoArgsConstructor
 @Builder
 //@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -63,16 +63,17 @@ public class ${className} extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
-    //需要更新的字段
-    @Ignore //dao 忽略
-    @Schema(title = "需要更新的字段", hidden = true)
-    @JsonIgnore
-    transient protected Set<String> needForceUpdateFields = new HashSet<>(5);
+    ///////////////////////////强制更新的字段列表///////////////////////////////////////
 
-    @Schema(title = "是否强制更新", description = "强制更新模式时，只要字段被调用set方法，则会被更新，不管是否空值" , hidden = true)
     @Ignore //dao 忽略
-    @JsonIgnore
-    transient protected boolean forceUpdate;
+    @Schema(title = "强制更新的字段列表", description = "在该字段列表中的字段值会被强制更新数据库，不管值是否为空")
+    //@JsonIgnore
+    transient final protected Set<String> forceUpdateFields = new HashSet<>(5);
+
+    @Schema(title = "自动增加强制更新字段", description = "自动增加强制更新字段为true时，只要字段的set方法被调用，字段会被加入强制更新列表")
+    @Ignore //dao 忽略
+    //@JsonIgnore
+    transient protected boolean autoAddForceUpdateField;
 
     //////////////////////////////////////////////////////////////////
 
@@ -114,17 +115,12 @@ public class ${className} extends ${reqExtendClass} {
     </#if>
 </#list>
 
-    public ${className}() {
-        this.forceUpdate = false;
-    }
-
     /**
-    * 强制更新
-    *
-    * @param forceUpdate
+    * 构造函数
+    * @param autoAddForceUpdateField
     */
-    public ${className}(boolean forceUpdate) {
-        this.forceUpdate = forceUpdate;
+    public ${className}(boolean autoAddForceUpdateField) {
+        this.autoAddForceUpdateField = autoAddForceUpdateField;
     }
 
     @PostConstruct
@@ -144,12 +140,33 @@ public class ${className} extends ${reqExtendClass} {
     <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
     public <T extends ${className}> T set${field.name?cap_first}(${field.typeName} ${field.name}) {
         this.${field.name} = ${field.name};
-        return addForceUpdateField(E_${entityName}.${field.name});
+        return autoAddForceUpdateField(E_${entityName}.${field.name});
     }
    </#if>
 </#list>
 
    ////////////////////////////////////////////////////////////////////////////////
+
+     /**
+     * 设置强制更新字段
+     * <p>
+     * 将会清除原有的字段列表
+     *
+     * @param forceUpdateFields
+     * @return
+     */
+     public <T extends ${className}> T setForceUpdateFields(Set<String> forceUpdateFields) {
+
+         this.autoAddForceUpdateField = false;
+
+         this.forceUpdateFields.clear();
+
+         if (forceUpdateFields != null) {
+         this.forceUpdateFields.addAll(forceUpdateFields);
+         }
+
+         return (T) this;
+     }
 
     /**
     * 是否更新字段
@@ -158,7 +175,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return
     */
     public boolean isForceUpdateField(String fieldName) {
-        return isForceUpdate() && getNeedForceUpdateFields() != null && getNeedForceUpdateFields().contains(fieldName);
+        return getForceUpdateFields().contains(fieldName);
     }
 
     /**
@@ -168,7 +185,7 @@ public class ${className} extends ${reqExtendClass} {
     * @return 需要更新字段返回 true
     */
     public <T extends ${className}> T removeForceUpdateField(String fieldName) {
-        boolean ok = getNeedForceUpdateFields() != null && getNeedForceUpdateFields().remove(fieldName);
+        boolean ok = getForceUpdateFields().remove(fieldName);
         return (T) this;
     }
 
@@ -179,8 +196,18 @@ public class ${className} extends ${reqExtendClass} {
     * @return
     */
     public <T extends ${className}> T addForceUpdateField(String fieldName) {
-        boolean ok = getNeedForceUpdateFields() != null && getNeedForceUpdateFields().add(fieldName);
+        boolean ok = getForceUpdateFields().add(fieldName);
         return (T) this;
     }
 
+   /**
+   * autoAddForceUpdateField 为true 时，添加更新字段
+   *
+   * @param fieldName
+   * @return
+   */
+   public <T extends ${className}> T autoAddForceUpdateField(String fieldName) {
+       boolean ok = autoAddForceUpdateField && getForceUpdateFields().add(fieldName);
+       return (T) this;
+   }
 }

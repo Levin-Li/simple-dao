@@ -117,6 +117,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
         //如果缓存发生删除事件，则删除对应的缓存
         SpringCacheEventListener.add((ctx, cache, action, key, value) -> {
+
                     if (ctx == null && value == null) {
                         if (key == null) {
                             return;
