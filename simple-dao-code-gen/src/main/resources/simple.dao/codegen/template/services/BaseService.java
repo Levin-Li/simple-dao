@@ -69,12 +69,16 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
 
     }
 
+    public <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
+        return StringUtils.hasText(txt) ? txt : defaultValue;
+    }
+
     public <S extends CharSequence> S empty2Null(S txt) {
         return StringUtils.hasText(txt) ? txt : null;
     }
 
     public <S extends CharSequence> S null2Empty(S txt) {
-        return txt == null ? null : txt;
+        return txt == null ? "" : txt;
     }
 
     /**
