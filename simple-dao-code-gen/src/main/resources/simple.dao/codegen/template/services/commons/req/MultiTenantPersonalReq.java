@@ -23,7 +23,7 @@ import lombok.experimental.FieldNameConstants;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @FieldNameConstants
-public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<?>>
+public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
         extends MultiTenantReq<T>
         implements PersonalObject {
 

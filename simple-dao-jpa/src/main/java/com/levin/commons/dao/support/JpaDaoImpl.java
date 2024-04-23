@@ -45,6 +45,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1049,7 +1050,7 @@ public class JpaDaoImpl
     /**
      * 获取对象中指定属性名的属性值集合
      *
-     * @param obj       要获取属性值的对象
+     * @param source    要获取属性值的对象
      * @param attrNames 属性名列表
      * @return 包含指定属性名的属性值的集合
      */
@@ -1154,17 +1155,34 @@ public class JpaDaoImpl
 
             Object value = ObjectUtil.getValue(queryObj, fieldName, true);
 
+            //空或是字符串
             if (value == null) {
 
                 //部分数据库支持空字符串等同于Null空值
                 //@todo 考虑根据数据库类型进行优化处理
                 //目前 MySql 支持空值忽略，唯一约束
 
-                // selectDao.isNull(fieldName);
+                if (uniqueField.unique == null || uniqueField.unique.ignoreNull()) {
+                    return null;
+                } else {
+                    selectDao.isNull(fieldName);
+                    //只要有一个是空值，就不违反约束条件
+                }
 
-                //只要有一个是空值，就不违反约束条件
+            } else if (value instanceof CharSequence) {
 
-                return null;
+                boolean ignoreEmptyStr = (uniqueField.unique == null || uniqueField.unique.ignoreEmptyStr())
+                        && !StringUtils.hasText((CharSequence) value);
+
+                if (ignoreEmptyStr) {
+                    return null;
+                }
+
+                //裁剪空格后的NULL或是空字符串
+                selectDao.eq("Trim(COALESCE(" + fieldName + ", ''))", value.toString().trim());
+
+                hasValue = true;
+
             } else {
                 selectDao.eq(fieldName, value);
                 hasValue = true;
@@ -1185,7 +1203,18 @@ public class JpaDaoImpl
      */
     private static Set<UniqueField> getUniqueFields(Class<?> entityClass) {
 
-        Set<UniqueField> uniqueFields = new HashSet<>(3);
+        final Set<UniqueField> uniqueFields = new HashSet<>(3);
+
+
+        Consumer<UniqueField> addUniqueField = uf -> {
+
+            //如果有注解，先移除，相同的字段时，有Unique注解的优先
+            if (uf.unique != null) {
+                uniqueFields.remove(uf);
+            }
+
+            uniqueFields.add(uf);
+        };
 
         Map<String, UniqueField> tmp = new LinkedHashMap<>();
 
@@ -1220,7 +1249,7 @@ public class JpaDaoImpl
                 if (uniqueField == null) {
                     uniqueField = new UniqueField().setUnique(unique).setGroup(group);
                     tmp.put(group, uniqueField);
-                    uniqueFields.add(uniqueField);
+                    addUniqueField.accept(uniqueField);
                 }
 
                 uniqueField.addField(field, unique.prompt());
@@ -1239,7 +1268,27 @@ public class JpaDaoImpl
             }
         }
 
-        //2、获取 Jpa Table 注解定义的唯一约束
+        //2、查找 unique 属性
+        ReflectionUtils.doWithFields(entityClass, field -> {
+
+            Boolean unique = (Boolean) Stream.of(field.getAnnotations())
+                    .filter(Objects::nonNull)
+                    //1、过滤出JPA 注解
+                    .filter(annotation -> annotation.annotationType().getName().startsWith(Column.class.getPackage().getName()))
+                    //2、读取unique属性值
+                    .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "unique", false))
+                    .filter(v -> v instanceof Boolean || boolean.class.isInstance(v))
+                    .findFirst()
+                    .orElse(null);
+
+            if (Boolean.TRUE.equals(unique)) {
+                //加入字段
+                addUniqueField.accept(new UniqueField().addField(field, null));
+            }
+
+        }, field -> !Modifier.isStatic(field.getModifiers()));
+
+        //3、获取 Jpa Table 注解定义的唯一约束
         Optional.ofNullable(entityClass.getAnnotation(Table.class))
                 .map(table -> table.uniqueConstraints())
                 .ifPresent(uniqueConstraints -> {
@@ -1255,31 +1304,10 @@ public class JpaDaoImpl
                             }
                         }
                         if (!uniqueField.fieldList.isEmpty()) {
-                            uniqueFields.add(uniqueField);
+                            addUniqueField.accept(uniqueField);
                         }
                     }
                 });
-
-
-        //3、查找 unique 属性
-        ReflectionUtils.doWithFields(entityClass, field -> {
-
-            Boolean unique = (Boolean) Stream.of(field.getAnnotations())
-                    .filter(Objects::nonNull)
-                    //1、过滤出JPA 注解
-                    .filter(annotation -> annotation.annotationType().getName().startsWith(Column.class.getPackage().getName()))
-                    //2、读取unique属性值
-                    .map(annotation -> com.levin.commons.utils.ClassUtils.getValue(annotation, "unique", false))
-                    .filter(v -> v instanceof Boolean || boolean.class.isInstance(v))
-                    .findFirst()
-                    .orElse(null);
-
-            if (Boolean.TRUE.equals(unique)) {
-                //加入字段
-                uniqueFields.add(new UniqueField().addField(field, null));
-            }
-
-        }, field -> !Modifier.isStatic(field.getModifiers()));
 
         //4、自动生成描述信息
         uniqueFields.forEach(UniqueField::finish);

@@ -11,6 +11,7 @@ import org.springframework.context.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.*;
+
 import javax.validation.*;
 import java.util.*;
 import javax.annotation.*;
@@ -19,7 +20,9 @@ import javax.annotation.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
+
 import javax.validation.constraints.*;
+
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
@@ -37,7 +40,6 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  * @author lilw
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- *
  */
 @Slf4j
 public abstract class BaseService<S> implements ApplicationListener<ContextRefreshedEvent> {
@@ -65,6 +67,18 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
 
     protected void onApplicationContextReady(ApplicationContext context) {
 
+    }
+
+    public <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
+        return StringUtils.hasText(txt) ? txt : defaultValue;
+    }
+
+    public <S extends CharSequence> S empty2Null(S txt) {
+        return StringUtils.hasText(txt) ? txt : null;
+    }
+
+    public String null2Empty(String txt) {
+        return txt == null ? "" : txt;
     }
 
     /**

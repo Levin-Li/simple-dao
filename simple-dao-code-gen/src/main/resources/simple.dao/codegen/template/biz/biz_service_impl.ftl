@@ -117,6 +117,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
         //如果缓存发生删除事件，则删除对应的缓存
         SpringCacheEventListener.add((ctx, cache, action, key, value) -> {
+
                     if (ctx == null && value == null) {
                         if (key == null) {
                             return;
@@ -129,12 +130,26 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                             ((MultiTenantObject) value).getTenantId() :
                             (String) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().map(o -> ((MultiTenantObject) o).getTenantId()).orElse(null);
 
-                    if (log.isDebugEnabled()) {
-                        log.debug("试图清除租户的${entityTitle}列表缓存：{} {}-{}", tenantId, key, value);
+                    //如果没有租户ID
+                    if (!StringUtils.hasText(tenantId)) {
+
+                        // 是否是超级管理员
+                        boolean isSuperAdmin = Stream.of(ctx.getArgs()).filter(o -> o instanceof ServiceReq).anyMatch(o -> ((ServiceReq) o).isSuperAdmin());
+
+                        if (isSuperAdmin) {
+                            //超级管理员，允许不指定租户ID进行操作
+                            ${entityName}Info entityInfo = ${serviceName?uncap_first}.findById(key.toString().substring(${serviceName}.CK_PREFIX.length()));
+
+                            tenantId = entityInfo != null ? entityInfo.getTenantId() : null;
+                        }
+                    }
+
+                    if (log.isInfoEnabled()) {
+                        log.info("发生缓存Evict事件({})，试图清除租户({})的缓存列表", key, tenantId);
                     }
 
                     //试图清除租户的角色缓存
-                    cache.evict("T@" + tenantId);
+                    cache.evict("T@" + null2Empty(tenantId));
                 }
                 ,  ${serviceName}.CACHE_NAME,  ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict);
     }
@@ -221,24 +236,48 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 <#if !classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>@Override</#if>
     public List<${entityName}Info> loadCacheListByTenant(Serializable userPrincipal, String tenantId) {
 
-        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + tenantId, (key) ->
+        List<${entityName}Info> ${entityName?uncap_first}InfoList = ${serviceName?uncap_first}.getCache("T@" + null2Empty(tenantId), (key) ->
                 simpleDao.selectFrom(${entityName}.class)
+
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
 
-                        //状态正常的
-                        //.eq(${entityName}::getState, ${entityName}.State.Normal)
+                         <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
+                         //启用的
+                         .isNullOrEq(E_${entityName}.enable, true)
+                         </#if>
 
-                        //启用的
-                        //.isNullOrEq(E_${entityName}.enable, true)
+                         <#if classModel.isType('com.levin.commons.dao.domain.StatefulObject')>
+                         //状态正常的
+                         //.eq(E_${entityName}.state, xxStatus)
+                         </#if>
 
-                        .orderBy(SortableObject.class.isAssignableFrom(${entityName}.class), E_${entityName}.orderCode)
+                         <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+                          //未过期的
+                          .or()
+                          .isNull(E_${entityName}.expiredTime)
+                          .gte(E_${entityName}.expiredTime, new java.util.Date())
+                          .end()
+                         </#if>
 
+                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
+                         //排序码排序
+                         .orderBy(E_${entityName}.orderCode)
+                         </#if>
+
+                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
+                         //时间倒序
+                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
+                         </#if>
                         .find(${entityName}Info.class)
         );
 
-        //复制一个列表，防止列表被修改，因为有使用内存缓存
-        return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
+         <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+         return ${entityName?uncap_first}InfoList.stream().filter(r -> r.getExpiredTime() == null || r.getExpiredTime().after(new Date())).collect(Collectors.toList());
+         <#else>
+         //复制一个列表，防止列表被修改，因为有使用内存缓存
+         return Collections.unmodifiableList(${entityName?uncap_first}InfoList);
+         </#if>
     }
 <#elseif isCacheableEntity>
     @PostConstruct
@@ -267,8 +306,8 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
         return ${serviceName?uncap_first}.getCache("${entityName}List",
                 (key) -> {
                     Consumer<SelectDao<?>> ex = dao -> dao.setSafeModeMaxLimit(-1).disableSafeMode();
-                    //最多10万条记录
-                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(10 * 10000), ex).getItems();
+                    //最多2万条记录
+                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
                 }
         );
     }
