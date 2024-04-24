@@ -80,11 +80,9 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @CRUD
 
 @Slf4j
+//禁止的操作，被禁止的操作，Swagger 文档将不显示这些方法
+@DisableApiOperation({"批量*"})
 public class ${className} extends ${entityName}Controller{
-
-    //允许的操作
-    List<String> allowOpList = Arrays.asList(QUERY_LIST_ACTION, CREATE_ACTION, UPDATE_ACTION, DELETE_ACTION, VIEW_DETAIL_ACTION, BATCH_CREATE_ACTION, BATCH_UPDATE_ACTION, BATCH_DELETE_ACTION, CLEAR_CACHE_ACTION);
-
 
     //@Autowired
     //AuthService authService;
@@ -98,9 +96,6 @@ public class ${className} extends ${entityName}Controller{
     */
     @Override
     protected <T> T checkRequest(String action, T req) {
-
-        Assert.isTrue(allowOpList.contains(action), "不支持的操作-{}", action);
-
         return super.checkRequest(action, req);
     }
 
