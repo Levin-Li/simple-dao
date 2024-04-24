@@ -72,7 +72,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 
 //类注解
 <#if isCreateBizController>//默认生成控制器类，@Tag的name属性关联权限的资源标识</#if>
-@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}")))
 @Validated //@Valid
 @CRUD
 @Slf4j

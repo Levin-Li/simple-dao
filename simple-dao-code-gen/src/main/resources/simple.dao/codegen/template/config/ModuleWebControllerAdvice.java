@@ -261,7 +261,7 @@ public class ModuleWebControllerAdvice {
 //    }
 
     @ExceptionHandler({AuthenticationException.class,})
-    public ApiResp onNotLoginException(Exception e) {
+    public ApiResp onAuthenticationException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 

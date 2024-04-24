@@ -128,9 +128,8 @@ public class ClassModel {
                 .collect(Collectors.toList());
     }
 
-
     public long getNextOrderNum() {
-        return serialNo * 100;
+        return serialNo++ * 10;
     }
 
     @SneakyThrows

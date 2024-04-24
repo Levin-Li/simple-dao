@@ -6,9 +6,12 @@ import ${modulePackageName}.*;
 import cn.hutool.core.lang.Assert;
 import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
+import com.levin.commons.service.exception.AccessDeniedException;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
+import com.levin.commons.service.domain.DisableApiOperation;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -27,6 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import org.springframework.util.PatternMatchUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +41,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Stream;
 
 /**
  * 模块控制器切面拦截器
@@ -209,6 +215,8 @@ public class ModuleWebControllerAspect {
             return joinPoint.proceed();
         }
 
+        //checkDisableApi(joinPoint, signature);
+
         final String path = getRequestPath();
         //去除应用路径后，进行匹配
         if (path.equals(serverProperties.getError().getPath())
@@ -231,6 +239,35 @@ public class ModuleWebControllerAspect {
 
         } finally {
             VariableInjector.setVariableResolversForCurrentThread(null);
+        }
+    }
+
+    private static void checkDisableApi(ProceedingJoinPoint joinPoint, MethodSignature signature) {
+
+        Method method = signature.getMethod();
+
+        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
+        final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
+
+        if (disableApi != null) {
+            throw new AccessDeniedException(disableApi.remark());
+        }
+
+        Object target = joinPoint.getTarget() == null ? joinPoint.getThis() : joinPoint.getTarget();
+
+        disableApi = AnnotatedElementUtils.findMergedAnnotation(target != null ? target.getClass() : method.getDeclaringClass(), DisableApiOperation.class);
+
+        if (disableApi != null && disableApi.value() != null) {
+            if (Stream.of(disableApi.value()).filter(StringUtils::hasText).anyMatch(
+                    txt -> txt.equals(method.getName())
+                            || txt.equals(method.toGenericString())
+                            || txt.equals(operation != null ? operation.method() : null)
+                            || txt.equals(operation != null ? operation.operationId() : null)
+                            || PatternMatchUtils.simpleMatch(txt, operation != null ? operation.summary() : null)
+            )
+            ) {
+                throw new AccessDeniedException(disableApi.remark());
+            }
         }
     }
 

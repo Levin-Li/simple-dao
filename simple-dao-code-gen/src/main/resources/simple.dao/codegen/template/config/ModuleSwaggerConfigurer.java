@@ -3,6 +3,9 @@ package ${modulePackageName}.config;
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
 
+import com.levin.commons.service.domain.DisableApiOperation;
+
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.models.info.Info;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.GroupedOpenApi;
@@ -12,12 +15,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.env.Environment;
+import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.beans.factory.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 //Swagger3
 
@@ -51,6 +61,8 @@ public class ModuleSwaggerConfigurer{
     @Autowired
     Environment environment;
 
+    final Map<String, AtomicLong> atomicLongMap = new ConcurrentHashMap<>();
+
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
 
     @PostConstruct
@@ -75,8 +87,55 @@ public class ModuleSwaggerConfigurer{
                                 .version(API_VERSION)
                                 .description(DESC)
                         ))
-                .addOperationCustomizer((operation, handlerMethod) -> operation)
+                .addOperationCustomizer((operation, handlerMethod) -> {
+
+                    // log.info("{} -- > method: {}", operation.getSummary(), handlerMethod);
+
+                    if (operation != null && (operation.getExtensions() == null || !operation.getExtensions().containsKey("x-order"))) {
+                        Long nextOrder = getNextOrder(handlerMethod);
+                        operation.addExtension("x-order", nextOrder);
+                        operation.addExtension31("order", nextOrder);
+                    }
+
+                    return isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
+                })
                 .build();
+    }
+
+    private Long getNextOrder(HandlerMethod handlerMethod) {
+        return atomicLongMap.computeIfAbsent(handlerMethod.getBeanType().getName(), k -> new AtomicLong(0)).incrementAndGet() * 10;
+    }
+
+
+    private boolean isApiEnable(Class<?> beanType, Method method) {
+
+        if (beanType == null) {
+            beanType = method.getDeclaringClass();
+        }
+
+        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
+        final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
+
+        if (disableApi != null) {
+            return false;
+        }
+
+        disableApi = AnnotatedElementUtils.findMergedAnnotation(beanType, DisableApiOperation.class);
+
+        if (disableApi != null && disableApi.value() != null) {
+            if (Stream.of(disableApi.value()).filter(StringUtils::hasText).anyMatch(
+                    txt -> txt.equals(method.getName())
+                            || txt.equals(method.toGenericString())
+                            || txt.equals(operation != null ? operation.method() : null)
+                            || txt.equals(operation != null ? operation.operationId() : null)
+                            || PatternMatchUtils.simpleMatch(txt, operation != null ? operation.summary() : null)
+            )
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }

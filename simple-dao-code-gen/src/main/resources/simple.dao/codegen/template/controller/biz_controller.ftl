@@ -2,6 +2,8 @@ package ${packageName};
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.extensions.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +75,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @ResAuthorize(domain = ID, type = ${entityCategory} + "-")
 
 //类注解，@Tag的name属性关联权限的资源标识
-@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}")))
 @Validated //@Valid
 @CRUD
 
