@@ -20,6 +20,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.beans.factory.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;

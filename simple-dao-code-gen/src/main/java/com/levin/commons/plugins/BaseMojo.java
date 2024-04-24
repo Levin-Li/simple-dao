@@ -75,7 +75,7 @@ public abstract class BaseMojo extends AbstractMojo {
      * 是否打印异常
      */
     @Parameter
-    protected boolean isPrintException = false;
+    protected boolean isPrintException = true;
 
     /**
      * 自定义变量

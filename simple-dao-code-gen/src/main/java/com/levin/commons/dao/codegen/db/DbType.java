@@ -87,7 +87,7 @@ public enum DbType {
 
         String prefix = jdbcUrl.substring(0, index + 1);
 
-        return Stream.of(values()).filter(dbType -> dbType.jdbcUrl.startsWith(prefix)).findFirst().get();
+        return Stream.of(values()).filter(dbType -> dbType.jdbcUrl.startsWith(prefix)).findFirst().orElse(null);
 
     }
 
