@@ -249,7 +249,7 @@ public class ModuleWebControllerAspect {
 
         Object target = joinPoint.getTarget() == null ? joinPoint.getThis() : joinPoint.getTarget();
 
-        if (isApiEnable(target != null ? target.getClass() : method.getDeclaringClass(), method)) {
+        if (!isApiEnable(target != null ? target.getClass() : method.getDeclaringClass(), method)) {
             throw new AccessDeniedException("不可访问的API");
         }
     }
