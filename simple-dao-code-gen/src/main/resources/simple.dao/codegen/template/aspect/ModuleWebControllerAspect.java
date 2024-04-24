@@ -290,9 +290,8 @@ public class ModuleWebControllerAspect {
             }
 
             //如果匹配排除的
-            if (disableApi.excludes().length > 0
-                    && predicate.test(disableApi.excludes())) {
-                return true;
+            if (disableApi.excludes().length > 0) {
+                return predicate.test(disableApi.excludes());
             }
 
         }
