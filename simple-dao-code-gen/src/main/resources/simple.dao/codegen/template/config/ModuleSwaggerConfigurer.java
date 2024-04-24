@@ -2,6 +2,7 @@ package ${modulePackageName}.config;
 
 import static ${modulePackageName}.ModuleOption.*;
 import ${modulePackageName}.*;
+import ${modulePackageName}.aspect.ModuleWebControllerAspect;
 
 import com.levin.commons.service.domain.DisableApiOperation;
 
@@ -98,45 +99,13 @@ public class ModuleSwaggerConfigurer{
                         operation.addExtension31("order", nextOrder);
                     }
 
-                    return isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
+                    return ModuleWebControllerAspect.isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
                 })
                 .build();
     }
 
     private Long getNextOrder(HandlerMethod handlerMethod) {
         return atomicLongMap.computeIfAbsent(handlerMethod.getBeanType().getName(), k -> new AtomicLong(0)).incrementAndGet() * 10;
-    }
-
-
-    private boolean isApiEnable(Class<?> beanType, Method method) {
-
-        if (beanType == null) {
-            beanType = method.getDeclaringClass();
-        }
-
-        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
-        final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
-
-        if (disableApi != null) {
-            return false;
-        }
-
-        disableApi = AnnotatedElementUtils.findMergedAnnotation(beanType, DisableApiOperation.class);
-
-        if (disableApi != null && disableApi.value() != null) {
-            if (Stream.of(disableApi.value()).filter(StringUtils::hasText).anyMatch(
-                    txt -> txt.equals(method.getName())
-                            || txt.equals(method.toGenericString())
-                            || txt.equals(operation != null ? operation.method() : null)
-                            || txt.equals(operation != null ? operation.operationId() : null)
-                            || PatternMatchUtils.simpleMatch(txt, operation != null ? operation.summary() : null)
-            )
-            ) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
 }

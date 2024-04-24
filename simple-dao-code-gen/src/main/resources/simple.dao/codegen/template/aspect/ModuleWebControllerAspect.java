@@ -41,6 +41,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -246,31 +247,58 @@ public class ModuleWebControllerAspect {
 
         Method method = signature.getMethod();
 
-        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
-        final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
-
-        if (disableApi != null) {
-            throw new AccessDeniedException(disableApi.remark());
-        }
-
         Object target = joinPoint.getTarget() == null ? joinPoint.getThis() : joinPoint.getTarget();
 
-        disableApi = AnnotatedElementUtils.findMergedAnnotation(target != null ? target.getClass() : method.getDeclaringClass(), DisableApiOperation.class);
+        if (isApiEnable(target != null ? target.getClass() : method.getDeclaringClass(), method)) {
+            throw new AccessDeniedException("不可访问的API");
+        }
+    }
 
-        if (disableApi != null && disableApi.value() != null) {
-            if (Stream.of(disableApi.value()).filter(StringUtils::hasText).anyMatch(
+    public static boolean isApiEnable(Class<?> beanType, Method method) {
+
+        if (beanType == null) {
+            beanType = method.getDeclaringClass();
+        }
+
+        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
+
+        if (disableApi != null) {
+            return false;
+        }
+
+        disableApi = AnnotatedElementUtils.findMergedAnnotation(beanType, DisableApiOperation.class);
+
+        if (disableApi != null && (disableApi.value().length > 0 || disableApi.excludes().length > 0)) {
+
+            final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
+            final RequestMapping requestMapping = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
+
+
+            Predicate<String[]> predicate = patterns -> Stream.of(patterns).filter(StringUtils::hasText).map(String::trim).anyMatch(
                     txt -> txt.equals(method.getName())
                             || txt.equals(method.toGenericString())
                             || txt.equals(operation != null ? operation.method() : null)
                             || txt.equals(operation != null ? operation.operationId() : null)
                             || PatternMatchUtils.simpleMatch(txt, operation != null ? operation.summary() : null)
-            )
-            ) {
-                throw new AccessDeniedException(disableApi.remark());
-            }
-        }
-    }
+                            || txt.toLowerCase().startsWith("path:") && requestMapping != null && Stream.of(requestMapping.value()).filter(StringUtils::hasText).anyMatch(path -> PatternMatchUtils.simpleMatch(txt.substring("path:".length()), path))
+            );
 
+            //如果匹配禁止的
+            if (disableApi.value().length > 0
+                    && predicate.test(disableApi.value())) {
+                return false;
+            }
+
+            //如果匹配排除的
+            if (disableApi.excludes().length > 0
+                    && predicate.test(disableApi.excludes())) {
+                return true;
+            }
+
+        }
+
+        return true;
+    }
     public List<VariableResolver> tryInjectVar(ProceedingJoinPoint joinPoint) {
 
         final List<VariableResolver> variableResolverList = new ArrayList<>();
