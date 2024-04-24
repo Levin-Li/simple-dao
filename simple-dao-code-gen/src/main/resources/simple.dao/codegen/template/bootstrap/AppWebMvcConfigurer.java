@@ -68,10 +68,10 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
     public void addFormatters(FormatterRegistry registry) {
 
         //移除默认的转换器
-        registry.removeConvertible(String.class, Date.class);
-        registry.removeConvertible(Date.class, String.class);
-
-        registry.addFormatter(new DefaultDateFormat());
+//        registry.removeConvertible(String.class, Date.class);
+//        registry.removeConvertible(Date.class, String.class);
+//
+//        registry.addFormatter(new DefaultDateFormat());
 
     }
 

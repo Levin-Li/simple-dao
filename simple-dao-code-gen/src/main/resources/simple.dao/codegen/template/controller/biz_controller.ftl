@@ -115,7 +115,7 @@ public class ${className} extends ${entityName}Controller{
     * @return  ApiResp<Stat${entityName}Req.Result>
     */
     @GetMapping("stat") //默认开放
-    @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
+    @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}")))
     public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
 
         req = checkRequest(STAT_ACTION, req);
