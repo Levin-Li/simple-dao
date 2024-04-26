@@ -86,7 +86,9 @@ public class FieldModel implements Cloneable {
 
     private boolean notUpdate = false;//是否不需要更新
 
-    private boolean hasDefValue = false;//是否有默认值
+    private boolean hasDefaultValue = false;//是否有默认值
+
+    private String defaultValue;
 
     private boolean lazy = false;//是否lazy
 
