@@ -2189,7 +2189,7 @@ public final class ServiceModelCodeGenerator {
                 } else if (defaultFieldValue instanceof Double) {
                     fieldModel.setDefaultValue(defaultFieldValue + "d");
                 } else if (defaultFieldValue instanceof Enum) {
-                    fieldModel.setDefaultValue(fieldType.getSimpleName() + "." + defaultFieldValue);
+                    fieldModel.setDefaultValue(fieldType.getSimpleName() + "." + ((Enum<?>) defaultFieldValue).name());
                 } else if (defaultFieldValue instanceof Date) {
                     fieldModel.setDefaultValue("new Date()");
                 }
