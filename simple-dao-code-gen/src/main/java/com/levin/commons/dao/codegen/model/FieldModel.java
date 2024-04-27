@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -121,6 +122,15 @@ public class FieldModel implements Cloneable {
         Class<? extends Annotation> annotationType = an.annotationType();
         String prefix = "@" + annotationType.getPackage().getName();
         return "@" + an.toString().substring(prefix.length() + 1);
+    }
+
+
+    /**
+     * 是否原则类型
+     * @return
+     */
+    public boolean isPrimitive() {
+        return type.isPrimitive();
     }
 
     public void addAnnotation(Class<? extends Annotation> type, String... attrs) {
