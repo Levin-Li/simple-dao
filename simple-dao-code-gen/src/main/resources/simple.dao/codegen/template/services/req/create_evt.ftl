@@ -75,10 +75,10 @@ public class ${className} extends ${reqExtendClass} {
     public void prePersist() {
        //@todo 保存之前初始化数据，比如时间，初始状态等
 <#list fields as field>
-    <#if field.hasDefaultValue?? >
+    <#if field.hasDefaultValue >
 
-        if(get${field.name?cap_first}() == null){
-            set${field.name?cap_first}(${field.defaultValue});
+        if(this.get${field.name?cap_first}() == null){
+            this.set${field.name?cap_first}(${field.defaultValue!});
         }
     </#if>
 </#list>
