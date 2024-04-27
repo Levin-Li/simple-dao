@@ -48,7 +48,7 @@ import ${imp};
 @FieldNameConstants
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
-@Builder
+//@Builder
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} extends ${reqExtendClass} {
 
