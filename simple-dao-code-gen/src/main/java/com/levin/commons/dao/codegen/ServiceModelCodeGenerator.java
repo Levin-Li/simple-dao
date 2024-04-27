@@ -1769,7 +1769,8 @@ public final class ServiceModelCodeGenerator {
         Object defaultEntityInstance = entityClass.newInstance();
 
         //初始化
-        com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(defaultEntityInstance, true, PrePersist.class, PostConstruct.class);
+        com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(defaultEntityInstance, true, PostConstruct.class);
+        com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(defaultEntityInstance, true, PrePersist.class);
 
         List<FieldModel> fieldModelList = new ArrayList<>();
 
