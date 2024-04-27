@@ -107,7 +107,7 @@ public class ${className} {
         Create${entityName}Req req = new Create${entityName}Req();
 
 <#list fields as field>
-    <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefValue && !field.jpaEntity) >
+    <#if (!field.notUpdate && field.testValue?? && field.baseType && !field.hasDefaultValue && !field.jpaEntity) >
         <#if field.name!="id">
             // req.set${field.name?cap_first}(${field.testValue!'null'});//${field.desc} ${field.required?string('必填','')}
         </#if>

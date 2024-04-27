@@ -57,8 +57,15 @@ public class DbConfig {
     public DbConfig setJdbcUrl(String jdbcUrl) {
 
         if (StringUtils.hasText(jdbcUrl)) {
+
             this.dbType = DbType.guess(jdbcUrl);
+
+            if (this.dbType == null && jdbcUrl.contains("jdbc:h2:")) {
+                this.dbType = DbType.MYSQL;
+            }
+
         }
+
 
         if (!StringUtils.hasText(this.dbName)
                 && DbType.MYSQL.equals(this.dbType)) {

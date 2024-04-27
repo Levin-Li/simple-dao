@@ -334,7 +334,22 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
     */
     @Operation(summary = STAT_ACTION)
     public Stat${entityName}Req.Result stat(Stat${entityName}Req req, Paging paging){
-        return simpleDao.findOneByQueryObj(req, paging);
+
+         //回调构造更多的查询条件
+         Consumer<SelectDao<${entityName}>> callback = dao -> {
+          dao
+          //.eq(${entityName}::getId, req.getId())
+
+          //OR 语句
+          .or()
+             // .isNull(${entityName}::getEnable)
+             // .eq(${entityName}::getEnable, true)
+          .end() //OR 语句结束
+
+          .setSafeModeMaxLimit(-1);
+          };
+
+        return simpleDao.findOneByQueryObj(req, paging, callback);
     }
 
 }

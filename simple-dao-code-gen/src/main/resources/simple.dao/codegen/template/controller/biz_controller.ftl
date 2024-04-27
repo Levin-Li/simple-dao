@@ -2,6 +2,8 @@ package ${packageName};
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.extensions.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,16 +75,14 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @ResAuthorize(domain = ID, type = ${entityCategory} + "-")
 
 //类注解，@Tag的name属性关联权限的资源标识
-@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
+@Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}")))
 @Validated //@Valid
 @CRUD
 
 @Slf4j
+//禁止的操作，被禁止的操作，Swagger 文档将不显示这些方法
+@DisableApiOperation({"批量*"})
 public class ${className} extends ${entityName}Controller{
-
-    //允许的操作
-    List<String> allowOpList = Arrays.asList(QUERY_LIST_ACTION, CREATE_ACTION, UPDATE_ACTION, DELETE_ACTION, VIEW_DETAIL_ACTION, BATCH_CREATE_ACTION, BATCH_UPDATE_ACTION, BATCH_DELETE_ACTION, CLEAR_CACHE_ACTION);
-
 
     //@Autowired
     //AuthService authService;
@@ -96,9 +96,6 @@ public class ${className} extends ${entityName}Controller{
     */
     @Override
     protected <T> T checkRequest(String action, T req) {
-
-        Assert.isTrue(allowOpList.contains(action), "不支持的操作-{}", action);
-
         return super.checkRequest(action, req);
     }
 
@@ -115,7 +112,7 @@ public class ${className} extends ${entityName}Controller{
     * @return  ApiResp<Stat${entityName}Req.Result>
     */
     @GetMapping("stat") //默认开放
-    @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME)
+    @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}")))
     public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
 
         req = checkRequest(STAT_ACTION, req);

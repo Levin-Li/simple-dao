@@ -152,6 +152,13 @@ public class ${className} extends BaseService<${className}> implements ${service
 <#else>
     public boolean create(Create${entityName}Req req){
 </#if>
+        <#if classModel.isType('com.levin.commons.dao.domain.OrganizedObject')>
+
+        Assert.isTrue(req.getOrgIdList() == null
+            || req.getOrgIdList().isEmpty()
+            || req.getOrgIdList().contains(req.getOrgId()), "orgId 超出可选范围");
+
+        </#if>
         //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
 <#if pkField?exists>

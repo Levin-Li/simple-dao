@@ -38,6 +38,7 @@
 
         <sa-token.version>1.37.0</sa-token.version>
         <fastjson.version>1.2.83</fastjson.version>
+        <fastjson2.version>2.0.42</fastjson2.version>
 
         <j2cache.version>2.8.5-release</j2cache.version>
         <j2cache_starter.version>2.8.0-release</j2cache_starter.version>
@@ -401,6 +402,12 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${r"${fastjson.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${r"${fastjson2.version}"}</version>
             </dependency>
 
             <dependency>

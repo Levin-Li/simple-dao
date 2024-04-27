@@ -26,6 +26,8 @@ public class ClassModel {
     //类的短名称
     String typeName;
 
+    private long serialNo = 1;
+
     private final Set<String> imports = new LinkedHashSet<>();
     private final Set<String> annotations = new HashSet<>();
 
@@ -124,6 +126,10 @@ public class ClassModel {
         return fieldModels.stream()
                 .filter(f -> attrList.contains(f.getName()))
                 .collect(Collectors.toList());
+    }
+
+    public long getNextOrderNum() {
+        return serialNo++ * 10;
     }
 
     @SneakyThrows

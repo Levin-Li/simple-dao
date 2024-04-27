@@ -66,7 +66,7 @@ public class ${className} extends ${reqExtendClass} {
 <#--    <#if (field.baseEntityField && field.name =='creator')>-->
 <#--    @InjectVar(InjectConst.USER_ID)-->
 <#--    </#if>-->
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!};
 
     </#if>
 </#list>
@@ -75,17 +75,11 @@ public class ${className} extends ${reqExtendClass} {
     public void prePersist() {
        //@todo 保存之前初始化数据，比如时间，初始状态等
 <#list fields as field>
-    <#if field.typeName == 'String' && (field.name == 'sn' || field.name == 'uuid')>
+    <#if field.hasDefaultValue && false >
 
-        if(get${field.name?cap_first}() == null){
-            set${field.name?cap_first}(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
-        }
-    </#if>
-    <#if classModel.isDefaultCreateTime(field.name) >
-
-        if(get${field.name?cap_first}() == null){
-            set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
-        }
+        ${field.primitive?string('//', '')} if(this.get${field.name?cap_first}() == null){
+            this.set${field.name?cap_first}(${field.defaultValue!});
+        ${field.primitive?string('//', '')} }
     </#if>
 </#list>
     }

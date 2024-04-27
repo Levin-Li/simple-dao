@@ -34,7 +34,7 @@ import org.hibernate.annotations.Type;
 
 @Schema(title = "测试角色", description = "示例代码")
 @Entity(name = EntityConst.PREFIX + "TestRole")
-@Cacheable
+
 @Table(
         indexes = {
                 @Index(columnList = E_TestRole.orderCode),
@@ -56,14 +56,14 @@ import org.hibernate.annotations.Type;
 
 //JPA 继承配置
 //@Inheritance(strategy = InheritanceType.JOINED)//定义实体类的继承策略，这里表示使用Joined Table的继承策略，子类和父类分别映射到不同的数据库表
-//@DiscriminatorColumn(name = E_${entityName}.exType)//DiscriminatorColumn注解指定了区分列的名称
+//@DiscriminatorColumn(name = E_TestRole.exType)//DiscriminatorColumn注解指定了区分列的名称
 
 //DiscriminatorColumn 字段例子
 //@Column(length = 64, nullable = false, insertable = false, updatable = false)
 //String exType;
 
 //当前类和子类都要配置鉴别值
-//@DiscriminatorValue(E_${entityName}.SIMPLE_CLASS_NAME)
+//@DiscriminatorValue(E_TestRole.SIMPLE_CLASS_NAME)
 
 //关于 JPA 继承模型
 //@DiscriminatorColumn
@@ -82,18 +82,17 @@ import org.hibernate.annotations.Type;
 //@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
 
 //JPA二级缓存
-//@Cacheable(false) //禁止或启用缓存，默认为true，在实体类对应的服务类${entityName}Service中会启用或是禁用缓存
-
-//JPA缓存
-@Cacheable(false) //禁止缓存
+//@Cacheable(false) //禁止或启用缓存，默认为true，在实体类对应的服务类TestRoleService中会启用或是禁用缓存
 
 //对父类的属性定义进行覆盖，通常是对数据库相关的（如字段长度，是否允许空等）属性重新定义
-@AttributeOverride(name = E_TestRole.tenantId, column = @Column(nullable = false, length = 128))
-@AttributeOverride(name = E_TestRole.name, column = @Column(nullable = false, length = 128))
+@AttributeOverrides({
+        @AttributeOverride(name = E_TestRole.tenantId, column = @Column(nullable = false, length = 128)),
+        @AttributeOverride(name = E_TestRole.code, column = @Column(nullable = false, length = 128))
+})
 
 //关联属性重新定义
-//@AssociationOverride(name = E_${entityName}.tenantId)
-//@AssociationOverride(name = E_${entityName}.orgId)
+//@AssociationOverride(name = E_TestRole.tenantId)
+//@AssociationOverride(name = E_TestRole.orgId)
 
 public class TestRole
         extends AbstractNamedMultiTenantObject {

@@ -42,6 +42,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.*;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.File;
@@ -1765,7 +1766,11 @@ public final class ServiceModelCodeGenerator {
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
             , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
-        Object obj = entityClass.newInstance();
+        Object defaultEntityInstance = entityClass.newInstance();
+
+        //初始化
+        com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(defaultEntityInstance, true, PostConstruct.class);
+        com.levin.commons.utils.ClassUtils.invokeMethodByAnnotationTag(defaultEntityInstance, true, PrePersist.class);
 
         List<FieldModel> fieldModelList = new ArrayList<>();
 
@@ -1792,6 +1797,8 @@ public final class ServiceModelCodeGenerator {
         for (Field field : declaredFields) {
 
             field.setAccessible(true);
+
+            final Object defaultFieldValue = field.get(defaultEntityInstance);
 
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
@@ -2132,13 +2139,6 @@ public final class ServiceModelCodeGenerator {
 //                buildExpandInfo(entityClass, fieldModel);
 //            }
 
-            String fieldValue = getFieldValue(field.getName(), obj);
-
-            if (fieldValue != null) {
-                fieldModel.setHasDefValue(true);
-                fieldModel.setTestValue(fieldValue);
-            }
-
             if (fieldModel.getTestValue() == null) {
                 if (fieldModel.getName().equals("sn")) {
                     String sn = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
@@ -2165,15 +2165,42 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            if (isQueryObj || isUpdateObj || (isCreateObj && fieldModel.isBaseEntityField())) {
+            //如果是创建对象，但是有初始化默认值
+
+            if (isQueryObj || isUpdateObj || (isCreateObj && defaultFieldValue != null)) {
+                //如果是创建对象，但是有初始化默认值，则认为允许为空
                 //查询对象和更新对象，允许空值
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotNull"));
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));
             }
 
+            //如果是创建对象，但是有初始化默认值
+            if (isCreateObj && defaultFieldValue != null) {
+
+                fieldModel.setHasDefaultValue(true)
+                        .setDefaultValue(defaultFieldValue.toString());
+
+                if (defaultFieldValue instanceof String) {
+                    fieldModel.setDefaultValue("\"" + defaultFieldValue + "\"");
+                } else if (defaultFieldValue instanceof Long) {
+                    fieldModel.setDefaultValue(defaultFieldValue + "L");
+                } else if (defaultFieldValue instanceof Float) {
+                    fieldModel.setDefaultValue(defaultFieldValue + "f");
+                } else if (defaultFieldValue instanceof Double) {
+                    fieldModel.setDefaultValue(defaultFieldValue + "d");
+                } else if (defaultFieldValue instanceof Enum) {
+                    fieldModel.setDefaultValue(fieldType.getSimpleName() + "." + ((Enum<?>) defaultFieldValue).name());
+                } else if (defaultFieldValue instanceof Date) {
+                    fieldModel.setDefaultValue("new Date()");
+                }
+
+            }
+
             fieldModelList.add(fieldModel);
 
         }
+
+
         return fieldModelList;
     }
 
