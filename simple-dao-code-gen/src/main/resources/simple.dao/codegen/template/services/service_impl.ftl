@@ -109,19 +109,31 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
+    //调用本方法会导致不会对租户ID进行过滤，如果需要调用方对租户ID进行核查
     //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
+        return simpleDao.findUnique(new ${entityName}IdReq(${pkField.name}));
     }
 
-    //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
+    <#if !pkField?exists || !isCacheableEntity>//</#if>//@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
+
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.findUnique(req);
+
+        //用ID查找
+        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
+
+        <#if isMultiTenantObject>
+        if(info != null && isNotEmpty(req.getTenantId())){
+            //验证租户ID
+            Assert.equals(req.getTenantId(), info.getTenantId(), BIZ_NAME + " 租户ID不匹配");
+        }
+        </#if>
+
+        return info;
     }
 </#if>
 

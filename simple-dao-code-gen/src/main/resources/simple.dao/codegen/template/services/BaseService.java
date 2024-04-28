@@ -1,5 +1,6 @@
 package ${modulePackageName}.services;
 
+import com.levin.commons.utils.ExpressionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -69,15 +70,43 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
 
     }
 
-    public <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
+    /**
+     * 判断对象是否非空，非空字符串，非空集合，非空数组
+     *
+     * @param obj
+     * @return
+     */
+    protected boolean isNotEmpty(Object obj) {
+        return ExpressionUtils.isNotEmpty(obj);
+    }
+
+    /**
+     * 空转默认值
+     * @param txt
+     * @param defaultValue
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
         return StringUtils.hasText(txt) ? txt : defaultValue;
     }
 
-    public <S extends CharSequence> S empty2Null(S txt) {
+    /**
+     * 空转null
+     * @param txt
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Null(S txt) {
         return StringUtils.hasText(txt) ? txt : null;
     }
 
-    public String null2Empty(String txt) {
+    /**
+     * null 转空字符串
+     * @param txt
+     * @return
+     */
+    protected String null2Empty(String txt) {
         return txt == null ? "" : txt;
     }
 

@@ -128,6 +128,16 @@ public abstract class BaseController {
     }
 
     /**
+     * 判断对象是否非空，非空字符串，非空集合，非空数组
+     *
+     * @param obj
+     * @return
+     */
+    protected boolean isNotEmpty(Object obj) {
+        return ExpressionUtils.isNotEmpty(obj);
+    }
+
+    /**
      * null2Empty
      * @param txt
      * @return
