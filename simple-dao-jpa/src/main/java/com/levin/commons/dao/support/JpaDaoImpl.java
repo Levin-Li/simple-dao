@@ -1110,15 +1110,15 @@ public class JpaDaoImpl
 
         Assert.isTrue(isEntityClass(entityClass), "查询目标实体未明确");
 
-        Class<?> finalEntityClass = entityClass;
+        final Class<?> finalEntityClass = entityClass;
 
-        Set<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(entityClass.getName(),
+        Set<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(finalEntityClass.getName(),
                 key -> getUniqueFields(finalEntityClass));
 
         //开始查找
         for (UniqueField uniqueField : uniqueFields) {
 
-            ID id = findIdByUniqueField(entityClass, queryObj, uniqueField);
+            ID id = findIdByUniqueField(finalEntityClass, queryObj, uniqueField);
 
             if (id != null) {
                 if (onFind != null) {
