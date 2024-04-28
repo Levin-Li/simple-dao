@@ -58,10 +58,6 @@ public abstract class BaseController {
         return ModuleOption.ID;
     }
 
-    protected boolean isNotEmpty(Object value) {
-        return ExpressionUtils.isNotEmpty(value);
-    }
-
     protected <T> T getSelfProxy(Class<T> type) {
 
         if (selfProxy == null) {
