@@ -123,17 +123,19 @@ public class ${className} extends BaseService<${className}> implements ${service
 
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
 
-        //用ID查找
-        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
+        return simpleDao.findUnique(req);
 
-        <#if isMultiTenantObject>
-        if(info != null && isNotEmpty(req.getTenantId())){
-            //验证租户ID
-            Assert.equals(req.getTenantId(), info.getTenantId(), BIZ_NAME + " 租户ID不匹配");
-        }
-        </#if>
+<#--        //用ID查找-->
+<#--        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());-->
 
-        return info;
+<#--        <#if isMultiTenantObject>-->
+<#--        if(info != null && isNotEmpty(req.getTenantId())){-->
+<#--            //验证租户ID-->
+<#--            Assert.equals(req.getTenantId(), info.getTenantId(), BIZ_NAME + " 租户ID不匹配");-->
+<#--        }-->
+<#--        </#if>-->
+
+<#--        return info;-->
     }
 </#if>
 
