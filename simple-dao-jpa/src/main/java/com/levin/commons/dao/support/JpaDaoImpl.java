@@ -733,7 +733,7 @@ public class JpaDaoImpl
 
         if (isCheckUniqueValue) {
             //查询重复
-            checkUniqueEntity(entityOrDto);
+            checkUniqueEntity(entity);
         }
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
@@ -775,7 +775,7 @@ public class JpaDaoImpl
 //                checkAccessLevel(entity, EntityOption.AccessLevel.Writeable);
 
                 if (isCheckUniqueValue) {
-                    checkUniqueEntity(entityOrDto);
+                    checkUniqueEntity(entity);
                 }
 
                 entity = em.merge(entity);
@@ -795,7 +795,7 @@ public class JpaDaoImpl
             //removed 状态的实体，persist可以处理
 //            checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
             if (isCheckUniqueValue) {
-                checkUniqueEntity(entityOrDto);
+                checkUniqueEntity(entity);
             }
 
             em.persist(entity);
@@ -1096,17 +1096,16 @@ public class JpaDaoImpl
 
         //尝试自动获取实体类
         if (entityClass == null) {
+            entityClass = queryObj.getClass();
+        }
 
-            TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
+        //尝试自动获取实体类
+        if (!isEntityClass(entityClass)
+                && entityClass.isAnnotationPresent(TargetOption.class)) {
 
-            if (targetOption != null) {
-                entityClass = targetOption.entityClass();
-            }
+            TargetOption targetOption = entityClass.getAnnotation(TargetOption.class);
 
-            if (!isEntityClass(entityClass)
-                    && isEntityClass(queryObj.getClass())) {
-                entityClass = queryObj.getClass();
-            }
+            entityClass = targetOption.entityClass();
         }
 
         Assert.isTrue(isEntityClass(entityClass), "查询目标实体未明确");
@@ -1153,7 +1152,8 @@ public class JpaDaoImpl
 
             String fieldName = field.getName();
 
-            Object value = ObjectUtil.getValue(queryObj, fieldName, true);
+            //如果是ID属性，并且是自动生成的，可以忽略获取ID错误
+            Object value = ObjectUtil.getValue(queryObj, fieldName, !field.isAnnotationPresent(GeneratedValue.class));
 
             //空或是字符串
             if (value == null) {
