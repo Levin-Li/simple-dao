@@ -51,7 +51,7 @@ ${(fields?size > 0) ? string('','//')}//@AllArgsConstructor
 </#if>
 
 @NoArgsConstructor
-@Builder
+//@Builder
 //@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Accessors(chain = true)

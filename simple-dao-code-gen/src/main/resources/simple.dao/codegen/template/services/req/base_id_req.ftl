@@ -49,7 +49,7 @@ import ${imp};
 ${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 </#if>
 @NoArgsConstructor
-@Builder
+//@Builder
 //@EqualsAndHashCode(callSuper = true)
 @ToString
 @Accessors(chain = true)
