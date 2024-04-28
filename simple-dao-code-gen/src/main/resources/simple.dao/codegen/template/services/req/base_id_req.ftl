@@ -66,6 +66,18 @@ public class ${className} extends ${reqExtendClass} {
     final boolean eqEditable = true;
 
 </#if>
+<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
+    @Schema(title = "是否包含平台公共数据")
+    @Ignore
+    boolean isContainsPublicData = true;
+
+</#if>
+<#if classModel.isType('com.levin.commons.dao.domain.OrganizedPublicObject')>
+    @Schema(title = "是否包含组织公共数据")
+    @Ignore
+    boolean isContainsOrgPublicData = true;
+
+</#if>
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} , required = true, requiredMode = REQUIRED)
     @Eq(require = true)
