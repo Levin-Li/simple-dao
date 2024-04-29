@@ -95,7 +95,7 @@ public class ${className} extends ${reqExtendClass} {
     OrderBy.Type orderDir;
 
     @Schema(title = "查询的字段列表", description = "逗号隔开，默认查询所有的字段")
-    @Select(value = C.FIELD_VALUE, condition = "#_isQuery && #isNotEmpty(#_fieldVal)")
+    @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE, condition = "#_isQuery && #isNotEmpty(#_fieldVal)")
     String[] selectColumns;
 
     public ${className} setSelectColumns(String... selectColumns) {

@@ -112,11 +112,11 @@ public abstract class ExprUtils {
         //如果只有一个元素的数组
         holder.value = tryGetFirstElementIfOnlyOne(holder.value);
 
-        boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
+       final boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
-        boolean isNotOp = Op.Not.name().equals(op.name());
+       final boolean isNotOp = Op.Not.name().equals(op.name());
 
-        boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
+       final boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
 
         if (isFieldExpand) {
 
