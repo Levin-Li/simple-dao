@@ -113,18 +113,15 @@ public class ${className} extends BaseService<${className}> implements ${service
     //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return simpleDao.findUnique(new ${entityName}IdReq(${pkField.name}));
+        return simpleDao.selectFrom(${entityName}.class).eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique(${entityName}Info.class);
     }
 
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>//@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
-
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-
         return simpleDao.findUnique(req);
-
 <#--        //用ID查找-->
 <#--        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());-->
 
