@@ -3,7 +3,9 @@ package ${packageName};
 import static ${modulePackageName}.entities.EntityConst.*;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.levin.commons.dao.annotation.Ignore;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -46,7 +48,7 @@ import ${imp};
 @Schema(title =  BIZ_NAME + " 主键通用查询")
 @Data
 <#if pkField?exists>
-${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+${(fields?size > 0) ? string('','//')}//@AllArgsConstructor
 </#if>
 @NoArgsConstructor
 //@Builder
@@ -78,11 +80,16 @@ public class ${className} extends ${reqExtendClass} {
     boolean isContainsOrgPublicData = true;
 
 </#if>
+
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} , required = true, requiredMode = REQUIRED)
     @Eq(require = true)
     <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     protected ${pkField.typeName} ${pkField.name};
+
+    public ${className}(${pkField.typeName} ${pkField.name}) {
+        this.${pkField.name} = ${pkField.name};
+    }
 
     public ${className} update${pkField.name?cap_first}WhenNotBlank(${pkField.typeName} ${pkField.name}){
         if(isNotBlank(${pkField.name})){
@@ -92,7 +99,6 @@ public class ${className} extends ${reqExtendClass} {
     }
 
 </#if>
-
     @PostConstruct
     public void preQuery() {
         //@todo ID 查询之前初始化数据
