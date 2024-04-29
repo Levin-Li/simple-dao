@@ -251,10 +251,10 @@ public class JpaDaoImpl
 
             // 获取当前对象的 fieldList 中非空字段的名称，并存储到 names 列表中
             //
-            String names = fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining());
+            String names = fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining(","));
 
             // 获取传入对象的 fieldList 中非空字段的名称，并存储到 names2 列表中
-            String names2 = ((UniqueField) obj).fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining());
+            String names2 = ((UniqueField) obj).fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining(","));
 
             // 如果 names 和 names2 列表都为空，则两个对象相等，返回 true；否则返回 false
             return names.equals(names2);
