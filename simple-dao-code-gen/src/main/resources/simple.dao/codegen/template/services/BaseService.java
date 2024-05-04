@@ -81,6 +81,24 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
     }
 
     /**
+     *
+     * @param obj
+     * @return
+     */
+    protected boolean isEmpty(Object obj) {
+        return ExpressionUtils.isEmpty(obj);
+    }
+
+    /**
+     * 是否有内容
+     * @param txt
+     * @return
+     */
+    protected boolean hasText(CharSequence txt){
+        return StringUtils.hasText(txt);
+    }
+
+    /**
      * 空转默认值
      * @param txt
      * @param defaultValue

@@ -552,6 +552,21 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testCustomSelectDTO() {
+
+        List<CustomSelectDTO> list = dao.findByQueryObj(new CustomSelectDTO());
+
+        System.out.println(list);
+
+        CustomSelectDTO dto = list.get(0);
+
+        Assert.hasText(dto.getParentName(), "父节点名称为空");
+        Assert.hasText(dto.getName(), "名称为空");
+        Assert.hasText(dto.getCategory(), "类别为空");
+        Assert.notNull(dto.getScore(), "分数为空");
+
+    }
 
     @Test
     public void testNativeTableJoinDTO() {

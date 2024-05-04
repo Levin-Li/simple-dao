@@ -988,6 +988,10 @@ public class SelectDaoImpl<T>
      */
     protected void appendColumnMap(String expr, String alias, Object fieldOrMethod, String name) {
 
+        if (C.FIELD_VALUE.equals(name)) {
+            return;
+        }
+
         String key = hasText(alias) ? alias : QLUtils.parseSelectColumn(expr);
 
         selectColumnsMap.put(key, new Object[]{name, fieldOrMethod});

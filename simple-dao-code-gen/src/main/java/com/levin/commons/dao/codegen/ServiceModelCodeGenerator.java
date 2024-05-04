@@ -935,7 +935,7 @@ public final class ServiceModelCodeGenerator {
 
                 .put("isMultiTenantObject", isMultiTenant)
                 .put("isOrganizedObject", isOrg)
-                .put("isPersonal", isPersonal)
+                .put("isPersonalObject", isPersonal)
 
                 .put("isMultiTenantSharedObject", MultiTenantSharedObject.class.isAssignableFrom(entityClass))
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))

@@ -23,6 +23,7 @@ public class QLUtils {
 
     /**
      * 只解析 select
+     * 只取第一个元素
      *
      * @param column
      * @return

@@ -112,18 +112,22 @@ public abstract class ExprUtils {
         //如果只有一个元素的数组
         holder.value = tryGetFirstElementIfOnlyOne(holder.value);
 
-       final boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
+        final boolean isExistsOp = Op.Exists.equals(op) || Op.NotExists.equals(op);
 
-       final boolean isNotOp = Op.Not.name().equals(op.name());
+        final boolean isNotOp = Op.Not.name().equals(op.name());
 
-       final boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
+        //是否字段表达式使用字段值
+        final boolean isFieldExprUseFieldValue = C.FIELD_VALUE.equals(name);
+
+        final boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
 
         if (isFieldExpand) {
 
             //如果使用字段值
             if (!complexType
-                    && C.FIELD_VALUE.equals(name)
+                    && isFieldExprUseFieldValue
                     && isNotEmpty(holder.value)) {
+                // 是否字段表达式使用字段值
                 fieldExpr = expandExpr(", ", holder.value, fieldExpr);
             }
 
@@ -354,7 +358,11 @@ public abstract class ExprUtils {
             return value.toString();
         }
 
-        return QueryAnnotationUtil.tryExpandNestedObject(null, null, value).stream().map(String::valueOf).collect(Collectors.joining(delimiter));
+        return QueryAnnotationUtil.tryExpandNestedObject(null, null, value).stream()
+                .filter(Objects::nonNull)
+                .map(String::valueOf)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.joining(delimiter));
     }
 
     /**
