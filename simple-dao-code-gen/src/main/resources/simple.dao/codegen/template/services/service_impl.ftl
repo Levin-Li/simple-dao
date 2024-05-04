@@ -6,6 +6,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
+import com.levin.commons.dao.domain.*;
 
 import javax.annotation.*;
 import java.util.*;
@@ -120,6 +121,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>//@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
+
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
         //return simpleDao.findUnique(req);
 
@@ -142,10 +144,12 @@ public class ${className} extends BaseService<${className}> implements ${service
                 passed = true;
             }
 
-        } else if (req instanceof MultiTenantPublicObject
-                && ((MultiTenantPublicObject) req).isContainsPublicData()) {
+        }
+        <#if isMultiTenantPublicObject>
+        else if (req.isContainsPublicData()) {
             passed = true;
         }
+        </#if>
 
         Assert.isTrue(passed, "租户ID不匹配({})", req.getTenantId());
         ///////////////////////租户检查///////////////////
@@ -164,10 +168,12 @@ public class ${className} extends BaseService<${className}> implements ${service
                 //如果是组织主动共享的的数据
                 passed = true;
             }
-        } else if (req instanceof OrganizedPublicObject
-                && ((OrganizedPublicObject) req).isContainsOrgPublicData()) {
+        }
+        <#if isOrganizedPublicObject>
+        else if (req.isContainsOrgPublicData()) {
             passed = true;
         }
+        </#if>
 
         Assert.isTrue(passed || req.isTenantAdmin(), "组织ID不匹配({})", req.getOrgId());
         ///////////////////////部门检查///////////////////
