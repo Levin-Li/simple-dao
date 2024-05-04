@@ -132,9 +132,9 @@ public class ${className} extends BaseService<${className}> implements ${service
         <#if isMultiTenantObject>
         ///////////////////////租户检查///////////////////
         //如果有租户标识
-        if (StringUtils.hasText(info.getTenantId())) {
+        if (hasText(info.getTenantId())) {
 
-            if (!StringUtils.hasText(req.getTenantId())
+            if (!hasText(req.getTenantId())
                     || info.getTenantId().equals(req.getTenantId())) {
                 //如果请求对象中没有租户标识，或是租户标识相等，则返回
                 passed = true;
@@ -158,7 +158,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         <#if isOrganizedObject>
         ///////////////////////部门检查///////////////////
         //如果有组织标识
-        if (StringUtils.hasText(info.getOrgId())) {
+        if (hasText(info.getOrgId())) {
             if (isEmpty(req.getOrgIdList())
                     || req.getOrgIdList().contains(info.getOrgId())) {
                 //如果请求对象中没有组织标识，或是组织标识相等，则返回
@@ -181,13 +181,13 @@ public class ${className} extends BaseService<${className}> implements ${service
 
        <#if isPersonalObject>
         ///////////////////////私有检查///////////////////
-        if (req instanceof PersonalObject) {
-            if (!StringUtils.hasText(info.getOwnerId())
-                    || !StringUtils.hasText(((PersonalObject) req).getOwnerId())
-                    || info.getOwnerId().equals(((PersonalObject) req).getOwnerId())) {
+       // if (req instanceof PersonalObject) {
+            if (!hasText(info.getOwnerId())
+                    || !hasText(req.getOwnerId())
+                    || info.getOwnerId().equals(req.getOwnerId())) {
                 passed = true;
             }
-        }
+        //}
         Assert.isTrue(passed, "拥有者ID不匹配({})", req.getOwnerId());
         ///////////////////////私有检查///////////////////
         </#if>
