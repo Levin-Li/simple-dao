@@ -177,9 +177,7 @@ public @interface Select {
     /**
      * 别名
      * 整个表达后的别名
-     * 默认为字段名
-     * <p>
-     * 如果为 "NULL" 值，则没有别名
+     * 默认为字段名，如果为 C.BLANK_VALUE ,则没有别名
      *
      * @return
      */
