@@ -123,6 +123,7 @@ public abstract class BaseController {
         return resp;
     }
 
+
     /**
      * 判断对象是否非空，非空字符串，非空集合，非空数组
      *
@@ -134,23 +135,51 @@ public abstract class BaseController {
     }
 
     /**
-     * null2Empty
-     * @param txt
+     *
+     * @param obj
      * @return
      */
-    protected static String null2Empty(String txt) {
-        return null2Empty(txt, "", "");
+    protected boolean isEmpty(Object obj) {
+        return ExpressionUtils.isEmpty(obj);
     }
 
     /**
-     * null2Empty
+     * 是否有内容
      * @param txt
-     * @param prefix
-     * @param suffix
      * @return
      */
-    protected static String null2Empty(String txt, String prefix, String suffix) {
-        return StringUtils.hasText(txt) ? (prefix + txt + suffix) : "";
+    protected boolean hasText(CharSequence txt){
+        return StringUtils.hasText(txt);
+    }
+
+    /**
+     * 空转默认值
+     * @param txt
+     * @param defaultValue
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
+        return StringUtils.hasText(txt) ? txt : defaultValue;
+    }
+
+    /**
+     * 空转null
+     * @param txt
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Null(S txt) {
+        return StringUtils.hasText(txt) ? txt : null;
+    }
+
+    /**
+     * null 转空字符串
+     * @param txt
+     * @return
+     */
+    protected String null2Empty(String txt) {
+        return txt == null ? "" : txt;
     }
 
     /**
