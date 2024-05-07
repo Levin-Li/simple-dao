@@ -724,8 +724,8 @@ Dao 类逻辑框图，如下图所示。
        
        }
 
-     
-
+ 统计注解使用示例-1    
+      
       @Data
       @AllArgsConstructor
       @NoArgsConstructor
@@ -787,8 +787,6 @@ Dao 类逻辑框图，如下图所示。
       
           }
       }
-
-          
           
 #### 6.3 多表关联-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
    
