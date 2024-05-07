@@ -645,9 +645,9 @@ Dao 类逻辑框图，如下图所示。
        }               
        
               
-### 6 多表关联查询
+### 6 多表关联查询统计
 
-#### 6.1 多表关联查询-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
+#### 6.1 多表关联-用 JoinOption 注解关联实体对象 [TableJoinStatDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoinStatDTO.java) 
    
    注解代码  @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)，会自动找实体对象之间的关联字段。
    对象 User 中有 Group类型的字段，但有多个Group类型的字段时，需要手动指定关联的字段
@@ -695,7 +695,7 @@ Dao 类逻辑框图，如下图所示。
        Order By  Count( 1 ) Desc , Avg( u.score ) Desc , g.name Desc
        
        
-#### 6.2 多表关联查询-用 JoinOption 注解  [TableJoin3](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
+#### 6.2 多表关联-用 JoinOption 注解  [TableJoin3](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/TableJoin3.java)   
        
    以下 @TargetOption 注解部分，手动指定关联的别名和关联的字段，joinTargetAlias = E_User.ALIAS , joinTargetColumn = E_User.group。
         
@@ -723,10 +723,74 @@ Dao 类逻辑框图，如下图所示。
            String groupName;
        
        }
+
+     
+
+      @Data
+      @AllArgsConstructor
+      @NoArgsConstructor
+      @Builder
+      //@EqualsAndHashCode(callSuper = true)
+      @ToString
+      @Accessors(chain = true)
+      @FieldNameConstants
+      @TargetOption(entityClass = MemberTradingLog.class,
+      alias = E_MemberTradingLog.ALIAS,
+
+      //统计结果类
+      resultClass = QueryTenantTradingMemberInfoReq.Result.class
+
+      )
+      public class QueryTenantTradingMemberInfoReq extends MultiTenantOrgReq<QueryTenantTradingMemberInfoReq> {
+      
+          @NotNull
+          @Schema(title = L_createTime, description = "大于等于" + L_createTime)
+          @Gte
+          Date gteCreateTime;
+      
+          @Schema(title = L_createTime, description = "小于等于" + L_createTime)
+          @Lte
+          Date lteCreateTime;
+      
+          @Schema(title = "交易类型", hidden = true)
+          @In
+          final List<TradingType> tradingType = Arrays.asList(TradingType.Income, TradingType.Split);
+      
+          @Data
+          @NoArgsConstructor
+          @Accessors(chain = true)
+          @ToString
+          public static class Result implements Serializable {
+      
+              @Schema(title = "交易总笔数")
+              @Count
+              Long tradeNum;
+      
+              @Schema(title = "交易成功笔数")
+              @Sum(fieldCases = @Case(column = E_MemberTradingLog.F_tradingStatus,
+                      whenOptions = @Case.When(whenExpr = E_TradingStatus.Succeed_STR, thenExpr = "1"), elseExpr = "0"))
+              Long tradeSuccessNum;
+      
+              @Schema(title = "分账金额")
+              @Sum(fieldCases = @Case(column = E_MemberTradingLog.F_tradingType,
+                      whenOptions = @Case.When(whenExpr = E_TradingType.Split_STR, thenExpr = E_MemberTradingLog.F_tradingAmount), elseExpr = "0"))
+              Long allocateAmount;
+      
+              @Schema(title = "入金金额")
+              @Sum(fieldCases = @Case(column = E_MemberTradingLog.F_tradingType,
+                      whenOptions = @Case.When(whenExpr = E_TradingType.Income_STR, thenExpr = E_MemberTradingLog.F_tradingAmount), elseExpr = "0"))
+              Long inComeAmount;
+      
+              @Schema(title = "服务费金额")
+              @Sum(E_MemberTradingLog.baseServiceFee + " + " + E_MemberTradingLog.serviceFee)
+              Long serviceCharge;
+      
+          }
+      }
+
           
           
-          
-#### 6.3 多表关联查询-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
+#### 6.3 多表关联-直接用TargetOption 注解的 tableName（或是fromStatement） 属性拼出连接语句 [FromStatementDTO](./simple-dao-examples/src/test/java/com/levin/commons/dao/dto/FromStatementDTO.java) 
    
    注解代码 @TargetOption( tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group.id = g.id" )
       
@@ -756,7 +820,7 @@ Dao 类逻辑框图，如下图所示。
        } 
        
        
-#### 6.4 多表关联查询-笛卡儿积
+#### 6.4 多表关联-笛卡儿积
 
        可以用@SimpleJoinOption注解方式，也可以直接代码方式，如下：
        
