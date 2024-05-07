@@ -8,9 +8,7 @@ import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.rbac.RbacRoleObject;
 import com.levin.commons.rbac.RbacUserInfo;
-import com.levin.commons.service.support.InjectConst;
-import com.levin.commons.service.support.VariableInjector;
-import com.levin.commons.service.support.VariableResolverManager;
+import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +20,12 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * web模块注入服务
@@ -95,8 +96,24 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
     @PostConstruct
     public void init() {
         log.info("启用模块Web注入服务...");
+
         //设置上下文
-        variableResolverManager.add(VariableInjector.newResolverByMap(() -> Arrays.asList(getInjectVars())));
+        //variableResolverManager.add(VariableInjector.newResolverByMap(() -> Arrays.asList(getInjectVars())));
+
+        //变量解析器
+        variableResolverManager.add(new VariableResolver() {
+            @Override
+            public <T> ValueHolder<T> resolve(String name, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
+
+                //注入变量名称
+                if ("xxx".equals(name) ) {
+                   //return new ValueHolder(null, name, value);
+                }
+
+                return ValueHolder.notValue(throwExWhenNotFound, name);
+            }
+        }
+        );
     }
 
     /**
@@ -123,36 +140,8 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
             return result;
         }
 
-        MapUtils.Builder<String, Object> builder = MapUtils.newBuilder();
-
-        builder.put(InjectConst.IS_WEB_CONTEXT, true);
-
-        //@todo  获取当前登录用户
-        RbacUserInfo userInfo = null; //加载当前用户
-
-        //当前登录用户
-        if (userInfo != null) {
-
-            //暂时兼容
-            //获取登录信息
-            builder.put(InjectConst.USER_ID, userInfo.getId())
-                    .put(InjectConst.USER_NAME, userInfo.getName())
-                    .put(InjectConst.USER, userInfo)
-                    .put(InjectConst.IS_SUPER_ADMIN, userInfo.isSuperAdmin())
-                    .put(InjectConst.IS_TENANT_ADMIN, userInfo.isTenantAdmin())
-
-//                    .put(InjectConst.ORG, userInfo.getOrg())
-//                    .put(InjectConst.ORG_ID, userInfo.getOrgId())
-            ;
-
-        } else {
-            //匿名用户
-            builder.put(InjectConst.USER, anonymous);
-        }
-
-        final Map<String, Object> ctx = builder.build();
-
-        result = ctx;
+        //@todo 设置注入变量
+         result = MapUtils.put("xxx","xxx").build();
 
         //缓存到请求对象重
         httpServletRequest.setAttribute(INJECT_VAR_CACHE_KEY, result);

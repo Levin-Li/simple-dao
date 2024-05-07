@@ -156,6 +156,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         </#if>
 
         <#if isOrganizedObject>
+         passed = false;
         ///////////////////////部门检查///////////////////
         //如果有组织标识
         if (hasText(info.getOrgId())) {
@@ -180,6 +181,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         </#if>
 
        <#if isPersonalObject>
+        passed = false;
         ///////////////////////私有检查///////////////////
        // if (req instanceof PersonalObject) {
             if (!hasText(info.getOwnerId())
