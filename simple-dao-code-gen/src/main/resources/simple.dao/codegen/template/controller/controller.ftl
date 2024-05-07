@@ -166,7 +166,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @CRUD.Op
     public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
-        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+        //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
 
