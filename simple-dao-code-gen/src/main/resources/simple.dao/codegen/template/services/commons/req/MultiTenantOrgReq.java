@@ -17,6 +17,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,10 +51,10 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
     @OR(autoClose = true, condition = "#_isQuery", desc = "本注解只对查询生效")
     @In(InjectConst.ORG_ID)
-    @IsNull(condition = "#_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData()", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
+    @IsNull(condition = "#_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
     @Eq(condition = "#_isQuery && !isAllOrgScope && isOrgShared()", value = "orgShared", paramExpr = "true", desc = "如果有可共享的部门数据，允许包括非该部门的数据")
     //@Validator(expr = "isAllOrgScope || !(#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "如果不是超管 也不是 租户管理员，那么值是必须的")
-    protected List<String> orgIdList;
+    protected Collection<String> orgIdList;
 
     //注入当前用户有权限的机构ID列表
     @InjectVar(value = InjectConst.ORG_ID
@@ -101,7 +102,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
      * @param orgIdList
      * @return
      */
-    public T setOrgIdList(List<String> orgIdList) {
+    public T setOrgIdList(Collection<String> orgIdList) {
         this.orgIdList = orgIdList;
         return (T) this;
     }

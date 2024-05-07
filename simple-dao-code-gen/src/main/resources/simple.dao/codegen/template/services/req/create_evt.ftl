@@ -66,7 +66,7 @@ public class ${className} extends ${reqExtendClass} {
 <#--    <#if (field.baseEntityField && field.name =='creator')>-->
 <#--    @InjectVar(InjectConst.USER_ID)-->
 <#--    </#if>-->
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!};
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}; //参考默认值 ${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!}
 
     </#if>
 </#list>

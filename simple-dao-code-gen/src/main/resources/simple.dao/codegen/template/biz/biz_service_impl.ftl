@@ -173,7 +173,8 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
         //如果当前不是加载公共数据
         if (StringUtils.hasText(tenantId)
-                && MultiTenantPublicObject.class.isAssignableFrom(${entityName}.class)) { //如果支持公共数据
+                // && MultiTenantPublicObject.class.isAssignableFrom(${entityName}.class)
+        ) { //如果支持公共数据
 
             selfDataList = new ArrayList<>(selfDataList);
 
@@ -213,7 +214,9 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
             selfDataList.removeIf(Objects::isNull);
 
             //重新新排序
-            if (!isPublicEmpty && !tenantSelfEmpty && SortableObject.class.isAssignableFrom(${entityName}.class)) {
+            if (!isPublicEmpty && !tenantSelfEmpty
+                   // && SortableObject.class.isAssignableFrom(${entityName}.class)
+            ) {
                 selfDataList.sort(Comparator.comparing(${entityName}Info::getOrderCode));
             }
         }

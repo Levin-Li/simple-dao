@@ -44,7 +44,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
             order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID不为NULL的排在前面")
     @OR(autoClose = true)
     @Eq
-    @IsNull(condition = "#_isQuery && !isSuperAdmin && isContainsPublicData() ", desc = "查询结果包含公共数据(tenantId为NULL的数据)")
+    @IsNull(condition = "#_isQuery && !isSuperAdmin && isContainsPublicData() && #isNotEmpty(#_fieldVal)", desc = "查询结果包含公共数据(tenantId为NULL的数据)")
     @Eq(condition = "#_isQuery && !isSuperAdmin && isTenantShared()", value = "tenantShared", paramExpr = "true", desc = "如果有平台可共享的租户数据，查询结果包括非该租户的数据")
     //@Validator(expr = "isSuperAdmin || #isNotEmpty(#_fieldVal) " , promptInfo = "tenantId-不能为空")
     protected String tenantId;

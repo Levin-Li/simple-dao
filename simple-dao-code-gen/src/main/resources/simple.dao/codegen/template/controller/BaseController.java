@@ -58,10 +58,6 @@ public abstract class BaseController {
         return ModuleOption.ID;
     }
 
-    protected boolean isNotEmpty(Object value) {
-        return ExpressionUtils.isNotEmpty(value);
-    }
-
     protected <T> T getSelfProxy(Class<T> type) {
 
         if (selfProxy == null) {
@@ -127,24 +123,63 @@ public abstract class BaseController {
         return resp;
     }
 
+
     /**
-     * null2Empty
-     * @param txt
+     * 判断对象是否非空，非空字符串，非空集合，非空数组
+     *
+     * @param obj
      * @return
      */
-    protected static String null2Empty(String txt) {
-        return null2Empty(txt, "", "");
+    protected boolean isNotEmpty(Object obj) {
+        return ExpressionUtils.isNotEmpty(obj);
     }
 
     /**
-     * null2Empty
-     * @param txt
-     * @param prefix
-     * @param suffix
+     *
+     * @param obj
      * @return
      */
-    protected static String null2Empty(String txt, String prefix, String suffix) {
-        return StringUtils.hasText(txt) ? (prefix + txt + suffix) : "";
+    protected boolean isEmpty(Object obj) {
+        return ExpressionUtils.isEmpty(obj);
+    }
+
+    /**
+     * 是否有内容
+     * @param txt
+     * @return
+     */
+    protected boolean hasText(CharSequence txt){
+        return StringUtils.hasText(txt);
+    }
+
+    /**
+     * 空转默认值
+     * @param txt
+     * @param defaultValue
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Default(S txt, S defaultValue) {
+        return StringUtils.hasText(txt) ? txt : defaultValue;
+    }
+
+    /**
+     * 空转null
+     * @param txt
+     * @return
+     * @param <S>
+     */
+    protected <S extends CharSequence> S empty2Null(S txt) {
+        return StringUtils.hasText(txt) ? txt : null;
+    }
+
+    /**
+     * null 转空字符串
+     * @param txt
+     * @return
+     */
+    protected String null2Empty(String txt) {
+        return txt == null ? "" : txt;
     }
 
     /**

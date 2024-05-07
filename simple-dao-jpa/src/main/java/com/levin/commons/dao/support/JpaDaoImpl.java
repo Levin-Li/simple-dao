@@ -1,11 +1,10 @@
 package com.levin.commons.dao.support;
 
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.exception.DaoAnnotationException;
 import com.levin.commons.dao.exception.DaoSecurityException;
 import com.levin.commons.dao.exception.DaoUniqueConstraintBizException;
 import com.levin.commons.dao.util.ExceptionUtils;
@@ -180,7 +179,7 @@ public class JpaDaoImpl
     @Autowired
     private HibernateProperties hibernateProperties;
 
-    private static final Map<String, Set<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
+    private static final Map<String, Collection<UniqueField>> uniqueFieldMap = new ConcurrentHashMap<>();
 
     //注意这个是数据库的函数支持缓存，不能静态化
     private final Map<String, Boolean> funSupportMap = new ConcurrentHashMap<>();
@@ -209,7 +208,7 @@ public class JpaDaoImpl
         String key;
         String title;
 
-        final List<Field> fieldList = new ArrayList<>(3);
+        final Set<Field> fieldList = new LinkedHashSet<>(3);
 
         UniqueField addField(Field field, String title) {
 
@@ -228,7 +227,7 @@ public class JpaDaoImpl
 
             fieldList.forEach(field -> field.setAccessible(true));
 
-            key = fieldList.stream().map(Field::getName).filter(Objects::nonNull).collect(Collectors.joining(","));
+            key = fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining(","));
 
             if (!StringUtils.hasText(title)) {
                 title = fieldList.stream().map(JpaDaoImpl::getDesc).filter(Objects::nonNull).collect(Collectors.joining("+"));
@@ -237,7 +236,7 @@ public class JpaDaoImpl
             return this;
         }
 
-
+        @Override
         public boolean equals(Object obj) {
 
             // 检查是否是同一个对象
@@ -252,24 +251,19 @@ public class JpaDaoImpl
 
             // 获取当前对象的 fieldList 中非空字段的名称，并存储到 names 列表中
             //
-            List<String> names = fieldList.stream().filter(Objects::nonNull).map(Field::getName).collect(Collectors.toList());
-
-            // 复制 names 列表到 namesCopy
-            List<String> namesCopy = new ArrayList<>(names);
+            String names = fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining(","));
 
             // 获取传入对象的 fieldList 中非空字段的名称，并存储到 names2 列表中
-            List<String> names2 = ((UniqueField) obj).fieldList.stream().filter(Objects::nonNull).map(Field::getName).collect(Collectors.toList());
-
-            // 从 names 列表中移除 names2 中包含的元素
-            names.removeIf(names2::contains);
-
-            // 从 names2 列表中移除 namesCopy 中包含的元素
-            names2.removeIf(namesCopy::contains);
+            String names2 = ((UniqueField) obj).fieldList.stream().filter(Objects::nonNull).map(Field::getName).sorted().collect(Collectors.joining(","));
 
             // 如果 names 和 names2 列表都为空，则两个对象相等，返回 true；否则返回 false
-            return names.isEmpty() && names2.isEmpty();
+            return names.equals(names2);
         }
 
+        @Override
+        public int hashCode() {
+            return Objects.hash(fieldList);
+        }
 
         @Override
         public String toString() {
@@ -1112,7 +1106,7 @@ public class JpaDaoImpl
 
         final Class<?> finalEntityClass = entityClass;
 
-        Set<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(finalEntityClass.getName(),
+        Collection<UniqueField> uniqueFields = uniqueFieldMap.computeIfAbsent(finalEntityClass.getName(),
                 key -> getUniqueFields(finalEntityClass));
 
         //开始查找
@@ -1201,12 +1195,15 @@ public class JpaDaoImpl
      * @param entityClass 实体类
      * @return 唯一性字段集合
      */
-    private static Set<UniqueField> getUniqueFields(Class<?> entityClass) {
+    private static Collection<UniqueField> getUniqueFields(Class<?> entityClass) {
 
-        final Set<UniqueField> uniqueFields = new HashSet<>(3);
-
+        final List<UniqueField> uniqueFields = new ArrayList<>(3);
 
         Consumer<UniqueField> addUniqueField = uf -> {
+
+            if (uf.fieldList.isEmpty()) {
+                return;
+            }
 
             //如果有注解，先移除，相同的字段时，有Unique注解的优先
             if (uf.unique != null) {
@@ -1216,14 +1213,15 @@ public class JpaDaoImpl
             uniqueFields.add(uf);
         };
 
-        Map<String, UniqueField> tmp = new LinkedHashMap<>();
+        Map<String, UniqueField> groupFields = new LinkedHashMap<>();
 
         BiConsumer<Field, Unique> uniqueConsumer = (field, unique) -> {
 
             String group = unique.group();
 
             if (!StringUtils.hasText(group)) {
-                group = (field != null ? field.getName() : "") + "_" + String.join(",", unique.value());
+//                group = (field != null ? field.getName() : "") + "U:" + String.join(",", unique.value());
+                group = "U:" + String.join(",", unique.value());
             }
 
             for (String column : unique.value()) {
@@ -1233,7 +1231,7 @@ public class JpaDaoImpl
                     try {
                         field = getRequireField(entityClass, column.trim());
                     } catch (NoSuchFieldException e) {
-                        throw new RuntimeException(entityClass + field.getName() + "字段上的注解 Unique(value =" + column + ") 指定的字段不存在", e);
+                        throw new DaoAnnotationException(entityClass + field.getName() + "字段上的注解 Unique(value =" + column + ") 指定的字段不存在", e);
                     }
                 }
 
@@ -1244,12 +1242,11 @@ public class JpaDaoImpl
                 column = field.getName();
 
 
-                UniqueField uniqueField = tmp.get(group);
+                UniqueField uniqueField = groupFields.get(group);
 
                 if (uniqueField == null) {
                     uniqueField = new UniqueField().setUnique(unique).setGroup(group);
-                    tmp.put(group, uniqueField);
-                    addUniqueField.accept(uniqueField);
+                    groupFields.put(group, uniqueField);
                 }
 
                 uniqueField.addField(field, unique.prompt());
@@ -1299,15 +1296,16 @@ public class JpaDaoImpl
                             try {
                                 uniqueField.addField(getRequireField(entityClass, column), null);
                             } catch (NoSuchFieldException e) {
-                                throw new RuntimeException(entityClass + " UniqueConstraint 注解 columnNames{"
+                                throw new DaoAnnotationException(entityClass + " UniqueConstraint 注解 columnNames{"
                                         + column + "} 中必须填入类的字段名而不是数据库的字段名", e);
                             }
                         }
-                        if (!uniqueField.fieldList.isEmpty()) {
-                            addUniqueField.accept(uniqueField);
-                        }
+                        addUniqueField.accept(uniqueField);
                     }
                 });
+
+        //加入
+        groupFields.values().forEach(addUniqueField);
 
         //4、自动生成描述信息
         uniqueFields.forEach(UniqueField::finish);

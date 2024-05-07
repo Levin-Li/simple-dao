@@ -6,6 +6,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
+import com.levin.commons.dao.domain.*;
 
 import javax.annotation.*;
 import java.util.*;
@@ -109,19 +110,91 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
+    //调用本方法会导致不会对租户ID进行过滤，如果需要调用方对租户ID进行核查
     //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return findById(new ${entityName}IdReq().set${pkField.name?cap_first}(${pkField.name}));
+        return simpleDao.selectFrom(${entityName}.class).eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique(${entityName}Info.class);
     }
 
-    //调用本方法会导致不会对租户ID经常过滤，如果需要调用方对租户ID进行核查
     @Operation(summary = VIEW_DETAIL_ACTION)
     @Override
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
+    <#if !pkField?exists || !isCacheableEntity>//</#if>//@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
+
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.findUnique(req);
+        //return simpleDao.findUnique(req);
+
+        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
+
+        boolean passed = false;
+
+        <#if isMultiTenantObject>
+        ///////////////////////租户检查///////////////////
+        //如果有租户标识
+        if (hasText(info.getTenantId())) {
+
+            if (!hasText(req.getTenantId())
+                    || info.getTenantId().equals(req.getTenantId())) {
+                //如果请求对象中没有租户标识，或是租户标识相等，则返回
+                passed = true;
+            } else if (req instanceof MultiTenantSharedObject
+                    && ((MultiTenantSharedObject) req).isTenantShared()) {
+                //如果是租户主动共享的的数据
+                passed = true;
+            }
+
+        }
+        <#if isMultiTenantPublicObject>
+        else if (req.isContainsPublicData()) {
+            passed = true;
+        }
+        </#if>
+
+        Assert.isTrue(passed, "租户ID不匹配({})", req.getTenantId());
+        ///////////////////////租户检查///////////////////
+        </#if>
+
+        <#if isOrganizedObject>
+         passed = false;
+        ///////////////////////部门检查///////////////////
+        //如果有组织标识
+        if (hasText(info.getOrgId())) {
+            if (isEmpty(req.getOrgIdList())
+                    || req.getOrgIdList().contains(info.getOrgId())) {
+                //如果请求对象中没有组织标识，或是组织标识相等，则返回
+                passed = true;
+            } else if (req instanceof OrganizedSharedObject
+                    && ((OrganizedSharedObject) req).isOrgShared()) {
+                //如果是组织主动共享的的数据
+                passed = true;
+            }
+        }
+        <#if isOrganizedPublicObject>
+        else if (req.isContainsOrgPublicData()) {
+            passed = true;
+        }
+        </#if>
+
+        Assert.isTrue(passed || req.isTenantAdmin(), "组织ID不匹配({})", req.getOrgId());
+        ///////////////////////部门检查///////////////////
+        </#if>
+
+       <#if isPersonalObject>
+        passed = false;
+        ///////////////////////私有检查///////////////////
+       // if (req instanceof PersonalObject) {
+            if (!hasText(info.getOwnerId())
+                    || !hasText(req.getOwnerId())
+                    || info.getOwnerId().equals(req.getOwnerId())) {
+                passed = true;
+            }
+        //}
+        Assert.isTrue(passed, "拥有者ID不匹配({})", req.getOwnerId());
+        ///////////////////////私有检查///////////////////
+        </#if>
+
+        return info;
     }
 </#if>
 
