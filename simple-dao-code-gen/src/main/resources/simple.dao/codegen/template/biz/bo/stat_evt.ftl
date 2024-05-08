@@ -107,9 +107,9 @@ public class ${className} extends Query${entityName}Req{
         //@Count(fieldCases = {@Case(column = E_${entityName}.status, whenOptions = {@Case.When(whenExpr = "OFF", thenExpr = "1")}, elseExpr = "NULL")})
         //Integer caseCnt;
 
-        //@Schema(description = "累计" , havingOp=Op.Gt)
+        //@Schema(description = "累计" , havingOp = Op.Gt)
         //@Sum
-        //Double sumGmv;
+        //Double sumGmv = 500;
 
     }
 }
