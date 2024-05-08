@@ -74,10 +74,18 @@ public class ${className} extends Query${entityName}Req{
     //@Ignore
     //private boolean isGroupByStatus;
 
-    //@Schema(description = "是否按日期分组统计")
-    //@CtxVar //增加当前字段名称和字段值到环境变量中
-    //@Ignore //
-    //private boolean isGroupByDate;
+    @Schema(description = "是否按创建时间分组统计")
+    @CtxVar //增加当前字段名称和字段值到环境变量中
+    @Ignore //
+    private boolean isGroupByCreateTime;
+
+    @Ignore
+    @CtxVar
+    final Date today = new Date();
+
+    @Ignore
+    @CtxVar
+    final Date _7dayAgo = DateUtil.offsetDay(today, -7).toJdkDate();
 
     @PostConstruct
     public void preStat() {
@@ -91,23 +99,30 @@ public class ${className} extends Query${entityName}Req{
     public static class Result
             implements Serializable {
 
-        //@Schema(description = "状态分组统计")
+        //@Schema(title = "状态分组统计")
         //@GroupBy(condition = "#isGroupByStatus")
         //Status status;
 
-        //@Schema(description = "时间分组统计")
-        //@GroupBy(condition = "#isGroupByDate", value = "date_format(" + E_${entityName}.createDate + ",'%Y-%m-%d')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
-        //String createDate;
+        @Schema(title = "时间分组统计")
+        @GroupBy(condition = "#isGroupByCreateTime", value = "date_format(" + createTime + ",'%Y-%m')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
+        String createTime;
 
-        @Schema(description = "记录数")
+        @Schema(title = "记录数")
         @Count
-        Integer cnt;
+        Integer totals;
 
-        //@Schema(description = "分类记录数")
+        @Schema(title = "新增记录数", description = "七天内")
+        @Sum(fieldCases = @Case(column = "",
+        whenOptions = @Case.When(whenExpr = createTime + "${r" Between ${:today} AND ${:_7dayAgo} "}", thenExpr = "1")
+        , elseExpr = "0")
+        )
+        Integer incrementCnt;
+
+        //@Schema(title = "分类记录数")
         //@Count(fieldCases = {@Case(column = E_${entityName}.status, whenOptions = {@Case.When(whenExpr = "OFF", thenExpr = "1")}, elseExpr = "NULL")})
         //Integer caseCnt;
 
-        //@Schema(description = "累计" , havingOp = Op.Gt)
+        //@Schema(title = "累计" , havingOp = Op.Gt)
         //@Sum
         //Double sumGmv = 500;
 
