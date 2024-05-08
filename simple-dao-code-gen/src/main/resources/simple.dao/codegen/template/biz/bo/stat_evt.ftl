@@ -111,5 +111,17 @@ public class ${className} extends Query${entityName}Req{
         //@Sum
         //Double sumGmv = 500;
 
+
+        //@Count(fieldCases = @Case(column = E_MemberTradingLog.F_tradingStatus,
+        //whenOptions = @Case.When(whenExpr = E_TradingStatus.Succeed_STR, thenExpr = "1"), elseExpr = "null"))
+        //@Schema(title = "交易成功的笔数")
+        //Long successTotal;
+
+
+        //@Sum(fieldCases = @Case(column = E_MemberTradingLog.F_tradingStatus,
+        //whenOptions = @Case.When(whenExpr = E_TradingStatus.Succeed_STR, thenExpr = E_MemberTradingLog.F_tradingAmount), elseExpr = "0"))
+        //@Schema(title = "交易金额")
+        //Long sumTradingAmount;
+
     }
 }
