@@ -6,6 +6,9 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.levin.commons.dao.annotation.Ignore;
 
+import cn.hutool.core.date.DateUtil;
+import com.levin.commons.dao.annotation.misc.Case;
+
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.update.*;
@@ -104,8 +107,8 @@ public class ${className} extends Query${entityName}Req{
         //Status status;
 
         @Schema(title = "时间分组统计")
-        @GroupBy(condition = "#isGroupByCreateTime", value = "date_format(" + createTime + ",'%Y-%m')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
-        String createTime;
+        @GroupBy(condition = "#isGroupByCreateTime", value = "date_format(" + E_${entityName}.createTime + ",'%Y-%m')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
+        String month;
 
         @Schema(title = "记录数")
         @Count
@@ -113,7 +116,7 @@ public class ${className} extends Query${entityName}Req{
 
         @Schema(title = "新增记录数", description = "七天内")
         @Sum(fieldCases = @Case(column = "",
-        whenOptions = @Case.When(whenExpr = createTime + "${r" Between ${:today} AND ${:_7dayAgo} "}", thenExpr = "1")
+        whenOptions = @Case.When(whenExpr = E_${entityName}.createTime + "${r" Between ${:today} AND ${:_7dayAgo} "}", thenExpr = "1")
         , elseExpr = "0")
         )
         Integer incrementCnt;
