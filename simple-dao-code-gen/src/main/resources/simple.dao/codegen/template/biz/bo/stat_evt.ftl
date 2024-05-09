@@ -92,7 +92,8 @@ public class ${className} extends Query${entityName}Req{
 
     @PostConstruct
     public void preStat() {
-    //@todo 统计之前初始化数据
+        //@todo 统计之前初始化数据
+        setEnableDefaultOrderBy(false);
     }
 
     @Schema(description = BIZ_NAME + "统计结果")
