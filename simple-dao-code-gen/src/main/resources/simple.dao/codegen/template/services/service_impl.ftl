@@ -143,12 +143,13 @@ public class ${className} extends BaseService<${className}> implements ${service
                     || info.getTenantId().equals(req.getTenantId())) {
                 //如果请求对象中没有租户标识，或是租户标识相等，则返回
                 passed = true;
-            } else if (req instanceof MultiTenantSharedObject
-                    && ((MultiTenantSharedObject) req).isTenantShared()) {
+            }
+            <#if isMultiTenantSharedObject>
+            else if (info.isTenantShared()) {
                 //如果是租户主动共享的的数据
                 passed = true;
             }
-
+            </#if>
         }
         <#if isMultiTenantPublicObject>
         else if (req.isContainsPublicData()) {
@@ -173,11 +174,13 @@ public class ${className} extends BaseService<${className}> implements ${service
                     || req.getOrgIdList().contains(info.getOrgId())) {
                 //如果请求对象中没有组织标识，或是组织标识相等，则返回
                 passed = true;
-            } else if (req instanceof OrganizedSharedObject
-                    && ((OrganizedSharedObject) req).isOrgShared()) {
+            }
+            <#if isOrganizedSharedObject>
+            else if (info.isOrgShared()) {
                 //如果是组织主动共享的的数据
                 passed = true;
             }
+            </#if>
         }
         <#if isOrganizedPublicObject>
         else if (!passed && req.isContainsOrgPublicData()) {
