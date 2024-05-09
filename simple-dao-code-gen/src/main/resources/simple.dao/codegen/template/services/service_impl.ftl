@@ -123,8 +123,9 @@ public class ${className} extends BaseService<${className}> implements ${service
     public ${entityName}Info findById(${entityName}IdReq req) {
 
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        //return simpleDao.findUnique(req);
-
+        <#if !isCacheableEntity>
+        return simpleDao.findUnique(req);
+        <#else>
         ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
 
         boolean passed = false;
@@ -195,6 +196,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         </#if>
 
         return info;
+      </#if>
     }
 </#if>
 
