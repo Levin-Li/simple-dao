@@ -180,12 +180,12 @@ public class ${className} extends BaseService<${className}> implements ${service
             }
         }
         <#if isOrganizedPublicObject>
-        else if (req.isContainsOrgPublicData()) {
+        else if (!passed && req.isContainsOrgPublicData()) {
             passed = true;
         }
         </#if>
 
-        Assert.isTrue(passed, "组织ID不匹配({})", req.getOrgId());
+        Assert.isTrue(passed, "组织机构ID不匹配({})", req.getOrgId());
         ///////////////////////部门检查///////////////////
         </#if>
 
