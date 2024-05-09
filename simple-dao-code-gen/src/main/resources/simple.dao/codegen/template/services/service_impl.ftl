@@ -128,6 +128,10 @@ public class ${className} extends BaseService<${className}> implements ${service
         <#else>
         ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
 
+        if(req.isSuperAdmin()){
+            return info;
+        }
+
         boolean passed = false;
 
         <#if isMultiTenantObject>
@@ -156,11 +160,15 @@ public class ${className} extends BaseService<${className}> implements ${service
         ///////////////////////租户检查///////////////////
         </#if>
 
+        if(req.isTenantAdmin()){
+            return info;
+        }
+
         <#if isOrganizedObject>
-         passed = false;
+         passed = req.isAllOrgScope();
         ///////////////////////部门检查///////////////////
         //如果有组织标识
-        if (hasText(info.getOrgId())) {
+        if (!passed && hasText(info.getOrgId())) {
             if (isEmpty(req.getOrgIdList())
                     || req.getOrgIdList().contains(info.getOrgId())) {
                 //如果请求对象中没有组织标识，或是组织标识相等，则返回
@@ -177,7 +185,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         }
         </#if>
 
-        Assert.isTrue(passed || req.isTenantAdmin(), "组织ID不匹配({})", req.getOrgId());
+        Assert.isTrue(passed, "组织ID不匹配({})", req.getOrgId());
         ///////////////////////部门检查///////////////////
         </#if>
 
