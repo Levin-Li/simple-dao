@@ -128,6 +128,10 @@ public class ${className} extends BaseService<${className}> implements ${service
         <#else>
         ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
 
+       if(info == null){
+           return null;
+       }
+
         if(req.isSuperAdmin()){
             return info;
         }
@@ -137,9 +141,9 @@ public class ${className} extends BaseService<${className}> implements ${service
         <#if isMultiTenantObject>
         ///////////////////////租户检查///////////////////
         //如果有租户标识
-        if (hasText(info.getTenantId())) {
+        if (isNotEmpty(info.getTenantId())) {
 
-            if (!hasText(req.getTenantId())
+            if (isEmpty(req.getTenantId())
                     || info.getTenantId().equals(req.getTenantId())) {
                 //如果请求对象中没有租户标识，或是租户标识相等，则返回
                 passed = true;
@@ -169,7 +173,7 @@ public class ${className} extends BaseService<${className}> implements ${service
          passed = req.isAllOrgScope();
         ///////////////////////部门检查///////////////////
         //如果有组织标识
-        if (!passed && hasText(info.getOrgId())) {
+        if (!passed && isNotEmpty(info.getOrgId())) {
             if (isEmpty(req.getOrgIdList())
                     || req.getOrgIdList().contains(info.getOrgId())) {
                 //如果请求对象中没有组织标识，或是组织标识相等，则返回
@@ -196,8 +200,8 @@ public class ${className} extends BaseService<${className}> implements ${service
         passed = false;
         ///////////////////////私有检查///////////////////
        // if (req instanceof PersonalObject) {
-            if (!hasText(info.getOwnerId())
-                    || !hasText(req.getOwnerId())
+            if (isEmpty(info.getOwnerId())
+                    || isEmpty(req.getOwnerId())
                     || info.getOwnerId().equals(req.getOwnerId())) {
                 passed = true;
             }
