@@ -33,7 +33,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
         extends BaseReq
         implements MultiTenantObject {
 
-    @Schema(title = "租户ID", hidden = true)
+    @Schema(title = "租户ID", hidden = true,description = "租户ID默认从当前用户获取，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值")
     @InjectVar(value = InjectConst.TENANT_ID
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN // 如果不是超级管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
