@@ -61,7 +61,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID", description = "创建、更新或删除指定的机构的数据, 该参数只对非查询有效", hidden = true)
+    @Schema(title = "机构ID", description = "创建、更新或删除指定的机构的数据, 该参数只对非查询有效，机构ID默认从当前用户获取")
     @Eq(condition = "!(#_isQuery) && #isNotEmpty(#_fieldVal)", desc = "本注解只对更新生效")
     //@Validator(expr = "isAllOrgScope || (#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "orgId-不能为空")
     protected String orgId;
