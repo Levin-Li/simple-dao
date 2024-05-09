@@ -76,10 +76,6 @@ public class ${className} extends ${reqExtendClass} {
 </#if>
 
     @Ignore
-    @Schema(title = "允许默认排序")
-    boolean enableDefaultOrderBy = true;
-
-    @Ignore
     @Schema(title = "排序字段")
     String orderBy;
 
