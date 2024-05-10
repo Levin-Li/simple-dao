@@ -243,11 +243,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     public boolean create(Create${entityName}Req req){
 </#if>
         <#if classModel.isType('com.levin.commons.dao.domain.OrganizedObject')>
-
-        Assert.isTrue(req.getOrgIdList() == null
-            || req.getOrgIdList().isEmpty()
-            || req.getOrgIdList().contains(req.getOrgId()), "orgId 超出可选范围");
-
+        Assert.isTrue(isEmpty(req.getOrgId()) || isEmpty(req.getOrgIdList()) || req.getOrgIdList().contains(req.getOrgId()), "orgId 超出可选范围");
         </#if>
         //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
@@ -344,7 +340,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @param key 缓存Key
     */
     @Override
-    @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key，通常是主键标识")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
     public void clearCache(String key) {
         Assert.notBlank(key, "key is empty");
