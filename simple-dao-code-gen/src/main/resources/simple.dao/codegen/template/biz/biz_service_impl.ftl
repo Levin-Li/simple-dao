@@ -118,23 +118,40 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
         //如果缓存发生删除事件，则删除对应的缓存
         SpringCacheEventListener.add((ctx, cache, action, key, value) -> {
 
-                    if (ctx == null && value == null) {
-                        if (key == null) {
-                            return;
-                        }
-                        //
-                        cache.clear();
+                    MultiTenantObject multiTenantObject = null;
+
+                    if (value instanceof MultiTenantObject) {
+                        multiTenantObject = (MultiTenantObject) value;
+                    } else if (ctx != null && ctx.getArgs() != null) {
+                        multiTenantObject = (MultiTenantObject) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().orElse(null);
                     }
 
-                    String tenantId = (value instanceof MultiTenantObject) ?
-                            ((MultiTenantObject) value).getTenantId() :
-                            (String) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().map(o -> ((MultiTenantObject) o).getTenantId()).orElse(null);
+                    //如果没有找到租户对象
+                    if (multiTenantObject == null) {
+
+                        if (isNotEmpty(key)) {
+
+                            if (log.isInfoEnabled()) {
+                                log.info("发生缓存Evict事件({})，但是无法获取租户ID，将清楚所有的缓存", key);
+                            }
+
+                            cache.clear();
+                        } else {
+                            if (log.isInfoEnabled()) {
+                                log.info("发生缓存Evict事件：value:{},action:{}，但是无法获取租户ID，并且也无Key将将忽略这个事件", value, action);
+                            }
+                        }
+
+                        return;
+                    }
+
+                    String tenantId = multiTenantObject.getTenantId();
 
                     //如果没有租户ID
                     if (!StringUtils.hasText(tenantId)) {
 
                         // 是否是超级管理员
-                        boolean isSuperAdmin = Stream.of(ctx.getArgs()).filter(o -> o instanceof ServiceReq).anyMatch(o -> ((ServiceReq) o).isSuperAdmin());
+                        final boolean isSuperAdmin = ctx != null && ctx.getArgs() != null && Stream.of(ctx.getArgs()).filter(o -> o instanceof ServiceReq).anyMatch(o -> ((ServiceReq) o).isSuperAdmin());
 
                         if (isSuperAdmin) {
                             //超级管理员，允许不指定租户ID进行操作
