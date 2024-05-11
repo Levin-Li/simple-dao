@@ -282,7 +282,7 @@ public interface ${className} {
     *
     * @return
     */
-    List<${entityName}Info> load${entityName}List(Predicate<${entityName}Info> filter);
+    List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter);
 
     </#if>
     /**

@@ -529,9 +529,9 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @return
     */
     @Override
-    public List<${entityName}Info> load${entityName}List(Predicate<${entityName}Info> filter) {
+    public List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter) {
 
-        List<${entityName}Info> dataList = ${serviceName?uncap_first}.getCache("${entityName}List",
+        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List",
                 (key) -> {
                     Consumer<SelectDao<?>> ex = dao -> dao 
                          <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
@@ -546,7 +546,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                          .disableSafeMode();
 
                     //最多2万条记录
-                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
+                    return getSelfProxy().query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
                 }
         );
 
