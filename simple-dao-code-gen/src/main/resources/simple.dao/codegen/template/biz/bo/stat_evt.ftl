@@ -64,8 +64,8 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS,
     //表连接
-    //joinOptions = { @JoinOption(entityClass = XXX.class,alias = E_XXX.ALIAS,joinColumn = E_XXX.joinColumn)},
-    resultClass = ${className}.Result.class
+    //joinOptions = { @JoinOption(entityClass = XXX.class, alias = E_XXX.ALIAS, joinColumn = E_XXX.joinColumn)},
+    resultClass = ${className}.Result.class //返回结果类型，需要和查询字段对应
 )
 public class ${className} extends Query${entityName}Req{
 
@@ -83,16 +83,17 @@ public class ${className} extends Query${entityName}Req{
     private boolean isGroupByCreateTime;
 
     @Ignore
-    @CtxVar
+    @CtxVar //增加当前字段名称和字段值到环境变量中
     final Date today = new Date();
 
     @Ignore
-    @CtxVar
+    @CtxVar //该注解增加当前字段名称和字段值到环境变量中
     final Date _7dayAgo = DateUtil.offsetDay(today, -7).toJdkDate();
 
     @PostConstruct
     public void preStat() {
-    //@todo 统计之前初始化数据
+        //@todo 统计之前初始化数据
+        setEnableDefaultOrderBy(false);
     }
 
     @Schema(description = BIZ_NAME + "统计结果")
@@ -106,20 +107,19 @@ public class ${className} extends Query${entityName}Req{
         //@GroupBy(condition = "#isGroupByStatus")
         //Status status;
 
-        @Schema(title = "时间分组统计")
-        @GroupBy(condition = "#isGroupByCreateTime", value = "date_format(" + E_${entityName}.createTime + ",'%Y-%m')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
-        String month;
+        //@Schema(title = "时间分组统计")
+        //@GroupBy(condition = "#isGroupByCreateTime", value = "date_format(" + E_${entityName}.createTime + ",'%Y-%m')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
+        //String month;
 
         @Schema(title = "记录数")
         @Count
         Integer totals;
 
-        @Schema(title = "新增记录数", description = "七天内")
-        @Sum(fieldCases = @Case(column = "",
-        whenOptions = @Case.When(whenExpr = E_${entityName}.createTime + "${r" Between ${:today} AND ${:_7dayAgo} "}", thenExpr = "1")
-        , elseExpr = "0")
-        )
-        Integer incrementCnt;
+        //@Schema(title = "新增记录数", description = "七天内")
+        //@Sum(fieldCases = @Case(column = "",
+        //whenOptions = @Case.When(whenExpr = E_${entityName}.createTime + "${r" Between ${:today} AND ${:_7dayAgo} "}", thenExpr = "1")
+        //, elseExpr = "0"))
+        //Integer incrementCnt;
 
         //@Schema(title = "分类记录数")
         //@Count(fieldCases = {@Case(column = E_${entityName}.status, whenOptions = {@Case.When(whenExpr = "OFF", thenExpr = "1")}, elseExpr = "NULL")})

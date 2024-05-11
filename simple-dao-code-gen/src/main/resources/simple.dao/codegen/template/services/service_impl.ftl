@@ -123,27 +123,37 @@ public class ${className} extends BaseService<${className}> implements ${service
     public ${entityName}Info findById(${entityName}IdReq req) {
 
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        //return simpleDao.findUnique(req);
-
+        <#if !isCacheableEntity>
+        return simpleDao.findUnique(req);
+        <#else>
         ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
+
+       if(info == null){
+           return null;
+       }
+
+        if(req.isSuperAdmin()){
+            return info;
+        }
 
         boolean passed = false;
 
         <#if isMultiTenantObject>
         ///////////////////////租户检查///////////////////
         //如果有租户标识
-        if (hasText(info.getTenantId())) {
+        if (isNotEmpty(info.getTenantId())) {
 
-            if (!hasText(req.getTenantId())
+            if (isEmpty(req.getTenantId())
                     || info.getTenantId().equals(req.getTenantId())) {
                 //如果请求对象中没有租户标识，或是租户标识相等，则返回
                 passed = true;
-            } else if (req instanceof MultiTenantSharedObject
-                    && ((MultiTenantSharedObject) req).isTenantShared()) {
+            }
+            <#if isMultiTenantSharedObject>
+            else if (info.isTenantShared()) {
                 //如果是租户主动共享的的数据
                 passed = true;
             }
-
+            </#if>
         }
         <#if isMultiTenantPublicObject>
         else if (req.isContainsPublicData()) {
@@ -155,28 +165,34 @@ public class ${className} extends BaseService<${className}> implements ${service
         ///////////////////////租户检查///////////////////
         </#if>
 
+        if(req.isTenantAdmin()){
+            return info;
+        }
+
         <#if isOrganizedObject>
-         passed = false;
+         passed = req.isAllOrgScope();
         ///////////////////////部门检查///////////////////
         //如果有组织标识
-        if (hasText(info.getOrgId())) {
+        if (!passed && isNotEmpty(info.getOrgId())) {
             if (isEmpty(req.getOrgIdList())
                     || req.getOrgIdList().contains(info.getOrgId())) {
                 //如果请求对象中没有组织标识，或是组织标识相等，则返回
                 passed = true;
-            } else if (req instanceof OrganizedSharedObject
-                    && ((OrganizedSharedObject) req).isOrgShared()) {
+            }
+            <#if isOrganizedSharedObject>
+            else if (info.isOrgShared()) {
                 //如果是组织主动共享的的数据
                 passed = true;
             }
+            </#if>
         }
         <#if isOrganizedPublicObject>
-        else if (req.isContainsOrgPublicData()) {
+        else if (!passed && req.isContainsOrgPublicData()) {
             passed = true;
         }
         </#if>
 
-        Assert.isTrue(passed || req.isTenantAdmin(), "组织ID不匹配({})", req.getOrgId());
+        Assert.isTrue(passed, "组织机构ID不匹配({})", req.getOrgId());
         ///////////////////////部门检查///////////////////
         </#if>
 
@@ -184,8 +200,8 @@ public class ${className} extends BaseService<${className}> implements ${service
         passed = false;
         ///////////////////////私有检查///////////////////
        // if (req instanceof PersonalObject) {
-            if (!hasText(info.getOwnerId())
-                    || !hasText(req.getOwnerId())
+            if (isEmpty(info.getOwnerId())
+                    || isEmpty(req.getOwnerId())
                     || info.getOwnerId().equals(req.getOwnerId())) {
                 passed = true;
             }
@@ -195,6 +211,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         </#if>
 
         return info;
+      </#if>
     }
 </#if>
 
@@ -226,11 +243,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     public boolean create(Create${entityName}Req req){
 </#if>
         <#if classModel.isType('com.levin.commons.dao.domain.OrganizedObject')>
-
-        Assert.isTrue(req.getOrgIdList() == null
-            || req.getOrgIdList().isEmpty()
-            || req.getOrgIdList().contains(req.getOrgId()), "orgId 超出可选范围");
-
+        Assert.isTrue(isEmpty(req.getOrgId()) || isEmpty(req.getOrgIdList()) || req.getOrgIdList().contains(req.getOrgId()), "orgId 超出可选范围");
         </#if>
         //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
@@ -327,7 +340,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @param key 缓存Key
     */
     @Override
-    @Operation(summary = CLEAR_CACHE_ACTION, description = "完整的缓存Key")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key，通常是主键标识")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
     public void clearCache(String key) {
         Assert.notBlank(key, "key is empty");

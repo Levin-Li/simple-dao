@@ -268,7 +268,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     /**
     * 清除缓存
     */
-    @GetMapping("clearCache")
+    <#if !isCacheableEntity>//</#if>@GetMapping("clearCache")
     @Operation(summary = CLEAR_CACHE_ACTION, description = "keySuffix 通常为记录的ID，如果参数keySuffix和cacheKey都为空，则清除所有缓存")
     public ApiResp<Boolean> clearCache(String keySuffix, String cacheKey) {
 

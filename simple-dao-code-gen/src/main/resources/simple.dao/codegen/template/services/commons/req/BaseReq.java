@@ -85,6 +85,10 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected String operatorName;
 
+    @Schema(title = "允许默认排序")
+    @Ignore
+    protected boolean enableDefaultOrderBy = true;
+
     @Schema(title = "是否是web请求", hidden = true)
     public boolean isWebContext() {
         return this.isWebContext;
