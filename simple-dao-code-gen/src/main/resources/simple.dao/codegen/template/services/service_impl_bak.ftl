@@ -8,18 +8,11 @@ import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.*;
 
-
-import com.levin.commons.service.support.SpringCacheEventListener;
-import ${modulePackageName}.cache.ModuleCacheService;
-
 import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 import java.util.function.*;
 
-import org.slf4j.*;
-
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
@@ -91,27 +84,10 @@ import ${imp};
 
 public class ${className} extends BaseService<${className}> implements ${serviceName} {
 
-    private static final Logger log = LoggerFactory.getLogger(${className}.class);
-
-    <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
-    ModuleCacheService moduleCacheService;
-
-
-<#if isCacheableEntity>
-    @PostConstruct
-    public void init() {
-
-        //启动先清除缓存
-        //${serviceName?uncap_first}.clearAllCache();
-        moduleCacheService.getCache(${serviceName}.CACHE_NAME).clear();
-
-        SpringCacheEventListener.add( this.springCacheEventListener(),
-               ${serviceName}.CACHE_NAME, ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict
-        );
-       
-    }
-
-</#if>
+<#--    protected ${serviceName} getSelfProxy(){-->
+<#--        //return getSelfProxy(${serviceName}.class);-->
+<#--        return getSelfProxy(${className}.class);-->
+<#--    }-->
 
     @Operation(summary = QUERY_ACTION)
     @Override
@@ -345,237 +321,6 @@ public class ${className} extends BaseService<${className}> implements ${service
         return simpleDao.deleteByQueryObj(req, queryObjs);
     }
 
-<#if isCacheableEntity>
-////////////////////////////////////// 缓存支持  ///////////////////////////////////////
-    <#if isMultiTenantObject>
-    /**
-     * 缓存事件监听器
-     */
-    protected SpringCacheEventListener springCacheEventListener() {
-
-        //如果缓存发生删除事件，则删除对应的缓存
-        return (ctx, cache, action, key, value) -> {
-
-                    MultiTenantObject multiTenantObject = null;
-
-                    if (value instanceof MultiTenantObject) {
-                        multiTenantObject = (MultiTenantObject) value;
-                    } else if (ctx != null && ctx.getArgs() != null) {
-                        multiTenantObject = (MultiTenantObject) Stream.of(ctx.getArgs()).filter(o -> o instanceof MultiTenantObject).findFirst().orElse(null);
-                    }
-
-                    //如果没有找到租户对象
-                    if (multiTenantObject == null) {
-
-                        if (isNotEmpty(key)) {
-
-                            if (log.isInfoEnabled()) {
-                                log.info("发生缓存Evict事件({})，但是无法获取租户ID，将清楚所有的缓存", key);
-                            }
-
-                            cache.clear();
-                        } else {
-                            if (log.isInfoEnabled()) {
-                                log.info("发生缓存Evict事件：value:{},action:{}，但是无法获取租户ID，并且也无Key将将忽略这个事件", value, action);
-                            }
-                        }
-
-                        return;
-                    }
-
-                    String tenantId = multiTenantObject.getTenantId();
-
-                    //如果没有租户ID
-                    if (!StringUtils.hasText(tenantId)) {
-
-                        // 是否是超级管理员
-                        final boolean isSuperAdmin = ctx != null && ctx.getArgs() != null && Stream.of(ctx.getArgs()).filter(o -> o instanceof ServiceReq).anyMatch(o -> ((ServiceReq) o).isSuperAdmin());
-
-                        if (isSuperAdmin) {
-                            //超级管理员，允许不指定租户ID进行操作
-                            ${entityName}Info entityInfo = getSelfProxy().findById(key.toString().substring(${serviceName}.CK_PREFIX.length()));
-
-                            tenantId = entityInfo != null ? entityInfo.getTenantId() : null;
-                        }
-                    }
-
-                    if (log.isInfoEnabled()) {
-                        log.info("发生缓存Evict事件({})，试图清除租户({})的缓存列表", key, tenantId);
-                    }
-
-                    //试图清除租户的角色缓存
-                    cache.evict("T@" + null2Empty(tenantId));
-                };
-    }
-
-	<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
-    /**
-    * 加载租户的缓存${entityTitle}列表
-    *
-    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
-    *
-    * tenantId 为 null 时加载公共${entityTitle}
-    *
-    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
-    * @return
-    */
-    @Override
-    public List<${entityName}Info> loadCacheList(String tenantId, Predicate<${entityName}Info> filter) {
-
-        List<${entityName}Info> selfDataList = loadCacheListByTenant(tenantId, filter);
-
-        //如果当前不是加载公共数据
-        if (StringUtils.hasText(tenantId)
-                // && MultiTenantPublicObject.class.isAssignableFrom(${entityName}.class)
-        ) { //如果支持公共数据
-
-            selfDataList = new ArrayList<>(selfDataList);
-
-            final boolean tenantSelfEmpty = selfDataList.isEmpty();
-
-            //加载公共数据
-            List<${entityName}Info> publicDataList = new ArrayList<>(loadCacheListByTenant(null, filter));
-
-            final boolean isPublicEmpty = publicDataList.isEmpty();
-
-            if (!isPublicEmpty && !tenantSelfEmpty) {
-
-                SelfOverridableObject selfOverridable = AnnotatedElementUtils.findMergedAnnotation(${entityName}.class, SelfOverridableObject.class);
-
-                if (selfOverridable != null
-                        && selfOverridable.overrideColumnNames() != null
-                        && selfOverridable.overrideColumnNames().length > 0) {
-
-                    //去除重复的记录
-                    List<String> attrs = Arrays.asList(selfOverridable.overrideColumnNames());
-
-                    final List<${entityName}Info> finalSelfDataList = selfDataList;
-                    publicDataList.removeIf(m1 -> {
-                                String key = simpleDao.getAttrValues(m1, attrs).stream().map(String::valueOf).collect(Collectors.joining(":"));
-
-                                return finalSelfDataList.stream().anyMatch(m2 ->
-                                        key.equals(simpleDao.getAttrValues(m2, attrs).stream().map(String::valueOf).collect(Collectors.joining(":")))
-                                );
-                            }
-
-                    );
-                }
-            }
-            selfDataList.addAll(publicDataList);
-
-            //去除空对象
-            selfDataList.removeIf(Objects::isNull);
-
-            //重新新排序
-            if (!isPublicEmpty && !tenantSelfEmpty
-                   // && SortableObject.class.isAssignableFrom(${entityName}.class)
-            ) {
-                selfDataList.sort(Comparator.comparing(${entityName}Info::getOrderCode));
-            }
-        }
-
-        return selfDataList;
-    }
-	</#if>
-
-    /**
-     * 加载租户的缓存${entityTitle}列表
-     *
-     * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
-     *
-     * tenantId 为 null 时加载公共${entityTitle}
-     *
-     * @param tenantId 可为null，为 null 时加载公共${entityTitle}
-     * @return
-     */
-	<#if !classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>@Override</#if>
-    public List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter) {
-
-        List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
-                simpleDao.selectFrom(${entityName}.class)
-
-                        .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
-                        .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
-
-                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
-                         //排序码排序
-                         .orderBy(E_${entityName}.orderCode)
-                         </#if>
-
-                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-                         //时间倒序
-                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
-                         </#if>
-                        .find(${entityName}Info.class)
-        );
-
-        return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
-    }
-
-    <#else>
-
-    /**
-     * 缓存事件监听器
-     */
-    protected SpringCacheEventListener springCacheEventListener() {
-        return (ctx, cache, action, key, value) -> cache.evict("${entityName}List");
-    }
-
-    /**
-    * 加载${entityTitle}列表
-    *
-    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
-    *
-    * @return
-    */
-    @Override
-    public List<${entityName}Info> load${entityName}List(Predicate<${entityName}Info> filter) {
-
-        List<${entityName}Info> dataList = ${serviceName?uncap_first}.getCache("${entityName}List",
-                (key) -> {
-                    Consumer<SelectDao<?>> ex = dao -> dao 
-                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
-                         //排序码排序
-                         .orderBy(E_${entityName}.orderCode)
-                         </#if>
-                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-                         //时间倒序
-                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
-                         </#if>
-			             .setSafeModeMaxLimit(-1)
-                         .disableSafeMode();
-
-                    //最多2万条记录
-                    return ${serviceName?uncap_first}.query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
-                }
-        );
-
-        return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
-    }
-   </#if>
-    /**
-     * 获取缓存
-     *
-     * @param keySuffix 缓存Key后缀，不包含前缀
-     * @return 缓存数据
-     */
-    @Override
-    public <T> T getCacheByKeySuffix(String keySuffix) {
-        Assert.notBlank(keySuffix, "keySuffix is empty");
-        return getSelfProxy().getCache(CK_PREFIX + keySuffix, null);
-    }
-
-    /**
-     * 清除缓存
-     *
-     * @param keySuffix 缓存Key后缀，不包含前缀
-     */
-    @Override
-    public void clearCacheByKeySuffix(String keySuffix) {
-        Assert.notBlank(keySuffix, "keySuffix is empty");
-        getSelfProxy().clearCache(CK_PREFIX + keySuffix);
-    }
-                        
     /**
     * 获取缓存
     *
@@ -583,7 +328,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @param valueLoader 缓存没有，则从加载函数加载
     * @return 缓存数据
     */
-    @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存key")
+    @Operation(summary = GET_CACHE_ACTION, description = "通常是主键ID")
     @Cacheable(unless = "#valueLoader == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
     public <T> T getCache(String key, Function<String,T> valueLoader){
         Assert.notBlank(key, "key is empty");
@@ -595,7 +340,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @param key 缓存Key
     */
     @Override
-    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key，完整的缓存key")
+    @Operation(summary = CLEAR_CACHE_ACTION, description = "缓存Key，通常是主键标识")
     @CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")
     public void clearCache(String key) {
         Assert.notBlank(key, "key is empty");
@@ -610,7 +355,5 @@ public class ${className} extends BaseService<${className}> implements ${service
     @CacheEvict(allEntries = true)
     public void clearAllCache() {
     }
-////////////////////////////////////// 缓存支持  ///////////////////////////////////////
 
-</#if>
 }
