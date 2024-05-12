@@ -52,11 +52,11 @@ public interface ${className} {
     String SERVICE_BEAN_NAME = PLUGIN_PREFIX + SERVICE_NAME;
 
     /**
+    * 获取实体类
     */
     default Class<?> getEntityClass() {
         return ${entityName}.class;
     }
-
 
     /**
      * 查询记录
@@ -221,6 +221,71 @@ public interface ${className} {
     int batchDelete(Query${entityName}Req req, Object... queryObjs);
 
     /**
+     * 有效数据过滤器
+     *
+     * @return
+     */
+    default Predicate<${entityName}Info> defaultEffectiveDataFilter() {
+        return info -> {
+            return info != null
+                         <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
+                          //启用的
+                          && Boolean.TRUE.equals(info.getEnable())
+                         </#if>
+                         <#if classModel.isType('com.levin.commons.dao.domain.StatefulObject')>
+                         //状态正常的
+                         //info.getState() == State.NORMAL
+                         </#if>
+                         <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+                         //未过期的
+                         && (info.getExpiredTime() == null || info.getExpiredTime().after(new Date()))
+                         </#if>
+            ;
+        };
+    }
+
+<#if isCacheableEntity>
+
+    <#if isMultiTenantObject>
+        <#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
+    /**
+    * 加载租户的缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * tenantId 为 null 时加载公共${entityTitle}
+    *
+    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @return
+    */
+    List<${entityName}Info> loadCacheList(String tenantId, Predicate<${entityName}Info> filter);
+
+        <#else>
+    /**
+    * 加载租户的缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * tenantId 为 null 时加载公共${entityTitle}
+    *
+    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @return
+    */
+    List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter);
+
+        </#if>
+    <#else>
+    /**
+    * 加载缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * @return
+    */
+    List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter);
+
+    </#if>
+    /**
      * 获取缓存
      *
      * @param keySuffix 缓存Key后缀，不包含前缀
@@ -267,4 +332,5 @@ public interface ${className} {
     @Operation(summary = CLEAR_CACHE_ACTION, description = "清除所有缓存")
     void clearAllCache();
 
+</#if>
 }

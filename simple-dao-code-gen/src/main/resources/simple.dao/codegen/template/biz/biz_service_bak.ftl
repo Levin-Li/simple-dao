@@ -47,6 +47,48 @@ import ${imp};
 
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 public interface ${className} {
+
+<#if isCacheableEntity && isMultiTenantObject>
+
+<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
+    /**
+    * 加载租户的缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * tenantId 为 null 时加载公共${entityTitle}
+    *
+    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @return
+    */
+    List<${entityName}Info> loadCacheList(String tenantId);
+
+<#else>
+    /**
+    * 加载租户的缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * tenantId 为 null 时加载公共${entityTitle}
+    *
+    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @return
+    */
+    List<${entityName}Info> loadCacheListByTenant(String tenantId);
+</#if>
+
+<#elseif isCacheableEntity>
+
+    /**
+    * 加载缓存${entityTitle}列表
+    *
+    * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
+    *
+    * @return
+    */
+    List<${entityName}Info> load${entityName}List();
+</#if>
+
     /**
     * 统计
     *

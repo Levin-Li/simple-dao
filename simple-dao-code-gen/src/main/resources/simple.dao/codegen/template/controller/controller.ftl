@@ -264,7 +264,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         return batchDelete(req);
     }
-
+<#if isCacheableEntity>
+////////////////////////////////////// 缓存支持  ///////////////////////////////////////
     /**
     * 清除缓存
     */
@@ -285,4 +286,5 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
         return ApiResp.ok(true);
     }
 
+</#if>
 }

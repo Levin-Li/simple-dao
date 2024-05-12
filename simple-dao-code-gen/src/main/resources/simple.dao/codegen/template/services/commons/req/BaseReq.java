@@ -47,28 +47,43 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
 
     public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
+
+    public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
+    public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
+
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
+    public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
+
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
+
+    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_USER = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_USER + ") ";
 
     public static final String NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
-    @Schema(title = "是否是web请求", hidden = true)
     @Ignore
     protected boolean isWebContext = true;
 
-    @Schema(title = "是否超级管理员", hidden = true)
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
     @Ignore
     protected boolean isSuperAdmin = false;
 
-    @Schema(title = "是否租户管理员", hidden = true)
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_ADMIN)
+    @Ignore
+    protected boolean isSaasAdmin = false;
+
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_USER)
+    @Ignore
+    protected boolean isSaasUser = false;
+
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
     @Ignore
     protected boolean isTenantAdmin = false;
+
+    ///////////////////////////////////////////////////////////////////////
 
     @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
     @Schema(title = "IP地址", hidden = true)
@@ -96,6 +111,16 @@ public abstract class BaseReq implements ServiceReq {
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
+    }
+
+    @Schema(title = "是否SAAS管理员", hidden = true)
+    public boolean isSaasAdmin() {
+        return this.isSaasAdmin;
+    }
+
+    @Schema(title = "是否SAAS用户", hidden = true)
+    public boolean isSaasUser() {
+        return this.isSaasUser;
     }
 
     @Schema(title = "是否租户管理员", hidden = true)

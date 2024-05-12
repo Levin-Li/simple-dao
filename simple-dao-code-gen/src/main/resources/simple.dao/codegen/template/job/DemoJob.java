@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -114,7 +115,7 @@ public class DemoJob
         //@todo 查询出要批处理的记录ID
         return simpleDao.selectFrom(TestEntity.class)
                 .select(E_TestEntity.id)
-                .gt(E_TestEntity.createTime, ((int) (startTime / 1000L)))
+                .gt(E_TestEntity.createTime, new Date())
                 .page(pageIndex, pageSize)
                 .find();
     }
