@@ -136,7 +136,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
              // .eq(${entityName}::getEnable, true)
           .end() //OR 语句结束
 
-          .setSafeModeMaxLimit(-1);
+          .setSafeModeMaxLimit(-1).disableSafeMode();
           };
 
         return simpleDao.findOneByQueryObj(req, paging, callback);

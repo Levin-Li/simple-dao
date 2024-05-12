@@ -542,8 +542,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                          //时间倒序
                          .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
                          </#if>
-			             .setSafeModeMaxLimit(-1)
-                         .disableSafeMode();
+			             .setSafeModeMaxLimit(-1).disableSafeMode();
 
                     //最多2万条记录
                     return getSelfProxy().query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
