@@ -30,10 +30,9 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
         extends MultiTenantOrgReq<T>
         implements PersonalObject {
 
-    //注意需要在注入服务中设置isTenantAdmin变量
     @InjectVar(value = InjectConst.USER_ID
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
     @Eq
@@ -48,5 +47,4 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
         this.ownerId = ownerId;
         return (T) this;
     }
-
 }

@@ -54,6 +54,8 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
+    
+    public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
 
     public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
 
@@ -61,7 +63,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_USER = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_USER + ") ";
 
-    public static final String NOT_SUPER_ADMIN_AND_NOT_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
+    public static final String NOT_SUPER_SAAS_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
     @Ignore
