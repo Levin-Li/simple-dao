@@ -1,6 +1,7 @@
 package ${modulePackageName}.services.commons.req;
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -32,7 +33,10 @@ public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
-    @Eq
+    @Eq(condition = "#isNotEmpty(#_fieldVal) && (!(#_isUpdate) || (!isSuperAdmin && !isSaasAdmin && !isTenantAdmin))"
+            , desc = "如果不是管理员进行更新操作，都加这个条件")
+    @Update(condition = "(#_isUpdate) && (isSuperAdmin || isSaasAdmin || isTenantAdmin) " +
+            " && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更这个数据")
     protected String ownerId;
 
     /**

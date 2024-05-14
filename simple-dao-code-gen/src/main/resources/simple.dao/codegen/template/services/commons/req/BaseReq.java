@@ -131,6 +131,15 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     /**
+     * 是否强制更新字段
+     * @param fieldName
+     * @return
+     */
+    protected boolean isForceUpdateField(String fieldName) {
+        return false;
+    }
+
+    /**
      * 是否非空
      * @param value
      * @return

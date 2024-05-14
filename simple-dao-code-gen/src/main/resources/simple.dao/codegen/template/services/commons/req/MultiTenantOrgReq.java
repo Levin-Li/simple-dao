@@ -5,6 +5,7 @@ import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -49,11 +50,10 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     @Schema(title = "机构ID列表", description = "查询指定机构的数据，未指定时默认查询所有有权限的数据, 该参数只对查询操作有效")
     @OrderBy(condition = "enableDefaultOrderBy && #_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal) && !isOrgShared()", value = InjectConst.ORG_ID,
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
-    @OR(autoClose = true, condition = "#_isQuery", desc = "本注解只对查询生效")
+    @OR(autoClose = true, desc = "查询、更新和删除都会增加这个条件")
     @In(InjectConst.ORG_ID)
     @IsNull(condition = "#_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
     @Eq(condition = "#_isQuery && !isAllOrgScope && isOrgShared()", value = "orgShared", paramExpr = "true", desc = "如果有可共享的部门数据，允许包括非该部门的数据")
-    //@Validator(expr = "isAllOrgScope || !(#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "如果不是超管 也不是 租户管理员，那么值是必须的")
     protected Collection<String> orgIdList;
 
     //注入当前用户有权限的机构ID列表
@@ -61,9 +61,8 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID", description = "创建、更新或删除指定的机构的数据, 该参数只对非查询有效，机构ID默认从当前用户获取")
-    @Eq(condition = "!(#_isQuery) && #isNotEmpty(#_fieldVal)", desc = "本注解只对更新生效")
-    //@Validator(expr = "isAllOrgScope || (#_isQuery) || #isNotEmpty(#_fieldVal)" , promptInfo = "orgId-不能为空")
+    @Schema(title = "机构ID", description = "通常用于创建和更新orgId，机构ID默认从当前用户获取")
+    @Update(condition = "(#_isUpdate) && (isSuperAdmin || isSaasAdmin || isTenantAdmin) && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID") // 正常来说只允许管理员修改部门数据的归属 (isSuperAdmin || isSaasAdmin || isTenantAdmin)
     protected String orgId;
 
     @Schema(title = "组织机构名称", hidden = true)
