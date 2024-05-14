@@ -286,7 +286,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     <#else>
     public List<Boolean> batchCreate(List<Create${entityName}Req> reqList){
 </#if>
-        return reqList.stream().map(this::create).collect(Collectors.toList());
+        return reqList.stream().map(req -> getSelfProxy().create(req)).collect(Collectors.toList());
     }
 
     @Operation(summary = UPDATE_ACTION)
