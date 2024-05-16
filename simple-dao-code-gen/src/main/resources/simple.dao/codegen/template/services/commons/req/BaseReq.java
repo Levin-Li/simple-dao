@@ -49,6 +49,7 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
 
     public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
+
     public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
@@ -61,7 +62,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
 
-    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_USER = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_USER + ") ";
+    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + ") ";
 
     public static final String NOT_SUPER_SAAS_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
@@ -114,17 +115,14 @@ public abstract class BaseReq implements ServiceReq {
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
     }
-
     @Schema(title = "是否SAAS管理员", hidden = true)
     public boolean isSaasAdmin() {
         return this.isSaasAdmin;
     }
-
     @Schema(title = "是否SAAS用户", hidden = true)
     public boolean isSaasUser() {
         return this.isSaasUser;
     }
-
     @Schema(title = "是否租户管理员", hidden = true)
     public boolean isTenantAdmin() {
         return this.isTenantAdmin;

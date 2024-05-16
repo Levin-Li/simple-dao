@@ -48,11 +48,11 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "机构ID列表", description = "查询指定机构的数据，未指定时默认查询所有有权限的数据, 该参数只对查询操作有效")
-    @OrderBy(condition = "enableDefaultOrderBy && #_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal) && !isOrgShared()", value = InjectConst.ORG_ID,
+    @OrderBy(condition = "enableDefaultOrderBy && #_isQuery && !(isSuperAdmin || isSaasAdmin || isTenantAdmin) && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal) && !isOrgShared()", value = InjectConst.ORG_ID,
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
     @OR(autoClose = true, desc = "查询、更新和删除都会增加这个条件")
     @In(InjectConst.ORG_ID)
-    @IsNull(condition = "#_isQuery && !isSuperAdmin && !isTenantAdmin && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
+    @IsNull(condition = "#_isQuery && !(isSuperAdmin || isSaasAdmin || isTenantAdmin) && !isAllOrgScope && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
     @Eq(condition = "#_isQuery && !isAllOrgScope && isOrgShared()", value = "orgShared", paramExpr = "true", desc = "如果有可共享的部门数据，允许包括非该部门的数据")
     protected Collection<String> orgIdList;
 
