@@ -5,19 +5,17 @@ import com.levin.commons.dao.annotation.misc.Case;
 import java.lang.annotation.*;
 
 /**
- * <p>NotLike class.</p>
+ * <p>StartsWith class.</p>
  *
  * @author llw
  * @version 2.0.0
  */
-@Repeatable(NotLike.List.class)
+@Repeatable(NotStartsWith.List.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-
-public @interface NotLike {
-
+public @interface NotStartsWith {
 
     /**
      *
@@ -191,6 +189,7 @@ public @interface NotLike {
      */
     String desc() default "语句表达式生成规则： surroundPrefix + op.gen( fieldFuncs( fieldCases(domain.fieldName) ), paramFuncs( fieldCases([ paramExpr(优先) or 参数占位符 ])) ) +  surroundSuffix";
 
+
     /**
      * 列表
      */
@@ -221,6 +220,6 @@ public @interface NotLike {
          *
          * @return
          */
-        NotLike[] value();
+        NotStartsWith[] value();
     }
 }

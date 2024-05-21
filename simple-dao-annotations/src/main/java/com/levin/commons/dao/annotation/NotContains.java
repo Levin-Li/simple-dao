@@ -5,19 +5,17 @@ import com.levin.commons.dao.annotation.misc.Case;
 import java.lang.annotation.*;
 
 /**
- * <p>NotLike class.</p>
+ * <p>Contains class.</p>
  *
  * @author llw
  * @version 2.0.0
  */
-@Repeatable(NotLike.List.class)
+@Repeatable(NotContains.List.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-
-public @interface NotLike {
-
+public @interface NotContains {
 
     /**
      *
@@ -94,6 +92,7 @@ public @interface NotLike {
      * @return
      */
     boolean filterNullValue() default true;
+
 
     /**
      * 左操作数（字段） Case 选项
@@ -221,6 +220,6 @@ public @interface NotLike {
          *
          * @return
          */
-        NotLike[] value();
+        NotContains[] value();
     }
 }

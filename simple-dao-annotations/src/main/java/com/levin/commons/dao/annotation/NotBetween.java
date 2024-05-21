@@ -4,20 +4,25 @@ import com.levin.commons.dao.annotation.misc.Case;
 
 import java.lang.annotation.*;
 
-/**
- * <p>NotLike class.</p>
- *
- * @author llw
- * @version 2.0.0
- */
-@Repeatable(NotLike.List.class)
+
+@Repeatable(NotBetween.List.class)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 
-public @interface NotLike {
-
+//在选项中
+/**
+ *
+ *
+ * 如果少于2个参数，语句将自动转换为大于等于
+ *
+ *
+ *
+ * @author llw
+ * @version 2.0.0
+ */
+public @interface NotBetween {
 
     /**
      *
@@ -25,13 +30,6 @@ public @interface NotLike {
      *
      *
      */
-
-    /**
-     * 操作
-     *
-     * @return
-     */
-//    Op op() default Op.Eq;
 
     /**
      * 查询字段名称，默认为字段的属性名称
@@ -44,47 +42,11 @@ public @interface NotLike {
 
 
     /**
-     * 是否是having 操作
-     * <p>
-     * 只针对查询有效
+     * 操作
      *
      * @return
      */
-    boolean having() default false;
-
-
-    /**
-     * 是否用 NOT () 包围
-     *
-     * @return
-     */
-    boolean not() default false;
-
-
-    /**
-     * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
-     *
-     * @return
-     */
-    boolean require() default false;
-
-
-    /**
-     * 表达式，默认为SPEL
-     * <p>
-     * <p>
-     * 如果用 groovy:  做为前缀则是 groovy脚本
-     * <p>
-     *
-     *
-     * <p>
-     * <p>
-     * <p/>
-     * 当条件成立时，整个条件才会被加入
-     *
-     * @return
-     */
-    String condition() default C.VALUE_NOT_EMPTY;
+//    Op op() default Op.Eq;
 
     /**
      * 是否过滤数组参数或是列表参数中的空值
@@ -146,6 +108,30 @@ public @interface NotLike {
      */
     Func[] paramFuncs() default {};
 
+    /**
+     * 是否是必须的，如果条件不匹配，但又是必须的，将抛出异常
+     *
+     * @return
+     */
+    boolean require() default false;
+
+    /**
+     * 表达式，默认为SPEL
+     * <p>
+     * <p>
+     * 如果用 groovy:  做为前缀则是 groovy脚本
+     * <p>
+     *
+     *
+     * <p>
+     * <p>
+     * <p/>
+     * 当条件成立时，整个条件才会被加入
+     *
+     * @return
+     */
+    String condition() default C.VALUE_NOT_EMPTY;
+
 
     /**
      * 对整个表达式的包围前缀
@@ -175,6 +161,26 @@ public @interface NotLike {
      * @return
      */
     String paramExpr() default "";
+
+
+    /**
+     * 数据类型转换模板
+     * 通常是date类型转换
+     * 默认会尝试各种常见的格式
+     *
+     * @return
+     */
+    String[] patterns() default {};
+
+
+    /**
+     * Between 参数之间的分隔符，仅对参数是字符串时有效
+     * <p>
+     * 通常用于时间，如： 2020-01-01|2020-03-01
+     *
+     * @return
+     */
+    String paramDelimiter() default ",";
 
 
     /**
@@ -221,6 +227,6 @@ public @interface NotLike {
          *
          * @return
          */
-        NotLike[] value();
+        NotBetween[] value();
     }
 }
