@@ -60,7 +60,7 @@ public interface SelectDao<T> extends
      */
     default <E> PagingData<E> findPaging(Class<? extends E> resultType, Paging paging) {
         return new DefaultPagingData<E>()
-                .setItems(paging.isRequireResultList() ? (List<E>) find(resultType) : null)
+                .setItems(paging.isRequireResultList() ? (List<E>) page(paging).find(resultType) : null)
                 .setTotals(paging.isRequireTotals() ? count() : -1L)
                 .setPageIndex(paging.getPageIndex())
                 .setPageSize(paging.getPageSize())

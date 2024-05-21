@@ -286,7 +286,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     <#else>
     public List<Boolean> batchCreate(List<Create${entityName}Req> reqList){
 </#if>
-        return reqList.stream().map(this::create).collect(Collectors.toList());
+        return reqList.stream().map(req -> getSelfProxy().create(req)).collect(Collectors.toList());
     }
 
     @Operation(summary = UPDATE_ACTION)
@@ -410,13 +410,13 @@ public class ${className} extends BaseService<${className}> implements ${service
 
 	<#if classModel.isType('com.levin.commons.dao.domain.MultiTenantPublicObject')>
     /**
-    * 加载租户的缓存${entityTitle}列表
+    * 加载租户的缓存${entityTitle}列表，自动把公共数据合并进去
     *
     * 注意：数据量大的数据，请不要使用缓存，将导致缓存爆满
     *
     * tenantId 为 null 时加载公共${entityTitle}
     *
-    * @param tenantId 可为null，为 null 时加载公共${entityTitle}
+    * @param tenantId 可为null，为 null 时仅加载公共${entityTitle}
     * @return
     */
     @Override
@@ -450,9 +450,11 @@ public class ${className} extends BaseService<${className}> implements ${service
                     List<String> attrs = Arrays.asList(selfOverridable.overrideColumnNames());
 
                     final List<${entityName}Info> finalSelfDataList = selfDataList;
+
+                    //从公共数据中去除本租户已经有的数据
                     publicDataList.removeIf(m1 -> {
                                 String key = simpleDao.getAttrValues(m1, attrs).stream().map(String::valueOf).collect(Collectors.joining(":"));
-
+                                //字符串
                                 return finalSelfDataList.stream().anyMatch(m2 ->
                                         key.equals(simpleDao.getAttrValues(m2, attrs).stream().map(String::valueOf).collect(Collectors.joining(":")))
                                 );
@@ -545,7 +547,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 			             .setSafeModeMaxLimit(-1).disableSafeMode();
 
                     //最多2万条记录
-                    return getSelfProxy().query(new Query${entityName}Req().setEnable(true), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
+                    return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
                 }
         );
 

@@ -29,6 +29,7 @@ public enum Op
     Lt("<"), Lte("<="),
 
     Between(),
+    NotBetween("NOT Between"),
 
     //null 判读，只需要左操作数
     IsNull("IS NULL", null),
@@ -49,11 +50,14 @@ public enum Op
 
     //20210425号修复这个 bug，原来使用 || 连接符
     // 函数形式，为了更好的兼容性，使用嵌套函数
-    Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
+    // Contains("LIKE", "CONCAT('%',CONCAT(", ",'%'))"),
     //改成 JPA 2.0 支持多于2个参数的形式
-//    Contains("LIKE", "CONCAT('%',", ",'%')"),
+    Contains("LIKE", "CONCAT('%',", ",'%')"),
+    NotContains("NOT LIKE", "CONCAT('%',", ",'%')"),
     StartsWith("LIKE", "CONCAT(", ",'%')"),
+    NotStartsWith("NOT LIKE", "CONCAT(", ",'%')"),
     EndsWith("LIKE", "CONCAT('%',", ")"),
+    NotEndsWith("NOT LIKE", "CONCAT('%',", ")"),
 
     //
     In("IN", "(", ")"),

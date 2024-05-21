@@ -30,13 +30,13 @@
         <levin.service-support.groupId>${service_support__groupId}</levin.service-support.groupId>
         <levin.service-support.version>${service_support__version}</levin.service-support.version>
 
-        <levin-framework-base.version>2.0.6</levin-framework-base.version>
+        <levin-framework-base.version>2.2.1</levin-framework-base.version>
 
         <easyexcel.version>3.2.1</easyexcel.version>
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
 
-        <sa-token.version>1.37.0</sa-token.version>
+        <sa-token.version>1.38.0</sa-token.version>
         <fastjson.version>1.2.83</fastjson.version>
         <fastjson2.version>2.0.42</fastjson2.version>
 
@@ -56,6 +56,16 @@
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
         <com.github.oshi.version>3.12.2</com.github.oshi.version>
+
+        <IJPay.version>2.9.3</IJPay.version>
+
+        <x-file-storage.version>2.1.0</x-file-storage.version>
+
+        <Happy-Captcha.version>1.0.1</Happy-Captcha.version>
+        <egzosn-pay.version>2.14.4-fix</egzosn-pay.version>
+        <net.guerlab.sms.version>2.1.0</net.guerlab.sms.version>
+
+        <org.dromara.sms4j.version>3.2.1</org.dromara.sms4j.version>
 
         <openfeign.version>3.1.5</openfeign.version>
 

@@ -240,6 +240,28 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
         return TRUE.equals(isAppend) ? between(attrReadFunction, paramValues) : (T) this;
     }
 
+
+    /**
+     * field not Between ? and ? and ?
+     * or
+     * field >= ?
+     *
+     * @return
+     */
+    T notBetween(String entityAttrName, Object... paramValues);
+
+    default T notBetween(Boolean isAppend, String entityAttrName, Object... paramValues) {
+        return TRUE.equals(isAppend) ? notBetween(entityAttrName, paramValues) : (T) this;
+    }
+
+    default T notBetween(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
+        return notBetween(attrReadFunction.get(), paramValues);
+    }
+
+    default T notBetween(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
+        return TRUE.equals(isAppend) ? notBetween(attrReadFunction, paramValues) : (T) this;
+    }
+
     /**
      * field in (?...)
      *
@@ -299,6 +321,20 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
         return TRUE.equals(isAppend) ? contains(attrReadFunction, keyword) : (T) this;
     }
 
+    T notContains(String entityAttrName, String keyword);
+
+    default T notContains(Boolean isAppend, String entityAttrName, String keyword) {
+        return TRUE.equals(isAppend) ? notContains(entityAttrName, keyword) : (T) this;
+    }
+
+    default T notContains(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return notContains(attrReadFunction.get(), keyword);
+    }
+
+    default T notContains(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return TRUE.equals(isAppend) ? notContains(attrReadFunction, keyword) : (T) this;
+    }
+
     /**
      * like keyword%
      *
@@ -319,6 +355,25 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * like keyword%
+     *
+     * @return
+     */
+    T notStartsWith(String entityAttrName, String keyword);
+
+    default T notStartsWith(Boolean isAppend, String entityAttrName, String keyword) {
+        return TRUE.equals(isAppend) ? notStartsWith(entityAttrName, keyword) : (T) this;
+    }
+
+    default T notStartsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return notStartsWith(attrReadFunction.get(), keyword);
+    }
+
+    default T notStartsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return TRUE.equals(isAppend) ? notStartsWith(attrReadFunction, keyword) : (T) this;
+    }
+
+    /**
      * like %keyword
      *
      * @return
@@ -335,6 +390,25 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T endsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
         return TRUE.equals(isAppend) ? endsWith(attrReadFunction, keyword) : (T) this;
+    }
+
+    /**
+     * like %keyword
+     *
+     * @return
+     */
+    T notEndsWith(String entityAttrName, String keyword);
+
+    default T notEndsWith(Boolean isAppend, String entityAttrName, String keyword) {
+        return TRUE.equals(isAppend) ? notEndsWith(entityAttrName, keyword) : (T) this;
+    }
+
+    default T notEndsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return notEndsWith(attrReadFunction.get(), keyword);
+    }
+
+    default T notEndsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
+        return TRUE.equals(isAppend) ? notEndsWith(attrReadFunction, keyword) : (T) this;
     }
 
     /**

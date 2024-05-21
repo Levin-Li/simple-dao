@@ -756,6 +756,20 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     /**
+     * field not between ? and ? and ?
+     * or
+     * field >= ?
+     *
+     * @param entityAttrName
+     * @param paramValues
+     * @return
+     */
+    @Override
+    public T notBetween(String entityAttrName, Object... paramValues) {
+        return processAnno(2, entityAttrName, paramValues);
+    }
+
+    /**
      * field in (?...)
      *
      * @param entityAttrName
@@ -851,6 +865,18 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     /**
+     * not like %keyword%
+     *
+     * @param entityAttrName
+     * @param keyword
+     * @return
+     */
+    @Override
+    public T notContains(String entityAttrName, String keyword) {
+        return processAnno(2, entityAttrName, keyword);
+    }
+
+    /**
      * like keyword%
      *
      * @param entityAttrName
@@ -871,6 +897,29 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     @Override
     public T endsWith(String entityAttrName, String keyword) {
+        return processAnno(2, entityAttrName, keyword);
+    }
+    /**
+     * like keyword%
+     *
+     * @param entityAttrName
+     * @param keyword
+     * @return
+     */
+    @Override
+    public T notStartsWith(String entityAttrName, String keyword) {
+        return processAnno(2, entityAttrName, keyword);
+    }
+
+    /**
+     * like %keyword
+     *
+     * @param entityAttrName
+     * @param keyword
+     * @return
+     */
+    @Override
+    public T notEndsWith(String entityAttrName, String keyword) {
         return processAnno(2, entityAttrName, keyword);
     }
 

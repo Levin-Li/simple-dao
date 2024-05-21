@@ -2,6 +2,7 @@ package com.levin.commons.dao.util;
 
 
 import com.levin.commons.dao.DaoContext;
+import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -52,21 +53,34 @@ public abstract class QueryAnnotationUtil {
 
 
     @Eq
+    @NotEq
+
     @Gt
     @Gte
-    @In
-    @Between
-    @Like
-    @Contains
-    @StartsWith
-    @EndsWith
     @Lt
     @Lte
+
+    @In
+    @NotIn
+
+    @Between
+    @NotBetween
+
+    @Like
+    @NotLike
+
+    @Contains
+    @NotContains
+
+    @StartsWith
+    @NotStartsWith
+
+    @EndsWith
+    @NotEndsWith
+
     @Where
 /////////////////////////////////
-    @NotEq
-    @NotIn
-    @NotLike
+
     @IsNotNull
     @IsNull
 
@@ -80,6 +94,7 @@ public abstract class QueryAnnotationUtil {
     //逻辑注解
     @AND
     @OR
+    @NOT
     @END
 
     //统计注解
@@ -95,10 +110,8 @@ public abstract class QueryAnnotationUtil {
     @SimpleOrderBy
     /////////////////////////////////
     @Select
-//    @SelectColumn
 
     @Update
-//    @UpdateColumn
 
     private static final Map<String, Annotation> allInstanceMap;
 
