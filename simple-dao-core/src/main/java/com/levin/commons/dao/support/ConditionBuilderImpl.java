@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -223,11 +224,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     protected EntityOption getEntityOption() {
-
-        //
-        return hasEntityClass() ? entityClass.getAnnotation(EntityOption.class) : null;
-
-        // QueryAnnotationUtil.getEntityOption(entityClass);
+        return hasEntityClass() ? AnnotatedElementUtils.findMergedAnnotation(entityClass, EntityOption.class) : null;
     }
 
     protected void checkAction(EntityOption.Action action, Consumer checkFailCallback) {
@@ -899,6 +896,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     public T endsWith(String entityAttrName, String keyword) {
         return processAnno(2, entityAttrName, keyword);
     }
+
     /**
      * like keyword%
      *
@@ -1345,8 +1343,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         }
 
         //先设置方法上的注解
-        setTargetOption(null, method.getAnnotation(TargetOption.class));
-        setTargetOption(null, method.getDeclaringClass().getAnnotation(TargetOption.class));
+        setTargetOption(null, AnnotatedElementUtils.findMergedAnnotation(method, TargetOption.class));
+        setTargetOption(null, AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), TargetOption.class));
 
     }
 
@@ -1462,8 +1460,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //3、设置参数实体类，第4优先级
         queryObjList.stream().filter(Objects::nonNull)
                 .map(o -> (o instanceof Class) ? (Class<?>) o : o.getClass())
-                .filter(c -> c.isAnnotationPresent(TargetOption.class))
-                .forEachOrdered(c -> setTargetOption(null, c.getAnnotation(TargetOption.class)));
+                .map(c -> AnnotatedElementUtils.findMergedAnnotation(c, TargetOption.class))
+                .forEachOrdered(a -> setTargetOption(null, a));
 
         for (Object queryValueObj : queryObjList) {
 

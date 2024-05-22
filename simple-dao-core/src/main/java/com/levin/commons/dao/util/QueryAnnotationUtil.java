@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -168,6 +169,16 @@ public abstract class QueryAnnotationUtil {
         return allInstanceMap;
     }
 
+
+    public static <A extends Annotation> A findAnnotation(AnnotatedElement annotatedElement, Class<A> type, A defaultValue) {
+
+        if (annotatedElement == null) {
+            return defaultValue;
+        }
+        A mergedAnnotation = AnnotatedElementUtils.findMergedAnnotation(annotatedElement, type);
+
+        return mergedAnnotation != null ? mergedAnnotation : defaultValue;
+    }
 
     /**
      * 获取目标类的注入域
