@@ -6,6 +6,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.TargetOption;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import javax.persistence.Column;
 import java.lang.reflect.Field;
@@ -58,9 +59,10 @@ public abstract class BeanStrFieldUtils {
         return fillNullStrFields(bean, null, ignoreFields);
     }
 
-    public static <T> T fillNullStrFieldsByEntityClass(T bean ) {
+    public static <T> T fillNullStrFieldsByEntityClass(T bean) {
         return fillNullStrFields(bean, (Class<?>) null);
     }
+
     /**
      * 根据实体类的定义，自动填充字符串属性
      *
@@ -89,10 +91,10 @@ public abstract class BeanStrFieldUtils {
         }
 
         // 尝试取出目标实体类
-        if (entityClass == null
-                && bean.getClass().isAnnotationPresent(TargetOption.class)) {
+        if (entityClass == null) {
+            TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation(entityClass, TargetOption.class);
             // 取出目标实体类
-            entityClass = bean.getClass().getAnnotation(TargetOption.class).entityClass();
+            entityClass = targetOption != null ? targetOption.entityClass() : null;
         }
 
         Assert.isTrue(entityClass != null

@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -626,7 +627,7 @@ public class JpaDaoImpl
             return (E) entityOrDto;
         }
 
-        TargetOption targetOption = entityOrDtoClass.getAnnotation(TargetOption.class);
+        TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation(entityOrDtoClass, TargetOption.class);
 
         //如果没有指定实体类，不做处理
         if (targetOption == null) {
@@ -1094,12 +1095,11 @@ public class JpaDaoImpl
         }
 
         //尝试自动获取实体类
-        if (!isEntityClass(entityClass)
-                && entityClass.isAnnotationPresent(TargetOption.class)) {
+        if (!isEntityClass(entityClass)) {
 
-            TargetOption targetOption = entityClass.getAnnotation(TargetOption.class);
+            TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation(entityClass, TargetOption.class);
 
-            entityClass = targetOption.entityClass();
+            entityClass = targetOption != null ? targetOption.entityClass() : null;
         }
 
         Assert.isTrue(isEntityClass(entityClass), "查询目标实体未明确");
@@ -1583,7 +1583,7 @@ public class JpaDaoImpl
                 }
             }
 
-            TargetOption targetOption = queryObj.getClass().getAnnotation(TargetOption.class);
+            TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation( queryObj.getClass(), TargetOption.class);
 
             //注解优先
             if (targetOption != null) {
@@ -1593,7 +1593,7 @@ public class JpaDaoImpl
                 }
             }
 
-            ResultOption resultOption = queryObj.getClass().getAnnotation(ResultOption.class);
+            ResultOption resultOption =  AnnotatedElementUtils.findMergedAnnotation( queryObj.getClass(), ResultOption.class);
 
             //注解优先
             if (resultOption != null) {
