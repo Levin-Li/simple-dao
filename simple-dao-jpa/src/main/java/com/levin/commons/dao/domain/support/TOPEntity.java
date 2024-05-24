@@ -32,9 +32,4 @@ public abstract class TOPEntity extends AbstractMultiTenantOrgObject
     @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     protected String ownerId;
 
-    @Schema(title = "个人所有者名称", description = "数据或是记录的所有者ID，通常是用户ID")
-    @Column
-    @InjectVar(value = InjectConst.USER_NAME, isRequired = "false")
-    protected String ownerName;
-
 }
