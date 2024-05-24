@@ -17,7 +17,12 @@ import javax.persistence.*;
 @Accessors(chain = true)
 @MappedSuperclass
 public abstract class TOPEntity extends AbstractMultiTenantOrgObject
-        implements MultiTenantPublicObject, MultiTenantSharedObject, OrganizedPublicObject, OrganizedSharedObject, PersonalObject {
+        implements
+        MultiTenantPublicObject,
+        MultiTenantSharedObject,
+        OrganizedPublicObject,
+        OrganizedSharedObject,
+        PersonalObject {
 
     @Schema(title = "是否租户之间共享", description = "")
     @Column(nullable = false)
