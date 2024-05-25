@@ -202,9 +202,9 @@ public class ModuleWebControllerAspect {
         if (requestArgs == null
                 || requestArgs.length == 0
                 || Arrays.stream(requestArgs).allMatch(arg -> arg == null || BeanUtils.isSimpleValueType(arg.getClass()))) {
-           //todo 预处理
+            //todo 预处理
+        }
     }
-
     /**
      * 变量注入
      * <p>
@@ -214,7 +214,6 @@ public class ModuleWebControllerAspect {
      * @throws Throwable
      */
 //    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-
 //    @Around("modulePackagePointcut() && controllerPointcut()")
     public Object injectVar(ProceedingJoinPoint joinPoint) throws Throwable {
 
