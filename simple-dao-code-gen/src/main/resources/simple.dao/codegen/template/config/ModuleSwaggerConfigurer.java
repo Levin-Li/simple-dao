@@ -39,13 +39,13 @@ public class ModuleSwaggerConfigurer
     /**
      * tokenName Authorization
      */
-    @Value("${sa-token.token-name:}")
+    @Value("${r"${sa-token.token-name:}"}")
     private String tokenName = "Authorization";
 
     /**
      * swagger 枚举值和描述之间的分隔符
      */
-    @Value("${swagger.enumDelimiter:}")
+    @Value("${r"${swagger.enumDelimiter:}"}")
     private String enumDelimiter;
 
 //    @Autowired
