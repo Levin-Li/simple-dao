@@ -36,9 +36,9 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
-    @Eq(condition = "#isNotEmpty(#_fieldVal) && (!(#_isUpdate) || (!isSuperAdmin && !isSaasAdmin && !isTenantAdmin))"
+    @Eq(condition = "#isNotEmpty(#_fieldVal) && (!(#_isUpdate) || !isAdmin())"
             , desc = "如果不是管理员进行更新操作，都加这个条件")
-    @Update(condition = "(#_isUpdate) && (isSuperAdmin || isSaasAdmin || isTenantAdmin) " +
+    @Update(condition = "(#_isUpdate) && isAdmin() " +
             " && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更这个数据")
     protected String ownerId;
 

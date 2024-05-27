@@ -66,9 +66,14 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_SUPER_SAAS_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
+    /////////////////////////////////////////////////////////////////////
+
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
     @Ignore
     protected boolean isWebContext = true;
+
+
+    ///////////////////////////////////////////////////
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
     @Ignore
@@ -107,25 +112,36 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean enableDefaultOrderBy = true;
 
+    ////////////////////////////////////////////////////////////////////
+
     @Schema(title = "是否是web请求", hidden = true)
     public boolean isWebContext() {
         return this.isWebContext;
     }
+
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
     }
+
     @Schema(title = "是否SAAS管理员", hidden = true)
     public boolean isSaasAdmin() {
         return this.isSaasAdmin;
     }
+
     @Schema(title = "是否SAAS用户", hidden = true)
     public boolean isSaasUser() {
         return this.isSaasUser;
     }
+
     @Schema(title = "是否租户管理员", hidden = true)
     public boolean isTenantAdmin() {
         return this.isTenantAdmin;
+    }
+
+    @Schema(title = "是否管理员",description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
+    public boolean isAdmin() {
+        return isSuperAdmin || isSaasAdmin || isTenantAdmin;
     }
 
     /**
