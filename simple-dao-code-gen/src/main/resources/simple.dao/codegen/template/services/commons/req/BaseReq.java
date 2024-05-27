@@ -119,6 +119,11 @@ public abstract class BaseReq implements ServiceReq {
         return this.isWebContext;
     }
 
+    @Schema(title = "是否允许默认排序", hidden = true)
+    public boolean isEnableDefaultOrderBy() {
+        return this.enableDefaultOrderBy;
+    }
+
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;

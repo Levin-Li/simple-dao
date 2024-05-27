@@ -38,9 +38,9 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN // 如果不是超级管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SAAS_USER // 如果不是SAAS用户，那么值是必须的
     )
-//    @OrderBy(condition = "enableDefaultOrderBy && #_isQuery && isSaasUser && #isEmpty(#_fieldVal)", type = OrderBy.Type.Asc
+//    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && isSaasUser && #isEmpty(#_fieldVal)", type = OrderBy.Type.Asc
 //            , order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID为NULL的排在前面")
-    @OrderBy(condition = "enableDefaultOrderBy && #_isQuery && !isSaasUser() && #isNotEmpty(#_fieldVal) && isContainsPublicData() && !isTenantShared()",
+    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && !isSaasUser() && #isNotEmpty(#_fieldVal) && isContainsPublicData() && !isTenantShared()",
             order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID不为NULL的排在前面")
     @OR(autoClose = true)
     @Eq
