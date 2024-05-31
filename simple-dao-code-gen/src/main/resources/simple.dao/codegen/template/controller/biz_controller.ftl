@@ -80,8 +80,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @CRUD
 
 @Slf4j
-//禁止的操作，被禁止的操作，Swagger 文档将不显示这些方法
-@DisableApiOperation({"批量*"})
+
+@DisableApiOperation({"批量*"}) //被禁止的操作，Swagger 文档将不显示这些方法，API也将被拦截，不可访问。支持*通配符匹配，eg. @DisableApiOperation({"批量*", "method:create", "method:update","method:delete*", "path:delete/*"})
 public class ${className} extends ${entityName}Controller{
 
     //@Autowired

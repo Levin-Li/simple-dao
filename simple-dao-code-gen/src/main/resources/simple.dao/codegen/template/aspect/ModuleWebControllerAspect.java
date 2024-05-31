@@ -10,6 +10,7 @@ import com.levin.commons.service.exception.AccessDeniedException;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
 import com.levin.commons.service.domain.DisableApiOperation;
+import com.levin.commons.utils.DisableApiOperationUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ import java.util.stream.Stream;
  *
  */
 @Aspect
+@Order //重要，有多个AOP切面的时候，顺序是重要，默认顺序是最后的，值越小优先级越高
 @Slf4j
 @Component(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
@@ -191,7 +193,18 @@ public class ModuleWebControllerAspect {
 
     }
 
+    //    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
+    public void beforeProcess(JoinPoint joinPoint) throws Throwable {
 
+        Object[] requestArgs = joinPoint.getArgs();
+
+        //如果没有参数,或是空参数 或是简单参数，直接返回
+        if (requestArgs == null
+                || requestArgs.length == 0
+                || Arrays.stream(requestArgs).allMatch(arg -> arg == null || BeanUtils.isSimpleValueType(arg.getClass()))) {
+            //todo 预处理
+        }
+    }
     /**
      * 变量注入
      * <p>
@@ -201,7 +214,6 @@ public class ModuleWebControllerAspect {
      * @throws Throwable
      */
 //    @Before("modulePackagePointcut() && controllerPointcut() && requestMappingPointcut()")
-    @Order(0)
 //    @Around("modulePackagePointcut() && controllerPointcut()")
     public Object injectVar(ProceedingJoinPoint joinPoint) throws Throwable {
 
@@ -249,55 +261,11 @@ public class ModuleWebControllerAspect {
 
         Object target = joinPoint.getTarget() == null ? joinPoint.getThis() : joinPoint.getTarget();
 
-        if (!isApiEnable(target != null ? target.getClass() : method.getDeclaringClass(), method)) {
+        if (!DisableApiOperationUtils.isApiEnable(target != null ? target.getClass() : method.getDeclaringClass(), method)) {
             throw new AccessDeniedException("不可访问的API");
         }
     }
 
-    public static boolean isApiEnable(Class<?> beanType, Method method) {
-
-        if (beanType == null) {
-            beanType = method.getDeclaringClass();
-        }
-
-        DisableApiOperation disableApi = AnnotatedElementUtils.findMergedAnnotation(method, DisableApiOperation.class);
-
-        if (disableApi != null) {
-            return false;
-        }
-
-        disableApi = AnnotatedElementUtils.findMergedAnnotation(beanType, DisableApiOperation.class);
-
-        if (disableApi != null && (disableApi.value().length > 0 || disableApi.excludes().length > 0)) {
-
-            final Operation operation = AnnotatedElementUtils.findMergedAnnotation(method, Operation.class);
-            final RequestMapping requestMapping = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
-
-
-            Predicate<String[]> predicate = patterns -> Stream.of(patterns).filter(StringUtils::hasText).map(String::trim).anyMatch(
-                    txt -> txt.equals(method.getName())
-                            || txt.equals(method.toGenericString())
-                            || txt.equals(operation != null ? operation.method() : null)
-                            || txt.equals(operation != null ? operation.operationId() : null)
-                            || PatternMatchUtils.simpleMatch(txt, operation != null ? operation.summary() : null)
-                            || txt.toLowerCase().startsWith("path:") && requestMapping != null && Stream.of(requestMapping.value()).filter(StringUtils::hasText).anyMatch(path -> PatternMatchUtils.simpleMatch(txt.substring("path:".length()), path))
-            );
-
-            //如果匹配禁止的
-            if (disableApi.value().length > 0
-                    && predicate.test(disableApi.value())) {
-                return false;
-            }
-
-            //如果匹配排除的
-            if (disableApi.excludes().length > 0) {
-                return predicate.test(disableApi.excludes());
-            }
-
-        }
-
-        return true;
-    }
     public List<VariableResolver> tryInjectVar(ProceedingJoinPoint joinPoint) {
 
         final List<VariableResolver> variableResolverList = new ArrayList<>();

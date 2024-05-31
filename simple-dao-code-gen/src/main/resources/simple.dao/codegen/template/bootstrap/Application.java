@@ -33,6 +33,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -60,7 +61,9 @@ public class Application {
 
     public static void main(String... args) throws Exception {
 
-        Server server = Server.createTcpServer("-tcpAllowOthers", "-ifNotExists").start();
+        //在项目目录中启动 TCP 服务器
+        Server server = Server.createTcpServer("-tcpPort", "9092", "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
+
         System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
                 + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
 

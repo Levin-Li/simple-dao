@@ -17,7 +17,12 @@ import javax.persistence.*;
 @Accessors(chain = true)
 @MappedSuperclass
 public abstract class TOPEntity extends AbstractMultiTenantOrgObject
-        implements MultiTenantPublicObject, MultiTenantSharedObject, OrganizedPublicObject, OrganizedSharedObject, PersonalObject {
+        implements
+        MultiTenantPublicObject,
+        MultiTenantSharedObject,
+        OrganizedPublicObject,
+        OrganizedSharedObject,
+        PersonalObject {
 
     @Schema(title = "是否租户之间共享", description = "")
     @Column(nullable = false)
@@ -31,10 +36,5 @@ public abstract class TOPEntity extends AbstractMultiTenantOrgObject
     @Column(length = 64)
     @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     protected String ownerId;
-
-    @Schema(title = "个人所有者名称", description = "数据或是记录的所有者ID，通常是用户ID")
-    @Column
-    @InjectVar(value = InjectConst.USER_NAME, isRequired = "false")
-    protected String ownerName;
 
 }

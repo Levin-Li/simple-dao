@@ -892,7 +892,7 @@ public final class ServiceModelCodeGenerator {
      *
      * @param entityClass 实体类
      */
-    public static void genCodeByEntityClass(Class entityClass, String serviceDir, String controllerDir
+    public static void genCodeByEntityClass(Class<?> entityClass, String serviceDir, String controllerDir
             , Map<String, Object> entityMapping) throws Exception {
 
         entityClass(entityClass);
@@ -951,7 +951,12 @@ public final class ServiceModelCodeGenerator {
         params.put("bizBoPackageName", bizServicePackage() + boDir.replace(File.separator, "."));
         params.put("bizBoSubPackageName", boDir.replace(File.separator, "."));
 
-        EntityCategory category = (EntityCategory) entityClass.getAnnotation(EntityCategory.class);
+        EntityCategory category = entityClass.getAnnotation(EntityCategory.class);
+
+        if (category != null && category.queryObjectExtendType() != Void.class) {
+            reqExtendClass = category.queryObjectExtendType().getSimpleName();
+            params.put("reqExtendClass", reqExtendClass);
+        }
 
         if (category != null && StringUtils.hasText(category.value())) {
 
