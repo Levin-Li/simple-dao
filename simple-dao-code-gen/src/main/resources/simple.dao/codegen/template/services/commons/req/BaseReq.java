@@ -23,6 +23,7 @@ import com.levin.commons.dao.annotation.misc.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
+import javax.persistence.Column;
 import javax.validation.constraints.*;
 
 import lombok.*;
@@ -91,6 +92,9 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean isTenantAdmin = false;
 
+    @InjectVar(InjectVar.SPEL_PREFIX + "(#canVisitPersonalData?:false)")
+    @Ignore
+    protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
 
     @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
@@ -122,6 +126,11 @@ public abstract class BaseReq implements ServiceReq {
     @Schema(title = "是否允许默认排序", hidden = true)
     public boolean isEnableDefaultOrderBy() {
         return this.enableDefaultOrderBy;
+    }
+
+    @Schema(title = "是否可访问个人数据", description = "是否可以访问个人的数据", hidden = true)
+    public boolean canVisitPersonalData() {
+        return this.canVisitPersonalData;
     }
 
     @Schema(title = "是否超级管理员", hidden = true)
