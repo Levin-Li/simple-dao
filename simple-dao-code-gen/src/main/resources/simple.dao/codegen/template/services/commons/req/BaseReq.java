@@ -129,7 +129,7 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Schema(title = "是否可访问个人数据", description = "是否可以访问个人的数据", hidden = true)
-    public boolean canVisitPersonalData() {
+    public boolean isCanVisitPersonalData() {
         return this.canVisitPersonalData;
     }
 
