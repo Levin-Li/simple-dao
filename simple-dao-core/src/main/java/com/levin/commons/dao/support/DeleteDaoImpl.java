@@ -167,7 +167,7 @@ public class DeleteDaoImpl<T>
         int n = delete();
 
         if (n > 1) {
-            throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期1条", 1, n);
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期小于等于1条", 1, n);
         }
 
         return n == 1;
