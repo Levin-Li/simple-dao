@@ -29,6 +29,7 @@
         <revision>${project.version}</revision>
 
         <dubbo.version>3.2.4</dubbo.version>
+        <jd-asyncTool.version>V1.4-SNAPSHOT</jd-asyncTool.version>
 
         <spring-boot.version>2.7.12</spring-boot.version>
 
@@ -246,6 +247,14 @@
                 <groupId>org.apache.dubbo</groupId>
                 <artifactId>dubbo-dependencies-zookeeper</artifactId>
                 <version>${dubbo.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.gitee.jd-platform-opensource</groupId>
+                <artifactId>asyncTool</artifactId>
+                <version>${jd-asyncTool.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -492,8 +501,8 @@
             </dependency>
 
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-driver.version}</version>
             </dependency>
 
