@@ -43,6 +43,11 @@
         <j2cache.version>2.8.5-release</j2cache.version>
         <j2cache_starter.version>2.8.0-release</j2cache_starter.version>
 
+        <lock4j.version>2.2.7</lock4j.version>
+        <baomidou-ds.version>4.3.1</baomidou-ds.version>
+
+        <powerjob.version>5.1.0</powerjob.version>
+
         <knife4j.version>4.5.0</knife4j.version>
         <springdoc.version>1.8.0</springdoc.version>
         <springdoc.version>1.6.15</springdoc.version>
@@ -327,6 +332,53 @@
                      <scope>provided</scope>
                  </dependency>
             </#if>
+
+            <!--若使用redisTemplate作为分布式锁底层，则需要引入-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>lock4j-redis-template-spring-boot-starter</artifactId>
+                <version>${r"${lock4j.version}"}</version>
+            </dependency>
+            <!--若使用redisson作为分布式锁底层，则需要引入-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>lock4j-redisson-spring-boot-starter</artifactId>
+                <version>${r"${lock4j.version}"}</version>
+            </dependency>
+            <!--若使用zookeeper作为分布式锁底层，则需要引入-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>lock4j-zookeeper-spring-boot-starter</artifactId>
+                <version>${r"${lock4j.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${r"${baomidou-ds.version}"}</version>
+            </dependency>
+
+
+          <!--  https://www.yuque.com/powerjob/guidence/deploy_worker  -->
+          <!--  https://gitee.com/KFCFans/PowerJob  -->
+            <dependency>
+                <groupId>tech.powerjob</groupId>
+                <artifactId>powerjob-worker-spring-boot-starter</artifactId>
+                <version>${r"${powerjob.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>tech.powerjob</groupId>
+                <artifactId>powerjob-worker</artifactId>
+                <version>${r"${powerjob.version}"}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>tech.powerjob</groupId>
+                <artifactId>powerjob-official-processors</artifactId>
+                <version>${r"${powerjob.version}"}</version>
+            </dependency>
 
             <dependency>
                 <groupId>net.oschina.j2cache</groupId>

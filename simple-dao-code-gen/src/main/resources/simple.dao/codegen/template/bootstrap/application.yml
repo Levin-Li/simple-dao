@@ -82,10 +82,34 @@ spring:
         url-pattern: /druid/*
         allow: " "
 
-  #    url: jdbc:h2:./dev.db;MODE=MySQL;
-  #    url: jdbc:h2:mem:dev.db;
-  #    username: dev
-  #    password: dev
+    ####################### 动态数据源 dynamic-datasource ###############################
+    # 多数据源配置 https://gitee.com/baomidou/dynamic-datasource-spring-boot-starter
+    # @DS 可以注解在方法上或类上，同时存在就近原则 方法上注解 优先于 类上注解。
+    # @DS("slave_1")
+
+    dynamic:
+      enabled: true #启用动态数据源，默认true
+      primary: master #设置默认的数据源或者数据源组,默认值即为master
+      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      grace-destroy: false #是否优雅关闭数据源，默认为false，设置为true时，关闭数据源时如果数据源中还存在活跃连接，至多等待10s后强制关闭
+      datasource:
+        master:
+          url: jdbc:mysql://xx.xx.xx.xx:3306/dynamic
+          username: root
+          password: 123456
+          driver-class-name: com.mysql.jdbc.Driver # 3.2.0开始支持SPI可省略此配置
+        slave_1:
+          url: jdbc:mysql://xx.xx.xx.xx:3307/dynamic
+          username: root
+          password: 123456
+          driver-class-name: com.mysql.jdbc.Driver
+        slave_2:
+          url: ENC(xxxxx) # 内置加密,使用请查看详细文档
+          username: ENC(xxxxx)
+          password: ENC(xxxxx)
+          driver-class-name: com.mysql.jdbc.Driver
+        #......省略
+        #以上会配置一个默认库master，一个组slave下有两个子库slave_1,slave_2
 
   #JPA配置
   jpa:
@@ -113,6 +137,29 @@ spring:
   #      MYSQL 配置选项
         properties:
           hibernate.id.new_generator_mappings: false
+
+####################### lock4j ###############################
+###  https://gitee.com/baomidou/lock4j
+# 配置全局默认的获取锁超时时间和锁过期时间。
+#    //完全配置，支持spel
+#    @Lock4j(keys = {"#user.id", "#user.name"}, expire = 60000, acquireTimeout = 1000)
+#    public User customMethod(User user) {
+#        return user;
+#    }
+
+# 指定时间内不释放锁(限流)
+#    // 用户在5秒内只能访问1次
+#    @Lock4j(keys = {"#user.id"}, acquireTimeout = 0, expire = 5000, autoRelease = false)
+#    public Boolean test(User user) {
+#        return "true";
+#    }
+
+lock4j:
+  acquire-timeout: 3000 #默认值3s，可不设置
+  expire: 30000 #默认值30s，可不设置
+#  primary-executor: com.baomidou.lock.executor.RedisTemplateLockExecutor #默认redisson>redisTemplate>zookeeper，可不设置
+  lock-key-prefix: lock4j #锁key前缀, 默认值lock4j，可不设置
+
 
 ############################### j2cache #######################################
 j2cache:
@@ -167,6 +214,7 @@ lettuce:
   maxIdle: 10
   minIdle: 10
   timeout: 10000
+
 
 ############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
 sa-token:
