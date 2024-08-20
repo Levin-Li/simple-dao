@@ -33,6 +33,8 @@
         <levin-framework-base.version>2.2.1</levin-framework-base.version>
 
         <easyexcel.version>3.2.1</easyexcel.version>
+        <easypoi.version>4.4.0</easypoi.version>
+
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.11</hutool.version>
 
@@ -47,6 +49,9 @@
         <baomidou-ds.version>4.3.1</baomidou-ds.version>
 
         <powerjob.version>5.1.0</powerjob.version>
+        <liteflow.version>2.12.2.1</liteflow.version>
+
+        <asyncTool.version>V1.4-SNAPSHOT</asyncTool.version>
 
         <knife4j.version>4.5.0</knife4j.version>
         <springdoc.version>1.8.0</springdoc.version>
@@ -62,7 +67,12 @@
 
         <com.github.oshi.version>3.12.2</com.github.oshi.version>
 
-        <IJPay.version>2.9.3</IJPay.version>
+        <IJPay.version>2.9.11</IJPay.version>
+
+        <egzosn-pay-boot-starter.version>1.0.3</egzosn-pay-boot-starter.version>
+        <egzosn-pay.version>2.14.7</egzosn-pay.version>
+
+        <JustAuth.version>1.16.6</JustAuth.version>
 
         <x-file-storage.version>2.1.0</x-file-storage.version>
 
@@ -339,12 +349,14 @@
                 <artifactId>lock4j-redis-template-spring-boot-starter</artifactId>
                 <version>${r"${lock4j.version}"}</version>
             </dependency>
+
             <!--若使用redisson作为分布式锁底层，则需要引入-->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>lock4j-redisson-spring-boot-starter</artifactId>
                 <version>${r"${lock4j.version}"}</version>
             </dependency>
+
             <!--若使用zookeeper作为分布式锁底层，则需要引入-->
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -357,7 +369,6 @@
                 <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
                 <version>${r"${baomidou-ds.version}"}</version>
             </dependency>
-
 
           <!--  https://www.yuque.com/powerjob/guidence/deploy_worker  -->
           <!--  https://gitee.com/KFCFans/PowerJob  -->
@@ -373,12 +384,28 @@
                 <version>${r"${powerjob.version}"}</version>
             </dependency>
 
-
             <dependency>
                 <groupId>tech.powerjob</groupId>
                 <artifactId>powerjob-official-processors</artifactId>
                 <version>${r"${powerjob.version}"}</version>
             </dependency>
+
+
+           <!--  https://liteflow.cc/   -->
+            <dependency>
+                <groupId>com.yomahub</groupId>
+                <artifactId>liteflow-spring-boot-starter</artifactId>
+                <version>${r"${liteflow.version}"}</version>
+            </dependency>
+
+
+            <!--  https://gitee.com/jd-platform-opensource/asyncTool-->
+            <dependency>
+                <groupId>com.gitee.jd-platform-opensource</groupId>
+                <artifactId>asyncTool</artifactId>
+                <version>${r"${asyncTool.version}"}</version>
+            </dependency>
+
 
             <dependency>
                 <groupId>net.oschina.j2cache</groupId>
@@ -483,6 +510,15 @@
                 <version>${r"${redission.version}"}</version>
             </dependency>
 
+
+           <!--  https://gitee.com/yadong.zhang/JustAuth -->
+            <dependency>
+                <groupId>me.zhyd.oauth</groupId>
+                <artifactId>JustAuth</artifactId>
+                <version>${r"${JustAuth.version}"}</version>
+            </dependency>
+
+
             <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
             <dependency>
                 <groupId>cn.dev33</groupId>
@@ -555,8 +591,8 @@
             </dependency>
 
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${r"${mysql-driver.version}"}</version>
             </dependency>
 
@@ -577,6 +613,83 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>easyexcel</artifactId>
                 <version>${r"${easyexcel.version}"}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>cn.afterturn</groupId>
+                <artifactId>easypoi-spring-boot-starter</artifactId>
+                <version>${r"${easypoi.version}"}</version>
+            </dependency>
+
+            <!--  IJPay-->
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-WxPay</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-AliPay</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-QQ</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-UnionPay</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-JDPay</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.javen205</groupId>
+                <artifactId>IJPay-PayPal</artifactId>
+                <version>${r"${IJPay.version}"}</version>
+            </dependency>
+
+
+           <!-- https://gitee.com/egzosn/pay-java-parent
+
+                 1. pay-java-common  公共lib,支付核心与规范定义
+                 2. pay-java-web-support  web支持包，目前已实现回调相关
+                 2. pay-java-demo  具体的支付demo
+                 3. pay-java-*  具体的支付实现库
+             -->
+
+            <dependency>
+                <groupId>com.egzosn</groupId>
+                <artifactId>pay-spring-boot-starter</artifactId>
+                <version>${r"${egzosn-pay-boot-starter.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.egzosn</groupId>
+                <artifactId>pay-java-web-support</artifactId>
+                <version>${r"${egzosn-pay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.egzosn</groupId>
+                <artifactId>pay-java-wx</artifactId>
+                <version>${r"${egzosn-pay.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.egzosn</groupId>
+                <artifactId>pay-java-ali</artifactId>
+                <version>${r"${egzosn-pay.version}"}</version>
             </dependency>
 
         </dependencies>

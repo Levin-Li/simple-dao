@@ -82,35 +82,10 @@ spring:
         url-pattern: /druid/*
         allow: " "
 
-    ####################### 动态数据源 dynamic-datasource ###############################
-    # 多数据源配置 https://gitee.com/baomidou/dynamic-datasource-spring-boot-starter
-    # @DS 可以注解在方法上或类上，同时存在就近原则 方法上注解 优先于 类上注解。
-    # @DS("slave_1")
-
-    dynamic:
-      enabled: true #启用动态数据源，默认true
-      primary: master #设置默认的数据源或者数据源组,默认值即为master
-      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
-      grace-destroy: false #是否优雅关闭数据源，默认为false，设置为true时，关闭数据源时如果数据源中还存在活跃连接，至多等待10s后强制关闭
-      datasource:
-        master:
-          url: jdbc:mysql://xx.xx.xx.xx:3306/dynamic
-          username: root
-          password: 123456
-          driver-class-name: com.mysql.jdbc.Driver # 3.2.0开始支持SPI可省略此配置
-        slave_1:
-          url: jdbc:mysql://xx.xx.xx.xx:3307/dynamic
-          username: root
-          password: 123456
-          driver-class-name: com.mysql.jdbc.Driver
-        slave_2:
-          url: ENC(xxxxx) # 内置加密,使用请查看详细文档
-          username: ENC(xxxxx)
-          password: ENC(xxxxx)
-          driver-class-name: com.mysql.jdbc.Driver
-        #......省略
-        #以上会配置一个默认库master，一个组slave下有两个子库slave_1,slave_2
-
+    #    url: jdbc:h2:./dev.db;MODE=MySQL;
+    #    url: jdbc:h2:mem:dev.db;
+    #    username: dev
+    #    password: dev
   #JPA配置
   jpa:
     show-sql: false
@@ -232,6 +207,29 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志
   is-log: true
+
+################################## powerjob worker #######################################
+
+powerjob:
+  worker:
+    # akka 工作端口，可选，默认 27777
+    akka-port: 27777
+    # 接入应用名称，用于分组隔离，推荐填写 本 Java 项目名称
+    app-name: ${moduleName}
+    # 调度服务器地址，IP:Port 或 域名，多值逗号分隔
+    server-address: 127.0.0.1:7700,127.0.0.1:7701
+    # 通讯协议，4.3.0 开始支持 HTTP 和 AKKA 两种协议，官方推荐使用 HTTP 协议（注意 server 和 worker 都要开放相应端口）
+    protocol: http
+    # 持久化方式，可选，默认 disk
+    store-strategy: disk
+    # 任务返回结果信息的最大长度，超过这个长度的信息会被截断，默认值 8192
+    max-result-length: 4096
+    # 单个任务追加的工作流上下文最大长度，超过这个长度的会被直接丢弃，默认值 8192
+    max-appended-wf-context-length: 4096
+    # 同时运行的轻量级任务数量上限
+    max-lightweight-task-num: 1024
+    # 同时运行的重量级任务数量上限
+    max-heavy-task-num: 64
 
 <#if enableDubbo>
 #dubbo 配置
