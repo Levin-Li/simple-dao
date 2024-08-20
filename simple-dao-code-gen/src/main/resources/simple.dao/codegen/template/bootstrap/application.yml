@@ -114,6 +114,29 @@ spring:
         properties:
           hibernate.id.new_generator_mappings: false
 
+####################### lock4j ###############################
+###  https://gitee.com/baomidou/lock4j
+# 配置全局默认的获取锁超时时间和锁过期时间。
+#    //完全配置，支持spel
+#    @Lock4j(keys = {"#user.id", "#user.name"}, expire = 60000, acquireTimeout = 1000)
+#    public User customMethod(User user) {
+#        return user;
+#    }
+
+# 指定时间内不释放锁(限流)
+#    // 用户在5秒内只能访问1次
+#    @Lock4j(keys = {"#user.id"}, acquireTimeout = 0, expire = 5000, autoRelease = false)
+#    public Boolean test(User user) {
+#        return "true";
+#    }
+
+lock4j:
+  acquire-timeout: 3000 #默认值3s，可不设置
+  expire: 30000 #默认值30s，可不设置
+#  primary-executor: com.baomidou.lock.executor.RedisTemplateLockExecutor #默认redisson>redisTemplate>zookeeper，可不设置
+  lock-key-prefix: lock4j #锁key前缀, 默认值lock4j，可不设置
+
+
 ############################### j2cache #######################################
 j2cache:
   #  config-location: /j2cache.properties
@@ -168,6 +191,7 @@ lettuce:
   minIdle: 10
   timeout: 10000
 
+
 ############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
 sa-token:
   # token 名称（同时也是 cookie 名称）
@@ -184,6 +208,29 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志
   is-log: true
+
+################################## powerjob worker #######################################
+
+powerjob:
+  worker:
+    # akka 工作端口，可选，默认 27777
+    akka-port: 27777
+    # 接入应用名称，用于分组隔离，推荐填写 本 Java 项目名称
+    app-name: ${moduleName}
+    # 调度服务器地址，IP:Port 或 域名，多值逗号分隔
+    server-address: 127.0.0.1:7700,127.0.0.1:7701
+    # 通讯协议，4.3.0 开始支持 HTTP 和 AKKA 两种协议，官方推荐使用 HTTP 协议（注意 server 和 worker 都要开放相应端口）
+    protocol: http
+    # 持久化方式，可选，默认 disk
+    store-strategy: disk
+    # 任务返回结果信息的最大长度，超过这个长度的信息会被截断，默认值 8192
+    max-result-length: 4096
+    # 单个任务追加的工作流上下文最大长度，超过这个长度的会被直接丢弃，默认值 8192
+    max-appended-wf-context-length: 4096
+    # 同时运行的轻量级任务数量上限
+    max-lightweight-task-num: 1024
+    # 同时运行的重量级任务数量上限
+    max-heavy-task-num: 64
 
 <#if enableDubbo>
 #dubbo 配置
