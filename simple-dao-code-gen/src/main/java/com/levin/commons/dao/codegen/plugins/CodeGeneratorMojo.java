@@ -4,7 +4,6 @@ import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.plugins.Utils;
-import com.levin.commons.utils.MapUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -61,18 +60,26 @@ public class CodeGeneratorMojo extends BaseMojo {
     private String starterModuleDirName = "starter";
 
     /**
-     * 生成的控制器类的存放位置
-     * 如果目录不存在，则会自动创建
-     */
-    @Parameter(defaultValue = "api")
-    private String apiModuleDirName = "api";
-
-    /**
      * bootstrap
      * 如果目录不存在，则会自动创建
      */
     @Parameter(defaultValue = "bootstrap")
     private String bootstrapModuleDirName = "bootstrap";
+
+
+    /**
+     * 客户端生成的控制器类的存放位置
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "client-api")
+    private String clientApiModuleDirName = "client-api";
+
+    /**
+     * 管理后台生成的控制器类的存放位置
+     * 如果目录不存在，则会自动创建
+     */
+    @Parameter(defaultValue = "admin-api")
+    private String adminApiModuleDirName = "admin-api";
 
     /**
      * admin-ui
@@ -270,7 +277,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             if (!splitDir) {
                 //如果发现目录存在，也自动分割目录
                 splitDir = new File(basedir, "../" + servicesModuleDirName).exists()
-                        || new File(basedir, "../" + apiModuleDirName).exists();
+                        || new File(basedir, "../" + adminApiModuleDirName).exists();
             }
 
             final String srcDir = mavenProject.getBuild().getSourceDirectory();
@@ -281,7 +288,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             String serviceImplDir = (splitDir && hasText(servicesImplModuleDirName)) ? dirPrefix + servicesImplModuleDirName : "";
 
             String starterDir = (splitDir && hasText(starterModuleDirName)) ? dirPrefix + starterModuleDirName : "";
-            String controllerDir = (splitDir && hasText(apiModuleDirName)) ? dirPrefix + apiModuleDirName : "";
+            String controllerDir = (splitDir && hasText(adminApiModuleDirName)) ? dirPrefix + adminApiModuleDirName : "";
+            String clientApiDir = (splitDir && hasText(clientApiModuleDirName)) ? dirPrefix + clientApiModuleDirName : "";
             String bootstrapDir = (splitDir && hasText(bootstrapModuleDirName)) ? dirPrefix + bootstrapModuleDirName : "";
             String adminUiDir = (splitDir && hasText(adminUiModuleDirName)) ? dirPrefix + adminUiModuleDirName : "";
 
@@ -291,6 +299,9 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             starterDir = StringUtils.hasLength(starterDir) ? basedir.getAbsolutePath() + "/../" + starterDir + "/" + mavenDirStyle : srcDir;
             controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
+
+            clientApiDir = StringUtils.hasLength(clientApiDir) ? basedir.getAbsolutePath() + "/../" + clientApiDir + "/" + mavenDirStyle : srcDir;
+
             bootstrapDir = StringUtils.hasLength(bootstrapDir) ? basedir.getAbsolutePath() + "/../" + bootstrapDir + "/" + mavenDirStyle : srcDir;
 
             adminUiDir = basedir.getAbsolutePath() + "/../" + adminUiDir;
@@ -301,6 +312,8 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             starterDir = new File(starterDir).getCanonicalPath();
             controllerDir = new File(controllerDir).getCanonicalPath();
+            clientApiDir = new File(clientApiDir).getCanonicalPath();
+
             bootstrapDir = new File(bootstrapDir).getCanonicalPath();
             adminUiDir = new File(adminUiDir).getCanonicalPath();
 
@@ -344,6 +357,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.serviceDir(serviceDir);
             ServiceModelCodeGenerator.serviceImplDir(serviceImplDir);
             ServiceModelCodeGenerator.controllerDir(controllerDir);
+            ServiceModelCodeGenerator.clientApiDir(clientApiDir);
             ServiceModelCodeGenerator.adminUiDir(adminUiDir);
 
             ServiceModelCodeGenerator.starterDir(starterDir);
@@ -353,7 +367,8 @@ public class CodeGeneratorMojo extends BaseMojo {
                     MapUtil.builder("services", serviceDir)
                             .put("starter", starterDir)
                             .put("admin-ui", adminUiDir)
-                            .put("api", controllerDir)
+                            .put("admin-api", controllerDir)
+                            .put("client-api", clientApiDir)
                             .put("bootstrap", bootstrapDir)
                             .put("services-impl", serviceImplDir)
                             .build()
@@ -377,6 +392,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("serviceImplDir", serviceImplDir);
             codeGenParams.putIfAbsent("starterDir", starterDir);
             codeGenParams.putIfAbsent("controllerDir", controllerDir);
+            codeGenParams.putIfAbsent("clientApiDir", clientApiDir);
             codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);
 
@@ -384,7 +400,6 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("enableOakBaseFramework", enableOakBaseFramework);
 
             codeGenParams.putIfAbsent("cacheSpelUtilsBeanName", cacheSpelUtilsBeanName);
-
 
             //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader(), outputDirectory, codeGenParams);

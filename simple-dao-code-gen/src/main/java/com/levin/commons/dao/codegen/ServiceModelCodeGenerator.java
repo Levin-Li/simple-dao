@@ -833,6 +833,13 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
+    public static String clientApiDir(String newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static String clientApiDir() {
+        return getThreadVar(null);
+    }
     ///////////////////////////////////////////////////
     public static String adminUiDir(String newValue) {
         return putThreadVar(newValue);
