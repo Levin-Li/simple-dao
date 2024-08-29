@@ -89,6 +89,7 @@ public final class ServiceModelCodeGenerator {
 
     public static final String CONTROLLER_FTL = "controller/controller.ftl";
     public static final String BIZ_CONTROLLER_FTL = "controller/biz_controller.ftl";
+    public static final String CLIENT_BIZ_CONTROLLER_FTL = "controller/client_biz_controller.ftl";
 
     public static final String POM_XML_FTL = "pom.xml.ftl";
 
@@ -185,7 +186,9 @@ public final class ServiceModelCodeGenerator {
 
         genPom(null, "service_impl", serviceImplDir(), params, modules);
 
-        genPom(null, "controller", controllerDir(), params, modules);
+        genPom(null, "admin_api", adminApiDir(), params, modules);
+
+        genPom(null, "client_api", clientApiDir(), params, modules);
         //////////////////////////启动模块//////////////////////////////////////////
 
         genPom(null, "starter", starterDir(), params, modules);
@@ -230,7 +233,7 @@ public final class ServiceModelCodeGenerator {
 
         logger.info("开始生成[Bootstrap]模块代码...");
 
-        String controllerDir = controllerDir();
+        String adminApiDir = adminApiDir();
         String serviceDir = serviceDir();
         String bootstrapDir = bootstrapDir();
 
@@ -326,7 +329,8 @@ public final class ServiceModelCodeGenerator {
 
         logger.info("开始生成模块的通用代码...");
 
-        String controllerDir = controllerDir();
+        String adminApiDir = adminApiDir();
+        String clientApiDir = clientApiDir();
 
         String serviceDir = serviceDir();
         String serviceImplDir = serviceImplDir();
@@ -337,9 +341,28 @@ public final class ServiceModelCodeGenerator {
 
         params.put("camelStyleModuleName", splitAndFirstToUpperCase(moduleName()));
 
+
         String fileName = "index.html";
+
         genFileByTemplate(fileName, params, String.join(File.separator,
-                controllerDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
+                adminApiDir, "..", "resources", "public", modulePackageName(), "admin", fileName));
+
+        ////////////////////////////////adminApiDir/////////////////////////////////////////////
+        //生成控制器配置文件
+        Arrays.asList("ModuleWebMvcConfigurer"
+                , "ModuleWebControllerAdvice"
+                , "ModuleSwaggerConfigurer"
+                , "ModuleVariableResolverConfigurer"
+                , "ModuleWebSocketConfigurer"
+        ).forEach(className -> genJavaFile(adminApiDir, "config", className, params));
+
+        Arrays.asList("ModulePlugin"
+                , "ModuleWebInjectVarServiceImpl"
+        ).forEach(className -> genJavaFile(adminApiDir, "", className, params));
+
+        genJavaFile(adminApiDir, "aspect", "ModuleWebControllerAspect", params);
+
+        //////////////////////////////////clientApiDir///////////////////////////////////////////////////
 
         //生成控制器配置文件
         Arrays.asList("ModuleWebMvcConfigurer"
@@ -347,8 +370,15 @@ public final class ServiceModelCodeGenerator {
                 , "ModuleSwaggerConfigurer"
                 , "ModuleVariableResolverConfigurer"
                 , "ModuleWebSocketConfigurer"
-        ).forEach(className -> genJavaFile(controllerDir, "config", className, params));
+        ).forEach(className -> genJavaFile(clientApiDir, "config", className, params));
 
+        Arrays.asList("ModulePlugin"
+                , "ModuleWebInjectVarServiceImpl"
+        ).forEach(className -> genJavaFile(clientApiDir, "", className, params));
+
+        genJavaFile(clientApiDir, "aspect", "ModuleWebControllerAspect", params);
+
+        ////////////////////////////////////  serviceDir & serviceImplDir////////////////////////////////////
 
         Arrays.asList("ModuleCacheService"
         ).forEach(className -> genJavaFile(serviceDir, "cache", className, params));
@@ -356,11 +386,6 @@ public final class ServiceModelCodeGenerator {
         Arrays.asList("ModuleSpringCacheResolver"
         ).forEach(className -> genJavaFile(serviceImplDir, "cache", className, params));
 
-        Arrays.asList("ModulePlugin"
-                , "ModuleWebInjectVarServiceImpl"
-        ).forEach(className -> genJavaFile(controllerDir, "", className, params));
-
-        genJavaFile(controllerDir, "aspect", "ModuleWebControllerAspect", params);
 
         //生成服务模块的文件
         Arrays.asList(
@@ -370,6 +395,9 @@ public final class ServiceModelCodeGenerator {
         Arrays.asList(
                 "ModuleDataInitializer"
         ).forEach(className -> genJavaFile(serviceImplDir, "", className, params));
+
+
+        ///////////////////////////////////  starterDir ///////////////////////////////////////////
 
         Arrays.asList("ModuleStarterConfiguration"
         ).forEach(className -> genJavaFile(starterDir, "", className, params));
@@ -526,7 +554,8 @@ public final class ServiceModelCodeGenerator {
         }
 
 
-        String controllerDir = controllerDir();
+        String adminApiDir = adminApiDir();
+        String clientApiDir = clientApiDir();
         String starterDir = starterDir();
         String serviceDir = serviceDir();
         String serviceImplDir = serviceImplDir();
@@ -534,11 +563,12 @@ public final class ServiceModelCodeGenerator {
         ///////////////////////////////////////////////
 
 //        genFileByTemplate("controller/BaseController.java",
-//                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), controllerDir + File.separatorChar
+//                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), adminApiDir + File.separatorChar
 //                        + modulePackageName().replace('.', File.separatorChar) + File.separatorChar
 //                        + "controller" + File.separatorChar + "BaseController.java");
 
-        genFileByTemplate(genParams, controllerDir, "controller", "BaseController.java");
+        genFileByTemplate(genParams, adminApiDir, "controller", "BaseController.java");
+        genFileByTemplate(genParams, clientApiDir, "controller", "BaseController.java");
 
 //        genFileByTemplate("services/BaseService.java",
 //                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar
@@ -583,10 +613,10 @@ public final class ServiceModelCodeGenerator {
 
             entityClassList(clazz);
 
-            logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + controllerDir + "]...");
+            logger.info("*** 开始尝试生成实体类[" + clazz.getName() + "]相关的代码，服务目录[" + serviceDir + "],控制器目录[" + adminApiDir + "]...");
 
             try {
-                genCodeByEntityClass(clazz, serviceDir, controllerDir, genParams);
+                genCodeByEntityClass(clazz, serviceDir, adminApiDir, genParams);
             } catch (Exception e) {
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
             }
@@ -825,11 +855,11 @@ public final class ServiceModelCodeGenerator {
     }
 
     ///////////////////////////////////////////////////
-    public static String controllerDir(String newValue) {
+    public static String adminApiDir(String newValue) {
         return putThreadVar(newValue);
     }
 
-    public static String controllerDir() {
+    public static String adminApiDir() {
         return getThreadVar(null);
     }
 
@@ -899,7 +929,7 @@ public final class ServiceModelCodeGenerator {
      *
      * @param entityClass 实体类
      */
-    public static void genCodeByEntityClass(Class<?> entityClass, String serviceDir, String controllerDir
+    public static void genCodeByEntityClass(Class<?> entityClass, String serviceDir, String adminApiDir
             , Map<String, Object> entityMapping) throws Exception {
 
         entityClass(entityClass);
@@ -1028,7 +1058,9 @@ public final class ServiceModelCodeGenerator {
 
         buildService(entityClass, fields, params);
 
-        buildController(entityClass, fields, controllerDir, params);
+        buildAdminApiController(entityClass, fields, adminApiDir, params);
+
+        buildClientApiController(entityClass, fields, clientApiDir(), params);
 
     }
 
@@ -1206,7 +1238,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    private static void buildController(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+    private static void buildAdminApiController(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
             params.put("servicePackageName", servicePackage());
@@ -1232,6 +1264,35 @@ public final class ServiceModelCodeGenerator {
             controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
 
             genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
+        }
+
+    }
+    private static void buildClientApiController(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+
+        final Consumer<Map<String, Object>> mapConsumer = (params) -> {
+            params.put("servicePackageName", servicePackage());
+            params.put("bizServicePackageName", bizServicePackage());
+            params.put("isCreateBizController", isCreateBizController());
+            params.put("controllerPackageName", controllerPackage());
+            params.put("serviceName", entityClass.getSimpleName() + "Service");
+            params.putAll(paramsMap);
+            params.put("isController", true);
+        };
+
+        //加入控制器类
+        String className = entityClass.getSimpleName() + "Controller";
+
+        controllerClassList((controllerPackage() + "." + className).replace("..", "."));
+
+       // genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
+
+        if (isCreateBizController()) {
+
+            String bizClassName = "Biz" + className;
+
+            controllerClassList((bizControllerPackage() + "." + bizClassName).replace("..", "."));
+
+            genCode(entityClass, CLIENT_BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
         }
 
     }

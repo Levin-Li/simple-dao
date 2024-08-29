@@ -288,7 +288,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             String serviceImplDir = (splitDir && hasText(servicesImplModuleDirName)) ? dirPrefix + servicesImplModuleDirName : "";
 
             String starterDir = (splitDir && hasText(starterModuleDirName)) ? dirPrefix + starterModuleDirName : "";
-            String controllerDir = (splitDir && hasText(adminApiModuleDirName)) ? dirPrefix + adminApiModuleDirName : "";
+            String adminApiDir = (splitDir && hasText(adminApiModuleDirName)) ? dirPrefix + adminApiModuleDirName : "";
             String clientApiDir = (splitDir && hasText(clientApiModuleDirName)) ? dirPrefix + clientApiModuleDirName : "";
             String bootstrapDir = (splitDir && hasText(bootstrapModuleDirName)) ? dirPrefix + bootstrapModuleDirName : "";
             String adminUiDir = (splitDir && hasText(adminUiModuleDirName)) ? dirPrefix + adminUiModuleDirName : "";
@@ -298,7 +298,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             serviceImplDir = StringUtils.hasLength(serviceImplDir) ? basedir.getAbsolutePath() + "/../" + serviceImplDir + "/" + mavenDirStyle : srcDir;
 
             starterDir = StringUtils.hasLength(starterDir) ? basedir.getAbsolutePath() + "/../" + starterDir + "/" + mavenDirStyle : srcDir;
-            controllerDir = StringUtils.hasLength(controllerDir) ? basedir.getAbsolutePath() + "/../" + controllerDir + "/" + mavenDirStyle : srcDir;
+            adminApiDir = StringUtils.hasLength(adminApiDir) ? basedir.getAbsolutePath() + "/../" + adminApiDir + "/" + mavenDirStyle : srcDir;
 
             clientApiDir = StringUtils.hasLength(clientApiDir) ? basedir.getAbsolutePath() + "/../" + clientApiDir + "/" + mavenDirStyle : srcDir;
 
@@ -311,7 +311,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             serviceImplDir = new File(serviceImplDir).getCanonicalPath();
 
             starterDir = new File(starterDir).getCanonicalPath();
-            controllerDir = new File(controllerDir).getCanonicalPath();
+            adminApiDir = new File(adminApiDir).getCanonicalPath();
             clientApiDir = new File(clientApiDir).getCanonicalPath();
 
             bootstrapDir = new File(bootstrapDir).getCanonicalPath();
@@ -356,7 +356,7 @@ public class CodeGeneratorMojo extends BaseMojo {
 
             ServiceModelCodeGenerator.serviceDir(serviceDir);
             ServiceModelCodeGenerator.serviceImplDir(serviceImplDir);
-            ServiceModelCodeGenerator.controllerDir(controllerDir);
+            ServiceModelCodeGenerator.adminApiDir(adminApiDir);
             ServiceModelCodeGenerator.clientApiDir(clientApiDir);
             ServiceModelCodeGenerator.adminUiDir(adminUiDir);
 
@@ -367,14 +367,14 @@ public class CodeGeneratorMojo extends BaseMojo {
                     MapUtil.builder("services", serviceDir)
                             .put("starter", starterDir)
                             .put("admin-ui", adminUiDir)
-                            .put("admin-api", controllerDir)
+                            .put("admin-api", adminApiDir)
                             .put("client-api", clientApiDir)
                             .put("bootstrap", bootstrapDir)
                             .put("services-impl", serviceImplDir)
                             .build()
             );
 
-            getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, controllerDir));
+            getLog().info(String.format(" *** 模块名称：{%s} ，模块包名：{%s} ， 服务类生成路径：{%s}，控制器类生成路径：{%s}", moduleName, modulePackageName, serviceDir, adminApiDir));
 
             codeGenParams.putIfAbsent("mavenProject", mavenProject);
             codeGenParams.putIfAbsent("mavenSession", mavenSession);
@@ -391,7 +391,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("serviceDir", serviceDir);
             codeGenParams.putIfAbsent("serviceImplDir", serviceImplDir);
             codeGenParams.putIfAbsent("starterDir", starterDir);
-            codeGenParams.putIfAbsent("controllerDir", controllerDir);
+            codeGenParams.putIfAbsent("adminApiDir", adminApiDir);
             codeGenParams.putIfAbsent("clientApiDir", clientApiDir);
             codeGenParams.putIfAbsent("bootstrapDir", bootstrapDir);
             codeGenParams.putIfAbsent("adminUiDir", adminUiDir);

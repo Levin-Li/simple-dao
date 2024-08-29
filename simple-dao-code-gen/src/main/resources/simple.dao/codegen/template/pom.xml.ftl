@@ -90,7 +90,7 @@
             <scope>provided</scope>
         </dependency>
         </#if>
-        <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller'>
+        <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'admin_api'  || moduleType == 'client_api'>
 
         <dependency>
             <artifactId>${service.artifactId}</artifactId>
@@ -113,13 +113,13 @@
         </dependency>
 
         <dependency>
-            <artifactId>${controller.artifactId}</artifactId>
+            <artifactId>${admin_api.artifactId}</artifactId>
             <groupId>${r"${project.groupId}"}</groupId>
             <version>${r"${project.version}"}</version>
         </dependency>
 
         </#if>
-        <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'controller')>
+        <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'admin_api'  || moduleType == 'client_api')>
 
         <dependency>
             <groupId>org.apache.dubbo</groupId>
@@ -187,7 +187,7 @@
 
         </#if>
 
-        <#if moduleType?? && moduleType == 'controller' >
+        <#if moduleType?? && (moduleType == 'admin_api'  || moduleType == 'client_api') >
         <#-- api spring-boot-starter-web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
