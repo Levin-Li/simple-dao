@@ -316,7 +316,7 @@
 
                  <dependency>
                      <groupId>com.levin.oak.base</groupId>
-                     <artifactId>framework-base-api</artifactId>
+                     <artifactId>framework-base-admin-api</artifactId>
                      <version>${r"${levin-framework-base.version}"}</version>
                      <scope>provided</scope>
                  </dependency>

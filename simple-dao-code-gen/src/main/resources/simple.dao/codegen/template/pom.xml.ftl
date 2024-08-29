@@ -218,7 +218,7 @@
 
         <dependency>
             <groupId>com.levin.oak.base</groupId>
-            <artifactId>framework-base-api</artifactId>
+            <artifactId>framework-base-admin-api</artifactId>
         </dependency>
 
         <dependency>
