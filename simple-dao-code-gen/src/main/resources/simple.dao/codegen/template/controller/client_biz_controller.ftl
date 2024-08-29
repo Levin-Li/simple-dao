@@ -110,7 +110,6 @@ public class ${className} extends BaseController{
         return super.checkRequest(action, req);
     }
 
-
     /**
      * 分页列表查找
      *
@@ -125,28 +124,6 @@ public class ${className} extends BaseController{
         req = checkRequest(QUERY_LIST_ACTION, req);
 
         return ApiResp.ok(checkResponse(QUERY_LIST_ACTION, get${serviceName}().query(req, paging)));
-    }
-
-
-    //如果业务需要请覆盖父类的方法，父类方法上的Spring注解可以不需要重写，除非业务上有需要
-    //public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-    //   处理业务逻辑...
-    //   return super.update(req, ${pkField.name});
-    // }
-
-    /**
-    * 统计
-    *
-    * @param req Query${entityName}Req
-    * @return  ApiResp<Stat${entityName}Req.Result>
-    */
-    @GetMapping("stat") //默认开放
-    @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME) //, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}"))
-    public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
-
-        req = checkRequest(STAT_ACTION, req);
-
-        return ApiResp.ok(checkResponse(STAT_ACTION, biz${serviceName}.stat(req, paging)));
     }
 
 }
