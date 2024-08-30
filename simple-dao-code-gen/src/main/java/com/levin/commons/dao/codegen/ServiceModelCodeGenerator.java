@@ -45,6 +45,7 @@ import org.springframework.util.*;
 import javax.annotation.PostConstruct;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -870,6 +871,7 @@ public final class ServiceModelCodeGenerator {
     public static String clientApiDir() {
         return getThreadVar(null);
     }
+
     ///////////////////////////////////////////////////
     public static String adminUiDir(String newValue) {
         return putThreadVar(newValue);
@@ -1267,6 +1269,7 @@ public final class ServiceModelCodeGenerator {
         }
 
     }
+
     private static void buildClientApiController(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
 
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
@@ -1284,7 +1287,7 @@ public final class ServiceModelCodeGenerator {
 
         controllerClassList((controllerPackage() + "." + className).replace("..", "."));
 
-       // genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
+        // genCode(entityClass, CONTROLLER_FTL, fields, srcDir, controllerPackage(), className, mapConsumer);
 
         if (isCreateBizController()) {
 
@@ -2164,7 +2167,11 @@ public final class ServiceModelCodeGenerator {
 
             //加入所有的校验规则
             fieldModel.addAnnotations(
-                    an -> an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                    an ->  //是否为校验注解
+                            an.annotationType().getPackage().equals(NotBlank.class.getPackage())
+                                    //对于复杂对象，只能支持NotNull注解
+                                    && (ClassUtils.isPrimitiveOrWrapper(fieldType) || an.annotationType().equals(NotNull.class))
+
                     , field.getAnnotations());
 
             if (fieldModel.getType().equals(String.class)
@@ -2244,6 +2251,11 @@ public final class ServiceModelCodeGenerator {
                 //如果是创建对象，但是有初始化默认值，则认为允许为空
                 //查询对象和更新对象，允许空值
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotNull"));
+                fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));
+            }
+
+            //如果不是字符串
+            if (!CharSequence.class.isAssignableFrom(fieldType)) {
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));
             }
 
