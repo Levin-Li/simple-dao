@@ -2018,15 +2018,20 @@ public final class ServiceModelCodeGenerator {
                 Desc desc = field.getAnnotation(Desc.class);
                 fieldModel.setTitle(desc.value());
                 fieldModel.setDesc(desc.detail());
-            } else if (field.isAnnotationPresent(FormItem.class)) {
+            } else {
+                fieldModel.setTitle(field.getName());
+            }
+
+            if (!fieldModel.isEnumerable()
+                    && field.isAnnotationPresent(FormItem.class)) {
+
                 FormItem formItem = field.getAnnotation(FormItem.class);
+
                 //是否可枚举
-                fieldModel.setEnumerable(
+                fieldModel.setEnumerable(formItem.options() != null &&
                         Stream.of(formItem.options())
                                 .anyMatch(options -> StringUtils.hasText(options.dictCode()) || (options.items() != null && options.items().length > 0))
                 );
-            } else {
-                fieldModel.setTitle(field.getName());
             }
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
