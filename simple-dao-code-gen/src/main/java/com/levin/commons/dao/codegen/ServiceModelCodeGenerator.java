@@ -23,7 +23,10 @@ import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
+import com.levin.commons.ui.annotation.Form;
+import com.levin.commons.ui.annotation.FormItem;
 import com.levin.commons.utils.ExceptionUtils;
+import com.levin.commons.utils.ExpressionUtils;
 import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -1945,6 +1948,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
+
             fieldModel.setEnumType(fieldType.isEnum());
 
             fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
@@ -2012,6 +2016,13 @@ public final class ServiceModelCodeGenerator {
                 Desc desc = field.getAnnotation(Desc.class);
                 fieldModel.setTitle(desc.value());
                 fieldModel.setDesc(desc.detail());
+            } else if (field.isAnnotationPresent(FormItem.class)) {
+                FormItem formItem = field.getAnnotation(FormItem.class);
+                //是否可枚举
+                fieldModel.setEnumerable(
+                        Stream.of(formItem.options())
+                                .anyMatch(options -> StringUtils.hasText(options.dictCode()) || (options.items() != null && options.items().length > 0))
+                );
             } else {
                 fieldModel.setTitle(field.getName());
             }
@@ -2174,6 +2185,11 @@ public final class ServiceModelCodeGenerator {
 
                     , field.getAnnotations());
 
+
+            //javax.validation.constraints.Size
+            //javax.validation.constraints
+
+
             if (fieldModel.getType().equals(String.class)
                     && fieldModel.getLength() != -1
                     && !fieldModel.getName().endsWith("Body")) {
@@ -2181,8 +2197,11 @@ public final class ServiceModelCodeGenerator {
                 if (isLob) {
                     //fieldModel.setLength(4000);
                     fieldModel.setTestValue("\"这是长文本正文\"");
-                } else {
+                } else if (fieldModel.getTypeName().equals("String")
+                        || fieldModel.getTypeName().equals("CharSequence")) {
+
                     annotations.add("@Size(max = " + fieldModel.getLength() + ")");
+
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
             }
@@ -2245,6 +2264,7 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
+
             //如果是创建对象，但是有初始化默认值
 
             if (isQueryObj || isUpdateObj || (isCreateObj && defaultFieldValue != null)) {
@@ -2257,6 +2277,11 @@ public final class ServiceModelCodeGenerator {
             //如果不是字符串
             if (!CharSequence.class.isAssignableFrom(fieldType)) {
                 fieldModel.getAnnotations().removeIf(annotation -> annotation.trim().startsWith("@NotBlank"));
+            }
+
+            //对应对象类型，查询对象要忽略
+            if ((isQueryObj) && !BeanUtils.isSimpleProperty(fieldType)) {
+                fieldModel.addAnnotation(Ignore.class);
             }
 
             //如果是创建对象，但是有初始化默认值

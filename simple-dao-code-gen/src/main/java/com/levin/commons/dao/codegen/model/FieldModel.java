@@ -75,7 +75,18 @@ public class FieldModel implements Cloneable {
 
     private boolean baseType = true;//基础封装类型
 
+    public void setEnumType(boolean enumType) {
+
+        this.enumType = enumType;
+
+        if (enumType) {
+            enumerable = true;
+        }
+    }
+
     private boolean enumType = false;//是否enum
+
+    private boolean enumerable = false;//是否enum
 
     private boolean jpaEntity = false;//是否 jpa 对象
 
@@ -127,6 +138,7 @@ public class FieldModel implements Cloneable {
 
     /**
      * 是否原则类型
+     *
      * @return
      */
     public boolean isPrimitive() {
@@ -185,7 +197,7 @@ public class FieldModel implements Cloneable {
         return isClassField("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
     }
 
-    public boolean isType(String className){
+    public boolean isType(String className) {
         return type.getName().equals(className);
     }
 
@@ -193,7 +205,7 @@ public class FieldModel implements Cloneable {
         return type.getName();
     }
 
-    public boolean isTypeEndsWith(String className){
+    public boolean isTypeEndsWith(String className) {
         return type.getName().endsWith(className);
     }
 

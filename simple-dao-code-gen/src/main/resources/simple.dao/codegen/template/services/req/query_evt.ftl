@@ -148,7 +148,7 @@ public class ${className} extends ${reqExtendClass} {
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
-    <#if field.enumType!>
+    <#if field.enumerable!>  <#-- 可枚举的 -->
 
     @Schema(title = "包含匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     @In
