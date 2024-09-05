@@ -136,8 +136,8 @@ public class ${className} extends ${reqExtendClass} {
     @Between
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
 
-    <#-- 基本类型 -->
-    <#elseif field.baseType>
+    <#-- 基本类型 field.baseType -->
+    <#elseif true>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#-- 模糊匹配 -->

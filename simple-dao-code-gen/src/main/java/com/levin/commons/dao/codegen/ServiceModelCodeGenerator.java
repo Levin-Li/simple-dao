@@ -1963,6 +1963,7 @@ public final class ServiceModelCodeGenerator {
 
                 fieldModel.getImports().add(getInfoClassImport(fieldType));
                 fieldModel.setTypeName(fieldType.getSimpleName() + "Info");
+                fieldModel.setBaseType(false);
 
             }
 
@@ -1983,6 +1984,7 @@ public final class ServiceModelCodeGenerator {
                 }
 
                 fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
+
             }
 
             //是否乐观锁字段
@@ -2118,10 +2120,19 @@ public final class ServiceModelCodeGenerator {
 
                                             fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
 
+                                            //基本类型或是集合
+                                            fieldModel.setBaseType(BeanUtils.isSimpleProperty(injectVar.expectBaseType())
+                                                    || Collection.class.isAssignableFrom(injectVar.expectBaseType()));
+
                                             String sub = Arrays.stream(injectVar.expectGenericTypes()).map(Class::getSimpleName).collect(Collectors.joining(","));
 
                                             if (StringUtils.hasText(sub)) {
                                                 fieldModel.typeName += "<" + sub + ">";
+                                                fieldModel.setBaseType(
+                                                        fieldModel.isBaseType()
+                                                                && injectVar.expectGenericTypes().length == 1
+                                                                && BeanUtils.isSimpleProperty(injectVar.expectGenericTypes()[0])
+                                                );
                                             }
                                             //转换数据类型
                                         }
@@ -2280,7 +2291,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             //对应对象类型，查询对象要忽略
-            if ((isQueryObj) && !BeanUtils.isSimpleProperty(fieldType)) {
+            if ((isQueryObj) && !fieldModel.isBaseType()) {
                 fieldModel.addAnnotation(Ignore.class);
             }
 

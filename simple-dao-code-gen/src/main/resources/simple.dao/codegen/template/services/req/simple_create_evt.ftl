@@ -55,8 +55,8 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#list fields as field>
-<#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
-    <#if (field.baseType && !field.baseEntityField && (!field.lazy || field.baseType) && !field.autoGenValue)>
+<#--  <#if (field.baseType && !field.baseEntityField && (!field.lazy || field.baseType) && !field.autoGenValue)> -->
+    <#if (!field.baseEntityField && !field.autoGenValue)>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')})
     <#list field.annotations as annotation>

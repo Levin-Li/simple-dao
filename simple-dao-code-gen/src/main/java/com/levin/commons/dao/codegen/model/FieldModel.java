@@ -51,6 +51,7 @@ public class FieldModel implements Cloneable {
     //类的短名称
     public String typeName;
 
+
     //字段类型
     private Class type;
 

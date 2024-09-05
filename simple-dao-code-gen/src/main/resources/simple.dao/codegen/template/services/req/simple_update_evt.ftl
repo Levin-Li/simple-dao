@@ -86,7 +86,8 @@ public class ${className} extends ${reqExtendClass} {
 </#if>
 <#-- 字段分组，参考 CRUD枚举，UPDATE_fields 表示更新分组 -->
 <#list UPDATE_fields as field>
-    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
+<#--    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >-->
+    <#if !field.notUpdate && !field.jpaEntity >
     <#list field.annotations as annotation>
 <#--        <#if !(annotation?string)?contains("@NotNull")>-->
     ${annotation}
@@ -99,7 +100,8 @@ public class ${className} extends ${reqExtendClass} {
 </#list>
 <#-- 字段分组，参考 CRUD枚举，默认是 CRUD.DEFAULT 分组，没有前缀 -->
 <#list fields as field>
-    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
+<#--    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >-->
+    <#if !field.notUpdate && !field.jpaEntity >
     <#list field.annotations as annotation>
 <#--    <#if !(annotation?string)?contains("@NotNull")>-->
     ${annotation}
@@ -137,7 +139,8 @@ public class ${className} extends ${reqExtendClass} {
     }
 
 <#list fields as field>
-    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >
+<#--    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >-->
+    <#if !field.notUpdate && !field.jpaEntity >
     public <T extends ${className}> T set${field.name?cap_first}(${field.typeName} ${field.name}) {
         this.${field.name} = ${field.name};
         return autoAddForceUpdateField(E_${entityName}.${field.name});
