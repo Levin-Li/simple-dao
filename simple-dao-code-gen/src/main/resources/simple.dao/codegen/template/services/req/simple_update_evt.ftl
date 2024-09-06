@@ -64,17 +64,20 @@ public class ${className} extends ${reqExtendClass} {
     private static final long serialVersionUID = ${serialVersionUID}L;
 
     ///////////////////////////强制更新的字段列表///////////////////////////////////////
-
-    @Ignore //dao 忽略
-    @Schema(title = "强制更新的字段列表", description = "在该字段列表中的字段值会被强制更新数据库，不管字段值是否为空")
-    //@JsonIgnore
-    protected LinkedHashSet<String> forceUpdateFields = new LinkedHashSet<>(5);
-
     @Schema(title = "自动增加强制更新字段", description = "自动增加强制更新字段为true时，只要字段的set方法被调用(对应客户端来说只要上传了参数)，字段会被加入强制更新列表。")
     @Ignore //dao 忽略
     //@JsonIgnore
     protected boolean autoAddForceUpdateField;
 
+    @Ignore //dao 忽略
+    @Schema(title = "强制更新的字段列表", description = "在该字段列表中的字段值会被强制更新数据库，不管字段值是否为空，该参数优先于[autoAddForceUpdateField]")
+    //@JsonIgnore
+    protected final LinkedHashSet<String> forceUpdateFields = new LinkedHashSet<>(5);
+
+    @Ignore //dao 忽略
+    @Schema(title = "临时辅助的字段", hidden = true)
+    @JsonIgnore
+    transient final protected LinkedHashSet<String> tempForceUpdateFields = new LinkedHashSet<>(5);
     //////////////////////////////////////////////////////////////////
 
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
@@ -125,9 +128,18 @@ public class ${className} extends ${reqExtendClass} {
         this.autoAddForceUpdateField = autoAddForceUpdateField;
     }
 
-    @PostConstruct
+    @PostConstruct //@PreUpdate
     public void preUpdate() {
         //@todo 更新之前初始化数据
+
+        //如果强制更新字段优先
+        if (this.forceUpdateFields.isEmpty()
+                && isAutoAddForceUpdateField()
+                && !this.tempForceUpdateFields.isEmpty()) {
+            this.forceUpdateFields.addAll(this.tempForceUpdateFields);
+            this.tempForceUpdateFields.clear();
+        }
+
 <#list fields as field>
     <#if classModel.isDefaultUpdateTime(field.name)>
 
@@ -165,7 +177,7 @@ public class ${className} extends ${reqExtendClass} {
          this.forceUpdateFields.clear();
 
          if (forceUpdateFields != null) {
-         this.forceUpdateFields.addAll(forceUpdateFields);
+            this.forceUpdateFields.addAll(forceUpdateFields);
          }
 
          return (T) this;
@@ -210,7 +222,7 @@ public class ${className} extends ${reqExtendClass} {
    * @return
    */
    public <T extends ${className}> T autoAddForceUpdateField(String fieldName) {
-       boolean ok = autoAddForceUpdateField && getForceUpdateFields().add(fieldName);
+       this.tempForceUpdateFields.add(fieldName);
        return (T) this;
    }
 }
