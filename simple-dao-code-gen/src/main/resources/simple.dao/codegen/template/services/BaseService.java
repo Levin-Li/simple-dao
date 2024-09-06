@@ -70,7 +70,6 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
     protected void onApplicationContextReady(ApplicationContext context) {
 
     }
-
     protected boolean isGte(BigDecimal val1, BigDecimal val2) {
         return val1.compareTo(val2) >= 0;
     }
