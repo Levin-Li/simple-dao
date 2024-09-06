@@ -14,6 +14,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.*;
 
 import javax.validation.*;
+import java.math.*;
 import java.util.*;
 import javax.annotation.*;
 
@@ -68,6 +69,18 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
 
     protected void onApplicationContextReady(ApplicationContext context) {
 
+    }
+
+    protected boolean isGte(BigDecimal val1, BigDecimal val2) {
+        return val1.compareTo(val2) >= 0;
+    }
+
+    protected boolean isGtZero(BigDecimal val) {
+        return val != null && val.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    protected boolean isNullOrZero(BigDecimal val) {
+        return val == null || val.compareTo(BigDecimal.ZERO) == 0;
     }
 
     /**
