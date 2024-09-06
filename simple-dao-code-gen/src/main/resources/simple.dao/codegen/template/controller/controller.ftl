@@ -172,7 +172,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(UPDATE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().update(req), UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().update(req), UPDATE_ACTION + BIZ_NAME + "失败-无记录"));
     }
 
     /**
@@ -190,7 +190,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败-无记录"));
     }
 
     /**
@@ -235,7 +235,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败-无记录"));
     }
 
     /**
@@ -249,7 +249,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败"));
+        return ApiResp.ok(assertTrue(get${serviceName}().batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败-无记录"));
     }
 
     /**

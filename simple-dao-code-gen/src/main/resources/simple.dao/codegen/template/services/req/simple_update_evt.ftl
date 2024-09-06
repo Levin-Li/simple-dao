@@ -132,16 +132,6 @@ public class ${className} extends ${reqExtendClass} {
     public void preUpdate() {
         //@todo 更新之前初始化数据
 
-        //直接指定的强制更新字段优先，自动强制更新优先级更低
-        if (this.forceUpdateFields.isEmpty()
-                && this.autoForceUpdateField
-                && !this.autoForceUpdateFields.isEmpty()) {
-
-            this.forceUpdateFields.addAll(this.autoForceUpdateFields);
-            this.autoForceUpdateFields.clear();
-
-        }
-
 <#list fields as field>
     <#if classModel.isDefaultUpdateTime(field.name)>
 
@@ -217,4 +207,6 @@ public class ${className} extends ${reqExtendClass} {
         this.forceUpdateFields.add(fieldName);
         return (T) this;
     }
+
+
 }
