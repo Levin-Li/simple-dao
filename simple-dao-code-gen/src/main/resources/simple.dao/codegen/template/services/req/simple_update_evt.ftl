@@ -66,14 +66,14 @@ public class ${className} extends ${reqExtendClass} {
     ///////////////////////////强制更新的字段列表///////////////////////////////////////
 
     @Ignore //dao 忽略
-    @Schema(title = "强制更新的字段列表", description = "在该字段列表中的字段值会被强制更新数据库，不管值是否为空")
+    @Schema(title = "强制更新的字段列表", description = "在该字段列表中的字段值会被强制更新数据库，不管字段值是否为空")
     //@JsonIgnore
-    transient final protected Set<String> forceUpdateFields = new HashSet<>(5);
+    protected LinkedHashSet<String> forceUpdateFields = new LinkedHashSet<>(5);
 
-    @Schema(title = "自动增加强制更新字段", description = "自动增加强制更新字段为true时，只要字段的set方法被调用，字段会被加入强制更新列表")
+    @Schema(title = "自动增加强制更新字段", description = "自动增加强制更新字段为true时，只要字段的set方法被调用(对应客户端来说只要上传了参数)，字段会被加入强制更新列表。")
     @Ignore //dao 忽略
     //@JsonIgnore
-    transient protected boolean autoAddForceUpdateField;
+    protected boolean autoAddForceUpdateField;
 
     //////////////////////////////////////////////////////////////////
 
