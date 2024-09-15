@@ -2446,10 +2446,16 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {
+
+        Assert.hasText(entityOption.logicalDeleteFieldName(), "EntityOption Annotation [logicalDeleteFieldName] value must not be blank");
+
         return aroundColumnPrefix(entityOption.logicalDeleteFieldName().trim()) + " " + op.getOperator() + " " + getParamPlaceholder();
     }
 
     protected Object convertLogicDeleteValue(EntityOption entityOption) {
+
+        Assert.hasText(entityOption.logicalDeleteValue(), "EntityOption Annotation [logicalDeleteValue] value must not be blank");
+
         return ObjectUtil.convert(entityOption.logicalDeleteValue().trim(), QueryAnnotationUtil.getFieldType(entityClass, entityOption.logicalDeleteFieldName().trim()));
     }
 
