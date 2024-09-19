@@ -27,6 +27,8 @@ import javax.annotation.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ${servicePackageName}.info.*;
 import ${entityClassName};
@@ -92,16 +94,21 @@ public class ${className} extends ${reqExtendClass} {
 
     @Schema(title = "查询的字段列表", description = "逗号隔开，默认查询所有的字段")
     @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE, condition = "#_isQuery && #isNotEmpty(#_fieldVal)")
-    String[] selectColumns;
+    Set<String> selectColumns;
 
     public ${className} setOrderBy(String orderBy) {
         //要防止SQL注
         return checkSQLInject(this.orderBy = orderBy);
     }
 
-    public ${className} setSelectColumns(String... selectColumns) {
+    public ${className} setSelectColumns(Set<String> selectColumns) {
         //要防止SQL注
         return checkSQLInject(this.selectColumns = selectColumns);
+    }
+
+    public ${className} setSelectColumns(String... selectColumns) {
+        //要防止SQL注
+        return setSelectColumns(Stream.of(selectColumns).filter(Objects::nonNull).collect(Collectors.toSet()));
     }
 
 <#if pkField?exists>

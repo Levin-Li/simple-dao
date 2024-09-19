@@ -181,7 +181,7 @@ public abstract class BaseReq implements ServiceReq {
      * 简单的防止SQL注检查
      * @param statements
      */
-    protected <T extends BaseReq> T checkSQLInject(String... statements) {
+    protected <T extends BaseReq> T checkSQLInject(Iterable<String> statements) {
 
         for (String statement : statements) {
             if (!StringUtils.hasText(statement)) {
