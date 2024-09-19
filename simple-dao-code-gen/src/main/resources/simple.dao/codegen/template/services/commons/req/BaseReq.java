@@ -177,6 +177,10 @@ public abstract class BaseReq implements ServiceReq {
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
 
+    protected <T extends BaseReq> T checkSQLInject(String... statements) {
+        return checkSQLInject(Arrays.asList(statements));
+    }
+
     /**
      * 简单的防止SQL注检查
      * @param statements
