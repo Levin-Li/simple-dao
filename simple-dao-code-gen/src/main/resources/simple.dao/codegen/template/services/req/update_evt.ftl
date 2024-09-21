@@ -71,8 +71,8 @@ public class ${className} extends ${reqExtendClass} {
         this.${pkField.name} = ${pkField.name};
     }
 
-    public ${className}(${pkField.typeName} ${pkField.name}, boolean forceUpdate) {
-        super(forceUpdate);
+    public ${className}(${pkField.typeName} ${pkField.name}, boolean autoForceUpdateField) {
+        super(autoForceUpdateField);
         this.${pkField.name} = ${pkField.name};
     }
 
@@ -83,8 +83,8 @@ public class ${className} extends ${reqExtendClass} {
         return this;
     }
 
-    public static ${className} of(${pkField.typeName} ${pkField.name}, boolean forceUpdate){
-        return new ${className}(${pkField.name}, forceUpdate);
+    public static ${className} of(${pkField.typeName} ${pkField.name}, boolean autoForceUpdateField){
+        return new ${className}(${pkField.name}, autoForceUpdateField);
     }
 
 </#if>
