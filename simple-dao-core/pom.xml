@@ -72,6 +72,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>${levin.service-support.groupId}</groupId>
+            <artifactId>service-support</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 </project>

@@ -7,6 +7,7 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.support.VariableInjector;
+import com.levin.commons.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;

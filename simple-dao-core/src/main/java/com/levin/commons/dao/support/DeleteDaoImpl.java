@@ -6,7 +6,7 @@ import com.levin.commons.dao.DeleteDao;
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.annotation.Op;
-import com.levin.commons.dao.util.ExceptionUtils;
+import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
