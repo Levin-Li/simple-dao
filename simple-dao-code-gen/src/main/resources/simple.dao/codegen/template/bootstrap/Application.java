@@ -35,6 +35,8 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.io.File;
 import java.lang.reflect.Type;
+import java.net.BindException;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
@@ -59,15 +61,44 @@ import org.h2.tools.Server;
 //@EnableDubboConfig
 public class Application {
 
+
     public static void main(String... args) throws Exception {
 
-        //在项目目录中启动 TCP 服务器
-        Server server = Server.createTcpServer("-tcpPort", "9092", "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
-
-        System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
-                + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
+        startH2Server();
 
         SpringApplication.run(Application.class, args);
+    }
+
+    private static void startH2Server() throws InterruptedException, SQLException {
+
+        int h2Port = 9092;
+
+        while (Thread.currentThread().isInterrupted()) {
+            //在项目目录中启动 TCP 服务器
+            try {
+                Server server = Server.createTcpServer("-tcpPort", "" + h2Port, "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
+
+                System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
+                        + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
+
+                break;
+            } catch (SQLException e) {
+
+                Throwable causeByTypes = ExceptionUtils.getCauseByTypes(e, BindException.class);
+
+                //Throwable causedBy = ExceptionUtil.getCausedBy(e, BindException.class);
+
+                if (causeByTypes != null) {
+                    log.warn("***WARN***  H2数据库(支持自动建库)启动失败，端口号冲突，尝试下一个端口号：{}", h2Port + 1);
+                } else {
+                    throw e;
+                }
+            }
+
+            Thread.sleep(10);
+
+            h2Port++;
+        }
     }
 
     @Autowired
