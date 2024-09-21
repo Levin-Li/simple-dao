@@ -58,6 +58,25 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
         return ModuleOption.ID;
     }
 
+    /**
+     * 获取调用者方法名
+     *
+     * @return
+     */
+    public static String getInvokeMethodName() {
+        return getInvokeMethodName(2);
+    }
+
+    /**
+     * 获取调用方法名
+     *
+     * @param level 0 当前方法，1 调用者
+     *
+     * @return
+     */
+    public static String getInvokeMethodName(int level) {
+        return (new Throwable()).getStackTrace()[level].getMethodName();
+    }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
