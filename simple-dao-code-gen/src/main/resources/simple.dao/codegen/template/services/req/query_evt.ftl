@@ -106,6 +106,10 @@ public class ${className} extends ${reqExtendClass} {
         return checkSQLInject(this.selectColumns = selectColumns);
     }
 
+    public ${className} selectColumns(String... selectColumns) {
+        return setSelectColumns(Stream.of(selectColumns).filter(Objects::nonNull).collect(Collectors.toSet()));
+    }
+
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} + "集合")
     @In(E_${entityName}.${pkField.name})
