@@ -7,6 +7,9 @@ import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableNotFoundException;
 import com.levin.commons.service.support.VariableResolver;
 import com.levin.commons.service.support.VariableResolverConfigurer;
+
+import com.levin.commons.utils.ExceptionUtils;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.redisson.codec.JsonJacksonCodec;
@@ -61,7 +64,11 @@ import org.h2.tools.Server;
 //@EnableDubboConfig
 public class Application {
 
-
+    /**
+     * 启动方法
+     * @param args
+     * @throws Exception
+     */
     public static void main(String... args) throws Exception {
 
         startH2Server();
@@ -73,7 +80,7 @@ public class Application {
 
         int h2Port = 9092;
 
-        while (Thread.currentThread().isInterrupted()) {
+        while (Thread.currentThread().isInterrupted() && h2Port < 9100) {
             //在项目目录中启动 TCP 服务器
             try {
                 Server server = Server.createTcpServer("-tcpPort", "" + h2Port, "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
@@ -84,11 +91,11 @@ public class Application {
                 break;
             } catch (SQLException e) {
 
-                Throwable causeByTypes = ExceptionUtils.getCauseByTypes(e, BindException.class);
+                BindException bindException = ExceptionUtils.getCauseByTypes(e, BindException.class);
 
                 //Throwable causedBy = ExceptionUtil.getCausedBy(e, BindException.class);
 
-                if (causeByTypes != null) {
+                if (bindException != null) {
                     log.warn("***WARN***  H2数据库(支持自动建库)启动失败，端口号冲突，尝试下一个端口号：{}", h2Port + 1);
                 } else {
                     throw e;

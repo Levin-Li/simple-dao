@@ -10,6 +10,7 @@ import java.io.PrintStream;
  * 功能说明：
  */
 
+@Deprecated
 public abstract class ExceptionUtils {
 
     /**
