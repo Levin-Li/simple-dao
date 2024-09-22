@@ -15,7 +15,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -98,7 +100,9 @@ public class ModuleSwaggerConfigurer
                         operation.addExtension31("order", nextOrder);
                     }
 
-                    return DisableApiOperationUtils.isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
+                    return AnnotatedElementUtils.hasAnnotation(handlerMethod.getBeanType(), Controller.class)
+                            && AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), RequestMapping.class)
+                            && DisableApiOperationUtils.isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
                 })
                 .build();
     }
