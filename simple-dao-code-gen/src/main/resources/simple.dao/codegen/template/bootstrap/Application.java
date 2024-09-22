@@ -80,7 +80,7 @@ public class Application {
 
         int h2Port = 9092;
 
-        while (Thread.currentThread().isInterrupted() && h2Port < 9100) {
+        while (!Thread.currentThread().isInterrupted() && h2Port < 9100) {
             //在项目目录中启动 TCP 服务器
             try {
                 Server server = Server.createTcpServer("-tcpPort", "" + h2Port, "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
@@ -96,7 +96,7 @@ public class Application {
                 //Throwable causedBy = ExceptionUtil.getCausedBy(e, BindException.class);
 
                 if (bindException != null) {
-                    log.warn("***WARN***  H2数据库(支持自动建库)启动失败，端口号冲突，尝试下一个端口号：{}", h2Port + 1);
+                    System.err.println("***WARN***  H2数据库(支持自动建库)启动失败，端口号冲突，尝试下一个端口号：" + (h2Port + 1));
                 } else {
                     throw e;
                 }
