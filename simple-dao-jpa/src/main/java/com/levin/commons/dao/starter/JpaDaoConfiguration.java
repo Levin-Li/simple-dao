@@ -6,6 +6,7 @@ import com.alibaba.druid.sql.parser.SQLParserUtils;
 import com.alibaba.druid.util.JdbcUtils;
 import com.levin.commons.conditional.ConditionalOn;
 import com.levin.commons.conditional.ConditionalOnList;
+import com.levin.commons.dao.DaoEventBus;
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.PhysicalNamingStrategy;
@@ -17,6 +18,8 @@ import com.levin.commons.dao.support.JpaDaoImpl;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
+import com.levin.commons.service.support.EventBus;
+import com.levin.commons.service.support.SimpleEventBus;
 import com.levin.commons.utils.MapUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.SneakyThrows;
@@ -114,17 +117,17 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 //    }
 
 
-//    private static class InnerEventBus extends SimpleEventBus implements DaoEventBus {
-//    }
-//
-//    @Bean("com.levin.commons.dao.JpaDao")
-//    @ConditionalOnList({
-//            @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {EventBus.class, DaoEventBus.class}),
-//            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = DaoEventBus.class),
-//    })
-//    DaoEventBus newDaoEventBus() {
-//        return new InnerEventBus();
-//    }
+    private static class InnerEventBus extends SimpleEventBus implements DaoEventBus {
+    }
+
+    @Bean("com.levin.commons.dao.starter.JpaDaoConfiguration.InnerEventBus")
+    @ConditionalOnList({
+            @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {EventBus.class, DaoEventBus.class}),
+            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = DaoEventBus.class),
+    })
+    DaoEventBus newDaoEventBus() {
+        return new InnerEventBus();
+    }
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
