@@ -118,7 +118,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     public boolean handleEvent(boolean ok, EntityOption.Action action, Object id) {
 
         if (ok && action != null && daoEventBus != null) {
-            daoEventBus.sendEvent(E_ScheduledTask.CLASS_NAME + "/" + action, id);
+            daoEventBus.sendEvent(E_ScheduledTask.CLASS_NAME + "/" + action.name(), id);
         }
 
         return ok;
