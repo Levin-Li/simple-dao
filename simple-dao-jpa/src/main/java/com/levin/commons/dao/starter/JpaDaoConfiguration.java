@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -126,7 +127,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = DaoEventBus.class),
     })
     DaoEventBus newDaoEventBus() {
-        return new InnerEventBus();
+        return (DaoEventBus) new InnerEventBus().setExecutor(Executors.newFixedThreadPool(15));
     }
 
     /**
