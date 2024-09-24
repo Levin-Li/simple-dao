@@ -96,6 +96,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
 
+    @Autowired(required = false)
+    DaoEventBus daoEventBus;
 
 <#if isCacheableEntity>
     @PostConstruct
@@ -112,6 +114,15 @@ public class ${className} extends BaseService<${className}> implements ${service
     }
 
 </#if>
+
+    public boolean handleEvent(boolean ok, EntityOption.Action action, Object id) {
+
+        if (ok && action != null && daoEventBus != null) {
+            daoEventBus.sendEvent(E_ScheduledTask.CLASS_NAME + "/" + action, id);
+        }
+
+        return ok;
+    }
 
     @Operation(summary = QUERY_ACTION)
     @Override
@@ -271,7 +282,9 @@ public class ${className} extends BaseService<${className}> implements ${service
         </#if>
         //dao支持保存前先自动查询唯一约束，并给出错误信息
         ${entityName} entity = simpleDao.create(req, true);
+
 <#if pkField?exists>
+        handleEvent(true, EntityOption.Action.Create, entity.get${pkField.name?cap_first}());
         return entity.get${pkField.name?cap_first}();
 <#else>
         return entity != null;
@@ -295,7 +308,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Transactional
     public boolean update(Update${entityName}Req req, Object... queryObjs) {
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.singleUpdateByQueryObj(req, queryObjs);
+        return handleEvent(simpleDao.singleUpdateByQueryObj(req, queryObjs), EntityOption.Action.Update, req.get${pkField.name?cap_first}());
     }
 
     @Operation(summary = UPDATE_ACTION)
@@ -321,7 +334,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Transactional
     public boolean delete(${entityName}IdReq req) {
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        return simpleDao.singleDeleteByQueryObj(req);
+        return handleEvent(simpleDao.singleDeleteByQueryObj(req), EntityOption.Action.Delete, req.get${pkField.name?cap_first}());
     }
 
     @Operation(summary = BATCH_DELETE_ACTION)
