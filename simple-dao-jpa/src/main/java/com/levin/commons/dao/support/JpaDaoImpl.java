@@ -11,8 +11,10 @@ import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
+import com.levin.commons.service.support.SimpleEventBus;
 import com.levin.commons.utils.ExceptionUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
@@ -21,12 +23,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
@@ -44,6 +48,7 @@ import javax.validation.constraints.NotNull;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -164,6 +169,9 @@ public class JpaDaoImpl
     @Autowired(required = false)
     private Validator validator;
 
+//    @Autowired(required = false)
+//    private DaoEventBus daoEventBus;
+
     private ApplicationContext applicationContext;
 
     @Autowired(required = false)
@@ -280,7 +288,6 @@ public class JpaDaoImpl
         List<T> resultList;
     }
 
-
     static {
 
         DaoContext.setEntityClassFieldNullableTestFun(field -> {
@@ -290,6 +297,11 @@ public class JpaDaoImpl
 
         DaoContext.setEntityClassTestFun(type -> type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class), true);
     }
+
+    public JpaDaoImpl() {
+        hibernateVersion = getHibernateVersion();
+    }
+
 
     @PostConstruct
     public void init() {
@@ -309,9 +321,6 @@ public class JpaDaoImpl
         logger.info("jpa dao init.");
     }
 
-    public JpaDaoImpl() {
-        hibernateVersion = getHibernateVersion();
-    }
 
     public static Integer getHibernateVersion() {
 
@@ -748,6 +757,10 @@ public class JpaDaoImpl
             // tryAutoFlushAndDetachAfterUpdate(em, entity);
         }
 
+//        if (daoEventBus != null) {
+//            daoEventBus.sendEvent(entity.getClass().getName(), new EntityEvent(EntityOption.Action.Create, entity));
+//        }
+
         return entity;
     }
 
@@ -795,6 +808,10 @@ public class JpaDaoImpl
 
             em.persist(entity);
         }
+
+//        if (daoEventBus != null) {
+//            daoEventBus.sendEvent(entity.getClass().getName(), new EntityEvent(EntityOption.Action.Create, entity));
+//        }
 
         return entity;
     }
@@ -1583,7 +1600,7 @@ public class JpaDaoImpl
                 }
             }
 
-            TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation( queryObj.getClass(), TargetOption.class);
+            TargetOption targetOption = AnnotatedElementUtils.findMergedAnnotation(queryObj.getClass(), TargetOption.class);
 
             //注解优先
             if (targetOption != null) {
@@ -1593,7 +1610,7 @@ public class JpaDaoImpl
                 }
             }
 
-            ResultOption resultOption =  AnnotatedElementUtils.findMergedAnnotation( queryObj.getClass(), ResultOption.class);
+            ResultOption resultOption = AnnotatedElementUtils.findMergedAnnotation(queryObj.getClass(), ResultOption.class);
 
             //注解优先
             if (resultOption != null) {

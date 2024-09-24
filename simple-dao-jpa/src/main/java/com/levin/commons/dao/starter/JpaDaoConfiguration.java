@@ -37,15 +37,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.SimpleJdbcCall;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceUnit;
 import javax.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
 import java.lang.reflect.AccessibleObject;
@@ -118,6 +113,18 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 //        return new SimpleJdbcCall(jdbcTemplate);
 //    }
 
+
+//    private static class InnerEventBus extends SimpleEventBus implements DaoEventBus {
+//    }
+//
+//    @Bean("com.levin.commons.dao.JpaDao")
+//    @ConditionalOnList({
+//            @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {EventBus.class, DaoEventBus.class}),
+//            @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = DaoEventBus.class),
+//    })
+//    DaoEventBus newDaoEventBus() {
+//        return new InnerEventBus();
+//    }
 
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean

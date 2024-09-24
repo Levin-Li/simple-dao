@@ -1,13 +1,16 @@
 package com.levin.commons.dao;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
  * 默认的查询选项
  */
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @ToString
 public class SimpleQueryOption implements QueryOption {
