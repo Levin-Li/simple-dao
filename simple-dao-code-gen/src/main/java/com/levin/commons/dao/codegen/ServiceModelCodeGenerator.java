@@ -2124,7 +2124,8 @@ public final class ServiceModelCodeGenerator {
                                             }
 
                                             //如果是集合
-                                            if(Collection.class.isAssignableFrom(injectVar.expectBaseType())){
+                                            if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj
+                                                    && Collection.class.isAssignableFrom(injectVar.expectBaseType())) {
                                                 annotations.remove("@NotBlank");
                                                 annotations.add("@NotEmpty");
                                             }
