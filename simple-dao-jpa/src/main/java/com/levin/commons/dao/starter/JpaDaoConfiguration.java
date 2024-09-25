@@ -121,12 +121,14 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
     private static class InnerEventBus extends SimpleEventBus implements DaoEventBus {
     }
 
-    @Bean("com.levin.commons.dao.starter.JpaDaoConfiguration.InnerEventBus")
+    @Bean("com.levin.commons.dao.starter.DaoEventBus")
     @ConditionalOnList({
             @ConditionalOn(action = ConditionalOn.Action.OnClass, types = {EventBus.class, DaoEventBus.class}),
             @ConditionalOn(action = ConditionalOn.Action.OnMissingBean, types = DaoEventBus.class),
+            @ConditionalOn(action = ConditionalOn.Action.OnMissingProperty, value = "com.levin.commons.dao.starter.DaoEventBus==false"),
     })
     DaoEventBus newDaoEventBus() {
+        log.info("Dao 默认DaoEventBus实例启用，可以配置[com.levin.commons.dao.starter.DaoEventBus==false]禁用");
         return (DaoEventBus) new InnerEventBus().setExecutor(Executors.newFixedThreadPool(15));
     }
 
