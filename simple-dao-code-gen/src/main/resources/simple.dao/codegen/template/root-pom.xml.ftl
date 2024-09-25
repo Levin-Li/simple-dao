@@ -668,6 +668,38 @@
                  3. pay-java-*  具体的支付实现库
              -->
 
+ <!--
+
+            &lt;!&ndash; 华为云 OBS 不使用的情况下可以不引入 &ndash;&gt;
+            <dependency>
+                <groupId>com.huaweicloud</groupId>
+                <artifactId>esdk-obs-java</artifactId>
+                <version>3.22.3.1</version>
+            </dependency>
+
+            &lt;!&ndash; 阿里云 OSS 不使用的情况下可以不引入 &ndash;&gt;
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>3.15.1</version>
+            </dependency>
+
+            &lt;!&ndash; 七牛云 Kodo 不使用的情况下可以不引入 &ndash;&gt;
+            <dependency>
+                <groupId>com.qiniu</groupId>
+                <artifactId>qiniu-java-sdk</artifactId>
+                <version>7.11.0</version>
+
+            </dependency>
+
+            &lt;!&ndash; 腾讯云 COS 不使用的情况下可以不引入 &ndash;&gt;
+            <dependency>
+                <groupId>com.qcloud</groupId>
+                <artifactId>cos_api</artifactId>
+                <version>5.6.98</version>
+            </dependency>
+-->
+
             <dependency>
                 <groupId>com.egzosn</groupId>
                 <artifactId>pay-spring-boot-starter</artifactId>

@@ -2123,6 +2123,13 @@ public final class ServiceModelCodeGenerator {
                                                 fieldModel.addImport(aType);
                                             }
 
+                                            //如果是集合
+                                            if(Collection.class.isAssignableFrom(injectVar.expectBaseType())){
+                                                annotations.remove("@NotBlank");
+                                                annotations.add("@NotEmpty");
+                                            }
+
+
                                             fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
 
                                             //基本类型或是集合
