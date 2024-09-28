@@ -100,27 +100,27 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "客户端类型", hidden = true)
     @InjectVar(value = InjectConst.USER_AGENT, isRequired = "false")
-    protected String userAgent;
+    protected String _userAgent;
 
     @Ignore
     @Schema(title = "域名", hidden = true)
     @InjectVar(value = InjectConst.DOMAIN, isRequired = "false")
-    protected String domain;
+    protected String _domain;
 
     @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
     @Schema(title = "IP地址", hidden = true)
     @Ignore
-    protected String ipAddr;
+    protected String _ipAddr;
 
     @Schema(title = "操作员ID", hidden = true)
     @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     @Ignore
-    protected String operatorId;
+    protected String _operatorId;
 
     @Schema(title = "操作员名称", hidden = true)
     @InjectVar(value = InjectConst.USER_NAME, isRequired = "false")
     @Ignore
-    protected String operatorName;
+    protected String _operatorName;
 
     @Schema(title = "允许默认排序")
     @Ignore
