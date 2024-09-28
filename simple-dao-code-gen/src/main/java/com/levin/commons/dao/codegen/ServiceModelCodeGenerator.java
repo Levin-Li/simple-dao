@@ -1965,6 +1965,11 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTypeName(fieldType.getSimpleName() + "Info");
                 fieldModel.setBaseType(false);
 
+                if (isCreateObj) {
+                    //
+                    continue;
+                }
+
             }
 
             setLazy(fieldModel);
@@ -1974,10 +1979,16 @@ public final class ServiceModelCodeGenerator {
                 String subTypeName = subType.getSimpleName();
 
                 if (subType.isAnnotationPresent(Entity.class)) {
+
                     subTypeName = subTypeName + "Info";
                     fieldModel.getImports().add(getInfoClassImport(subType));
                     fieldModel.setLazy(true);
                     fieldModel.setBaseType(false);
+
+                    if (isCreateObj) {
+                        continue;
+                    }
+
                 } else {
                     fieldModel.addImport(subType);
                     fieldModel.setBaseType(isBaseType(forField, subType));

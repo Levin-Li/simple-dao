@@ -97,6 +97,16 @@ public abstract class BaseReq implements ServiceReq {
     protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
 
+    @Ignore
+    @Schema(title = "客户端类型", hidden = true)
+    @InjectVar(value = InjectConst.USER_AGENT, isRequired = "false")
+    protected String userAgent;
+
+    @Ignore
+    @Schema(title = "域名", hidden = true)
+    @InjectVar(value = InjectConst.DOMAIN, isRequired = "false")
+    protected String domain;
+
     @InjectVar(value = InjectConst.IP_ADDR, isRequired = "false")
     @Schema(title = "IP地址", hidden = true)
     @Ignore
