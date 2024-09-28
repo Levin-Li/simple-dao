@@ -52,7 +52,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @Schema(title = "租户名称", hidden = true)
     @InjectVar(value = InjectConst.TENANT_NAME, isRequired = "false")
     @Ignore
-    protected String tenantName;
+    protected String _tenantName;
 
     /**
      * 是否为公共数据

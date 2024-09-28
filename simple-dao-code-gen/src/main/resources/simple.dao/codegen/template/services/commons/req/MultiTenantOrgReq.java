@@ -68,7 +68,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     @Schema(title = "组织机构名称", hidden = true)
     @InjectVar(value = InjectConst.ORG_NAME, isRequired = "false")
     @Ignore
-    protected String orgName;
+    protected String _orgName;
 
     /**
      * 是否为公共数据
