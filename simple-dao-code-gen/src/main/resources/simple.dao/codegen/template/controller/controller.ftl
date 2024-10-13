@@ -141,7 +141,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @GetMapping({"retrieve", "{${pkField.name}}"})
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<${entityName}Info> retrieve(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<${entityName}Info> retrieve(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
          req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -182,7 +182,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping({"delete", "{${pkField.name}}"})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Boolean> delete(${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -199,7 +199,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     //@DeleteMapping(value = {"{${pkField.name}}", ""}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + "-2, 路径变量参数优先")
-    public ApiResp<Boolean> delete2(@RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Boolean> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
         return delete(req, ${pkField.name});
     }
@@ -245,7 +245,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping({"batchDelete"})
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
-    public ApiResp<Integer> batchDelete(@NotNull @Valid Delete${entityName}Req req) {
+    public ApiResp<Integer> batchDelete( @Valid @NotNull Delete${entityName}Req req) {
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
