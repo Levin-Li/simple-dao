@@ -216,7 +216,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PostMapping("batchCreate")
     @Operation(summary = BATCH_CREATE_ACTION, description = BATCH_CREATE_ACTION + " " + BIZ_NAME)
 <#if pkField?exists>
-    public ApiResp<List<${pkField.typeName}>> batchCreate(@RequestBody @Valid List<Create${entityName}Req> reqList) {
+    public ApiResp<List<${pkField.typeName}>> batchCreate(@Valid @RequestBody List<Create${entityName}Req> reqList) {
 <#else>
     public ApiResp<List<Boolean>> batchCreate(@RequestBody List<Create${entityName}Req> reqList) {
 </#if>
@@ -231,7 +231,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     @PutMapping("batchUpdate")
     @Operation(summary = BATCH_UPDATE_ACTION, description = BATCH_UPDATE_ACTION + " " + BIZ_NAME)
-    public ApiResp<Integer> batchUpdate(@RequestBody @Valid List<Update${entityName}Req> reqList) {
+    public ApiResp<Integer> batchUpdate(@Valid @RequestBody List<Update${entityName}Req> reqList) {
 
         reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
 
@@ -245,7 +245,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping({"batchDelete"})
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
-    public ApiResp<Integer> batchDelete( @Valid @NotNull Delete${entityName}Req req) {
+    public ApiResp<Integer> batchDelete(@Valid @NotNull Delete${entityName}Req req) {
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
@@ -258,7 +258,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     //@DeleteMapping(value = {"batchDelete"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
-    public ApiResp<Integer> batchDelete2(@RequestBody @Valid Delete${entityName}Req req) {
+    public ApiResp<Integer> batchDelete2(@Valid @RequestBody Delete${entityName}Req req) {
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
