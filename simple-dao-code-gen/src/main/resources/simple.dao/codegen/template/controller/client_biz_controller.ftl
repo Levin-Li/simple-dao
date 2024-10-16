@@ -66,8 +66,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 *
 */
 
-//生成的控制器
-@RestController(PLUGIN_PREFIX + "${className}")
+//生成的控制器 默认不启用
+//@RestController(PLUGIN_PREFIX + "${className}")
 @RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
 
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
