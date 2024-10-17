@@ -1182,8 +1182,7 @@ public class JpaDaoImpl
 
             } else if (value instanceof CharSequence) {
 
-                boolean ignoreEmptyStr = (uniqueField.unique == null || uniqueField.unique.ignoreEmptyStr())
-                        && !StringUtils.hasText((CharSequence) value);
+                final boolean ignoreEmptyStr = (uniqueField.unique == null || uniqueField.unique.ignoreEmptyStr()) && !StringUtils.hasText((CharSequence) value);
 
                 if (ignoreEmptyStr) {
                     return null;

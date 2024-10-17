@@ -36,12 +36,15 @@ public @interface Unique {
 
     /**
      * 分组
+     * 同一个分组内，多个字段组合成一个唯一约束
+     *
      */
     String group() default "";
 
-
     /**
      * 是否忽略空值
+     *
+     * 当多个字段中，有一个字段值为空，则忽略唯一约束的检查
      *
      * @return
      */
@@ -49,6 +52,8 @@ public @interface Unique {
 
     /**
      * 是否忽略空文本
+     *
+     * 当多个字段中，有一个字段值是空字符串，则忽略唯一约束的检查
      *
      * @return
      */
