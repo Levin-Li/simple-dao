@@ -5,7 +5,10 @@ import ${modulePackageName}.*;
 
 import com.levin.commons.utils.DisableApiOperationUtils;
 
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.info.Info;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +24,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //Swagger3
 
@@ -90,6 +99,7 @@ public class ModuleSwaggerConfigurer
                                         .description(DESC)
                                 )
                 )
+
                 .addOperationCustomizer((operation, handlerMethod) -> {
 
                     // log.info("{} -- > method: {}", operation.getSummary(), handlerMethod);
@@ -100,11 +110,33 @@ public class ModuleSwaggerConfigurer
                         operation.addExtension31("order", nextOrder);
                     }
 
+                    if (operation != null) {
+
+                    }
+
+                    // 过滤掉被 DisableApiOperation 注解禁用的接口
                     return AnnotatedElementUtils.hasAnnotation(handlerMethod.getBeanType(), Controller.class)
                             && AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), RequestMapping.class)
                             && DisableApiOperationUtils.isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
                 })
+                .addOpenApiCustomiser(openApi -> {
+                    //删除调没有接口的tag
+                    Set<String> tags = openApi.getPaths().values().stream()
+                            .flatMap(pathItem -> getOperations(pathItem).stream())
+                            .flatMap(operation -> operation.getTags() != null ? operation.getTags().stream() : Stream.empty())
+                            .collect(Collectors.toSet());
+
+                    if (openApi.getTags() != null) {
+                        //删除调没有接口的tag
+                        openApi.getTags().removeIf(tag -> !tags.contains(tag.getName()));
+                    }
+                })
                 .build();
+    }
+
+    private List<Operation> getOperations(PathItem pathItem) {
+        return Stream.of(pathItem.getOptions(), pathItem.getDelete(), pathItem.getGet(), pathItem.getHead(), pathItem.getTrace()
+                , pathItem.getPatch(), pathItem.getPost(), pathItem.getPut()).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private Long getNextOrder(HandlerMethod handlerMethod) {
