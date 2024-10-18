@@ -214,13 +214,4 @@ public abstract class BaseReq implements ServiceReq {
         return (T) this;
     }
 
-    /**
-     * 强制转换
-     * @param <T>
-     * @return
-     */
-    public <T extends BaseReq> T cast() {
-        return (T) this;
-    }
-
 }
