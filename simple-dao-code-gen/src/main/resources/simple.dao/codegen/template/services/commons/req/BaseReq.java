@@ -73,7 +73,6 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean isWebContext = true;
 
-
     ///////////////////////////////////////////////////
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
@@ -96,6 +95,9 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
+
+    @Schema(title = "请求Id", hidden = true)
+    protected String requestId = java.util.UUID.randomUUID().toString().replace("-", "");
 
     @Ignore
     @Schema(title = "客户端类型", hidden = true)
