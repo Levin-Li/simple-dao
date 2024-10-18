@@ -96,8 +96,8 @@ public abstract class BaseReq implements ServiceReq {
     protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
 
-    @Schema(title = "请求Id", hidden = true)
-    protected String requestId = java.util.UUID.randomUUID().toString().replace("-", "");
+    @Schema(title = "跟踪标识", hidden = true)
+    protected String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
 
     @Ignore
     @Schema(title = "客户端类型", hidden = true)
