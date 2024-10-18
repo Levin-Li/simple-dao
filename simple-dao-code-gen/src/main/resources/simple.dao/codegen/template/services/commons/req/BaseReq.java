@@ -97,6 +97,7 @@ public abstract class BaseReq implements ServiceReq {
     ///////////////////////////////////////////////////////////////////////
 
     @Schema(title = "跟踪标识", hidden = true)
+    @Ignore
     protected String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
 
     @Ignore
