@@ -36,7 +36,8 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @Schema(title = "租户ID", hidden = true, description = "租户ID默认从当前用户获取，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值")
     @InjectVar(value = InjectConst.TENANT_ID
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN // 如果不是超级管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_SAAS_USER // 如果不是SAAS用户，那么值是必须的
+           // , isRequired = InjectVar.SPEL_PREFIX + NOT_SAAS_USER // 如果不是SAAS用户，那么值是必须的 @2024.10.20 注释变更，变更后，允许普通SAAS用户代租户做部分操作
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN // 如果不是超级管理员，那么值是必须的
     )
 //    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && isSaasUser && #isEmpty(#_fieldVal)", type = OrderBy.Type.Asc
 //            , order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID为NULL的排在前面")
