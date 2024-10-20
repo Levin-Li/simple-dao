@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.*;
 
 //import org.springframework.cache.annotation.*;
 //import org.springframework.dao.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
 
 import java.util.*;
@@ -165,6 +166,19 @@ public interface ${className} {
 <#else>
     List<Boolean> batchCreate(@NotNull List<Create${entityName}Req> reqList);
 </#if>
+
+    /**
+    * 唯一更新
+    * 有且仅有一条数据被更新，否则将抛出异常
+    *
+    * @param req
+    * @param queryObjs
+    */
+    @Transactional
+    @Operation(summary = "唯一" + UPDATE_ACTION, description = "有且仅有一条数据被更新，否则将抛出异常")
+    default void updateUnique(@NotNull UpdateAccessLogReq req, Object... queryObjs) {
+        Assert.isTrue(update(req, queryObjs), UPDATE_ACTION + BIZ_NAME + "-未成功");
+    }
 
     /**
      * 更新记录，并返回更新是否成功
