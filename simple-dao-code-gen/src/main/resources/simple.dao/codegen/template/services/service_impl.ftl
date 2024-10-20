@@ -302,6 +302,13 @@ public class ${className} extends BaseService<${className}> implements ${service
         return reqList.stream().map(req -> getSelfProxy().create(req)).collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    @Operation(summary = "唯一" + UPDATE_ACTION, description = "有且仅有一条数据被更新，否则将抛出异常")
+    public void updateUnique(@NotNull Update${entityName}Req req, Object... queryObjs) {
+        Assert.isTrue(getSelfProxy().update(req, queryObjs), BIZ_NAME + "(" + req.get${pkField.name?cap_first}() + ")" + "-更新未成功");
+    }
+
     @Operation(summary = UPDATE_ACTION)
     @Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name}) && #result", key = CK_PREFIX_EXPR + "#req.${pkField.name}")//, beforeInvocation = true

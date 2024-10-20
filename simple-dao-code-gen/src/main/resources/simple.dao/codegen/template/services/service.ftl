@@ -174,11 +174,8 @@ public interface ${className} {
     * @param req
     * @param queryObjs
     */
-    @Transactional
     @Operation(summary = "唯一" + UPDATE_ACTION, description = "有且仅有一条数据被更新，否则将抛出异常")
-    default void updateUnique(@NotNull Update${entityName}Req req, Object... queryObjs) {
-        Assert.isTrue(update(req, queryObjs), BIZ_NAME + "(" + req.get${pkField.name?cap_first}() + ")" + "-更新未成功");
-    }
+    void updateUnique(@NotNull Update${entityName}Req req, Object... queryObjs);
 
     /**
      * 更新记录，并返回更新是否成功
