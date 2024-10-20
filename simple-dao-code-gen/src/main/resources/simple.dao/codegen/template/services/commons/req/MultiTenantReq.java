@@ -33,7 +33,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
         extends BaseReq
         implements MultiTenantObject {
 
-    @Schema(title = "租户ID", hidden = true, description = "租户ID默认从当前用户获取，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值")
+    @Schema(title = "租户ID", hidden = true, description = "租户ID默认取域名关联的租户，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值，并且检查当前用户都租户和域名关联的租户是否相同")
     @InjectVar(value = InjectConst.TENANT_ID
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN // 如果不是超级管理员, 那么覆盖必须的
            // , isRequired = InjectVar.SPEL_PREFIX + NOT_SAAS_USER // 如果不是SAAS用户，那么值是必须的 @2024.10.20 注释变更，变更后，允许普通SAAS用户代租户做部分操作
