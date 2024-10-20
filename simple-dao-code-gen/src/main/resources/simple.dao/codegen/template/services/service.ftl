@@ -177,7 +177,7 @@ public interface ${className} {
     @Transactional
     @Operation(summary = "唯一" + UPDATE_ACTION, description = "有且仅有一条数据被更新，否则将抛出异常")
     default void updateUnique(@NotNull UpdateAccessLogReq req, Object... queryObjs) {
-        Assert.isTrue(update(req, queryObjs), UPDATE_ACTION + BIZ_NAME + "-未成功");
+        Assert.isTrue(update(req, queryObjs), BIZ_NAME + "(" + req.getId() + ")" + "-更新未成功");
     }
 
     /**
