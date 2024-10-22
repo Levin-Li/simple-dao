@@ -36,7 +36,7 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
-    @Eq(condition = "#isNotEmpty(#_fieldVal) && !(#_isUpdate)" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件") // 原条件 && !isCanVisitPersonalData()
+    @Eq(condition = "#isNotEmpty(#_fieldVal) && !(#_isUpdate) && !isCanVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
     @Update(condition = "(#_isUpdate) && isAdmin() " +
             " && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更数据的拥有者")
     protected String ownerId;
