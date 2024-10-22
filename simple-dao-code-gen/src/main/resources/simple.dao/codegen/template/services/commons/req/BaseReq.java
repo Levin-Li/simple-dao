@@ -168,7 +168,7 @@ public abstract class BaseReq implements ServiceReq {
 
     @Schema(title = "是否管理员",description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
     public boolean isAdmin() {
-        return isSuperAdmin || isSaasAdmin || isTenantAdmin;
+        return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
     }
 
     /**
