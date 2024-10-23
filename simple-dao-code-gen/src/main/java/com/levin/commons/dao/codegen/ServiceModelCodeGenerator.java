@@ -272,6 +272,7 @@ public final class ServiceModelCodeGenerator {
         genSameNameFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell");
+        genSameNameFileByTemplate("bootstrap/shell/CpuTopN.sh", params, resPath + "shell");
 
         final String resTemplateDir = "simple.dao/codegen/template/";
 
