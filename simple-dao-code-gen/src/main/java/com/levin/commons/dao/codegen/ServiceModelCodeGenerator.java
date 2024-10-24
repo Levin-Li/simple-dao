@@ -272,7 +272,12 @@ public final class ServiceModelCodeGenerator {
         genSameNameFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell");
-        genSameNameFileByTemplate("bootstrap/shell/CpuTopN.sh", params, resPath + "shell");
+
+        //Java 线程 CPU占用排行
+        genSameNameFileByTemplate("bootstrap/shell/jtCpuTopN.sh", params, resPath + "shell");
+
+        //Java 线程堆栈
+        genSameNameFileByTemplate("bootstrap/shell/jtStack.sh", params, resPath + "shell");
 
         final String resTemplateDir = "simple.dao/codegen/template/";
 
