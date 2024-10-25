@@ -193,27 +193,12 @@ public abstract class BaseController {
         return txt == null ? "" : txt;
     }
 
-    /**
-     * 检查结果
-     *
-     * @param n
-     * @param failAction
-     * @return
-     */
-    protected int assertTrue(int n, String failAction) {
-        Assert.isTrue(n > 0, failAction);
-        return n;
+    protected ApiResp<Integer> expectGtZero(Integer n, String failAction) {
+        return n > 0 ? ApiResp.ok(n) : ApiResp.error(failAction);
     }
 
-    /**
-     * 检查结果
-     *
-     * @param ok
-     * @param failAction
-     * @return
-     */
-    protected boolean assertTrue(boolean ok, String failAction) {
-        Assert.isTrue(ok, failAction);
-        return ok;
+    protected ApiResp<Void> expectTrue(boolean isOk, String failAction) {
+        return isOk ? ApiResp.ok() : ApiResp.error(failAction);
     }
+
 }

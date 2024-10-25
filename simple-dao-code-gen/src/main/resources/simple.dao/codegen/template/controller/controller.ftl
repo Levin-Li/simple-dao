@@ -164,7 +164,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PutMapping({"update",}) // "{${pkField.name}}"
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
+    public ApiResp<Void> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
         //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -172,7 +172,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(UPDATE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().update(req), UPDATE_ACTION + BIZ_NAME + "失败-无记录"));
+        return expectTrue(get${serviceName}().update(req), UPDATE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
@@ -182,7 +182,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping({"delete", "{${pkField.name}}"})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Void> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -190,7 +190,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败-无记录"));
+        return expectTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
@@ -199,7 +199,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     //@DeleteMapping(value = {"{${pkField.name}}", ""}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + "-2, 路径变量参数优先")
-    public ApiResp<Boolean> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Void> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
         return delete(req, ${pkField.name});
     }
@@ -235,7 +235,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败-无记录"));
+        return expectGtZero(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
@@ -249,7 +249,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
 
-        return ApiResp.ok(assertTrue(get${serviceName}().batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败-无记录"));
+        return expectGtZero(get${serviceName}().batchDelete(req), BATCH_DELETE_ACTION + BIZ_NAME + "失败");
     }
 
     /**
