@@ -164,7 +164,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PutMapping({"update",}) // "{${pkField.name}}"
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
+    public ApiResp<Void> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
         //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -182,7 +182,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @DeleteMapping({"delete", "{${pkField.name}}"})
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Boolean> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Void> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
 
         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
@@ -199,7 +199,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     //@DeleteMapping(value = {"{${pkField.name}}", ""}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + "-2, 路径变量参数优先")
-    public ApiResp<Boolean> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Void> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
         return delete(req, ${pkField.name});
     }
