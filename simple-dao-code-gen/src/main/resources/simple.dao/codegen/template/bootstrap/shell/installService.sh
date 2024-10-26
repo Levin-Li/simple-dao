@@ -20,7 +20,7 @@ echo "Gen service[${service_name}]  --> file: ${daemon_service_file}"
 
 #包括双引号
 echo "[Unit]" > "${daemon_service_file}"
-echo "Description=Linux ${App} daemon service" >> "${daemon_service_file}"
+echo "Description=${service_name} daemon service" >> "${daemon_service_file}"
 echo "After=network.target" >> "${daemon_service_file}"
 echo "After=network-online.target" >> "${daemon_service_file}"
 echo "Wants=network-online.target" >> "${daemon_service_file}"
