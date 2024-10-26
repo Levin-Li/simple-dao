@@ -26,7 +26,7 @@ echo "After=network-online.target" >> "${daemon_service_file}"
 echo "Wants=network-online.target" >> "${daemon_service_file}"
 
 echo "[Service]" >> "${daemon_service_file}"
-echo "ExecStart=${shellDir}/restart.sh" >> "${daemon_service_file}"
+echo "ExecStart=${shellDir}/startup.sh" >> "${daemon_service_file}"
 echo "ExecStop=${shellDir}/shutdown.sh" >> "${daemon_service_file}"
 echo "Type=simple" >> "${daemon_service_file}"
 echo "User=${USER}" >> "${daemon_service_file}"
