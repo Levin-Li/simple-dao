@@ -1,6 +1,4 @@
-package $
-
-{modulePackageName}.services.commons.req;
+package ${modulePackageName}.services.commons.req;
 
 
 import cn.hutool.core.lang.Assert;
