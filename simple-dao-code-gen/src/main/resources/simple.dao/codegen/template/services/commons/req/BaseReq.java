@@ -1,4 +1,6 @@
-package ${modulePackageName}.services.commons.req;
+package $
+
+{modulePackageName}.services.commons.req;
 
 
 import cn.hutool.core.lang.Assert;
@@ -35,9 +37,9 @@ import java.util.stream.Stream;
 
 
 /**
- *  基本查询对象
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- *  
+ * 基本查询对象
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  */
 @Schema(title = "基本查询对象")
 @Data
@@ -54,9 +56,10 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
+    public static final String CAN_VISIT_PERSONAL_DATA = " (#canVisitPersonalData?:false)";
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
-    
+
     public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
 
     public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
@@ -91,7 +94,7 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected boolean isTenantAdmin = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + "(#canVisitPersonalData?:false)")
+    @InjectVar(InjectVar.SPEL_PREFIX + CAN_VISIT_PERSONAL_DATA)
     @Ignore
     protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
@@ -166,13 +169,14 @@ public abstract class BaseReq implements ServiceReq {
         return this.isTenantAdmin;
     }
 
-    @Schema(title = "是否管理员",description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
+    @Schema(title = "是否管理员", description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
     public boolean isAdmin() {
         return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
     }
 
     /**
      * 是否强制更新字段
+     *
      * @param fieldName
      * @return
      */
@@ -182,10 +186,11 @@ public abstract class BaseReq implements ServiceReq {
 
     /**
      * 是否非空
+     *
      * @param value
      * @return
      */
-    protected boolean isNotBlank(Object value){
+    protected boolean isNotBlank(Object value) {
         return value != null
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
     }
@@ -196,6 +201,7 @@ public abstract class BaseReq implements ServiceReq {
 
     /**
      * 简单的防止SQL注检查
+     *
      * @param statements
      */
     protected <T extends BaseReq> T checkSQLInject(Iterable<String> statements) {
