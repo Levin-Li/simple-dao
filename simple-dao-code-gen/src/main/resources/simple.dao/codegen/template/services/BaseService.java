@@ -140,6 +140,23 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
         return StringUtils.hasText(txt) ? txt : defaultValue;
     }
 
+
+    /**
+     * 返回第一个非空字符串
+     * @param txts
+     * @return
+     */
+    protected String firstNotEmpty(String... txts) {
+
+        if (txts == null) return null;
+
+        for (String txt : txts) {
+            if (StringUtils.hasText(txt)) return txt;
+        }
+
+        return null;
+    }
+
     /**
      * 空转null
      * @param txt

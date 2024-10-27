@@ -155,6 +155,24 @@ public abstract class BaseController {
     }
 
     /**
+     * 获取第一个非空字符串
+     *
+     * @param txts
+     *
+     * @return
+     */
+    protected String firstNotEmpty(String... txts) {
+
+        if (txts == null) return null;
+
+        for (String txt : txts) {
+            if (StringUtils.hasText(txt)) return txt;
+        }
+
+        return null;
+    }
+
+    /**
      * 是否有内容
      * @param txt
      * @return
