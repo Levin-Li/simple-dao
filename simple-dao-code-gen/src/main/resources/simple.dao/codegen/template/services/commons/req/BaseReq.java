@@ -56,6 +56,7 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
+
     public static final String CAN_VISIT_PERSONAL_DATA = " (#canVisitPersonalData?:false)";
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
