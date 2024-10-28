@@ -448,6 +448,11 @@ public class SelectDaoImpl<T>
                     fieldOrMethod = fieldOrMethodOrName;
                 } else if (fieldOrMethodOrName instanceof Method) {
                     columnAlias = ((Method) fieldOrMethodOrName).getName();
+                    if (columnAlias.length() > 3
+                            && columnAlias.startsWith("get")
+                            && Character.isUpperCase(columnAlias.charAt(3))) {
+                        columnAlias = Character.toLowerCase(columnAlias.charAt(3)) + (columnAlias.length() > 4 ? columnAlias.substring(4) : "");
+                    }
                     fieldOrMethod = fieldOrMethodOrName;
                 } else {
                     throw new StatementBuildException("@Fetch(attrs=" + attr + ") on " + fieldOrMethodOrName);
