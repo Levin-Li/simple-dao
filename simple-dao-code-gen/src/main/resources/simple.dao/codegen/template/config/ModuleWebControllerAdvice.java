@@ -15,9 +15,7 @@ import com.levin.commons.utils.ExceptionUtils;
 
 import com.levin.commons.dao.exception.*;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
@@ -35,6 +33,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.*;
+import org.springframework.web.multipart.*;
+import org.springframework.web.servlet.config.annotation.*;
+import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.http.converter.HttpMessageConversionException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -49,10 +51,9 @@ import java.sql.SQLException;
 import javax.validation.ValidationException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
-import org.springframework.web.servlet.config.annotation.*;
-import org.springframework.boot.autoconfigure.condition.*;
-import org.springframework.http.converter.HttpMessageConversionException;
-
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -290,6 +291,20 @@ public class ModuleWebControllerAdvice {
         log.error("业务参数异常," + request.getRequestURL(), e);
 
         return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
+    }
+
+    @ExceptionHandler({MultipartException.class, MaxUploadSizeExceededException.class})
+    public ApiResp onMultipartException(MultipartException e) {
+
+        log.error("Multipart表单数据异常," + request.getRequestURL(), e);
+
+        String msg = getExMsg(e);
+
+        if (e instanceof MaxUploadSizeExceededException) {
+            msg = "上传文件大小超过限制，不能超过" + multipartProperties.getMaxRequestSize().toMegabytes() + "M";
+        }
+
+        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), msg).setDetailMsg(getExDetailMsg(e));
     }
 
     @ExceptionHandler({IllegalArgumentException.class,
