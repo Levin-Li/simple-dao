@@ -1947,7 +1947,7 @@ public final class ServiceModelCodeGenerator {
                     .addImport(InjectVar.class)
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
-            fieldModel.setLength(field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).length() : -1);
+            fieldModel.setLength(field.isAnnotationPresent(Column.class) && CharSequence.class.isAssignableFrom(fieldType) ? field.getAnnotation(Column.class).length() : -1);
 
             fieldModel.setTypeName(fieldType.getSimpleName());
 
@@ -2233,17 +2233,14 @@ public final class ServiceModelCodeGenerator {
             //javax.validation.constraints
 
 
-            if (fieldModel.getType().equals(String.class)
-                    && fieldModel.getLength() != -1
+            if (fieldModel.getLength() != -1
                     && !fieldModel.getName().endsWith("Body")) {
-                boolean isLob = field.isAnnotationPresent(Lob.class);
-                if (isLob) {
+
+                if (field.isAnnotationPresent(Lob.class)) {
                     //fieldModel.setLength(4000);
                     fieldModel.setTestValue("\"这是长文本正文\"");
-                } else if (fieldModel.getTypeName().equals("String")
-                        || fieldModel.getTypeName().equals("CharSequence")) {
-
-                    annotations.add("@Size(max = " + fieldModel.getLength() + ")");
+                } else {
+                    annotations.add(String.format("@Size(%smax = %s)", (fieldModel.isRequired() ? "min = 1, " : ""), fieldModel.getLength()));
 
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
                 }
