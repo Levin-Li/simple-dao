@@ -129,7 +129,7 @@ public class ${className} extends ${reqExtendClass} {
         </#if>
     </#list>
     <#-- 如果是日期类型 -->
-    <#if field.typeName == 'Date'>
+    <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
     @Schema(title = ${field.schemaTitle} , description = ${field.schemaTitle} + "大于等于字段值")
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
