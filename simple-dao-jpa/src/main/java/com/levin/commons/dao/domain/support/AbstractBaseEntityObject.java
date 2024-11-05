@@ -45,7 +45,6 @@ public abstract class AbstractBaseEntityObject
     protected Date createTime;
 
     @Schema(title = "更新时间")
-    @Column
     @Temporal(value = TemporalType.TIMESTAMP)
 //    @LastModifiedDate
     protected Date lastUpdateTime;
@@ -64,7 +63,7 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(title = "备注")
     @Column(length = 512)
-    @Contains
+    //@Contains
     protected String remark;
 
     @Schema(title = "乐观锁")
