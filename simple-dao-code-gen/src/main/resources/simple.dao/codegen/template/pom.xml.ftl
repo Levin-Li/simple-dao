@@ -214,6 +214,11 @@
             <artifactId>jna-platform</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+        </dependency>
+
     <#if enableOakBaseFramework>
 
         <dependency>
@@ -357,6 +362,12 @@
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-spring-aop</artifactId>
+        </dependency>
+
+        <!--  https://gitee.com/yadong.zhang/JustAuth -->
+        <dependency>
+            <groupId>me.zhyd.oauth</groupId>
+            <artifactId>JustAuth</artifactId>
         </dependency>
 
         <dependency>

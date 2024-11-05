@@ -46,6 +46,7 @@
         <openfeign.version>3.1.5</openfeign.version>
 
         <dubbo.version>3.1.8</dubbo.version>
+        <groovy.version>3.0.22</groovy.version>
         <groovy.version>2.5.23</groovy.version>
 
         <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
@@ -245,6 +246,11 @@
                 <version>${com.dameng.driver.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${groovy.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>cn.hutool</groupId>

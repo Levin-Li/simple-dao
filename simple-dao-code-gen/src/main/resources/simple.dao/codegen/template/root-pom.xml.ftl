@@ -32,6 +32,7 @@
 
         <levin-framework-base.version>2.2.1</levin-framework-base.version>
 
+        <groovy.version>2.5.23</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
 
@@ -260,6 +261,12 @@
                 <version>${r"${dubbo.version}"}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${r"${groovy.version}"}</version>
             </dependency>
 
             <dependency>
