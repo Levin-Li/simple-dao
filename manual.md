@@ -194,7 +194,7 @@ Dao 类逻辑框图，如下图所示。
         //分页
         Paging paging = new PagingQueryReq(1, 20);
     
-        @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875"
+        @Select(condition = "taskCnt > 0 && #_fieldVal > 0 && taskSum > 9875"
                 , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
         int taskCnt = 1;
         
@@ -264,7 +264,7 @@ Dao 类逻辑框图，如下图所示。
        //默认更新注解
        //防止出现负数逻辑
        @Update(paramExpr = "${_name} + (CASE WHEN ( ${_name} + ${_val} ) >= 0 THEN ${_val} ELSE 0 END)"
-               , condition = " #_val != null && #_val != 0")
+               , condition = " #_fieldVal != null && #_fieldVal != 0")
        public class IncrementEditDeviceReq extends BaseServiceReq {
        
            private static final long serialVersionUID = 362651129L;
@@ -313,9 +313,9 @@ Dao 类逻辑框图，如下图所示。
       
           @Select(value = E_User.score, fieldCases = {
           
-                  // case 1 的条件 #_val == 1
+                  // case 1 的条件 #_fieldVal == 1
                   
-                  @Case(value = "", elseExpr = "5", condition = "#_val == 1", 
+                  @Case(value = "", elseExpr = "5", condition = "#_fieldVal == 1", 
                   whenOptions = {
                             @Case.When(whenExpr = "F$:score > 95 AND F$:u.lastUpdateTime is null", thenExpr = "1")
                           , @Case.When(whenExpr = "score > 85", thenExpr = "2")
@@ -323,9 +323,9 @@ Dao 类逻辑框图，如下图所示。
                           , @Case.When(whenExpr = "score > 30", thenExpr = "4")
                   })
       
-                    // case 2 的条件 #_val == 2 && queryState
+                    // case 2 的条件 #_fieldVal == 2 && queryState
                     
-                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState", 
+                  , @Case(value = E_User.state, elseExpr = "5", condition = "#_fieldVal == 2 && queryState", 
                       whenOptions = {
                         @Case.When(whenExpr = "'正常'", thenExpr = "1")
                       , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
@@ -413,7 +413,7 @@ Dao 类逻辑框图，如下图所示。
        #isNotEmpty(param)：内置函数，检测参数是否不为空，如果不为空，则返回 true
 
        使用例子：
-       @Eq(condition="#_val != null") // 变量 #_val 的值为 "Echo"
+       @Eq(condition="#_fieldVal != null") // 变量 #_fieldVal 的值为 "Echo"
        String name = "Echo";     
 
        //函数使用
@@ -516,10 +516,10 @@ Dao 类逻辑框图，如下图所示。
 
    例如：在 condition 属性上示 SPEL表达式，默认变量名前面需要加 # 号，如下
   
-        @Eq(condition="#_val != null") //_val 变量名前要加#号
+        @Eq(condition="#_fieldVal != null") //_val 变量名前要加#号
         String name = "Echo";
         
-        @Gt(condition="#_val != null") //_val 变量名前要加#号
+        @Gt(condition="#_fieldVal != null") //_val 变量名前要加#号
         Integer age = 18;
 
 
@@ -846,11 +846,11 @@ Dao 类逻辑框图，如下图所示。
 
     //以下为代码片段
 
-    @AND(condition = "#_val == true")
+    @AND(condition = "#_fieldVal == true")
     protected Boolean editable = true;
 
     @Lt
-    @OR(condition = "#_val!=null")
+    @OR(condition = "#_fieldVal!=null")
     protected Date createTime = new Date();
 
     @Between("score")
@@ -886,7 +886,7 @@ Dao 类逻辑框图，如下图所示。
               @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
               @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
           
-              @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875" , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+              @Select(condition = "taskCnt > 0 && #_fieldVal > 0 && taskSum > 9875" , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
               int taskCnt = 1;
           
               @Ignore
@@ -1020,7 +1020,7 @@ Dao 类逻辑框图，如下图所示。
 
    大部分的注解都有 condition 属性，以脚本的方式求值，目前只支持SpEL，当返回true时，表示注解生效，如下：
 
-      @Eq(condition="#_val != null")
+      @Eq(condition="#_fieldVal != null")
       String name = "Echo";
       
   当 condition 设置为空字符串时，表示没有要求的条件，默认为注解生效，如下：

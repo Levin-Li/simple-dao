@@ -73,28 +73,34 @@ public abstract class BaseReq implements ServiceReq {
 
     @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
     @Ignore
+    @CtxVar
     protected boolean isWebContext = true;
 
     ///////////////////////////////////////////////////
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
     @Ignore
+    @CtxVar
     protected boolean isSuperAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_ADMIN)
     @Ignore
+    @CtxVar
     protected boolean isSaasAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_USER)
     @Ignore
+    @CtxVar
     protected boolean isSaasUser = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
     @Ignore
+    @CtxVar
     protected boolean isTenantAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + CAN_VISIT_PERSONAL_DATA)
     @Ignore
+    @CtxVar
     protected boolean canVisitPersonalData = false;
     ///////////////////////////////////////////////////////////////////////
 
