@@ -265,7 +265,7 @@
 
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
+                <artifactId>groovy</artifactId>
                 <version>${r"${groovy.version}"}</version>
             </dependency>
 

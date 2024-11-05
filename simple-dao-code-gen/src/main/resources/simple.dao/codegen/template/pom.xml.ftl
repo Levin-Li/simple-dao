@@ -216,7 +216,7 @@
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
+            <artifactId>groovy</artifactId>
         </dependency>
 
     <#if enableOakBaseFramework>
