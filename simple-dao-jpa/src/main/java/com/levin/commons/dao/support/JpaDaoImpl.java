@@ -1488,9 +1488,8 @@ public class JpaDaoImpl
             query = (resultClass == null) ? em.createQuery(statement) : em.createQuery(statement, resultClass);
         }
 
-        query.getResultStream()
 
-        org.hibernate.query.Query hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
+ //       org.hibernate.query.Query hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
 
 //        hibernateQuery.setFlushMode(FlushModeType.AUTO);
 
