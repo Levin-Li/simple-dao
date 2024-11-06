@@ -135,6 +135,7 @@ public abstract class BaseReq implements ServiceReq {
 
     @Schema(title = "允许默认排序")
     @Ignore
+    @CtxVar
     protected boolean enableDefaultOrderBy = true;
 
     ////////////////////////////////////////////////////////////////////
@@ -175,6 +176,7 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Schema(title = "是否管理员", description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
+    @CtxVar
     public boolean isAdmin() {
         return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
     }

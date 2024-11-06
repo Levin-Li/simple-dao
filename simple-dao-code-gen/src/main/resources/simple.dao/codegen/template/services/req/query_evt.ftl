@@ -83,12 +83,12 @@ public class ${className} extends ${reqExtendClass} {
 
     //@Ignore
     @Schema(title = "排序方向")
-    @SimpleOrderBy(expr = "orderBy + ' ' + orderDir", condition = "#isNotEmpty(orderBy) && #isNotEmpty(orderDir)", remark = "生成排序表达式")
+    @SimpleOrderBy(expr = "(orderBy?:'') + ' ' + (orderDir?:'')", condition = "#isNotEmpty(orderBy)", remark = "生成排序表达式")
 <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
-    @OrderBy(value = E_${entityName}.orderCode, condition = "#enableDefaultOrderBy && (#isEmpty(orderBy) || #isEmpty(orderDir))", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按顺序排序")
+    @OrderBy(value = E_${entityName}.orderCode, condition = "#enableDefaultOrderBy && (#isEmpty(orderBy))", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按顺序排序")
 </#if>
 <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-    @OrderBy(value = E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "#enableDefaultOrderBy && (#isEmpty(orderBy) || #isEmpty(orderDir))", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按时间排序")
+    @OrderBy(value = E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')}, condition = "#enableDefaultOrderBy && (#isEmpty(orderBy))", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按时间排序")
 </#if>
     OrderBy.Type orderDir = OrderBy.Type.Desc;
 
