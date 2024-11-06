@@ -23,7 +23,7 @@ import java.lang.annotation.*;
  */
 
 @Repeatable(CtxVar.List.class)
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -78,7 +78,7 @@ public @interface CtxVar {
     /**
      * 列表
      */
-    @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+    @Target({ElementType.FIELD, ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
     @Inherited

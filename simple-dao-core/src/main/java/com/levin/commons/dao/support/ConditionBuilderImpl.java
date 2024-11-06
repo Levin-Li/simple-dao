@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 import javax.persistence.*;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -27,6 +28,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -36,8 +38,10 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1607,7 +1611,39 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param queryValueObj
      * @param fields
      */
+
     private void processCtxVar(Object queryValueObj, List<Field> fields) {
+
+        PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(queryValueObj.getClass());
+
+        for (PropertyDescriptor pd : propertyDescriptors) {
+
+            Method readMethod = pd.getReadMethod();
+
+            if (readMethod == null) {
+                continue;
+            }
+
+            try {
+                CtxVar ctxVar = readMethod.getAnnotation(CtxVar.class);
+
+                if (ctxVar != null) {
+                    processCtxVar(queryValueObj, ctxVar, pd.getName(), readMethod.invoke(queryValueObj));
+                }
+
+                CtxVar.List list = readMethod.getAnnotation(CtxVar.List.class);
+
+                if (list != null && list.value().length > 0) {
+                    Object returnVal = readMethod.invoke(queryValueObj);
+                    for (CtxVar _ctxVar : list.value()) {
+                        processCtxVar(queryValueObj, _ctxVar, pd.getName(), returnVal);
+                    }
+                }
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
 
         //开始处理字段
         for (Field field : fields) {
@@ -1628,28 +1664,20 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //
     }
 
-    private void processCtxVar(Object queryValueObj, Field field, CtxVar ctxVar) {
+    private void processCtxVar(Object queryValueObj, CtxVar ctxVar, String attrName, Object exportValue) {
 
-        if (ctxVar == null || field == null) {
+        if (ctxVar == null || !StringUtils.hasText(attrName)) {
             return;
         }
 
-        Object exportValue = null;
-
-        try {
-            exportValue = field.get(queryValueObj);
-        } catch (IllegalAccessException e) {
-            throw new StatementBuildException(field + "条件过滤失败", e);
-        }
-
-        if (!evalTrueExpr(queryValueObj, exportValue, field.getName(), ctxVar.condition())) {
+        if (!evalTrueExpr(queryValueObj, exportValue, attrName, ctxVar.condition())) {
             return;
         }
 
         String exportVarName = ctxVar.varName();
 
         if (!StringUtils.hasText(exportVarName)) {
-            exportVarName = field.getName();
+            exportVarName = attrName;
         }
 
         Map<String, Object> localContext = getLocalContext(true);
@@ -1662,10 +1690,24 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         String expr = ctxVar.value();
 
         if (StringUtils.hasText(expr)) {
-            exportValue = ExprUtils.evalSpEL(queryValueObj, expr, buildContextValues(queryValueObj, exportValue, field.getName()));
+            exportValue = ExprUtils.evalSpEL(queryValueObj, expr, buildContextValues(queryValueObj, exportValue, attrName));
         }
 
         localContext.put(exportVarName, exportValue);
+
+    }
+
+    private void processCtxVar(Object queryValueObj, Field field, CtxVar ctxVar) {
+
+        if (ctxVar == null || field == null) {
+            return;
+        }
+
+        try {
+            processCtxVar(queryValueObj, ctxVar, field.getName(), field.get(queryValueObj));
+        } catch (IllegalAccessException e) {
+            throw new StatementBuildException(field + "条件过滤失败", e);
+        }
 
     }
 
