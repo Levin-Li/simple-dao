@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -58,7 +57,8 @@ public class FieldModel implements Cloneable {
     //对于集合类型的字段，元素的类型
     private Class eleType;
 
-    private Integer length = -1;
+    //空表示，不是字符串
+    private Integer textLength = null;
 
 
     public final Set<String> imports = new LinkedHashSet<>();

@@ -23,10 +23,8 @@ import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
-import com.levin.commons.ui.annotation.Form;
 import com.levin.commons.ui.annotation.FormItem;
 import com.levin.commons.utils.ExceptionUtils;
-import com.levin.commons.utils.ExpressionUtils;
 import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -1947,7 +1945,8 @@ public final class ServiceModelCodeGenerator {
                     .addImport(InjectVar.class)
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
-            fieldModel.setLength(field.isAnnotationPresent(Column.class) && CharSequence.class.isAssignableFrom(fieldType) ? field.getAnnotation(Column.class).length() : -1);
+
+            fieldModel.setTextLength(field.isAnnotationPresent(Column.class) && CharSequence.class.isAssignableFrom(fieldType) ? field.getAnnotation(Column.class).length() : null);
 
             fieldModel.setTypeName(fieldType.getSimpleName());
 
@@ -2233,16 +2232,17 @@ public final class ServiceModelCodeGenerator {
             //javax.validation.constraints
 
 
-            if (fieldModel.getLength() != -1
+            if (fieldModel.getTextLength() != null
                     && !fieldModel.getName().endsWith("Body")) {
 
                 if (field.isAnnotationPresent(Lob.class)) {
                     //fieldModel.setLength(4000);
                     fieldModel.setTestValue("\"这是长文本正文\"");
                 } else {
-                    annotations.add(String.format("@Size(%smax = %s)", (fieldModel.isRequired() ? "min = 1, " : ""), fieldModel.getLength()));
 
-                    fieldModel.setTestValue("\"这是文本" + fieldModel.getLength() + "\"");
+                    annotations.add(String.format("@Size(%smax = %s)", (fieldModel.isRequired() ? "min = 1, " : ""), fieldModel.getTextLength()));
+
+                    fieldModel.setTestValue("\"这是文本" + fieldModel.getTextLength() + "\"");
                 }
             }
 
