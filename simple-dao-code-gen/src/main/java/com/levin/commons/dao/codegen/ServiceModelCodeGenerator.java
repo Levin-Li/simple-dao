@@ -2240,7 +2240,9 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"这是长文本正文\"");
                 } else {
 
-                    annotations.add(String.format("@Size(%smax = %s)", (fieldModel.isRequired() && isCreateObj ? "min = 1, " : ""), fieldModel.getTextLength()));
+                    //(fieldModel.isRequired() && isCreateObj ? "min = 1, " : ""),
+                    //最小长度限制，通过@NotBlank，来控制
+                    annotations.add(String.format("@Size(%smax = %s)", "", fieldModel.getTextLength()));
 
                     fieldModel.setTestValue("\"这是文本" + fieldModel.getTextLength() + "\"");
                 }
