@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.levin.commons.dao.util.QueryAnnotationUtil.flattenParams;
+import static com.levin.commons.dao.util.QueryAnnotationUtil.getEntityClassByTableName;
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.util.StringUtils.trimWhitespace;
 
@@ -1078,6 +1079,11 @@ public abstract class ExprUtils {
             aliasCacheFunc.accept(alias, entityClass);
         }
 
+        //添加默认别名
+        for (JoinOption joinOption : joinOptions) {
+            aliasMap.put(joinOption.alias().trim().toLowerCase(), isEntityClass(joinOption.entityClass()) ? entityClass : getEntityClassByTableName(joinOption.tableOrStatement()));
+        }
+
         for (JoinOption joinOption : joinOptions) {
 
             if (joinOption.type() == null
@@ -1088,16 +1094,14 @@ public abstract class ExprUtils {
             //别名全部用小写
             String selfAlias = joinOption.alias().trim().toLowerCase();
 
-            boolean hasJoinEntityClass = isValidClass(joinOption.entityClass());
+            Class<?> selfEntityClass = isValidClass(joinOption.entityClass()) ? joinOption.entityClass() : null;
 
-            Class<?> joinEntityClass = hasJoinEntityClass ? joinOption.entityClass() : null;
-
-            if (joinEntityClass == null) {
-                joinEntityClass = miniDao.getEntityClass(joinOption.tableOrStatement());
+            if (selfEntityClass == null) {
+                selfEntityClass = miniDao.getEntityClass(joinOption.tableOrStatement());
             }
 
             if (!hasText(selfAlias)) {
-                selfAlias = getDefaultAlias(joinEntityClass);
+                selfAlias = getDefaultAlias(selfEntityClass);
             }
 
             if (!hasText(selfAlias)) {
@@ -1108,32 +1112,43 @@ public abstract class ExprUtils {
                 throw new StatementBuildException(joinOption + ": alias 重名");
             } else {
 
-                aliasMap.put(selfAlias, joinEntityClass);
+                aliasMap.put(selfAlias, selfEntityClass);
 
                 if (aliasCacheFunc != null) {
-                    aliasCacheFunc.accept(selfAlias, joinEntityClass);
+                    aliasCacheFunc.accept(selfAlias, selfEntityClass);
                 }
             }
 
-            // joinEntityClass 优先于 tableOrStatement 属性
-            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
+            // selfEntityClass 优先于 tableOrStatement 属性
+            String fromStatement = genFromStatement(miniDao, isNative, selfEntityClass, joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
             }
 
-            String targetAlias = joinOption.joinTargetAlias();
+            String joinTargetAlias = joinOption.joinTargetAlias();
 
-            if (!hasText(targetAlias)) {
+            Class<?> joinTargetClass = null;
+
+            if (!hasText(joinTargetAlias)) {
                 //没有指定，默认关联到主表别名
-                targetAlias = alias;
+                joinTargetAlias = alias;
+                //没有指定，默认关联到主表实体类
+                joinTargetClass = entityClass;
+
+            } else {
+
+                joinTargetClass = aliasMap.get(joinTargetAlias.trim().toLowerCase());
+
+                //别名找不到对应的实体类
+                Assert.notNull(joinTargetClass, joinTargetAlias + ": 无法确定关联的目标实体");
             }
 
-            if (!hasText(targetAlias)) {
+            if (!hasText(joinTargetAlias)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的目标");
             }
 
-            targetAlias = targetAlias.trim().toLowerCase();
+            joinTargetAlias = joinTargetAlias.trim().toLowerCase();
 
             builder.append(" ")
                     .append(joinOption.type().name()).append(" Join ")
@@ -1146,67 +1161,67 @@ public abstract class ExprUtils {
                 continue;
             }
 
-            String targetColumn = joinOption.joinTargetColumn();
+            String targetJoinColumn = joinOption.joinTargetColumn();
 
-            if (!hasText(targetColumn) && hasJoinEntityClass) {
+            if (!hasText(targetJoinColumn) && selfEntityClass != null) {
                 //尝试自动获取字段名
-                List<String> refFieldNames = getRefFieldNames(aliasMap.get(targetAlias), joinEntityClass);
+                List<String> refFieldNames = getRefFieldNames(aliasMap.get(joinTargetAlias), selfEntityClass);
 
                 if (refFieldNames != null && refFieldNames.size() == 1) {
-                    targetColumn = refFieldNames.get(0);
+                    targetJoinColumn = refFieldNames.get(0);
                 }
 
                 //如果无法获得，尝试自动获取目标表的主键
-                if (!hasText(targetColumn)
+                if (!hasText(targetJoinColumn)
                         && refFieldNames.size() == 0) {
                     //@todo
                 }
             }
 
-            if (!hasText(targetColumn)) {
+            if (!hasText(targetJoinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的目标列，没有或是存在多个关联字段");
             }
 
-            String joinColumn = joinOption.joinColumn();
+            String selfJoinColumn = joinOption.joinColumn();
 
-            if (!hasText(joinColumn) && miniDao != null && hasJoinEntityClass) {
+            if (!hasText(selfJoinColumn) && miniDao != null && selfEntityClass != null) {
                 //@todo 实现获取表的主键名称
-                joinColumn = miniDao.getPKName(joinEntityClass);
+                selfJoinColumn = miniDao.getPKName(selfEntityClass);
             }
 
-            if (!hasText(joinColumn)) {
+            if (!hasText(selfJoinColumn)) {
                 throw new StatementBuildException(joinOption + ": 无法确定关联的列");
             }
 
-            if (joinColumn.startsWith(C.FIELD_PREFIX)) {
-                joinColumn = joinColumn.substring(C.FIELD_PREFIX.length());
+            if (selfJoinColumn.startsWith(C.FIELD_PREFIX)) {
+                selfJoinColumn = selfJoinColumn.substring(C.FIELD_PREFIX.length());
             }
 
-            if (targetColumn.startsWith(C.FIELD_PREFIX)) {
-                targetColumn = targetColumn.substring(C.FIELD_PREFIX.length());
+            if (targetJoinColumn.startsWith(C.FIELD_PREFIX)) {
+                targetJoinColumn = targetJoinColumn.substring(C.FIELD_PREFIX.length());
             }
 
             //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
 
-                targetColumn = miniDao.getColumnName(entityClass, targetColumn);
+                targetJoinColumn = miniDao.getColumnName(joinTargetClass, targetJoinColumn);
 
-                joinColumn = miniDao.getColumnName(joinEntityClass, joinColumn);
+                selfJoinColumn = miniDao.getColumnName(selfEntityClass, selfJoinColumn);
             }
 
-            if (!targetColumn.contains(".")) {
+            if (!targetJoinColumn.contains(".")) {
                 //如果不包含表达式
-                builder.append(targetAlias).append(".");
+                builder.append(joinTargetAlias).append(".");
             }
 
-            builder.append(targetColumn).append(" = ");
+            builder.append(targetJoinColumn).append(" = ");
 
-            if (!joinColumn.contains(".")) {
+            if (!selfJoinColumn.contains(".")) {
                 //如果不包含表达式
                 builder.append(selfAlias).append(".");
             }
 
-            builder.append(joinColumn).append(" ");
+            builder.append(selfJoinColumn).append(" ");
 
         }
 
@@ -1216,9 +1231,10 @@ public abstract class ExprUtils {
 
     /**
      * entityClass 优先于 tableOrStatement 属性
+     *
      * @param miniDao
      * @param isNative
-     * @param entityClass  优先于 tableOrStatement 属性
+     * @param entityClass      优先于 tableOrStatement 属性
      * @param tableOrStatement
      * @param alias
      * @return
