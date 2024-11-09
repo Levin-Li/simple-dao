@@ -1116,7 +1116,7 @@ public abstract class ExprUtils {
             }
 
             // joinEntityClass 优先于 tableOrStatement 属性
-            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, isEntityClass(joinEntityClass) ? null : joinOption.tableOrStatement(), selfAlias);
+            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -1214,22 +1214,31 @@ public abstract class ExprUtils {
     }
 
 
+    /**
+     * entityClass 优先于 tableOrStatement 属性
+     * @param miniDao
+     * @param isNative
+     * @param entityClass  优先于 tableOrStatement 属性
+     * @param tableOrStatement
+     * @param alias
+     * @return
+     */
     public static String genFromStatement(MiniDao miniDao, boolean isNative, Class entityClass, String tableOrStatement, String alias) {
 
-        if (hasText(tableOrStatement)) {
-
-            //如果时表达式，不是表名，则加上挂号
-            if (tableOrStatement.trim().contains(" ")) {
-                tableOrStatement = "(" + tableOrStatement + ")";
-            }
-
-        } else if (isEntityClass(entityClass)) {
+        if (isEntityClass(entityClass)) {
 
             tableOrStatement = entityClass.getName();
 
             if (isNative && miniDao != null) {
                 //尝试获取表名
                 tableOrStatement = miniDao.getTableName(entityClass);
+            }
+
+        } else if (hasText(tableOrStatement)) {
+
+            //如果时表达式，不是表名，则加上挂号
+            if (tableOrStatement.trim().contains(" ")) {
+                tableOrStatement = "(" + tableOrStatement + ")";
             }
 
         } else {

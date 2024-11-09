@@ -32,7 +32,7 @@ public @interface JoinOption {
      * 对应表名
      * 可以填 Void.class
      *
-     * 优先于 tableOrStatement
+     * 优先于 tableOrStatement 属性
      *
      * @return
      */
