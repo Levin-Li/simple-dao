@@ -82,11 +82,11 @@ public @interface TargetOption {
 
     /**
      * 笛卡儿积连接
-     *
+     * 取消支持，请使用 JoinOption
      *
      * @return
      */
-    SimpleJoinOption[] simpleJoinOptions() default {};
+    //SimpleJoinOption[] simpleJoinOptions() default {};
 
     /**
      * 是否是安全模式

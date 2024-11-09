@@ -1228,7 +1228,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 //        }
 
         join(true, targetOption.joinOptions());
-        join(true, targetOption.simpleJoinOptions());
+
+       // join(true, targetOption.simpleJoinOptions());
 
         return (T) this;
     }
@@ -1298,7 +1299,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                         join(true, queryOption.getJoinOptions());
 
-                        join(true, queryOption.getSimpleJoinOptions());
+                       // join(true, queryOption.getSimpleJoinOptions());
                     }
 
                 });
