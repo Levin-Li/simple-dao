@@ -72,7 +72,7 @@ public @interface TargetOption {
     /**
      * 连接选项
      * <p>
-     * 改配置的优先级高于 fromStatement属性，会让fromStatement属性失效
+     * 
      * <p>
      * 更新和删除操作，此属性无意义
      *
@@ -81,7 +81,8 @@ public @interface TargetOption {
     JoinOption[] joinOptions() default {};
 
     /**
-     * 笛卡儿积
+     * 笛卡儿积连接
+     *
      *
      * @return
      */

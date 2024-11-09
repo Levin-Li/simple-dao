@@ -21,6 +21,8 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -990,6 +992,11 @@ public abstract class ExprUtils {
                 && !(type == Void.class || type == void.class);
     }
 
+    public static boolean isEntityClass(Class type) {
+        return type != null
+                && !(type == Void.class || type == void.class) && (type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class));
+    }
+
     /**
      * 是否非空 null 或是空字符串
      *
@@ -1106,10 +1113,10 @@ public abstract class ExprUtils {
                 if (aliasCacheFunc != null) {
                     aliasCacheFunc.accept(selfAlias, joinEntityClass);
                 }
-
             }
 
-            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, joinOption.tableOrStatement(), selfAlias);
+            // joinEntityClass 优先于 tableOrStatement 属性
+            String fromStatement = genFromStatement(miniDao, isNative, joinEntityClass, isEntityClass(joinEntityClass) ? null : joinOption.tableOrStatement(), selfAlias);
 
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
@@ -1216,8 +1223,7 @@ public abstract class ExprUtils {
                 tableOrStatement = "(" + tableOrStatement + ")";
             }
 
-        } else if (entityClass != null
-                && !Void.class.getName().equals(entityClass.getName())) {
+        } else if (isEntityClass(entityClass)) {
 
             tableOrStatement = entityClass.getName();
 

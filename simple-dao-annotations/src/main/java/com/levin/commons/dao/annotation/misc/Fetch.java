@@ -24,7 +24,9 @@ public @interface Fetch {
     /**
      * 自然连接、内连接、外连接（左外连接、右外连接、全外连接）、交叉连接
      *
+     * 外连接（outer join）分为三种：左外连接，右外连接，全外连接。对应SQL：LEFT/RIGHT/FULL OUTER JOIN。通常省略outer这个关键字。写成：LEFT/RIGHT/FULL JOIN。
      */
+    @Schema(title = "连接类型",description = "自然连接、内连接、外连接（左外连接、右外连接、全外连接）、交叉连接; 外连接 通常省略outer这个关键字。写成：LEFT/RIGHT/FULL JOIN")
     enum JoinType {
 
         @Schema(description = "自然连接不用指定连接列，也不能使用ON语句，它默认比较两张表里相同的名字的列，eg. A NATURAL JOIN B ")
@@ -32,12 +34,15 @@ public @interface Fetch {
 
         @Schema(description = "内连接和自然连接区别之处在于内连接可以自定义两张表的不同列字段，内连接有两种形式：显式和隐式。" +
                 "隐式的内连接，没有INNER JOIN，形成的中间表为两个表的笛卡尔积。 " +
-                "显示的内连接，一般称为内连接，有INNER JOIN，形成的中间表为两个表经过ON条件过滤后的笛卡尔积。")
+                "显示的内连接，一般称为内连接，有INNER JOIN，形成的中间表为两个表经过ON条件过滤后的笛卡尔积。" +
+                "INNER JOIN（内连接）是连接查询中最常见的一种方式。它基于两个或多个表之间的共同字段（通常是主外键关系），将匹配的行合并为一行。它只返回两个表中共有的、符合连接条件的数据。"
+        )
         Inner,
 
         Left,
 
         Right,
+
         @Schema(description = "全外连接（full outer join）：把左右两表进行自然连接，左表在右表没有的显示NULL，右表在左表没有的显示NULL。")
         Full,
 

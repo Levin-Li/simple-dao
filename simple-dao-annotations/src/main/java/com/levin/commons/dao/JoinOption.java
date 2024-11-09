@@ -32,6 +32,8 @@ public @interface JoinOption {
      * 对应表名
      * 可以填 Void.class
      *
+     * 优先于 tableOrStatement
+     *
      * @return
      */
     Class<?> entityClass();
@@ -39,7 +41,7 @@ public @interface JoinOption {
     /**
      * 表名或是语句表达式
      * <p>
-     * 不建议使用，使用原生查询时，也可以通过实体名获取表名
+     * 一般不建议使用，使用原生查询时，也可以通过实体名获取表名
      *
      * @return
      */
@@ -56,7 +58,9 @@ public @interface JoinOption {
     String alias();
 
     /**
-     * on 的条件表达式
+     * on 的条件表达式，可以是多个连接条件, 如：Left JOIN table2 ON table1.id = table2.id AND table1.name = table2.name
+     * <p>
+     * 如果手动指定了 join on 表达式，则不自动生成on表达式
      *
      * @return
      */
@@ -82,7 +86,7 @@ public @interface JoinOption {
     String joinTargetAlias() default "";
 
     /**
-     * 连接目标的列名或是字段名
+     * 连接目标表的列名或是字段名，注意不是本注解 entityClass 中的字段名，而是目标表的字段名
      * <p>
      * <p>
      * 如果是表，必须指定

@@ -1245,6 +1245,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     protected T join(Boolean isAppend, JoinOption... joinOptions) {
 
         //Nothing to do
+        // 在子类中完成逻辑
 
         return (T) this;
     }
@@ -1252,6 +1253,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     protected T join(Boolean isAppend, SimpleJoinOption... joinOptions) {
 
         //Nothing to do
+        // 在子类中完成逻辑
 
         return (T) this;
     }
