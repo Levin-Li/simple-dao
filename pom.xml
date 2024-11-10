@@ -43,6 +43,11 @@
 
         <springdoc.version>1.6.14</springdoc.version>
 
+        <fastjson.version>1.2.83</fastjson.version>
+        <fastjson.version>2.0.42</fastjson.version>
+
+
+        <fastjson2.version>2.0.42</fastjson2.version>
         <openfeign.version>3.1.5</openfeign.version>
 
         <dubbo.version>3.1.8</dubbo.version>
@@ -204,6 +209,20 @@
             &lt;!&ndash;                <version>${project.version}</version>&ndash;&gt;
                         </dependency>
             -->
+
+
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>${levin.service-support.groupId}</groupId>
