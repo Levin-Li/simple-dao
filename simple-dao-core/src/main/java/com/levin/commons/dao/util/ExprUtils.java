@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Assert;
 import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
@@ -19,7 +20,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
-import org.springframework.util.*;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
@@ -1074,14 +1077,23 @@ public abstract class ExprUtils {
 
         //别名转换成小写
         aliasMap.put(alias.trim().toLowerCase(), entityClass);
-
         if (aliasCacheFunc != null) {
             aliasCacheFunc.accept(alias, entityClass);
         }
 
         //添加默认别名
         for (JoinOption joinOption : joinOptions) {
-            aliasMap.put(joinOption.alias().trim().toLowerCase(), isEntityClass(joinOption.entityClass()) ? entityClass : getEntityClassByTableName(joinOption.tableOrStatement()));
+
+            String joinAlias = joinOption.alias().trim().toLowerCase();
+            Class<?> joinClass = isEntityClass(joinOption.entityClass()) ? entityClass : getEntityClassByTableName(joinOption.tableOrStatement());
+
+            Assert.isTrue(aliasMap.containsKey(joinAlias), "别名[{}]重复", joinAlias);
+
+            aliasMap.put(joinAlias, joinClass);
+
+            if (aliasCacheFunc != null) {
+                aliasCacheFunc.accept(joinAlias, joinClass);
+            }
         }
 
         for (JoinOption joinOption : joinOptions) {
@@ -1106,17 +1118,6 @@ public abstract class ExprUtils {
 
             if (!hasText(selfAlias)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，JoinOption注解 的 alias 属性必须指定");
-            }
-
-            if (aliasMap.containsKey(selfAlias)) {
-                throw new StatementBuildException(joinOption + ": alias 重名");
-            } else {
-
-                aliasMap.put(selfAlias, selfEntityClass);
-
-                if (aliasCacheFunc != null) {
-                    aliasCacheFunc.accept(selfAlias, selfEntityClass);
-                }
             }
 
             // selfEntityClass 优先于 tableOrStatement 属性
