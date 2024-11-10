@@ -167,7 +167,7 @@ public class ${className} extends BaseService<${className}> implements ${service
            return null;
        }
 
-        if(req.isSuperAdmin()){
+        if(req.isSuperAdmin() || req.isSaasAdmin()){
             return info;
         }
 
