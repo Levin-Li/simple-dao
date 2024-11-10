@@ -52,6 +52,7 @@ public abstract class ExprUtils {
 
     //字段替换匹配样式：F$:columnName
     public static final Pattern fieldVarStylePattern = Pattern.compile("(F\\$:([\\w._]+))");
+    public static final Pattern fieldVarStylePattern2 = Pattern.compile("([\\s\\(\\)]+)(([\\w._]+)\\.F\\$:([\\w._]+))");
 
     //表名替换匹配样式：E$:entityName
     public static final Pattern entityVarStylePattern = Pattern.compile("(E\\$:([\\w._]+))");
@@ -792,6 +793,8 @@ public abstract class ExprUtils {
         });
 
         //替换字段名称
+        txt = replace(fieldVarStylePattern2, txt, fieldNameConverter);
+
         txt = replace(fieldVarStylePattern, txt, fieldNameConverter);
 
         //替换表名
@@ -851,8 +854,18 @@ public abstract class ExprUtils {
 
             String key = matcher.group(2);
 
+            //针对这种情况   " tr.F$:advertiserId"
+
+            String prefix = "";
+
+            //特别处理
+            if (pattern == fieldVarStylePattern2) {
+                key = key.replace("F$:", "");
+                prefix = matcher.group(1);
+            }
+
             //把占位符，替换掉
-            matcher.appendReplacement(sb, replaceFun.apply(key));
+            matcher.appendReplacement(sb, prefix + replaceFun.apply(key));
         }
 
         if (found) {
@@ -1065,12 +1078,17 @@ public abstract class ExprUtils {
             throw new StatementBuildException("多表关联时，entityClass 或 tableOrStatement 必须指定一个");
         }
 
-        if (!hasText(alias)) {
-            throw new StatementBuildException("多表关联时，别名不允许为空");
-        }
-
         if (entityClass == null) {
             entityClass = miniDao.getEntityClass(tableOrStatement);
+        }
+
+        //获取自动别名
+        if (!hasText(alias) && isEntityClass(entityClass)) {
+            alias = getDefaultAlias(entityClass);
+        }
+
+        if (!hasText(alias)) {
+            throw new StatementBuildException("多表关联时，别名不允许为空");
         }
 
         Map<String, Class> aliasMap = new HashMap<>(joinOptions.length + 1);
@@ -1084,10 +1102,21 @@ public abstract class ExprUtils {
         //添加默认别名
         for (JoinOption joinOption : joinOptions) {
 
-            String joinAlias = joinOption.alias().trim().toLowerCase();
-            Class<?> joinClass = isEntityClass(joinOption.entityClass()) ? entityClass : getEntityClassByTableName(joinOption.tableOrStatement());
+            Class<?> joinClass = isEntityClass(joinOption.entityClass()) ? joinOption.entityClass() : getEntityClassByTableName(joinOption.tableOrStatement());
 
-            Assert.isTrue(aliasMap.containsKey(joinAlias), "别名[{}]重复", joinAlias);
+            String joinAlias = joinOption.alias();
+
+            if (!hasText(joinAlias) && isEntityClass(joinClass)) {
+                joinAlias = getDefaultAlias(joinClass);
+            }
+
+            if (!hasText(joinAlias)) {
+                throw new StatementBuildException("多表关联时，别名alias不允许为空, " + joinOption);
+            }
+            //转换为小写
+            joinAlias = joinAlias.trim().toLowerCase();
+
+            Assert.isFalse(aliasMap.containsKey(joinAlias), "别名[{}]重复", joinAlias);
 
             aliasMap.put(joinAlias, joinClass);
 
@@ -1096,6 +1125,9 @@ public abstract class ExprUtils {
             }
         }
 
+
+        //准备生成连接语句
+
         for (JoinOption joinOption : joinOptions) {
 
             if (joinOption.type() == null
@@ -1103,22 +1135,21 @@ public abstract class ExprUtils {
                 throw new StatementBuildException(joinOption + " type 连接类型必须指定");
             }
 
-            //别名全部用小写
-            String selfAlias = joinOption.alias().trim().toLowerCase();
+            Class<?> selfEntityClass = isEntityClass(joinOption.entityClass()) ? joinOption.entityClass() : getEntityClassByTableName(joinOption.tableOrStatement());
 
-            Class<?> selfEntityClass = isValidClass(joinOption.entityClass()) ? joinOption.entityClass() : null;
+            String selfAlias = joinOption.alias();
 
-            if (selfEntityClass == null) {
-                selfEntityClass = miniDao.getEntityClass(joinOption.tableOrStatement());
-            }
-
-            if (!hasText(selfAlias)) {
+            if (!hasText(selfAlias) && isEntityClass(selfEntityClass)) {
                 selfAlias = getDefaultAlias(selfEntityClass);
             }
 
             if (!hasText(selfAlias)) {
-                throw new StatementBuildException(joinOption + ": 多表关联时，JoinOption注解 的 alias 属性必须指定");
+                throw new StatementBuildException("多表关联时，别名alias不允许为空, " + joinOption);
             }
+
+            //转换为小写
+            selfAlias = selfAlias.trim().toLowerCase();
+
 
             // selfEntityClass 优先于 tableOrStatement 属性
             String fromStatement = genFromStatement(miniDao, isNative, selfEntityClass, joinOption.tableOrStatement(), selfAlias);
@@ -1126,6 +1157,19 @@ public abstract class ExprUtils {
             if (!hasText(fromStatement)) {
                 throw new StatementBuildException(joinOption + ": 多表关联时，entityClass 或 tableOrStatement 必须指定一个");
             }
+
+            builder.append(" ")
+                    .append(joinOption.type().name()).append(" Join ")
+                    .append(fromStatement).append(" On ");
+
+            //优先使用连接表达式
+            if (StringUtils.hasText(joinOption.onExpr())) {
+                builder.append(joinOption.onExpr()).append(" ");
+                continue;
+            }
+
+
+            ////////////////////自动生成 ON 表达式 ////////////////////////
 
             String joinTargetAlias = joinOption.joinTargetAlias();
 
@@ -1151,16 +1195,6 @@ public abstract class ExprUtils {
 
             joinTargetAlias = joinTargetAlias.trim().toLowerCase();
 
-            builder.append(" ")
-                    .append(joinOption.type().name()).append(" Join ")
-                    .append(fromStatement).append(" On ");
-
-            //优先使用连接表达式
-            if (StringUtils.hasText(joinOption.onExpr())) {
-
-                builder.append(joinOption.onExpr()).append(" ");
-                continue;
-            }
 
             String targetJoinColumn = joinOption.joinTargetColumn();
 

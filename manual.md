@@ -479,8 +479,22 @@ Dao 类逻辑框图，如下图所示。
    
 ###### 4.4.3.1 文本替换   
 
-   字段变量的替换
-   
+   字段变量的替换，主要通过以下4中方式提供支持
+
+
+    //占位参数匹配样式：${:paramName}
+     Pattern jpaNamedParamStylePattern = Pattern.compile("(\\$\\{\\s*:\\s*([\\w._]+)\\s*\\})");
+
+    //字段替换匹配样式：F$:columnName
+    Pattern fieldVarStylePattern = Pattern.compile("(F\\$:([\\w._]+))");
+
+    //表名替换匹配样式：E$:entityName
+     Pattern entityVarStylePattern = Pattern.compile("(E\\$:([\\w._]+))");
+
+    //直接替换匹配样式：${paramName}
+     Pattern groovyVarStylePattern = Pattern.compile("(\\$\\{\\s*\\s*([\\w._]+)\\s*\\})");
+
+
   同时同时兼容原生查询和JPA查询的字段，支持使用字段替换变量，格式：F$:[alias.]classFieldName
    
       F$:score > 95 AND F$:u.lastUpdateTime

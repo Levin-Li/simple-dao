@@ -31,7 +31,7 @@ public @interface JoinOption {
      * <p>
      * 对应表名
      * 可以填 Void.class
-     *
+     * <p>
      * 优先于 tableOrStatement 属性
      *
      * @return
@@ -55,7 +55,7 @@ public @interface JoinOption {
      *
      * @return
      */
-    String alias();
+    String alias() default "";
 
     /**
      * on 的条件表达式，可以是多个连接条件, 如：Left JOIN table2 ON table1.id = table2.id AND table1.name = table2.name
