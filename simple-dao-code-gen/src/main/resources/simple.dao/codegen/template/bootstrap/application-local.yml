@@ -19,3 +19,18 @@ spring:
     hibernate:
       ddl-auto: update
 
+#日志配置
+logging:
+  level:
+    root: warn
+    com.levin: debug
+    ${modulePackageName}: debug
+
+
+plugin:
+  com:
+    levin:
+      oak:
+        base:
+          framework:
+            enable-mock-sms-send: true
