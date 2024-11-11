@@ -1202,7 +1202,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         this.alias = targetOption.alias();
 
-        if (!StringUtils.hasText(alias)) {
+        if (!StringUtils.hasText(alias) && ExprUtils.isEntityClass(entityClass)) {
             this.alias = ExprUtils.getDefaultAlias(entityClass);
         }
 
