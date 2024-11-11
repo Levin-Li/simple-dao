@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 public abstract class DaoContext {
 
     public static final String entityClassFieldNullableTestFun = "entityClassFieldNullableFun";
+
     public static final String entityClassTestFun = "entityClassFun";
 
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";

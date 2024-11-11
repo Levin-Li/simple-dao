@@ -3,6 +3,7 @@ package com.levin.commons.dao.util;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import com.levin.commons.dao.DaoContext;
+import com.levin.commons.dao.EntityClassSupplier;
 import com.levin.commons.dao.JoinOption;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.exception.StatementBuildException;
@@ -1010,8 +1011,7 @@ public abstract class ExprUtils {
     }
 
     public static boolean isEntityClass(Class type) {
-        return type != null
-                && !(type == Void.class || type == void.class) && (type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class));
+        return isValidClass(type) && (type.isAnnotationPresent(Entity.class) || type.isAnnotationPresent(MappedSuperclass.class));
     }
 
     /**
@@ -1036,13 +1036,15 @@ public abstract class ExprUtils {
      */
     public static String getDefaultAlias(Class<?> entityClass) {
 
-        Assert.isTrue(isValidClass(entityClass), entityClass.getName() + "不是一个JPA实体类");
+        Assert.isTrue(isEntityClass(entityClass), entityClass.getName() + "不是一个JPA实体类");
 
         String eClass = entityClass.getPackage().getName() + ".E_" + entityClass.getSimpleName();
+
         try {
             return (String) ClassUtils.forName(eClass, null).getField("ALIAS").get(null);
         } catch (Exception e) {
-            throw new StatementBuildException(entityClass.getName() + "获取默认别名失败，错误：" + e.getMessage());
+            return EntityClassSupplier.getAlias(entityClass);
+           // throw new StatementBuildException(entityClass.getName() + "获取默认别名失败，错误：" + e.getMessage());
         }
 
     }

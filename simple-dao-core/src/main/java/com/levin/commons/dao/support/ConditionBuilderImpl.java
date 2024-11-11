@@ -1202,6 +1202,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         this.alias = targetOption.alias();
 
+        if (!StringUtils.hasText(alias)) {
+            this.alias = ExprUtils.getDefaultAlias(entityClass);
+        }
+
         //如果是第一个
         this.safeMode = targetOption.safeMode();
 
@@ -1229,7 +1233,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         join(true, targetOption.joinOptions());
 
-       // join(true, targetOption.simpleJoinOptions());
+        // join(true, targetOption.simpleJoinOptions());
 
         return (T) this;
     }
@@ -1285,6 +1289,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                     alias = queryOption.getAlias();
 
+                    if (!StringUtils.hasText(alias) && ExprUtils.isEntityClass(entityClass)) {
+                        this.alias = ExprUtils.getDefaultAlias(entityClass);
+                    }
+
                     tryUpdateTableName();
 
                     if (hasValidQueryEntity()) {
@@ -1299,7 +1307,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                         join(true, queryOption.getJoinOptions());
 
-                       // join(true, queryOption.getSimpleJoinOptions());
+                        // join(true, queryOption.getSimpleJoinOptions());
                     }
 
                 });
