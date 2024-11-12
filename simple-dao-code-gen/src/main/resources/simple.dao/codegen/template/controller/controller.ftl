@@ -63,7 +63,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 //生成的控制器
 <#--<#if isCreateBizController>//</#if>@RestController(PLUGIN_PREFIX + "${className}")-->
 @RestController(PLUGIN_PREFIX + "${className}")
-<#if isCreateBizController>//</#if>@RequestMapping(API_PATH + "${entityName}") //${entityName?lower_case}
+<#if isCreateBizController>//</#if>@RequestMapping(API_PATH  + E_${entityName}.SIMPLE_CLASS_NAME) //${entityName?lower_case}
 
 <#if isCreateBizController>//</#if>@ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true",  matchIfMissing = true)
 
