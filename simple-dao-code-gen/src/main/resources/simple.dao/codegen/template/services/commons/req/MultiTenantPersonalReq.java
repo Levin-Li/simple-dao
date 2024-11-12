@@ -29,8 +29,8 @@ public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
         implements PersonalObject {
 
     @InjectVar(value = InjectConst.USER_ID
-            , isOverride = InjectVar.SPEL_PREFIX + CAN_VISIT_PERSONAL_DATA // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + CAN_VISIT_PERSONAL_DATA // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + CAN_NOT_VISIT_PERSONAL_DATA // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + CAN_NOT_VISIT_PERSONAL_DATA // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
     @Eq(condition = "#isNotEmpty(#_fieldVal) && !(#_isUpdate) && !isCanVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
