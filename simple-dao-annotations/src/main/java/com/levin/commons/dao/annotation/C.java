@@ -69,7 +69,7 @@ public @interface C {
     String BLANK_VALUE = "#BLANK";
 
     /**
-     * 原表达式
+     * 原表达式，目前用于 @Func注解 和 @Case注解
      */
     String ORIGIN_EXPR = "$$";
 

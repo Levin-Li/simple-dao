@@ -19,6 +19,10 @@ import java.lang.annotation.*;
  * 选择字段注解
  *
  *
+ * @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE)
+ * String[] columns = new String[]{"name", "category", "score"};
+ *
+ *
  * 语句的组成:   op + prefix + value + suffix
  * 如：  to_date('yyyy',fieldName)
  *
