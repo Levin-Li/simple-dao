@@ -11,7 +11,7 @@ import static com.levin.commons.dao.annotation.Op.OperandType.Param;
 
 /**
  * 核心枚举类
- *
+ * <p>
  * 表达式生成规则：左操作数 + 操作符 + 前缀 + 右操作数 + 后缀
  * <p>
  * 可扩展操作枚举对象

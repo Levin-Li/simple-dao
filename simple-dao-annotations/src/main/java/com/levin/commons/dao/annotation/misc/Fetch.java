@@ -23,10 +23,10 @@ public @interface Fetch {
 
     /**
      * 自然连接、内连接、外连接（左外连接、右外连接、全外连接）、交叉连接
-     *
+     * <p>
      * 外连接（outer join）分为三种：左外连接，右外连接，全外连接。对应SQL：LEFT/RIGHT/FULL OUTER JOIN。通常省略outer这个关键字。写成：LEFT/RIGHT/FULL JOIN。
      */
-    @Schema(title = "连接类型",description = "自然连接、内连接、外连接（左外连接、右外连接、全外连接）、交叉连接; 外连接 通常省略outer这个关键字。写成：LEFT/RIGHT/FULL JOIN")
+    @Schema(title = "连接类型", description = "自然连接、内连接、外连接（左外连接、右外连接、全外连接）、交叉连接; 外连接 通常省略outer这个关键字。写成：LEFT/RIGHT/FULL JOIN")
     enum JoinType {
 
         @Schema(description = "自然连接不用指定连接列，也不能使用ON语句，它默认比较两张表里相同的名字的列，eg. A NATURAL JOIN B ")

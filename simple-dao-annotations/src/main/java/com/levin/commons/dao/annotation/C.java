@@ -75,7 +75,6 @@ public @interface C {
 
     /**
      * 字段值
-     *
      */
     String FIELD_VALUE = "$$FIELD_VALUE";
 

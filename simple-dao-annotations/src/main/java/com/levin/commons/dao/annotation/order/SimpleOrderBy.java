@@ -1,6 +1,8 @@
 package com.levin.commons.dao.annotation.order;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.lang.annotation.*;
 
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
@@ -26,8 +28,9 @@ import java.lang.annotation.*;
  *      String name = "";
  *
  * @author llw
- * @version 2.0.0
+ * @since 2.0.0
  */
+@Schema(title = "简单排序", description = "优先使用expr做为排序语句，否则使用被注解的字段值做为排序语句")
 public @interface SimpleOrderBy {
 
     /**

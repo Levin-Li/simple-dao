@@ -161,7 +161,7 @@ public @interface Gt {
      * 可以强制指定为空， C.BLANK_VALUE
      *
      * @return
-     * @see C.BLANK_VALUE
+     * @see C#BLANK_VALUE
      */
     String domain() default "";
 

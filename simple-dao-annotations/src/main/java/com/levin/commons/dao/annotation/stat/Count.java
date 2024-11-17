@@ -128,7 +128,6 @@ public @interface Count {
     Func[] fieldFuncs() default {};
 
 
-
     /**
      * 对整个表达式的包围前缀
      *
@@ -139,8 +138,11 @@ public @interface Count {
 
     /**
      * 字段归属的域，通常是表的别名
+     * 默认为主表别名，如果是子查询，则是子查询的表别名
+     * 可以强制指定为空， C.BLANK_VALUE
      *
      * @return
+     * @see C#BLANK_VALUE
      */
     String domain() default "";
 
