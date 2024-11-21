@@ -87,7 +87,7 @@ public class CachedUidGenerator extends DefaultUidGenerator implements Disposabl
     @Override
     public long getUID() {
         try {
-            return ringBuffer.take();
+            return  Math.abs(ringBuffer.take());
         } catch (Exception e) {
             LOGGER.error("Generate unique id exception. ", e);
             throw new UidGenerateException(e);
