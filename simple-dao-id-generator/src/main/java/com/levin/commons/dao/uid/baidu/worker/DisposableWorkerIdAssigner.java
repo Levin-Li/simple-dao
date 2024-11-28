@@ -43,8 +43,6 @@ import java.util.Map;
 public class DisposableWorkerIdAssigner
         implements WorkerIdAssigner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DisposableWorkerIdAssigner.class);
-
     @Autowired(required = false)
     WorkerNodeDAO workerNodeDAO;
 
