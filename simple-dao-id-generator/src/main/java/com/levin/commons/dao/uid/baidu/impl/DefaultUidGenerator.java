@@ -126,7 +126,7 @@ public class DefaultUidGenerator
     @Override
     public long getUID() throws UidGenerateException {
         try {
-            return nextId();
+            return Math.abs(nextId());
         } catch (Exception e) {
             LOGGER.error("Generate unique id exception. ", e);
             throw new UidGenerateException(e);
