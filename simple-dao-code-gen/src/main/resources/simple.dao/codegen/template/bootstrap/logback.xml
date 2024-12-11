@@ -126,12 +126,7 @@
 
     <!-- TRACE级别日志 appender -->
     <appender name="TRACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 过滤器，只记录ERROR级别的日志 -->
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>TRACE</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
+
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- 按天回滚 daily -->
             <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/trace-log.%i.log.gz</fileNamePattern>
