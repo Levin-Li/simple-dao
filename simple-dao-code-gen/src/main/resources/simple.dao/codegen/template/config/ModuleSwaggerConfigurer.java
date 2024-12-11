@@ -48,22 +48,21 @@ public class ModuleSwaggerConfigurer
      * tokenName Authorization
      */
     @Value("${r"${sa-token.token-name:}"}")
-    private String tokenName = "Authorization";
+    String tokenName = "Authorization";
 
     /**
      * swagger 枚举值和描述之间的分隔符
      */
     @Value("${r"${swagger.enumDelimiter:}"}")
-    private String enumDelimiter;
+    String enumDelimiter;
 
 //    @Autowired
 //    FrameworkProperties frameworkProperties;
 
     @Autowired
-    Environment environment;
+    Environment env;
 
-
-    private boolean isTestEnv;
+    boolean isTestEnv;
 
     final Map<String, AtomicLong> atomicLongMap = new ConcurrentHashMap<>();
 
