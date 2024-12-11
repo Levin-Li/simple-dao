@@ -27,10 +27,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -66,6 +63,8 @@ public class ModuleSwaggerConfigurer
     Environment environment;
 
 
+    private boolean isTestEnv;
+
     final Map<String, AtomicLong> atomicLongMap = new ConcurrentHashMap<>();
 
     private static final String GROUP_NAME = ModuleOption.NAME + "-" + ModuleOption.ID;
@@ -77,6 +76,8 @@ public class ModuleSwaggerConfigurer
             enumDelimiter = "--";
         }
 
+        this.isTestEnv = Arrays.stream(env.getActiveProfiles()).allMatch(profile -> profile.equals("dev") || profile.equals("local") || profile.equals("test"));
+
         log.info("init...");
 
     }
@@ -84,9 +85,26 @@ public class ModuleSwaggerConfigurer
     @Bean(PLUGIN_PREFIX + "GroupedOpenApi")
     public GroupedOpenApi groupedOpenApi() {
 
-        return GroupedOpenApi.builder()
+        GroupedOpenApi.Builder builder = GroupedOpenApi.builder()
                 .group(ID)
                 .displayName(GROUP_NAME)
+                .addOpenApiCustomiser(openApi ->
+                        //Tag排序
+                        openApi
+                                //设置模块信息
+                                .info(new Info()
+                                        .summary(GROUP_NAME)
+                                        .title(NAME)
+                                        .version(API_VERSION)
+                                        .description(DESC)
+                                )
+                );
+
+        if (!isTestEnv) {
+            return builder.build();
+        }
+
+        return builder
                 .packagesToScan(PACKAGE_NAME)
                 .addOpenApiCustomiser(openApi ->
                         //Tag排序
