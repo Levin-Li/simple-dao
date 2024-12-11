@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)
 @ConditionalOnClass({GroupedOpenApi.class,})
-@Profile({"local", "dev", "test"})
+//@Profile({"local", "dev", "test"})
 public class ModuleSwaggerConfigurer
         implements
         WebMvcConfigurer {
