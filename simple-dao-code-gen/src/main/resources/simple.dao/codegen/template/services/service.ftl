@@ -291,8 +291,8 @@ public interface ${className} {
     *
     * @param tenantId 租户ID
     */
-    @Operation(summary = CLEAR_CACHE_ACTION +"-租户", description = "用租户ID，清除租户${entityTitle}缓存")
-    void clearCacheByTenant(String tenantId);
+    @Operation(summary = CLEAR_CACHE_ACTION +"-租户", description = "用租户ID，清除租户${entityTitle}缓存列表")
+    void clearCacheListByTenant(String tenantId);
 
     <#else>
     /**
@@ -304,6 +304,8 @@ public interface ${className} {
     */
     List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter);
 
+    @Operation(summary = CLEAR_CACHE_ACTION +"-默认列表", description = "清除${entityTitle}缓存列表")
+    void clearCacheList();
     </#if>
     /**
      * 获取缓存

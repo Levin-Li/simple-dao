@@ -107,7 +107,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         //${serviceName?uncap_first}.clearAllCache();
         moduleCacheService.getCache(${serviceName}.CACHE_NAME).clear();
 
-        SpringCacheEventListener.add( this.springCacheEventListener(),
+        SpringCacheEventListener.add(this.springCacheEventListener(),
                ${serviceName}.CACHE_NAME, ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict
         );
        
@@ -536,7 +536,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     }
 
     @Override
-    public void clearCacheByTenant(String tenantId){
+    public void clearCacheListByTenant(String tenantId){
         getSelfProxy().clearCache("T@" + null2Empty(tenantId));
     }
 
@@ -581,7 +581,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     }
 
     @Override
-    public void clearCacheByTenant(String tenantId){
+    public void clearCacheList(){
         getSelfProxy().clearCache("${entityName}List");
     }
 
