@@ -425,6 +425,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 
                     //试图清除租户的[${entityTitle}]缓存
                     cache.evict("T@" + null2Empty(tenantId));
+                    cache.evict("${entityName}List");
                 };
     }
 
