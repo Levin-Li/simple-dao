@@ -516,7 +516,8 @@ public class ${className} extends BaseService<${className}> implements ${service
 
         List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
                 simpleDao.selectFrom(${entityName}.class)
-
+                         //最大缓存记录5万
+                        .setSafeModeMaxLimit(-1).disableSafeMode().limit(-1, 5_0000)
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
 
@@ -572,8 +573,8 @@ public class ${className} extends BaseService<${className}> implements ${service
                          </#if>
 			             .setSafeModeMaxLimit(-1).disableSafeMode();
 
-                    //最多2万条记录
-                    return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
+                    //最多5万条记录
+                    return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(5_0000), ex).getItems();
                 }
         );
 
