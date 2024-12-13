@@ -285,6 +285,15 @@ public interface ${className} {
     List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter);
 
         </#if>
+
+    /**
+    * 清除租户${entityTitle}缓存
+    *
+    * @param tenantId 租户ID
+    */
+    @Operation(summary = CLEAR_CACHE_ACTION +"-租户", description = "用租户ID，清除租户${entityTitle}缓存")
+    void clearCacheByTenant(String tenantId);
+
     <#else>
     /**
     * 加载缓存${entityTitle}列表
