@@ -132,7 +132,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
     public PagingData<${entityName}Info> selectQuery(Query${entityName}Req req, Paging paging, String... columnNames){
-        return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(null, paging);
+        return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(${entityName}Info.class, paging);
     }
 
     @Override
