@@ -41,10 +41,8 @@ public abstract class AbstractDaoFactory implements DaoFactory {
 
         if (SelectDao.class.isAssignableFrom(daoClass)) {
             return (DAO) new SelectDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
-
         } else if (UpdateDao.class.isAssignableFrom(daoClass)) {
             return (DAO) new UpdateDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
-
         } else if (DeleteDao.class.isAssignableFrom(daoClass)) {
             return (DAO) new DeleteDaoImpl(getDao(), false).appendByQueryObj(queryObjs);
         } else {

@@ -22,8 +22,9 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
@@ -90,7 +91,9 @@ public class SelectDaoImpl<T>
 
     private boolean useStatAliasForHavingGroupByOrderBy = DaoContext.getValue(DaoContext.useStatAliasForHavingGroupByOrderBy, false);
 
-    Class resultType;
+    @Accessors(chain = true)
+    @Setter@Getter
+    Class defaultResultType;
 
     final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildThreadContext(true);
 
@@ -1291,6 +1294,12 @@ public class SelectDaoImpl<T>
 
         boolean noResultType = resultType == null || resultType == Void.class;
 
+        //尝试默认的结果类型
+        if (noResultType) {
+            resultType = this.defaultResultType;
+            noResultType = resultType == null || resultType == Void.class;
+        }
+
         if (!noResultType && selectColumns.isEmpty()) {
             //加入选择条件
             appendByQueryObj(resultType);
@@ -1489,7 +1498,7 @@ public class SelectDaoImpl<T>
             return;
         }
 
-        this.resultType = targetType;
+        this.defaultResultType = targetType;
 
         if (isNative()) {
             logger.warn("native query can't support [Fetch] annotation, it will be ignore");

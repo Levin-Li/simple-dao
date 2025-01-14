@@ -1489,7 +1489,7 @@ public class JpaDaoImpl
         }
 
 
- //       org.hibernate.query.Query hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
+        //       org.hibernate.query.Query hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
 
 //        hibernateQuery.setFlushMode(FlushModeType.AUTO);
 
@@ -1669,6 +1669,9 @@ public class JpaDaoImpl
             selectDao = newDao(SelectDao.class, queryObjs);
         }
 
+        //设置默认的返回类型
+        selectDao.setDefaultResultType(resultType);
+
         return selectDao;
     }
 
@@ -1680,7 +1683,7 @@ public class JpaDaoImpl
 
     @Override
     public <E> List<E> findByQueryObj(Object... queryObjs) {
-        return findByQueryObj(tryFindResultClass(queryObjs), queryObjs);
+        return findByQueryObj((Class<E>) null, queryObjs);
     }
 
 
@@ -1742,6 +1745,8 @@ public class JpaDaoImpl
 
 
     /**
+     * 判断是否包含指定类型
+     *
      * @param type
      * @param queryObjs
      * @return

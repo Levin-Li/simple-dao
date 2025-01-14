@@ -921,6 +921,11 @@ public abstract class QueryAnnotationUtil {
         return false;
     }
 
+    /**
+     * 是否有选择注解的字段
+     * @param type
+     * @return
+     */
     public static boolean hasSelectStatementField(Class<?> type) {
         return hasSelectStatementField(type, null);
     }
