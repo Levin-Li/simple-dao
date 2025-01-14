@@ -33,6 +33,14 @@ public interface SelectDao<T> extends
      */
     boolean hasSelectColumns();
 
+
+    /**
+     * 设置默认结果类型
+     * @param defaultResultType
+     * @return
+     */
+    SelectDao<T> setDefaultResultType(Class<?> defaultResultType);
+
     /**
      * 设置 having 子句 group by 子句 和 order by 子句 是否使用统计别名
      *
