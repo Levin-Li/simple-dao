@@ -138,12 +138,12 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      *
      * @param req Query${entityName}ByIdReq
      */
-    @GetMapping({"retrieve", "{${pkField.name}}"})
+    @GetMapping({"retrieve"}) //, "{${pkField.name}}"
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<${entityName}Info> retrieve(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<${entityName}Info> retrieve(@Valid ${entityName}IdReq req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
-         req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+        // req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
          Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
 
@@ -161,7 +161,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 更新
      * @param req Update${entityName}Req
      */
-    @PutMapping({"update",}) // "{${pkField.name}}"
+    @PutMapping({"update"}) // , "{${pkField.name}}"
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
     public ApiResp<Void> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
@@ -179,12 +179,12 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      * 删除
      * @param req ${entityName}IdReq
      */
-    @DeleteMapping({"delete", "{${pkField.name}}"})
+    @DeleteMapping({"delete"}) //, "{${pkField.name}}"
     @Operation(summary = DELETE_ACTION, description = DELETE_ACTION  + "(Query方式) " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Void> delete(@Valid ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    public ApiResp<Void> delete(@Valid ${entityName}IdReq req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
-        req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
+        //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
 
@@ -193,16 +193,6 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
         return expectTrue(get${serviceName}().delete(req), DELETE_ACTION + BIZ_NAME + "失败");
     }
 
-    /**
-     * 删除
-     * @param req ${entityName}IdReq
-     */
-    //@DeleteMapping(value = {"{${pkField.name}}", ""}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = DELETE_ACTION, description = DELETE_ACTION + " " + BIZ_NAME + "-2, 路径变量参数优先")
-    public ApiResp<Void> delete2(@Valid @RequestBody ${entityName}IdReq req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
-        Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
-        return delete(req, ${pkField.name});
-    }
 </#if>
 
     //////////////////////////////////////以下是批量操作//////////////////////////////////////
@@ -271,14 +261,14 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     */
     <#if !isCacheableEntity>//</#if>@GetMapping("clearCache")
     @Operation(summary = CLEAR_CACHE_ACTION, description = "keySuffix 通常为记录的ID，如果参数keySuffix和cacheKey都为空，则清除所有缓存")
-    public ApiResp<Boolean> clearCache(String keySuffix, String cacheKey) {
+    public ApiResp<Boolean> clearCache(@Valid CacheKey cacheKey) {
 
         cacheKey = checkRequest(CLEAR_CACHE_ACTION, cacheKey);
 
-        if(StringUtils.hasText(keySuffix)){
-            ${serviceName?uncap_first}.clearCacheByKeySuffix(keySuffix);
-        }else if(StringUtils.hasText(cacheKey)){
-            ${serviceName?uncap_first}.clearCache(cacheKey);
+        if(StringUtils.hasText(cacheKey.getKeySuffix())){
+            ${serviceName?uncap_first}.clearCacheByKeySuffix(cacheKey.getKeySuffix());
+        }else if(StringUtils.hasText(cacheKey.getCacheKey())){
+            ${serviceName?uncap_first}.clearCache(cacheKey.getCacheKey());
         }else{
             ${serviceName?uncap_first}.clearAllCache();
         }

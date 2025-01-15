@@ -73,6 +73,7 @@ public class ${className} extends ${reqExtendClass} {
     @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)
     @In(E_${entityName}.${pkField.name})
     @NotEmpty
+    @Id//主键标识
     ${pkField.typeName}[] ${pkField.name}List;
 
     public ${className}(${pkField.typeName}... ${pkField.name}List) {

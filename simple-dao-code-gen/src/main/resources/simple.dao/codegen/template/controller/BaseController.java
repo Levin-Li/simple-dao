@@ -1,6 +1,5 @@
 package ${modulePackageName}.controller;
 
-import com.levin.commons.dao.*;
 import com.levin.commons.rbac.*;
 import com.levin.commons.utils.*;
 import io.swagger.v3.oas.annotations.*;
@@ -19,7 +18,6 @@ import javax.annotation.*;
 import javax.servlet.http.*;
 
 import com.levin.commons.service.domain.*;
-import com.levin.commons.dao.support.*;
 
 import javax.validation.constraints.*;
 

@@ -2054,6 +2054,9 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setPk(field.isAnnotationPresent(Id.class));
 
+            if (fieldModel.isPk()) {
+                fieldModel.addAnnotation(Id.class);
+            }
 
             final boolean isDiscriminatorColumn = discriminatorColumn != null && fieldModel.getName().equals(discriminatorColumn.name());
 

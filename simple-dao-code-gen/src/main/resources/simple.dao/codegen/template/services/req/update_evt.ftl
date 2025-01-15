@@ -62,6 +62,7 @@ public class ${className} extends ${reqExtendClass} {
     @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)
     <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     @Eq(require = true)
+    @Id//主键标识
     ${pkField.typeName} ${pkField.name};
 
     public ${className}() {

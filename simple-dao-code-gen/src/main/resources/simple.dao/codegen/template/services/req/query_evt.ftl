@@ -113,6 +113,7 @@ public class ${className} extends ${reqExtendClass} {
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} + "集合")
     @In(E_${entityName}.${pkField.name})
+    @Id//主键标识
     List<${pkField.typeName}> ${pkField.name}List;
 
 </#if>
