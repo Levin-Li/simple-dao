@@ -57,6 +57,12 @@ import static ${modulePackageName}.ModuleOption.*;
 public class AppWebMvcConfigurer implements WebMvcConfigurer {
 
     @Autowired
+    HttpServletRequest httpRequest;
+
+    @Autowired
+    HttpServletResponse httpResponse;
+
+    @Autowired
     WebProperties webProperties;
 
     @PostConstruct
@@ -110,7 +116,6 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
         resolvers.add(0, new HandlerMethodArgumentResolver() {
 
             //private CopyOptions copyOptions = CopyOptions.create().ignoreNullValue();
-
             @Override
             public boolean supportsParameter(MethodParameter parameter) {
                 return Paging.class.isAssignableFrom(parameter.getParameterType());
@@ -123,6 +128,8 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                 String limit = webRequest.getParameter("limit");
                 String requireTotals = webRequest.getParameter("count");
                 String requireResultList = webRequest.getParameter("list");
+
+                //@todo 客户端加密数据，在这解密数据
 
                 Map<String, Object> pData = new HashMap<>();
 
@@ -290,8 +297,8 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                                 final String json = objectMapper.writeValueAsString(data);
 
                                 final String sign = SecureUtil.sha1(json);
-                                //加密
 
+                                //加密重写数据，并且签名
                                 data = aesEncrypt(json, sign);
 
                                 jsonGenerator.writeStringField(ApiResp.Fields.sign, sign);
