@@ -1,6 +1,8 @@
 package ${modulePackageName};
 
+import cn.hutool.core.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.beans.factory.annotation.*;
@@ -8,6 +10,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,13 +28,26 @@ public class BlockingFilter extends OncePerRequestFilter {
 
     private boolean isBlocked = false;
 
+    @Autowired
+    Environment environment;
+    private int nohupOutFileMaxSize = 5;
+
     @Override
     public void afterPropertiesSet() throws ServletException {
+
         log.info("阻断过滤器已经启用，可以在本机执行[curl 127.0.0.1/local/console/stop]阻断新的请求");
+
+        nohupOutFileMaxSize = environment.getProperty("nohupOutFileMaxSize", Integer.class, 5);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        File nohupOutFile = new File("./nohup.out");
+        //如果日志文件大于5G
+        if (nohupOutFile.exists() && nohupOutFileMaxSize > 0 && nohupOutFile.length() > nohupOutFileMaxSize * 1_000_000_000L) {
+            FileUtil.writeUtf8String("---日志文件超过5G，自动清除---\n", nohupOutFile);
+        }
 
         final String serverName = request.getServerName();
 
