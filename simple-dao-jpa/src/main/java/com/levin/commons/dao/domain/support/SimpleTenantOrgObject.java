@@ -2,6 +2,7 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.rbac.DataMasking;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,6 +35,7 @@ public abstract class SimpleTenantOrgObject
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
+    @DataMasking
     protected String tenantId;
 
     @Schema(title = "组织机构ID")
