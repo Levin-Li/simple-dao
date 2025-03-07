@@ -37,7 +37,7 @@ public class FieldModel implements Cloneable {
 
     final Class entityType;
 
-    Field field;
+    public Field field;
 
     public String name;
 

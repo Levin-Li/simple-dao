@@ -9,7 +9,9 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.metamodel.TypeDeclarationMetaModel;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
@@ -37,7 +39,9 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
@@ -472,32 +476,51 @@ public final class ServiceModelCodeGenerator {
 
 
     @SneakyThrows
-    public static Map<String, CompilationUnit> parseSrcFile(File srcFileDir) {
+    public static Map<String, CUnit> parseSrcFile(File srcFileDir) {
 
-        Map<String, CompilationUnit> srcFileMap = new LinkedHashMap<>();
+        Map<String, CUnit> srcFileMap = new LinkedHashMap<>();
 
         if (srcFileDir.isDirectory() && srcFileDir.exists()) {
 
-            String prefix = srcFileDir.getCanonicalPath();
+            logger.info("*** 准备开始解析Java源文件: " + srcFileDir.getAbsolutePath());
 
-            for (File javaFile : FileUtils.listFiles(srcFileDir, new String[]{".java"}, true)) {
+            final String prefix = srcFileDir.getCanonicalPath();
 
-                String classFilePath = javaFile.getCanonicalPath().substring(prefix.length() + 1);
+            for (File javaFile : FileUtils.listFiles(srcFileDir, new String[]{"java"}, true)) {
+
+                final String classFilePath = javaFile.getCanonicalPath().substring(prefix.length() + 1);
+
+                final String classPkgName = javaFile.getParentFile().getCanonicalPath().substring(prefix.length() + 1).replace(File.separator, ".");
 
                 logger.info("*** 解析Java源文件：" + classFilePath);
 
-                srcFileMap.put(classFilePath.substring(0, classFilePath.length() - 5).replace(File.separator, ".")
-                        , StaticJavaParser.parse(javaFile));
+                CompilationUnit unit = StaticJavaParser.parse(javaFile);
+
+                for (TypeDeclaration<?> type : unit.getTypes()) {
+                    srcFileMap.put(classPkgName + "." + type.getNameAsString(), new CUnit().setFileName(classFilePath).setType(type).setCompilationUnit(unit));
+                }
             }
 
+            logger.info("*** 解析Java源文件完成，共解析到：" + srcFileMap.size() + "个类，" + srcFileMap.keySet());
+
         } else {
-            logger.error("*** 源文件目录：" + srcFileDir + "不存在。");
+            logger.error("*** 解析Java源文件失败，目录：" + srcFileDir.getAbsolutePath() + "不存在。");
         }
 
         return srcFileMap;
     }
 
-    private static Map<String, CompilationUnit> srcFileCompilationMap;
+    @Data
+    @Accessors(chain = true)
+    static class CUnit {
+        String fileName;
+
+        TypeDeclaration type;
+
+        CompilationUnit compilationUnit;
+    }
+
+    private static Map<String, CUnit> srcFileCompilationMap;
 
     /**
      * 根据Maven目录样式生成 控制器，服务接口，请求和返回值
@@ -517,7 +540,7 @@ public final class ServiceModelCodeGenerator {
         }
 
         if (srcFileCompilationMap == null) {
-            srcFileCompilationMap = parseSrcFile(new File(mavenProject.getBasedir(), mavenProject.getBuild().getSourceDirectory()));
+            srcFileCompilationMap = parseSrcFile(new File(mavenProject.getBuild().getSourceDirectory()));
         }
 
         String canonicalPath = file.getCanonicalPath();
@@ -980,12 +1003,13 @@ public final class ServiceModelCodeGenerator {
     public static void genCodeByEntityClass(Class<?> entityClass, String serviceDir, String adminApiDir
             , Map<String, Object> entityMapping) throws Exception {
 
+        logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode @* 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode @query 表示复制到查询对象");
+
         entityClass(entityClass);
 
         if (entityMapping == null) {
             entityMapping = new LinkedHashMap<>();
         }
-
 
         boolean isMultiTenant = MultiTenantObject.class.isAssignableFrom(entityClass);
         boolean isOrg = OrganizedObject.class.isAssignableFrom(entityClass);
@@ -1886,71 +1910,56 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    /**
-     * 在 CompilationUnit 中查找指定类的指定字段
-     *
-     * @param compilationUnit 编译单元
-     * @param className       类名
-     * @param fieldName       字段名
-     * @return 找到的字段声明
-     */
-    private static FieldDeclaration getField(CompilationUnit compilationUnit, String className, String fieldName) {
-
-        if (compilationUnit == null) {
-            return null;
-        }
-
-        // 查找指定类
-        Optional<ClassOrInterfaceDeclaration> classDeclaration = compilationUnit.getClassByName(className);
-
-        if (classDeclaration.isPresent()) {
-            // 在类中查找指定字段
-            return classDeclaration.get().getFields().stream()
-                    .filter(field -> field.getVariables().stream()
-                            .anyMatch(variable -> variable.getNameAsString().equals(fieldName)))
-                    .findFirst().orElse(null);
-        }
-
-        return null;
-    }
-
     protected static List<String> getCopyAnnotation(FieldModel fieldModel, String action) {
 
         List<String> result = new ArrayList<>();
 
-        Class entityType = fieldModel.getEntityType();
 
         //innerClass.isMemberClass() || innerClass.isLocalClass() || innerClass.isAnonymousClass()
 
-        FieldDeclaration field = getField(srcFileCompilationMap.get(entityType.getName()), entityClass().getName(), fieldModel.getName());
+        final Class<?> cls = fieldModel.getField() != null ? fieldModel.getField().getDeclaringClass() : fieldModel.getEntityType();
 
-        if (field != null) {
+        CUnit cUnit = srcFileCompilationMap.get(cls.getName());
 
-            for (AnnotationExpr annotation : field.getAnnotations()) {
-                //
-                if (annotation.getAllContainedComments().stream()
-                        .anyMatch(comment ->
-                                comment.getContent().contains("@CopyToGenCode")
-                                        && (
-                                        !StringUtils.hasText(action)
-                                                || comment.getContent().contains(" @*")
-                                                || comment.getContent().contains(" @" + action.trim())
-                                )
-                        )
-                ) {
-                    result.add(annotation.toString());
-                }
+        if (cUnit == null) {
+            logger.warn("*** 未发现源码解析类，类：{}，字段：{}"
+                    , cls.getName() + (fieldModel.getEntityType() != cls ? " <- " + fieldModel.getEntityType().getName() : "")
+                    , fieldModel.getName());
+            return result;
+        }
+
+        FieldDeclaration field = (FieldDeclaration) (cUnit.type.getFieldByName(fieldModel.getName())).orElse(null);
+
+        if (field == null) {
+            logger.warn("*** 未发现源码解析字段，类：{}，字段：{}", cls.getName(), fieldModel.getName());
+            return result;
+        }
+
+        for (AnnotationExpr annotation : field.getAnnotations()) {
+
+            final String content = annotation.toString();
+
+            if (content.contains("@CopyToGenCode ")
+                    && (
+                    !StringUtils.hasText(action)
+                            || content.contains(" @*")
+                            || content.contains(" @" + action.trim()
+                    )
+            )
+            ) {
+                //复制原样的注解内容
+                result.add(annotation.toString());
             }
 
+            //logger.info("{} 解析到注解：{}", fieldModel.getName(), annotation.getComment().orElse(null));
         }
+
 
         return result;
     }
 
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
             , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
-
-        logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode @* 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode @query 表示复制到查询对象");
 
         Object defaultEntityInstance = entityClass.newInstance();
 
