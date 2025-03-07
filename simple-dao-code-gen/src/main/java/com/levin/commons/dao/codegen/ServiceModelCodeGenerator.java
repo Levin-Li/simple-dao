@@ -7,10 +7,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.ClassExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.expr.TypeExpr;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.metamodel.TypeDeclarationMetaModel;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.EntityCategory;
@@ -1909,6 +1915,65 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
+    private static Set<String> recursivelyFindClasses(Node node, Set<String> usedClasses) {
+
+        if (usedClasses == null) {
+            usedClasses = new LinkedHashSet<>();
+        }
+
+        if (node instanceof ObjectCreationExpr) {
+            ObjectCreationExpr creationExpr = (ObjectCreationExpr) node;
+            ClassOrInterfaceType type = creationExpr.getType();
+            usedClasses.add(type.getNameAsString());
+        } else if (node instanceof ClassExpr) {
+            ClassExpr classExpr = (ClassExpr) node;
+            usedClasses.add(classExpr.getType().asString());
+        } else if (node instanceof TypeExpr) {
+            TypeExpr typeExpr = (TypeExpr) node;
+            if (typeExpr.getType() instanceof ClassOrInterfaceType) {
+                ClassOrInterfaceType classType = (ClassOrInterfaceType) typeExpr.getType();
+                usedClasses.add(classType.getNameAsString());
+            }
+        }
+
+        // 递归遍历子节点
+        for (Node child : node.getChildNodes()) {
+            recursivelyFindClasses(child, usedClasses);
+        }
+
+        return usedClasses;
+    }
+
+    /**
+     * 从 CompilationUnit 获取不包含 import 关键字和分号的导入列表
+     *
+     * @param compilationUnit 编译单元
+     * @return 导入列表
+     */
+    private static List<String> getImportList(CompilationUnit compilationUnit) {
+
+        List<String> importList = new ArrayList<>();
+
+        // 遍历所有导入声明
+        for (ImportDeclaration importDeclaration : compilationUnit.getImports()) {
+
+            // 提取导入的类名
+            String importName = importDeclaration.getName().asString();
+
+            if (importDeclaration.isStatic()) {
+                // 如果是静态导入，添加静态成员
+                importName = "static " + importName;
+            }
+
+            if (importDeclaration.isAsterisk()) {
+                // 如果是通配符导入，添加类名
+                importName += ".*";
+            }
+
+            importList.add(importName);
+        }
+        return importList;
+    }
 
     protected static List<String> getCopyAnnotation(FieldModel fieldModel, String action) {
 
@@ -1947,6 +2012,20 @@ public final class ServiceModelCodeGenerator {
                     )
             )
             ) {
+
+//                Set<String> classesUsedInBlock = recursivelyFindClasses(annotation, null);
+//                logger.info("{} 解析到注解：{}", fieldModel.getName(), classesUsedInBlock);
+
+
+                //导入注解的类
+
+//                cUnit.getCompilationUnit().getImports().forEach(imp -> {
+//                    fieldModel.getImports().add(imp.toString());
+//                    // logger.info("{} 解析到注解：{}", fieldModel.getName(), imp.toString());
+//                });
+//
+                fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()));
+
                 //复制原样的注解内容
                 result.add(annotation.toString());
             }
