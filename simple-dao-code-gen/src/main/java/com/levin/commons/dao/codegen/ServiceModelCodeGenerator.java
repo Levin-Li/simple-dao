@@ -1,11 +1,15 @@
 package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileSystemUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
@@ -19,6 +23,7 @@ import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
+import com.levin.commons.rbac.DataMasking;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
@@ -47,10 +52,7 @@ import javax.annotation.PostConstruct;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.StringWriter;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -175,7 +177,8 @@ public final class ServiceModelCodeGenerator {
         String template = "模块开发说明.md";
         genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
 
-        ////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+
 
         final List<String> modules = new ArrayList<>(2);
 
@@ -467,6 +470,35 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+
+    @SneakyThrows
+    public static Map<String, CompilationUnit> parseSrcFile(File srcFileDir) {
+
+        Map<String, CompilationUnit> srcFileMap = new LinkedHashMap<>();
+
+        if (srcFileDir.isDirectory() && srcFileDir.exists()) {
+
+            String prefix = srcFileDir.getCanonicalPath();
+
+            for (File javaFile : FileUtils.listFiles(srcFileDir, new String[]{".java"}, true)) {
+
+                String classFilePath = javaFile.getCanonicalPath().substring(prefix.length() + 1);
+
+                logger.info("*** 解析Java源文件：" + classFilePath);
+
+                srcFileMap.put(classFilePath.substring(0, classFilePath.length() - 5).replace(File.separator, ".")
+                        , StaticJavaParser.parse(javaFile));
+            }
+
+        } else {
+            logger.error("*** 源文件目录：" + srcFileDir + "不存在。");
+        }
+
+        return srcFileMap;
+    }
+
+    private static Map<String, CompilationUnit> srcFileCompilationMap;
+
     /**
      * 根据Maven目录样式生成 控制器，服务接口，请求和返回值
      *
@@ -474,8 +506,7 @@ public final class ServiceModelCodeGenerator {
      * @param genParams
      */
     public static void genCodeAsMavenStyle(MavenProject mavenProject, ClassLoader classLoader
-            , String buildOutputDirectory
-            , Map<String, Object> genParams) throws Exception {
+            , String buildOutputDirectory, Map<String, Object> genParams) throws Exception {
 
 //            File file = new File(project.getBuild().getOutputDirectory());
         File file = new File(buildOutputDirectory);
@@ -483,6 +514,10 @@ public final class ServiceModelCodeGenerator {
         if (!file.exists()) {
             logger.error("***" + buildOutputDirectory + "目录不存在，请先编译实体模块。");
             return;
+        }
+
+        if (srcFileCompilationMap == null) {
+            srcFileCompilationMap = parseSrcFile(new File(mavenProject.getBasedir(), mavenProject.getBuild().getSourceDirectory()));
         }
 
         String canonicalPath = file.getCanonicalPath();
@@ -833,6 +868,8 @@ public final class ServiceModelCodeGenerator {
     public static String serviceDir() {
         return getThreadVar(null);
     }
+
+    ///////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////
 
@@ -1848,8 +1885,68 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
+
+    /**
+     * 在 CompilationUnit 中查找指定类的指定字段
+     *
+     * @param compilationUnit 编译单元
+     * @param className       类名
+     * @param fieldName       字段名
+     * @return 找到的字段声明
+     */
+    private static FieldDeclaration getField(CompilationUnit compilationUnit, String className, String fieldName) {
+
+        if (compilationUnit == null) {
+            return null;
+        }
+
+        // 查找指定类
+        Optional<ClassOrInterfaceDeclaration> classDeclaration = compilationUnit.getClassByName(className);
+
+        if (classDeclaration.isPresent()) {
+            // 在类中查找指定字段
+            return classDeclaration.get().getFields().stream()
+                    .filter(field -> field.getVariables().stream()
+                            .anyMatch(variable -> variable.getNameAsString().equals(fieldName)))
+                    .findFirst().orElse(null);
+        }
+
+        return null;
+    }
+
+    protected static List<String> getCopyAnnotation(FieldModel fieldModel, String action) {
+
+        List<String> result = new ArrayList<>();
+
+        Class entityType = fieldModel.getEntityType();
+
+        //innerClass.isMemberClass() || innerClass.isLocalClass() || innerClass.isAnonymousClass()
+
+        FieldDeclaration field = getField(srcFileCompilationMap.get(entityType.getName()), entityClass().getName(), fieldModel.getName());
+
+        if (field != null) {
+
+            for (AnnotationExpr annotation : field.getAnnotations()) {
+                //
+                if (annotation.getAllContainedComments().stream()
+                        .anyMatch(comment ->
+                                comment.getContent().contains("@CopyToGenCode")
+                                        && (!StringUtils.hasText(action) || comment.getContent().contains(" " + action.trim()))
+                        )
+                ) {
+                    result.add(annotation.toString());
+                }
+            }
+
+        }
+
+        return result;
+    }
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
             , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
+
+        logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode query 表示复制到查询对象");
 
         Object defaultEntityInstance = entityClass.newInstance();
 
@@ -2095,7 +2192,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             //生成注解
-            ArrayList<String> annotations = new ArrayList<>();
+            ArrayList<String> annotations = new ArrayList<>(getCopyAnnotation(fieldModel, action));
 
             if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
