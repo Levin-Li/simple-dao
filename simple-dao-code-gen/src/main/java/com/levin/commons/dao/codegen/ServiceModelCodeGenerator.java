@@ -1931,7 +1931,11 @@ public final class ServiceModelCodeGenerator {
                 if (annotation.getAllContainedComments().stream()
                         .anyMatch(comment ->
                                 comment.getContent().contains("@CopyToGenCode")
-                                        && (!StringUtils.hasText(action) || comment.getContent().contains(" " + action.trim()))
+                                        && (
+                                        !StringUtils.hasText(action)
+                                                || comment.getContent().contains(" @*")
+                                                || comment.getContent().contains(" @" + action.trim())
+                                )
                         )
                 ) {
                     result.add(annotation.toString());
@@ -1946,7 +1950,7 @@ public final class ServiceModelCodeGenerator {
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
             , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
-        logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode query 表示复制到查询对象");
+        logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode @* 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode @query 表示复制到查询对象");
 
         Object defaultEntityInstance = entityClass.newInstance();
 
