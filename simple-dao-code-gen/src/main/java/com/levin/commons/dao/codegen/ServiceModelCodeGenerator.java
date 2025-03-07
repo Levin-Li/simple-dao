@@ -1527,7 +1527,7 @@ public final class ServiceModelCodeGenerator {
         //分解字段类型
         LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
 
-        Set<String> impList = fields.stream().map(f -> f.imports.stream().filter(t -> !t.trim().startsWith("java.lang.")).collect(Collectors.toSet()))
+        Set<String> impList = fields.stream().map(f -> f.imports.stream().map(t -> t.trim()).filter(t -> !t.startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<>(), (f, s) -> {
                     f.addAll(s);
                     return f;
@@ -2024,7 +2024,7 @@ public final class ServiceModelCodeGenerator {
 //                    // logger.info("{} 解析到注解：{}", fieldModel.getName(), imp.toString());
 //                });
 //
-                fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()));
+                fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()).stream().filter(s -> !s.contains("javax.persistence.")).collect(Collectors.toList()));
 
                 //复制原样的注解内容
                 result.add(annotation.toString());
