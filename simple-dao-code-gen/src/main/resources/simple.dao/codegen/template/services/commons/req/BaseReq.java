@@ -204,6 +204,11 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     protected <T extends BaseReq> T checkSQLInject(String... statements) {
+
+        if(statements == null){
+            return (T) this;
+        }
+
         return checkSQLInject(Arrays.asList(statements));
     }
 
@@ -214,7 +219,12 @@ public abstract class BaseReq implements ServiceReq {
      */
     protected <T extends BaseReq> T checkSQLInject(Iterable<String> statements) {
 
+        if(statements == null){
+            return (T) this;
+        }
+
         for (String statement : statements) {
+
             if (!StringUtils.hasText(statement)) {
                 continue;
             }
