@@ -4,6 +4,16 @@ import groovy.lang.GroovyShell;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.codehaus.plexus.DefaultPlexusContainer;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -33,6 +43,7 @@ public abstract class Utils {
 
         return moduleName;
     }
+
 
     /**
      * 替换并写入文件

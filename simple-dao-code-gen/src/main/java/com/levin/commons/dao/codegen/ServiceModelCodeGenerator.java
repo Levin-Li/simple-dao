@@ -745,6 +745,15 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(false);
     }
 
+    public static List<String> keepAnnotationList(String... newValue) {
+        return putThreadVar(Arrays.asList(newValue));
+    }
+
+    public static List<String> keepAnnotationList() {
+        return getThreadVar(Collections.emptyList());
+    }
+
+
     public static Boolean enableDubbo(Boolean newValue) {
         return putThreadVar(newValue);
     }
@@ -1520,8 +1529,8 @@ public final class ServiceModelCodeGenerator {
         //默认
 
         if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
-            classModel.getImports().add(JsonIgnoreProperties.class.getName());
-            classModel.getAnnotations().add("@JsonIgnoreProperties({\"tenantId\"})");
+//            classModel.getImports().add(JsonIgnoreProperties.class.getName());
+//            classModel.getAnnotations().add("@JsonIgnoreProperties({\"tenantId\"})");
         }
 
         //分解字段类型
@@ -1915,34 +1924,6 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
-    private static Set<String> recursivelyFindClasses(Node node, Set<String> usedClasses) {
-
-        if (usedClasses == null) {
-            usedClasses = new LinkedHashSet<>();
-        }
-
-        if (node instanceof ObjectCreationExpr) {
-            ObjectCreationExpr creationExpr = (ObjectCreationExpr) node;
-            ClassOrInterfaceType type = creationExpr.getType();
-            usedClasses.add(type.getNameAsString());
-        } else if (node instanceof ClassExpr) {
-            ClassExpr classExpr = (ClassExpr) node;
-            usedClasses.add(classExpr.getType().asString());
-        } else if (node instanceof TypeExpr) {
-            TypeExpr typeExpr = (TypeExpr) node;
-            if (typeExpr.getType() instanceof ClassOrInterfaceType) {
-                ClassOrInterfaceType classType = (ClassOrInterfaceType) typeExpr.getType();
-                usedClasses.add(classType.getNameAsString());
-            }
-        }
-
-        // 递归遍历子节点
-        for (Node child : node.getChildNodes()) {
-            recursivelyFindClasses(child, usedClasses);
-        }
-
-        return usedClasses;
-    }
 
     /**
      * 从 CompilationUnit 获取不包含 import 关键字和分号的导入列表
@@ -1975,9 +1956,24 @@ public final class ServiceModelCodeGenerator {
         return importList;
     }
 
-    protected static List<String> getCopyAnnotation(FieldModel fieldModel, String action) {
 
-        List<String> result = new ArrayList<>();
+    protected static boolean isMatch(String content, String action) {
+
+        boolean anyMatch = keepAnnotationList().stream().filter(StringUtils::hasText).anyMatch(p -> PatternMatchUtils.simpleMatch(p, content));
+
+        return (anyMatch || (content.contains("@CopyToGenCode ")
+                && (
+                !StringUtils.hasText(action)
+                        || content.contains(" @*")
+                        || content.contains(" @" + action.trim()
+                )
+        )));
+
+    }
+
+    protected static Set<String> getCopyAnnotation(FieldModel fieldModel, String action) {
+
+        Set<String> result = new LinkedHashSet<>();
 
 
         //innerClass.isMemberClass() || innerClass.isLocalClass() || innerClass.isAnonymousClass()
@@ -1990,6 +1986,22 @@ public final class ServiceModelCodeGenerator {
             logger.warn("*** 未发现源码解析类，类：{}，字段：{}"
                     , cls.getName() + (fieldModel.getEntityType() != cls ? " <- " + fieldModel.getEntityType().getName() : "")
                     , fieldModel.getName());
+
+            //如果没有源码，则读取类的定义
+            if (fieldModel.getField() != null) {
+                List<String> fieldAnnotationList = com.levin.commons.utils.ClassUtils.getFieldAnnotationList(fieldModel.getField());
+
+                Set<String> tempResult = fieldAnnotationList.stream().filter(c -> isMatch(c, action)).collect(Collectors.toSet());
+
+                if (!tempResult.isEmpty()) {
+                    //添加导入
+                    fieldModel.getImports().addAll(com.levin.commons.utils.ClassUtils.getFieldAnnotationImportList(fieldModel.getField()));
+                }
+
+                return tempResult;
+            }
+
+
             return result;
         }
 
@@ -2004,30 +2016,12 @@ public final class ServiceModelCodeGenerator {
 
             final String content = annotation.toString();
 
-            if (content.contains("@CopyToGenCode ")
-                    && (
-                    !StringUtils.hasText(action)
-                            || content.contains(" @*")
-                            || content.contains(" @" + action.trim()
-                    )
-            )
-            ) {
+            if (isMatch(content, action)) {
 
-//                Set<String> classesUsedInBlock = recursivelyFindClasses(annotation, null);
-//                logger.info("{} 解析到注解：{}", fieldModel.getName(), classesUsedInBlock);
-
-
-                //导入注解的类
-
-//                cUnit.getCompilationUnit().getImports().forEach(imp -> {
-//                    fieldModel.getImports().add(imp.toString());
-//                    // logger.info("{} 解析到注解：{}", fieldModel.getName(), imp.toString());
-//                });
-//
                 fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()).stream().filter(s -> !s.contains("javax.persistence.")).collect(Collectors.toList()));
 
                 //复制原样的注解内容
-                result.add(annotation.toString());
+                result.add(content);
             }
 
             //logger.info("{} 解析到注解：{}", fieldModel.getName(), annotation.getComment().orElse(null));

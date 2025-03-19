@@ -2,6 +2,8 @@ package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.rbac.DataMasking;
+import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,7 +37,7 @@ public abstract class AbstractMultiTenantObject
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
-    @DataMasking
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示通道详情, @CopyToGenCode @*")
     protected String tenantId;
 
 }

@@ -4,12 +4,15 @@ import cn.hutool.core.map.MapUtil;
 import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.plugins.Utils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.impl.ArtifactResolver;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -180,11 +183,20 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter
     protected String[] ignoreEntities = {".+\\.TestOrg", ".+\\.TestRole"};
 
+
+    /**
+     * 生成代码时字段上保留的注解列表，可以支持 * 通配符
+     */
+    @Parameter
+    protected String[] keepAnnotationList = {};
+
+
     /**
      * 代码生成的附加参数
      */
     @Parameter
     protected Map<String, Object> codeGenParams;
+
 
     {
         independentPluginClassLoader = false;
@@ -342,6 +354,7 @@ public class CodeGeneratorMojo extends BaseMojo {
                         (splitDir ? mavenProject.getBasedir().getParentFile().getName() : mavenProject.getBasedir().getName());
             }
 
+            ServiceModelCodeGenerator.keepAnnotationList(this.keepAnnotationList);
             ServiceModelCodeGenerator.isOutputFormatCode(this.isOutputFormatCode);
             ServiceModelCodeGenerator.enableDubbo(this.enableDubbo);
             ServiceModelCodeGenerator.isIgnoreCodeCommentChange(this.isIgnoreCodeCommentChange);
