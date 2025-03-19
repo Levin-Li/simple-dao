@@ -1989,7 +1989,7 @@ public final class ServiceModelCodeGenerator {
 
             //如果没有源码，则读取类的定义
             if (fieldModel.getField() != null) {
-                List<String> fieldAnnotationList = com.levin.commons.utils.ClassUtils.getFieldAnnotationList(fieldModel.getField());
+                Set<String> fieldAnnotationList = com.levin.commons.utils.ClassUtils.getFieldAnnotationList(fieldModel.getField());
 
                 Set<String> tempResult = fieldAnnotationList.stream().filter(c -> isMatch(c, action)).collect(Collectors.toSet());
 
