@@ -63,12 +63,12 @@ public class FieldModel implements Cloneable {
 
     public final Set<String> imports = new LinkedHashSet<>();
 
-    private final Set<String> annotations = new HashSet<>();
+    private final Set<String> annotations = new LinkedHashSet<>();
 
     //字段修饰前缀
-    private final Set<String> modifiers = new HashSet<>();
+    private final Set<String> modifiers = new LinkedHashSet<>();
 
-    private final Map<String, Object> extras = new HashMap<>();
+    private final Map<String, Object> extras = new LinkedHashMap<>();
 
     private boolean pk = false;//是否主键字段
 

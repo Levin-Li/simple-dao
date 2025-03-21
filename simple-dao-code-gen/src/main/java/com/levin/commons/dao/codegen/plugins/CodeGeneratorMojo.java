@@ -192,6 +192,12 @@ public class CodeGeneratorMojo extends BaseMojo {
 
 
     /**
+     * 注解内容替换
+     */
+    @Parameter
+    protected Map<String, String> annotationContentReplaceMap = new HashMap<>();
+
+    /**
      * 代码生成的附加参数
      */
     @Parameter
@@ -355,6 +361,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             }
 
             ServiceModelCodeGenerator.keepAnnotationList(this.keepAnnotationList);
+            ServiceModelCodeGenerator.annotationContentReplaceMap(this.annotationContentReplaceMap);
             ServiceModelCodeGenerator.isOutputFormatCode(this.isOutputFormatCode);
             ServiceModelCodeGenerator.enableDubbo(this.enableDubbo);
             ServiceModelCodeGenerator.isIgnoreCodeCommentChange(this.isIgnoreCodeCommentChange);

@@ -32,6 +32,8 @@ import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.rbac.DataMasking;
+import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.ContextHolder;
@@ -751,6 +753,15 @@ public final class ServiceModelCodeGenerator {
 
     public static List<String> keepAnnotationList() {
         return getThreadVar(Collections.emptyList());
+    }
+
+
+    public static Map<String, String> annotationContentReplaceMap(Map<String, String> newValue) {
+        return putThreadVar((newValue));
+    }
+
+    public static Map<String, String> annotationContentReplaceMap() {
+        return getThreadVar(Collections.emptyMap());
     }
 
 
@@ -2539,7 +2550,78 @@ public final class ServiceModelCodeGenerator {
         }
 
 
+        if (isInfoObj && isMultiTenantObject) {
+
+            FieldModel tenantFm = fieldModelList.stream().filter(fm -> fm.getName().equals(InjectConst.TENANT_ID)).findFirst().orElse(null);
+
+            boolean hasTenantName = fieldModelList.stream().anyMatch(fieldModel -> fieldModel.getName().equals(InjectConst.TENANT_NAME));
+
+            if (!hasTenantName && tenantFm != null) {
+
+                FieldModel fieldModel = new FieldModel(entityClass)
+                        .setName(InjectConst.TENANT_NAME)
+                        .setTitle("租户名称")
+                        .setType(String.class)
+                        .setTypeName("String")
+                        .setBaseType(true)
+                        .setNotUpdate(true)
+                        .setDesc("")
+                        .setSchemaDescUseConstRef(false)
+                        .setTestValue("\"租户名称\"");
+
+                fieldModel.addImport(InjectVar.class)
+                        .addImport(InjectConst.class);
+
+                fieldModel.getAnnotations().add("@InjectVar(value = InjectConst.TENANT_NAME, isRequired = \"false\")");
+
+                int indexOf = fieldModelList.indexOf(tenantFm);
+
+                // 插入到租户ID后面
+                fieldModelList.add(indexOf + 1, fieldModel);
+
+            }
+        }
+
+        fieldModelList.forEach(fieldModel -> {
+
+            fieldModel.addImport(RbacRoleObject.class)
+                    .addImport(InjectVar.class)
+                    .addImport(InjectConst.class);
+
+            Set<String> set = new LinkedHashSet<>();
+
+            fieldModel.getAnnotations().stream()
+                    //  .filter(txt -> txt.contains("@" + ResAuthorize.class.getSimpleName()))
+                    .forEach(annotation -> {
+                        set.add(
+                                annotationContentReplace(annotation)
+                                        .replace("\"R_SA\"", "RbacRoleObject.SA_ROLE")
+                                        .replace("\"R_SAAS_*\"", "RbacRoleObject.SAAS_ROLE_PREFIX + \"*\"")
+                        );
+                    });
+
+            fieldModel.getAnnotations().clear();
+
+            fieldModel.getAnnotations().addAll(set);
+        });
+
+
         return fieldModelList;
+    }
+
+    private static String annotationContentReplace(String aTxt) {
+
+        Map<String, String> map = annotationContentReplaceMap();
+
+        if (map == null) {
+            return aTxt;
+        }
+
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            aTxt = aTxt.replace(entry.getKey(), entry.getValue());
+        }
+
+        return aTxt;
     }
 
     private static boolean isBaseType(ResolvableType parent, Class type) {
