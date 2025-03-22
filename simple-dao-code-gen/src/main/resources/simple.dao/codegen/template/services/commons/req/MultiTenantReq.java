@@ -51,7 +51,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @IsNull(condition = "#_isQuery && !(isSuperAdmin() || isSaasAdmin()) && isContainsPublicData() && #isNotEmpty(#_fieldVal)", desc = "查询结果包含公共数据(tenantId为NULL的数据)")
     @Eq(condition = "#_isQuery && !(isSuperAdmin() || isSaasAdmin()) && isTenantShared()", value = "tenantShared", paramExpr = "true", desc = "如果有平台可共享的租户数据，查询结果包括非该租户的数据")
     //@Validator(expr = "isSuperAdmin || #isNotEmpty(#_fieldVal) " , promptInfo = "tenantId-不能为空")
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示通道详情, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "SAAS管理员才能显示")
     protected String tenantId;
 
     @Schema(title = "租户名称", hidden = true)

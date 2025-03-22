@@ -33,13 +33,13 @@ public class MultiTenantInfo
         extends BaseInfo
         implements MultiTenantObject {
 
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示通道详情, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "SAAS管理员才能显示")
     @Size(max = 128)
     @Schema(title = "租户Id")
     String tenantId;
 
     @RefInject(refObjectType = "Tenant", idExpr = InjectConst.TENANT_ID, valueExpr = "name")
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示通道详情, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "SAAS管理员才能显示")
     @Schema(title = "租户名称")
     String tenantName;
 
