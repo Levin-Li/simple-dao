@@ -36,6 +36,7 @@ import com.levin.commons.rbac.RbacRoleObject;
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.ui.annotation.FormItem;
@@ -2551,42 +2552,28 @@ public final class ServiceModelCodeGenerator {
 
 
         if (isInfoObj && isMultiTenantObject) {
-
-            FieldModel tenantFm = fieldModelList.stream().filter(fm -> fm.getName().equals(InjectConst.TENANT_ID)).findFirst().orElse(null);
-
-            boolean hasTenantName = fieldModelList.stream().anyMatch(fieldModel -> fieldModel.getName().equals(InjectConst.TENANT_NAME));
-
-            if (!hasTenantName && tenantFm != null) {
-
-                FieldModel fieldModel = new FieldModel(entityClass)
-                        .setName(InjectConst.TENANT_NAME)
-                        .setTitle("租户名称")
-                        .setType(String.class)
-                        .setTypeName("String")
-                        .setBaseType(true)
-                        .setNotUpdate(true)
-                        .setDesc("")
-                        .setSchemaDescUseConstRef(false)
-                        .setTestValue("\"租户名称\"");
-
-                fieldModel.addImport(InjectVar.class)
-                        .addImport(InjectConst.class);
-
-                fieldModel.getAnnotations().add("@InjectVar(value = InjectConst.TENANT_NAME, isRequired = \"false\")");
-
-                int indexOf = fieldModelList.indexOf(tenantFm);
-
-                // 插入到租户ID后面
-                fieldModelList.add(indexOf + 1, fieldModel);
-
-            }
+            autoAddTenantNameField(entityClass, fieldModelList);
         }
+
+        if (isInfoObj && isOrganizedObject) {
+            autoAddOrgNameField(entityClass, fieldModelList);
+        }
+
+        //替换注解中的内容
+        replaceAnno(fieldModelList);
+
+
+        return fieldModelList;
+    }
+
+    private static void replaceAnno(List<FieldModel> fieldModelList) {
 
         fieldModelList.forEach(fieldModel -> {
 
             fieldModel.addImport(RbacRoleObject.class)
-                    .addImport(InjectVar.class)
-                    .addImport(InjectConst.class);
+            // .addImport(InjectVar.class)
+            //  .addImport(InjectConst.class)
+            ;
 
             Set<String> set = new LinkedHashSet<>();
 
@@ -2604,9 +2591,79 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.getAnnotations().addAll(set);
         });
+    }
 
+    private static void autoAddOrgNameField(Class entityClass, List<FieldModel> fieldModelList) {
 
-        return fieldModelList;
+        FieldModel orgFM = fieldModelList.stream().filter(fm -> fm.getName().equals(InjectConst.ORG_ID)).findFirst().orElse(null);
+
+        boolean hasOrgName = fieldModelList.stream().anyMatch(fieldModel -> fieldModel.getName().equals(InjectConst.ORG_NAME));
+
+        if (!hasOrgName && orgFM != null) {
+
+            FieldModel fieldModel = new FieldModel(entityClass)
+                    .setName(InjectConst.ORG_NAME)
+                    .setTitle("组织名称")
+                    .setType(String.class)
+                    .setTypeName("String")
+                    .setBaseType(true)
+                    .setNotUpdate(true)
+                    .setDesc("")
+                    .setSchemaDescUseConstRef(false)
+                    .setTestValue("\"组织名称\"");
+
+            fieldModel.addImport(RefInject.class)
+                    .addImport(InjectConst.class);
+
+            fieldModel.getAnnotations().add("@RefInject(refObjectType = \"Org\", idExpr = InjectConst.ORG_ID, valueExpr = \"name\")");
+
+            //加入和租户ID的一样的DataMasking注解
+            orgFM.getAnnotations().stream()
+                    .filter(annotation -> annotation.trim().startsWith("@" + DataMasking.class.getSimpleName()))
+                    .forEach(fieldModel.getAnnotations()::add);
+
+            int indexOf = fieldModelList.indexOf(orgFM);
+
+            // 插入到ORG_ID后面
+            fieldModelList.add(indexOf + 1, fieldModel);
+        }
+    }
+
+    private static void autoAddTenantNameField(Class entityClass, List<FieldModel> fieldModelList) {
+
+        FieldModel tenantFm = fieldModelList.stream().filter(fm -> fm.getName().equals(InjectConst.TENANT_ID)).findFirst().orElse(null);
+
+        boolean hasTenantName = fieldModelList.stream().anyMatch(fieldModel -> fieldModel.getName().equals(InjectConst.TENANT_NAME));
+
+        if (!hasTenantName && tenantFm != null) {
+
+            FieldModel fieldModel = new FieldModel(entityClass)
+                    .setName(InjectConst.TENANT_NAME)
+                    .setTitle("租户名称")
+                    .setType(String.class)
+                    .setTypeName("String")
+                    .setBaseType(true)
+                    .setNotUpdate(true)
+                    .setDesc("")
+                    .setSchemaDescUseConstRef(false)
+                    .setTestValue("\"租户名称\"");
+
+            fieldModel.addImport(RefInject.class)
+                    .addImport(InjectConst.class);
+
+            fieldModel.getAnnotations().add("@RefInject(refObjectType = \"Tenant\", idExpr = InjectConst.TENANT_ID, valueExpr = \"name\")");
+
+            //加入和租户ID的一样的DataMasking注解
+            tenantFm.getAnnotations().stream()
+                    .filter(annotation -> annotation.trim().startsWith("@" + DataMasking.class.getSimpleName()))
+                    .forEach(fieldModel.getAnnotations()::add);
+
+            int indexOf = fieldModelList.indexOf(tenantFm);
+
+            // 插入到租户ID后面
+            fieldModelList.add(indexOf + 1, fieldModel);
+
+        }
     }
 
     private static String annotationContentReplace(String aTxt) {

@@ -1,5 +1,7 @@
 package com.levin.commons.dao.codegen.model;
 
+import com.levin.commons.service.domain.RefInject;
+import com.levin.commons.service.support.InjectConst;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
@@ -43,6 +45,7 @@ public class FieldModel implements Cloneable {
 
     public String title = "";
     private String desc = "";
+
 
 
     String prefix;
