@@ -1077,7 +1077,7 @@ public final class ServiceModelCodeGenerator {
 
         if (!StringUtils.hasText(infoExtendClass)) {
             infoExtendClass = "BaseInfo";
-        }else {
+        } else {
             infoExtendClass += "Info";
         }
 
@@ -1142,7 +1142,6 @@ public final class ServiceModelCodeGenerator {
         }
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
-
 
 
         //info 对象按完整的字段生成
@@ -2582,6 +2581,15 @@ public final class ServiceModelCodeGenerator {
 
         if (isInfoObj && isOrganizedObject) {
             autoAddOrgNameField(entityClass, fieldModelList);
+        }
+
+        if (isInfoObj) {
+
+            fieldModelList.removeIf(fieldModel -> isMultiTenantObject && (Stream.of(InjectConst.TENANT_ID, InjectConst.TENANT_NAME).anyMatch(name -> fieldModel.getName().equals(name))));
+            fieldModelList.removeIf(fieldModel -> isOrganizedObject && (Stream.of(InjectConst.ORG_ID, InjectConst.ORG_NAME).anyMatch(name -> fieldModel.getName().equals(name))));
+
+            fieldModelList.removeIf(fieldModel -> isPersonalObject && (Stream.of("ownerId", "ownerName").anyMatch(name -> fieldModel.getName().equals(name))));
+
         }
 
         //替换注解中的内容
