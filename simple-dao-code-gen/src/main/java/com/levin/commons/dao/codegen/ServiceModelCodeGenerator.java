@@ -664,11 +664,21 @@ public final class ServiceModelCodeGenerator {
 
 
         genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
+
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "BaseInfo.java");
+
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantInfo.java");
+
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantOrgInfo.java");
+
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantPersonalReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantPersonalInfo.java");
+
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantOrgPersonalReq.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantOrgPersonalInfo.java");
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1057,10 +1067,18 @@ public final class ServiceModelCodeGenerator {
             reqExtendClass += "Personal";
         }
 
+        String infoExtendClass = reqExtendClass;
+
         if (!StringUtils.hasText(reqExtendClass)) {
             reqExtendClass = "BaseReq";
         } else {
             reqExtendClass += "Req<";
+        }
+
+        if (!StringUtils.hasText(infoExtendClass)) {
+            infoExtendClass = "BaseInfo";
+        }else {
+            infoExtendClass += "Info";
         }
 
         Map<String, Object> params = MapUtils
@@ -1080,6 +1098,7 @@ public final class ServiceModelCodeGenerator {
                 .put("isOrganizedSharedObject", OrganizedSharedObject.class.isAssignableFrom(entityClass))
                 //设置请求对象继承的类
                 .put("reqExtendClass", reqExtendClass)
+                .put("infoExtendClass", infoExtendClass)
                 .build();
 
         String boDir = File.separator + "bo" + File.separator + entityClass.getSimpleName().toLowerCase();
@@ -1092,6 +1111,10 @@ public final class ServiceModelCodeGenerator {
         if (category != null && category.queryObjectExtendType() != Void.class) {
             reqExtendClass = category.queryObjectExtendType().getSimpleName();
             params.put("reqExtendClass", reqExtendClass);
+        }
+        if (category != null && category.infoObjectExtendType() != Void.class) {
+            reqExtendClass = category.infoObjectExtendType().getSimpleName();
+            params.put("infoExtendClass", infoExtendClass);
         }
 
         if (category != null && StringUtils.hasText(category.value())) {
@@ -1119,6 +1142,8 @@ public final class ServiceModelCodeGenerator {
         }
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
+
+
 
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);

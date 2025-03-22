@@ -23,6 +23,7 @@ import com.levin.commons.dao.annotation.order.*;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.misc.*;
 
+import ${modulePackageName}.services.commons.req.*;
 import ${entityClassPackage}.*;
 import static ${entityClassPackage}.E_${entityName}.*;
 ////////////////////////////////////

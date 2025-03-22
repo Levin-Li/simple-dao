@@ -14,15 +14,9 @@ import javax.validation.constraints.*;
 
 import com.fasterxml.jackson.annotation.*;
 /////////////////////////////////////////////////////
-import com.levin.commons.dao.*;
-import com.levin.commons.dao.annotation.*;
-import com.levin.commons.dao.annotation.update.*;
-import com.levin.commons.dao.annotation.select.*;
-import com.levin.commons.dao.annotation.stat.*;
-import com.levin.commons.dao.annotation.order.*;
-import com.levin.commons.dao.annotation.logic.*;
-import com.levin.commons.dao.annotation.misc.*;
 
+
+import ${modulePackageName}.services.commons.info.*;
 import ${entityClassPackage}.*;
 import static ${entityClassPackage}.E_${entityName}.*;
 ////////////////////////////////////
@@ -51,7 +45,9 @@ import ${imp};
 <#list classModel.annotations as annotation>
 ${annotation}
 </#list>
-public class ${className} implements ${implementsListStr} {
+public class ${className}
+        extends ${infoExtendClass}
+        implements ${implementsListStr} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

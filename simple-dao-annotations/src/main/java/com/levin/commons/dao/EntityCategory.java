@@ -31,6 +31,15 @@ public @interface EntityCategory {
     Class<?> queryObjectExtendType() default Void.class;
 
     /**
+     * 代码生成的时候，信息对象继承的类型。
+     * <p>
+     * 信息对象继承的类型，默认为 Void.class，自动选择
+     *
+     * @return
+     */
+    Class<?> infoObjectExtendType() default Void.class;
+
+    /**
      * 描述
      *
      * @return
