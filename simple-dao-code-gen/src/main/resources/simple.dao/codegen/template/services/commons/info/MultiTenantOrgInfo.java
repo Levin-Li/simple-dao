@@ -39,6 +39,6 @@ public class MultiTenantOrgInfo
 
     @RefInject(refObjectType = "Org", idExpr = InjectConst.ORG_ID, valueExpr = "name")
     @Schema(title = "组织名称")
-    String orgName;
+    String orgName = ""; // 默认值, Jackson序列化时默认不会处理null值，所以特意设置了空串
 
 }

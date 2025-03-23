@@ -33,6 +33,6 @@ public class MultiTenantOrgPersonalInfo
 
     @RefInject(refObjectType = "User", idExpr = "ownerId", valueExpr = "name")
     @Schema(title = "拥有者名称")
-    String ownerName;
+    String ownerName = ""; // 默认值, Jackson序列化时默认不会处理null值，所以特意设置了空串
 
 }
