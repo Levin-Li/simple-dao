@@ -1,5 +1,6 @@
 package ${modulePackageName}.services.commons.info;
 
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 
@@ -30,6 +31,7 @@ public class MultiTenantPersonalInfo
     @Schema(title = "拥有者Id")
     String ownerId;
 
+    @Ignore
     @RefInject(refObjectType = "User", idExpr = "ownerId", valueExpr = "name")
     @Schema(title = "拥有者名称")
     String ownerName = ""; // 默认值, Jackson序列化时默认不会处理null值，所以特意设置了空串

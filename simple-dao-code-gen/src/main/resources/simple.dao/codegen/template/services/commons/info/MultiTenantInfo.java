@@ -1,5 +1,6 @@
 package ${modulePackageName}.services.commons.info;
 
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.rbac.DataMasking;
 import com.levin.commons.rbac.RbacRoleObject;
@@ -33,6 +34,7 @@ public class MultiTenantInfo
         extends BaseInfo
         implements MultiTenantObject {
 
+    @Ignore
     @RefInject(refObjectType = "Tenant", idExpr = InjectConst.TENANT_ID, valueExpr = "name")
     @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "SAAS管理员才能显示")
     @Schema(title = "租户名称")

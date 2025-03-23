@@ -1,5 +1,6 @@
 package ${modulePackageName}.services.commons.info;
 
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.rbac.DataMasking;
 import com.levin.commons.rbac.RbacRoleObject;
@@ -37,6 +38,7 @@ public class MultiTenantOrgInfo
     @Schema(title = "组织Id")
     String orgId;
 
+    @Ignore
     @RefInject(refObjectType = "Org", idExpr = InjectConst.ORG_ID, valueExpr = "name")
     @Schema(title = "组织名称")
     String orgName = ""; // 默认值, Jackson序列化时默认不会处理null值，所以特意设置了空串
