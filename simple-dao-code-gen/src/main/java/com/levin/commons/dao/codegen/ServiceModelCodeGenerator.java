@@ -188,6 +188,10 @@ public final class ServiceModelCodeGenerator {
 
         /////////////////////////////生成说明文件///////////////////////////////////
         String template = "模块开发说明.md";
+
+        genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
+
+        template = "代码生成说明.md";
         genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
 
         ///////////////////////////////////////////////////////////////////////////
