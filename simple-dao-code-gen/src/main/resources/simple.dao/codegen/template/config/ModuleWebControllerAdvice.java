@@ -23,6 +23,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -137,7 +138,7 @@ public class ModuleWebControllerAdvice {
 
         //循环获取异常的message,返回第一个有message的异常
         while (exception != null) {
-            if (exception.getMessage() != null) {
+            if (exception.getMessage() != null || exception instanceof BindException) {
 
                 if (exception instanceof BindException) {
 
@@ -151,20 +152,23 @@ public class ModuleWebControllerAdvice {
 
                     if (fieldError != null && target != null) {
 
-                        Field field = ClassUtil.getDeclaredField(target.getClass(), fieldError.getField());
-
-                        Schema schema = field.getAnnotation(Schema.class);
-
                         String errorMessage = fieldError.getField();
 
-                        if (schema != null) {
-                            errorMessage = Stream.of(schema.title(), schema.description())
-                                    .filter(StringUtils::hasText).findFirst().orElse(fieldError.getField());
+                        Field field = ReflectionUtils.findField(target.getClass(), fieldError.getField());
+
+                        if (field != null) {
+                            Schema schema = field.getAnnotation(Schema.class);
+                            if (schema != null) {
+                                errorMessage = Stream.of(schema.title(), schema.description())
+                                        .filter(StringUtils::hasText).findFirst().orElse(fieldError.getField());
+                            }
                         }
 
                         return errorMessage + "-" + fieldError.getDefaultMessage();
 
                     }
+
+
                 } else if (exception instanceof HttpMessageConversionException) {
                     return "数据转换异常";
                 }
@@ -194,7 +198,7 @@ public class ModuleWebControllerAdvice {
         }
 
         //开发模式下，返回异常的堆栈信息
-        if (isDev) {
+        if (isTestEnv) {
             return ExceptionUtils.getPrintInfo(exception);
         }
 
