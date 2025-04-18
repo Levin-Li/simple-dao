@@ -77,9 +77,9 @@ import static com.levin.commons.service.domain.ServiceResp.ErrorType.*;
  *
  */
 @Slf4j
-//@Component(PLUGIN_PREFIX + "${className}")
+@Component(PLUGIN_PREFIX + "${className}")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "${className}", havingValue = "true", matchIfMissing = true)
-//@RestControllerAdvice(PACKAGE_NAME)
+@RestControllerAdvice(PACKAGE_NAME)
 public class ModuleWebControllerAdvice {
 
 
@@ -213,179 +213,15 @@ public class ModuleWebControllerAdvice {
         return causeList.stream().map(ex -> ex.getClass().getSimpleName() + (StringUtils.hasText(ex.getMessage()) ? ":" + ex.getMessage() : "")).collect(Collectors.joining(" -> "));
     }
 
-
-//    // 这里@ModelAttribute("loginUserInfo")标注的modelAttribute()方法表示会在Controller方法之前
-//    // 执行，返回当前登录用户的UserDetails对象
-//    @ModelAttribute("loginUserInfo")
-//    public UserDetails modelAttribute() {
-//        return (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//    }
-
-
-//    // 这里表示Controller抛出的MethodArgumentNotValidException异常由这个方法处理
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public Result exceptionHandler(MethodArgumentNotValidException e) {
-//        Result result = new Result(BizExceptionEnum.INVALID_REQ_PARAM.getErrorCode(),
-//                BizExceptionEnum.INVALID_REQ_PARAM.getErrorMsg());
-//        logger.error("req params error", e);
-//        return result;
-//    }
-//    // 这里表示Controller抛出的BizException异常由这个方法处理
-//    @ExceptionHandler(BizException.class)
-//    public Result exceptionHandler(BizException e) {
-//        BizExceptionEnum exceptionEnum = e.getBizExceptionEnum();
-//        Result result = new Result(exceptionEnum.getErrorCode(), exceptionEnum.getErrorMsg());
-//        logger.error("business error", e);
-//        return result;
-//    }
-//    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
-//    @ExceptionHandler(Exception.class)
-//    public Result exceptionHandler(Exception e) {
-//        Result result = new Result(1000, "网络繁忙,请稍后再试");
-//        logger.error("application error", e);
-//        return result;
-//    }
-
-
-//    @ExceptionHandler({NotLoginException.class,})
-//    public ApiResp onNotLoginException(Exception e) {
-//
-//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//
-//        return ApiResp.error(ServiceResp.AuthenticationError.getBaseErrorCode()
-//                , "未登录：" + e.getMessage());
-//    }
-//
-//    @ExceptionHandler({SaTokenException.class,})
-//    public ApiResp onSaTokenException(Exception e) {
-//
-//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//
-//        return ApiResp.error(ServiceResp.AuthenticationError.getBaseErrorCode()
-//                , "认证异常：" + e.getMessage());
-//    }
-
-    @ExceptionHandler({AuthenticationException.class,})
-    public ApiResp onAuthenticationException(Exception e) {
+    //自定义错误处理
+    //@ExceptionHandler({XXException.class,})
+    public ApiResp onXXException(Exception e) {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
         return ApiResp.error(AuthenticationError.getBaseErrorCode(), "未登录：" + getExMsg(e));
     }
 
-    @ExceptionHandler({AuthorizationException.class})
-    public ApiResp onAuthorizedException(Exception e) {
 
-        response.setStatus(HttpStatus.FORBIDDEN.value());
 
-        return ApiResp.error(AuthenticationError.getBaseErrorCode(), "鉴权异常：" + getExMsg(e));
-    }
-
-    @ExceptionHandler({AccessDeniedException.class,})
-    public ApiResp onAccessDeniedException(Exception e) {
-
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-
-        return ApiResp.error(AuthenticationError.getBaseErrorCode(), getExMsg(e));
-    }
-
-    @ExceptionHandler({BizException.class, DaoUniqueConstraintBizException.class})
-    public ApiResp onBizException(Exception e) {
-
-        log.error("业务参数异常," + request.getRequestURL(), e);
-
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
-    }
-
-    @ExceptionHandler({MultipartException.class, MaxUploadSizeExceededException.class})
-    public ApiResp onMultipartException(MultipartException e) {
-
-        log.error("Multipart表单数据异常," + request.getRequestURL(), e);
-
-        String msg = getExMsg(e);
-
-        if (e instanceof MaxUploadSizeExceededException) {
-            msg = "上传文件大小超过限制，不能超过" + multipartProperties.getMaxRequestSize().toMegabytes() + "M";
-        }
-
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), msg).setDetailMsg(getExDetailMsg(e));
-    }
-
-    @ExceptionHandler({IllegalArgumentException.class,
-            IllegalStateException.class,
-            MethodArgumentNotValidException.class,
-            ValidationException.class,
-            MissingServletRequestParameterException.class})
-    public ApiResp onParameterException(Exception e) {
-
-        log.error("请求参数异常," + request.getRequestURL(), e);
-
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
-    }
-
-    @ExceptionHandler(ServiceException.class)
-    public ApiResp onServiceException(Exception e) {
-
-        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
-    }
-
-    @ExceptionHandler({ConstraintViolationException.class, DataIntegrityViolationException.class, SQLIntegrityConstraintViolationException.class})
-    public ApiResp onConstraintViolationException(Exception e) {
-
-        log.error("发生数据约束异常," + request.getRequestURL(), e);
-
-//        boolean used = e.getMessage().contains(" delete ")
-//                || e.getMessage().contains(" update ");
-
-        return (ApiResp) ApiResp.error(BizError.getBaseErrorCode(), "数据约束异常").setDetailMsg(getExDetailMsg(e));
-
-    }
-
-    @ExceptionHandler({PersistenceException.class, SQLException.class, DataAccessException.class})
-    public ApiResp onPersistenceException(Exception e) {
-
-        if (ExceptionUtils.getCauseByTypes(e, ConstraintViolationException.class
-                , DataIntegrityViolationException.class
-                , SQLIntegrityConstraintViolationException.class) != null) {
-            return onConstraintViolationException(e);
-        }
-
-        log.error("发生数据库操作异常," + request.getRequestURL(), e);
-
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), "数据异常，请稍后重试").setDetailMsg(getExDetailMsg(e));
-
-    }
-
-    //    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
-    @ExceptionHandler(ServletException.class)
-    public ApiResp onServletException(ServletException e) {
-
-        log.error("发生 Web异常:" + request.getRequestURL(), e);
-
-        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-
-        return (ApiResp) ApiResp.error(SystemInnerError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
-    }
-
-    //    // 这里就是通用的异常处理器了,所有预料之外的Exception异常都由这里处理
-    @ExceptionHandler(Exception.class)
-    public ApiResp exceptionHandler(Exception e) {
-
-        log.error("发生异常:" + request.getRequestURL(), e);
-
-        //网络异常
-        if (ExceptionUtils.getCauseByTypes(e, SocketException.class) != null) {
-
-            response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-
-            return (ApiResp) ApiResp.error(ResourceError.getBaseErrorCode(), getExMsg(e))
-                    .setDetailMsg(getExDetailMsg(e));
-        }
-
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-
-        return (ApiResp) ApiResp.error(UnknownError.getBaseErrorCode(), getExMsg(e)).setDetailMsg(getExDetailMsg(e));
-    }
 }
