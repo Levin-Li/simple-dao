@@ -2031,7 +2031,7 @@ public final class ServiceModelCodeGenerator {
             if (fieldModel.getField() != null) {
                 Set<String> fieldAnnotationList = com.levin.commons.utils.ClassUtils.getFieldAnnotationList(fieldModel.getField());
 
-                Set<String> tempResult = fieldAnnotationList.stream().filter(c -> isMatch(c, action)).collect(Collectors.toSet());
+                Set<String> tempResult = fieldAnnotationList.stream().filter(c -> isMatch(c.trim(), action)).collect(Collectors.toSet());
 
                 if (!tempResult.isEmpty()) {
                     //添加导入
@@ -2056,7 +2056,7 @@ public final class ServiceModelCodeGenerator {
 
             final String content = annotation.toString();
 
-            if (isMatch(content, action)) {
+            if (isMatch(content.trim(), action)) {
 
                 fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()).stream().filter(s -> !s.contains("javax.persistence.")).collect(Collectors.toList()));
 

@@ -188,8 +188,7 @@ public class CodeGeneratorMojo extends BaseMojo {
      * 生成代码时字段上保留的注解列表，可以支持 * 通配符
      */
     @Parameter
-    protected String[] keepAnnotationList = {};
-
+    protected String[] keepAnnotationList = {"@Options*(*","@FormItem*(*"};
 
     /**
      * 注解内容替换
