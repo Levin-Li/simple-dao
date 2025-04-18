@@ -118,7 +118,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
     @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
 <#if pkField?exists>
-    public ApiResp<${pkField.typeName}> create(@RequestBody @Valid Create${entityName}Req req) {
+    public ApiResp<${pkField.typeName}> create(@Form @RequestBody @Valid Create${entityName}Req req) {
 <#else>
     public ApiResp<Boolean> create(@RequestBody @Valid Create${entityName}Req req) {
 </#if>
@@ -164,7 +164,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     @PutMapping({"update"}) // , "{${pkField.name}}"
     @Operation(summary = UPDATE_ACTION, description = UPDATE_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
     @CRUD.Op
-    public ApiResp<Void> update(@RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
+    public ApiResp<Void> update(@Form @RequestBody @Valid Update${entityName}Req req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
         //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 

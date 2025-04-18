@@ -100,7 +100,7 @@ public class ${className} extends ${entityName}Controller{
     }
 
     //如果业务需要请覆盖父类的方法，父类方法上的Spring注解可以不需要重写，除非业务上有需要
-    //public ApiResp<Boolean> update(@RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
+    //public ApiResp<Boolean> update(@Form @RequestBody @Valid Update${entityName}Req req, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}) {
     //   处理业务逻辑...
     //   return super.update(req, ${pkField.name});
     // }
@@ -113,7 +113,7 @@ public class ${className} extends ${entityName}Controller{
     */
     @GetMapping("stat") //默认开放
     @Operation(summary = STAT_ACTION, description = STAT_ACTION + " " + BIZ_NAME) //, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}"))
-    public ApiResp<Stat${entityName}Req.Result> stat(@Valid Stat${entityName}Req req, SimplePaging paging) {
+    public ApiResp<Stat${entityName}Req.Result> stat(@Form @Valid Stat${entityName}Req req, SimplePaging paging) {
 
         req = checkRequest(STAT_ACTION, req);
 
