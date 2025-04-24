@@ -25,8 +25,8 @@ else
 #尝试停止进程
    ps -ef | grep java | grep "${keyword}"
 
-    #查看线程堆栈
-    ${JAVA_HOME}/bin/jstat $1 ${pids}
+   #查看线程堆栈
+   ${JAVA_HOME}/bin/jstat $1 ${pids}
 
 fi
 
