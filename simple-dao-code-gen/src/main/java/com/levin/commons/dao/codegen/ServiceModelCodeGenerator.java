@@ -298,6 +298,7 @@ public final class ServiceModelCodeGenerator {
 
         //Java 线程堆栈
         genSameNameFileByTemplate("bootstrap/shell/jtStack.sh", params, resPath + "shell");
+        genSameNameFileByTemplate("bootstrap/shell/jtStat.sh", params, resPath + "shell");
 
         final String resTemplateDir = "simple.dao/codegen/template/";
 
