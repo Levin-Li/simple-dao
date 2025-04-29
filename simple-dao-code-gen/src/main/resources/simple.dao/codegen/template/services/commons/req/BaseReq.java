@@ -132,41 +132,49 @@ public abstract class BaseReq implements ServiceReq {
 
     ////////////////////////////////////////////////////////////////////
 
+    @Ignore
     @Schema(title = "是否是web请求", hidden = true)
     public boolean isWebContext() {
         return this.isWebContext;
     }
 
+    @Ignore
     @Schema(title = "是否允许默认排序", hidden = true)
     public boolean isEnableDefaultOrderBy() {
         return this.enableDefaultOrderBy;
     }
 
+    @Ignore
     @Schema(title = "是否可访问个人数据", description = "是否可以访问个人的数据", hidden = true)
     public boolean isCanVisitPersonalData() {
         return this.canVisitPersonalData;
     }
 
+    @Ignore
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
     }
 
+    @Ignore
     @Schema(title = "是否SAAS管理员", hidden = true)
     public boolean isSaasAdmin() {
         return this.isSaasAdmin;
     }
 
+    @Ignore
     @Schema(title = "是否SAAS用户", hidden = true)
     public boolean isSaasUser() {
         return this.isSaasUser;
     }
 
+    @Ignore
     @Schema(title = "是否租户管理员", hidden = true)
     public boolean isTenantAdmin() {
         return this.isTenantAdmin;
     }
 
+    @Ignore
     @Schema(title = "是否管理员", description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
     @CtxVar
     public boolean isAdmin() {
