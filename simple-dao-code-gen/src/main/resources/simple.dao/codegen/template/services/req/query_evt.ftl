@@ -131,37 +131,37 @@ public class ${className} extends ${reqExtendClass} {
     </#list>
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
-    @Schema(title = ${field.schemaTitle} , description = ${field.schemaTitle} + "大于等于字段值")
+    @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>"大于等于开始时间"</#if>)
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(title = ${field.schemaTitle} , description = ${field.schemaTitle} + "小于等于字段值")
+    @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>"小于等于结束时间"</#if>)
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-    @Schema(title = "日期范围匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Schema(title = ${field.schemaTitle} + "范围", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-范围"</#if>)
     @Between
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
 
     <#-- 基本类型 field.baseType -->
     <#elseif true>
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#-- 模糊匹配 -->
     <#if field.contains && field.typeName = 'String'>
 
-    @Schema(title = "模糊匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
     <#if field.enumerable!>  <#-- 可枚举的 -->
 
-    @Schema(title = "包含匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-包含匹配"</#if>)
     @In
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> in${field.name?cap_first};
 
-    @Schema(title = "不包含匹配-" + ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-不包含匹配"</#if>)
     @NotIn
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> notIn${field.name?cap_first};
     </#if>

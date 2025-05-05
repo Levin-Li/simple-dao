@@ -45,6 +45,7 @@ import ${imp};
 <#list classModel.annotations as annotation>
 ${annotation}
 </#list>
+@TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className}
         extends ${infoExtendClass}
         implements ${implementsListStr} {
