@@ -14,7 +14,7 @@ import javax.validation.constraints.*;
 
 //import com.fasterxml.jackson.annotation.*;
 /////////////////////////////////////////////////////
-import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.*;
 
 import ${modulePackageName}.services.commons.info.*;
 import ${entityClassPackage}.*;
