@@ -198,7 +198,7 @@ public class ModuleWebControllerAdvice {
         }
 
         //开发模式下，返回异常的堆栈信息
-        if (isTestEnv) {
+        if (isDev) {
             return ExceptionUtils.getPrintInfo(exception);
         }
 
