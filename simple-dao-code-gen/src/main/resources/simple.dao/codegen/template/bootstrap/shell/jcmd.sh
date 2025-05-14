@@ -25,8 +25,8 @@ else
 #
    ps -ef | grep java | grep "${keyword}"
 
-   #查看CPU占用高的线程
-   $1 ${pids}
+   #
+  ${JAVA_HOME}/bin/jcmd ${pids} $*
 
 fi
 
