@@ -131,11 +131,11 @@ public class ${className} extends ${reqExtendClass} {
     </#list>
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
-    @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>"大于等于开始时间"</#if>)
+    @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
-    @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>"小于等于结束时间"</#if>)
+    @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "小于等于"</#if>)
     @Lte
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
