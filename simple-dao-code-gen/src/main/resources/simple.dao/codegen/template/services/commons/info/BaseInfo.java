@@ -24,4 +24,7 @@ import java.util.*;
 @FieldNameConstants
 public abstract class BaseInfo implements Serializable {
 
+    <T extends BaseInfo> T cast() {
+        return (T) this;
+    }
 }

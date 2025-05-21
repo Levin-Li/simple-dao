@@ -44,4 +44,5 @@ public class MultiTenantInfo
     @Size(max = 128)
     @Schema(title = "租户Id")
     String tenantId;
+
 }
