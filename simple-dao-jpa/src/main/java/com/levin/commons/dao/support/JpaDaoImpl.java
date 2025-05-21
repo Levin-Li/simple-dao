@@ -1445,6 +1445,26 @@ public class JpaDaoImpl
         return find(false, null, start, count, statement, paramValues);
     }
 
+
+    private String toStrAndTrimMax(Object v) {
+
+        if (v == null) {
+            return "null";
+        }
+
+        String txt = v.toString();
+
+        //如果 txt 大于 500 ,则保留前后,截去中间
+
+        if (txt.length() > 500) {
+            txt = txt.substring(0, 249) + " ... " + txt.substring(txt.length() - 250);
+        }
+
+
+        return txt;
+    }
+
+
     /**
      * @param isNative    是否是原生查询
      * @param resultClass 可以为null(结果集将返回对象数组)，或是java.util.Map 或是具体的类
@@ -1461,7 +1481,7 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-        String oldStatement = statement;
+       // String oldStatement = statement;
 
         if (!paramValueList.isEmpty()) {
             statement = replacePlaceholder(isNative, statement);
@@ -1470,7 +1490,7 @@ public class JpaDaoImpl
         if (logger.isDebugEnabled()) {
             logger.debug("Select JPQL:[" + statement + "] ResultClass: " + resultClass + " , Param placeholder:" + getParamPlaceholder(isNative)
                     + ", native: " + isNative + ", limits :" + start + "," + count
-                    + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList);
+                    + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList.stream().map(this::toStrAndTrimMax).collect(Collectors.joining(",", "[", "]")));
         }
 
         EntityManager em = getEntityManager();
@@ -1763,7 +1783,7 @@ public class JpaDaoImpl
                 .anyMatch(t -> t == type || type.isAssignableFrom(t));
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Query setRange(Query query, int index, int count) {
 
