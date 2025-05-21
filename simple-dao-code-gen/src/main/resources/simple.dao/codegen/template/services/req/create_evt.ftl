@@ -58,7 +58,7 @@ public class ${className} extends ${reqExtendClass} {
 <#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
     <#if (!field.notCreate && !field.autoGenValue)>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
-    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${(field.baseEntityField && field.notUpdate)?string(', hidden = true', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.defaultValue != ''> ,  defaultValue = "${field.defaultValue!}"</#if><#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${(field.baseEntityField && field.notUpdate)?string(', hidden = true', '')})
     <#list field.annotations as annotation>
 <#--        默认创建请求不处理-->
     ${( false && field.baseEntityField && field.notUpdate)?string('//', '')}${annotation}

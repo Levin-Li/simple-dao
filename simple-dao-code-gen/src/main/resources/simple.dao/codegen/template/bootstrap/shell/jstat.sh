@@ -1,4 +1,4 @@
-#!/bin/bash
+<#noparse>#!/bin/bash
 #Author Lilw @2024
 ### 代码生成哈希校验码：[ecb625cf11c403084e29e49eafd006fd], 请不要修改和删除此行内容。
 
@@ -30,3 +30,4 @@ else
 
 fi
 
+</#noparse>

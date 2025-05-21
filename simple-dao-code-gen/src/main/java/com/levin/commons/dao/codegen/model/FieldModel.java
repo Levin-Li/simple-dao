@@ -47,7 +47,6 @@ public class FieldModel implements Cloneable {
     private String desc = "";
 
 
-
     String prefix;
 
     //类的短名称
@@ -104,7 +103,9 @@ public class FieldModel implements Cloneable {
 
     private boolean hasDefaultValue = false;//是否有默认值
 
-    private String defaultValue;
+    private String defaultValue = "";
+
+    private String exampleValue;
 
     private boolean lazy = false;//是否lazy
 

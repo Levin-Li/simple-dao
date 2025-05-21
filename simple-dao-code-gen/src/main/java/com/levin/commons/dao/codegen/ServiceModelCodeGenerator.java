@@ -2,7 +2,11 @@ package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileSystemUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.javaparser.StaticJavaParser;
@@ -888,7 +892,7 @@ public final class ServiceModelCodeGenerator {
         return threadContext.getOrDefault(getInvokeMethodName(2), defaultValue);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static Class<?> entityClass(Class<?> newValue) {
         return putThreadVar(newValue);
     }
@@ -897,7 +901,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
 
     public static Map<String, String> dirMap(Map<String, String> newValue) {
         return putThreadVar(newValue);
@@ -916,7 +920,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static String moduleName(String newValue) {
         return putThreadVar(newValue);
     }
@@ -924,7 +928,8 @@ public final class ServiceModelCodeGenerator {
     public static String moduleName() {
         return getThreadVar(null);
     }
-    ///////////////////////////////////////////////////
+
+    /// ////////////////////////////////////////////////
 
     public static String serviceDir(String newValue) {
         return putThreadVar(newValue);
@@ -936,7 +941,7 @@ public final class ServiceModelCodeGenerator {
 
     ///////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
 
     public static String serviceImplDir(String newValue) {
         return putThreadVar(newValue);
@@ -946,7 +951,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
 
 
     public static String starterDir(String newValue) {
@@ -957,7 +962,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static String bootstrapDir(String newValue) {
         return putThreadVar(newValue);
     }
@@ -966,7 +971,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static String adminApiDir(String newValue) {
         return putThreadVar(newValue);
     }
@@ -983,7 +988,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static String adminUiDir(String newValue) {
         return putThreadVar(newValue);
     }
@@ -992,7 +997,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
     public static String modulePackageName(String newValue) {
         return putThreadVar(newValue);
     }
@@ -1001,7 +1006,7 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
 
     public static void isSchemaDescUseConstRef(boolean isSchemaDescUseConstRef) {
         threadContext.put(ExceptionUtils.getInvokeMethodName(), isSchemaDescUseConstRef);
@@ -1011,7 +1016,7 @@ public final class ServiceModelCodeGenerator {
         return threadContext.getOrDefault(ExceptionUtils.getInvokeMethodName(), true);
     }
 
-    ///////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////
 
     public static String upPackage(String packageName) {
         return upLevel(packageName, '.');
@@ -2235,6 +2240,8 @@ public final class ServiceModelCodeGenerator {
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
 
+                fieldModel.setDefaultValue(toJsonStr(schema.defaultValue()));
+
                 if (StringUtils.hasText(schema.title())) {
 
                     fieldModel.setTitle(schema.title())
@@ -2557,20 +2564,22 @@ public final class ServiceModelCodeGenerator {
             if (isCreateObj && defaultFieldValue != null) {
 
                 fieldModel.setHasDefaultValue(true)
-                        .setDefaultValue(defaultFieldValue.toString());
+                        .setDefaultValue(toJsonStr(defaultFieldValue.toString()));
 
-                if (defaultFieldValue instanceof String) {
-                    fieldModel.setDefaultValue("\"" + defaultFieldValue + "\"");
+                if (defaultFieldValue instanceof CharSequence) {
+                    fieldModel.setDefaultValue(toJsonStr(defaultFieldValue.toString()));
                 } else if (defaultFieldValue instanceof Long) {
-                    fieldModel.setDefaultValue(defaultFieldValue + "L");
+                    fieldModel.setDefaultValue(defaultFieldValue + "");
                 } else if (defaultFieldValue instanceof Float) {
-                    fieldModel.setDefaultValue(defaultFieldValue + "f");
+                    fieldModel.setDefaultValue(defaultFieldValue + "");
                 } else if (defaultFieldValue instanceof Double) {
-                    fieldModel.setDefaultValue(defaultFieldValue + "d");
+                    fieldModel.setDefaultValue(defaultFieldValue + "");
                 } else if (defaultFieldValue instanceof Enum) {
                     fieldModel.setDefaultValue(fieldType.getSimpleName() + "." + ((Enum<?>) defaultFieldValue).name());
+                    fieldModel.setDefaultValue(toJsonStr(((Enum<?>) defaultFieldValue).name()));
                 } else if (defaultFieldValue instanceof Date) {
                     fieldModel.setDefaultValue("new Date()");
+                    fieldModel.setDefaultValue("");
                 }
 
             }
@@ -2602,6 +2611,17 @@ public final class ServiceModelCodeGenerator {
 
 
         return fieldModelList;
+    }
+
+    public static String toJsonStr(String txt) {
+
+        if (StrUtil.isBlank(txt)) {
+            return "";
+        }
+
+        String jsonString = JSON.toJSONString(txt, JSONWriter.Feature.BrowserCompatible);
+
+        return jsonString.substring(1, jsonString.length() - 1);
     }
 
     private static void replaceAnno(List<FieldModel> fieldModelList) {
