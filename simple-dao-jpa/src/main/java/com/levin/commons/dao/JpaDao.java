@@ -2,6 +2,9 @@
 package com.levin.commons.dao;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Type;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * JPA使用支持接口，提供了对jpa实体管理器的简单功能
@@ -221,6 +224,16 @@ public interface JpaDao extends SimpleDao {
      * @return
      */
     JpaDao setParamPlaceholder(String paramPlaceholder);
+
+
+    /**
+     * 获取实体类集合
+     *
+     * @return
+     */
+    default Set<Class<?>> getEntityClasses() {
+        return getEntityManager().getMetamodel().getEntities().stream().map(Type::getJavaType).collect(Collectors.toSet());
+    }
 
 
     /**
