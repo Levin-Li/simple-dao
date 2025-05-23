@@ -182,7 +182,7 @@ public @interface NotBetween {
      * 默认支持  [-,|\s\r\n\t] 等分隔符
      * @return
      */
-    String paramDelimiter() default "";
+    String paramDelimiter() default "[,|]";
 
 
     /**
