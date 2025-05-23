@@ -522,7 +522,6 @@ public class JpaDaoImpl
     public EntityManager getEntityManager() {
 
         if (defaultEntityManager != null) {
-
             return defaultEntityManager;
         }
 
