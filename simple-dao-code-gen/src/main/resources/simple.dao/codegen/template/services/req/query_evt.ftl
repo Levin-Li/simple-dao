@@ -124,7 +124,7 @@ public class ${className} extends ${reqExtendClass} {
     @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#elseif keyword != '' &&  annotation?contains(keyword)>
+        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version')>
     ${annotation}
         </#if>
     </#list>
