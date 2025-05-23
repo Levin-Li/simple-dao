@@ -2530,7 +2530,11 @@ public final class ServiceModelCodeGenerator {
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
                 } else if (fieldModel.isEnumerable()) {
-                    fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
+
+                    if(fieldType.isEnum()) {
+                        fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
+                    }
+
                 } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");
                 } else if (fieldModel.getType().equals(String.class)) {
