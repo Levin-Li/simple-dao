@@ -179,10 +179,10 @@ public @interface Between {
      * Between 参数之间的分隔符，仅对参数是字符串时有效
      * <p>
      * 通常用于时间，如： 2020-01-01|2020-03-01
-     *
+     * 具体参考 ExprUtils 的 paramDelimiter 处理默认支持 [-,|\s\r\n\t]
      * @return
      */
-    String paramDelimiter() default ",";
+    String paramDelimiter() default "";
 
 
     /**

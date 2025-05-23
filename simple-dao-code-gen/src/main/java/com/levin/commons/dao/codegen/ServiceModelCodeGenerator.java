@@ -44,6 +44,7 @@ import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.ui.annotation.FormItem;
+import com.levin.commons.ui.annotation.Options;
 import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
@@ -2184,8 +2185,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
-
-            fieldModel.setEnumType(fieldType.isEnum());
+            fieldModel.setEnumerable(fieldType.isEnum());
 
             fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
@@ -2272,14 +2272,23 @@ public final class ServiceModelCodeGenerator {
             }
 
             if (!fieldModel.isEnumerable()
-                    && field.isAnnotationPresent(FormItem.class)) {
+                    && (field.isAnnotationPresent(FormItem.class) || field.isAnnotationPresent(Options.class))) {
 
-                FormItem formItem = field.getAnnotation(FormItem.class);
+                Options[] options = field.getAnnotationsByType(Options.class);
+
+                if (options == null || options.length < 1) {
+
+                    FormItem formItem = field.getAnnotation(FormItem.class);
+
+                    if (formItem != null) {
+                        options = formItem.options();
+                    }
+                }
 
                 //是否可枚举
-                fieldModel.setEnumerable(formItem.options() != null &&
-                        Stream.of(formItem.options())
-                                .anyMatch(options -> StringUtils.hasText(options.dictCode()) || (options.items() != null && options.items().length > 0))
+                fieldModel.setEnumerable(options != null &&
+                        Stream.of(options)
+                                .anyMatch(op -> StringUtils.hasText(op.dictCode()) || (op.items() != null && op.items().length > 0))
                 );
             }
 
@@ -2520,7 +2529,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"" + sn + "\"");
                 } else if (fieldModel.getName().equals("areaId")) {
                     fieldModel.setTestValue("\"1\"");
-                } else if (fieldModel.isEnumType()) {
+                } else if (fieldModel.isEnumerable()) {
                     fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
                 } else if (fieldModel.getType().equals(Boolean.class)) {
                     fieldModel.setTestValue("true");

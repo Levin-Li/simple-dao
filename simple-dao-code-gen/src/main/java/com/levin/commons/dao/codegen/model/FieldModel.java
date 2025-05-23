@@ -78,16 +78,7 @@ public class FieldModel implements Cloneable {
 
     private boolean baseType = true;//基础封装类型
 
-    public void setEnumType(boolean enumType) {
 
-        this.enumType = enumType;
-
-        if (enumType) {
-            enumerable = true;
-        }
-    }
-
-    private boolean enumType = false;//是否enum
 
     private boolean enumerable = false;//是否enum
 

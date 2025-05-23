@@ -179,10 +179,10 @@ public @interface NotBetween {
      * Between 参数之间的分隔符，仅对参数是字符串时有效
      * <p>
      * 通常用于时间，如： 2020-01-01|2020-03-01
-     *
+     * 默认支持  [-,|\s\r\n\t] 等分隔符
      * @return
      */
-    String paramDelimiter() default ",";
+    String paramDelimiter() default "";
 
 
     /**

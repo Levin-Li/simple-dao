@@ -203,7 +203,7 @@ public abstract class ExprUtils {
                             holder.value = holder.value.toString().split(c.paramDelimiter());
                         } else if (expectType != null && !CharSequence.class.isAssignableFrom(expectType)) {
                             //关键逻辑，如果时可以展开参数的操作，并且期望的类型不是字符串，则用逗号分割数据
-                            holder.value = holder.value.toString().split(",");
+                            holder.value = holder.value.toString().split("[-,|\\s\\r\\n\\t]");
                         } else {
                             //
                         }
