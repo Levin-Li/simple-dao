@@ -117,7 +117,7 @@ public class ${className} extends ${reqExtendClass} {
     List<${pkField.typeName}> ${pkField.name}List;
 
 </#if>
-
+<#-- 注解宏 -->
 <#macro FieldAnnotationList field keyword = ''>
     <#list field.annotations as annotation>
         <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
@@ -129,7 +129,7 @@ public class ${className} extends ${reqExtendClass} {
         </#if>
     </#list>
 </#macro>
-
+<#--        注解宏结束 -->
 <#list fields as field>
 
     <#-- 如果是日期类型 -->
