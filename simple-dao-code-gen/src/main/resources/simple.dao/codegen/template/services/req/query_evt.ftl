@@ -132,7 +132,6 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
 
-
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
