@@ -118,25 +118,31 @@ public class ${className} extends ${reqExtendClass} {
 
 </#if>
 
-<#list fields as field>
-
+<#macro FieldAnnotationList field keyword = ''>
     <#list field.annotations as annotation>
         <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
     @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#else>
+        <#elseif keyword != '' &&  annotation?contains(keyword)>
     ${annotation}
         </#if>
     </#list>
+</#macro>
+
+<#list fields as field>
+
+
     <#-- 如果是日期类型 -->
     <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
+    <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
     @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "小于等于"</#if>)
     @Lte
+    <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
     @Schema(title = ${field.schemaTitle} + "范围", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-范围"</#if>)
@@ -146,21 +152,25 @@ public class ${className} extends ${reqExtendClass} {
     <#-- 基本类型 field.baseType -->
     <#elseif true>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
+    <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#-- 模糊匹配 -->
     <#if field.contains && field.typeName = 'String'>
 
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
+    <@FieldAnnotationList field = field/>
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
     <#if field.enumerable!>  <#-- 可枚举的 -->
 
+    <@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-包含匹配"</#if>)
     @In
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> in${field.name?cap_first};
 
+    <@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-不包含匹配"</#if>)
     @NotIn
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> notIn${field.name?cap_first};
