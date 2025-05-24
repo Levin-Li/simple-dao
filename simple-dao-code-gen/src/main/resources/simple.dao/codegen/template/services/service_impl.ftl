@@ -533,6 +533,9 @@ public class ${className} extends BaseService<${className}> implements ${service
                         .find(${entityName}Info.class)
         );
 
+
+        if(dataList == null) { clearCacheListByTenant(tenantId);  }
+
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
     }
 
@@ -577,6 +580,8 @@ public class ${className} extends BaseService<${className}> implements ${service
                     return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(5_0000), ex).getItems();
                 }
         );
+
+        if(dataList == null) {   clearCacheList();     }
 
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
     }
