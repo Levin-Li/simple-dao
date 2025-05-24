@@ -53,7 +53,9 @@
         <dubbo.version>3.1.8</dubbo.version>
         <groovy.version>2.5.23</groovy.version>
 
-        <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>
+<!--        <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>-->
+        <com.alibaba.druid.version>1.2.23</com.alibaba.druid.version>
+
         <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>
         <hutool.version>5.8.10</hutool.version>

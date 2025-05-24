@@ -1,5 +1,6 @@
 package com.levin.commons.dao.starter;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.ast.statement.SQLColumnDefinition;
 import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
 import com.alibaba.druid.sql.parser.SQLParserUtils;
@@ -391,9 +392,9 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
 
         final Map<String, String> columnDefinitions = new ConcurrentHashMap<>();
 
-        String dbType = JdbcUtils.getDbType(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
+        DbType dbType = JdbcUtils.getDbTypeRaw(dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
 
-        if (!StringUtils.hasText(dbType)) {
+        if (dbType == null) {
             log.warn("can't recognition db type by {} {}", dataSourceProperties.determineUrl(), dataSourceProperties.determineDriverClassName());
             return columnDefinitions;
         }
