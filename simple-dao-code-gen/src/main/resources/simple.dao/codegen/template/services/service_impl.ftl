@@ -534,7 +534,9 @@ public class ${className} extends BaseService<${className}> implements ${service
         );
 
 
-        if(dataList == null) { clearCacheListByTenant(tenantId);  }
+        if(dataList == null) {
+           clearCacheListByTenant(tenantId);
+        }
 
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
     }
@@ -574,14 +576,17 @@ public class ${className} extends BaseService<${className}> implements ${service
                          //时间倒序
                          .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
                          </#if>
-			             .setSafeModeMaxLimit(-1).disableSafeMode();
+			             .setSafeModeMaxLimit(-1)
+                         .disableSafeMode();
 
                     //最多5万条记录
                     return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(5_0000), ex).getItems();
                 }
         );
 
-        if(dataList == null) {   clearCacheList();     }
+        if(dataList == null) {
+           clearCacheList();
+        }
 
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
     }
