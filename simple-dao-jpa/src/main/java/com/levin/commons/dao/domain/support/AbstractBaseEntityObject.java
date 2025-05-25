@@ -3,7 +3,6 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.BaseEntityObject;
-import com.levin.commons.dao.domain.CastableObject;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.ServiceReq;
 import com.levin.commons.service.support.InjectConst;
