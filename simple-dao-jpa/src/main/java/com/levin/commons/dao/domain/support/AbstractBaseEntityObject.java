@@ -31,7 +31,7 @@ import java.util.Date;
 //})
 //@EntityListeners()
 public abstract class AbstractBaseEntityObject
-        implements BaseEntityObject, CastableObject<AbstractBaseEntityObject> {
+        implements BaseEntityObject {
 
     private static final long serialVersionUID = -123456789L;
 
