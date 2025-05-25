@@ -19,7 +19,7 @@
 
         <levin.service-support.groupId>${jitpack.groupId}</levin.service-support.groupId>
 
-        <!-- <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId> -->
+<!--         <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>-->
 
         <levin.service-support.version>1.2.30-SNAPSHOT</levin.service-support.version>
 
