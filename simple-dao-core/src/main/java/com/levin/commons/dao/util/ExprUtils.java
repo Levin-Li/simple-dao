@@ -31,6 +31,8 @@ import javax.validation.constraints.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -421,7 +423,7 @@ public abstract class ExprUtils {
             return value;
         }
 
-        Class<?> valueClass = value.getClass();
+        final Class<?> valueClass = value.getClass();
 
         if (eleType.isAssignableFrom(valueClass)) {
             return value;
@@ -429,7 +431,7 @@ public abstract class ExprUtils {
 
         //只针对日期类型转换
         if (Date.class.isAssignableFrom(eleType)
-                && c.patterns().length > 0) {
+                || Temporal.class.isAssignableFrom(eleType)) {
 
             if (valueClass.isArray()) {
 
@@ -438,14 +440,15 @@ public abstract class ExprUtils {
                 Object newArray = eleType.isAssignableFrom(valueClass.getComponentType()) ? value : Array.newInstance(eleType, idx);
 
                 while (idx-- > 0) {
-                    Array.set(newArray, idx, tryConvertToDate(Array.get(value, idx), c.patterns()));
+                    Array.set(newArray, idx, tryConvertToDate(eleType, Array.get(value, idx), c.patterns()));
                 }
 
                 return newArray;
 
             } else if (value instanceof Collection) {
+                Class<?> eleType2 = eleType;
                 return ((Collection) value).stream().map(ele ->
-                                tryConvertToDate(ele, c.patterns()))
+                                tryConvertToDate(eleType2, ele, c.patterns()))
                         .collect(Collectors.toList());
             }
         }
@@ -472,22 +475,28 @@ public abstract class ExprUtils {
      * @return
      */
     @SneakyThrows
-    private static Object tryConvertToDate(Object data, String... patterns) {
+    private static Object tryConvertToDate(final Class<?> eleType, final Object data, String... patterns) {
 
-        if (data != null && !(data instanceof Date)) {
+        if (data == null) {
+            return null;
+        }
 
-            if (patterns != null && patterns.length > 0) {
-                for (String pattern : patterns) {
-                    if (!StringUtils.hasText(pattern))
-                        continue;
-                    try {
-                        return new SimpleDateFormat(pattern).parse(data.toString());
-                    } catch (Exception e) {
-                    }
-                }
-            }
+        String dataStr = data.toString();
 
-            return DateUtil.parse(data.toString());
+        if (!StringUtils.hasText(dataStr)) {
+            return null;
+        }
+
+        boolean hasPattern = patterns != null && patterns.length > 0;
+
+        if (Date.class.isAssignableFrom(eleType)) {
+            return hasPattern ? DateUtil.parse(dataStr, patterns).toJdkDate() : DateUtil.parse(dataStr).toJdkDate();
+        } else if (Temporal.class.isAssignableFrom(eleType)) {
+
+            return hasPattern ?
+                    Stream.of(patterns).filter(StringUtils::hasText).map(format -> DateUtil.parseLocalDateTime(dataStr, format)).findFirst().get()
+                    : DateUtil.parseLocalDateTime(dataStr);
+
         }
 
         return data;
@@ -1003,7 +1012,7 @@ public abstract class ExprUtils {
 //    }
 
 
-    ///////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////生成连接语句//////////////////////////////////////////
 
     public static boolean isValidClass(Class type) {
         return type != null
@@ -1044,7 +1053,7 @@ public abstract class ExprUtils {
             return (String) ClassUtils.forName(eClass, null).getField("ALIAS").get(null);
         } catch (Exception e) {
             return EntityClassSupplier.getAlias(entityClass);
-           // throw new StatementBuildException(entityClass.getName() + "获取默认别名失败，错误：" + e.getMessage());
+            // throw new StatementBuildException(entityClass.getName() + "获取默认别名失败，错误：" + e.getMessage());
         }
 
     }

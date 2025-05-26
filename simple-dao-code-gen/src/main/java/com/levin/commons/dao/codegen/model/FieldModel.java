@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -78,7 +79,6 @@ public class FieldModel implements Cloneable {
     private boolean uk = false;//是否唯一键
 
     private boolean baseType = true;//基础封装类型
-
 
 
     private boolean enumerable = false;//是否enum
@@ -168,6 +168,10 @@ public class FieldModel implements Cloneable {
                     imports.add(an.annotationType().getName());
                     this.annotations.add(anToStr(an));
                 });
+    }
+
+    public boolean isDateTimeType() {
+        return Date.class.isAssignableFrom(type) || Temporal.class.isAssignableFrom(type);
     }
 
     public boolean hasBetweenAnnotation() {
