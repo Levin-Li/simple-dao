@@ -1,5 +1,6 @@
 package com.levin.commons.dao.codegen.model;
 
+import com.levin.commons.dao.annotation.Between;
 import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.InjectConst;
 import lombok.Data;
@@ -167,6 +168,10 @@ public class FieldModel implements Cloneable {
                     imports.add(an.annotationType().getName());
                     this.annotations.add(anToStr(an));
                 });
+    }
+
+    public boolean hasBetweenAnnotation() {
+        return field.isAnnotationPresent(Between.class);
     }
 
     /**

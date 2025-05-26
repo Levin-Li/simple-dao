@@ -132,8 +132,16 @@ public class ${className} extends ${reqExtendClass} {
 <#--        注解宏结束 -->
 <#list fields as field>
 
+    <#assign isDateField = field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
+   <#-- 是否有between注解 -->
+    <#if field.hasBetweenAnnotation() || isDateField >
+    @Schema(title = ${field.schemaTitle} + "范围", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-范围"</#if>)
+    @Between
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
+
+    </#if>
     <#-- 如果是日期类型 -->
-    <#if field.typeName == 'Date' || field.typeName == 'LocalDate' || field.typeName == 'LocalDateTime'>
+    <#if isDateField>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
     <@FieldAnnotationList field = field/>
@@ -143,10 +151,6 @@ public class ${className} extends ${reqExtendClass} {
     @Lte
     <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
-
-    @Schema(title = ${field.schemaTitle} + "范围", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-范围"</#if>)
-    @Between
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
 
     <#-- 基本类型 field.baseType -->
     <#elseif true>
