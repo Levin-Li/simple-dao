@@ -1,10 +1,8 @@
 package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.file.FileSystemUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
-import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,16 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
-import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.expr.ClassExpr;
-import com.github.javaparser.ast.expr.ObjectCreationExpr;
-import com.github.javaparser.ast.expr.TypeExpr;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.metamodel.TypeDeclarationMetaModel;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
@@ -37,7 +28,6 @@ import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.rbac.DataMasking;
 import com.levin.commons.rbac.RbacRoleObject;
-import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.RefInject;
@@ -1152,17 +1142,21 @@ public final class ServiceModelCodeGenerator {
             logger.info("默认缓存实体类：{} ，可以设置 @Cacheable(false) 禁用缓存", entityClass.getSimpleName());
         }
 
-        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, "info");
+        String action = "info";
 
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, action);
+
+//        postProcess(fields, action);
 
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
 
         //////////////////////////////////////////////////////////////
-        String action = "query";
+        action = "query";
 
         //请求对象会忽略继承的属性
         fields = buildFieldModel(entityClass, entityMapping, true, action);
+//        postProcess(fields, action);
 
         //查询相关的独立处理
         buildEvt(entityClass, fields, serviceDir, params, action);
@@ -1171,6 +1165,7 @@ public final class ServiceModelCodeGenerator {
         action = "create";
 
         fields = buildFieldModel(entityClass, entityMapping, true, action);
+//        postProcess(fields, action);
 
         buildEvt(entityClass, fields, serviceDir, params, action);
 
@@ -1178,6 +1173,7 @@ public final class ServiceModelCodeGenerator {
         action = "update";
 
         fields = buildFieldModel(entityClass, entityMapping, true, action);
+//        postProcess(fields, action);
 
         buildEvt(entityClass, fields, serviceDir, params, action);
 
@@ -1185,6 +1181,7 @@ public final class ServiceModelCodeGenerator {
         action = "delete";
 
         fields = buildFieldModel(entityClass, entityMapping, true, action);
+//        postProcess(fields, action);
 
         buildEvt(entityClass, fields, serviceDir, params, action);
 
@@ -2091,7 +2088,7 @@ public final class ServiceModelCodeGenerator {
 
         final List<Field> declaredFields = new LinkedList<>();
 
-        ResolvableType resolvableTypeForClass = ResolvableType.forClass(entityClass);
+        final ResolvableType resolvableTypeForClass = ResolvableType.forClass(entityClass);
 
         //  System.out.println("found " + clzss + " : " + field);
         ReflectionUtils.doWithFields(entityClass, declaredFields::add);
@@ -2106,6 +2103,7 @@ public final class ServiceModelCodeGenerator {
         final boolean isCreateObj = "create".equalsIgnoreCase(action);
         final boolean isUpdateObj = "update".equalsIgnoreCase(action);
         final boolean isDeleteObj = "delete".equalsIgnoreCase(action);
+
 
         final DiscriminatorColumn discriminatorColumn = AnnotatedElementUtils.findMergedAnnotation(entityClass, DiscriminatorColumn.class);
 
@@ -2123,7 +2121,9 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
+            final ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
+
+
             final Class<?> fieldType = forField.resolve(field.getType());
 
             if (field.getType() != fieldType) {
@@ -2172,6 +2172,7 @@ public final class ServiceModelCodeGenerator {
                     .setSchemaDescUseConstRef(isSchemaDescUseConstRef());
 
             fieldModel.setField(field)
+                    .setResolvableType(forField)
                     .addImport(InjectVar.class)
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
@@ -2195,6 +2196,9 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.addImport(subType);
             }
 
+            //  字段
+            fieldModelList.add(fieldModel);
+
             if (fieldModel.isJpaEntity()) {
 
                 fieldModel.getImports().add(getInfoClassImport(fieldType));
@@ -2203,7 +2207,7 @@ public final class ServiceModelCodeGenerator {
 
                 if (isCreateObj) {
                     //
-                    continue;
+//                    continue;
                 }
 
             }
@@ -2222,7 +2226,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setBaseType(false);
 
                     if (isCreateObj) {
-                        continue;
+                       // continue;
                     }
 
                 } else {
@@ -2531,7 +2535,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("\"1\"");
                 } else if (fieldModel.isEnumerable()) {
 
-                    if(fieldType.isEnum()) {
+                    if (fieldType.isEnum()) {
                         fieldModel.setTestValue(fieldType.getSimpleName() + "." + getEnumByVal(fieldType, 0).name());
                     }
 
@@ -2597,8 +2601,6 @@ public final class ServiceModelCodeGenerator {
 
             }
 
-            fieldModelList.add(fieldModel);
-
         }
 
 
@@ -2623,8 +2625,48 @@ public final class ServiceModelCodeGenerator {
         replaceAnno(fieldModelList);
 
 
+        postProcess(fieldModelList, action);
+
         return fieldModelList;
     }
+
+
+    protected static void postProcess(List<FieldModel> fieldModels, String action) {
+
+        for (FieldModel fieldModel : fieldModels) {
+
+            // 设置字段关联关系
+            JoinColumn joinColumn = fieldModel.getField().getAnnotation(JoinColumn.class);
+
+            if (joinColumn != null) {
+
+                final String name = StringUtils.hasText(joinColumn.name()) ? joinColumn.name() : StrUtil.lowerFirst(fieldModel.getType().getSimpleName()) + "Id";
+
+                logger.info("---{}--- 设置字段关联关系：{} -> {}  : {}", action, fieldModel.getName(), name, fieldModel.getType().getName());
+
+                fieldModels.stream()
+                        .filter(fm -> fm.getName().equals(name))
+                        .findFirst()
+                        .ifPresent(fm -> {
+                            fm.setOptionsRefTargetType(fieldModel.getType());
+
+                            // 如果已经存在Options注解，则不添加
+                            if (!fm.getField().isAnnotationPresent(Options.class)) {
+
+                                fm.addImport(Options.class);
+
+                                fm.addAnnotation(Options.class, "refTargetType = " + fieldModel.getType().getSimpleName() + ".class");
+
+                            }
+
+                        });
+
+                //设置关联关系
+            }
+
+        }
+    }
+
 
     public static String toJsonStr(String txt) {
 

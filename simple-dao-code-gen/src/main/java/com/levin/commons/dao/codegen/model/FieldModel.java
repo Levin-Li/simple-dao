@@ -8,9 +8,11 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.springframework.core.ResolvableType;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.time.temporal.Temporal;
@@ -43,6 +45,11 @@ public class FieldModel implements Cloneable {
 
     public Field field;
 
+    public ResolvableType resolvableType;
+
+    //时间字段类型
+    private Class type;
+
     public String name;
 
     public String title = "";
@@ -54,9 +61,6 @@ public class FieldModel implements Cloneable {
     //类的短名称
     public String typeName;
 
-
-    //字段类型
-    private Class type;
 
     //对于集合类型的字段，元素的类型
     private Class eleType;
@@ -112,6 +116,10 @@ public class FieldModel implements Cloneable {
 
     private String testValue;
 
+    //可选项关联的目标类型,比如关联枚举类, 关联实体类
+    private Class<?> optionsRefTargetType;
+
+
     /**
      * 使用常量应用
      */
@@ -131,7 +139,6 @@ public class FieldModel implements Cloneable {
         String prefix = "@" + annotationType.getPackage().getName();
         return "@" + an.toString().substring(prefix.length() + 1);
     }
-
 
     /**
      * 是否原则类型
@@ -168,6 +175,14 @@ public class FieldModel implements Cloneable {
                     imports.add(an.annotationType().getName());
                     this.annotations.add(anToStr(an));
                 });
+    }
+
+    public boolean hasJpaJoinColumn(){
+        return field.isAnnotationPresent(JoinColumn.class)
+                || field.isAnnotationPresent(ManyToMany.class)
+                || field.isAnnotationPresent(ManyToOne.class)
+                || field.isAnnotationPresent(OneToMany.class)
+                || field.isAnnotationPresent(JoinColumns.class);
     }
 
     public boolean isDateTimeType() {

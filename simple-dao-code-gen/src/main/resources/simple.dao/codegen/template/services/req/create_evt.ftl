@@ -56,16 +56,13 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
 <#--    <#if (field.baseType && !field.pk && (!field.lazy || field.baseType) && !field.autoGenValue)>-->
-    <#if (!field.notCreate && !field.autoGenValue)>
+    <#if (!field.notCreate && !field.autoGenValue && !field.jpaEntity && !field.hasJpaJoinColumn())>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.baseEntityField?string(', hidden = true', '')} ${(field.required && !field.baseEntityField)?string(', required = true, requiredMode = REQUIRED', '')})-->
-    @Schema(title = ${field.schemaTitle}<#if field.defaultValue != ''> ,  defaultValue = "${field.defaultValue!}"</#if><#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${(field.baseEntityField && field.notUpdate)?string(', hidden = true', '')})
+    @Schema(title = ${field.schemaTitle}<#if field.defaultValue != ''> , defaultValue = "${field.defaultValue!}"</#if><#if field.desc != ''> , description = ${field.schemaDesc}</#if>${(field.baseEntityField && field.notUpdate)?string(' , hidden = true', '')})
     <#list field.annotations as annotation>
-<#--        默认创建请求不处理-->
-    ${( false && field.baseEntityField && field.notUpdate)?string('//', '')}${annotation}
+    <#--  默认创建请求不处理 -->
+    ${(false)?string('//', '')}${annotation}
     </#list>
-<#--    <#if (field.baseEntityField && field.name =='creator')>-->
-<#--    @InjectVar(InjectConst.USER_ID)-->
-<#--    </#if>-->
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}; //参考默认值 ${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!}
 
     </#if>

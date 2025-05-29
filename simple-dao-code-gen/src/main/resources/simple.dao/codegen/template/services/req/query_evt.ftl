@@ -124,7 +124,7 @@ public class ${className} extends ${reqExtendClass} {
     @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max')  || annotation?trim?starts_with('@Size')>
+        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@Id')  ||  annotation?trim?starts_with('@Options')  || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max')  || annotation?trim?starts_with('@Size')>
     ${annotation}
         </#if>
     </#list>
@@ -153,7 +153,7 @@ public class ${className} extends ${reqExtendClass} {
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
     <#-- 基本类型 field.baseType -->
-    <#elseif true>
+    <#elseif !field.hasJpaJoinColumn()>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
     <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
