@@ -4,6 +4,7 @@ package com.levin.commons.dao.support;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.domain.TreeObject;
 import com.levin.commons.dao.exception.DaoAnnotationException;
 import com.levin.commons.dao.exception.DaoSecurityException;
 import com.levin.commons.dao.exception.DaoUniqueConstraintBizException;
@@ -18,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -769,6 +771,14 @@ public class JpaDaoImpl
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
 
+        //简单检查树形对象,防止循环
+        if (entity instanceof TreeObject) {
+            TreeObject<?, ?> treeObject = (TreeObject<?, ?>) entity;
+
+            Assert.isTrue(!entity.equals(treeObject.getParent()), "parent attr can't set self object");
+            Assert.isTrue(!(treeObject.getParentId() != null && treeObject.getParentId().equals(treeObject.getId())), "parentId attr can't set self object");
+        }
+
         EntityManager em = getEntityManager();
 
         boolean mergeOk = false;
@@ -1480,7 +1490,7 @@ public class JpaDaoImpl
 
         List paramValueList = flattenParams(null, paramValues);
 
-       // String oldStatement = statement;
+        // String oldStatement = statement;
 
         if (!paramValueList.isEmpty()) {
             statement = replacePlaceholder(isNative, statement);
