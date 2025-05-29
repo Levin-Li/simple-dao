@@ -133,10 +133,10 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
     <#if classModel.isDefaultUpdateTime(field.name)>
-
         if(get${field.name?cap_first}() == null){
             set${field.name?cap_first}(<#if field.typeName =='Date'>new ${field.typeName}()<#else>${field.typeName}.now()</#if>);
         }
+
     </#if>
 </#list>
     }
@@ -149,6 +149,7 @@ public class ${className} extends ${reqExtendClass} {
         this.autoForceUpdateFields.add(E_${entityName}.${field.name});
         return (T) this;
     }
+
    </#if>
 </#list>
 
