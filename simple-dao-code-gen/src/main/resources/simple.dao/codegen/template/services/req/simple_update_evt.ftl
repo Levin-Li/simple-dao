@@ -130,13 +130,6 @@ public class ${className} extends ${reqExtendClass} {
 
     @PostConstruct //@PreUpdate
     public void preUpdate() {
-        //@todo 更新之前初始化数据
-        <#-- 简单防止树形节点的循环引用 -->
-        <#if classModel.isType('com.levin.commons.dao.domain.TreeObject')>
-         if(getParentId() != null && getParentId().equals(get${pkField.name?cap_first}())){
-            throw new IllegalArgumentException("父节点不能设置为自己");
-        }
-        </#if>
 
 <#list fields as field>
     <#if classModel.isDefaultUpdateTime(field.name)>
