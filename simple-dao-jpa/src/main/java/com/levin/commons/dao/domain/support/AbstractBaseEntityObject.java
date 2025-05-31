@@ -67,7 +67,7 @@ public abstract class AbstractBaseEntityObject
     //@Contains
     protected String remark;
 
-    @Schema(title = "乐观锁")
+    @Schema(title = "乐观锁版本号")
     @Version
     protected Integer optimisticLock;
 
