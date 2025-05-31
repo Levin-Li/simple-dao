@@ -536,6 +536,14 @@ Dao 类逻辑框图，如下图所示。
         @Gt(condition="#_fieldVal != null") //_val 变量名前要加#号
         Integer age = 18;
 
+   特别用法对目标字段的名的动态定义，如下：
+
+         String ageColumnName = "age";
+
+         @Gt(value="#!spel:#ageColumnName", domain = "#!spel:#xxx")
+         Integer age = 18;
+
+   修改ageColumnName可以动态改变目标字段,尽量使用固定字段名，避免字段名变化导致代码不生效。目前只支持ExpressionType.SPEL_PREFIX为前缀的spel表达式。
 
 #### 4.5 数据校验注解 @Validator
    在查询和更新之前，可以通过 @Validator 的expr属性实现数据校验，基于 SPEL 实现跨字段的参数验证。

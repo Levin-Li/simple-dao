@@ -1912,14 +1912,15 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     public static String evalTextByThreadLocal(String expr, Map<String, Object>... exMaps) {
 
-        if (!hasText(expr)
-                || !trimWhitespace(expr).startsWith(ExpressionType.SPEL_PREFIX)) {
-            return expr;
-        }
 
         BiFunction<String, Map<String, Object>[], Object> func = elEvalFuncThreadLocal.get();
 
         if (func == null) {
+            return expr;
+        }
+
+        if (!hasText(expr)
+                || !trimWhitespace(expr).startsWith(ExpressionType.SPEL_PREFIX)) {
             return expr;
         }
 
