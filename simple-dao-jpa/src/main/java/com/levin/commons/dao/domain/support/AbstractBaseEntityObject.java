@@ -54,7 +54,7 @@ public abstract class AbstractBaseEntityObject
     @Schema(title = "排序代码")
     protected Integer orderCode;
 
-    @Schema(title = "是否允许")
+    @Schema(title = "是否启用")
     @Column(nullable = false)
     protected Boolean enable;
 
