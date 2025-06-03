@@ -2177,13 +2177,13 @@ public final class ServiceModelCodeGenerator {
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
 
-            if(CharSequence.class.isAssignableFrom(fieldType)){
+            if (CharSequence.class.isAssignableFrom(fieldType)) {
 
-                if(field.isAnnotationPresent(Column.class)){
+                if (field.isAnnotationPresent(Column.class)) {
                     fieldModel.setTextLength(field.getAnnotation(Column.class).length());
-                }else if(field.isAnnotationPresent(Lob.class)){
+                } else if (field.isAnnotationPresent(Lob.class)) {
                     fieldModel.setTextLength(Integer.MAX_VALUE);
-                }else {
+                } else {
                     fieldModel.setTextLength(null);
                 }
             }
@@ -2488,20 +2488,16 @@ public final class ServiceModelCodeGenerator {
             //javax.validation.constraints
 
 
-            if (fieldModel.getTextLength() != null
-                    && !fieldModel.getName().endsWith("Body")) {
+            if (fieldModel.getTextLength() != null) {
 
                 if (field.isAnnotationPresent(Lob.class)) {
-                    //fieldModel.setLength(4000);
-                    fieldModel.setTestValue("\"这是长文本正文\"");
-                } else {
-
-                    //(fieldModel.isRequired() && isCreateObj ? "min = 1, " : ""),
-                    //最小长度限制，通过@NotBlank，来控制
-                    annotations.add(String.format("@Size(%smax = %s)", "", fieldModel.getTextLength()));
-
-                    fieldModel.setTestValue("\"这是文本" + fieldModel.getTextLength() + "\"");
                 }
+
+                //最小长度限制，通过@NotBlank，来控制
+                annotations.add(String.format("@Size(%smax = %s)", "", fieldModel.getTextLength()));
+
+                fieldModel.setTestValue("\"这是文本" + fieldModel.getTextLength() + "\"");
+
             }
 
 /*
