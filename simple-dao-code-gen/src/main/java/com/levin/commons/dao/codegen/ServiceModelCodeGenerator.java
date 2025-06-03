@@ -2177,7 +2177,16 @@ public final class ServiceModelCodeGenerator {
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
 
-            fieldModel.setTextLength(field.isAnnotationPresent(Column.class) && CharSequence.class.isAssignableFrom(fieldType) ? field.getAnnotation(Column.class).length() : (field.isAnnotationPresent(Lob.class) ? Short.MAX_VALUE : null));
+            if(CharSequence.class.isAssignableFrom(fieldType)){
+
+                if(field.isAnnotationPresent(Column.class)){
+                    fieldModel.setTextLength(field.getAnnotation(Column.class).length());
+                }else if(field.isAnnotationPresent(Lob.class)){
+                    fieldModel.setTextLength(Integer.MAX_VALUE);
+                }else {
+                    fieldModel.setTextLength(null);
+                }
+            }
 
             fieldModel.setTypeName(fieldType.getSimpleName());
 
