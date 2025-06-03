@@ -580,7 +580,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                          .disableSafeMode();
 
                     //最多5万条记录
-                    return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(5_0000), ex).getItems();
+                    return getSelfProxy().query(new Query${entityName}Req().setSuperAdmin(true).cast(), new SimplePaging().setPageSize(5_0000), ex).getItems();
                 }
         );
 
