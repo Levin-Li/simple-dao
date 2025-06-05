@@ -32,7 +32,7 @@ import java.util.List;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
-        extends MultiTenantReq<T> implements OrganizedScopeObject {
+        extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject {
 
     public static final String IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
     public static final String NOT_ALL_ORG_SCOPE = " !" + IS_ALL_ORG_SCOPE;
