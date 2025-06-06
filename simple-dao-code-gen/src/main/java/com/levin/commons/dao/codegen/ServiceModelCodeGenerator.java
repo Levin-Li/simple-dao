@@ -1601,7 +1601,7 @@ public final class ServiceModelCodeGenerator {
         Arrays.stream(FieldModel.CRUD.values()).forEach(action -> params.put(action.name() + "_fields", Collections.emptyList()));
 
         //默认的字段
-        params.put("fields", multiValueMap.containsValue(FieldModel.CRUD.DEFAULT) ? multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()) : Collections.emptyList());
+        params.put("fields", multiValueMap.containsValue(FieldModel.CRUD.DEFAULT.name()) ? multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()) : Collections.emptyList());
 
         //覆盖
         multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
@@ -2252,13 +2252,14 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setReadOnly(Modifier.isFinal(field.getModifiers())
                     //  无setter方法
-                    || ReflectionUtils.findMethod(entityClass, "set" + StrUtil.upperFirst(field.getName())) == null);
+                    || ReflectionUtils.findMethod(entityClass, "set" + StrUtil.upperFirst(field.getName())) == null
+            );
 
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
 
                 // 只读字段
-                fieldModel.setReadOnly(fieldModel.isReadOnly() || schema.readOnly() || schema.accessMode() == Schema.AccessMode.READ_ONLY);
+                fieldModel.setReadOnly(fieldModel.isReadOnly() || schema.readOnly() || (schema.accessMode() == Schema.AccessMode.READ_ONLY));
 
                 fieldModel.setDefaultValue(toJsonStr(schema.defaultValue()));
 
