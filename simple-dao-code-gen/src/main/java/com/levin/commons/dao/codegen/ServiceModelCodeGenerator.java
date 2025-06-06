@@ -1601,7 +1601,7 @@ public final class ServiceModelCodeGenerator {
         Arrays.stream(FieldModel.CRUD.values()).forEach(action -> params.put(action.name() + "_fields", Collections.emptyList()));
 
         //默认的字段
-        params.put("fields", multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()));
+        params.put("fields", multiValueMap.containsValue(FieldModel.CRUD.DEFAULT) ? multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()) : Collections.emptyList());
 
         //覆盖
         multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
@@ -2250,9 +2250,7 @@ public final class ServiceModelCodeGenerator {
             //是否乐观锁字段
             fieldModel.setOptimisticLock(field.isAnnotationPresent(Version.class));
 
-
             fieldModel.setReadOnly(Modifier.isFinal(field.getModifiers())
-
                     //  无setter方法
                     || ReflectionUtils.findMethod(entityClass, "set" + StrUtil.upperFirst(field.getName())) == null);
 
