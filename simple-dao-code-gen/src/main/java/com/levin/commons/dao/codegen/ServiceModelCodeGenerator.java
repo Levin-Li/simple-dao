@@ -2250,11 +2250,17 @@ public final class ServiceModelCodeGenerator {
             //是否乐观锁字段
             fieldModel.setOptimisticLock(field.isAnnotationPresent(Version.class));
 
+
+            fieldModel.setReadOnly(Modifier.isFinal(field.getModifiers())
+
+                    //  无setter方法
+                    || ReflectionUtils.findMethod(entityClass, "set" + StrUtil.upperFirst(field.getName())) == null);
+
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
 
                 // 只读字段
-                fieldModel.setReadOnly(Modifier.isFinal(field.getModifiers()) || schema.readOnly() || schema.accessMode() == Schema.AccessMode.READ_ONLY);
+                fieldModel.setReadOnly(fieldModel.isReadOnly() || schema.readOnly() || schema.accessMode() == Schema.AccessMode.READ_ONLY);
 
                 fieldModel.setDefaultValue(toJsonStr(schema.defaultValue()));
 
