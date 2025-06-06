@@ -2253,6 +2253,9 @@ public final class ServiceModelCodeGenerator {
             if (field.isAnnotationPresent(Schema.class)) {
                 Schema schema = field.getAnnotation(Schema.class);
 
+                // 只读字段
+                fieldModel.setReadOnly(Modifier.isFinal(field.getModifiers()) || schema.readOnly() || schema.accessMode() == Schema.AccessMode.READ_ONLY);
+
                 fieldModel.setDefaultValue(toJsonStr(schema.defaultValue()));
 
                 if (StringUtils.hasText(schema.title())) {
@@ -2626,9 +2629,13 @@ public final class ServiceModelCodeGenerator {
 
         }
 
+        if (isCreateObj || isUpdateObj) {
+            //移除只读字段
+            fieldModelList.removeIf(FieldModel::isReadOnly);
+        }
+
         //替换注解中的内容
         replaceAnno(fieldModelList);
-
 
         postProcess(fieldModelList, action);
 
