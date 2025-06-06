@@ -1601,7 +1601,7 @@ public final class ServiceModelCodeGenerator {
         Arrays.stream(FieldModel.CRUD.values()).forEach(action -> params.put(action.name() + "_fields", Collections.emptyList()));
 
         //默认的字段
-        params.put("fields", multiValueMap.containsValue(FieldModel.CRUD.DEFAULT.name()) ? multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()) : Collections.emptyList());
+        params.put("fields", multiValueMap.containsKey(FieldModel.CRUD.DEFAULT.name()) ? multiValueMap.remove(FieldModel.CRUD.DEFAULT.name()) : Collections.emptyList());
 
         //覆盖
         multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
