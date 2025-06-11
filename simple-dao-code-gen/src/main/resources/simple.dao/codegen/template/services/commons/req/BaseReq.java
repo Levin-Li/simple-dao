@@ -115,6 +115,11 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     protected String _ipAddr;
 
+    @Schema(title = "操作员动作",description = "一般对应控制器的方法或是描述", hidden = true)
+    @InjectVar(value = InjectConst.OPERATOR_ACTION, isRequired = "false")
+    @Ignore
+    protected String _operatorAction;
+
     @Schema(title = "操作员ID", hidden = true)
     @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
     @Ignore
