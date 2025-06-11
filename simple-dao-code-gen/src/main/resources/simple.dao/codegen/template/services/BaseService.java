@@ -168,6 +168,15 @@ public abstract class BaseService<S> implements ApplicationListener<ContextRefre
     }
 
     /**
+     * null 转空字符串, 其他情况 ToString
+     * @param obj
+     * @return
+     */
+    protected String toStrOrEmpty(Object obj) {
+        return obj == null ? "" : obj.toString();
+    }
+
+    /**
      * null 转空字符串
      * @param txt
      * @return

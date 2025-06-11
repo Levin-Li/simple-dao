@@ -190,6 +190,16 @@ public abstract class BaseController {
         return StringUtils.hasText(txt) ? txt : defaultValue;
     }
 
+
+    /**
+     * null 转空字符串, 其他情况 ToString
+     * @param obj
+     * @return
+     */
+    protected String toStrOrEmpty(Object obj) {
+        return obj == null ? "" : obj.toString();
+    }
+
     /**
      * 空转null
      * @param txt
