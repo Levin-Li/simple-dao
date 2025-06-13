@@ -143,7 +143,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     @GetMapping({"retrieve"}) //, "{${pkField.name}}"
     @Operation(summary = VIEW_DETAIL_ACTION, description = VIEW_DETAIL_ACTION + " " + BIZ_NAME + "-1, 路径变量参数优先")
-    @CRUD.Op(showResultView = true)
+    @CRUD.Op
     public ApiResp<${entityName}Info> retrieve(@Valid ${entityName}IdReq req) { //, @PathVariable(required = false) ${pkField.typeName} ${pkField.name}
 
         // req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
