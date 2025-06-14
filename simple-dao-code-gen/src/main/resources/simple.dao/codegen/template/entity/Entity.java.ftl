@@ -22,7 +22,7 @@ import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
 
-import static ${CLASS_PACKAGE_NAME}.E_${entityName}.*;
+//import static ${CLASS_PACKAGE_NAME}.E_${entityName}.*;
 
 
 /**
@@ -118,7 +118,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     @FieldNameConstants
     @ToString(callSuper = true)
     @EqualsAndHashCode
-    public class EID implements Serializable {
+    public static class EID implements Serializable {
 
         private static final long serialVersionUID = ${serialVersionUID}L;
 
