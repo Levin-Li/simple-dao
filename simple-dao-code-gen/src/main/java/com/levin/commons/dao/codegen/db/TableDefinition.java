@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 数据库表定义,从这里可以获取表名,字段信息
@@ -28,10 +30,14 @@ public class TableDefinition {
      */
     private String comment;
 
-    /** Java相关字段 */
+    /**
+     * Java相关字段
+     */
     private transient List<ColumnDefinition> columnDefinitions = Collections.emptyList();
 
-    /** C#相关字段 */
+    /**
+     * C#相关字段
+     */
     private transient List<CsharpColumnDefinition> csharpColumnDefinitions = Collections.emptyList();
 
     public TableDefinition() {
@@ -43,6 +49,7 @@ public class TableDefinition {
 
     /**
      * 是否有时间字段
+     *
      * @return true：有
      */
     public boolean getHasDateColumn() {
@@ -147,6 +154,21 @@ public class TableDefinition {
     public List<ColumnDefinition> getColumnDefinitions() {
         return columnDefinitions;
     }
+
+    public boolean hasColumnName(String... names) {
+        return columnDefinitions.stream().anyMatch(cd -> Stream.of(names).anyMatch(n -> n.equals(cd.getColumnName())));
+    }
+
+    /**
+     * 获取联合主键
+     *
+     * @return
+     */
+    public List<ColumnDefinition> getEmbeddedIdColumns() {
+        List<ColumnDefinition> columnDefinitionList = columnDefinitions.stream().filter(columnDefinition -> columnDefinition.getIsPk()).collect(Collectors.toList());
+        return columnDefinitionList.size() > 1 ? columnDefinitionList : Collections.emptyList();
+    }
+
 
     public void setColumnDefinitions(List<ColumnDefinition> columnDefinitions) {
         this.columnDefinitions = columnDefinitions;

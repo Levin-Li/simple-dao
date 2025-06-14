@@ -30,6 +30,7 @@ public abstract class ColumnSelector {
 	protected abstract ColumnDefinition buildColumnDefinition(Map<String, Object> rowMap);
 
 	public List<ColumnDefinition> getColumnDefinitions(String tableName) {
+
 		List<Map<String, Object>> resultList = SqlHelper.runSql(this.getGeneratorConfig(), getColumnInfoSQL(tableName));
 
 		List<ColumnDefinition> columnDefinitionList = new ArrayList<ColumnDefinition>(resultList.size());
@@ -37,6 +38,8 @@ public abstract class ColumnSelector {
 		for (Map<String, Object> rowMap : resultList) {
 			columnDefinitionList.add(buildColumnDefinition(rowMap));
 		}
+
+
 
 		return columnDefinitionList;
 	}

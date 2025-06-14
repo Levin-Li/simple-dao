@@ -106,33 +106,67 @@ implements EntityObject
 
 private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#assign hasEmbeddedId = entity.getEmbeddedIdColumns()?size gt 0/>
+
+<#if hasEmbeddedId>
+
+    @Embeddable
+    @Accessors(chain = true)
+    @FieldNameConstants
+    @ToString(callSuper = true)
+    @EqualsAndHashCode
+    public class EID implements Serializable {
+
+        private static final long serialVersionUID = ${serialVersionUID}L;
+
+    <#list entity.getEmbeddedIdColumns() as pkField>
+        @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
+        @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
+        ${pkField.fieldTypeBox} ${pkField.camelCaseName};
+
+    </#list>
+    }
+
+    @EmbeddedId
+    EID id;
+
+</#if>
+
 <#list fields as field>
     <#if field.isPk>
-        @Id
-        @GeneratedValue<#if !field.isIdentity>(generator = "default_id")</#if>
+    @Id
+    @GeneratedValue<#if !field.isIdentity>(generator = "default_id")</#if>
     </#if>
     <#if field.isLob>
-        @Lob
+    @Lob
     </#if>
     <#if field.fieldTypeBox == 'Date'>
-        @Temporal(TemporalType.<#if field.columnType =='date'>DATE<#elseif field.columnType =='time'>TIME<#else>TIMESTAMP</#if>)
+    @Temporal(TemporalType.<#if field.columnType =='date'>DATE<#elseif field.columnType =='time'>TIME<#else>TIMESTAMP</#if>)
     </#if>
     @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
     @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
     protected ${field.fieldTypeBox} ${field.camelCaseName};
 
 </#list>
-//@Override
-@PrePersist
-public void prePersist() {
-//super.prePersist();
-}
 
-//@Override
-@PreUpdate
-public void preUpdate() {
-// super.preUpdate();
-}
+<#if !entity.hasColumnName('id') && !hasEmbeddedId>
+    @Override
+    public ${entity.pkColumn.fieldTypeBox} getId() {
+        return ${entityPkName};
+    }
+</#if>
+
+    //@Override
+    @PrePersist
+    public void prePersist() {
+        //super.prePersist();
+    }
+
+    //@Override
+    @PreUpdate
+    public void preUpdate() {
+        // super.preUpdate();
+    }
 
 }
 

@@ -327,9 +327,14 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .findAny()
                     .isPresent();
 
+
+            List<ColumnDefinition> embeddedIdColumns = tableDefinition.getEmbeddedIdColumns();
+
             Map<String, Object> params = MapUtil
-                    .builder("fields", (Object) tableDefinition.getColumnDefinitions())
+                    .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream().filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition)).collect(Collectors.toList()))
                     .put("attrs", fun)
+                    .put("embeddedIdColumns", embeddedIdColumns)
+                    .put("entity", tableDefinition)
                     .put("keywordFun", keywordFun)
                     .put("entityName", entityName)
                     .put("serialVersionUID", "9876543210")
