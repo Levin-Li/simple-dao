@@ -10,10 +10,9 @@ import com.levin.commons.dao.domain.support.*;
 import com.levin.commons.service.support.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
+
+import lombok.*;
+import lombok.experimental.*;
 
 import javax.persistence.*;
 import java.util.*;
