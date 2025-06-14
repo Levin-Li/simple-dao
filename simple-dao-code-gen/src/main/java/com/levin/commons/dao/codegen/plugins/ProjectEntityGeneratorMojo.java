@@ -331,7 +331,12 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             List<ColumnDefinition> embeddedIdColumns = tableDefinition.getEmbeddedIdColumns();
 
             Map<String, Object> params = MapUtil
-                    .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream().filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition)).collect(Collectors.toList()))
+                    .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream()
+                            .filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition))
+                          //  .sorted(Comparator.comparing(ColumnDefinition::getColumnName))
+                            .collect(Collectors.toList())
+
+                    )
                     .put("attrs", fun)
                     .put("embeddedIdColumns", embeddedIdColumns)
                     .put("entity", tableDefinition)

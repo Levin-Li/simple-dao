@@ -15,6 +15,9 @@ import lombok.*;
 import lombok.experimental.*;
 
 import javax.persistence.*;
+
+java.io.Serializable;
+
 import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
@@ -120,7 +123,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
         private static final long serialVersionUID = ${serialVersionUID}L;
 
     <#list entity.getEmbeddedIdColumns() as field>
-        @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
+        @Column(nullable = ${field.isNullable?c}<#if field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
         ${field.fieldTypeBox} ${field.camelCaseName};
 
@@ -143,7 +146,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     <#if field.fieldTypeBox == 'Date'>
     @Temporal(TemporalType.<#if field.columnType =='date'>DATE<#elseif field.columnType =='time'>TIME<#else>TIMESTAMP</#if>)
     </#if>
-    @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
+    @Column(nullable = ${field.isNullable?c}<#if field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
     @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
     protected ${field.fieldTypeBox} ${field.camelCaseName};
 
