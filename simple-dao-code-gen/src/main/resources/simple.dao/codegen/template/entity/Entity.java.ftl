@@ -19,7 +19,7 @@ import java.util.*;
 import java.math.*;
 //import org.hibernate.annotations.*;
 
-import static ${CLASS_PACKAGE_NAME}.E${entityName}.*;
+import static ${CLASS_PACKAGE_NAME}.E_${entityName}.*;
 
 
 /**
