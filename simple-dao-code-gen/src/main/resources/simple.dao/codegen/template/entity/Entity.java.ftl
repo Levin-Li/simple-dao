@@ -109,7 +109,7 @@ implements EntityObject
 
 private static final long serialVersionUID = ${serialVersionUID}L;
 
-<#assign hasEmbeddedId = entity.getEmbeddedIdColumns()?size gt 0/>
+<#assign hasEmbeddedId = embeddedIdColumns?size gt 0/>
 
 <#if hasEmbeddedId>
 
@@ -123,6 +123,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
         private static final long serialVersionUID = ${serialVersionUID}L;
 
     <#list entity.getEmbeddedIdColumns() as field>
+        @Id
         @Column(nullable = ${field.isNullable?c}<#if field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
         ${field.fieldTypeBox} ${field.camelCaseName};
