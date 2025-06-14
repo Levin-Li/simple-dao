@@ -16,7 +16,7 @@ import lombok.experimental.*;
 
 import javax.persistence.*;
 
-java.io.Serializable;
+import java.io.Serializable;
 
 import java.util.*;
 import java.math.*;
