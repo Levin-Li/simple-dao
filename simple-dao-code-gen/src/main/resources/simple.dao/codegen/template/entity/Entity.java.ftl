@@ -119,10 +119,10 @@ private static final long serialVersionUID = ${serialVersionUID}L;
 
         private static final long serialVersionUID = ${serialVersionUID}L;
 
-    <#list entity.getEmbeddedIdColumns() as pkField>
+    <#list entity.getEmbeddedIdColumns() as field>
         @Column(<#if !field.isNullable>nullable = false,</#if><#if field.maxLength?? && field.maxLength &gt; 0 > length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
-        ${pkField.fieldTypeBox} ${pkField.camelCaseName};
+        ${field.fieldTypeBox} ${field.camelCaseName};
 
     </#list>
     }
