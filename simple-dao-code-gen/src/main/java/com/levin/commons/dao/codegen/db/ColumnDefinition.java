@@ -108,6 +108,17 @@ public class ColumnDefinition {
     }
 
 
+    public boolean isNumber() {
+
+        TypeEnum typeEnum = getTypeEnum();
+
+        return typeEnum.ordinal() >= TypeEnum.TINYINT.ordinal() && typeEnum.ordinal() <= TypeEnum.DECIMAL.ordinal();
+    }
+
+    public TypeEnum getTypeEnum() {
+        return TypeEnum.getByType(getType());
+    }
+
     /**
      * 获得基本类型,int,float
      *

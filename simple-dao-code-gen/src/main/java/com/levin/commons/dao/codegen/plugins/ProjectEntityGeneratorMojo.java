@@ -7,21 +7,16 @@ import com.levin.commons.dao.codegen.ServiceModelCodeGenerator;
 import com.levin.commons.dao.codegen.db.*;
 import com.levin.commons.dao.codegen.db.util.FieldUtil;
 import com.levin.commons.plugins.BaseMojo;
-import com.levin.commons.plugins.Utils;
 import com.levin.commons.utils.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -131,7 +126,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
      * 要生成实体类的表名称前缀
      */
     @Parameter
-    private String defaultTableNamePrefix = "";
+    private String defaultTableNameMatchPattern = "";
 
     {
         independentPluginClassLoader = false;
@@ -228,12 +223,20 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
         if (!dbConfigRes.exists()) {
 
-            FileUtil.writeString("spring.datasource:\n" +
+            FileUtil.writeString(
+                    "spring.datasource:\n" +
                             "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
-                            "  #需要生成实体类的表前缀\n" +
-                            "  genEntityTablePrefix: \n" +
                             "  username: root\n" +
-                            "  password: \n",
+                            "  password: \n" +
+
+                            "codegen:\n" +
+                            "  #需要生成实体类的表前缀,可以*模糊匹配,默认所有的表都生成\n" +
+                            "  tableNameMatchPattern: \n" +
+                            "  #是否使用表名, 不进行表名转换, 重要配置\n" +
+                            "  useTableName: false\n" +
+                            "  #是否使用字段名, 不进行字段名转换, 重要配置\n" +
+                            "  useColumnName: false",
+
                     dbConfigRes.getFile(),
                     "utf-8");
 
@@ -248,31 +251,34 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
         yamlProperties.afterPropertiesSet();
 
-        Properties props = yamlProperties.getObject();
+        final Properties genProps = yamlProperties.getObject();
 
         String dsPrefix = "spring.datasource.";
 
         DbConfig dbConfig = new DbConfig()
-                .setDbName(props.getProperty(dsPrefix + "dbName"))
-                .setJdbcUrl(props.getProperty(dsPrefix + "url", defaultJdbcUrl))
-                .setUsername(props.getProperty(dsPrefix + "username", defaultJdbcUsername))
-                .setPassword(props.getProperty(dsPrefix + "password", defaultJdbcPassword));
+                .setDbName(genProps.getProperty(dsPrefix + "dbName"))
+                .setJdbcUrl(genProps.getProperty(dsPrefix + "url", defaultJdbcUrl))
+                .setUsername(genProps.getProperty(dsPrefix + "username", defaultJdbcUsername))
+                .setPassword(genProps.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
         if (StrUtil.isBlank(dbConfig.getJdbcUrl())) {
             logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
             return;
         }
 
-        String tablePrefix = props.getProperty(dsPrefix + "genEntityTablePrefix", null);
 
-        if (!StringUtils.hasText(tablePrefix)) {
-            tablePrefix = defaultTableNamePrefix;
+        final String genPrefix = "codegen";
+
+        String tableNameMatchPattern = genProps.getProperty(genPrefix + ".tableNameMatchPattern", null);
+
+        if (!StringUtils.hasText(tableNameMatchPattern)) {
+            tableNameMatchPattern = defaultTableNameMatchPattern;
         }
 
-        if (!StringUtils.hasText(tablePrefix)) {
+        if (!StringUtils.hasText(tableNameMatchPattern)) {
             logger.warn("*** 可以定义：" + dsPrefix + "genEntityTablePrefix" + " 指定要生成实体类的表前缀，同时会去除前缀");
         } else {
-            logger.info("需要生成实体类的表名前缀：{}", tablePrefix);
+            logger.info("需要生成实体类的表名前缀：{}", tableNameMatchPattern);
         }
 
         getLog().info("开始读取数据库：" + dbConfig);
@@ -290,15 +296,14 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                 continue;
             }
 
-            if (StringUtils.hasText(tablePrefix)) {
-                if (!tableName.toLowerCase().startsWith(tablePrefix.toLowerCase())) {
-                    //如果不是指定前缀的表
-                    logger.info("指定要求前缀[{}],忽略表:{}", tablePrefix, tableName);
-                    continue;
-                }
+            if (StringUtils.hasText(tableNameMatchPattern)
+                    && !PatternMatchUtils.simpleMatch(tableNameMatchPattern.split(","), tableName)) {
+                //如果不是指定前缀的表
+                logger.info("指定要求前缀[{}],忽略表:{}", tableNameMatchPattern, tableName);
+                continue;
             }
 
-            final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tablePrefix) ? tableName.substring(tablePrefix.length()) : tableName));
+            final String entityName = FieldUtil.upperFirstLetter(StrUtil.toCamelCase(hasText(tableNameMatchPattern) ? tableName.substring(tableNameMatchPattern.length()) : tableName));
 
             File outFile = new File(entitiesDir, entityName + ".java");
 
@@ -333,13 +338,19 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
             Map<String, Object> params = MapUtil
                     .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream()
                             .filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition))
-                          //  .sorted(Comparator.comparing(ColumnDefinition::getColumnName))
+                            .sorted(Comparator.comparingInt(this::getOrder))
                             .collect(Collectors.toList())
 
                     )
                     .put("attrs", fun)
                     .put("embeddedIdColumns", embeddedIdColumns)
+
+
                     .put("entity", tableDefinition)
+
+                    .put("useTableName", "true".equalsIgnoreCase(genProps.getProperty(genPrefix + ".useTableName", "false").trim()))
+                    .put("useColumnName", "true".equalsIgnoreCase(genProps.getProperty(genPrefix + ".useColumnName", "false").trim()))
+
                     .put("keywordFun", keywordFun)
                     .put("entityName", entityName)
                     .put("serialVersionUID", "9876543210")
@@ -352,6 +363,21 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             ServiceModelCodeGenerator.genFileByTemplate("entity/Entity.java.ftl", params, outFile.getCanonicalPath());
         }
+
+    }
+
+
+    protected int getOrder(ColumnDefinition cd) {
+
+        if (cd.getIsPk()) {
+            return 1;
+        } else if (cd.getCamelCaseName().endsWith("Name")
+                || (StrUtil.isNotBlank(cd.getComment()) && Stream.of("名", "名称").anyMatch(name -> cd.getComment().endsWith(name)))
+                || cd.getCamelCaseName().endsWith("name")) {
+            return 2;
+        }
+
+        return 100;
 
     }
 

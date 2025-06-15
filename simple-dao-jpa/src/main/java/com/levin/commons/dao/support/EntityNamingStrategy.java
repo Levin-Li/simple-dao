@@ -1,5 +1,7 @@
 package com.levin.commons.dao.support;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
@@ -12,11 +14,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 表名和字段名命名策略
- *
+ * <p>
  * 注意：
  * 当没有使用@Table和@Column注解时，implicit-strategy配置项才会被使用，即implicit-strategy定义的是一种缺省场景的处理策略；
  * 而physical-strategy属于一种高优先级的策略，只要设置就会被执行，而不管是否有@Table和@Column注解。
- *
  */
 @Slf4j
 public class EntityNamingStrategy extends CamelCaseToUnderscoresNamingStrategy {
@@ -44,6 +45,8 @@ public class EntityNamingStrategy extends CamelCaseToUnderscoresNamingStrategy {
         }
     }
 
+
+    @Operation(summary = "转换到物理表名")
     @Override
     public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
 

@@ -43,4 +43,13 @@ public enum TypeEnum {
     public String getType() {
         return type;
     }
+
+    public static TypeEnum getByType(String type) {
+        for (TypeEnum value : values()) {
+            if (value.type.equals(type)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }

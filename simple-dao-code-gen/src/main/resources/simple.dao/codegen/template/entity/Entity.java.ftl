@@ -36,27 +36,30 @@ import java.math.*;
 @FieldNameConstants
 @ToString(callSuper = true)
 @Schema(description = "${entityComment}")
-@Entity(name = EntityConst.PREFIX + "${entityName}")
+
+@Entity<#if !useTableName>(name = EntityConst.PREFIX + "${entityName}")</#if>
+
 @Table(
+<#if useTableName>      name = "${entity.tableName}", </#if>
 <#if entitySchema??>        //schema = "${entitySchema}",</#if>
-indexes = {
-// 索引
-<#if !attrs.test('name')>//</#if>                 @Index(columnList = E_${entityName}.name),
+    indexes = {
+    // 索引
+    <#if !attrs.test('name')>//</#if>                 @Index(columnList = E_${entityName}.name),
 
-<#list fields as field>
-    <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,no,time,date,name,status,state,type,code,category') >
-        @Index(columnList =  E_${entityName}.${field.camelCaseName}),
-    <#elseif field.isPk && attrs.test('tenantId')>
-        @Index(columnList = E_${entityName}.tenantId + "," + E_${entityName}.${field.camelCaseName}),
-    </#if>
-</#list>
-},
+    <#list fields as field>
+        <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,no,time,date,name,status,state,type,code,category') >
+            @Index(columnList =  E_${entityName}.${field.camelCaseName}),
+        <#elseif field.isPk && attrs.test('tenantId')>
+            @Index(columnList = E_${entityName}.tenantId + "," + E_${entityName}.${field.camelCaseName}),
+        </#if>
+    </#list>
+    },
 
-uniqueConstraints = {
-//   唯一约束
-//   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_${entityName}.code}),
-//   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
-}
+    uniqueConstraints = {
+    //   唯一约束
+    //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_${entityName}.code}),
+    //   @UniqueConstraint(columnNames = {AbstractNamedMultiTenantObject.Fields.tenantId, E_AbstractNamedMultiTenantObject.name}),
+    }
 )
 
 //JPA 继承配置
@@ -124,8 +127,8 @@ private static final long serialVersionUID = ${serialVersionUID}L;
 
     <#list entity.getEmbeddedIdColumns() as field>
         @Id
-        @Column(nullable = ${field.isNullable?c}<#if field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
+        @Column(nullable = ${field.isNullable?c}<#if useColumnName>, name = "${field.columnName}"</#if><#if !field.isNumber() && field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.isNumber() &&  field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         ${field.fieldTypeBox} ${field.camelCaseName};
 
     </#list>
@@ -139,7 +142,7 @@ private static final long serialVersionUID = ${serialVersionUID}L;
 <#list fields as field>
     <#if field.isPk>
     @Id
-    @GeneratedValue<#if !field.isIdentity>(generator = "default_id")</#if>
+    @GeneratedValue(<#if field.isIdentity>strategy = GenerationType.IDENTITY<#else>generator = "default_id"</#if>)
     </#if>
     <#if field.isLob>
     @Lob
@@ -147,18 +150,12 @@ private static final long serialVersionUID = ${serialVersionUID}L;
     <#if field.fieldTypeBox == 'Date'>
     @Temporal(TemporalType.<#if field.columnType =='date'>DATE<#elseif field.columnType =='time'>TIME<#else>TIMESTAMP</#if>)
     </#if>
-    @Column(nullable = ${field.isNullable?c}<#if field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
+    <#-- 如果ID属性名称不是id，则需要指定数据库列名属性 -->
     @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
-    protected ${field.fieldTypeBox} ${field.camelCaseName};
+    @Column(nullable = ${field.isNullable?c}<#if useColumnName || (field.isPk && field.camelCaseName != 'id')>, name = "${field.columnName}"</#if><#if !field.isNumber() && field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.isNumber() && field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
+    ${field.fieldTypeBox} <#if field.isPk>id<#else>${field.camelCaseName}</#if>;
 
 </#list>
-
-<#if !entity.hasColumnName('id') && !hasEmbeddedId>
-    @Override
-    public ${entity.pkColumn.fieldTypeBox} getId() {
-        return ${entityPkName};
-    }
-</#if>
 
     //@Override
     @PrePersist
