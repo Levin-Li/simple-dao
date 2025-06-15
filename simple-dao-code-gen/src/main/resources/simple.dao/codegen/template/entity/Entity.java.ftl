@@ -122,7 +122,7 @@ public class ${entityName}
         private static final long serialVersionUID = ${serialVersionUID}L;
 
     <#list entity.getEmbeddedIdColumns() as field>
-        @Id
+        //@Id
         @Schema(title = "${field.title}"<#if field.desc != ''>, description = "${field.desc}"</#if>)
         @Column(nullable = ${field.isNullable?c}<#if useColumnName>, name = "${field.columnName}"</#if><#if !field.isNumber() && field.maxLength?? && field.maxLength &gt; 0 > , length = ${field.maxLength?string}</#if><#if field.isNumber() &&  field.scale?? && field.scale &gt; 0 >, scale = ${"" + field.scale}</#if>) // db: ${field.columnName} ${field.columnType}
         ${field.fieldTypeBox} ${field.camelCaseName};
