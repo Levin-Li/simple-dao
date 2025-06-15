@@ -1,5 +1,6 @@
 package ${packageName};
 
+import ${entityClassPackage}.${entityName}.*;
 import static ${modulePackageName}.ModuleOption.*;
 import static ${modulePackageName}.entities.EntityConst.*;
 

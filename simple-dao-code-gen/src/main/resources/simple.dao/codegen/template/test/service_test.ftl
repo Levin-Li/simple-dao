@@ -9,6 +9,8 @@ import ${servicePackageName}.*;
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
+import ${entityClassPackage}.${entityName}.*;
+
 <#list fields as field>
     <#if (field.lzay)??>
 import ${field.classType.package.name}.${field.classType.simpleName};
