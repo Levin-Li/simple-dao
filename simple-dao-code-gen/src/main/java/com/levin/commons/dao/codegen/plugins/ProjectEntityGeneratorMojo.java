@@ -374,6 +374,10 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                 entityBizName = entityBizName.substring(0, entityBizName.length() - 1);
             }
 
+            if (StrUtil.isBlank(entityBizName)) {
+                entityBizName = StrUtil.toCamelCase(tableName);
+            }
+
             Map<String, Object> params = MapUtil
                     .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream()
                             .filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition))
