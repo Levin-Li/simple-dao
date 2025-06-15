@@ -2310,11 +2310,13 @@ public final class ServiceModelCodeGenerator {
                 );
             }
 
-            fieldModel.setPk(field.isAnnotationPresent(Id.class));
+            fieldModel.setPk(field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class));
 
             if (fieldModel.isPk()) {
                 fieldModel.addAnnotation(Id.class);
             }
+
+            fieldModel.addImport(field.getType());
 
             final boolean isDiscriminatorColumn = discriminatorColumn != null && fieldModel.getName().equals(discriminatorColumn.name());
 

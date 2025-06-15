@@ -46,7 +46,7 @@ import ${imp};
 @ToString(callSuper = true)
 //@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants
-${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+//${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 //@Builder
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)

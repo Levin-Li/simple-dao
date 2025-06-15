@@ -46,6 +46,8 @@ import ${entityClassPackage}.*;
 import ${entityClassName};
 import static ${entityClassPackage}.E_${entityName}.*;
 
+import ${entityClassPackage}.${entityName}.*;
+
 import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 

@@ -47,7 +47,7 @@ import ${imp};
 @Data
 
 <#if pkField?exists>
-${(fields?size > 0) ? string('','//')}//@AllArgsConstructor
+//${(fields?size > 0) ? string('','//')}//@AllArgsConstructor
 </#if>
 
 @NoArgsConstructor

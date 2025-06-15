@@ -48,7 +48,7 @@ import ${imp};
  */
 @Schema(title = UPDATE_ACTION + BIZ_NAME)
 @Data
-${(fields?size > 0) ? string('','//')}@AllArgsConstructor
+//${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 //@Builder
 //@EqualsAndHashCode(callSuper = true)

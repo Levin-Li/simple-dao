@@ -26,6 +26,9 @@ import ${packageName}.info.*;
 
 import ${modulePackageName}.*;
 import ${modulePackageName}.entities.*;
+
+import ${entityClassPackage}.${entityName}.*;
+
 import static ${modulePackageName}.entities.EntityConst.*;
 
 
