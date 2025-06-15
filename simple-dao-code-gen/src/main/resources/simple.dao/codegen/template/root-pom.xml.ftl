@@ -30,7 +30,7 @@
         <levin.service-support.groupId>${service_support__groupId}</levin.service-support.groupId>
         <levin.service-support.version>${service_support__version}</levin.service-support.version>
 
-        <levin-framework-base.version>2.2.1</levin-framework-base.version>
+        <levin-framework-base.version>2.2.2</levin-framework-base.version>
 
         <groovy.version>2.5.23</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
