@@ -164,7 +164,6 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
     }
 
 
-
     @Override
     public void executeMojo() throws Exception {
 
@@ -368,6 +367,13 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             List<ColumnDefinition> embeddedIdColumns = tableDefinition.getEmbeddedIdColumns();
 
+            //
+            String entityBizName = tableDefinition.getComment().replaceAll("\\s", "");
+
+            while (entityBizName.endsWith("表")) {
+                entityBizName = entityBizName.substring(0, entityBizName.length() - 1);
+            }
+
             Map<String, Object> params = MapUtil
                     .builder("fields", (Object) tableDefinition.getColumnDefinitions().stream()
                             .filter(columnDefinition -> !embeddedIdColumns.contains(columnDefinition))
@@ -387,7 +393,8 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                     .put("keywordFun", keywordFun)
                     .put("entityName", entityName)
                     .put("serialVersionUID", "9876543210")
-                    .put("entityComment", tableDefinition.getComment())
+
+                    .put("entityComment", entityBizName)
                     .put("entitySchema", tableDefinition.getSchema())
                     .put("entityPkName", StrUtil.toCamelCase(tableDefinition.getPkColumn().getColumnName()))
                     .map();
