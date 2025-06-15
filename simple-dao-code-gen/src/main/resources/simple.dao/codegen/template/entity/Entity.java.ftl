@@ -44,13 +44,11 @@ import java.math.*;
 <#if entitySchema??>        //schema = "${entitySchema}",</#if>
     indexes = {
     // 索引
-    <#if !attrs.test('name')>//</#if>                 @Index(columnList = E_${entityName}.name),
-
     <#list fields as field>
-        <#if !field.isPk && keywordFun.test(field.camelCaseName,'id,no,time,date,name,status,state,type,code,category') >
-            @Index(columnList =  E_${entityName}.${field.camelCaseName}),
+        <#if !field.isPk>
+          <#if !keywordFun.test(field.camelCaseName,'id,no,time,date,name,status,state,type,code,category,order')>//</#if>@Index(columnList = E_${entityName}.<#if useColumnName>T_</#if>${field.camelCaseName}),
         <#elseif field.isPk && attrs.test('tenantId')>
-            @Index(columnList = E_${entityName}.tenantId + "," + E_${entityName}.${field.camelCaseName}),
+            @Index(columnList = E_${entityName}.tenantId + "," + E_${entityName}.<#if useColumnName>T_</#if>${field.camelCaseName}),
         </#if>
     </#list>
     },
@@ -107,13 +105,11 @@ public class ${entityName}
 //    extends AbstractBaseEntityObject
 //    extends AbstractMultiTenantObject
 //    extends AbstractNamedMultiTenantObject
-implements EntityObject
-{
+    implements EntityObject {
 
-private static final long serialVersionUID = ${serialVersionUID}L;
+    private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#assign hasEmbeddedId = embeddedIdColumns?size gt 0/>
-
 <#if hasEmbeddedId>
 
     @Embeddable

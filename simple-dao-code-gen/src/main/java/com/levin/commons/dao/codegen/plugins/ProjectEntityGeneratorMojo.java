@@ -132,6 +132,39 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
         independentPluginClassLoader = false;
     }
 
+
+    public static boolean anyMatch(ColumnDefinition column, List<String> nameKeywordList, List<String> labelKeywordList) {
+        //如果匹配主关键字
+        return anyMatch(column.getCamelCaseName(), nameKeywordList, null)
+                || anyMatch(column.getComment(), labelKeywordList, null)
+                ;
+    }
+
+    public static boolean anyMatch(String text, List<String> keywordList, List<String> suffixList) {
+
+        if (StrUtil.isBlank(text) || keywordList == null || keywordList.isEmpty()) {
+            return false;
+        }
+
+        //重点逻辑 匹配以什么结尾 或是 等于指定的关键字
+        return anyMatch(text::endsWith, keywordList, suffixList)
+                //首字母小写,等于比较
+                || anyMatch(text::equals, keywordList.stream().map(StrUtil::lowerFirst).collect(Collectors.toList()), suffixList);
+    }
+
+    public static boolean anyMatch(Predicate<String> predicate, List<String> keywordList, List<String> suffixList) {
+        //如果匹配主关键字
+        return keywordList.stream().anyMatch(predicate)
+                || (
+                //主关键字不能为空
+                !keywordList.isEmpty()
+                        && suffixList != null
+                        && suffixList.stream().anyMatch(suffix -> keywordList.stream().map(k -> k + suffix).anyMatch(predicate))
+        );
+    }
+
+
+
     @Override
     public void executeMojo() throws Exception {
 
