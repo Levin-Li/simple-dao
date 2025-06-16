@@ -107,8 +107,12 @@ spring:
       use-new-id-generator-mappings: false
 
       naming:
+
+        #区分 implicit-strategy 和 physical-strategy
+        #implicit-strategy：处理未显式指定 @Column 的字段。
+        #physical-strategy：处理所有列名，包括 @Column 指定的名称。
         #模块表名前缀映射类，重要
-        physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
+        implicit-strategy: com.levin.commons.dao.support.EntityNamingStrategy
 
   #      MYSQL 配置选项
         properties:
