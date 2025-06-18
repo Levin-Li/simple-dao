@@ -44,7 +44,7 @@ public class TestEntity
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示通道详情, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
     protected String tenantId;
 
     @Schema(title = "组织ID")
