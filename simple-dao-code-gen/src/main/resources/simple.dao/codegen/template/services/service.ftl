@@ -244,7 +244,7 @@ public interface ${className} {
             return info != null
                    <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
                     //启用的
-                    && (nfo.getEnable() == null || Boolean.TRUE.equals(info.getEnable()))
+                    && (info.getEnable() == null || Boolean.TRUE.equals(info.getEnable()))
                    </#if>
                    <#if classModel.isType('com.levin.commons.dao.domain.StatefulObject')>
                     //状态正常的
