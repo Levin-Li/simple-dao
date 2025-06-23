@@ -1,5 +1,6 @@
 package ${modulePackageName}.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.rbac.*;
 import com.levin.commons.utils.*;
 import io.swagger.v3.oas.annotations.*;
@@ -68,6 +69,32 @@ public abstract class BaseController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         // binder.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("MM-dd-yyyy"),false));
+    }
+
+    /**
+     * 设置缓存
+     * @param key
+     * @param seconds
+     */
+    protected void setResponseCache(String key, int seconds,boolean isPrivate) {
+
+        if (seconds <= 0) {
+            return;
+        }
+        //验证机制：可结合ETag或Last-Modified头实现条件请求，减少不必要的数据传输。
+        // 可选：添加ETag用于验证
+        httpResponse.setHeader("ETag", StrUtil.format("\"{}\"", Math.abs(getClass().getName().hashCode()) + "_" + key));
+
+        //设置HTTP 1.1缓存头
+        //public：允许任何缓存（包括代理服务器）存储响应。
+        //private：仅允许客户端（如浏览器）缓存。
+        httpResponse.setHeader("Cache-Control", (isPrivate ? "private" : "public") + ", max-age=" + seconds);
+
+        //last-modified
+        httpResponse.setDateHeader("Last-Modified", System.currentTimeMillis());
+
+        // 设置HTTP 1.0缓存头（可选，兼容老浏览器）
+        httpResponse.setDateHeader("Expires", System.currentTimeMillis() + (seconds * 1_000L));
     }
 
     /**
