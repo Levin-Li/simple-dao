@@ -1,3 +1,9 @@
+#!/bin/sh
+
+# cd to script dir
+cd `dirname $0`
+
+sudo yum update -y
 
 sudo yum install -y docker
 
