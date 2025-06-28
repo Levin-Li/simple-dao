@@ -54,8 +54,14 @@ if [ -n "${rootPwd}" ]  && [ $execStatus -eq 0 ]; then
 echo "数据库root用户初始化完成, 请牢记数据库root密码:${rootPwd}"
 
 #开始清除root密码
-# 将 "old_text" 替换为 "new_text"，输出到新文件 MysqlDbPwd@202506
-sed -i '' "s/${rootPwd}//g" .env
+# 将 "old_text" 替换为 "new_text"，输出到新文件
+
+# 如果是 mac os
+if [ "$(uname)" == "Darwin" ]; then
+  sed -i '' "s/${rootPwd}//g" .env
+else
+  sed -i "s/${rootPwd}//g" .env
+fi
 
 execStatus=$? # 获取返回值
 
