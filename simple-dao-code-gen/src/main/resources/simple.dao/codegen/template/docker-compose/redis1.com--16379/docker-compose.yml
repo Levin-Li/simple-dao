@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:6.2
+    container_name: redis-server-${SERVICE_PORT}  #指定服务名
+    volumes:
+      - ./data-${SERVICE_PORT}:/data
+      - ./custom-hosts:/etc/hosts:ro  # 只读挂载
+    command: redis-server --port ${SERVICE_PORT} --dir /data
+    restart: always
+    privileged: true
+    network_mode: host

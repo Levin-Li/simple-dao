@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+    mysql-master:
+        image: mysql:8.0
+        container_name: mysql-${SERVICE_PORT} # 指定服务名
+        ports:
+          - "${SERVICE_PORT}:3306"
+        command:
+          --default-authentication-plugin=mysql_native_password
+          --lower_case_table_names=1
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_unicode_ci
+        volumes:
+          - ./custom-hosts:/etc/hosts:ro  # 只读挂载
+          - ./mysql/config/my.cnf:/etc/mysql/my.cnf
+          - ./mysql/logs:/var/log/mysql
+          - ./mysql/mysql-files:/var/lib/mysql-files
+          - ./mysql/data:/var/lib/mysql
+        environment:
+          - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+        privileged: true
+        restart: always
