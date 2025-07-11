@@ -112,7 +112,7 @@ spring:
         #implicit-strategy：处理未显式指定 @Column 的字段。
         #physical-strategy：处理所有列名，包括 @Column 指定的名称。
         #模块表名前缀映射类，重要
-        implicit-strategy: com.levin.commons.dao.support.EntityNamingStrategy
+        physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
 
   #      MYSQL 配置选项
         properties:
@@ -150,12 +150,14 @@ j2cache:
   #  缓存清除模式
   #  active:主动清除，二级缓存过期主动通知各节点清除，优点在于所有节点可以同时收到缓存清除
   #  passive:被动清除，一级缓存过期进行通知各节点清除一二级缓存
-  #  blend:两种模式一起运作，对于各个节点缓存准确性以及及时性要求高的可以使用（推荐使用前面两种模式中一种）
-  cache-clean-mode: passive
+  #  blend:两种模式一起运作，对于各个节点缓存准确性以及及时性要求高的应用可以使用（推荐使用前面两种模式中一种）
+  cache-clean-mode: blend
 
   #尽量不要允许空值，虽然会导致缓存不命中，但是可以避免数据更新问题
   allow-null-values: false
-  default_cache_null_object: false
+
+  #J2Cache 提供了一种 “空对象缓存” 策略：当底层返回 null 时，不直接缓存 null，而是缓存一个特殊的 “空对象”（如 NullValue 实例），标识 “该键不存在”。
+  default_cache_null_object: true
 
   redis-client: lettuce #指定redis客户端使用lettuce，也可以使用Jedis
 
