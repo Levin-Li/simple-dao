@@ -869,7 +869,7 @@
             </plugin>
 
             <plugin>
-                <!--  flatten-maven-plugin 插件由 spring boot 进行版本管理-->
+                <!--  flatten-maven-plugin 插件由 spring boot 进行版本管理 -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
 
@@ -882,12 +882,12 @@
 
                     <execution>
                         <id>flatten</id>
-                        <phase>process-resources</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>flatten</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${r"${project.build.directory}"}</outputDirectory>
+                            <!--   <outputDirectory>${r"${project.build.directory}"}</outputDirectory> -->
                         </configuration>
                     </execution>
 
