@@ -19,3 +19,7 @@ if [ ! -e "./mysql/data/mysql.ibd" ]; then
 fi
 
 
+#如果网络模式network_mode:  host
+#修改mysql端口
+
+

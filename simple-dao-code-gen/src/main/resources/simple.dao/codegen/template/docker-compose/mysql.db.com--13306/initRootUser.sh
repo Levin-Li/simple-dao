@@ -5,23 +5,13 @@ cd `dirname $0`
 
 echo "`pwd` $0..."
 
-#等待3秒, 等待mysql启动完成
-sleep 3
-
-if [ ! -e "./mysql/data/mysql.ibd" ]; then
-
-#继续等待4秒, 等待mysql启动完成
-sleep 4
-
-fi
-
-#mysql是否已经创建
-if [ ! -e "./mysql/data/mysql.ibd" ]; then
-
-  echo "数据库未创建, 无法初始化数据库root用户"
-  exit 1
-
-fi
+#等待mysql启动完成
+while [ ! -e "./mysql/data/mysql.ibd" ]
+do
+ #继续等待4秒, 等待mysql启动完成
+ sleep 2
+ echo "等待mysql启动完成..."
+done
 
 #参数1 文件名 参数2 变量名
 findLastValue(){
@@ -35,10 +25,11 @@ dbPort=$(findLastValue  ".env" 'SERVICE_PORT');
 if [ -z "${rootPwd}" ]; then
   echo "数据库非首次启动, 如果需要再次初始化数据库root用户, 可以在配置文件[.env]中设置[MYSQL_ROOT_PASSWORD]为root密码, 并再次运行本脚本[${0}]"
   exit 1
-
 fi
 
 echo "初始化数据库root用户, 允许root用户从任何主机登录并授权所有权限..."
+
+sleep 7
 
 #-p"${rootPwd}"
 docker exec -it mysql-${dbPort} mysql -uroot -p"${rootPwd}" \
