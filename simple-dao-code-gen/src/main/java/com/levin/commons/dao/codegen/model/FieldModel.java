@@ -65,6 +65,8 @@ public class FieldModel implements Cloneable {
     //对于集合类型的字段，元素的类型
     private Class eleType;
 
+    private Class injectBaseType;
+
     //空表示，不是字符串
     private Integer textLength = null;
 

@@ -129,7 +129,7 @@ public class ${className} extends ${reqExtendClass} {
         </#if>
     </#list>
 </#macro>
-<#--        注解宏结束 -->
+<#--  注解宏结束 -->
 <#list fields as field>
 
 

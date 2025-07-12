@@ -2404,13 +2404,14 @@ public final class ServiceModelCodeGenerator {
                                                 fieldModel.addImport(aType);
                                             }
 
+                                            fieldModel.setInjectBaseType(injectVar.expectBaseType());
+
                                             //如果是集合
                                             if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj
                                                     && Collection.class.isAssignableFrom(injectVar.expectBaseType())) {
                                                 annotations.remove("@NotBlank");
                                                 annotations.add("@NotEmpty");
                                             }
-
 
                                             fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
 
@@ -2470,7 +2471,6 @@ public final class ServiceModelCodeGenerator {
             if (fieldModel.isOptimisticLock()) {
                 fieldModel.getAnnotations().removeIf(an -> an.startsWith("@JsonIgnore"));
             }
-
 
             if (field.isAnnotationPresent(Update.class)) {
                 Update update = field.getAnnotation(Update.class);
@@ -2643,6 +2643,15 @@ public final class ServiceModelCodeGenerator {
         replaceAnno(fieldModelList);
 
         postProcess(fieldModelList, action);
+
+        //如果字段是对象类型, 要移除 @Size @Max注解等注解
+        fieldModelList.forEach(fieldModel -> {
+
+            fieldModel.getAnnotations().removeIf(an -> fieldModel.getInjectBaseType() != null
+                    && fieldModel.getInjectBaseType() != Object.class
+                    && !BeanUtils.isSimpleValueType(fieldModel.getInjectBaseType())
+                    && Stream.of("@Size", "@Max", "@Min").anyMatch(key -> an.trim().startsWith(key)));
+        });
 
         return fieldModelList;
     }
