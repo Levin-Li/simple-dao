@@ -6,6 +6,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.DaoContext;
 //import com.levin.commons.dao.SimpleDao;
+import com.levin.commons.plugin.Plugin;
 import com.levin.commons.rbac.RbacRoleObject;
 import com.levin.commons.rbac.RbacUserInfo;
 import com.levin.commons.service.support.*;
@@ -21,11 +22,9 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * web模块注入服务
@@ -114,6 +113,29 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
             }
         }
         );
+    }
+
+    @Override
+    public List<String> getBizStack(Thread thread) {
+
+        if (thread == null) {
+            thread = Thread.currentThread();
+        }
+
+        Collection<Plugin> plugins = pluginManager.getInstalledPlugins();
+
+        return Stream.of(thread.getStackTrace())
+
+                //过滤自己
+                .filter(e -> !e.getClassName().startsWith(getClass().getName()))
+                .filter(e -> !e.getClassName().startsWith(InjectVarService.class.getName()))
+
+                //只过滤出业务类
+                .filter(e -> plugins.stream().anyMatch(plugin -> e.getClassName().startsWith(plugin.getPackageName())))
+
+                .map(e -> e.getClassName() + ":" + e.getMethodName() + "(" + e.getFileName() + ":" + e.getLineNumber() + ")")
+
+                .collect(Collectors.toList());
     }
 
     /**
