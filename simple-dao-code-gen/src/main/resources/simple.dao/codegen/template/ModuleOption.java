@@ -77,7 +77,7 @@ public interface ModuleOption {
     String BASE_PATH = "/" + ID + "/" + API_VERSION + "/";
 
     /**
-     * api path
+     * base api path
      * 注意路径必须以 / 结尾
      */
     String API_PATH = BASE_PATH + "api/";
@@ -88,7 +88,6 @@ public interface ModuleOption {
      */
     String WS_PATH = BASE_PATH + "ws/";
 
-
     /**
      * admin api path
      * 注意路径必须以 / 结尾
@@ -96,10 +95,10 @@ public interface ModuleOption {
     String ADMIN_API_PATH = API_PATH + "admin/";
 
     /**
-     * app/h5 api path
+     * client api path
      * 注意路径必须以 / 结尾
      */
-    String APP_API_PATH = API_PATH + "app/";
+    String CLIENT_API_PATH = API_PATH + "client/";
 
     /**
      * admin ui path
@@ -111,7 +110,7 @@ public interface ModuleOption {
      * h5 ui path
      * 注意路径必须以 / 结尾
      */
-    String H5_UI_PATH = BASE_PATH + "h5/";
+    String CLIENT_UI_PATH = BASE_PATH + "client/";
 
     /**
      * 注意路径必须以 / 结尾

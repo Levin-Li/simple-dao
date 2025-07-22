@@ -211,7 +211,7 @@ public final class ServiceModelCodeGenerator {
         genPom(null, "starter", starterDir(), params, modules);
         /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
-        genPom(null, "bootstrap", bootstrapDir(), params, modules);
+        genPom(null, "bootstrap", adminBootstrapDir(), params, modules);
         ///////////////////////// 修改项目根POM ////////////////////////////
 
         File parent = new File(serviceDir(), "../../../../pom.xml").getCanonicalFile();
@@ -239,7 +239,7 @@ public final class ServiceModelCodeGenerator {
     }
 
 
-    public static void tryGenBootstrap(MavenProject mavenProject, Map<String, Object> params) throws Exception {
+    public static void tryGenBootstrap(MavenProject mavenProject, String bootstrapDir, Map<String, Object> params) throws Exception {
 
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName())
@@ -248,11 +248,7 @@ public final class ServiceModelCodeGenerator {
             return;
         }
 
-        logger.info("开始生成[Bootstrap]模块代码...");
-
-        String adminApiDir = adminApiDir();
-        String serviceDir = serviceDir();
-        String bootstrapDir = bootstrapDir();
+        logger.info("开始生成[{}]模块代码...", bootstrapDir);
 
         params.putAll(threadContext.getAll(false));
 
@@ -518,6 +514,7 @@ public final class ServiceModelCodeGenerator {
 
         return srcFileMap;
     }
+
 
     @Data
     @Accessors(chain = true)
@@ -954,13 +951,23 @@ public final class ServiceModelCodeGenerator {
     }
 
     /// ////////////////////////////////////////////////
-    public static String bootstrapDir(String newValue) {
+    public static String adminBootstrapDir(String newValue) {
         return putThreadVar(newValue);
     }
 
-    public static String bootstrapDir() {
+    public static String adminBootstrapDir() {
         return getThreadVar(null);
     }
+
+
+    public static String clientBootstrapDir(String newValue) {
+        return putThreadVar(newValue);
+    }
+
+    public static String clientBootstrapDir() {
+        return getThreadVar(null);
+    }
+
 
     /// ////////////////////////////////////////////////
     public static String adminApiDir(String newValue) {
