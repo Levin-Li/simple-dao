@@ -7,6 +7,9 @@ import ${modulePackageName}.biz.InjectVarService;
 //import com.levin.commons.dao.DaoContext;
 //import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.plugin.Plugin;
+import com.levin.commons.plugin.PluginManager;
+import com.levin.commons.service.support.*;
+
 import com.levin.commons.rbac.RbacRoleObject;
 import com.levin.commons.rbac.RbacUserInfo;
 import com.levin.commons.service.support.*;
@@ -18,6 +21,9 @@ import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.core.env.Environment;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
@@ -28,10 +34,10 @@ import java.util.stream.Stream;
 
 /**
  * web模块注入服务
- *
+ * <p>
  * 正常情况下，一个项目只需要一个注入服务，为项目提供注入上下文。
+ *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
  */
 
 //默认不启用
@@ -39,49 +45,6 @@ import java.util.stream.Stream;
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleWebInjectVarService", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class ModuleWebInjectVarServiceImpl implements InjectVarService {
-
-    public static final RbacUserInfo anonymous = new RbacUserInfo() {
-        @Override
-        public String getNickname() {
-            return "anonymous";
-        }
-
-        @Override
-        public String getEmail() {
-            return "anonymous@163.com";
-        }
-
-        @Override
-        public String getTelephone() {
-            return "18912345678";
-        }
-
-        @Override
-        public String getAvatar() {
-            return "anonymous";
-        }
-
-        @Override
-        public String getName() {
-            return "anonymous";
-        }
-
-        @Override
-        public String getTenantId() {
-            return "tenant-anonymous";
-        }
-
-        @Override
-        public <ID extends Serializable> ID getId() {
-            //throw new IllegalStateException("anonymous user");
-            return  (ID)  "id-anonymous";
-        }
-
-        @Override
-        public <ID extends Serializable> ID getOrgId() {
-            return  (ID)  "org-anonymous";
-        }
-    };
 
     @Autowired
     Environment environment;
@@ -92,6 +55,9 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
     @Autowired
     VariableResolverManager variableResolverManager;
 
+    @Autowired
+    PluginManager pluginManager;
+
     @PostConstruct
     public void init() {
         log.info("启用模块Web注入服务...");
@@ -101,18 +67,40 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
         //变量解析器
         variableResolverManager.add(new VariableResolver() {
-            @Override
-            public <T> ValueHolder<T> resolve(String name, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
+                                        @Override
+                                        public <T> ValueHolder<T> resolve(String name, T originalValue, boolean throwExWhenNotFound, boolean isRequireNotNull, Type... expectTypes) throws VariableNotFoundException {
 
-                //注入变量名称
-                if ("xxx".equals(name) ) {
-                   //return new ValueHolder(null, name, value);
-                }
+                                            //注入变量名称
+                                            if ("xxx".equals(name)) {
+                                                //return new ValueHolder(null, name, value);
+                                            }
 
-                return ValueHolder.notValue(throwExWhenNotFound, name);
-            }
-        }
+                                            return ValueHolder.notValue(throwExWhenNotFound, name);
+                                        }
+                                    }
         );
+    }
+
+    protected boolean isWebContext() {
+        return RequestContextHolder.getRequestAttributes() != null;
+    }
+
+    public void clearCache(){
+        clearCache(null);
+    }
+
+    /**
+     * 清除缓存
+     */
+
+    public void clearCache(Object context) {
+
+        ServletRequest request = (context instanceof ServletRequest) ? (ServletRequest) context : (isWebContext() ? httpServletRequest : null);
+
+        if (request != null) {
+            request.removeAttribute(INJECT_VAR_CACHE_KEY);
+        }
+
     }
 
     @Override
@@ -138,15 +126,6 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     *清除缓存
-     *
-     */
-    @Override
-    public void clearCache() {
-        httpServletRequest.removeAttribute(INJECT_VAR_CACHE_KEY);
-    }
-
     @Override
     public Map<String, ?> getInjectVars() {
 
@@ -163,7 +142,8 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
         }
 
         //@todo 设置注入变量
-         result = MapUtils.put("xxx","xxx").build();
+        //注入当前登录用户
+        result = MapUtils.put("xxx", "xxx").build();
 
         //缓存到请求对象重
         httpServletRequest.setAttribute(INJECT_VAR_CACHE_KEY, result);
