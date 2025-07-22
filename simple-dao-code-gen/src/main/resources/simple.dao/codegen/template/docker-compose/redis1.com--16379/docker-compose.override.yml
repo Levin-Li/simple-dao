@@ -1,4 +1,0 @@
-
-services:
-  redis:
-    restart: always
