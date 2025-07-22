@@ -83,7 +83,7 @@ public class ModuleWebSecurityConfigurer implements WebSecurityConfigurer<WebSec
                 "/springfox-swagger-ui/**/*",
                 "/swagger-resources/**",
                 ADMIN_UI_PATH + "**",
-                H5_UI_PATH + "**",
+                CLIENT_UI_PATH + "**",
                 API_PATH + "auth/**",
                 API_PATH + "weixin/**"
         );

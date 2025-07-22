@@ -113,7 +113,7 @@
         </dependency>
 
         <dependency>
-            <artifactId>${admin_api.artifactId}</artifactId>
+            <artifactId><#if isAdminModule>${admin_api.artifactId}<#else>${client_api.artifactId}</#if></artifactId>
             <groupId>${r"${project.groupId}"}</groupId>
             <version>${r"${project.version}"}</version>
         </dependency>
