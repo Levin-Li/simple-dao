@@ -400,11 +400,12 @@ public class ${className} extends BaseService<${className}> implements ${service
                     }
 
                     if (log.isInfoEnabled()) {
-                        log.info("发生缓存Evict事件({})，试图清除租户({})的缓存列表", key, tenantId);
+                        log.info("发生缓存Evict事件({})，试图清除租户({})的${entityTitle}缓存列表", key, tenantId);
                     }
 
-                    //试图清除租户的角色缓存
+                    //试图清除租户的[${entityTitle}]缓存
                     cache.evict("T@" + null2Empty(tenantId));
+                    cache.evict("${entityName}List");
                 };
     }
 
@@ -495,7 +496,8 @@ public class ${className} extends BaseService<${className}> implements ${service
 
         List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
                 simpleDao.selectFrom(${entityName}.class)
-
+                         //最大缓存记录5万
+                        .setSafeModeMaxLimit(-1).disableSafeMode().limit(-1, 5_0000)
                         .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
 
@@ -511,7 +513,17 @@ public class ${className} extends BaseService<${className}> implements ${service
                         .find(${entityName}Info.class)
         );
 
+
+        if(dataList == null) {
+           clearCacheListByTenant(tenantId);
+        }
+
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
+    }
+
+    //@Override
+    public void clearCacheListByTenant(String tenantId){
+        getSelfProxy().clearCache("T@" + null2Empty(tenantId));
     }
 
     <#else>
@@ -544,15 +556,26 @@ public class ${className} extends BaseService<${className}> implements ${service
                          //时间倒序
                          .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
                          </#if>
-			             .setSafeModeMaxLimit(-1).disableSafeMode();
+			             .setSafeModeMaxLimit(-1)
+                         .disableSafeMode();
 
-                    //最多2万条记录
-                    return getSelfProxy().query(new Query${entityName}Req(), new SimplePaging().setPageSize(2 * 10000), ex).getItems();
+                    //最多5万条记录
+                    return getSelfProxy().query(new Query${entityName}Req().setSuperAdmin(true).cast(), new SimplePaging().setPageSize(5_0000), ex).getItems();
                 }
         );
 
+        if(dataList == null) {
+           clearCacheList();
+        }
+
         return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
     }
+
+    //@Override
+    public void clearCacheList(){
+        getSelfProxy().clearCache("${entityName}List");
+    }
+
    </#if>
     /**
      * 获取缓存
