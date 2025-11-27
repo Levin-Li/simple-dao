@@ -39,6 +39,8 @@ public interface ${className} {
 
     String BIZ_NAME = E_${entityName}.BIZ_NAME;
 
+    String DEFAULT_RES_PREFIX = ModuleOption.ID + CACHE_DELIM + ${entityCategory} + "-" + BIZ_NAME;
+
     String CACHE_NAME = ModuleOption.ID + CACHE_DELIM + E_${entityName}.SIMPLE_CLASS_NAME;
 
     //缓存key前缀
