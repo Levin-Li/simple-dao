@@ -390,6 +390,11 @@
                 <version>${r"${powerjob.version}"}</version>
             </dependency>
 
+            <dependency>
+                <groupId>tech.powerjob</groupId>
+                <artifactId>powerjob-client</artifactId>
+                <version>${r"${powerjob.version}"}</version>
+            </dependency>
 
            <!--  https://liteflow.cc/   -->
             <dependency>
