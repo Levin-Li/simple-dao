@@ -80,7 +80,12 @@ public class ${className} extends ${reqExtendClass} {
     boolean isContainsOrgPublicData = true;
 
 </#if>
+<#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+    @Schema(title = "是否是机密数据")
+    @Ignore
+    boolean isConfidentialObject = true;
 
+</#if>
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle} , required = true, requiredMode = REQUIRED)
     @Eq(require = true)

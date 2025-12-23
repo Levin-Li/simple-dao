@@ -76,7 +76,12 @@ public class ${className} extends ${reqExtendClass} {
     boolean isContainsOrgPublicData = true;
 
 </#if>
+<#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+    @Schema(title = "是否是机密数据")
+    @Ignore
+    boolean isConfidentialObject = true;
 
+</#if>
     @Ignore
     @Schema(title = "排序字段")
     String orderBy;

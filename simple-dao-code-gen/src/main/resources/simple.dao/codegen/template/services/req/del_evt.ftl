@@ -68,6 +68,12 @@ public class ${className} extends ${reqExtendClass} {
     final boolean eqEditable = true;
 
 </#if>
+<#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+    @Schema(title = "是否是机密数据")
+    @Ignore
+    boolean isConfidentialObject = true;
+
+</#if>
 <#if pkField?exists>
 
     @Schema(title = ${pkField.schemaTitle} + "集合", required = true, requiredMode = REQUIRED)

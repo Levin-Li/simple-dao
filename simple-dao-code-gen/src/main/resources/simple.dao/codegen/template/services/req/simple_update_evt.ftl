@@ -87,6 +87,13 @@ public class ${className} extends ${reqExtendClass} {
     final boolean eqEditable = true;
 
 </#if>
+<#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+    @Schema(title = "是否是机密数据")
+    @Ignore
+    boolean isConfidentialObject = true;
+
+</#if>
+
 <#-- 字段分组，参考 CRUD枚举，UPDATE_fields 表示更新分组 -->
 <#list UPDATE_fields as field>
 <#--    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >-->

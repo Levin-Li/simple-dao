@@ -186,6 +186,21 @@ public abstract class BaseReq implements ServiceReq {
         return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
     }
 
+    @Schema(title = "是否是敏感数据", description = "敏感数据需要根据级别进行过滤", hidden = true)
+    @CtxVar
+    public boolean isConfidentialObject() {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    @Schema(title = "数据访问级别", hidden = true)
+    @InjectVar(value = InjectConst.DATA_ACCESS_LEVEL
+            , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么值是必须的
+    )
+    @Lte(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()",  desc = "数据机密级别小于用户的数据访问级别的都可见")
+    protected Integer dataAccessLevel;
+
     /**
      * 是否强制更新字段
      *
