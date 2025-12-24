@@ -5,6 +5,7 @@ import cn.hutool.core.lang.Assert;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
@@ -198,8 +199,10 @@ public abstract class BaseReq implements ServiceReq {
             , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么值是必须的
     )
+    @OR(autoClose = true)
     @Lte(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()",  desc = "数据机密级别小于用户的数据访问级别的都可见")
-    protected Integer dataAccessLevel;
+    @IsNull(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()", desc = "保密等级未定义的数据")
+    protected Integer _dataAccessLevel;
 
     /**
      * 是否强制更新字段
