@@ -47,8 +47,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
-    public static final String CAN_VISIT_PERSONAL_DATA = " (#canVisitPersonalData?:false)";
-    public static final String CAN_NOT_VISIT_PERSONAL_DATA = " !" + CAN_VISIT_PERSONAL_DATA;
+    public static final String CAN_NOT_VISIT_PERSONAL_DATA = " !canVisitPersonalData() " ;
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
@@ -90,12 +89,6 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @CtxVar
     protected boolean isTenantAdmin = false;
-
-    @InjectVar(InjectVar.SPEL_PREFIX + CAN_VISIT_PERSONAL_DATA)
-    @Ignore
-    @CtxVar
-    protected boolean canVisitPersonalData = false;
-    ///////////////////////////////////////////////////////////////////////
 
     @Schema(title = "跟踪标识", hidden = true)
     @Ignore
@@ -151,12 +144,6 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
-    @Schema(title = "是否可访问个人数据", description = "是否可以访问个人的数据", hidden = true)
-    public boolean isCanVisitPersonalData() {
-        return this.canVisitPersonalData;
-    }
-
-    @Ignore
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
@@ -203,6 +190,15 @@ public abstract class BaseReq implements ServiceReq {
     @Lte(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()",  desc = "数据机密级别小于用户的数据访问级别的都可见")
     @IsNull(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()", desc = "保密等级未定义的数据")
     protected Integer _dataAccessLevel;
+
+
+    @Ignore
+    @Schema(title = "是否能访问个人数据", description = "", hidden = true)
+    @CtxVar
+    protected boolean canVisitPersonalData() {
+        return _dataAccessLevel != null
+                && _dataAccessLevel >= ConfidentialObject.PERSON_PRIVATE;
+    }
 
     /**
      * 是否强制更新字段
