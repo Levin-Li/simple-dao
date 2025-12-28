@@ -60,6 +60,7 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
     @PostConstruct
     public void init() {
+
         log.info("启用模块Web注入服务...");
 
         //设置上下文

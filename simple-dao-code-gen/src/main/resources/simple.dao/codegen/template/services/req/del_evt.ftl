@@ -71,7 +71,8 @@ public class ${className} extends ${reqExtendClass} {
 <#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
     @Schema(title = "是否是机密数据")
     @Ignore
-    boolean isConfidentialObject = true;
+    @JsonIgnore
+    final boolean isConfidentialObject = true;
 
 </#if>
 <#if pkField?exists>
