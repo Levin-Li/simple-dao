@@ -23,6 +23,7 @@ import org.springframework.format.annotation.*;
 
 import javax.validation.constraints.*;
 import javax.annotation.*;
+import com.fasterxml.jackson.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
