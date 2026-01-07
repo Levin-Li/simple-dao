@@ -100,6 +100,15 @@ public class ${className} extends ${reqExtendClass} {
             throw new IllegalArgumentException("父节点不能设置为自己");
         }
     </#if>
+
+    <#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+        if (confidentialLevel != null
+           && get_dataAccessLevel() != null
+           && confidentialLevel > get_dataAccessLevel()) {
+            throw new IllegalArgumentException("confidentialLevel great than " + get_dataAccessLevel());
+        }
+    </#if>
+
     }
 
 </#if>
