@@ -7,6 +7,7 @@ import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
+import com.levin.commons.rbac.ConfidentialLevel;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
 
@@ -25,6 +26,7 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 基本查询对象
@@ -197,7 +199,7 @@ public abstract class BaseReq implements ServiceReq {
     @CtxVar
     protected boolean canVisitPersonalData() {
         return _dataAccessLevel != null
-                && _dataAccessLevel >= ConfidentialObject.PERSON_PRIVATE;
+                && _dataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
     }
 
     /**

@@ -103,9 +103,9 @@ public class ${className} extends ${reqExtendClass} {
 
     <#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
         if (confidentialLevel != null
-           && get_dataAccessLevel() != null
-           && confidentialLevel > get_dataAccessLevel()) {
-            throw new IllegalArgumentException("confidentialLevel great than " + get_dataAccessLevel());
+            && get_dataAccessLevel() != null
+            && confidentialLevel > get_dataAccessLevel()) {
+              throw new IllegalArgumentException("confidentialLevel great than operator's dataAccessLevel " + get_dataAccessLevel());
         }
     </#if>
 
