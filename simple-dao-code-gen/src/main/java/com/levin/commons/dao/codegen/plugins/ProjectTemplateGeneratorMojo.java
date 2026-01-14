@@ -108,8 +108,6 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
             modulePackageName = mavenProject.getGroupId();
         }
 
-
-
         boolean hasSubModule = hasText(this.subModuleName);
 
         File entitiesModuleDir = new File(basedir, isPomModule ? this.subModuleName + "/entities" : "");
