@@ -1,0 +1,31 @@
+﻿
+
+services:
+  java-app:
+
+    #注入到容器内部，容器内进程可读取
+    env_file:
+      - ../default.env #注入到容器内部，容器内进程可读取
+
+    image: amazoncorretto:${JDK_VERSION}
+
+    container_name: java-${SERVICE_HOSTNAME}-${SERVICE_PORT}
+
+    hostname: ${SERVICE_HOSTNAME}  # 显式设置主机名
+
+    working_dir: /app  # 指定容器内的工作目录
+
+    command: java ${JAVA_OPTS} -jar /app/${APP_JAR}
+
+    network_mode: host
+    restart: always
+    privileged: true
+
+    volumes:
+      - ../custom-hosts:/etc/hosts:ro  # 只读挂载
+      - ../common-third-libs:/app/common-third-libs
+      - ../common-biz-libs:/app/common-biz-libs
+      - ./:/app
+
+    ports:
+      - "${SERVICE_PORT}:8080"  # 映射到宿主机不同端口

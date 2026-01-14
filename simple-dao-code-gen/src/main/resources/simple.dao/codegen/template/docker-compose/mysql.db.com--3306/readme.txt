@@ -1,0 +1,7 @@
+
+1  请把文件夹名称改为主机加端口的名称
+
+如 xxx.com--3306 , xxx.com 是主机名称, 3306是端口,中间用--分隔.
+
+2 设置./env文件中的数据库root密码
+   MYSQL_ROOT_PASSWORD=XXXPWD
