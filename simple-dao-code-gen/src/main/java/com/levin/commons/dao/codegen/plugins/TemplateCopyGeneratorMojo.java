@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen.plugins;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
 import com.levin.commons.plugins.BaseMojo;
 import com.levin.commons.utils.MapUtils;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -13,6 +14,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -123,7 +125,13 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
                 if (resource instanceof ClassPathResource) {
                     String path = ((ClassPathResource) resource).getPath();
                     path = path.substring(resTemplateRootDir.length());
-                    FileUtil.writeFromStream(resource.getInputStream(), new File(targetFile, path));
+
+                    File dest = new File(targetFile, path);
+
+                    dest.getParentFile().mkdirs();
+
+                    FileUtil.writeFromStream(resource.getInputStream(), dest);
+
                 } else {
                     logger.warn("{} 非类路径资源, 忽略处理", resource.getDescription());
                 }
