@@ -130,7 +130,9 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
 
                     dest.getParentFile().mkdirs();
 
-                    FileUtil.writeFromStream(resource.getInputStream(), dest);
+                    if(!dest.exists()) {
+                        FileUtil.writeFromStream(resource.getInputStream(), dest);
+                    }
 
                 } else {
                     logger.warn("{} 非类路径资源, 忽略处理", resource.getDescription());
