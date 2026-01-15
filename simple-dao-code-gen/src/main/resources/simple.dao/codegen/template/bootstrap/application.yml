@@ -53,11 +53,13 @@ spring:
     locale: zh_CN
 
   # 数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
   shardingsphere:
     datasource:
-      names: ds_0 #,ds_1
-      ds_0:
-        type: com.alibaba.druid.pool.DruidDataSource
+      names: ds-0 #,ds-1
+      ds-0:
+        type: ${r"${spring.datasource.type}"}
         url: ${r"${spring.datasource.url}"}
         username: ${r"${spring.datasource.username}"}
         password: ${r"${spring.datasource.password}"}
