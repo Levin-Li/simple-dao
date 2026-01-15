@@ -207,11 +207,11 @@ public final class ServiceModelCodeGenerator {
         /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
         params.put("isAdminModule",true);
-        genPom(null, "admin_api", adminApiDir(), params, modules);
+        genPom(null, "api", adminApiDir(), params, modules);
         genPom(null, "bootstrap", adminBootstrapDir(), params, modules);
 
         params.put("isAdminModule",false);
-        genPom(null, "client_api", clientApiDir(), params, modules);
+        genPom(null, "api", clientApiDir(), params, modules);
         genPom(null, "bootstrap", clientBootstrapDir(), params, modules);
         ///////////////////////// 修改项目根POM ////////////////////////////
 

@@ -32,6 +32,8 @@
 
         <levin-framework-base.version>2.2.2</levin-framework-base.version>
 
+        <shardingsphere.version>4.1.1</shardingsphere.version>
+
         <groovy.version>2.5.23</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
@@ -525,6 +527,11 @@
                 <version>${r"${JustAuth.version}"}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+                <version>${r"${shardingsphere.version}"}</version>
+            </dependency>
 
             <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
             <dependency>

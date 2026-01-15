@@ -53,39 +53,48 @@ spring:
     locale: zh_CN
 
   # 数据源配置
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid: #单独使用druid时的配置
-      initial-size: 50
-      max-active: 500
-      min-idle: 10
-      max-wait: 60000
-      min-evictable-idle-time-millis: 1800000
-      max-evictable-idle-time-millis: 1800000
-      time-between-eviction-runs-millis: 0
-      validation-query: select 1
-      validation-query-timeout: 60000
-      test-on-borrow: false
-      test-on-return: false
-      test-while-idle: true
-      filters: config,stat,wall
+  shardingsphere:
+    datasource:
+      names: ds_0 #,ds_1
+      ds_0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: ${r"${spring.datasource.url}"}
+        username: ${r"${spring.datasource.username}"}
+        password: ${r"${spring.datasource.password}"}
+        druid: #单独使用druid时的配置
+          initial-size: 50
+          max-active: 500
+          min-idle: 10
+          max-wait: 60000
+          min-evictable-idle-time-millis: 1800000
+          max-evictable-idle-time-millis: 1800000
+          time-between-eviction-runs-millis: 0
+          validation-query: select 1
+          validation-query-timeout: 60000
+          test-on-borrow: false
+          test-on-return: false
+          test-while-idle: true
+          filters: config,stat,wall
 
-#      配置是否对数据库密码进行加密，
-#      加密工具：  java -cp druid-xx.jar com.alibaba.druid.filter.config.ConfigTools 你的密码
-#      config.decrypt=true/false 表示是否对密码进行解密
-      connection-properties: ${r"config.decrypt=false;config.decrypt.key=${public-key};"}
+          #      配置是否对数据库密码进行加密，
+          #      加密工具：  java -cp druid-xx.jar com.alibaba.druid.filter.config.ConfigTools 你的密码
+          #      config.decrypt=true/false 表示是否对密码进行解密
+          # connection-properties: ${r"config.decrypt=false;config.decrypt.key=${public-key};"}
 
-      stat-view-servlet:
-        loginUsername: admin
-        loginPassword: 123456
-        enabled: true
-        url-pattern: /druid/*
-        allow: " "
-
-  #    url: jdbc:h2:./dev.db;MODE=MySQL;
-  #    url: jdbc:h2:mem:dev.db;
-  #    username: dev
-  #    password: dev
+          # 监控配置
+          stat-view-servlet:
+            enabled: true        # 开启监控页面
+            login-username: admin # 监控页面账号
+            login-password: admin456 # 监控页面密码
+          #  allow: 127.0.0.1     # 允许访问的IP
+          # SQL监控
+          filter:
+            stat:
+              enabled: true      # 开启SQL统计
+              slow-sql-millis: 1000 # 慢SQL阈值（1秒）
+              log-slow-sql: true # 记录慢SQL
+            wall:
+              enabled: true      # 开启SQL防火墙（防注入）
 
   #JPA配置
   jpa:

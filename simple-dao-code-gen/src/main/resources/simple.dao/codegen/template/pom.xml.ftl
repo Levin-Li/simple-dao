@@ -90,7 +90,7 @@
             <scope>provided</scope>
         </dependency>
         </#if>
-        <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'admin_api'  || moduleType == 'client_api'>
+        <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'api'>
 
         <dependency>
             <artifactId>${service.artifactId}</artifactId>
@@ -113,13 +113,13 @@
         </dependency>
 
         <dependency>
-            <artifactId><#if isAdminModule>${admin_api.artifactId}<#else>${client_api.artifactId}</#if></artifactId>
+            <artifactId>${api.artifactId}</artifactId>
             <groupId>${r"${project.groupId}"}</groupId>
             <version>${r"${project.version}"}</version>
         </dependency>
 
         </#if>
-        <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'admin_api'  || moduleType == 'client_api')>
+        <#if (moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'api')>
 
         <dependency>
             <groupId>org.apache.dubbo</groupId>
@@ -187,7 +187,7 @@
 
         </#if>
 
-        <#if moduleType?? && (moduleType == 'admin_api'  || moduleType == 'client_api') >
+        <#if moduleType?? && (moduleType == 'api') >
         <#-- api spring-boot-starter-web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -219,6 +219,10 @@
             <artifactId>groovy</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+        </dependency>
     <#if enableOakBaseFramework>
 
         <dependency>
