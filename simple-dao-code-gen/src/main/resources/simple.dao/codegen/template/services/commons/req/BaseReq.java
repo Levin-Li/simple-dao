@@ -41,6 +41,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
 
+    public static final String IS_TOP_SUPER_ADMIN = " (#" + InjectConst.IS_TOP_SUPER_ADMIN + "?:false) ";
     public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
 
     public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
@@ -51,6 +52,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String CAN_NOT_VISIT_PERSONAL_DATA = " !canVisitPersonalData() " ;
 
+    public static final String NOT_TOP_SUPER_ADMIN = " !" + IS_TOP_SUPER_ADMIN;
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
     public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
@@ -71,6 +73,10 @@ public abstract class BaseReq implements ServiceReq {
     protected boolean isWebContext = true;
 
     ///////////////////////////////////////////////////
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_TOP_SUPER_ADMIN)
+    @Ignore
+    @CtxVar
+    protected boolean isTopSuperAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
     @Ignore
@@ -146,6 +152,12 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
+    @Schema(title = "是否Top超级管理员", hidden = true)
+    public boolean isTopSuperAdmin() {
+        return this.isTopSuperAdmin;
+    }
+
+    @Ignore
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
         return this.isSuperAdmin;
@@ -184,13 +196,13 @@ public abstract class BaseReq implements ServiceReq {
 
     ///////////////////////////////////////////////////////////////////////
     @Schema(title = "数据访问级别", hidden = true)
-    @InjectVar(value = InjectConst.DATA_ACCESS_LEVEL
-            , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_SUPER_ADMIN // 如果不是超管 那么值是必须的
+    @InjectVar(value = InjectConst.CONFIDENTIAL_DATA_ACCESS_LEVEL
+            , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么值是必须的
     )
     @OR(autoClose = true)
-    @Lte(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()",  desc = "数据机密级别小于用户的数据访问级别的都可见")
-    @IsNull(value = "confidentialLevel", condition = "#isNotEmpty(#_fieldVal) && !(isSuperAdmin()) && isConfidentialObject()", desc = "保密等级未定义的数据")
+    @Lte(value = "confidentialLevel", condition = "isConfidentialObject() && #isNotEmpty(#_fieldVal) && !isTopSuperAdmin() ",  desc = "数据机密级别小于用户的数据访问级别的都可见")
+    @IsNull(value = "confidentialLevel", condition = "isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
     protected Integer _dataAccessLevel;
 
 
