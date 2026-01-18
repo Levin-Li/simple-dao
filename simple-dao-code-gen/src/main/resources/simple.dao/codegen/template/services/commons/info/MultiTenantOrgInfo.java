@@ -3,7 +3,7 @@ package ${modulePackageName}.services.commons.info;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.rbac.DataMasking;
-import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.RbacRoleInfo;
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;

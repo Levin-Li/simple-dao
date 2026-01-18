@@ -4,7 +4,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.rbac.DataMasking;
-import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.RbacRoleInfo;
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.support.*;
@@ -162,7 +162,7 @@ public class TestOrg
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleObject.SA_ROLE, RbacRoleObject.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.SA_ROLE, RbacRoleInfo.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
     protected String tenantId;
 
     @Schema(title = "编码", description = "对于公司是统一信用码")

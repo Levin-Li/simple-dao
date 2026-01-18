@@ -27,7 +27,7 @@ import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.rbac.DataMasking;
-import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.RbacRoleInfo;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.RefInject;
@@ -2717,7 +2717,7 @@ public final class ServiceModelCodeGenerator {
 
         fieldModelList.forEach(fieldModel -> {
 
-            fieldModel.addImport(RbacRoleObject.class)
+            fieldModel.addImport(RbacRoleInfo.class)
             // .addImport(InjectVar.class)
             //  .addImport(InjectConst.class)
             ;
@@ -2729,8 +2729,8 @@ public final class ServiceModelCodeGenerator {
                     .forEach(annotation -> {
                         set.add(
                                 annotationContentReplace(annotation)
-                                        .replace("\"R_SA\"", "RbacRoleObject.SA_ROLE")
-                                        .replace("\"R_SAAS_*\"", "RbacRoleObject.SAAS_ROLE_PREFIX + \"*\"")
+                                        .replace("\"R_SA\"", "RbacRoleInfo.SA_ROLE")
+                                        .replace("\"R_SAAS_*\"", "RbacRoleInfo.SAAS_ROLE_PREFIX + \"*\"")
                         );
                     });
 

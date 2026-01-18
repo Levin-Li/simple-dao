@@ -10,7 +10,7 @@ import com.levin.commons.plugin.Plugin;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.service.support.*;
 
-import com.levin.commons.rbac.RbacRoleObject;
+import com.levin.commons.rbac.RbacRoleInfo;
 import com.levin.commons.rbac.RbacUserInfo;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.MapUtils;
