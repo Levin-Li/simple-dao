@@ -197,21 +197,25 @@ public abstract class BaseReq implements ServiceReq {
     ///////////////////////////////////////////////////////////////////////
     @Schema(title = "数据访问级别", hidden = true)
     @InjectVar(value = InjectConst.CONFIDENTIAL_DATA_ACCESS_LEVEL
+
             , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么值是必须的
+
+            // 用户可以没有数据访问级别
+           // , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么值是必须的
+              , isRequired = "false"
     )
     @OR(autoClose = true)
     @Lte(value = "confidentialLevel", condition = "isConfidentialObject() && #isNotEmpty(#_fieldVal) && !isTopSuperAdmin() ",  desc = "数据机密级别小于用户的数据访问级别的都可见")
     @IsNull(value = "confidentialLevel", condition = "isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
-    protected Integer _dataAccessLevel;
+    protected Integer _confidentialDataAccessLevel;
 
 
     @Ignore
     @Schema(title = "是否能访问个人数据", description = "", hidden = true)
     @CtxVar
     protected boolean canVisitPersonalData() {
-        return _dataAccessLevel != null
-                && _dataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
+        return _confidentialDataAccessLevel != null
+                && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
     }
 
     /**
