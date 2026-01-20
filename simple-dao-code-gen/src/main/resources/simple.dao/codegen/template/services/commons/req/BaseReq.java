@@ -213,7 +213,7 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "是否能访问个人数据", description = "", hidden = true)
     @CtxVar
-    protected boolean canVisitPersonalData() {
+    public boolean canVisitPersonalData() {
         return _confidentialDataAccessLevel != null
                 && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
     }
@@ -224,7 +224,7 @@ public abstract class BaseReq implements ServiceReq {
      * @param fieldName
      * @return
      */
-    protected boolean isForceUpdateField(String fieldName) {
+    public boolean isForceUpdateField(String fieldName) {
         return false;
     }
 
