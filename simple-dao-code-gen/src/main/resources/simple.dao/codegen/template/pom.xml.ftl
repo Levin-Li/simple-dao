@@ -210,6 +210,11 @@
         </dependency>
 
         <dependency>
+            <groupId>ma.glasnost.orika</groupId>
+            <artifactId>orika-core</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
         </dependency>
