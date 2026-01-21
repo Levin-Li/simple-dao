@@ -18,6 +18,7 @@ import com.levin.commons.service.domain.ApiResp;
 import com.levin.commons.service.domain.BaseResp;
 import com.levin.commons.service.domain.PageableData;
 
+import com.levin.commons.utils.BeanCopyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,16 +152,17 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                     pData.put(SimplePaging.Fields.requireResultList, "true".equalsIgnoreCase(requireResultList.trim()));
                 }
 
-                Object bean = BeanUtils.instantiateClass(parameter.getParameterType());
+//                Object bean = BeanUtils.instantiateClass(parameter.getParameterType());
 
 //                return BeanUtil.copyProperties(pData, parameter.getParameterType());
 
-                BeanUtils.copyProperties(pData, bean);
-                return bean;
+//                BeanUtils.copyProperties(pData, bean);
+//                return bean;
 
                 //
                 //return BeanUtil.copyProperties(pData, parameter.getParameterType());
 
+               return BeanCopyUtils.copyProperties(pData, parameter.getParameterType())
             }
         });
     }
