@@ -40,6 +40,7 @@
 
         <druid.version>1.1.24</druid.version>
         <hutool.version>5.8.43</hutool.version>
+        <orika.version>1.5.4</orika.version>
 
         <sa-token.version>1.38.0</sa-token.version>
         <fastjson.version>1.2.83</fastjson.version>
@@ -567,6 +568,11 @@
                 <version>${r"${sa-token.version}"}</version>
             </dependency>
 
+            <dependency>
+                <groupId>ma.glasnost.orika</groupId>
+                <artifactId>orika-core</artifactId>
+                <version>${r"${orika.version}"}</version>
+            </dependency>
 
             <!-- 引入Swagger3依赖 -->
             <dependency>
