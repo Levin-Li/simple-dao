@@ -39,7 +39,7 @@
         <easypoi.version>4.4.0</easypoi.version>
 
         <druid.version>1.1.24</druid.version>
-        <hutool.version>5.8.11</hutool.version>
+        <hutool.version>5.8.43</hutool.version>
 
         <sa-token.version>1.38.0</sa-token.version>
         <fastjson.version>1.2.83</fastjson.version>

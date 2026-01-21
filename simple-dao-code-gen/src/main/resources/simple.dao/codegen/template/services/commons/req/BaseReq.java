@@ -160,7 +160,7 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
-        return this.isSuperAdmin;
+        return isTopSuperAdmin() || this.isSuperAdmin;
     }
 
     @Ignore

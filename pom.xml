@@ -58,7 +58,7 @@
 
         <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>
-        <hutool.version>5.8.28</hutool.version>
+        <hutool.version>5.8.43</hutool.version>
 
         <mica-auto.version>2.3.0</mica-auto.version>
 
