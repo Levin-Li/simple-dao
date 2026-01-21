@@ -151,7 +151,15 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                     pData.put(SimplePaging.Fields.requireResultList, "true".equalsIgnoreCase(requireResultList.trim()));
                 }
 
-                return BeanUtil.copyProperties(pData, parameter.getParameterType());
+                Object bean = BeanUtils.instantiateClass(parameter.getParameterType());
+
+//                return BeanUtil.copyProperties(pData, parameter.getParameterType());
+
+                BeanUtils.copyProperties(pData, bean);
+                return bean;
+
+                //
+                //return BeanUtil.copyProperties(pData, parameter.getParameterType());
 
             }
         });
