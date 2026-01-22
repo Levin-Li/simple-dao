@@ -42,6 +42,7 @@ public abstract class BaseReq implements ServiceReq {
     public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
 
     public static final String IS_TOP_SUPER_ADMIN = " (#" + InjectConst.IS_TOP_SUPER_ADMIN + "?:false) ";
+
     public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
 
     public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
@@ -50,9 +51,10 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
-    public static final String CAN_NOT_VISIT_PERSONAL_DATA = " !canVisitPersonalData() " ;
 
+   /// /////////////////////////////////////////////////////////////////////
     public static final String NOT_TOP_SUPER_ADMIN = " !" + IS_TOP_SUPER_ADMIN;
+
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
     public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
@@ -60,6 +62,8 @@ public abstract class BaseReq implements ServiceReq {
     public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
 
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
+
+    /// //////////////////////////////////////////////////////////////////////////////////
 
     public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + ") ";
 
