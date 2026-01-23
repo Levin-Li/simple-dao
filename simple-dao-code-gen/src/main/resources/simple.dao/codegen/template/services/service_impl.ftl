@@ -154,101 +154,13 @@ public class ${className} extends BaseService<${className}> implements ${service
         return simpleDao.selectFrom(${entityName}.class).eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique(${entityName}Info.class);
     }
 
-    @Operation(summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION, description = "注意性能, 该方法将不会使用缓存")
     @Override
-    <#if !pkField?exists || !isCacheableEntity>//</#if>//@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#req.${pkField.name})" , key = CK_PREFIX_EXPR + "#req.${pkField.name}") //<#if isMultiTenantObject>#req.tenantId + </#if>  //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${entityName}IdReq req) {
 
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
-        <#if !isCacheableEntity>
+
         return simpleDao.findUnique(req);
-        <#else>
-        ${entityName}Info info = getSelfProxy().findById(req.get${pkField.name?cap_first}());
-
-       if(info == null){
-           return null;
-       }
-
-        if(req.isSuperAdmin() || req.isSaasAdmin()){
-            return info;
-        }
-
-        boolean passed = false;
-
-        <#if isMultiTenantObject>
-        ///////////////////////租户检查///////////////////
-        //如果有租户标识
-        if (isNotEmpty(info.getTenantId())) {
-
-            if (isEmpty(req.getTenantId())
-                    || info.getTenantId().equals(req.getTenantId())) {
-                //如果请求对象中没有租户标识，或是租户标识相等，则返回
-                passed = true;
-            }
-            <#if isMultiTenantSharedObject>
-            else if (info.isTenantShared()) {
-                //如果是租户主动共享的的数据
-                passed = true;
-            }
-            </#if>
-        }
-        <#if isMultiTenantPublicObject>
-        else if (req.isContainsPublicData()) {
-            passed = true;
-        }
-        </#if>
-
-        Assert.isTrue(passed, "租户ID不匹配({})", req.getTenantId());
-        ///////////////////////租户检查///////////////////
-        </#if>
-
-        if(req.isTenantAdmin()){
-            return info;
-        }
-
-        <#if isOrganizedObject>
-         passed = req.isAllOrgScope();
-        ///////////////////////部门检查///////////////////
-        //如果有组织标识
-        if (!passed && isNotEmpty(info.getOrgId())) {
-            if (isEmpty(req.getOrgIdList())
-                    || req.getOrgIdList().contains(info.getOrgId())) {
-                //如果请求对象中没有组织标识，或是组织标识相等，则返回
-                passed = true;
-            }
-            <#if isOrganizedSharedObject>
-            else if (info.isOrgShared()) {
-                //如果是组织主动共享的的数据
-                passed = true;
-            }
-            </#if>
-        }
-        <#if isOrganizedPublicObject>
-        else if (!passed && req.isContainsOrgPublicData()) {
-            passed = true;
-        }
-        </#if>
-
-        Assert.isTrue(passed, "组织机构ID不匹配({})", req.getOrgId());
-        ///////////////////////部门检查///////////////////
-        </#if>
-
-       <#if isPersonalObject>
-        passed = false;
-        ///////////////////////私有检查///////////////////
-       // if (req instanceof PersonalObject) {
-            if (isEmpty(info.getOwnerId())
-                    || isEmpty(req.getOwnerId())
-                    || info.getOwnerId().equals(req.getOwnerId())) {
-                passed = true;
-            }
-        //}
-        Assert.isTrue(passed, "拥有者ID不匹配({})", req.getOwnerId());
-        ///////////////////////私有检查///////////////////
-        </#if>
-
-        return info;
-      </#if>
     }
 </#if>
 

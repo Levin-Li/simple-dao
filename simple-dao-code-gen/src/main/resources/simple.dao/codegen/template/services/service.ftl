@@ -121,7 +121,7 @@ public interface ${className} {
     * @param req
     * @return data 数据详情
     */
-    @Operation(summary = VIEW_DETAIL_ACTION)
+    @Operation(summary = VIEW_DETAIL_ACTION, description = "注意性能, 该方法将不会使用缓存")
     ${entityName}Info findById(@NotNull ${entityName}IdReq req);
 </#if>
 

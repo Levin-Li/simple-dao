@@ -13,10 +13,7 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -206,6 +203,12 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter
     protected Map<String, Object> codeGenParams;
 
+    /**
+     * 是否中断代码生成，当目标文件被外部变更时 , 脚本返回一个boolean 值
+     * 这是一个groovy脚本, 可用变量: entityClassName ,fileName , filePath
+     */
+    @Parameter
+    protected String isInterruptWhenTargetFileChangedByGroovyScript = "fileName.endsWith('.java') && filePath.contains('/services/') && !filePath.contains('/biz/')";
 
     {
         independentPluginClassLoader = false;
@@ -394,6 +397,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             ServiceModelCodeGenerator.adminBootstrapDir(adminBootstrapDir);
             ServiceModelCodeGenerator.clientBootstrapDir(clientBootstrapDir);
 
+            ServiceModelCodeGenerator.isInterruptWhenTargetFileChangedByGroovyScript(isInterruptWhenTargetFileChangedByGroovyScript);
+
             ServiceModelCodeGenerator.dirMap(
                     MapUtil.builder("services", serviceDir)
                             .put("starter", starterDir)
@@ -437,6 +442,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("enableOakBaseFramework", enableOakBaseFramework);
 
             codeGenParams.putIfAbsent("cacheSpelUtilsBeanName", cacheSpelUtilsBeanName);
+
 
             //1、生成代码
             ServiceModelCodeGenerator.genCodeAsMavenStyle(mavenProject, getClassLoader(), outputDirectory, codeGenParams);

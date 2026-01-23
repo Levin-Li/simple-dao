@@ -56,17 +56,24 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
     @Override
     public void executeMojo() throws Exception {
 
+       final String resTemplateRootDir = "simple.dao/codegen/template/";
+
         if (copyDirMap == null) {
-            return;
+            copyDirMap = new HashMap<>();
         }
 
         if (copyDirMap.isEmpty()) {
+
+            logger.warn("插件没有配置要拷贝的目录, 配置参数(Map<String, String>): copyDirMap ,  key为源目录，value为目标目录(可不填) ");
+            logger.warn("默认拷贝 docker-compose 资源");
+
             copyDirMap.put("docker-compose", "");
         }
 
         boolean isRootModule = mavenProject.getParent() != null;
 
         if (onlyRootModule && isRootModule) {
+            logger.warn("当前模块[{}]非根模块，忽略处理", mavenProject.getArtifactId());
             return;
         }
 
@@ -77,8 +84,6 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
         if (!hasText(this.modulePackageName)) {
             modulePackageName = mavenProject.getGroupId();
         }
-
-        String resTemplateRootDir = "simple.dao/codegen/template/";
 
 
         Map<Object, Object> mavenProperties = new HashMap<>();
@@ -120,18 +125,34 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
 
             File targetFile = new File(basedir, targetDir);
 
+            logger.info("开始拷贝目录 {} --> {} ...", srcDir, targetFile);
+
             for (Resource resource : resolver.getResources(ResourceUtils.CLASSPATH_URL_PREFIX + resTemplateRootDir + srcDir + "/**")) {
 
                 if (resource instanceof ClassPathResource) {
-                    String path = ((ClassPathResource) resource).getPath();
+
+                    ClassPathResource resource2 = (ClassPathResource) resource;
+
+                    String path = resource2.getPath();
+
                     path = path.substring(resTemplateRootDir.length());
 
-                    File dest = new File(targetFile, path);
+                    File dest = new File(basedir, path);
 
                     dest.getParentFile().mkdirs();
 
-                    if(!dest.exists()) {
-                        FileUtil.writeFromStream(resource.getInputStream(), dest);
+                    long contentLength = resource2.contentLength();
+
+                    if (!dest.exists()) {
+                        if (resource2.isReadable()) {
+                            logger.info("{}({}kb) 准备复制...", dest.getAbsolutePath(), contentLength);
+                            FileUtil.writeFromStream(resource.getInputStream(), dest);
+                        } else {
+                            logger.info("创建目录 {}...", dest.getAbsolutePath());
+                            dest.mkdirs();
+                        }
+                    } else {
+                        logger.warn("{} 已存在, 忽略复制...", dest.getAbsolutePath());
                     }
 
                 } else {

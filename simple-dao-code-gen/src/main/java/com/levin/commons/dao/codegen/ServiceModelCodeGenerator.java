@@ -1,6 +1,7 @@
 package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
@@ -33,9 +34,11 @@ import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.InjectConst;
+import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.ui.annotation.FormItem;
 import com.levin.commons.ui.annotation.Options;
 import com.levin.commons.utils.ExceptionUtils;
+import com.levin.commons.utils.ExpressionUtils;
 import com.levin.commons.utils.LangUtils;
 import com.levin.commons.utils.MapUtils;
 import freemarker.template.Configuration;
@@ -68,7 +71,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -206,11 +208,11 @@ public final class ServiceModelCodeGenerator {
         genPom(null, "starter", starterDir(), params, modules);
         /////////////////////////////////////控制器/////////////////////////////////////////////////////////////////////////////
 
-        params.put("isAdminModule",true);
+        params.put("isAdminModule", true);
         genPom(null, "api", adminApiDir(), params, modules);
         genPom(null, "bootstrap", adminBootstrapDir(), params, modules);
 
-        params.put("isAdminModule",false);
+        params.put("isAdminModule", false);
         genPom(null, "api", clientApiDir(), params, modules);
         genPom(null, "bootstrap", clientBootstrapDir(), params, modules);
         ///////////////////////// 修改项目根POM ////////////////////////////
@@ -702,8 +704,15 @@ public final class ServiceModelCodeGenerator {
 
             try {
                 genCodeByEntityClass(clazz, serviceDir, adminApiDir, genParams);
-            } catch (Exception e) {
+            } catch (CodeGenInteruptException e) {
+
                 logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
+
+                throw e;
+            } catch (Exception e) {
+
+                logger.warn(" *** 实体类" + clazz + " 代码生成错误", e);
+
             }
         }
         ///////////////////////////////////////////////
@@ -969,6 +978,13 @@ public final class ServiceModelCodeGenerator {
         return getThreadVar(null);
     }
 
+    public static String isInterruptWhenTargetFileChangedByGroovyScript(String allowGenCodeOverrideFailEntityClassList) {
+        return putThreadVar(allowGenCodeOverrideFailEntityClassList);
+    }
+
+    public static String isInterruptWhenTargetFileChangedByGroovyScript() {
+        return getThreadVar(null);
+    }
 
     /// ////////////////////////////////////////////////
     public static String adminApiDir(String newValue) {
@@ -1347,7 +1363,7 @@ public final class ServiceModelCodeGenerator {
 
         final String serviceName = entityClass.getSimpleName() + "Service";
 
-        final Consumer<Map<String, Object>> setVars = params -> {
+        final Consumer<Map<String, Object>> genParams = params -> {
             params.put("servicePackageName", pkgName);
             params.put("serviceName", serviceName);
             params.putAll(paramsMap);
@@ -1356,23 +1372,23 @@ public final class ServiceModelCodeGenerator {
 
 
         //生成通用服务类
-        genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, setVars);
+        genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, genParams);
 
         //生成业务服务类
-        genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, setVars);
+        genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, genParams);
 
         //统计
         genCode(entityClass, STAT_EVT_FTL, fields, serviceDir,
-                bizServicePackage() + boDir.replace(File.separator, "."), "Stat" + entityClass.getSimpleName() + "Req", setVars);
+                bizServicePackage() + boDir.replace(File.separator, "."), "Stat" + entityClass.getSimpleName() + "Req", genParams);
 
-        genCode(entityClass, BIZ_SERVICE_IMPL_FTL, fields, serviceImplDir, bizServicePackage(), "Biz" + serviceName + "Impl", setVars);
+        genCode(entityClass, BIZ_SERVICE_IMPL_FTL, fields, serviceImplDir, bizServicePackage(), "Biz" + serviceName + "Impl", genParams);
 
         //加入服务类
         serviceClassList((pkgName + "." + serviceName).replace("..", "."));
 
         serviceClassNameList(serviceName);
 
-        genCode(entityClass, SERVICE_IMPL_FTL, fields, serviceImplDir, pkgName, serviceName + "Impl", setVars);
+        genCode(entityClass, SERVICE_IMPL_FTL, fields, serviceImplDir, pkgName, serviceName + "Impl", genParams);
 
     }
 
@@ -1629,13 +1645,13 @@ public final class ServiceModelCodeGenerator {
      *
      * @param overwriteWhenMd5IsEmpty
      * @param file
-     * @param skip
+     * @param errorInfoHolder
      * @param prefix
      * @param linesFilter
      * @return
      */
     @SneakyThrows
-    public static String getCompactContent(boolean overwriteWhenMd5IsEmpty, File file, AtomicBoolean skip, String prefix, Function<List<String>, String> linesFilter) {
+    public static String getCompactContent(boolean overwriteWhenMd5IsEmpty, File file, ValueHolder<String> errorInfoHolder, String prefix, Function<List<String>, String> linesFilter) {
 
         if (file == null || !file.exists()) {
             return "";
@@ -1652,8 +1668,11 @@ public final class ServiceModelCodeGenerator {
         int startIdx = StringUtils.hasText(md5Line) ? md5Line.indexOf(prefix) : -1;
 
         if (startIdx == -1) {
-            skip.set(true);
+
             logger.warn("目标文件：" + file + " 已经存在，但没有发现生成关键字<<<{}>>>, {}, 将被忽略。", prefix, startIdx);
+
+            errorInfoHolder.setHasValue(true).setValue("目标文件：" + file.getAbsolutePath() + " 已经存在, 但没有发现生成关键字:" + prefix);
+
             return null;
         }
 
@@ -1707,9 +1726,11 @@ public final class ServiceModelCodeGenerator {
             return fileOldCompactContent;
         }
 
-        skip.set(true);
-
         logger.error("目标文件：{}已经存在，并且被修改过，跳过。校验md5：{}，内容逐步校验逻辑：{}。", file, md5, info);
+
+        errorInfoHolder.setHasValue(true).setValue("目标文件：" + file.getAbsolutePath() + " 并且被修改过, 无法覆盖.");
+
+        //实现
 
         return null;
     }
@@ -1739,6 +1760,7 @@ public final class ServiceModelCodeGenerator {
      */
     public static void genFileByTemplate(boolean overwriteWhenMd5IsEmpty, final String template, Map<String, Object> params, File outFile) throws Exception {
 
+
         //复制
         params = new LinkedHashMap<>(params);
 
@@ -1765,21 +1787,50 @@ public final class ServiceModelCodeGenerator {
                 .map(StringUtils::trimWhitespace)
                 .collect(Collectors.joining());
 
-        final AtomicBoolean skip = new AtomicBoolean(false);
 
         //获取旧文件内容，并且判断是否跳过，比如文件被修改过
-        final String fileOldCompactContent = getCompactContent(overwriteWhenMd5IsEmpty, outFile, skip, prefix, linesFilter);
+        final ValueHolder<String> errorInfoHolder = new ValueHolder<>();
+        final String fileOldCompactContent = getCompactContent(overwriteWhenMd5IsEmpty, outFile, errorInfoHolder, prefix, linesFilter);
+
+        params.put("fileName", outFile.getName());
+        params.put("templateFileName", template.replace("\\", "/"));
 
 
-        if (skip.get()) {
+        if (errorInfoHolder.hasValue()) {
+
+            String groovyScript = isInterruptWhenTargetFileChangedByGroovyScript();
+
+            params.put("filePath", outFile.getAbsolutePath());
+
+            final String msg = "请配置代码插件的属性[isInterruptWhenTargetFileChangedByGroovyScript] " +
+                    ", 这是一个groovy脚本, 可用变量: entityClassName ,fileName , filePath, 配置空就是不中断." +
+                    " \n默认配置: fileName.endsWith('.java') && filePath.contains('/services/') &&  !filePath.contains('/biz/') ";
+
+            try {
+                //生成实体类相关代码的时候,才能中断
+                boolean interrupt = params.containsKey("entityClassName")
+                        //                    && outFile.getName().endsWith(".java")
+                        //                    && (template.contains("/service/"))
+                        && StrUtil.isNotBlank(groovyScript)
+                        && (Boolean) ExpressionUtils.evalGroovy(groovyScript, null, params);
+
+                if (interrupt) {
+                    logger.info(msg);
+                }
+
+                cn.hutool.core.lang.Assert.isTrue(!interrupt, () -> new CodeGenInteruptException(errorInfoHolder.getValue()));
+
+            } catch (CodeGenInteruptException e) {
+                throw e;
+            } catch (Exception e) {
+                logger.error(msg);
+                throw new CodeGenInteruptException(e.getMessage(), e);
+            }
+
             return;
         }
 
         outFile.getParentFile().mkdirs();
-
-        //文件名
-        params.put("fileName", outFile.getName());
-        params.put("templateFileName", template.replace("\\", "/"));
 
         StringWriter stringWriter = new StringWriter();
 
