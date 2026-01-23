@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.springframework.core.io.support.ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX;
 import static org.springframework.util.StringUtils.hasText;
 
 
@@ -61,6 +62,8 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
         if (copyDirMap == null) {
             copyDirMap = new HashMap<>();
         }
+
+        logger.info("模板的类资源根目录:", resTemplateRootDir);
 
         if (copyDirMap.isEmpty()) {
 
@@ -127,7 +130,7 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
 
             logger.info("开始拷贝目录 {} --> {} ...", srcDir, targetFile);
 
-            for (Resource resource : resolver.getResources(ResourceUtils.CLASSPATH_URL_PREFIX + resTemplateRootDir + srcDir + "/**")) {
+            for (Resource resource : resolver.getResources(CLASSPATH_ALL_URL_PREFIX + resTemplateRootDir + srcDir + "/**")) {
 
                 if (resource instanceof ClassPathResource) {
 
