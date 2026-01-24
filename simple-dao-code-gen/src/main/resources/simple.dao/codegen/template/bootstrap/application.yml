@@ -55,7 +55,26 @@ spring:
   # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
+
+  ################### sharding-jdbc 配置 ###############################
   shardingsphere:
+    props:
+      sql-show: false
+
+      # 关键：关闭未配置规则表的校验（Hibernate自动建表必备）
+      #check-table-metadata-enabled: false
+
+      sharding:
+        allow-empty-route: true  #可以不使用分表策略
+
+    rules:
+      sharding:
+        # 核心：配置默认分片策略（无分片规则的表都走默认数据源）
+        default-database-strategy:
+          none: {} # 无数据库分片（单库）
+        default-table-strategy:
+          none: {} # 无表分片（单表）
+
     datasource:
       names: ds-0 #,ds-1
       ds-0:
@@ -97,6 +116,7 @@ spring:
               log-slow-sql: true # 记录慢SQL
             wall:
               enabled: true      # 开启SQL防火墙（防注入）
+#######################################################################
 
   #JPA配置
   jpa:

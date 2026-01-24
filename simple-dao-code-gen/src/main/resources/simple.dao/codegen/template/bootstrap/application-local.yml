@@ -16,7 +16,7 @@ spring:
     show-sql: true
     generate-ddl: true
     #强制数据库类型
-    database: mysql
+    database: MYSQL
     hibernate:
       ddl-auto: update
 

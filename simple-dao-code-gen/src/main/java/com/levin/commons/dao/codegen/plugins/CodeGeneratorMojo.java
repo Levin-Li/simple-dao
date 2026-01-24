@@ -171,6 +171,13 @@ public class CodeGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
 
+
+    /**
+     * 是否生成客户端模块
+     */
+    @Parameter(defaultValue = "true")
+    private boolean isGenClientMoudle = true;
+
     /**
      * springboot 版本
      */
@@ -450,6 +457,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             //2、生成辅助文件
             if (splitDir) { //尝试生成Pom 文件
                 ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, adminBootstrapDir, codeGenParams);
+
+
                 ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, clientBootstrapDir, codeGenParams);
 
                 ServiceModelCodeGenerator.tryGenPomFile(mavenProject, codeGenParams);
