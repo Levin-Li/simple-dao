@@ -63,7 +63,7 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
             copyDirMap = new HashMap<>();
         }
 
-        logger.info("模板的类资源根目录:", resTemplateRootDir);
+        logger.info("可复制的类资源根目录:", resTemplateRootDir);
 
         if (copyDirMap.isEmpty()) {
 
