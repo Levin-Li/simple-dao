@@ -1816,6 +1816,7 @@ public final class ServiceModelCodeGenerator {
 
                 if (interrupt) {
                     logger.info(msg);
+                    logger.info("代码生产已经中断, 请检查错误信息或是调整配置[isInterruptWhenTargetFileChangedByGroovyScript], 当前配置的脚本:<<<{}>>>", groovyScript);
                 }
 
                 cn.hutool.core.lang.Assert.isTrue(!interrupt, () -> new CodeGenInteruptException(errorInfoHolder.getValue()));
