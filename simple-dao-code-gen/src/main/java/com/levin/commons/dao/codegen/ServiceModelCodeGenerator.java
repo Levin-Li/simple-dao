@@ -2074,7 +2074,7 @@ public final class ServiceModelCodeGenerator {
 
     }
 
-    protected static Set<String> getCopyAnnotation(FieldModel fieldModel, String action) {
+    protected static Set<String> getCopyAnnotation(MultiValueMap<Class<?>, FieldModel> nonSrcClassFieldMap, FieldModel fieldModel, String action) {
 
         Set<String> result = new LinkedHashSet<>();
 
@@ -2086,9 +2086,12 @@ public final class ServiceModelCodeGenerator {
         CUnit cUnit = srcFileCompilationMap.get(cls.getName());
 
         if (cUnit == null) {
-            logger.warn("*** 无源码类，类：{}，字段：{}"
-                    , cls.getName() + (fieldModel.getEntityType() != cls ? " <- " + fieldModel.getEntityType().getName() : "")
-                    , fieldModel.getName());
+
+//            logger.warn("*** 无源码类，类：{}，字段：{}"
+//                    , cls.getName() + (fieldModel.getEntityType() != cls ? " <- " + fieldModel.getEntityType().getName() : "")
+//                    , fieldModel.getName());
+
+            nonSrcClassFieldMap.add(cls, fieldModel);
 
             //如果没有源码，则读取类的定义
             if (fieldModel.getField() != null) {
@@ -2165,6 +2168,8 @@ public final class ServiceModelCodeGenerator {
 
 
         final DiscriminatorColumn discriminatorColumn = AnnotatedElementUtils.findMergedAnnotation(entityClass, DiscriminatorColumn.class);
+
+        MultiValueMap<Class<?>, FieldModel> nonSrcClassFieldMap = new LinkedMultiValueMap<>();
 
         for (Field field : declaredFields) {
 
@@ -2414,7 +2419,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             //生成注解
-            ArrayList<String> annotations = new ArrayList<>(getCopyAnnotation(fieldModel, action));
+            ArrayList<String> annotations = new ArrayList<>(getCopyAnnotation(nonSrcClassFieldMap, fieldModel, action));
 
             if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
@@ -2674,6 +2679,9 @@ public final class ServiceModelCodeGenerator {
 
         }
 
+        nonSrcClassFieldMap.forEach((cls, fieldModels) -> {
+            logger.warn(" *** 发现[{}]依赖的无源码类：{} 关联字段: {}", entityClass.getName(), cls, fieldModels.stream().map(FieldModel::getName).collect(Collectors.joining(",")));
+        });
 
         if (isInfoObj && isMultiTenantObject) {
             autoAddTenantNameField(entityClass, fieldModelList);
