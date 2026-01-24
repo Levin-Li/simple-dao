@@ -57,7 +57,7 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
     @Override
     public void executeMojo() throws Exception {
 
-       final String resTemplateRootDir = "simple.dao/codegen/template/";
+        final String resTemplateRootDir = "simple.dao/codegen/template/";
 
         if (copyDirMap == null) {
             copyDirMap = new HashMap<>();
@@ -132,35 +132,40 @@ public class TemplateCopyGeneratorMojo extends BaseMojo {
 
             for (Resource resource : resolver.getResources(CLASSPATH_ALL_URL_PREFIX + resTemplateRootDir + srcDir + "/**")) {
 
+                String path = null;
+
                 if (resource instanceof ClassPathResource) {
-
-                    ClassPathResource resource2 = (ClassPathResource) resource;
-
-                    String path = resource2.getPath();
-
-                    path = path.substring(resTemplateRootDir.length());
-
-                    File dest = new File(basedir, path);
-
-                    dest.getParentFile().mkdirs();
-
-                    long contentLength = resource2.contentLength();
-
-                    if (!dest.exists()) {
-                        if (resource2.isReadable()) {
-                            logger.info("{}({}kb) 准备复制...", dest.getAbsolutePath(), contentLength);
-                            FileUtil.writeFromStream(resource.getInputStream(), dest);
-                        } else {
-                            logger.info("创建目录 {}...", dest.getAbsolutePath());
-                            dest.mkdirs();
-                        }
-                    } else {
-                        logger.warn("{} 已存在, 忽略复制...", dest.getAbsolutePath());
-                    }
-
+                    path = ((ClassPathResource) resource).getPath();
+                } else if (resource.isFile()) {
+                    path = resource.getFile().getAbsolutePath();
                 } else {
-                    logger.warn("{} 非类路径资源, 忽略处理", resource.getDescription());
+                    path = resource.getURI().toString();
                 }
+
+                if (StrUtil.isBlank(path) || !path.contains(resTemplateRootDir)) {
+                    logger.warn("{} 非模板位置[{}]文件, 忽略处理...", path, resTemplateRootDir);
+                    continue;
+                }
+
+                path = path.substring(path.lastIndexOf(resTemplateRootDir) + resTemplateRootDir.length());
+
+                File dest = new File(basedir, path);
+
+                dest.getParentFile().mkdirs();
+
+                if (!dest.exists()) {
+                    if (resource.isReadable()) {
+                        logger.info("复制资源 [{}] -> [{}]...", path, dest.getAbsolutePath());
+                        FileUtil.writeFromStream(resource.getInputStream(), dest);
+                    } else {
+                        logger.info("创建目录 {}...", dest.getAbsolutePath());
+                        dest.mkdirs();
+                    }
+                } else {
+                    logger.warn("{} 已存在, 忽略复制...", dest.getAbsolutePath());
+                }
+
+
             }
         }
 

@@ -133,6 +133,11 @@ public final class ServiceModelCodeGenerator {
 
     private static String genPom(String moduleNamePrefix, String moduleType, String srcDir, Map<String, Object> params, List<String> modules) throws Exception {
 
+        if (!StringUtils.hasText(srcDir)) {
+            logger.warn("模块[{}]未指定Pom文件的目录，将忽略生成", moduleType);
+            return null;
+        }
+
         if (!StringUtils.hasText(moduleNamePrefix)) {
             moduleNamePrefix = moduleName();
         }
@@ -247,7 +252,7 @@ public final class ServiceModelCodeGenerator {
         //如果没有包名，也没有发现实体类
         if (!StringUtils.hasText(modulePackageName())
                 || !hasEntityClass()
-        ) {
+                || !StringUtils.hasText(bootstrapDir)) {
             return;
         }
 
@@ -389,20 +394,23 @@ public final class ServiceModelCodeGenerator {
 
         //////////////////////////////////clientApiDir///////////////////////////////////////////////////
 
-        //生成控制器配置文件
-        Arrays.asList("ModuleWebMvcConfigurer"
-                , "ModuleWebControllerAdvice"
-                , "ModuleSwaggerConfigurer"
-                , "ModuleVariableResolverConfigurer"
-                , "ModuleWebSocketConfigurer"
-        ).forEach(className -> genJavaFile(clientApiDir, "config", className, params));
+        if (StrUtil.isNotBlank(clientApiDir)) {
 
-        Arrays.asList("ModulePlugin"
-                , "ModuleWebInjectVarServiceImpl"
-        ).forEach(className -> genJavaFile(clientApiDir, "", className, params));
+            //生成控制器配置文件
+            Arrays.asList("ModuleWebMvcConfigurer"
+                    , "ModuleWebControllerAdvice"
+                    , "ModuleSwaggerConfigurer"
+                    , "ModuleVariableResolverConfigurer"
+                    , "ModuleWebSocketConfigurer"
+            ).forEach(className -> genJavaFile(clientApiDir, "config", className, params));
 
-        genJavaFile(clientApiDir, "aspect", "ModuleWebControllerAspect", params);
+            Arrays.asList("ModulePlugin"
+                    , "ModuleWebInjectVarServiceImpl"
+            ).forEach(className -> genJavaFile(clientApiDir, "", className, params));
 
+            genJavaFile(clientApiDir, "aspect", "ModuleWebControllerAspect", params);
+
+        }
         ////////////////////////////////////  serviceDir & serviceImplDir////////////////////////////////////
 
         Arrays.asList("ModuleCacheService"
@@ -1420,10 +1428,14 @@ public final class ServiceModelCodeGenerator {
 
             genCode(entityClass, BIZ_CONTROLLER_FTL, fields, srcDir, bizControllerPackage(), bizClassName, mapConsumer);
         }
-
     }
 
     private static void buildClientApiController(Class entityClass, List<FieldModel> fields, String srcDir, Map<String, Object> paramsMap) throws Exception {
+
+        if (StrUtil.isBlank(srcDir)) {
+            // logger.warn("未指定客户端控制器生成目录，将不生成客户端控制器");
+            return;
+        }
 
         final Consumer<Map<String, Object>> mapConsumer = (params) -> {
             params.put("servicePackageName", servicePackage());

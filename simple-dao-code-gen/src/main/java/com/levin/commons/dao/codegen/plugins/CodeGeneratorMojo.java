@@ -461,6 +461,7 @@ public class CodeGeneratorMojo extends BaseMojo {
 
                 ServiceModelCodeGenerator.tryGenBootstrap(mavenProject, clientBootstrapDir, codeGenParams);
 
+
                 ServiceModelCodeGenerator.tryGenPomFile(mavenProject, codeGenParams);
                 //生成界面文件
                 ServiceModelCodeGenerator.tryGenAdminUiFile(mavenProject, codeGenParams);
