@@ -2086,7 +2086,7 @@ public final class ServiceModelCodeGenerator {
         CUnit cUnit = srcFileCompilationMap.get(cls.getName());
 
         if (cUnit == null) {
-            logger.warn("*** 未发现源码解析类，类：{}，字段：{}"
+            logger.warn("*** 无源码类，类：{}，字段：{}"
                     , cls.getName() + (fieldModel.getEntityType() != cls ? " <- " + fieldModel.getEntityType().getName() : "")
                     , fieldModel.getName());
 
