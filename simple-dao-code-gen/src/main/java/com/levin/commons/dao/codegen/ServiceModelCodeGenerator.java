@@ -1585,6 +1585,11 @@ public final class ServiceModelCodeGenerator {
             classModel.getImplementsList().add("EditableObject");
         }
 
+        if(SelfAuditableObject.class.isAssignableFrom(entityClass)){
+            classModel.getImports().add(SelfAuditableObject.class.getName());
+            classModel.getImplementsList().add("SelfAuditableObject");
+        }
+
         if (TreeObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(TreeObject.class.getName());
             classModel.getImplementsList().add("TreeObject<" + genClassName + ", " + genClassName + ">");
@@ -1595,7 +1600,9 @@ public final class ServiceModelCodeGenerator {
         for (Type si : entityClass.getGenericInterfaces()) {
 
             ResolvableType forType = ResolvableType.forType(si, root);
+
             Class<?> resolve = forType.resolve();
+
             if (BaseTreeObject.class.isAssignableFrom(resolve)) {
                 continue;
             }
@@ -1623,7 +1630,7 @@ public final class ServiceModelCodeGenerator {
         }
 
         //分解字段类型
-        LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap();
+        LinkedMultiValueMap<String, FieldModel> multiValueMap = new LinkedMultiValueMap<>();
 
         Set<String> impList = fields.stream().map(f -> f.imports.stream().map(t -> t.trim()).filter(t -> !t.startsWith("java.lang.")).collect(Collectors.toSet()))
                 .reduce(new LinkedHashSet<>(), (f, s) -> {
