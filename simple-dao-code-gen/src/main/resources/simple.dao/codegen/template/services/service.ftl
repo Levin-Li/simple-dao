@@ -234,30 +234,6 @@ public interface ${className} {
     @Operation(summary = BATCH_DELETE_ACTION)
     int batchDelete(Query${entityName}Req req, Object... queryObjs);
 
-    /**
-     * 有效数据过滤器
-     *
-     * @return
-     */
-    default Predicate<${entityName}Info> defaultEffectiveDataFilter() {
-        return info -> {
-            return info != null
-                   <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
-                    //启用的
-                    && (info.getEnable() == null || Boolean.TRUE.equals(info.getEnable()))
-                   </#if>
-                   <#if classModel.isType('com.levin.commons.dao.domain.StatefulObject')>
-                    //状态正常的
-                    //info.getState() == State.NORMAL
-                   </#if>
-                   <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
-                    //未过期的
-                    && (info.getExpiredTime() == null || info.getExpiredTime().after(new Date()))
-                   </#if>
-            ;
-        };
-    }
-
 <#if isCacheableEntity>
 
     <#if isMultiTenantObject>
