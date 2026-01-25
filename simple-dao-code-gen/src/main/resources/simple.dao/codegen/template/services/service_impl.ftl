@@ -448,7 +448,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                          .find(${entityName}Info.class)
 
                           //转为只读对象
-                         .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList()
+                         .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList())
         );
 
 
