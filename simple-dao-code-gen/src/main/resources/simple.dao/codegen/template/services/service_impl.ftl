@@ -445,10 +445,10 @@ public class ${className} extends BaseService<${className}> implements ${service
                          //时间倒序
                          .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
                          </#if>
-                        .find(${entityName}Info.class)
+                         .find(${entityName}Info.class)
 
-                         //转为只读对象
-                        .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList()
+                          //转为只读对象
+                         .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList()
         );
 
 
@@ -500,7 +500,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                     //最多5万条记录
                     return getSelfProxy().query(new Query${entityName}Req().setSuperAdmin(true).cast(), new SimplePaging().setPageSize(5_0000), ex).getItems()
                                //转换为只读对象
-                              .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList();
+                              .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList());
                 }
         );
 
