@@ -1166,7 +1166,7 @@ public final class ServiceModelCodeGenerator {
             params.put("entityCategory", "BIZ_TYPE_NAME");
         }
 
-        boolean isCacheableEntity = !entityClass.isAnnotationPresent(Cacheable.class) || ((Cacheable) entityClass.getAnnotation(Cacheable.class)).value();
+        boolean isCacheableEntity = !entityClass.isAnnotationPresent(Cacheable.class) || (entityClass.getAnnotation(Cacheable.class)).value();
         params.put("isCacheableEntity", isCacheableEntity);
 
 
