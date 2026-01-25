@@ -101,14 +101,15 @@ public abstract class AbstractBaseEntityObject
 
     @Override
     @Transient
-    public boolean isEditable() {
-        return Boolean.TRUE.equals(editable);
+    public boolean isEnable() {
+        return enable == null || enable;
     }
 
     @Override
     @Transient
-    public boolean isEnable() {
-        return Boolean.TRUE.equals(enable);
+    public boolean isEditable() {
+        //
+        return editable == null || editable;
     }
 
 }

@@ -29,9 +29,9 @@ public class ClassModel {
     private long serialNo = 1;
 
     private final Set<String> imports = new LinkedHashSet<>();
-    private final Set<String> annotations = new HashSet<>();
+    private final Set<String> annotations = new LinkedHashSet<>();
 
-    private final Set<String> implementsList = new HashSet<>();
+    private final Set<String> implementsList = new LinkedHashSet<>();
 
     List<FieldModel> fieldModels = Collections.emptyList();
 

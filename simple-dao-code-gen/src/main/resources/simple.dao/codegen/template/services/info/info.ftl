@@ -65,4 +65,16 @@ public class ${className}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 </#list>
 
+<#if classModel.isType('com.levin.commons.dao.domain.EnableObject') >
+    public boolean isEnable() {
+        return enable == null || enable;
+    }
+</#if>
+
+<#if classModel.isType('com.levin.commons.dao.domain.EditableObject') >
+    public boolean isEditable() {
+        return editable == null || editable;
+    }
+</#if>
+
 }

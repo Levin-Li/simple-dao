@@ -1575,6 +1575,15 @@ public final class ServiceModelCodeGenerator {
         classModel.getImports().add(Serializable.class.getName());
         classModel.getImplementsList().add("Serializable");
 
+        if(EnableObject.class.isAssignableFrom(entityClass)){
+            classModel.getImports().add(EnableObject.class.getName());
+            classModel.getImplementsList().add("EnableObject");
+        }
+
+        if(EditableObject.class.isAssignableFrom(entityClass)){
+            classModel.getImports().add(EditableObject.class.getName());
+            classModel.getImplementsList().add("EditableObject");
+        }
 
         if (TreeObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(TreeObject.class.getName());
