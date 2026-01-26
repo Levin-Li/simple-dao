@@ -280,6 +280,43 @@ public class ${className} extends BaseService<${className}> implements ${service
         return simpleDao.deleteByQueryObj(req, queryObjs);
     }
 
+    /**
+     * 加载所有数据
+     * @param wrapper2Readonly
+     * @param exDaoConsumer
+     */
+    protected List<${entityName}Info> loadAll(boolean wrapper2Readonly, Consumer<SelectDao<${entityName}>> exDaoConsumer){
+
+       SelectDao<${entityName}> dao = simpleDao.selectFrom(${entityName}.class)
+
+             //最大缓存记录5万
+           .setSafeModeMaxLimit(-1).disableSafeMode().limit(-1, 5_0000);
+
+      if(exDaoConsumer != null){
+        exDaoConsumer.accept(dao);
+      }
+
+      List<${entityName}Info> result = dao
+
+        <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
+            //排序码排序
+            .orderBy(E_${entityName}.orderCode)
+        </#if>
+
+        <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
+            //时间倒序
+            .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
+        </#if>
+        .find(${entityName}Info.class);
+
+      //转为只读对象
+      if(wrapper2Readonly){
+        result = result.stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toUnmodifiableList());
+      }
+
+     return result;
+   }
+
 <#if isCacheableEntity>
 ////////////////////////////////////// 缓存支持  ///////////////////////////////////////
     <#if isMultiTenantObject>
@@ -430,25 +467,10 @@ public class ${className} extends BaseService<${className}> implements ${service
     public List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter) {
 
         List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
-                simpleDao.selectFrom(${entityName}.class)
-                         //最大缓存记录5万
-                        .setSafeModeMaxLimit(-1).disableSafeMode().limit(-1, 5_0000)
-                        .isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
+                loadAll(true, dao ->
+                        dao.isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
-
-                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
-                         //排序码排序
-                         .orderBy(E_${entityName}.orderCode)
-                         </#if>
-
-                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-                         //时间倒序
-                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
-                         </#if>
-                         .find(${entityName}Info.class)
-
-                          //转为只读对象
-                         .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList())
+                 )
         );
 
 
@@ -483,26 +505,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     public List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter) {
 
-        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List",
-                (key) -> {
-                    Consumer<SelectDao<?>> ex = dao -> dao 
-                         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
-                         //排序码排序
-                         .orderBy(E_${entityName}.orderCode)
-                         </#if>
-                         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
-                         //时间倒序
-                         .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
-                         </#if>
-			             .setSafeModeMaxLimit(-1)
-                         .disableSafeMode();
-
-                    //最多5万条记录
-                    return getSelfProxy().query(new Query${entityName}Req().setSuperAdmin(true).cast(), new SimplePaging().setPageSize(5_0000), ex).getItems()
-                               //转换为只读对象
-                              .stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toList());
-                }
-        );
+        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List", (key) -> loadAll(true, null) );
 
         if(dataList == null) {
            clearCacheList();

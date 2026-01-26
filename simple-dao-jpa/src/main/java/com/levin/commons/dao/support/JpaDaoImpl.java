@@ -669,7 +669,7 @@ public class JpaDaoImpl
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(entityClass);
 
         //2、不拷贝注入属性
-        entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(entityClass), 1, daoInjectAttrs);
+        entityOrDto = copy(entityOrDto, BeanUtils.instantiateClass(entityClass), 3, daoInjectAttrs);
 
         if (daoInjectAttrs != null
                 && daoInjectAttrs.length > 0) {
