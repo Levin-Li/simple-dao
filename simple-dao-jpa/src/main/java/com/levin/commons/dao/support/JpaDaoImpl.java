@@ -1543,6 +1543,9 @@ public class JpaDaoImpl
 
         if (tableOrEntityClass instanceof Class) {
             return getEntityIdAttrName(tableOrEntityClass);
+        }else {
+            //@todo 获取表的主键名称
+
         }
 
         return null;

@@ -1220,7 +1220,8 @@ public abstract class ExprUtils {
                 //如果无法获得，尝试自动获取目标表的主键
                 if (!hasText(targetJoinColumn)
                         && refFieldNames.size() == 0) {
-                    //@todo
+
+                    targetJoinColumn = miniDao.getPKName(aliasMap.get(joinTargetAlias));
                 }
             }
 
