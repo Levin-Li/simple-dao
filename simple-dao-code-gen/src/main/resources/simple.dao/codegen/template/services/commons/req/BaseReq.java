@@ -71,10 +71,10 @@ public abstract class BaseReq implements ServiceReq {
 
     /////////////////////////////////////////////////////////////////////
 
-    @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "false")
+    @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "true")
     @Ignore
     @CtxVar
-    protected boolean isWebContext = true;
+    protected boolean isWebContext = false;
 
     ///////////////////////////////////////////////////
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TOP_SUPER_ADMIN)
