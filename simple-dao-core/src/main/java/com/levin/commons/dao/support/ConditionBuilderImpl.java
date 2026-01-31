@@ -2067,6 +2067,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             final boolean valid = isValid(annotation, bean, name, value);
 
             if (!valid) {
+
+
                 return;
             }
 
@@ -2577,22 +2579,22 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             return true;
         }
 
-        String conditionExpr = ClassUtils.getValue(anno, E_C.condition, false);
+        final String conditionExpr = ClassUtils.getValue(anno, E_C.condition, false);
 
         //如果没有内容默认为true
         if (!hasText(conditionExpr)) {
             return true;
         }
 
-        boolean isOK = evalTrueExpr(root, value, name, conditionExpr);
+        final boolean isOK = evalTrueExpr(root, value, name, conditionExpr);
 
-
-        Boolean require = ClassUtils.getValue(anno, E_C.require, false);
+        //重要逻辑
+        final Boolean require = ClassUtils.getValue(anno, E_C.require, false);
 
         //如果是必须的，但条件又不成立，则抛出异常
         if (Boolean.TRUE.equals(require) && !isOK) {
-            throw new IllegalArgumentException(String.format("field [%s] is require, annotation [%s] condition[%s] must be true"
-                    , name, anno.annotationType().getSimpleName(), conditionExpr));
+            throw new IllegalArgumentException(String.format("The annotation(@%s) must take effect when applied to the field(%s), but the current condition(%s) are not met."
+                    , anno.annotationType().getSimpleName(), name, conditionExpr));
         }
 
         return isOK;
