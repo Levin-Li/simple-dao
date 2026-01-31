@@ -47,7 +47,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID列表", description = "机构ID列表, 查询指定机构的数据，未指定时默认查询所有有权限的数据, 该参数只对查询操作有效")
+    @Schema(title = "机构ID列表", description = "机构ID列表, 查询条件, 本参数优先于orgId")
     @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && !isAdmin() && !isAllOrgScope() && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal) && !isOrgShared()", value = InjectConst.ORG_ID,
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
     @OR(autoClose = true, desc = "查询、更新和删除都会增加这个条件")
@@ -62,7 +62,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
-    @Schema(title = "机构ID", description = "机构ID, 通常用于创建和更新orgId，机构ID默认从当前用户获取")
+    @Schema(title = "机构ID", description = "机构ID, 通常用于创建和更新orgId，机构ID默认从当前用户获取, 做为查询条件时本参数优先级低于orgIdList")
     @Eq(condition = "!#_isUpdate && #isNotEmpty(#_fieldVal) && #isEmpty(orgIdList)", desc = "如果不是更新模式,且当前有值,且orgIdList查询条件未设置")
     @Update(condition = "(#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID") // 正常来说只允许管理员修改部门数据的归属 (isSuperAdmin || isSaasAdmin || isTenantAdmin)
     protected String orgId;
