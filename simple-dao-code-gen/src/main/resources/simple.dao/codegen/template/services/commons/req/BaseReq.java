@@ -39,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @FieldNameConstants
 public abstract class BaseReq implements ServiceReq {
 
-    public static final String IS_WEB_CONTEXT = " (#" + InjectConst.IS_WEB_CONTEXT + "?:false) ";
+    public static final String IS_UNSAFE_CONTEXT = " (#" + InjectConst.IS_UNSAFE_CONTEXT + "?:false) ";
 
     public static final String IS_TOP_SUPER_ADMIN = " (#" + InjectConst.IS_TOP_SUPER_ADMIN + "?:false) ";
 
@@ -71,10 +71,10 @@ public abstract class BaseReq implements ServiceReq {
 
     /////////////////////////////////////////////////////////////////////
 
-    @InjectVar(value = InjectConst.IS_WEB_CONTEXT, isRequired = "true")
+    @InjectVar(value = InjectConst.IS_UNSAFE_CONTEXT, isRequired = "true")
     @Ignore
     @CtxVar
-    protected boolean isWebContext = false;
+    protected boolean isUnsafeContext = false;
 
     ///////////////////////////////////////////////////
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TOP_SUPER_ADMIN)
@@ -144,9 +144,9 @@ public abstract class BaseReq implements ServiceReq {
     ////////////////////////////////////////////////////////////////////
 
     @Ignore
-    @Schema(title = "是否是web请求", hidden = true)
-    public boolean isWebContext() {
-        return this.isWebContext;
+    @Schema(title = "是否是不安全的上下文", hidden = true)
+    public boolean isUnsafeContext() {
+        return this.isUnsafeContext;
     }
 
     @Ignore
@@ -209,8 +209,8 @@ public abstract class BaseReq implements ServiceReq {
               , isRequired = "false"
     )
     @OR(autoClose = true)
-    @Lte(value = "confidentialLevel", condition = "isConfidentialObject() && #isNotEmpty(#_fieldVal) && !isTopSuperAdmin() ",  desc = "数据机密级别小于用户的数据访问级别的都可见")
-    @IsNull(value = "confidentialLevel", condition = "isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
+    @Lte(value = "confidentialLevel",    condition = "isUnsafeContext() && isConfidentialObject() && !isTopSuperAdmin() && #isNotEmpty(#_fieldVal) ",  desc = "数据机密级别小于用户的数据访问级别的都可见")
+    @IsNull(value = "confidentialLevel", condition = "isUnsafeContext() && isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
     protected Integer _confidentialDataAccessLevel;
 
 

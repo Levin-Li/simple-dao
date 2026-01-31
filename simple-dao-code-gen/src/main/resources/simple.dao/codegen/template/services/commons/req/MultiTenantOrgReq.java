@@ -52,7 +52,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
     @OR(autoClose = true, desc = "查询、更新和删除都会增加这个条件")
     @In(InjectConst.ORG_ID)
-    @Where(condition = "isWebContext() && !isAdmin() && !isAllOrgScope() && #isEmpty(#_fieldVal)" , paramExpr = " 1 = 2 ", desc = "如果, 故意设置永远不成立的条件")
+    @Where(condition = "isUnsafeContext() && !isAdmin() && !isAllOrgScope() && #isEmpty(#_fieldVal)" , paramExpr = " 1 = 2 ", desc = "如果是不安全的上下文, 故意设置永远不成立的条件")
     @IsNull(condition = "#_isQuery && !isAdmin() && !isAllOrgScope() && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
     @Eq(condition = "#_isQuery && !isAllOrgScope() && isOrgShared()", value = "orgShared", paramExpr = "true", desc = "如果有可共享的部门数据，允许包括非该部门的数据")
     protected Collection<String> orgIdList;
@@ -63,7 +63,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "机构ID", description = "机构ID, 通常用于创建和更新orgId，机构ID默认从当前用户获取")
-    //@Eq(condition = "(#_isCreate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID")
+    @Eq(condition = "!#_isUpdate && #isNotEmpty(#_fieldVal) && #isEmpty(orgIdList)", desc = "如果不是更新模式,且当前有值,且orgIdList查询条件未设置")
     @Update(condition = "(#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID") // 正常来说只允许管理员修改部门数据的归属 (isSuperAdmin || isSaasAdmin || isTenantAdmin)
     protected String orgId;
 

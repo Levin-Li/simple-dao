@@ -82,7 +82,7 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
         );
     }
 
-    protected boolean isWebContext() {
+    protected boolean isUnsafeContext() {
         return RequestContextHolder.getRequestAttributes() != null;
     }
 
@@ -96,7 +96,7 @@ public class ModuleWebInjectVarServiceImpl implements InjectVarService {
 
     public void clearCache(Object context) {
 
-        ServletRequest request = (context instanceof ServletRequest) ? (ServletRequest) context : (isWebContext() ? httpServletRequest : null);
+        ServletRequest request = (context instanceof ServletRequest) ? (ServletRequest) context : (isUnsafeContext() ? httpServletRequest : null);
 
         if (request != null) {
             request.removeAttribute(INJECT_VAR_CACHE_KEY);
