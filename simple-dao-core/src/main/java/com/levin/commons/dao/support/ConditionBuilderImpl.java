@@ -73,7 +73,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     protected javax.validation.Validator validator;
 
-    //////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////
     protected Class<DOMAIN> entityClass;
 
     protected String tableName;
@@ -84,7 +84,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     private boolean nativeQL = false;
 
-    ///////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////
 
     final List whereParamValues = new ArrayList(5);
 
@@ -195,7 +195,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////
 
     public ParameterNameDiscoverer getParameterNameDiscoverer() {
 
@@ -476,7 +476,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (T) this;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     @Override
@@ -1336,7 +1336,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (T) this;
     }
 
-//////////////////////////////////////////////
+    /// ///////////////////////////////////////////
 
     protected void beforeWalkMethod(Object methodOwnerBean, Method method, Object[] args) {
 
@@ -1988,7 +1988,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param consumer
      * @return
      */
-    protected boolean autoConsumerIfList(Annotation annotation, boolean isDoConsume, Consumer<Annotation> consumer) {
+    protected boolean autoConsumerIfListAnnotation(Annotation annotation, Consumer<Annotation> consumer) {
 
         Class<? extends Annotation> annotationType = annotation.annotationType();
 
@@ -2009,12 +2009,11 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             return false;
         }
 
-        boolean equals = (returnType.getComponentType().getName() + "$List")
-                .contentEquals(annotationType.getName());
+        final boolean equals = (returnType.getComponentType().getName() + "$List").contentEquals(annotationType.getName());
 
-        if (equals
-                && isDoConsume
-                && consumer != null) {
+        if (equals && consumer != null) {
+
+            //拆解成多个子注解
             Annotation[] result = (Annotation[]) ReflectionUtils.invokeMethod(method, annotation);
             if (result != null) {
                 Stream.of(result).filter(Objects::nonNull).forEachOrdered(consumer);
@@ -2066,16 +2065,18 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             //
             isNotDaoAnnotation.set(false);
 
+            final boolean valid = isValid(annotation, bean, name, value);
+
+            if (!valid) {
+                return;
+            }
+
             if (annotation instanceof CList) {
                 CList clist = (CList) annotation;
-                if (isValid(annotation, bean, name, value)) {
-                    daoAnnotations.addAll(Arrays.asList(clist.value()));
-                }
+                daoAnnotations.addAll(Arrays.asList(clist.value()));
             } else if (annotation instanceof OrderBy.List) {
-                if (isValid(annotation, bean, name, value)) {
-                    daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
-                }
-            } else if (autoConsumerIfList(annotation, isValid(annotation, bean, name, value), daoAnnotations::add)) {
+                daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
+            } else if (autoConsumerIfListAnnotation(annotation, daoAnnotations::add)) {
                 //该if 条件不能去除
                 //自动加入
             } else {
@@ -2246,7 +2247,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void appendToWhere(String expr, Object value, boolean addToFirst) {
 
