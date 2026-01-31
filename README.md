@@ -73,7 +73,7 @@
       @Data
       @TargetOption(
       
-      entityClass =ExamLog.class ,  /* 目标类 */ 
+      entityClass =ExamLog.class ,  /* 目标主表 */ 
       
       alias = E_ExamLog.ALIAS, // 主表别名
       

@@ -174,7 +174,7 @@ public @interface C {
      *
      * @return
      */
-    String condition() default NOT_EMPTY;
+    String condition() default VALUE_NOT_EMPTY;
 
 
     /**

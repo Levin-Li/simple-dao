@@ -400,9 +400,9 @@ Dao 类逻辑框图，如下图所示。
     
        _isQuery  : Boolean 值，表示当前是否是查询操作，SelectDao
     
-       _isUpdate  : Boolean 值，表示当前是否是UpdateDao
+       _isUpdate  : Boolean 值，表示当前是否是 UpdateDao
     
-       _isDelete  : Boolean 值，表示当前是否是DeleteDao
+       _isDelete  : Boolean 值，表示当前是否是 DeleteDao
 
        VALUE_NOT_EMPTY  : Boolean 值，表示被注解字段的值不为空时，值为 true
 
