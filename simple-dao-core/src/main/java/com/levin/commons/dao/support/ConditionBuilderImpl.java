@@ -2,7 +2,6 @@ package com.levin.commons.dao.support;
 
 import javax.persistence.*;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
@@ -1041,13 +1040,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             }
 
             if (hasText(this.tableName)) {
-                return tableName + " " + getText(alias, " ");
+                return tableName + " " + getDefaultTextIfEmpty(alias, " ");
             }
 
         }
 
         if (!isNative() && hasEntityClass()) {
-            return entityClass.getName() + " " + getText(alias, " ");
+            return entityClass.getName() + " " + getDefaultTextIfEmpty(alias, " ");
         }
 
         throw new StatementBuildException("entityClass or tableName is no valid");
@@ -1116,7 +1115,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             domain = "";
         }
 
-        String prefix = getText(domain, "", ".", "");
+        String prefix = getDefaultTextIfEmpty(domain, "", ".", "");
 
         return tryGetPhysicalColumnName(column.trim().startsWith(prefix) ? column : prefix + column);
     }
@@ -2435,11 +2434,11 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 this::buildSubQuery, fieldCtxs);
     }
 
-    protected String getText(String text, String prefix, String suffix, String defaultV) {
+    protected String getDefaultTextIfEmpty(String text, String prefix, String suffix, String defaultV) {
         return hasText(text) ? prefix + text + suffix : defaultV;
     }
 
-    protected String getText(String text, String defaultV) {
+    protected String getDefaultTextIfEmpty(String text, String defaultV) {
         return hasText(text) ? text : defaultV;
     }
 
@@ -2474,7 +2473,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             throw new DaoSecurityException(" " + entityClass + " disable " + action + " action");
         }
 
-        String whereStatement = getText(whereExprRootNode.toString(), " Where ", " ", " ");
+        String whereStatement = getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " ");
 
         checkSafeMode(whereStatement);
 
@@ -2512,7 +2511,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
         }
 
-        return getText(whereExprRootNode.toString(), " Where ", " ", " ");
+        return getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " ");
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {

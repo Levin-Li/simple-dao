@@ -1030,11 +1030,11 @@ public class SelectDaoImpl<T>
     protected String genFromStatement() {
 
         if (hasText(fromStatement)) {
-            String from = getText(fromStatement, "").trim();
+            String from = getDefaultTextIfEmpty(fromStatement, "").trim();
             boolean hasKey = from.toLowerCase().startsWith("from ");
-            return (hasKey ? " " + fromStatement : " From " + fromStatement) + " " + getText(joinStatement.toString(), " ");
+            return (hasKey ? " " + fromStatement : " From " + fromStatement) + " " + getDefaultTextIfEmpty(joinStatement.toString(), " ");
         } else {
-            return super.genFromStatement() + getText(joinStatement.toString(), " ");
+            return super.genFromStatement() + getDefaultTextIfEmpty(joinStatement.toString(), " ");
         }
 
     }
