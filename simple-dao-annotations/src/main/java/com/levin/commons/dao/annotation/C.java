@@ -66,7 +66,7 @@ public @interface C {
      * 特别空值
      * 对于domain 和 alias 可强行指定空值
      */
-    String BLANK_VALUE = "#BLANK";
+    String BLANK_VALUE = "#BLANK#";
 
     /**
      * 原表达式，目前用于 @Func注解 和 @Case注解

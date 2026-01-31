@@ -1112,7 +1112,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         // :?P
 
         //如果别名指定为 null，按特殊值处理
-        if (C.BLANK_VALUE.equalsIgnoreCase(domain)) {
+        if (C.BLANK_VALUE.equals(domain)) {
             domain = "";
         }
 
@@ -2076,7 +2076,12 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 daoAnnotations.addAll(Arrays.asList(clist.value()));
             } else if (annotation instanceof OrderBy.List) {
                 daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
-            } else if (autoConsumerIfListAnnotation(annotation, daoAnnotations::add)) {
+            } else if (autoConsumerIfListAnnotation(annotation, an -> {
+                if (isValid(an, bean, name, value)) {
+                    daoAnnotations.add(an);
+                }
+            })
+            ) {
                 //该if 条件不能去除
                 //自动加入
             } else {
@@ -2103,7 +2108,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 reAppendByQueryObj(value);
             } else {
                 //如果没有注解，不是复杂类型，则默认为等于查询
-                daoAnnotations.add(getAnnotation(Eq.class));
+                addAnnotationConsumer.accept(getAnnotation(Eq.class));
             }
 
         }
@@ -2127,20 +2132,30 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             //如果是扩展参数的操作 或是 不是迭代类型
             Op op = getOp(annotation);
 
+            if (op == Op.None) {
+                continue;
+            }
+
             if (
                 //空值直接忽略迭代
                     value == null
                             //如果没有操作 忽略迭代
                             || op == null
+
+                            //特别的操作
+                            || op == Op.Expr
+
                             || (!isArray && !isIterable)
+
                             //如果是扩展参数的操作，如 IN NotIn Between等
                             || op.isExpandParamValue()
+
                             //如果是不需要参的操作，如 IS NULL，IS NOT NULL
                             || !op.isNeedParamExpr()) {
 
-                if (isValid(annotation, bean, name, value)) {
-                    processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
-                }
+//                 if (isValid(annotation, bean, name, value)) {
+                processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
+//                  }
 
             } else {
                 //可迭代参数

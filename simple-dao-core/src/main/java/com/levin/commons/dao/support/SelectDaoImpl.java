@@ -889,7 +889,7 @@ public class SelectDaoImpl<T>
         }
 
         //特殊处理的别名
-        if (C.BLANK_VALUE.equalsIgnoreCase(newAlias)) {
+        if (C.BLANK_VALUE.equals(newAlias)) {
             return "";
         }
 

@@ -21,6 +21,7 @@ public @interface Where {
      *
      */
 
+
     /**
      * 操作
      *
@@ -37,17 +38,15 @@ public @interface Where {
      * @see C#BLANK_VALUE
      */
     String domain() default "";
-//
-//
-//    /**
-//     * 查询字段名称，默认为字段的属性名称
-//     * <p>
-//     * 对应数据库的字段名或是 Jpa 实体类的字段名
-//     *
-//     * @return
-//     */
-//    String value() default "";
-//
+
+    /**
+     * 查询字段名称，默认为字段的属性名称
+     * <p>
+     * 对应数据库的字段名或是 Jpa 实体类的字段名
+     *
+     * @return
+     */
+    String value() default C.BLANK_VALUE;
 
     /**
      * 子查询表达式
@@ -56,7 +55,6 @@ public @interface Where {
      * 如果本属性内容不为空，则优先使用本属性
      * <p>
      * <p>
-     * 
      *
      * @return
      */

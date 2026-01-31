@@ -101,8 +101,18 @@ public abstract class ExprUtils {
 
         final String domain = domainFunc != null ? domainFunc.apply(c.domain()) : c.domain();
 
+        //是否字段表达式使用字段值
+        final boolean isFieldExprUseFieldValue = C.FIELD_VALUE.equals(name);
+
+        String fieldExpr = name;
+
+        if (C.BLANK_VALUE.equals(name)) {
+            fieldExpr = name = "";
+        } else if (c.isAddAliasPrefixForValue()) {
+            fieldExpr = aroundColumnPrefixFunc.apply(domain, name);
+        }
+
         //优先使用 fieldExpr
-        String fieldExpr = c.isAddAliasPrefixForValue() ? aroundColumnPrefixFunc.apply(domain, name) : name;
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
         // 如  a.name || b.name || ${:cname}   = （等于操作） ${:v}    参数Map： { cname:'lily' , v:info}
@@ -126,8 +136,6 @@ public abstract class ExprUtils {
 
         final boolean isNotOp = Op.Not.name().equals(op.name());
 
-        //是否字段表达式使用字段值
-        final boolean isFieldExprUseFieldValue = C.FIELD_VALUE.equals(name);
 
         final boolean isFieldExpand = op.isNeedFieldExpr() && op.isAllowFieldExprExpand();
 
