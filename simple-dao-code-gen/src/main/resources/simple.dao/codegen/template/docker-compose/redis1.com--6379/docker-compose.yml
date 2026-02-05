@@ -11,5 +11,7 @@ services:
     command: redis-server /conf/redis.conf --port ${SERVICE_PORT} --dir /data
     restart: always
     privileged: true
-    network_mode: host
 
+#    network_mode: host  # mac os 会失效
+    ports:
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
