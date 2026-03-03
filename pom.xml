@@ -27,9 +27,9 @@
         <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
 
         <!--  Java 8 到 13 的版本号填写方式为 1.8, 1.9, 1.10, 10, 11, 12, 13 -->
-        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.source>21</maven.compiler.source>
 
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
