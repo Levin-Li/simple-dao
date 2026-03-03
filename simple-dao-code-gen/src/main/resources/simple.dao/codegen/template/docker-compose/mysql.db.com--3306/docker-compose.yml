@@ -4,8 +4,9 @@ services:
     image: mysql:${MYSQL_VERSION}
     container_name: mysql-${SERVICE_PORT} #指定服务名
 
-    #数据库和Redis 网络模式尽量不用桥接模式，使用host模式,以免损失性能, mac os 会失败
-    #    network_mode: host
+    #数据库和Redis 网络模式尽量不用桥接模式，使用host模式,以免损失性能
+    #注意MacOS不支持host模式
+    #network_mode: host
 
     ports:
       - "${SERVICE_PORT}:${SERVICE_PORT}"

@@ -1300,7 +1300,7 @@ Dao 类逻辑框图，如下图所示。
         <revision>1.0.0-SNAPSHOT</revision> 
 
         <!-- Spring Boot 版本，请根据需要修改 -->
-        <spring-boot.version>2.7.15</spring-boot.version>
+        <spring-boot.version>3.2.5</spring-boot.version>
 
         <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
 
