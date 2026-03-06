@@ -21,11 +21,11 @@ import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.core.env.Environment;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;

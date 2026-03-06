@@ -21,6 +21,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -41,12 +42,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.*;
-import javax.persistence.Parameter;
-import javax.persistence.metamodel.EntityType;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.*;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -446,21 +447,18 @@ public class JpaDaoImpl
                 org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
 
                 @Override
-                public String toPhysicalTableName(String name, Object jdbcEnvironment) {
-                    return springPhysicalNamingStrategy.toPhysicalTableName(Identifier.toIdentifier(name), null).getText();
+                public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+                    return springPhysicalNamingStrategy.toPhysicalTableName(name, jdbcEnvironment);
                 }
 
                 @Override
-                public String toPhysicalColumnName(String name, Object jdbcEnvironment) {
+                public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
 
-                    String newName = columnNameMapCaches.get(name);
+                    Identifier newName = columnNameMapCaches.computeIfAbsent(name.getText(), k -> 
+                        springPhysicalNamingStrategy.toPhysicalColumnName(name, jdbcEnvironment).getText()
+                    );
 
-                    if (!StringUtils.hasText(newName)) {
-                        newName = springPhysicalNamingStrategy.toPhysicalColumnName(Identifier.toIdentifier(name), null).getText();
-                        columnNameMapCaches.put(name, newName);
-                    }
-
-                    return newName;
+                    return Identifier.toIdentifier(newName, name.isQuoted());
                 }
             };
 
@@ -1524,8 +1522,8 @@ public class JpaDaoImpl
 
         //hibernateQuery.setHibernateFlushMode(null);
 
-//        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.REFRESH);
-//        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+//        query.setHint("jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+//        query.setHint("jakarta.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
 //        query.setHint("org.hibernate.cacheMode", "REFRESH");
 
         setParams(isNative, getParamStartIndex(isNative), query, paramValueList);

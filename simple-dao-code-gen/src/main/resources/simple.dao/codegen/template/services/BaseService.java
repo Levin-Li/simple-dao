@@ -13,17 +13,17 @@ import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.*;
 
-import javax.validation.*;
+import jakarta.validation.*;
 import java.math.*;
 import java.util.*;
-import javax.annotation.*;
+import jakarta.annotation.*;
 
-//import javax.servlet.http.*;
+//import jakarta.servlet.http.*;
 
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;

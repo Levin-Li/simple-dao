@@ -13,9 +13,9 @@ import com.levin.commons.dao.domain.E_User;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 
 @Data
 @Accessors(chain = true)

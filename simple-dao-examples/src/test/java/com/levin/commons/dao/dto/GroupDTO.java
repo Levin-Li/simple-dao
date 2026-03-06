@@ -11,7 +11,7 @@ import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Date;
 
 @Data

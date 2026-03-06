@@ -1,7 +1,7 @@
 package com.levin.commons.dao;
 
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;

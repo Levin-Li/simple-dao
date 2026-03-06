@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity(name = "simple_dao_test_entity")
 //@DynamicInsert

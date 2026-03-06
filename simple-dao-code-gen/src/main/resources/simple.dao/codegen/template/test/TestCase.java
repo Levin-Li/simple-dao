@@ -23,7 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.beans.factory.annotation.*;
 
 import java.util.List;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 <#list serviceClassList as className>
 import ${className};

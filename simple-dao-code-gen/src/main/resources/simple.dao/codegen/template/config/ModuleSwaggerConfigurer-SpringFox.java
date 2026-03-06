@@ -39,10 +39,10 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,9 +50,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.*;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.annotation.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 //import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 //Swagger3

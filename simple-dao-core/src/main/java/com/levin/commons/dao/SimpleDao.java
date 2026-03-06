@@ -5,8 +5,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;

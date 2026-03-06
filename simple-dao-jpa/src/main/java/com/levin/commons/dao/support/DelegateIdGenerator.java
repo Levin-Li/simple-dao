@@ -10,7 +10,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -100,9 +99,9 @@ public class DelegateIdGenerator implements IdentifierGenerator {
     }
 
     @Override
-    public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+    public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 
-        Serializable id = getIdentifierGenerator().generate(session, object);
+        Object id = getIdentifierGenerator().generate(session, object);
 
         Class returnedClass = type.getReturnedClass();
 

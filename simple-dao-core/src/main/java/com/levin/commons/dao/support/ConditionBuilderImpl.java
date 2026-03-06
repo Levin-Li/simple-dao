@@ -1,6 +1,6 @@
 package com.levin.commons.dao.support;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -70,7 +70,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     public static final String DELIMITER = " , ";
 
-    protected javax.validation.Validator validator;
+    protected jakarta.validation.Validator validator;
 
     /// ///////////////////////////////////////////////////////
     protected Class<DOMAIN> entityClass;
@@ -216,12 +216,12 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (T) this;
     }
 
-    public javax.validation.Validator getValidator() {
+    public jakarta.validation.Validator getValidator() {
         return validator;
     }
 
 
-    public T setValidator(javax.validation.Validator validator) {
+    public T setValidator(jakarta.validation.Validator validator) {
         this.validator = validator;
         return (T) this;
     }
@@ -566,7 +566,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
 
     @Override
-    public T appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
+    public T appendByAnnotations(Boolean isAppend, @jakarta.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
 
         if (Boolean.TRUE.equals(isAppend)) {
             processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);

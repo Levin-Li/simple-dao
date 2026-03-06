@@ -1,81 +1,90 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.service.domain.EnumDesc;
-import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 
-import java.lang.reflect.Field;
-import java.util.Properties;
-import java.util.function.Supplier;
+import java.sql.Types;
 
 /**
- * 枚举装换
+ * 枚举转换 - Hibernate 6 兼容版本
  */
-public class EnumDescType extends EnumType {
+public class EnumDescType extends AbstractSingleColumnStandardBasicType<Enum<?>> {
 
-    static Field field;
+    private static final long serialVersionUID = 1L;
 
-    static {
-        try {
-            field = EnumType.class.getDeclaredField("enumValueConverter");
-            field.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException("Current hibernate version incompatible", e);
-        }
+    private final Class<? extends Enum> enumClass;
+
+    public EnumDescType(Class<? extends Enum> enumClass) {
+        super(
+                new EnumJdbcTypeDescriptor(enumClass),
+                new MyEnumJavaTypeDescriptor<>(enumClass)
+        );
+        this.enumClass = enumClass;
     }
 
     @Override
-    public void setParameterValues(Properties parameters) {
+    public Class<Enum<?>> getJavaType() {
+        return (Class<Enum<?>>) enumClass;
+    }
 
-        super.setParameterValues(parameters);
-
-        Class<? extends Enum> enumClass = returnedClass();
-
-        if (EnumDesc.class.isAssignableFrom(enumClass)) {
-            try {
-                field.set(this, new OrdinalEnumValueConverter(new MyEnumJavaTypeDescriptor(enumClass)));
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Current hibernate version incompatible", e);
-            }
-        }
-
+    @Override
+    public String getName() {
+        return enumClass.getName();
     }
 
     static class MyEnumJavaTypeDescriptor<T extends Enum> extends EnumJavaTypeDescriptor<T> {
+
+        private final Class<T> enumClass;
+
         public MyEnumJavaTypeDescriptor(Class<T> type) {
             super(type);
+            this.enumClass = type;
         }
 
         @Override
-        public <E extends Enum> Integer toOrdinal(E domainForm) {
+        public Class<T> getJavaType() {
+            return enumClass;
+        }
 
-            if (domainForm instanceof EnumDesc) {
-                return ((EnumDesc) domainForm).code();
+        @Override
+        public <X> X unwrap(T value, Class<X> type, java.util.function.Supplier<X> supplier) {
+            if (value == null) {
+                return null;
             }
 
-            return super.toOrdinal(domainForm);
+            if (EnumDesc.class.isAssignableFrom(enumClass) && value instanceof EnumDesc) {
+                EnumDesc enumDesc = (EnumDesc) value;
+
+                if (String.class.isAssignableFrom(type)) {
+                    return (X) enumDesc.name();
+                }
+                if (Integer.class.isAssignableFrom(type) || Number.class.isAssignableFrom(type)) {
+                    return (X) Integer.valueOf(enumDesc.code());
+                }
+                if (int.class.isAssignableFrom(type)) {
+                    return (X) Integer.valueOf(enumDesc.code());
+                }
+            }
+
+            return super.unwrap(value, type, supplier);
         }
 
         @Override
-        public String toName(T domainForm) {
-            return super.toName(domainForm);
-        }
+        public <X> T wrap(X value, java.util.function.Supplier<T> supplier) {
+            if (value == null) {
+                return null;
+            }
 
-        @Override
-        public <E extends Enum> E fromOrdinal(Integer relationalForm) {
-            return (E) EnumDesc.parse(getJavaType(), relationalForm);
-        }
+            if (EnumDesc.class.isAssignableFrom(enumClass)) {
+                if (value instanceof Number) {
+                    return (T) EnumDesc.parse(enumClass, ((Number) value).intValue());
+                }
+                if (value instanceof String) {
+                    return (T) EnumDesc.parse(enumClass, (String) value);
+                }
+            }
 
-        @Override
-        public T fromName(String relationalForm) {
-            return EnumDesc.parse(getJavaType(), relationalForm);
+            return super.wrap(value, supplier);
         }
-
-        @Override
-        public T fromString(String relationalForm) {
-            return EnumDesc.parse(getJavaType(), relationalForm);
-        }
-
     }
 }

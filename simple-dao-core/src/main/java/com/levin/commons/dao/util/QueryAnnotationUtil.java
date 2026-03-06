@@ -25,8 +25,8 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-//import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+//import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -306,12 +306,12 @@ public abstract class QueryAnnotationUtil {
                     return;
                 }
 
-                String column = Optional.ofNullable(field.getAnnotation(javax.persistence.Column.class))
-                        .map(javax.persistence.Column::name)
+                String column = Optional.ofNullable(field.getAnnotation(jakarta.persistence.Column.class))
+                        .map(jakarta.persistence.Column::name)
                         .filter(StringUtils::hasText)
                         .orElse(
-                                Optional.ofNullable(field.getAnnotation(javax.persistence.JoinColumn.class))
-                                        .map(javax.persistence.JoinColumn::name)
+                                Optional.ofNullable(field.getAnnotation(jakarta.persistence.JoinColumn.class))
+                                        .map(jakarta.persistence.JoinColumn::name)
                                         .filter(StringUtils::hasText)
                                         //默认使用转换值
                                         .orElse(columnNameConvert.apply(field.getName()))
@@ -369,16 +369,16 @@ public abstract class QueryAnnotationUtil {
 
         return entityTableNameCaches.computeIfAbsent(entityClass.getName(), key ->
 
-                Optional.ofNullable(entityClass.getAnnotation(javax.persistence.Table.class))
+                Optional.ofNullable(entityClass.getAnnotation(jakarta.persistence.Table.class))
                         .filter((t) -> hasText(t.name()))
-                        .map(javax.persistence.Table::name)
+                        .map(jakarta.persistence.Table::name)
                         .orElse(
                                 //转换名称
                                 tableNameConvert.apply(
                                         //否则取实体名
-                                        Optional.ofNullable(entityClass.getAnnotation(javax.persistence.Entity.class))
+                                        Optional.ofNullable(entityClass.getAnnotation(jakarta.persistence.Entity.class))
                                                 .filter(t -> hasText(t.name()))
-                                                .map(javax.persistence.Entity::name).orElse(
+                                                .map(jakarta.persistence.Entity::name).orElse(
                                                         //否则取类名
                                                         entityClass.getSimpleName()
                                                 )

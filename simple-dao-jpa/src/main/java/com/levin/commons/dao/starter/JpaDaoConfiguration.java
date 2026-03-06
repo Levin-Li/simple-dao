@@ -43,9 +43,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.metamodel.Attribute;
 import javax.sql.DataSource;
 import java.lang.reflect.AccessibleObject;
 import java.sql.*;

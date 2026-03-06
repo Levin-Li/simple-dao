@@ -14,7 +14,7 @@ import org.springframework.context.*;
 import org.springframework.util.*;
 
 import lombok.extern.slf4j.Slf4j;
-import javax.annotation.*;
+import jakarta.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 

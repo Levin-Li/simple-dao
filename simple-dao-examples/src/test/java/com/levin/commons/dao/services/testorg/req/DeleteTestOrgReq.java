@@ -15,8 +15,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotEmpty;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotEmpty;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
 import static com.levin.commons.dao.domain.EntityConst.*;

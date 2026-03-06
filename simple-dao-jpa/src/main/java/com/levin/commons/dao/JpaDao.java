@@ -1,8 +1,8 @@
 
 package com.levin.commons.dao;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.Type;
 import java.util.Set;
 import java.util.stream.Collectors;
 

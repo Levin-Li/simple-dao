@@ -4,7 +4,7 @@ import com.levin.commons.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterNameDiscoverer;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import static org.springframework.util.StringUtils.hasText;
 

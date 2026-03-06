@@ -13,7 +13,7 @@
 
         <revision>3.0.0-SNAPSHOT</revision>
 
-        <spring-boot.version>[3.2.0, 3.3.0)</spring-boot.version>
+<!--        <spring-boot.version>[3.2.0, 3.3.0)</spring-boot.version>-->
         <spring-boot.version>3.2.5</spring-boot.version>
 
         <jitpack.groupId>com.github.Levin-Li</jitpack.groupId>
@@ -57,7 +57,7 @@
 <!--        <com.alibaba.druid.version>1.1.24</com.alibaba.druid.version>-->
         <com.alibaba.druid.version>1.2.23</com.alibaba.druid.version>
 
-        <com.dameng.driver.version>8.1.2.79</com.dameng.driver.version>
+        <com.dameng.driver.version>8.1.4.93</com.dameng.driver.version>
         <com.oracle.driver.version>21.8.0.0</com.oracle.driver.version>
         <hutool.version>5.8.43</hutool.version>
 
@@ -256,7 +256,7 @@
             <!-- https://mvnrepository.com/artifact/com.dameng/DmDialect-for-hibernate5.0 -->
             <dependency>
                 <groupId>com.dameng</groupId>
-                <artifactId>DmDialect-for-hibernate5.0</artifactId>
+                <artifactId>DmDialect-for-hibernate6.6</artifactId>
                 <version>${com.dameng.driver.version}</version>
             </dependency>
 

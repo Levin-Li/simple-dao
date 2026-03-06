@@ -3,7 +3,7 @@ package com.levin.commons.dao.codegen.db.table;
 
 import com.levin.commons.dao.codegen.db.DbType;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Query

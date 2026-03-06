@@ -9,7 +9,7 @@ import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.*;
 
-import javax.annotation.*;
+import jakarta.annotation.*;
 
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.*;

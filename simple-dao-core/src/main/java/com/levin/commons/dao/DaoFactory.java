@@ -1,6 +1,6 @@
 package com.levin.commons.dao;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public interface DaoFactory {
 
