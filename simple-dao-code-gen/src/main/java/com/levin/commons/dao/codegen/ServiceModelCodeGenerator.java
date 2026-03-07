@@ -672,6 +672,7 @@ public final class ServiceModelCodeGenerator {
 
 
         genFileByTemplate(genParams, serviceDir, "services", "package-info.java");
+        genFileByTemplate(genParams, serviceDir, "services", "ModuleVersion.java");
         genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
