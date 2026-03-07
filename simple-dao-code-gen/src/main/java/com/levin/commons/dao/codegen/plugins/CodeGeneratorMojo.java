@@ -245,6 +245,7 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
 
             codeGenParams.putIfAbsent("moduleName", mavenProject.getName());
+            codeGenParams.putIfAbsent("moduleVersion", mavenProject.getVersion());
             codeGenParams.putIfAbsent("moduleDesc", mavenProject.getDescription());
 
             //父项目
@@ -427,6 +428,8 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("artifactId", mavenSession.getCurrentProject().getArtifactId());
             codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
             codeGenParams.putIfAbsent("projectName", mavenProject.getName());
+            codeGenParams.putIfAbsent("projectVersion", mavenProject.getVersion());
+            codeGenParams.putIfAbsent("projectModelVersion", mavenProject.getModelVersion());
             codeGenParams.putIfAbsent("projectDesc", mavenProject.getDescription());
 
 
