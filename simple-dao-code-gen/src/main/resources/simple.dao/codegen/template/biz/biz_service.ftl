@@ -21,7 +21,6 @@ import ${servicePackageName}.req.*;
 import ${servicePackageName}.info.*;
 
 import ${modulePackageName}.*;
-import ${modulePackageName}.services.*;
 
 <#list fields as field>
     <#if (field.lzay)??>
