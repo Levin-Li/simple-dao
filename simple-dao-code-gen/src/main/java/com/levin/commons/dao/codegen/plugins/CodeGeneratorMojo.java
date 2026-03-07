@@ -429,7 +429,6 @@ public class CodeGeneratorMojo extends BaseMojo {
             codeGenParams.putIfAbsent("basedir", mavenProject.getBasedir());
             codeGenParams.putIfAbsent("projectName", mavenProject.getName());
             codeGenParams.putIfAbsent("projectVersion", mavenProject.getVersion());
-            codeGenParams.putIfAbsent("projectModelVersion", mavenProject.getModelVersion());
             codeGenParams.putIfAbsent("projectDesc", mavenProject.getDescription());
 
 
