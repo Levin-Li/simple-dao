@@ -8,6 +8,6 @@ package ${modulePackageName}.services;
 
 public abstract class ModuleVersion {
 
-    public static final String VERSION_NAME = "${projectVersion}";
+    public static final String VERSION_NAME = "${projectVersion}"; // ${projectModelVersion}
 
 }
