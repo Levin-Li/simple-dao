@@ -29,4 +29,9 @@ public class SimpleQueryOption implements QueryOption {
 
    // SimpleJoinOption[] simpleJoinOptions;
 
+    @Override
+    public Class<?> getEntityClass() {
+        return entityClass;
+    }
+
 }

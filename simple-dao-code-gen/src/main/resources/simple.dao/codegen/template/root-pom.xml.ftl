@@ -20,7 +20,7 @@
 
         <revision>${project__version}</revision>
 
-        <dubbo.version>3.2.4</dubbo.version>
+        <dubbo.version>3.2.15</dubbo.version>
 
         <spring-boot.version>${spring_boot__version}</spring-boot.version>
 
@@ -32,13 +32,12 @@
 
         <levin-framework-base.version>2.2.2</levin-framework-base.version>
 
-        <shardingsphere.version>4.1.1</shardingsphere.version>
+        <shardingsphere.version>5.4.1</shardingsphere.version>
 
-        <groovy.version>2.5.23</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
 
-        <druid.version>1.1.24</druid.version>
+        <druid.version>1.2.23</druid.version>
         <hutool.version>5.8.43</hutool.version>
         <orika.version>1.5.4</orika.version>
 
@@ -58,8 +57,7 @@
         <asyncTool.version>V1.4-SNAPSHOT</asyncTool.version>
 
         <knife4j.version>4.5.0</knife4j.version>
-        <springdoc.version>1.8.0</springdoc.version>
-        <springdoc.version>1.6.15</springdoc.version>
+        <springdoc.version>2.3.0</springdoc.version>
 
         <swagger.version>2.2.7</swagger.version>
         <swagger.enable>true</swagger.enable>
@@ -86,12 +84,10 @@
 
         <org.dromara.sms4j.version>3.2.1</org.dromara.sms4j.version>
 
-        <openfeign.version>3.1.5</openfeign.version>
-
         <mysql-driver.version>8.0.32</mysql-driver.version>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <!-- 兼容 jdk-21-->
         <!-- <lombok.version>1.18.30</lombok.version> -->
@@ -267,12 +263,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy</artifactId>
-                <version>${r"${groovy.version}"}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.dubbo</groupId>
                 <artifactId>dubbo-dependencies-zookeeper</artifactId>
                 <version>${r"${dubbo.version}"}</version>
@@ -376,7 +366,7 @@
 
             <dependency>
                 <groupId>com.baomidou</groupId>
-                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
                 <version>${r"${baomidou-ds.version}"}</version>
             </dependency>
 
@@ -445,7 +435,7 @@
 
             <dependency>
                 <groupId>net.oschina.j2cache</groupId>
-                <artifactId>j2cache-spring-boot2-starter</artifactId>
+                <artifactId>j2cache-spring-boot3-starter</artifactId>
                 <version>${r"${j2cache_starter.version}"}</version>
 
                 <exclusions>
@@ -530,7 +520,7 @@
 
             <dependency>
                 <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+                <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
                 <version>${r"${shardingsphere.version}"}</version>
             </dependency>
 
@@ -583,13 +573,13 @@
 
             <dependency>
                 <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-webmvc-core</artifactId>
+                <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
                 <version>${r"${springdoc.version}"}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-ui</artifactId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${r"${springdoc.version}"}</version>
             </dependency>
 
@@ -614,12 +604,6 @@
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${r"${mysql-driver.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-openfeign</artifactId>
-                <version>${r"${openfeign.version}"}</version>
             </dependency>
 
             <dependency>

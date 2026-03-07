@@ -5,7 +5,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.springframework.util.Assert;
@@ -81,11 +80,8 @@ public class DelegateIdGenerator implements IdentifierGenerator {
 
         this.identifierGenerator = ctxIdentifierGenerator;
 
-        if (this.identifierGenerator == null) {
-            //使用默认的生成器
-            this.identifierGenerator = new UUIDGenerator();
-            this.identifierGenerator.configure(type, params, serviceRegistry);
-        }
+        //确保非空
+        Assert.notNull(identifierGenerator, "IdentifierGenerator is null");
 
         return identifierGenerator;
     }
