@@ -19,9 +19,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -45,6 +50,7 @@ import org.springframework.util.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
@@ -154,7 +160,9 @@ import static com.levin.commons.dao.util.QueryAnnotationUtil.expandAndFilterNull
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
+
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
+
     private final Integer hibernateVersion;
 
     @Autowired
@@ -172,13 +180,9 @@ public class JpaDaoImpl
     @Autowired(required = false)
     private Validator validator;
 
-//    @Autowired(required = false)
-//    private DaoEventBus daoEventBus;
 
     private ApplicationContext applicationContext;
 
-    @Autowired(required = false)
-    private FormattingConversionService formattingConversionService;
 
     @Value("${com.levin.commons.dao.param.placeholder:#{T(com.levin.commons.dao.JpaDao).DEFAULT_JPQL_PARAM_PLACEHOLDER}}")
     private String paramPlaceholder = JpaDao.DEFAULT_JPQL_PARAM_PLACEHOLDER;
@@ -199,6 +203,10 @@ public class JpaDaoImpl
     private static final Map<String, String> idAttrNames = new ConcurrentHashMap<>();
 
     private static final Map<String, Object> idFields = new ConcurrentHashMap<>(256);
+
+    private static final Map<String, Map<String, String>> fieldColumnNameMap = new ConcurrentHashMap<>();
+
+    private static final Map<String, Map<String, String>> columnFieldNameCache = new ConcurrentHashMap<>();
 
     private static final ContextHolder<String, Object> autoFlushThreadContext = ContextHolder.buildThreadContext(true);
 
@@ -309,9 +317,27 @@ public class JpaDaoImpl
     @PostConstruct
     public void init() {
 
+
+        final MappingMetamodelImplementor mappingMetamodel = entityManagerFactory.unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels()  .getMappingMetamodel();
+
         entityManagerFactory.getMetamodel().getEntities().forEach(entityType -> {
 
             Class<?> entityClass = entityType.getJavaType();
+
+
+            var attrMap = fieldColumnNameMap.computeIfAbsent(entityClass.getName(), key -> new ConcurrentHashMap<>());
+
+            EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(entityClass);
+
+            entityDescriptor.getAttributeMappings().forEach(am -> {
+              am.forEachNonFormula((attribute, mapping) -> {
+
+                  attrMap.computeIfAbsent(am.getAttributeName(), key -> mapping.getSelectableName()) ;
+
+              });
+
+
+            });
 
             //加载缓存
             getTableName(entityClass);
@@ -321,9 +347,11 @@ public class JpaDaoImpl
 
         });
 
+
+
+
         logger.info("jpa dao init.");
     }
-
 
     public static Integer getHibernateVersion() {
 
@@ -424,6 +452,7 @@ public class JpaDaoImpl
 
     }
 
+
     @SneakyThrows
     @Override
     public PhysicalNamingStrategy getNamingStrategy() {
@@ -432,35 +461,8 @@ public class JpaDaoImpl
 
         if (namingStrategy == null && hibernateProperties.getNaming() != null) {
 
-            String physicalStrategy = hibernateProperties.getNaming().getPhysicalStrategy();
 
-            if (!StringUtils.hasText(physicalStrategy)) {
-                physicalStrategy = EntityNamingStrategy.class.getName();
-            }
 
-            Class<?> aClass = ClassUtils.forName(physicalStrategy, this.getClass().getClassLoader());
-
-            namingStrategy = new PhysicalNamingStrategy() {
-
-                final Map<String, String> columnNameMapCaches = new ConcurrentHashMap<>();
-
-                org.hibernate.boot.model.naming.PhysicalNamingStrategy springPhysicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) BeanUtils.instantiateClass(aClass);
-
-                @Override
-                public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-                    return springPhysicalNamingStrategy.toPhysicalTableName(name, jdbcEnvironment);
-                }
-
-                @Override
-                public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-
-                    Identifier newName = columnNameMapCaches.computeIfAbsent(name.getText(), k -> 
-                        springPhysicalNamingStrategy.toPhysicalColumnName(name, jdbcEnvironment).getText()
-                    );
-
-                    return Identifier.toIdentifier(newName, name.isQuoted());
-                }
-            };
 
             DaoContext.setGlobalValue(PhysicalNamingStrategy.class.getName(), namingStrategy);
 
@@ -1936,5 +1938,3 @@ public class JpaDaoImpl
     }
 
 }
-
-

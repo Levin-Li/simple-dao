@@ -67,7 +67,7 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     default PhysicalNamingStrategy getNamingStrategy() {
-        return null;
+        return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
 
     /**
