@@ -63,6 +63,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -1577,17 +1578,17 @@ public final class ServiceModelCodeGenerator {
         classModel.getImports().add(Serializable.class.getName());
         classModel.getImplementsList().add("Serializable");
 
-        if(EnableObject.class.isAssignableFrom(entityClass)){
+        if (EnableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(EnableObject.class.getName());
             classModel.getImplementsList().add("EnableObject");
         }
 
-        if(EditableObject.class.isAssignableFrom(entityClass)){
+        if (EditableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(EditableObject.class.getName());
             classModel.getImplementsList().add("EditableObject");
         }
 
-        if(SelfAuditableObject.class.isAssignableFrom(entityClass)){
+        if (SelfAuditableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(SelfAuditableObject.class.getName());
             classModel.getImplementsList().add("SelfAuditableObject");
         }
@@ -2454,6 +2455,11 @@ public final class ServiceModelCodeGenerator {
 
             if (fieldModel.isRequired() && !isQueryObj && !isUpdateObj) {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
+            }
+
+            //Dao 忽略字段
+            if (fieldModel.isTransient()) {
+                annotations.add("@" + Ignore.class.getName());
             }
 
             Consumer<List<Class<? extends Annotation>>> addAnnotation =
