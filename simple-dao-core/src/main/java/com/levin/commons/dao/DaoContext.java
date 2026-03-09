@@ -9,7 +9,6 @@ import lombok.Setter;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * DAO环境上下文
@@ -28,8 +27,7 @@ public abstract class DaoContext {
     public static final String useStatAliasForHavingGroupByOrderBy = "useStatAliasForHavingGroupByOrderBy";
 
     @Getter
-    @Setter
-    private static Supplier<List<VariableResolver>> defaultVariableResolverSupplier = null;
+    private static final VariableResolverManager defaultVariableResolverManager = new DefaultVariableResolverManager();
 
     private static final VariableInjector defaultVariableInjector = new SimpleVariableInjector() {
         @Override
@@ -41,7 +39,7 @@ public abstract class DaoContext {
         @Override
         public List<VariableResolver> getDefaultVariableResolvers() {
             //默认变量解析器
-            return defaultVariableResolverSupplier != null ? defaultVariableResolverSupplier.get() : Collections.emptyList();
+            return defaultVariableResolverManager != null ? defaultVariableResolverManager.get() : Collections.emptyList();
         }
 
     };
@@ -52,7 +50,7 @@ public abstract class DaoContext {
 
     public static final ContextHolder<String, Object> threadContext = ContextHolder.buildThreadContext(true);
 
-    //////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////
     public static Map<String, Object> getGlobalContext() {
         return globalContext.getAll(true);
     }
