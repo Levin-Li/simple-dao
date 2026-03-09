@@ -2456,6 +2456,11 @@ public final class ServiceModelCodeGenerator {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
+            //Dao 忽略字段
+            if (fieldModel.isTransient()) {
+                annotations.add("@" + Ignore.class.getName());
+            }
+
             Consumer<List<Class<? extends Annotation>>> addAnnotation =
                     classes -> classes.stream().filter(Objects::nonNull)
                             //.filter(cls -> CharSequence.class.isAssignableFrom(fieldType))

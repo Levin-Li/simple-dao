@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import javax.persistence.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Predicate;
@@ -76,7 +77,7 @@ public class FieldModel implements Cloneable {
     private final Set<String> annotations = new LinkedHashSet<>();
 
     //字段修饰前缀
-    private final Set<String> modifiers = new LinkedHashSet<>();
+    //private final Set<String> modifiers = new LinkedHashSet<>();
 
     private final Map<String, Object> extras = new LinkedHashMap<>();
 
@@ -134,8 +135,12 @@ public class FieldModel implements Cloneable {
         this.entityType = entityType;
     }
 
-    public String getModifiersPrefix() {
-        return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
+//    public String getModifiersPrefix() {
+//        return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
+//    }
+
+    public boolean isTransient(){
+        return field.isAnnotationPresent(Transient.class) || Modifier.isTransient(field.getModifiers());
     }
 
     public static String anToStr(Annotation an) {
