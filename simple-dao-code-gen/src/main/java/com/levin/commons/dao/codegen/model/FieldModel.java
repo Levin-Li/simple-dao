@@ -9,8 +9,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Transient;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -114,8 +116,12 @@ public class FieldModel implements Cloneable {
         this.entityType = entityType;
     }
 
-    public String getModifiersPrefix() {
-        return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
+//    public String getModifiersPrefix() {
+//        return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
+//    }
+
+    public boolean isTransient(){
+        return field.isAnnotationPresent(Transient.class) || Modifier.isTransient(field.getModifiers());
     }
 
     public static String anToStr(Annotation an) {
