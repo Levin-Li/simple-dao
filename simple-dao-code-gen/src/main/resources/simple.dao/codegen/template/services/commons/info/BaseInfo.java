@@ -11,7 +11,7 @@ import lombok.experimental.*;
 
 import java.io.Serializable;
 import java.util.*;
-
+import com.levin.commons.service.domain.Castable;
 
 /**
  * 基本查询对象
@@ -22,9 +22,6 @@ import java.util.*;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public abstract class BaseInfo implements Serializable {
+public abstract class BaseInfo implements Castable, Serializable {
 
-    <T extends BaseInfo> T cast() {
-        return (T) this;
-    }
 }
