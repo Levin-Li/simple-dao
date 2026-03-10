@@ -30,8 +30,8 @@ public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
 
     //注入逻辑,不能调用方法
     @InjectVar(value = InjectConst.USER_ID
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_TOP_SUPER_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_TOP_SUPER_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
     @Eq(condition = "#isNotEmpty(#_fieldVal) && !(#_isUpdate) && !canVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
