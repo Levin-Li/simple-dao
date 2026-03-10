@@ -2459,7 +2459,8 @@ public final class ServiceModelCodeGenerator {
 
             //Dao 忽略字段
             if (fieldModel.isTransient()) {
-                annotations.add("@" + Ignore.class.getName());
+                fieldModel.addImport(Ignore.class);
+                annotations.add("@" + Ignore.class.getSimpleName());
             }
 
             Consumer<List<Class<? extends Annotation>>> addAnnotation =
