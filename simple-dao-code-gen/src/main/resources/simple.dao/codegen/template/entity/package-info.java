@@ -45,7 +45,6 @@
         )
 })
 
-JsonType
 package ${CLASS_PACKAGE_NAME};
 
 import com.levin.commons.dao.support.EnumDescType;
