@@ -145,7 +145,7 @@ public class TestRole
 
     @Schema(title = "资源权限列表2", description = "Json数组")
     @Type(type = "json")
-    @Column(columnDefinition = "varchar", length = 1024)
+    @Column(columnDefinition = "json")
     protected List<String> permissionList2;
 
     @Override

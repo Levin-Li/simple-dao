@@ -63,6 +63,6 @@ public class User
 
     @Schema(description = "角色列表")
     @Type(type = "json")
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "json")
     List<OperationLog> logs;
 }
