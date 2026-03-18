@@ -1,6 +1,7 @@
 package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
+import com.levin.commons.dao.support.GenericJsonConverter;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
@@ -10,8 +11,10 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * Created by echo on 2015/11/17.
@@ -25,7 +28,7 @@ import javax.persistence.*;
 @FieldNameConstants
 public class User
         extends AbstractNamedEntityObject
-        implements StatefulObject  {
+        implements StatefulObject {
 
     @Id
     @GeneratedValue
@@ -53,4 +56,13 @@ public class User
     @InjectVar(converter = PrimitiveArrayJsonConverter.class)
     String belongOrgList;
 
+    @Schema(description = "角色列表")
+    @Type(type = "json")
+    @Column(columnDefinition = "varchar", length = 1024)
+    List<String> roleList;
+
+    @Schema(description = "角色列表")
+    @Type(type = "json")
+    @Column(columnDefinition = "text")
+    List<OperationLog> logs;
 }

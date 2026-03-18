@@ -66,6 +66,7 @@
 
         <redission.version>3.19.3</redission.version>
         <redission.version>3.23.5</redission.version>
+        <hibernateTypes.version>2.21.1</hibernateTypes.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
@@ -352,6 +353,13 @@
                      <scope>provided</scope>
                  </dependency>
             </#if>
+
+
+            <dependency>
+                <groupId>com.vladmihalcea</groupId>
+                <artifactId>hibernate-types-55</artifactId>
+                <version>${r"${hibernateTypes.version}"}</version>
+            </dependency>
 
             <!--若使用redisTemplate作为分布式锁底层，则需要引入-->
             <dependency>
@@ -761,6 +769,13 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>hibernate-types-55</artifactId>
             <scope>provided</scope>
         </dependency>
 

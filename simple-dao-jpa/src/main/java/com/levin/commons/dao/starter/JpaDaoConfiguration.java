@@ -133,6 +133,7 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
         return (DaoEventBus) new InnerEventBus().setExecutor(Executors.newFixedThreadPool(15));
     }
 
+
     /**
      * 因为在注册期 JpaDao bean 已经被引用，所以事务注解不会尝试重试初始化 JpaDao bean
      *

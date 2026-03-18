@@ -142,6 +142,12 @@ public class TestRole
     @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false", remark="数据库存取时的值转换定义")
     protected String permissionList;
 
+
+    @Schema(title = "资源权限列表2", description = "Json数组")
+    @Type(type = "json")
+    @Column(columnDefinition = "varchar", length = 1024)
+    protected List<String> permissionList2;
+
     @Override
     @PrePersist
     public void prePersist() {

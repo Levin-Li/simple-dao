@@ -15,19 +15,15 @@ import java.util.function.Function;
  * 通用 JSON ↔ Java 对象 转换器（支持任意可序列化的 Java 类型）
  * 无需为每个 POJO 写单独的转换器，通过泛型动态适配
  */
-@Converter // 不设置 autoApply = true，避免全局自动生效（按需绑定更灵活）
-public class GenericJsonConverter<T extends Serializable> implements AttributeConverter<T, String> {
+//@Converter // 不设置 autoApply = true，避免全局自动生效（按需绑定更灵活）
+public class GenericJsonConverter<T> implements AttributeConverter<T, String> {
 
     // 目标转换类型（通过构造函数动态传入）
     @Getter
     private final Class<T> targetClass;
 
-    @Getter
-    @Setter
-    private static Function<String, String> globalExParseConverter;
-
     /**
-     * 构造函数：传入要转换的 Java 类型（如 UserExtInfo.class）
+     * 构造函数
      *
      * @param targetClass 目标 POJO 的 Class 对象
      */
@@ -56,10 +52,6 @@ public class GenericJsonConverter<T extends Serializable> implements AttributeCo
      */
     @Override
     public T convertToEntityAttribute(String text) {
-
-        if (globalExParseConverter != null) {
-            text = globalExParseConverter.apply(text);
-        }
 
         if (StrUtil.isBlank(text)) {
             return null;

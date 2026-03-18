@@ -289,6 +289,11 @@ public class DaoExamplesTest {
                 user.setScore(Math.abs(random.nextInt(100)));
                 user.setGroup(group)
                         .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
+
+                user.setRoleList(Arrays.asList("R_SA","R_TEST"));
+
+                user.setLogs(Arrays.asList(new OperationLog().setLogText(""+user.hashCode())));
+
                 dao.create(user);
 
 
@@ -978,6 +983,8 @@ public class DaoExamplesTest {
         paging.setPageSize(10);
 
         List<User> users = userDao.find(null, "User", 5, paging);
+
+        cn.hutool.core.lang.Assert.isTrue(!users.get(0).getRoleList().isEmpty());
 
         //    paging.setPageSize(1);
 
