@@ -10,8 +10,10 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.Type;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 /**
  * Created by echo on 2015/11/17.
@@ -53,4 +55,13 @@ public class User
     @InjectVar(converter = PrimitiveArrayJsonConverter.class)
     String belongOrgList;
 
+    @Schema(description = "角色列表")
+    @Type(type = "json")
+    @Column(columnDefinition = "varchar", length = 1024)
+    List<String> roleList;
+
+    @Schema(description = "角色列表")
+    @Type(type = "json")
+    @Column(columnDefinition = "json")
+    List<OperationLog> logs;
 }

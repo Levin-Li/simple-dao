@@ -8,6 +8,7 @@ import com.levin.commons.dao.domain.TreeObject;
 import com.levin.commons.dao.exception.DaoAnnotationException;
 import com.levin.commons.dao.exception.DaoSecurityException;
 import com.levin.commons.dao.exception.DaoUniqueConstraintBizException;
+import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QLUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
@@ -647,7 +648,7 @@ public class JpaDaoImpl
         Class<?> entityClass = targetOption.entityClass();
 
         //如果不是有效的实体类，不做处理
-        if (!isValidClass(entityClass)) {
+        if (!ExprUtils.isValidClass(entityClass)) {
             return (E) entityOrDto;
         }
 
@@ -1620,14 +1621,14 @@ public class JpaDaoImpl
 
             if (queryObj instanceof ResultClassSupplier) {
                 resultClass = ((ResultClassSupplier) queryObj).get();
-                if (isValidClass(resultClass)) {
+                if (ExprUtils.isValidClass(resultClass)) {
                     break;
                 }
             }
 
             if (queryObj instanceof QueryOption) {
                 resultClass = ((QueryOption) queryObj).getResultClass();
-                if (isValidClass(resultClass)) {
+                if (ExprUtils.isValidClass(resultClass)) {
                     break;
                 }
             }
@@ -1637,7 +1638,7 @@ public class JpaDaoImpl
             //注解优先
             if (targetOption != null) {
                 resultClass = targetOption.resultClass();
-                if (isValidClass(resultClass)) {
+                if (ExprUtils.isValidClass(resultClass)) {
                     break;
                 }
             }
@@ -1647,7 +1648,7 @@ public class JpaDaoImpl
             //注解优先
             if (resultOption != null) {
                 resultClass = resultOption.resultClass();
-                if (isValidClass(resultClass)) {
+                if (ExprUtils.isValidClass(resultClass)) {
                     break;
                 }
             }
@@ -1677,9 +1678,6 @@ public class JpaDaoImpl
 
     }
 
-    private boolean isValidClass(Class clazz) {
-        return clazz != null && clazz != Void.class;
-    }
 
     @Override
     public <T> SelectDao<T> forSelect(Object... queryObjs) {

@@ -1028,7 +1028,7 @@ public abstract class ExprUtils {
 
     public static boolean isValidClass(Class type) {
         return type != null
-                && !(type == Void.class || type == void.class);
+                && !(type == Void.class || type == void.class || type == Object.class);
     }
 
     public static boolean isEntityClass(Class type) {

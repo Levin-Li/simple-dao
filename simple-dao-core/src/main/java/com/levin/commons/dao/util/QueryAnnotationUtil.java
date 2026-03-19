@@ -290,7 +290,7 @@ public abstract class QueryAnnotationUtil {
      */
     public static String getEntityColumnName(Class<?> entityClass, String fieldName, Function<String, String> columnNameConvert) {
 
-        if (!ExprUtils.isValidClass(entityClass)
+        if (!ExprUtils.isEntityClass(entityClass)
                 || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
             return fieldName;
         }
