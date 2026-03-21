@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.exception.StatementBuildException;
@@ -95,9 +96,12 @@ public class UpdateDaoImpl<T>
     @Override
     public UpdateDao<T> set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue) {
 
-        if (!Boolean.TRUE.equals(isAppend) && !hasText(entityAttrName)) {
+        if (!Boolean.TRUE.equals(isAppend)
+                || StrUtil.isBlank(entityAttrName)) {
             return this;
         }
+
+       // Assert.notBlank(entityAttrName, "entityAttrName unset");
 
         String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
 
@@ -311,11 +315,11 @@ public class UpdateDaoImpl<T>
 
                 //SQL 条件语句 (IF, CASE WHEN,COALESCE)
                 // // Case表达式是SQL标准（SQL92发行版）的一部分，并已在Oracle Database、SQL Server、 MySQL、 PostgreSQL、 IBM UDB和其他数据库服务器中实现；
-               //  COALESCE函数是SQL92标准中的一部分
+                //  COALESCE函数是SQL92标准中的一部分
                 // 基本上大部分的数据库都支持 COALESCE 函数，不使用 CASE 语句
 //                if (true) {
-                    //COALESCE 简化语句
-                    tempExpr = colExpr + " = " + fun + "( COALESCE(" + colExpr + " , " + defaultValue + ") " + delim + " COALESCE(" + paramExpr + " , " + defaultValue + ") )";
+                //COALESCE 简化语句
+                tempExpr = colExpr + " = " + fun + "( COALESCE(" + colExpr + " , " + defaultValue + ") " + delim + " COALESCE(" + paramExpr + " , " + defaultValue + ") )";
 //                } else {
 //                    tempExpr = colExpr + " = " + fun + "( (" + new Case().when(colExpr + " IS NULL ", defaultValue).elseExpr(colExpr)
 //                            + ") " + delim + " (" + new Case().when(paramExpr + " IS NULL ", defaultValue).elseExpr(paramExpr) + ") )";

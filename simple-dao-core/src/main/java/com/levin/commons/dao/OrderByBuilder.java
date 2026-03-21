@@ -238,7 +238,7 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * 增加排序表达式
      *
      * @param type
-     * @param scope            生效的作用域
+     * @param scope             生效的作用域
      * @param attrReadFunctions
      * @return
      */
@@ -251,14 +251,14 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      *
      * @param isAppend
      * @param type
-     * @param scope            生效的作用域
+     * @param scope             生效的作用域
      * @param attrReadFunctions
      * @return
      */
     default T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrReadFunctions) {
 
         //快速返回，优化性能
-        return (!Boolean.TRUE.equals(isAppend))?(T) this : orderBy(isAppend, type, scope, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+        return (Boolean.TRUE.equals(isAppend)) ? orderBy(isAppend, type, scope, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new)) : (T) this;
     }
 
     /**
