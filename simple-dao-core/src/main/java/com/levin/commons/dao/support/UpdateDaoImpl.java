@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.exception.StatementBuildException;
@@ -95,9 +96,12 @@ public class UpdateDaoImpl<T>
     @Override
     public UpdateDao<T> set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue) {
 
-        if (!Boolean.TRUE.equals(isAppend) && !hasText(entityAttrName)) {
+        if (!Boolean.TRUE.equals(isAppend)
+                || StrUtil.isBlank(entityAttrName)) {
             return this;
         }
+
+       // Assert.notBlank(entityAttrName, "entityAttrName unset");
 
         String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
 
