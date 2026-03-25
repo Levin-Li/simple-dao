@@ -26,6 +26,8 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 //import javax.persistence.*;
+import javax.persistence.Embeddable;
+import javax.persistence.IdClass;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -499,7 +501,7 @@ public abstract class QueryAnnotationUtil {
         return annotations;
     }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Class<?> getFieldType(Class<?> type, String propertyName) {
         return getFieldType(type, propertyName, null);
@@ -674,29 +676,9 @@ public abstract class QueryAnnotationUtil {
 
         return (A) Stream.of(annotations)
                 .filter(Objects::nonNull)
-                .filter(a -> Stream.of(types).anyMatch(t -> t == a.annotationType()))
+                .filter(a -> Stream.of(types).filter(Objects::nonNull).anyMatch(t -> t == a.annotationType()))
                 .findFirst()
                 .orElse(null);
-
-//        for (Annotation annotation : annotations) {
-//
-//            if (annotation == null) {
-//                continue;
-//            }
-//
-//            for (Class type : types) {
-//
-//                if (type == null) {
-//                    continue;
-//                }
-//
-//                if (annotation.annotationType() == type) {
-//                    return (A) annotation;
-//                }
-//            }
-//        }
-//
-//        return null;
 
     }
 
@@ -879,7 +861,7 @@ public abstract class QueryAnnotationUtil {
                 .collect(Collectors.toList());
     }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static <K, V> Map<K, V> copyMap(boolean isOnlyCopyPrimitive, Map<K, V> output, Map<K, V>... sources) {
 
@@ -907,7 +889,8 @@ public abstract class QueryAnnotationUtil {
 
         return output;
     }
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static boolean hasSelectAnnotation(Annotation... annotations) {
 
@@ -923,6 +906,7 @@ public abstract class QueryAnnotationUtil {
 
     /**
      * 是否有选择注解的字段
+     *
      * @param type
      * @return
      */
@@ -1114,7 +1098,10 @@ public abstract class QueryAnnotationUtil {
                 && !Iterable.class.isAssignableFrom(varType) //并且不是可迭代对象
 
                 //不是特殊标记的
-                && !varType.isAnnotationPresent(PrimitiveValue.class);
+                && !varType.isAnnotationPresent(PrimitiveValue.class)
+                && !varType.isAnnotationPresent(Embeddable.class)
+
+                ;
     }
 
 

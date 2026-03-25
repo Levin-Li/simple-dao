@@ -101,7 +101,7 @@ public class UpdateDaoImpl<T>
             return this;
         }
 
-       // Assert.notBlank(entityAttrName, "entityAttrName unset");
+        // Assert.notBlank(entityAttrName, "entityAttrName unset");
 
         String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
 
@@ -244,7 +244,7 @@ public class UpdateDaoImpl<T>
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
 
-            genExprAndProcess(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation, (expr, holder) -> {
+            genExprAndProcess(bean, varType, name, value, isComplexAttr(fieldOrMethod,varType,value,varAnnotations), opAnnotation, (expr, holder) -> {
 
                 Update updateOp = (opAnnotation instanceof Update) ? (Update) opAnnotation : null;
 

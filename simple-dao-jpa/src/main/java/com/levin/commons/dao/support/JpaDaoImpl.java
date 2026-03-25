@@ -47,6 +47,7 @@ import javax.persistence.Parameter;
 import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -421,6 +422,21 @@ public class JpaDaoImpl
             throw new IllegalStateException("entityManager or entityManagerFactory must be set");
         }
 
+    }
+
+
+    @Override
+    public boolean hasPrimitiveAnnotation(Annotation... varAnnotations) {
+
+        if (varAnnotations == null) {
+            return false;
+        }
+
+        return Stream.of(varAnnotations)
+                .filter(Objects::nonNull).anyMatch(a ->
+                        Stream.of(org.hibernate.annotations.Type.class, Embedded.class, EmbeddedId.class)
+                                .anyMatch(t -> t == a.annotationType())
+                );
     }
 
     @SneakyThrows
@@ -1543,7 +1559,7 @@ public class JpaDaoImpl
 
         if (tableOrEntityClass instanceof Class) {
             return getEntityIdAttrName(tableOrEntityClass);
-        }else {
+        } else {
             //@todo 获取表的主键名称
 
         }

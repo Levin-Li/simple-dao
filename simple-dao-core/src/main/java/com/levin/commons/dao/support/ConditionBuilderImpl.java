@@ -601,7 +601,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 || disableEmptyValueFilter
                 || !isNullOrEmptyTxt(value)) {
 
-            processWhereCondition(null, null, expr, value, null, annotation);
+            processWhereCondition(null, null, expr, value, false, annotation);
 
         } else {
             if (logger.isDebugEnabled()) {
@@ -1597,9 +1597,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                         varAnnotations = annotationsOnClass;
                     }
 
-                    processAttr(isClassCurrQueryObj ? null : queryValueObj
-                            , field, name, varAnnotations
-                            , targetType, value);
+                    processAttr(isClassCurrQueryObj ? null : queryValueObj, field, name, varAnnotations, targetType, value);
 
                 } catch (Exception e) {
                     throw new StatementBuildException("处理注解失败，字段:" + field + ", " + e.getMessage(), e);
@@ -1818,8 +1816,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                 Annotation[] varAnnotations = {opAnno};
 
-                processAttr(queryParam, null, name, varAnnotations,
-                        paramValue != null ? paramValue.getClass() : null, paramValue);
+                processAttr(queryParam, null, name, varAnnotations, paramValue != null ? paramValue.getClass() : null, paramValue);
 
             }
         }
@@ -2022,6 +2019,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return equals;
     }
 
+
+    protected boolean isComplexAttr(Object fieldOrMethod, Class<?> varType, Object value, Annotation... varAnnotations) {
+        return !isPrimitiveAttr(fieldOrMethod)
+                && !hasPrimitiveAnnotation(varAnnotations)
+                && isComplexType(varType, value);
+    }
+
     /**
      * 核心方法
      * <p>
@@ -2102,9 +2106,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //如果没有注解
         if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty()) {
 
-            boolean complexType = (findPrimitiveValue(varAnnotations) == null) && isComplexType(varType, value);
-
-            if (complexType) {
+            if (isComplexAttr(fieldOrMethod, varType, value, varAnnotations)) {
                 //递归加入条件
                 reAppendByQueryObj(value);
             } else {
@@ -2226,14 +2228,35 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         if (QueryAnnotationUtil.isSamePackage(opAnnotation, Eq.class)) {
             //处理where条件
-            processWhereCondition(bean, varType, name, value, findPrimitiveValue(varAnnotations), opAnnotation);
+            processWhereCondition(bean, varType, name, value, isComplexAttr(fieldOrMethod, varType, value, varAnnotations), opAnnotation);
         }
 
     }
 
+    protected boolean isPrimitiveAttr(Object fieldOrMethod) {
 
-    protected PrimitiveValue findPrimitiveValue(Annotation... varAnnotations) {
-        return findFirstMatched(varAnnotations, PrimitiveValue.class);
+        if (fieldOrMethod instanceof Field) {
+
+            Field field = (Field) fieldOrMethod;
+            return field.getType().isPrimitive()
+                    || hasPrimitiveAnnotation(field.getAnnotations());
+
+        } else if (fieldOrMethod instanceof Method) {
+
+            Method method = (Method) fieldOrMethod;
+
+            return method.getReturnType().isPrimitive()
+                    || hasPrimitiveAnnotation(method.getAnnotations());
+        }
+
+        return false;
+    }
+
+    protected boolean hasPrimitiveAnnotation(Annotation... varAnnotations) {
+
+        return getDao().hasPrimitiveAnnotation(varAnnotations)
+                || findFirstMatched(varAnnotations, PrimitiveValue.class) != null;
+
     }
 
     public boolean isIgnore(Annotation[] varAnnotations) {
@@ -2292,7 +2315,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 || annotationType == IsNull.class
                 || !isNullOrEmptyTxt(value)) {
 
-            processWhereCondition(null, null, name, value, null, QueryAnnotationUtil.getAnnotation(annotationType));
+            processWhereCondition(null, null, name, value, false, QueryAnnotationUtil.getAnnotation(annotationType));
 
         }
 
@@ -2321,13 +2344,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param varType
      * @param name
      * @param value
-     * @param primitiveValue
+     * @param isComplexAttr
      * @param opAnnotation
      */
     protected void processWhereCondition(final Object bean, Class<?> varType, String name, Object value,
-                                         PrimitiveValue primitiveValue, Annotation opAnnotation) {
+                                         boolean isComplexAttr, Annotation opAnnotation) {
 
-        genExprAndProcess(bean, varType, name, value, primitiveValue, opAnnotation, (expr, holder) -> {
+        genExprAndProcess(bean, varType, name, value, isComplexAttr, opAnnotation, (expr, holder) -> {
 
             Boolean having = ClassUtils.getValue(opAnnotation, E_C.having, false);
 
@@ -2344,10 +2367,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
 
     protected void genExprAndProcess(final Object bean, Class<?> varType, String name, Object paramValue,
-                                     PrimitiveValue primitiveValue, Annotation opAnnotation,
+                                     boolean isComplexAttr, Annotation opAnnotation,
                                      BiConsumer<String, ValueHolder<Object>> consumer) {
 
-        boolean complexType = (primitiveValue == null) && isComplexType(varType, paramValue);
+        final boolean complexType = isComplexAttr || isComplexType(varType, paramValue);
 
         ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 

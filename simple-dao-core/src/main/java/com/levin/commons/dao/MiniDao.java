@@ -2,10 +2,10 @@ package com.levin.commons.dao;
 
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
-import com.levin.commons.service.support.ValueHolder;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +69,15 @@ public interface MiniDao extends DeepCopier {
     default PhysicalNamingStrategy getNamingStrategy() {
         return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
+
+
+    /**
+     * 是否是原始类型
+     *
+     * @param varAnnotations
+     * @return
+     */
+    boolean hasPrimitiveAnnotation(Annotation... varAnnotations);
 
     /**
      * 是否是实体类
