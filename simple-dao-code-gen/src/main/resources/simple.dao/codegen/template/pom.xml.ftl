@@ -228,6 +228,13 @@
             <groupId>org.apache.shardingsphere</groupId>
             <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
         </dependency>
+
+    <dependency>
+        <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
+        <groupId>io.hypersistence</groupId>
+        <artifactId>hypersistence-utils-hibernate-55</artifactId>
+    </dependency>
+
     <#if enableOakBaseFramework>
 
         <dependency>

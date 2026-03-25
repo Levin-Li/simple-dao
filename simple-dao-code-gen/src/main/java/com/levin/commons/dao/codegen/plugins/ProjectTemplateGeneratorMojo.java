@@ -236,8 +236,6 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
         //设置构建名称为：父节点的名称加上本节点的名称
         mapBuilder.put("project__artifactId", (hasSubModule ? subModuleName : Utils.getModuleName(mavenProject.getArtifactId())) + "-" + entitiesModuleDir.getName());
 
-        //替换旧的生成方式
-        //copyAndReplace(false, resTemplateEntityDir + "entities-pom.xml", new File(entitiesModuleDir, "pom.xml"), mapBuilder.build());
 
         //生成 POM 文件
         ServiceModelCodeGenerator.genFileByTemplate("entity/entities-pom.xml.ftl", new HashMap<>(mapBuilder.build()), new File(entitiesModuleDir, "pom.xml").getCanonicalPath());

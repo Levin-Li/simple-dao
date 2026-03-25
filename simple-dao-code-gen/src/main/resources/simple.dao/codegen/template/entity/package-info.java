@@ -37,11 +37,11 @@
         ,
         @TypeDef(
                 name = "json",
-                typeClass = com.vladmihalcea.hibernate.type.json.JsonType.class
+                typeClass = io.hypersistence.utils.hibernate.type.json.JsonType.class
         ) ,
         @TypeDef(
                 name = "jsonb",
-                typeClass = com.vladmihalcea.hibernate.type.json.JsonBinaryType.class
+                typeClass = io.hypersistence.utils.hibernate.type.json.JsonBinaryType.class
         )
 })
 

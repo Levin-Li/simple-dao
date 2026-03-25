@@ -66,7 +66,7 @@
 
         <redission.version>3.19.3</redission.version>
         <redission.version>3.23.5</redission.version>
-        <hibernateTypes.version>2.21.1</hibernateTypes.version>
+        <hibernateTypes.version>3.9.5</hibernateTypes.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
@@ -91,8 +91,8 @@
 
         <mysql-driver.version>8.0.32</mysql-driver.version>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <!-- 兼容 jdk-21-->
         <!-- <lombok.version>1.18.30</lombok.version> -->
@@ -356,8 +356,9 @@
 
 
             <dependency>
-                <groupId>com.vladmihalcea</groupId>
-                <artifactId>hibernate-types-55</artifactId>
+                <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
+                <groupId>io.hypersistence</groupId>
+                <artifactId>hypersistence-utils-hibernate-55</artifactId>
                 <version>${r"${hibernateTypes.version}"}</version>
             </dependency>
 
@@ -773,11 +774,6 @@
         </dependency>
 
 
-        <dependency>
-            <groupId>com.vladmihalcea</groupId>
-            <artifactId>hibernate-types-55</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>${r"${levin.simple-dao.groupId}"}</groupId>

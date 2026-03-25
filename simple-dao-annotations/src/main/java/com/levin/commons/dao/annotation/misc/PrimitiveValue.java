@@ -20,6 +20,7 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 public @interface PrimitiveValue {
+
     /**
      * 描述信息
      *

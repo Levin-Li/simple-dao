@@ -258,6 +258,12 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <dependency>
+            <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-55</artifactId>
+        </dependency>
+
     </dependencies>
 
 

@@ -45,8 +45,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.vladmihalcea</groupId>
-            <artifactId>hibernate-types-55</artifactId>
+            <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-55</artifactId>
             <scope>provided</scope>
         </dependency>
 
