@@ -88,6 +88,9 @@ public class FieldModel implements Cloneable {
     private boolean baseType = true;//基础封装类型
 
 
+    private Annotation primitiveAttrAnnotation;
+
+
     private boolean enumerable = false;//是否enum
 
     private boolean jpaEntity = false;//是否 jpa 对象
@@ -155,8 +158,8 @@ public class FieldModel implements Cloneable {
      *
      * @return
      */
-    public boolean isPrimitive() {
-        return type.isPrimitive();
+    public boolean isPrimitiveAttr() {
+        return getPrimitiveAttrAnnotation() != null;
     }
 
     public void addAnnotation(Class<? extends Annotation> type, String... attrs) {

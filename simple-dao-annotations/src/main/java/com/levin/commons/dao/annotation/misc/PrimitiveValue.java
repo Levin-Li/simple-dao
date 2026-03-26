@@ -40,6 +40,9 @@ public @interface PrimitiveValue {
      */
     boolean isExpr() default false;
 
+
+    String refDefinition() default "";
+
     /**
      * @return
      */

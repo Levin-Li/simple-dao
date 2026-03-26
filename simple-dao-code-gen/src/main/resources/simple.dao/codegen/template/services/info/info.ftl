@@ -28,9 +28,10 @@ import ${imp};
 
 /**
  * ${entityTitle}
+ * <p>
+ * 这个一个生成的代码,  请务必不要修改这个类文件, 否则会导致后续无法再生成代码.
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- *
  */
 @Schema(title = BIZ_NAME)
 @Data

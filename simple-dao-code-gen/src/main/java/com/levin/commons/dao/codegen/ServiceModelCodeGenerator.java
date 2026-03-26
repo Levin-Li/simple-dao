@@ -14,13 +14,17 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.google.googlejavaformat.java.FormatterException;
+import com.google.googlejavaformat.java.ImportOrderer;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
+import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.EndsWith;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
@@ -662,6 +666,7 @@ public final class ServiceModelCodeGenerator {
 
 
         genFileByTemplate(genParams, serviceImplDir, "services", "BaseService.java");
+        genFileByTemplate(genParams, serviceImplDir, "services", "code-gen-rule.md");
         genFileByTemplate(genParams, serviceImplDir, "services", "基础服务类开发规范.md");
 
         genFileByTemplate(genParams, serviceImplDir, "job", "DemoJob.java");
@@ -673,6 +678,7 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(genParams, serviceDir, "services", "package-info.java");
         genFileByTemplate(genParams, serviceDir, "services", "ModuleVersion.java");
+        genFileByTemplate(genParams, serviceDir, "services", "code-gen-rule.md");
         genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
@@ -1577,17 +1583,17 @@ public final class ServiceModelCodeGenerator {
         classModel.getImports().add(Serializable.class.getName());
         classModel.getImplementsList().add("Serializable");
 
-        if(EnableObject.class.isAssignableFrom(entityClass)){
+        if (EnableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(EnableObject.class.getName());
             classModel.getImplementsList().add("EnableObject");
         }
 
-        if(EditableObject.class.isAssignableFrom(entityClass)){
+        if (EditableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(EditableObject.class.getName());
             classModel.getImplementsList().add("EditableObject");
         }
 
-        if(SelfAuditableObject.class.isAssignableFrom(entityClass)){
+        if (SelfAuditableObject.class.isAssignableFrom(entityClass)) {
             classModel.getImports().add(SelfAuditableObject.class.getName());
             classModel.getImplementsList().add("SelfAuditableObject");
         }
@@ -1729,7 +1735,9 @@ public final class ServiceModelCodeGenerator {
 
                 //2、格式化后比较
                 lines = Arrays.asList(cu.toString().split("[\r\n]"));
+
                 fileOldCompactContent = linesFilter.apply(lines);
+
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     return fileOldCompactContent;
                 }
@@ -1738,8 +1746,11 @@ public final class ServiceModelCodeGenerator {
 
                 //3、删除注释代码后再比较
                 cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
+
                 lines = Arrays.asList(cu.toString().split("[\r\n]"));
+
                 fileOldCompactContent = linesFilter.apply(lines);
+
                 if (md5.equals(SecureUtil.md5(fileOldCompactContent))) {
                     return fileOldCompactContent;
                 }
@@ -1846,7 +1857,7 @@ public final class ServiceModelCodeGenerator {
 
                 if (interrupt) {
                     logger.info(msg);
-                    logger.info("代码生产已经中断, 请检查错误信息或是调整配置[isInterruptWhenTargetFileChangedByGroovyScript], 当前配置的脚本:<<<{}>>>", groovyScript);
+                    logger.info("代码生成已经中断, 请检查错误信息或是调整配置[isInterruptWhenTargetFileChangedByGroovyScript], 当前配置的脚本:<<<{}>>>", groovyScript);
                 }
 
                 cn.hutool.core.lang.Assert.isTrue(!interrupt, () -> new CodeGenInteruptException(errorInfoHolder.getValue()));
@@ -1870,16 +1881,35 @@ public final class ServiceModelCodeGenerator {
         //文件内容
         String fileContent = stringWriter.toString();
 
-        if (isJavaSrcFile
-                && isOutputFormatCode()) {
-            //如果是Java类文件，自动格式化
+        if (isJavaSrcFile) {
+
             try {
-                fileContent = new com.google.googlejavaformat.java.Formatter(
-                        JavaFormatterOptions.builder().style(JavaFormatterOptions.Style.AOSP).build()
-                ).formatSource(fileContent);
+                //google-format 并不会移除 .* 的导入
+                fileContent = RemoveUnusedImports.removeUnusedImports(fileContent);
             } catch (Exception e) {
-                logger.warn("无法格式化生成的代码，" + path);
+                logger.error(path + " -google-format-优化导入失败， " + e.getMessage(), e);
             }
+
+            try {
+                fileContent = ImportOptimizer.optimizeImports(path , fileContent);
+            } catch (Exception e) {
+                logger.error(path + " -java-parser-优化导入失败， " + e.getMessage(), e);
+            }
+
+            //如果是Java类文件，自动格式化
+
+            if (isOutputFormatCode()) {
+                try {
+                    fileContent = new com.google.googlejavaformat.java.Formatter(
+                            JavaFormatterOptions.builder()
+                                    //   .style(JavaFormatterOptions.Style.AOSP)
+                                    .build()
+                    ).formatSource(fileContent);
+                } catch (Exception e) {
+                    logger.warn("[{}]生成的代码无法格式化，{}", path, e.getMessage());
+                }
+            }
+
         }
 
         final int startIdx = fileContent.indexOf(prefix);
@@ -1903,8 +1933,6 @@ public final class ServiceModelCodeGenerator {
                         cu.getAllComments().forEach(com.github.javaparser.ast.Node::remove);
                     }
 
-                    //@todo 优化无用的导入语句
-
                     newCompactContent = cu.toString();
 
                 } catch (Exception e) {
@@ -1926,6 +1954,7 @@ public final class ServiceModelCodeGenerator {
             int endIndex = fileContent.indexOf("]", startIdx);
 
             fileContent = fileContent.substring(0, startIdx + prefix.length()) + newMd5 + fileContent.substring(endIndex);
+
         }
 
         //写入文件
@@ -2216,10 +2245,12 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
+
             final ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
 
 
             final Class<?> fieldType = forField.resolve(field.getType());
+
 
             if (field.getType() != fieldType) {
                 logger.info("*** " + entityClass + "[" + action + "] 发现泛型字段 : " + field + " --> " + fieldType);
@@ -2229,11 +2260,6 @@ public final class ServiceModelCodeGenerator {
                 logger.warn("*** " + entityClass + "[" + action + "] 发现根基类型字段 : " + field + " --> " + fieldType);
             }
 
-            if (Map.class.isAssignableFrom(fieldType)) {
-                //暂不支持Map
-                logger.warn("*** " + entityClass + "[" + action + "] 发现不支持的字段 : " + field + " --> " + fieldType);
-                continue;
-            }
 
             if (ignoreSpecificField
                     && isMultiTenantObject
@@ -2271,6 +2297,23 @@ public final class ServiceModelCodeGenerator {
                     .addImport(InjectVar.class)
                     .addImport(InjectConst.class);
             fieldModel.setName(field.getName());
+
+
+            fieldModel.setPrimitiveAttrAnnotation(Stream.of(field.getAnnotations()).filter(an ->
+                            Stream.of(PrimitiveValue.class, Convert.class, EmbeddedId.class,
+                                            Embedded.class, org.hibernate.annotations.Type.class)
+                                    .anyMatch(t -> t == an.annotationType()))
+                    .findFirst()
+                    .orElse(null)
+            );
+
+            if (Map.class.isAssignableFrom(fieldType)
+                    && !fieldModel.isPrimitiveAttr()) {
+                //暂不支持Map
+                logger.warn("*** " + entityClass + "[" + action + "] 发现不支持的字段 : " + field + " --> " + fieldType);
+                continue;
+            }
+
 
             if (CharSequence.class.isAssignableFrom(fieldType)) {
 
@@ -2384,6 +2427,10 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.setTitle(field.getName());
             }
 
+            if (fieldModel.getPrimitiveAttrAnnotation() != null) {
+                fieldModel.addAnnotation(PrimitiveValue.class, "refDefinition=\"" + fieldModel.getPrimitiveAttrAnnotation().annotationType().getName() + "\"");
+            }
+
             if (!fieldModel.isEnumerable()
                     && (field.isAnnotationPresent(FormItem.class) || field.isAnnotationPresent(Options.class))) {
 
@@ -2449,6 +2496,7 @@ public final class ServiceModelCodeGenerator {
                 // fieldModel.setTestValue("null");
             }
 
+
             //生成注解
             ArrayList<String> annotations = new ArrayList<>(getCopyAnnotation(nonSrcClassFieldMap, fieldModel, action));
 
@@ -2456,10 +2504,12 @@ public final class ServiceModelCodeGenerator {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
+
             //Dao 忽略字段
             if (fieldModel.isTransient()) {
                 annotations.add("@" + Ignore.class.getName());
             }
+
 
             Consumer<List<Class<? extends Annotation>>> addAnnotation =
                     classes -> classes.stream().filter(Objects::nonNull)
