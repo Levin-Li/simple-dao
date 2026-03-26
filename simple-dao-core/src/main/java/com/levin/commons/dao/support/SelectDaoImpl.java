@@ -92,7 +92,8 @@ public class SelectDaoImpl<T>
     private boolean useStatAliasForHavingGroupByOrderBy = DaoContext.getValue(DaoContext.useStatAliasForHavingGroupByOrderBy, false);
 
     @Accessors(chain = true)
-    @Setter@Getter
+    @Setter
+    @Getter
     Class defaultResultType;
 
     final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildThreadContext(true);
@@ -786,7 +787,7 @@ public class SelectDaoImpl<T>
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
-            genExprAndProcess(bean, varType, name, value, isComplexAttr(fieldOrMethod,varType,value,varAnnotations), opAnnotation, (expr, holder) -> {
+            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation,varAnnotations, (expr, holder) -> {
 
                 tryAppendHaving(bean, name, opAnnotation, expr, holder, value);
 
@@ -831,7 +832,7 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        genExprAndProcess(bean, varType, name, value, isComplexAttr(fieldOrMethod,varType,value,varAnnotations), opAnnotation, (expr, holder) -> {
+        genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation,varAnnotations, (expr, holder) -> {
 
             boolean isGroupBy = opAnnotation instanceof GroupBy;
 
@@ -1248,7 +1249,7 @@ public class SelectDaoImpl<T>
 
     }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+    /// //////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public <I, E> List<E> find(Converter<I, E> converter) {
@@ -1542,7 +1543,7 @@ public class SelectDaoImpl<T>
         }
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////
+    /// //////////////////////////////////////////////////////////////////////////////////////////
 
     public String removeAlias(String column) {
 
@@ -1625,7 +1626,7 @@ public class SelectDaoImpl<T>
         return columnNames;
     }
 
-//////////////////////////////////////////////
+    /// ///////////////////////////////////////////
 
     private SelectDao<T> processStat(int callMethodDeep, String expr, String alias, Object... paramValues) {
 
@@ -1683,7 +1684,7 @@ public class SelectDaoImpl<T>
         return this;
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    /// //////////////////////////////////////////////////////////////////////////////////////////////
 
     @Data
     @Accessors(chain = true)

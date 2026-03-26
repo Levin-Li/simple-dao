@@ -70,6 +70,15 @@ public interface MiniDao extends DeepCopier {
         return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
     }
 
+    /**
+     * 是否有原子类型注解
+     *
+     * @param field
+     * @return
+     */
+    default boolean hasPrimitiveAnnotation(Field field) {
+        return hasPrimitiveAnnotation(field.getAnnotations());
+    }
 
     /**
      * 是否是原始类型

@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 
 import com.levin.commons.dao.*;
+import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.TreeObject;
@@ -434,7 +435,7 @@ public class JpaDaoImpl
 
         return Stream.of(varAnnotations)
                 .filter(Objects::nonNull).anyMatch(a ->
-                        Stream.of(org.hibernate.annotations.Type.class, Embedded.class, EmbeddedId.class)
+                        Stream.of(org.hibernate.annotations.Type.class, Embedded.class, EmbeddedId.class, PrimitiveValue.class)
                                 .anyMatch(t -> t == a.annotationType())
                 );
     }
@@ -1773,10 +1774,9 @@ public class JpaDaoImpl
                 for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
                     try {
                         //没有属性会抛出异常
-                        Object value = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
+                        paramValue = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
-
-                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), value));
+                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), paramValue));
 
                     } catch (Exception e) {
 
@@ -1798,7 +1798,6 @@ public class JpaDaoImpl
                 pIndex++;
             }
         }
-
 
         return pIndex;
     }
@@ -1831,10 +1830,10 @@ public class JpaDaoImpl
             logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
         }
 
-        //关键点，如果是原生查询，枚举要转换城对应的
-//        if (isNative && paramValue != null
-//                && paramValue.getClass().isEnum()) {
-//        }
+        //参数解包, 用于兼容复杂的参数类型
+        if (paramValue instanceof PrimitiveValueWrapper) {
+            paramValue = ((PrimitiveValueWrapper) paramValue).get();
+        }
 
         return paramValue;
     }

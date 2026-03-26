@@ -1891,7 +1891,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             try {
-                fileContent = ImportOptimizer.optimizeImports(path , fileContent);
+               // fileContent = ImportOptimizer.optimizeImports(path , fileContent);
             } catch (Exception e) {
                 logger.error(path + " -java-parser-优化导入失败， " + e.getMessage(), e);
             }

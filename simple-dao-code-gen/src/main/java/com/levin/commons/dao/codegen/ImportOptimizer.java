@@ -271,10 +271,30 @@ public class ImportOptimizer {
 
         Set<String> uncoveredTypeNames = new HashSet<>(unresolvedTypeSimpleNames);
         uncoveredTypeNames.removeAll(coveredTypeNames);
-        Set<String> unresolvedTypeSuffixTokens = uncoveredTypeNames.stream()
-                .map(ImportOptimizer::getTypeSuffixToken)
+        Set<String> unresolvedTypeTokens = uncoveredTypeNames.stream()
+                .flatMap(typeName -> getTypeTokens(typeName).stream())
+                .map(ImportOptimizer::normalizeWord)
+                .filter(token -> token.length() >= 3)
                 .filter(token -> !token.isEmpty())
                 .collect(Collectors.toSet());
+        Map<ImportDeclaration, Integer> tokenMatchScores = new IdentityHashMap<>();
+        int maxTokenMatchScore = 0;
+        for (ImportDeclaration imp : asteriskImports) {
+            if (usage.containsKey(imp)) {
+                continue;
+            }
+            int score = getImportPackageTokenMatchScore(imp.getNameAsString(), unresolvedTypeTokens);
+            tokenMatchScores.put(imp, score);
+            if (score > maxTokenMatchScore) {
+                maxTokenMatchScore = score;
+            }
+        }
+        int finalMaxTokenMatchScore = maxTokenMatchScore;
+        Set<ImportDeclaration> tokenMatchedImports = tokenMatchScores.entrySet().stream()
+                .filter(entry -> entry.getValue() == finalMaxTokenMatchScore && entry.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        boolean enableSameModuleFallback = tokenMatchedImports.isEmpty() && !uncoveredTypeNames.isEmpty();
 
         for (ImportDeclaration imp : asteriskImports) {
             if (usage.containsKey(imp)) {
@@ -288,9 +308,9 @@ public class ImportOptimizer {
             }
 
             // 如果仍有无法映射的类型名，保守保留其它 * 导入，避免误删。
-            usage.put(imp, !uncoveredTypeNames.isEmpty()
-                    && isSameModulePrefix(imp.getNameAsString(), currentPackagePrefix)
-                    && matchesUnresolvedTypeSuffix(imp.getNameAsString(), unresolvedTypeSuffixTokens));
+            usage.put(imp, tokenMatchedImports.contains(imp)
+                    || (enableSameModuleFallback
+                    && isSameModulePrefix(imp.getNameAsString(), currentPackagePrefix)));
         }
 
         return usage;
@@ -513,26 +533,72 @@ public class ImportOptimizer {
         return dotIdx > 0 ? className.substring(0, dotIdx) : "";
     }
 
-    private static String getTypeSuffixToken(String typeName) {
+    private static List<String> getTypeTokens(String typeName) {
         if (typeName == null || typeName.isEmpty()) {
-            return "";
+            return Collections.emptyList();
         }
+
         List<String> tokens = splitCamelCase(typeName);
         if (tokens.isEmpty()) {
-            return typeName.toLowerCase(Locale.ROOT);
+            return Collections.singletonList(typeName.toLowerCase(Locale.ROOT));
         }
-        return tokens.get(tokens.size() - 1);
+        return tokens;
     }
 
-    private static boolean matchesUnresolvedTypeSuffix(String importPackage, Set<String> unresolvedTypeSuffixTokens) {
-        if (unresolvedTypeSuffixTokens == null || unresolvedTypeSuffixTokens.isEmpty()) {
-            return false;
+    private static int getImportPackageTokenMatchScore(String importPackage, Set<String> unresolvedTypeTokens) {
+        if (unresolvedTypeTokens == null || unresolvedTypeTokens.isEmpty()
+                || importPackage == null || importPackage.isEmpty()) {
+            return 0;
         }
-        int dotIdx = importPackage.lastIndexOf('.');
-        String lastSegment = dotIdx >= 0
-                ? importPackage.substring(dotIdx + 1)
-                : importPackage;
-        return unresolvedTypeSuffixTokens.contains(lastSegment.toLowerCase(Locale.ROOT));
+
+        String[] segments = importPackage.split("\\.");
+        String lastSegment = segments.length > 0 ? normalizeWord(segments[segments.length - 1]) : "";
+        String secondLastSegment = segments.length > 1 ? normalizeWord(segments[segments.length - 2]) : "";
+
+        if (lastSegment.length() >= 3 && containsEquivalentToken(lastSegment, unresolvedTypeTokens)) {
+            return 2;
+        }
+        if (secondLastSegment.length() >= 3 && containsEquivalentToken(secondLastSegment, unresolvedTypeTokens)) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static boolean containsEquivalentToken(String segment, Set<String> unresolvedTypeTokens) {
+        for (String token : unresolvedTypeTokens) {
+            String normalizedToken = normalizeWord(token);
+            if (normalizedToken.length() < 3) {
+                continue;
+            }
+            if (segment.equals(normalizedToken)
+                    || segment.startsWith(normalizedToken)
+                    || normalizedToken.startsWith(segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalizeWord(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char ch = Character.toLowerCase(text.charAt(i));
+            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+                sb.append(ch);
+            }
+        }
+
+        String normalized = sb.toString();
+        if (normalized.length() > 3 && normalized.endsWith("s")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        return normalized;
     }
 
     private static List<String> splitCamelCase(String value) {

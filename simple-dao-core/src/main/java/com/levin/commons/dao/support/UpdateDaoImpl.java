@@ -243,8 +243,7 @@ public class UpdateDaoImpl<T>
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-
-            genExprAndProcess(bean, varType, name, value, isComplexAttr(fieldOrMethod,varType,value,varAnnotations), opAnnotation, (expr, holder) -> {
+            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
 
                 Update updateOp = (opAnnotation instanceof Update) ? (Update) opAnnotation : null;
 
