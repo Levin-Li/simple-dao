@@ -82,7 +82,7 @@ public abstract class ExprUtils {
      *
      * @param c
      * @param name
-     * @param complexType
+     * @param isSubQuery
      * @param expectType
      * @param holder
      * @param paramPlaceholder
@@ -91,7 +91,7 @@ public abstract class ExprUtils {
      * @return
      */
     public static String genExpr(C c, String name,
-                                 boolean complexType, Class<?> expectType,
+                                 boolean isSubQuery, Class<?> expectType,
                                  ValueHolder holder, String paramPlaceholder,
                                  Function<String, Object> ctxEvalFunc,
                                  @NotNull Function<String, String> domainFunc,
@@ -129,10 +129,6 @@ public abstract class ExprUtils {
             return "";
         }
 
-
-
-
-
         //如果只有一个元素的数组
         holder.value = tryGetFirstElementIfOnlyOne(holder.value);
 
@@ -146,7 +142,7 @@ public abstract class ExprUtils {
         if (isFieldExpand) {
 
             //如果使用字段值
-            if (!complexType
+            if (!isSubQuery
                     && isFieldExprUseFieldValue
                     && isNotEmpty(holder.value)) {
                 // 是否字段表达式使用字段值
@@ -186,7 +182,7 @@ public abstract class ExprUtils {
 
                 hasDynamicExpr = false;
 
-            } else if (complexType) {
+            } else if (isSubQuery) {
 
                 hasDynamicExpr = holder.value != null;
 
@@ -253,7 +249,7 @@ public abstract class ExprUtils {
 
         } else if (isFieldExpand) {
 
-            if (complexType) {
+            if (isSubQuery) {
 
                 //如果查询对象为 null
 
@@ -268,7 +264,7 @@ public abstract class ExprUtils {
         }
 
         //自动加大挂号
-        if ((hasText(c.paramExpr()) || complexType) && !isExistsOp) {
+        if ((hasText(c.paramExpr()) || isSubQuery) && !isExistsOp) {
             //尝试自动加挂号
             paramExpr = autoAroundParentheses("", paramExpr, "");
         }

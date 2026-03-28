@@ -18,21 +18,25 @@ public interface SelectBuilder<T extends SelectBuilder<T, DOMAIN>, DOMAIN> {
         return select(true, columnNames);
     }
 
-    default T select(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return select(true, attrReadFunctions);
+    default <R> T select(LambdaMethodAttr<DOMAIN, R>... lambdaMethodAttrs) {
+        return select(
+
+                Stream.of(lambdaMethodAttrs)
+                        .filter(Objects::nonNull)
+                        .map(LambdaMethodAttr::getAttrName)
+                        .toArray(String[]::new)
+        );
     }
 
     /**
      * 增加选择字段
      *
      * @param isAppend
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T select(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-
-        //快速返回，优化性能
-        return (Boolean.TRUE.equals(isAppend)) ? select(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new)) : (T) this;
+    default <R>  T select(Boolean isAppend, LambdaMethodAttr<DOMAIN, R>... lambdaMethodAttrs) {
+        return Boolean.TRUE.equals(isAppend) ? select(lambdaMethodAttrs) : (T) this;
     }
 
     /**

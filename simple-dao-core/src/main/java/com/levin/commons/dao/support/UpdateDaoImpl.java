@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +115,12 @@ public class UpdateDaoImpl<T>
 
             //参数
             paramValue = holder.value;
+        }
+
+        if (paramValue != null
+                && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
+
+            paramValue = PrimitiveValueWrapper.of(paramValue);
         }
 
         append(expr, paramValue);

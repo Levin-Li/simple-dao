@@ -32,6 +32,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
@@ -44,10 +45,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -566,17 +564,24 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
 
     @Override
-    public T appendByAnnotations(Boolean isAppend, @javax.validation.constraints.NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
+    public T appendByAnnotations(Boolean isAppend, Class<?> attrBelongClass, String attrName, Object attrValue, Class<? extends Annotation>... annoTypes) {
 
         if (Boolean.TRUE.equals(isAppend)) {
-            processAttr(null, null, attrName, QueryAnnotationUtil.getAnnotations(annoTypes), null, attrValue);
+
+            ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+            Class<?> attrType = tryGetFieldTypeByAttrExpr(attrBelongClass, attrName, (et, field) -> {
+                fieldHolder.value = field;
+            });
+
+            processAttr(null, fieldHolder.get(), attrName, QueryAnnotationUtil.getAnnotations(annoTypes), attrType, attrValue);
         }
 
         return (T) this;
     }
 
 
-    private T processAnno(int callMethodDeep, String expr, Object value) {
+    private T processAnno(int callMethodDeep, @Nullable Class<?> attrBelongClass, String expr, Object value) {
 
         //2024.3.25 添加属性异常检查，不知道原来为啥注释这代码？？？
         Assert.hasText(expr, "attr name or expr is empty");
@@ -601,7 +606,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 || disableEmptyValueFilter
                 || !isNullOrEmptyTxt(value)) {
 
-            processWhereCondition(null, null, null, expr, value, null, annotation, null);
+            ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+            Class<?> fieldType = tryGetFieldTypeByAttrExpr(attrBelongClass, expr, (et, field) -> {
+                fieldHolder.value = field;
+            });
+
+            processWhereCondition(null, fieldHolder.get(), fieldType, expr, value, null, annotation, null);
 
         } else {
             if (logger.isDebugEnabled()) {
@@ -639,7 +650,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     public T isNull(String... entityAttrNames) {
 
         for (String entityAttrName : entityAttrNames) {
-            processAnno(2, entityAttrName, null);
+            processAnno(2, null, entityAttrName, null);
         }
 
         return (T) this;
@@ -655,16 +666,15 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     public T isNotNull(String... entityAttrNames) {
 
         for (String entityAttrName : entityAttrNames) {
-            processAnno(2, entityAttrName, null);
+            processAnno(2, null, entityAttrName, null);
         }
 
         return (T) this;
     }
 
-
     @Override
-    public T isNullOrEq(String entityAttrName, Object paramValue) {
-        appendByAnnotations(true, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
+    public T isNullOrEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        appendByAnnotations(true, attrBelongClass, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
         return (T) this;
     }
 
@@ -677,8 +687,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T eq(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T eq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -689,8 +699,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notEq(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T notEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -701,8 +711,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T gt(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T gt(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -713,8 +723,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T lt(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T lt(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -725,8 +735,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T gte(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T gte(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -737,8 +747,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T lte(String entityAttrName, Object paramValue) {
-        return processAnno(2, entityAttrName, paramValue);
+    public T lte(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValue);
     }
 
     /**
@@ -751,8 +761,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T between(String entityAttrName, Object... paramValues) {
-        return processAnno(2, entityAttrName, paramValues);
+    public T between(Class<?> attrBelongClass, String entityAttrName, Object... paramValues) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValues);
     }
 
     /**
@@ -765,8 +775,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notBetween(String entityAttrName, Object... paramValues) {
-        return processAnno(2, entityAttrName, paramValues);
+    public T notBetween(Class<?> attrBelongClass, String entityAttrName, Object... paramValues) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValues);
     }
 
     /**
@@ -777,8 +787,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T in(String entityAttrName, Object... paramValues) {
-        return processAnno(2, entityAttrName, paramValues);
+    public T in(Class<?> attrBelongClass, String entityAttrName, Object... paramValues) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValues);
     }
 
     /**
@@ -789,8 +799,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notIn(String entityAttrName, Object... paramValues) {
-        return processAnno(2, entityAttrName, paramValues);
+    public T notIn(Class<?> attrBelongClass, String entityAttrName, Object... paramValues) {
+        return processAnno(2, attrBelongClass, entityAttrName, paramValues);
     }
 
 
@@ -838,7 +848,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         } else {
             //忽略 paramValues
-            return processAnno(3, "", exprOrQueryObj);
+            return processAnno(3, null, "", exprOrQueryObj);
         }
 
         if (hasText(expr)) {
@@ -860,8 +870,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T contains(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T contains(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     /**
@@ -872,8 +882,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notContains(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T notContains(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     /**
@@ -884,8 +894,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T startsWith(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T startsWith(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     /**
@@ -896,8 +906,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T endsWith(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T endsWith(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     /**
@@ -908,8 +918,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notStartsWith(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T notStartsWith(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     /**
@@ -920,8 +930,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @return
      */
     @Override
-    public T notEndsWith(String entityAttrName, String keyword) {
-        return processAnno(2, entityAttrName, keyword);
+    public T notEndsWith(Class<?> attrBelongClass, String entityAttrName, String keyword) {
+        return processAnno(2, attrBelongClass, entityAttrName, keyword);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1814,14 +1824,24 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                     // throw new UnsupportedOperationException(oldExpr);
                 }
 
+
+                ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+                Class<?> attrType = tryGetFieldTypeByAttrExpr(null, name, (et, field) -> {
+                    fieldHolder.value = field;
+                });
+
                 Annotation[] varAnnotations = {opAnno};
 
-                processAttr(queryParam, null, name, varAnnotations, paramValue != null ? paramValue.getClass() : null, paramValue);
+                processAttr(queryParam, fieldHolder.get(), name, varAnnotations, attrType, paramValue);
 
             }
         }
     }
 
+    protected boolean isValidAttrType(Class<?> varType) {
+        return !(varType == null || varType == Void.class || varType == void.class);
+    }
 
     /**
      * 核心方法
@@ -1850,6 +1870,17 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     public void processAttr(final Object bean, Object fieldOrMethod, String name, Annotation[] varAnnotations, Class<?> attrType, Object value) {
 
         Assert.hasText(name, "name is empty");
+
+        if (!isValidAttrType(attrType)) {
+
+            ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+            attrType = tryGetFieldTypeByAttrExpr(null, name, (et, field) -> {
+                fieldHolder.value = field;
+            });
+
+            fieldOrMethod = fieldHolder.get();
+        }
 
         try {
             //设置脚本执行功能函数
@@ -2020,40 +2051,57 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
 
-    protected boolean isPrimitiveAttr(Object fieldOrMethod) {
-
+    protected boolean hasPrimitiveAnnotationOnFieldOrMethhod(Object fieldOrMethod) {
         if (fieldOrMethod instanceof Field) {
-
-            Field field = (Field) fieldOrMethod;
-            return field.getType().isPrimitive()
-                    || hasPrimitiveAnnotation(field.getAnnotations());
-
+            return hasPrimitiveAnnotation(((Field) fieldOrMethod).getAnnotations());
         } else if (fieldOrMethod instanceof Method) {
-
-            Method method = (Method) fieldOrMethod;
-
-            return method.getReturnType().isPrimitive()
-                    || hasPrimitiveAnnotation(method.getAnnotations());
+            return hasPrimitiveAnnotation(((Method) fieldOrMethod).getAnnotations());
         }
-
         return false;
     }
 
     protected boolean hasPrimitiveAnnotation(Annotation... varAnnotations) {
         return getDao().hasPrimitiveAnnotation(varAnnotations);
-
     }
 
-    protected boolean isComplexAttr(Object bean, Object fieldOrMethod, Class<?> varType, String name, Object value, Annotation... varAnnotations) {
+    protected boolean isWrapperParamValue(Object bean, Object fieldOrMethod, Class<?> attrType, String name, Object value, Annotation... varAnnotations) {
 
-        //如果是基本类型，则不处理
+        //如果是null, 无论否有注解，都返回false
+        //@todo 可能是有问题的
+        if (value == null
+                || BeanUtils.isSimpleValueType(value.getClass())
+                || value instanceof ValueHolder
+                || value instanceof PrimitiveValueWrapper) {
+            return false;
+        }
 
-        //@todo
+        //如果是原子类型
+        //@todo 可能有问题
+        if (isValidAttrType(attrType)) {
 
-        return !isPrimitiveAttr(fieldOrMethod)
-                && !hasPrimitiveAnnotation(varAnnotations)
-                && isComplexType(varType, value);
+            //
+            if (BeanUtils.isSimpleValueType(attrType)) {
+                return false;
+            }
 
+            // 如果类型, 实体字段本来就是复杂类型, 就要进行包装
+            if (Map.class.isAssignableFrom(attrType)
+                    || Iterable.class.isAssignableFrom(attrType)
+                    || Iterator.class.isAssignableFrom(attrType)
+                    || attrType.isArray()
+                    || attrType.isAnnotationPresent(Embeddable.class)
+            ) {
+                return true;
+            }
+
+        }
+
+        //1 首先是 有原子类型的注解
+        if (hasPrimitiveAnnotation(varAnnotations)) {
+            return true;
+        }
+
+        return hasPrimitiveAnnotationOnFieldOrMethhod(fieldOrMethod);
     }
 
     /**
@@ -2067,26 +2115,33 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param fieldOrMethod
      * @param varAnnotations
      * @param name
-     * @param varType
+     * @param attrType
      * @param value
      */
-    protected void processAttr(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> varType, Object value) {
+    protected void processAttr(final Object bean, Object fieldOrMethod, Annotation[] varAnnotations, final String name, Class<?> attrType, Object value) {
 
-//        if (isIgnore(varAnnotations)) {
-//            return;
-//        }
+        if (!isValidAttrType(attrType)) {
+
+            ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+            attrType = tryGetFieldTypeByAttrExpr(null, name, (et, field) -> {
+                fieldHolder.value = field;
+            });
+
+            fieldOrMethod = fieldHolder.get();
+        }
+
+        final boolean wrapperParamValue = isWrapperParamValue(bean, fieldOrMethod, attrType, name, value, varAnnotations);
 
         //如果没有类型，默认获取值的类型
-        if ((varType == null || varType == Object.class) && value != null) {
-            varType = value.getClass();
+        if (attrType == null && value == null) {
+            logger.warn(" *** processAttr " + name + " attrType is null and value is null.");
         }
 
-        if (varType == null && value == null) {
-            logger.warn(" *** processAttr " + name + " varType is null and value is null.");
-        }
-
-        final boolean isIterable = (varType != null && Iterable.class.isAssignableFrom(varType));
-        final boolean isArray = (varType != null && varType.isArray());
+        final boolean isMap = (attrType != null && Map.class.isAssignableFrom(attrType));
+        final boolean isIterable = (attrType != null && Iterable.class.isAssignableFrom(attrType));
+        final boolean isArray = (attrType != null && attrType.isArray());
+        final boolean isSimpleValueType = (attrType != null && BeanUtils.isSimpleValueType(attrType));
 
         final List<Annotation> daoAnnotations = new ArrayList<>(5);
 
@@ -2101,7 +2156,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             final boolean valid = isValid(annotation, bean, name, value);
 
             if (!valid) {
-
 
                 return;
             }
@@ -2136,24 +2190,17 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //如果没有注解
         if (isNotDaoAnnotation.get() && daoAnnotations.isEmpty()) {
 
-            if (isComplexAttr(bean, fieldOrMethod, varType, name, value, varAnnotations)) {
-                //递归加入条件
-                reAppendByQueryObj(value);
-            } else {
+            if (wrapperParamValue || isArray || isIterable || isSimpleValueType || isMap) {
                 //如果没有注解，不是复杂类型，则默认为等于查询
                 addAnnotationConsumer.accept(getAnnotation(Eq.class));
+            } else {
+                //递归加入条件
+                reAppendByQueryObj(value);
             }
 
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////
-        Class<?> eleType = null;
-
-        if (isArray) {
-            // eleType = varType.getComponentType();
-        } else if (isIterable) {
-            // ResolvableType.forInstance(bean).getGenerics()
-        }
 
         for (Annotation annotation : daoAnnotations) {
 
@@ -2180,6 +2227,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                             || (!isArray && !isIterable)
 
+                            || wrapperParamValue
+
                             //如果是扩展参数的操作，如 IN NotIn Between等
                             || op.isExpandParamValue()
 
@@ -2187,20 +2236,20 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                             || !op.isNeedParamExpr()) {
 
 //                 if (isValid(annotation, bean, name, value)) {
-                processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, varType, value, annotation);
+                processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, attrType, value, annotation);
 //                  }
 
             } else {
+
+                // 如果
                 //可迭代参数
                 Iterable<?> iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable<?>) value;
 
                 for (Object paramValue : iterableData) {
 
-                    Class<?> newVarType = (paramValue == null) ? null : (paramValue == value ? varType : paramValue.getClass());
-
                     //迭代循环
                     if (isValid(annotation, bean, name, paramValue)) {
-                        processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, newVarType, paramValue, annotation);
+                        processAttrAnno(bean, fieldOrMethod, varAnnotations, newName, attrType, paramValue, annotation);
                     }
 
                 }
@@ -2348,13 +2397,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param varType
      * @param name
      * @param value
-     * @param isComplexAttr
+     * @param isWrapperParamValue
      * @param opAnnotation
      */
     protected void processWhereCondition(final Object bean, Object fieldOrMethod, Class<?> varType, String name, Object value,
-                                         Boolean isComplexAttr, Annotation opAnnotation, Annotation[] varAnnotations) {
+                                         Boolean isWrapperParamValue, Annotation opAnnotation, Annotation[] varAnnotations) {
 
-        genExprAndProcess(bean, fieldOrMethod, varType, name, value, isComplexAttr, opAnnotation, varAnnotations, (expr, holder) -> {
+        genExprAndProcess(bean, fieldOrMethod, varType, name, value, isWrapperParamValue, opAnnotation, varAnnotations, (expr, holder) -> {
 
             Boolean having = ClassUtils.getValue(opAnnotation, E_C.having, false);
 
@@ -2370,17 +2419,45 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
 
-    protected void genExprAndProcess(final Object bean, Object fieldOrMethod, Class<?> varType, String name, Object paramValue,
-                                     Boolean isComplexAttr, Annotation opAnnotation, Annotation[] varAnnotations,
+    protected void genExprAndProcess(final Object bean, Object fieldOrMethod, Class<?> attrType, String name, Object paramValue,
+                                     Boolean isWrapperParamValue, Annotation opAnnotation, Annotation[] varAnnotations,
                                      BiConsumer<String, ValueHolder<Object>> consumer) {
         //未知的
-        final boolean complexType = Boolean.TRUE.equals(isComplexAttr)
-                || isComplexAttr(bean, fieldOrMethod, varType, name, paramValue, varAnnotations);
+        isWrapperParamValue = Boolean.TRUE.equals(isWrapperParamValue);
 
-        //包装类型
-        ValueHolder<Object> holder = new ValueHolder<>(bean, name, complexType ? paramValue : PrimitiveValueWrapper.of(paramValue));
+        if (!isValidAttrType(attrType)) {
 
-        String expr = genConditionExpr(complexType, opAnnotation, name, holder);
+            ValueHolder<Field> fieldHolder = new ValueHolder<>();
+
+            attrType = tryGetFieldTypeByAttrExpr(null, name, (et, field) -> {
+                fieldHolder.value = field;
+            });
+
+            fieldOrMethod = fieldHolder.get();
+        }
+
+        isWrapperParamValue = isWrapperParamValue || isWrapperParamValue(bean, fieldOrMethod, attrType, name, paramValue, varAnnotations);
+
+        //如果是一个复杂属性,但是值为 null 时
+
+        //如果复杂对象,但又被标记为原子属性,则包装为对象
+        if (isWrapperParamValue) {
+            paramValue = PrimitiveValueWrapper.of(paramValue);
+        }
+
+        final ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
+
+        String expr = genConditionExpr(paramValue != null
+                        && !isWrapperParamValue
+
+                        && isValidAttrType(attrType)
+                        && !BeanUtils.isSimpleValueType(attrType)
+                        && !attrType.isArray()
+                        && !Iterator.class.isAssignableFrom(attrType)
+                        && !Iterable.class.isAssignableFrom(attrType)
+                        && !Map.class.isAssignableFrom(attrType)
+
+                , opAnnotation, name, holder);
 
         consumer.accept(expr, holder);
 
@@ -2409,13 +2486,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     /**
      * 关键方法，根据注解生成SQL语句
      *
-     * @param complexType
+     * @param isSubQuery
      * @param opAnno
      * @param name
      * @param holder
      * @return
      */
-    protected String genConditionExpr(boolean complexType, Annotation opAnno, String name, final ValueHolder<?> holder) {
+    protected String genConditionExpr(boolean isSubQuery, Annotation opAnno, String name, final ValueHolder<?> holder) {
 
         C c = null;
 
@@ -2452,7 +2529,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         Function<String, String> domainFunc = (domain) -> tryEvalExprIfHasSeplExpr(holder.root, holder.value, name, domain, fieldCtxs);
 
-        return ExprUtils.genExpr(c, name, complexType, getExpectFieldType(domainFunc.apply(c.domain()), name), holder, getParamPlaceholder(),
+        return ExprUtils.genExpr(c, name, isSubQuery, tryGetFieldTypeByAttrExpr(domainFunc.apply(c.domain()), name), holder, getParamPlaceholder(),
 
                 //condition 求值回调
                 expr -> evalTrueExpr(holder.root, holder.value, name, expr, fieldCtxs),
@@ -2756,15 +2833,83 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         }
     }
 
+    protected Class<?> getEntityClassByAlias(String alias) {
+        return hasText(alias) ? aliasMap.get(alias) : null;
+    }
+
+    /**
+     * 尝试获取属性的类型
+     *
+     * @param attrExpr      u.group.name  u 是别名
+     * @param fieldConsumer
+     * @return
+     */
+    protected Class<?> tryGetFieldTypeByAttrExpr(Class<?> fallbackClass, String attrExpr, BiConsumer<Class<?>, Field> fieldConsumer) {
+
+        attrExpr = attrExpr.trim();
+
+        int indexOf = attrExpr.indexOf(".");
+
+        Class<?> entityType = null;
+
+        if (indexOf < 0) {
+
+            //如果没有点
+            entityType = hasEntityClass() ? entityClass : null;
+
+        } else {
+
+            //如果有点, 则第一个点表示实体类别名,
+            entityType = getEntityClassByAlias(attrExpr.substring(0, indexOf).trim());
+
+            if (entityType == null) {
+
+                // 安全起见, 不能获取默认的实体类
+                // entityType = hasEntityClass() ? entityClass : null;
+
+            } else {
+                //
+                attrExpr = attrExpr.substring(indexOf + 1).trim();
+            }
+
+        }
+
+        //如果没有实体类
+        if (entityType == null) {
+            //尝试获取默认的实体类
+            entityType = fallbackClass;
+        }
+
+        Class<?> tempEntityType = entityType;
+
+        return getFieldType(entityType, attrExpr, ((field, type) -> {
+
+            if (fieldConsumer != null) {
+                fieldConsumer.accept(tempEntityType, field);
+            }
+
+            //如果是枚举，且是原生查询，需要转换为字符串或是整形
+            if (isNative()
+                    && type != null
+                    && type.isEnum()
+                    && field != null) {
+                type = getDao().getEnumConvertType(field, type);
+            }
+
+            return type;
+        }));
+
+    }
+
 
     /**
      * 获取属性的数据类型
      *
-     * @param name
+     * @param attrExpr
      * @return
      */
     //@todo
-    protected Class<?> getExpectFieldType(String domain, String name) {
+    protected Class<?> tryGetFieldTypeByAttrExpr(String domain, String attrExpr) {
 
         Class<?> entityType = null;
 
@@ -2774,7 +2919,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             entityType = aliasMap.get(domain);
         }
 
-        return getFieldType(entityType, name, ((field, type) -> {
+        return getFieldType(entityType, attrExpr, ((field, type) -> {
             //如果是枚举，且是原生查询，需要转换为字符串或是整形
             if (isNative()
                     && type != null
@@ -2784,7 +2929,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             }
             return type;
         }));
-
     }
 
 

@@ -19,11 +19,11 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * @param isAppend
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T setNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return setNull(isAppend, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default T setNull(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return setNull(isAppend, Stream.of(lambdaMethodAttrs).filter(Objects::nonNull).map(LambdaMethodAttr::getAttrName).toArray(String[]::new));
     }
 
     /**
@@ -38,11 +38,11 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T setNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return setNull(true, attrReadFunctions);
+    default T setNull(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return setNull(true, lambdaMethodAttrs);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -59,12 +59,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
-     * @param attrReadFunction
+     * @param lambdaMethodAttr
      * @param paramValue
      * @return
      */
-    default T set(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return set(true, attrReadFunction.get(), paramValue);
+    default T set(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return set(true, lambdaMethodAttr, paramValue);
     }
 
     /**
@@ -81,12 +81,12 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
 
     /**
      * @param isAppend
-     * @param attrReadFunction
+     * @param lambdaMethodAttr
      * @param paramValue
      * @return
      */
-    default T set(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return set(isAppend, false, attrReadFunction.get(), paramValue);
+    default T set(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return set(isAppend, false, lambdaMethodAttr, paramValue);
     }
 
     /**
@@ -105,13 +105,26 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     /**
      * @param isAppend
      * @param incrementMode
-     * @param attrReadFunction
+     * @param lambdaMethodAttr
      * @param paramValue
      * @return
      */
-    default T set(Boolean isAppend, boolean incrementMode, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return set(isAppend, incrementMode, true, attrReadFunction.get(), paramValue);
+    default T set(Boolean isAppend, boolean incrementMode, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return set(isAppend, incrementMode, true, lambdaMethodAttr, paramValue);
     }
+
+    /**
+     * @param isAppend
+     * @param incrementMode
+     * @param autoConvertNullValueForIncrementMode
+     * @param lambdaMethodAttr
+     * @param paramValue
+     * @return
+     */
+    default T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return set(isAppend, incrementMode, autoConvertNullValueForIncrementMode, lambdaMethodAttr.get(), paramValue);
+    }
+
 
     /**
      * 设置更新字段
@@ -124,19 +137,6 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
      * @return
      */
     T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue);
-
-
-    /**
-     * @param isAppend
-     * @param incrementMode
-     * @param autoConvertNullValueForIncrementMode
-     * @param attrReadFunction
-     * @param paramValue
-     * @return
-     */
-    default T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return set(isAppend, incrementMode, autoConvertNullValueForIncrementMode, attrReadFunction.get(), paramValue);
-    }
 
     /**
      * 增加更新表达式，可设置参数

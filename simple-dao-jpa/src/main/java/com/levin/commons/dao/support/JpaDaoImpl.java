@@ -56,6 +56,7 @@ import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -435,7 +436,7 @@ public class JpaDaoImpl
 
         return Stream.of(varAnnotations)
                 .filter(Objects::nonNull).anyMatch(a ->
-                        Stream.of(org.hibernate.annotations.Type.class, Embedded.class, EmbeddedId.class, PrimitiveValue.class)
+                        Stream.of(org.hibernate.annotations.Type.class, Convert.class, Converts.class, Embedded.class, EmbeddedId.class, PrimitiveValue.class, Id.class, MapsId.class, Lob.class)
                                 .anyMatch(t -> t == a.annotationType())
                 );
     }
@@ -1773,16 +1774,15 @@ public class JpaDaoImpl
                 //如果是Map，就设置命名参数
                 for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
                     try {
-                        //没有属性会抛出异常
-                        paramValue = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
+                        //没有属性会抛出异常, 就继续尝试下一个属性
+                        final Object keyParamValue = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
-                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), paramValue));
+                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), keyParamValue));
 
                     } catch (Exception e) {
 
                     }
                 }
-
             } else {
 
                 paramValue = tryAutoConvertParamValue(isNative, parameterMap, pIndex, paramValue);
@@ -1803,9 +1803,19 @@ public class JpaDaoImpl
     }
 
     private Object tryAutoConvertParamValue(boolean isNative, Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
+
         //自动转换数据类型
         //@todo 观察，需要关注性能问题
         //@todo 数据自动转换，关注 ConditionBuilderImpl.tryToConvertValue
+
+        if (paramValue == null) {
+            return paramValue;
+        }
+
+        //参数解包, 用于兼容复杂的类型
+        if (paramValue instanceof PrimitiveValueWrapper) {
+            paramValue = ((PrimitiveValueWrapper) paramValue).get();
+        }
 
         if (paramValue == null) {
             return paramValue;
@@ -1818,21 +1828,16 @@ public class JpaDaoImpl
         }
 
         try {
-            Class<?> parameterType = parameter != null ? parameter.getParameterType() : null;
+            Class<?> requireParameterType = parameter != null ? parameter.getParameterType() : null;
 
-            if (parameterType != null
-                    && !parameterType.equals(paramValue.getClass())) {
+            if (requireParameterType != null
+                    && !requireParameterType.isAssignableFrom(paramValue.getClass())) {
 
-                paramValue = ObjectUtil.convert(paramValue, parameterType);
+                paramValue = ObjectUtil.convert(paramValue, requireParameterType);
             }
 
         } catch (Exception e) {
             logger.warn(" try to convert param [" + paramKey + "] value error: " + ExceptionUtils.getRootCauseInfo(e));
-        }
-
-        //参数解包, 用于兼容复杂的参数类型
-        if (paramValue instanceof PrimitiveValueWrapper) {
-            paramValue = ((PrimitiveValueWrapper) paramValue).get();
         }
 
         return paramValue;

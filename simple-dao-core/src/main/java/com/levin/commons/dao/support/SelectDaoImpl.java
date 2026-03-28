@@ -787,7 +787,7 @@ public class SelectDaoImpl<T>
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
-            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation,varAnnotations, (expr, holder) -> {
+            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
 
                 tryAppendHaving(bean, name, opAnnotation, expr, holder, value);
 
@@ -832,7 +832,7 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation,varAnnotations, (expr, holder) -> {
+        genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
 
             boolean isGroupBy = opAnnotation instanceof GroupBy;
 

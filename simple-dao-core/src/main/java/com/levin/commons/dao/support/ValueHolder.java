@@ -1,9 +1,18 @@
 package com.levin.commons.dao.support;
 
-import java.io.Serializable;
+
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.util.function.Supplier;
 
 
-public class ValueHolder<T> implements Serializable {
+/**
+ * @author lilw
+ */
+@Data
+@Accessors(chain = true)
+public class ValueHolder<T> implements Supplier<T> {
 
     public final Object root;
 
@@ -26,6 +35,15 @@ public class ValueHolder<T> implements Serializable {
     public ValueHolder(T value) {
         this.value = value;
         this.root = null;
+    }
+
+    public ValueHolder() {
+        this.root = null;
+    }
+
+    @Override
+    public T get() {
+        return value;
     }
 
 }

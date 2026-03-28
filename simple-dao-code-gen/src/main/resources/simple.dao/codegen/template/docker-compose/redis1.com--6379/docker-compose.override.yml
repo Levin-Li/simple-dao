@@ -1,4 +1,4 @@
 
 services:
-  redis:
+  dragonfly:
     restart: always

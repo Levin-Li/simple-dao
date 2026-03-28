@@ -1,17 +1,23 @@
 
 services:
-  redis:
-    image: redis:${REDIS_VERSION}
-    container_name: redis-server-${SERVICE_PORT}  #指定服务名
 
-    volumes:
-      - ./data-${SERVICE_PORT}:/data
-      - ./conf/redis.conf:/conf/redis.conf:ro
-      - ./custom-hosts:/etc/hosts:ro  # 只读挂载
-    command: redis-server /conf/redis.conf --port ${SERVICE_PORT} --dir /data
+  dragonfly:
+    # 明确指定稳定版，避免 latest 自动更新
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:${DRAGONFLY_VERSION}
+    container_name: dragonfly-redis-${SERVICE_PORT}
     restart: always
     privileged: true
 
-#    network_mode: host  # mac os 会失效
-    ports:
-      - "${SERVICE_PORT}:${SERVICE_PORT}"
+    network_mode: host  # mac os 会失效  ports:  去掉！！！
+    #    ports:
+    #      - "${SERVICE_PORT}:${SERVICE_PORT}"
+    command:
+      - --bind=127.0.0.1
+      - --port=6379
+      - --requirepass=bNBmfftDPvzJWU87
+      - --dbfilename=dump
+      - --dir=/data
+      - --maxmemory=4G
+    volumes:
+      - ./dragonfly-data-${SERVICE_PORT}:/data
+      - ./custom-hosts:/etc/hosts:ro  # 只读挂载

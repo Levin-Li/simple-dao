@@ -43,13 +43,12 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
         return TRUE.equals(isAppend) ? isNull(entityAttrNames) : (T) this;
     }
 
-
-    default T isNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return isNull(Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default T isNull(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return isNull(Stream.of(lambdaMethodAttrs).filter(Objects::nonNull).map(LambdaMethodAttr::getAttrName).toArray(String[]::new));
     }
 
-    default T isNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return TRUE.equals(isAppend) ? isNull(attrReadFunctions) : (T) this;
+    default T isNull(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return TRUE.equals(isAppend) ? isNull(lambdaMethodAttrs) : (T) this;
     }
 
     /**
@@ -62,12 +61,12 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
         return TRUE.equals(isAppend) ? isNotNull(entityAttrNames) : (T) this;
     }
 
-    default T isNotNull(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return isNotNull(Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default T isNotNull(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return isNotNull(Stream.of(lambdaMethodAttrs).filter(Objects::nonNull).map(LambdaMethodAttr::getAttrName).toArray(String[]::new));
     }
 
-    default T isNotNull(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return TRUE.equals(isAppend) ? isNotNull(attrReadFunctions) : (T) this;
+    default T isNotNull(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return TRUE.equals(isAppend) ? isNotNull(lambdaMethodAttrs) : (T) this;
     }
 
     /**
@@ -76,19 +75,23 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param entityAttrName 如 name
      * @return
      */
-    T isNullOrEq(String entityAttrName, Object paramValue);
+    T isNullOrEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T isNullOrEq(String entityAttrName, Object paramValue) {
+        return isNullOrEq((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T isNullOrEq(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? isNullOrEq(entityAttrName, paramValue) : (T) this;
     }
 
-    default T isNullOrEq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return isNullOrEq(attrReadFunction.get(), paramValue);
+    default T isNullOrEq(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return isNullOrEq(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
 
-    default T isNullOrEq(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? isNullOrEq(attrReadFunction, paramValue) : (T) this;
+    default T isNullOrEq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? isNullOrEq(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -99,18 +102,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T eq(String entityAttrName, Object paramValue);
+    T eq(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T eq(String entityAttrName, Object paramValue) {
+        return eq((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T eq(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? eq(entityAttrName, paramValue) : (T) this;
     }
 
-    default T eq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return eq(attrReadFunction.get(), paramValue);
+    default T eq(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return eq(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
-    default T eq(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? eq(attrReadFunction, paramValue) : (T) this;
+    default T eq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? eq(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -120,18 +127,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T notEq(String entityAttrName, Object paramValue);
+    T notEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T notEq(String entityAttrName, Object paramValue) {
+        return eq((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T notEq(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? notEq(entityAttrName, paramValue) : (T) this;
     }
 
-    default T notEq(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return notEq(attrReadFunction.get(), paramValue);
+    default T notEq(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return notEq(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
-    default T notEq(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? notEq(attrReadFunction, paramValue) : (T) this;
+    default T notEq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? notEq(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -141,18 +152,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T gt(String entityAttrName, Object paramValue);
+    T gt(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T gt(String entityAttrName, Object paramValue) {
+        return gt((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T gt(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? gt(entityAttrName, paramValue) : (T) this;
     }
 
-    default T gt(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return gt(attrReadFunction.get(), paramValue);
+    default T gt(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return gt(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
-    default T gt(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? gt(attrReadFunction, paramValue) : (T) this;
+    default T gt(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? gt(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -162,18 +177,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T lt(String entityAttrName, Object paramValue);
+    T lt(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T lt(String entityAttrName, Object paramValue) {
+        return lt((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T lt(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? lt(entityAttrName, paramValue) : (T) this;
     }
 
-    default T lt(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return lt(attrReadFunction.get(), paramValue);
+    default T lt(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return lt(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
-    default T lt(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? lt(attrReadFunction, paramValue) : (T) this;
+    default T lt(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? lt(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -183,18 +202,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T gte(String entityAttrName, Object paramValue);
+    T gte(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T gte(String entityAttrName, Object paramValue) {
+        return gte((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T gte(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? gte(entityAttrName, paramValue) : (T) this;
     }
 
-    default T gte(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return gte(attrReadFunction.get(), paramValue);
+    default T gte(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return gte(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
-    default T gte(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? gte(attrReadFunction, paramValue) : (T) this;
+    default T gte(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? gte(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -204,19 +227,23 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      * @param paramValue     如果值为null ，将不加入查询条件
      * @return
      */
-    T lte(String entityAttrName, Object paramValue);
+    T lte(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
+
+    default T lte(String entityAttrName, Object paramValue) {
+        return lte((Class<?>) null, entityAttrName, paramValue);
+    }
 
     default T lte(Boolean isAppend, String entityAttrName, Object paramValue) {
         return TRUE.equals(isAppend) ? lte(entityAttrName, paramValue) : (T) this;
     }
 
-    default T lte(PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return lte(attrReadFunction.get(), paramValue);
+    default T lte(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return lte(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValue);
     }
 
 
-    default T lte(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object paramValue) {
-        return TRUE.equals(isAppend) ? lte(attrReadFunction, paramValue) : (T) this;
+    default T lte(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return TRUE.equals(isAppend) ? lte(lambdaMethodAttr, paramValue) : (T) this;
     }
 
     /**
@@ -226,18 +253,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T between(String entityAttrName, Object... paramValues);
+    T between(Class<?> attrBelongClass, String entityAttrName, Object... paramValues);
+
+    default T between(String entityAttrName, Object... paramValues) {
+        return between((Class<?>) null, entityAttrName, paramValues);
+    }
 
     default T between(Boolean isAppend, String entityAttrName, Object... paramValues) {
         return TRUE.equals(isAppend) ? between(entityAttrName, paramValues) : (T) this;
     }
 
-    default T between(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return between(attrReadFunction.get(), paramValues);
+    default T between(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return between(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValues);
     }
 
-    default T between(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return TRUE.equals(isAppend) ? between(attrReadFunction, paramValues) : (T) this;
+    default T between(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return TRUE.equals(isAppend) ? between(lambdaMethodAttr, paramValues) : (T) this;
     }
 
 
@@ -248,18 +279,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T notBetween(String entityAttrName, Object... paramValues);
+    T notBetween(Class<?> attrBelongClass, String entityAttrName, Object... paramValues);
+
+    default T notBetween(String entityAttrName, Object... paramValues) {
+        return notBetween((Class<?>) null, entityAttrName, paramValues);
+    }
 
     default T notBetween(Boolean isAppend, String entityAttrName, Object... paramValues) {
         return TRUE.equals(isAppend) ? notBetween(entityAttrName, paramValues) : (T) this;
     }
 
-    default T notBetween(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return notBetween(attrReadFunction.get(), paramValues);
+    default T notBetween(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return notBetween(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValues);
     }
 
-    default T notBetween(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return TRUE.equals(isAppend) ? notBetween(attrReadFunction, paramValues) : (T) this;
+    default T notBetween(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return TRUE.equals(isAppend) ? notBetween(lambdaMethodAttr, paramValues) : (T) this;
     }
 
     /**
@@ -267,19 +302,23 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T in(String entityAttrName, Object... paramValues);
+    T in(Class<?> attrBelongClass, String entityAttrName, Object... paramValues);
+
+    default T in(String entityAttrName, Object... paramValues) {
+        return in((Class<?>) null, entityAttrName, paramValues);
+    }
 
     default T in(Boolean isAppend, String entityAttrName, Object... paramValues) {
         return TRUE.equals(isAppend) ? in(entityAttrName, paramValues) : (T) this;
     }
 
-    default T in(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return in(attrReadFunction.get(), paramValues);
+    default T in(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return in(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValues);
     }
 
 
-    default T in(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return TRUE.equals(isAppend) ? in(attrReadFunction, paramValues) : (T) this;
+    default T in(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return TRUE.equals(isAppend) ? in(lambdaMethodAttr, paramValues) : (T) this;
     }
 
     /**
@@ -287,18 +326,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T notIn(String entityAttrName, Object... paramValues);
+    T notIn(Class<?> attrBelongClass, String entityAttrName, Object... paramValues);
+
+    default T notIn(String entityAttrName, Object... paramValues) {
+        return notIn((Class<?>) null, entityAttrName, paramValues);
+    }
 
     default T notIn(Boolean isAppend, String entityAttrName, Object... paramValues) {
         return TRUE.equals(isAppend) ? notIn(entityAttrName, paramValues) : (T) this;
     }
 
-    default T notIn(PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return notIn(attrReadFunction.get(), paramValues);
+    default T notIn(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return notIn(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), paramValues);
     }
 
-    default T notIn(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, Object... paramValues) {
-        return TRUE.equals(isAppend) ? notIn(attrReadFunction, paramValues) : (T) this;
+    default T notIn(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object... paramValues) {
+        return TRUE.equals(isAppend) ? notIn(lambdaMethodAttr, paramValues) : (T) this;
     }
 
     /**
@@ -306,33 +349,40 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T contains(String entityAttrName, String keyword);
+    T contains(Class<?> attrBelongClass, String entityAttrName, String keyword);
 
+    default T contains(String entityAttrName, String keyword) {
+        return contains((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T contains(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? contains(entityAttrName, keyword) : (T) this;
     }
 
-    default T contains(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return contains(attrReadFunction.get(), keyword);
+    default T contains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return contains(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T contains(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? contains(attrReadFunction, keyword) : (T) this;
+    default T contains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? contains(lambdaMethodAttr, keyword) : (T) this;
     }
 
-    T notContains(String entityAttrName, String keyword);
+    T notContains(Class<?> attrBelongClass, String entityAttrName, String keyword);
+
+    default T notContains(String entityAttrName, String keyword) {
+        return notContains((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T notContains(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? notContains(entityAttrName, keyword) : (T) this;
     }
 
-    default T notContains(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return notContains(attrReadFunction.get(), keyword);
+    default T notContains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return notContains(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T notContains(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? notContains(attrReadFunction, keyword) : (T) this;
+    default T notContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? notContains(lambdaMethodAttr, keyword) : (T) this;
     }
 
     /**
@@ -340,18 +390,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T startsWith(String entityAttrName, String keyword);
+    T startsWith(Class<?> attrBelongClass, String entityAttrName, String keyword);
+
+    default T startsWith(String entityAttrName, String keyword) {
+        return startsWith((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T startsWith(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? startsWith(entityAttrName, keyword) : (T) this;
     }
 
-    default T startsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return startsWith(attrReadFunction.get(), keyword);
+    default T startsWith(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return startsWith(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T startsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? startsWith(attrReadFunction, keyword) : (T) this;
+    default T startsWith(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? startsWith(lambdaMethodAttr, keyword) : (T) this;
     }
 
     /**
@@ -359,18 +413,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T notStartsWith(String entityAttrName, String keyword);
+    T notStartsWith(Class<?> attrBelongClass, String entityAttrName, String keyword);
+
+    default T notStartsWith(String entityAttrName, String keyword) {
+        return notStartsWith((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T notStartsWith(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? notStartsWith(entityAttrName, keyword) : (T) this;
     }
 
-    default T notStartsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return notStartsWith(attrReadFunction.get(), keyword);
+    default T notStartsWith(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return notStartsWith(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T notStartsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? notStartsWith(attrReadFunction, keyword) : (T) this;
+    default T notStartsWith(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? notStartsWith(lambdaMethodAttr, keyword) : (T) this;
     }
 
     /**
@@ -378,18 +436,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T endsWith(String entityAttrName, String keyword);
+    T endsWith(Class<?> attrBelongClass, String entityAttrName, String keyword);
+
+    default T endsWith(String entityAttrName, String keyword) {
+        return endsWith((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T endsWith(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? endsWith(entityAttrName, keyword) : (T) this;
     }
 
-    default T endsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return endsWith(attrReadFunction.get(), keyword);
+    default T endsWith(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return endsWith(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T endsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? endsWith(attrReadFunction, keyword) : (T) this;
+    default T endsWith(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? endsWith(lambdaMethodAttr, keyword) : (T) this;
     }
 
     /**
@@ -397,18 +459,22 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
      *
      * @return
      */
-    T notEndsWith(String entityAttrName, String keyword);
+    T notEndsWith(Class<?> attrBelongClass, String entityAttrName, String keyword);
+
+    default T notEndsWith(String entityAttrName, String keyword) {
+        return notEndsWith((Class<?>) null, entityAttrName, keyword);
+    }
 
     default T notEndsWith(Boolean isAppend, String entityAttrName, String keyword) {
         return TRUE.equals(isAppend) ? notEndsWith(entityAttrName, keyword) : (T) this;
     }
 
-    default T notEndsWith(PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return notEndsWith(attrReadFunction.get(), keyword);
+    default T notEndsWith(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return notEndsWith(lambdaMethodAttr.getAttrClass(), lambdaMethodAttr.getAttrName(), keyword);
     }
 
-    default T notEndsWith(Boolean isAppend, PFunction<DOMAIN, ?> attrReadFunction, String keyword) {
-        return TRUE.equals(isAppend) ? notEndsWith(attrReadFunction, keyword) : (T) this;
+    default T notEndsWith(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
+        return TRUE.equals(isAppend) ? notEndsWith(lambdaMethodAttr, keyword) : (T) this;
     }
 
     /**

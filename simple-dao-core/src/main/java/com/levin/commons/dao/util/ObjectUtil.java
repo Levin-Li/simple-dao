@@ -134,6 +134,7 @@ public abstract class ObjectUtil {
 
         //对枚举类型进行转换
         if (source instanceof EnumDesc) {
+
             //如果是数值，并且源是枚举
             if (Number.class.isAssignableFrom(targetType))
                 source = ((EnumDesc) source).code();
@@ -148,7 +149,6 @@ public abstract class ObjectUtil {
         }
 
         return conversionService.convert(source, targetType);
-
     }
 
 

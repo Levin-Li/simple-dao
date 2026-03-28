@@ -220,6 +220,6 @@ public interface ConditionBuilder<T extends ConditionBuilder<T, DOMAIN>, DOMAIN>
      * @param annoTypes
      * @return this
      */
-    T appendByAnnotations(Boolean isAppend, @NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes);
+    T appendByAnnotations(Boolean isAppend, Class<?> attrClass, @NotNull String attrName, Object attrValue, Class<? extends Annotation>... annoTypes);
 
 }

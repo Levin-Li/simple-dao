@@ -70,8 +70,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(true, null, columnNames);
     }
 
-    default T orderBy(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, null, attrReadFunctions);
+    default T orderBy(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, null, lambdaMethodAttrs);
     }
 
     /**
@@ -83,8 +83,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(true, type, columnNames);
     }
 
-    default T orderBy(OrderBy.Type type, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, type, attrReadFunctions);
+    default T orderBy(OrderBy.Type type, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, type, lambdaMethodAttrs);
     }
 
     /**
@@ -98,8 +98,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(isAppend, null, columnNames);
     }
 
-    default T orderBy(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(isAppend, null, attrReadFunctions);
+    default T orderBy(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(isAppend, null, lambdaMethodAttrs);
     }
 
     /**
@@ -118,22 +118,22 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
     /**
      * 增加降序排序
      *
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderByDesc(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, OrderBy.Type.Desc, attrReadFunctions);
+    default T orderByDesc(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, OrderBy.Type.Desc, lambdaMethodAttrs);
     }
 
     /**
      * 增加降序排序
      *
      * @param scope
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderByDesc(OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, OrderBy.Type.Desc, scope, attrReadFunctions);
+    default T orderByDesc(OrderBy.Scope scope, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, OrderBy.Type.Desc, scope, lambdaMethodAttrs);
     }
 
     /**
@@ -145,8 +145,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
         return orderBy(isAppend, OrderBy.Type.Desc, columnNames);
     }
 
-    default T orderByDesc(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(isAppend, OrderBy.Type.Desc, attrReadFunctions);
+    default T orderByDesc(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(isAppend, OrderBy.Type.Desc, lambdaMethodAttrs);
     }
 
     /**
@@ -164,11 +164,11 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
     /**
      * 增加升序排序
      *
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderByAsc(Boolean isAppend, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(isAppend, OrderBy.Type.Asc, attrReadFunctions);
+    default T orderByAsc(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(isAppend, OrderBy.Type.Asc, lambdaMethodAttrs);
     }
 
     /**
@@ -188,15 +188,15 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
     /**
      * 增加升序排序
      *
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderByAsc(PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, OrderBy.Type.Asc, attrReadFunctions);
+    default T orderByAsc(LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, OrderBy.Type.Asc, lambdaMethodAttrs);
     }
 
-    default T orderByAsc(OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, OrderBy.Type.Asc, scope, attrReadFunctions);
+    default T orderByAsc(OrderBy.Scope scope, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, OrderBy.Type.Asc, scope, lambdaMethodAttrs);
     }
 
     /**
@@ -204,11 +204,11 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      *
      * @param isAppend
      * @param type
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderBy(Boolean isAppend, OrderBy.Type type, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(isAppend, type, null, attrReadFunctions);
+    default T orderBy(Boolean isAppend, OrderBy.Type type, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(isAppend, type, null, lambdaMethodAttrs);
     }
 
     /**
@@ -239,11 +239,11 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      *
      * @param type
      * @param scope             生效的作用域
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderBy(OrderBy.Type type, OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrReadFunctions) {
-        return orderBy(true, type, scope, attrReadFunctions);
+    default T orderBy(OrderBy.Type type, OrderBy.Scope scope, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
+        return orderBy(true, type, scope, lambdaMethodAttrs);
     }
 
     /**
@@ -252,13 +252,23 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      * @param isAppend
      * @param type
      * @param scope             生效的作用域
-     * @param attrReadFunctions
+     * @param lambdaMethodAttrs
      * @return
      */
-    default T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, PFunction<DOMAIN, ?>... attrReadFunctions) {
+    default T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, LambdaMethodAttr<DOMAIN, ?>... lambdaMethodAttrs) {
 
-        //快速返回，优化性能
-        return (Boolean.TRUE.equals(isAppend)) ? orderBy(isAppend, type, scope, Stream.of(attrReadFunctions).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new)) : (T) this;
+        if (Boolean.TRUE.equals(isAppend)) {
+
+            orderBy(true, type, scope,
+                    Stream.of(lambdaMethodAttrs)
+                            .filter(Objects::nonNull)
+                            .map(LambdaMethodAttr::getAttrName)
+                            .toArray(String[]::new)
+            );
+
+        }
+
+        return (T) this;
     }
 
     /**

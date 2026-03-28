@@ -26,8 +26,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 //import javax.persistence.*;
-import javax.persistence.Embeddable;
-import javax.persistence.IdClass;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -516,7 +515,7 @@ public abstract class QueryAnnotationUtil {
      * @param propertyName 支持复杂属性
      * @return
      */
-    public static Class<?> getFieldType(Class<?> type, String propertyName, BiFunction<Field, Class<?>, Class<?>> biFunction) {
+    public static Class<?> getFieldType(Class<?> type, String propertyName, BiFunction<Field, Class<?>, Class<?>> fieldTypeConvert) {
 
         if (type == null || !hasText(propertyName)) {
             return null;
@@ -530,7 +529,7 @@ public abstract class QueryAnnotationUtil {
 
         for (int i = 0; i < names.length; i++) {
 
-            field = ReflectionUtils.findField(type, names[i]);
+            field = ReflectionUtils.findField(type, names[i].trim());
 
             if (field == null) {
                 return null;
@@ -542,7 +541,7 @@ public abstract class QueryAnnotationUtil {
 
         }
 
-        return biFunction != null ? biFunction.apply(field, type) : type;
+        return fieldTypeConvert != null ? fieldTypeConvert.apply(field, type) : type;
     }
 
 
@@ -1099,7 +1098,12 @@ public abstract class QueryAnnotationUtil {
 
                 //不是特殊标记的
                 && !varType.isAnnotationPresent(PrimitiveValue.class)
-                && !varType.isAnnotationPresent(Embeddable.class)
+                && !varType.isAnnotationPresent(Embedded.class)
+                && !varType.isAnnotationPresent(EmbeddedId.class)
+                && !varType.isAnnotationPresent(Convert.class)
+                && !varType.isAnnotationPresent(Converts.class)
+
+                //@todo hibrenate 自定义类型
 
                 ;
     }

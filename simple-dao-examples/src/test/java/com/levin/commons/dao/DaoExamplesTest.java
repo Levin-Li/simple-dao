@@ -173,8 +173,8 @@ public class DaoExamplesTest {
 
 
         long count = dao.selectFrom(TestEntity.class, "e")
-                .select(E_TestEntity.name)
-                .contains(E_TestEntity.name, "test")
+                .select(AbstractNamedEntityObject::getName)
+                .contains(AbstractNamedEntityObject::getName, "test")
                 .count();
 
 
@@ -290,9 +290,9 @@ public class DaoExamplesTest {
                 user.setGroup(group)
                         .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
 
-                user.setRoleList(Arrays.asList("R_SA","R_TEST"));
+                user.setRoleList(Arrays.asList("R_SA", "R_TEST"));
 
-                user.setLogs(Arrays.asList(new OperationLog().setLogText(""+user.hashCode())));
+                user.setLogs(Arrays.asList(new OperationLog().setLogText("" + user.hashCode())));
 
                 dao.create(user);
 
@@ -1234,6 +1234,10 @@ public class DaoExamplesTest {
         userUpdateDao
                 .set(true, true, E_User.score, 1)
                 .set(true, true, E_User.name, "+")
+
+                //
+                .set(User::getRoleList, Arrays.asList("R_NEW_ADMIN1", "R_NEW_ADMIN2"))
+
                 .eq(E_User.enable, false);
 
         String statement = userUpdateDao.genFinalStatement();
@@ -1241,6 +1245,7 @@ public class DaoExamplesTest {
         System.out.println(statement);
 
         Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )"));
+        Assert.isTrue(statement.contains("roleList = :?"));
 
         userUpdateDao.update();
     }
