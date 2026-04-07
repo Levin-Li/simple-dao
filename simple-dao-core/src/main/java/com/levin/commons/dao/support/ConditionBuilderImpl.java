@@ -3,6 +3,7 @@ package com.levin.commons.dao.support;
 import javax.persistence.*;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.*;
@@ -798,7 +799,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     @Override
     public T exists(Object exprOrQueryObj, Object... paramValues) {
-        return processOp(Op.Exists.getOperator(), exprOrQueryObj, paramValues);
+        return processExistOp(Op.Exists.getOperator(), exprOrQueryObj, paramValues);
     }
 
     /**
@@ -810,10 +811,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     @Override
     public T notExists(Object exprOrQueryObj, Object... paramValues) {
-        return processOp(Op.NotExists.getOperator(), exprOrQueryObj, paramValues);
+        return processExistOp(Op.NotExists.getOperator(), exprOrQueryObj, paramValues);
     }
 
-    protected T processOp(String op, Object exprOrQueryObj, Object paramValues) {
+    protected T processExistOp(String op, Object exprOrQueryObj, Object paramValues) {
 
         if (exprOrQueryObj == null) {
             return (T) this;
@@ -840,9 +841,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             //子查询, 子查询
             ValueHolder<Object> holder = new ValueHolder<>(exprOrQueryObj);
-
             expr = buildSubQuery(holder);
-
             paramValues = Arrays.asList(paramValues, holder.value);
 
         } else {
@@ -1838,13 +1837,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 && entityType != Void.class
                 && entityType != void.class
 
-                && (Stream.of(Entity.class, MappedSuperclass.class).anyMatch(t -> entityType.isAssignableFrom(t)))
+                && (Stream.of(Entity.class, MappedSuperclass.class).anyMatch(t -> entityType.isAnnotationPresent(t)))
 
                 ;
-    }
-
-    protected boolean isValidAttrType(Class<?> varType) {
-        return !(varType == null || varType == Void.class || varType == void.class);
     }
 
     /**
@@ -1871,7 +1866,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param valueType
      * @param value
      */
-    public void processAttrWithLogic(final Object bean, final AnnotatedElement fieldOrMethod, String name, Annotation[] varAnnotations, ResolvableType valueType, Object value) {
+    public void processAttrWithLogic(final Object bean, final AnnotatedElement fieldOrMethod, String name, Annotation[] varAnnotations, final ResolvableType valueType, Object value) {
 
         //如果是包括忽略注解，则直接忽略
         if (isIgnore(fieldOrMethod, varAnnotations)) {
@@ -1881,7 +1876,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         Assert.notBlank(name, "name is empty");
 
         if (value != null && valueType != null) {
-            Assert.isTrue(valueType.isInstance(value), "value[{}] is not instance of {}", value.getClass(), valueType);
+            // Assert.isTrue(valueType.resolve().isAssignableFrom(value.getClass()), "value[{}] is not instance of {}", value.getClass(), valueType);
         }
 
         try {
@@ -2182,14 +2177,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param value
      */
     protected void processAttrWithoutLogic(final Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, final String name
-            , ResolvableType valueType, Object value) {
+            , final ResolvableType valueType, Object value) {
 
         if (isIgnore(fieldOrMethod, varAnnotations)) {
             return;
         }
 
         if (value != null && valueType != null) {
-            Assert.isTrue(valueType.isInstance(value), "value[{}] is not instance of {}", value.getClass(), valueType);
+            // Assert.isTrue(valueType.resolve().isAssignableFrom(value.getClass()), "value[{}] is not instance of {}", value.getClass(), valueType);
         }
 
         final Class<?> realValueType = value != null ? value.getClass() : (valueType != null ? valueType.resolve() : null);
@@ -2280,7 +2275,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             final boolean wrapperParamValue = isWrapper.get()
                     || wrapperParamValueByAnno
                     //如果属性类型是实体字段的类型, 而当前值类型和属性值类型一致并且不是简单类型, 则需要包装
-                    || (entityAttrType != null && entityAttrType.isInstance(value) && !isSimpleValueType);
+                    || (!isSimpleValueType && entityAttrType != null && (entityAttrType.isInstance(value) || entityAttrType.isAssignableFrom(ObjUtil.defaultIfNull(valueType, ResolvableType.NONE))));
 
             //如果是扩展参数的操作 或是 不是迭代类型
             Op op = getOp(annotation);
@@ -2369,7 +2364,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param opAnnotation
      * @return 是否继续处理，true继续.false则停止
      */
-    public void processAttrAnno(final Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType valueType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(final Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, final ResolvableType valueType, Object value, Annotation opAnnotation) {
 
         if (isIgnore(fieldOrMethod, varAnnotations)) {
             return;
@@ -2443,7 +2438,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 || annotationType == IsNull.class
                 || !isNullOrEmptyTxt(value)) {
 
-            processWhereCondition(null, null,null, name, null, value, null, QueryAnnotationUtil.getAnnotation(annotationType), null);
+            processWhereCondition(null, null, null, name, null, value, null, QueryAnnotationUtil.getAnnotation(annotationType), null);
 
         }
 
@@ -2474,7 +2469,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param isWrapperParamValue
      * @param opAnnotation
      */
-    protected void processWhereCondition(final Object bean, AnnotatedElement fieldOrMethod, ResolvableType entityAttrType, String name, ResolvableType valueType, Object value,
+    protected void processWhereCondition(final Object bean, AnnotatedElement fieldOrMethod, ResolvableType entityAttrType, String name, final ResolvableType valueType, Object value,
                                          Boolean isWrapperParamValue, Annotation opAnnotation, Annotation[] varAnnotations) {
 
         genExprAndProcess(bean, fieldOrMethod, entityAttrType, name, valueType, value, isWrapperParamValue, opAnnotation, varAnnotations, (expr, holder) -> {
@@ -2493,14 +2488,15 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
 
-    protected void genExprAndProcess(final Object bean, AnnotatedElement fieldOrMethod, ResolvableType entityAttrType, String name, ResolvableType valueType, Object paramValue,
+    protected void genExprAndProcess(final Object bean, AnnotatedElement fieldOrMethod, ResolvableType entityAttrType, String name, final ResolvableType valueType, Object paramValue,
                                      Boolean isWrapperParamValue, Annotation opAnnotation, Annotation[] varAnnotations,
                                      BiConsumer<String, ValueHolder<Object>> consumer) {
 
         Assert.notNull(opAnnotation, "opAnnotation is null");
 
+        final Class<?> realValueType = paramValue != null ? paramValue.getClass() : (valueType != null ? valueType.resolve() : null);
 
-        if (isWrapperParamValue == null) {
+        if (isWrapperParamValue == null && paramValue != null) {
 
             isWrapperParamValue = isNeedWrapperValue(fieldOrMethod, varAnnotations);
 
@@ -2517,13 +2513,12 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             isWrapperParamValue = isWrapperParamValue
                     || isWrapper.get()
                     //如果属性类型是实体字段的类型, 而当前值类型和属性值类型一致并且不是简单类型, 则需要包装
-                    || (entityAttrType != null && paramValue != null && entityAttrType.isInstance(paramValue) && !BeanUtils.isSimpleValueType(paramValue.getClass()));
-        }
-
-        //如果是一个复杂属性,但是值为 null 时
-
-        if (paramValue != null) {
-            valueType = ResolvableType.forClass(paramValue.getClass());
+                    || (
+                    !BeanUtils.isSimpleValueType(paramValue.getClass())
+                            && entityAttrType != null
+                            && (entityAttrType.isInstance(paramValue) || entityAttrType.isAssignableFrom(ObjUtil.defaultIfNull(valueType, ResolvableType.NONE)))
+            )
+            ;
         }
 
         //未知的
@@ -2537,13 +2532,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         final ValueHolder<Object> holder = new ValueHolder<>(bean, name, paramValue);
 
         String expr = genConditionExpr(paramValue != null
+                        && realValueType != null
                         && !isWrapperParamValue
 
-                        && !BeanUtils.isSimpleValueType(paramValue.getClass())
-                        && !valueType.isArray()
-                        && !Iterator.class.isAssignableFrom(paramValue.getClass())
-                        && !Iterable.class.isAssignableFrom(paramValue.getClass())
-                        && !Map.class.isAssignableFrom(paramValue.getClass())
+                        && !BeanUtils.isSimpleValueType(realValueType)
+                        && !realValueType.isArray()
+                        && !Iterator.class.isAssignableFrom(realValueType)
+                        && !Iterable.class.isAssignableFrom(realValueType)
+                        && !Map.class.isAssignableFrom(realValueType)
 
                 , opAnnotation, entityAttrType, name, holder);
 
@@ -2964,7 +2960,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         Class<?> entityType = StrUtil.isBlank(alias) ? entityClass : getEntityClassByAlias(alias);
 
         //如果没有实体类
-        if (!isValidEntityClass(entityType)) {
+        if (!isValidEntityClass(entityType)
+                && fallbackEntityClass != null) {
             //尝试获取默认的实体类
             entityType = fallbackEntityClass;
         }
