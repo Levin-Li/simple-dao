@@ -9,12 +9,15 @@ import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.ResolvableType;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -102,7 +105,10 @@ public class UpdateDaoImpl<T>
             return this;
         }
 
-        // Assert.notBlank(entityAttrName, "entityAttrName unset");
+        //参数值为空, 则直接调用设置为NULL
+        if (paramValue == null) {
+            return setNull(true, entityAttrName);
+        }
 
         String expr = aroundColumnPrefix(entityAttrName) + " = " + getParamPlaceholder();
 
@@ -118,8 +124,12 @@ public class UpdateDaoImpl<T>
         }
 
         if (paramValue != null
+                && !(paramValue instanceof ValueHolder)
+                && !(paramValue instanceof Map)
+                && !(paramValue instanceof PrimitiveValueWrapper)
                 && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
 
+            //转为包装类
             paramValue = PrimitiveValueWrapper.of(paramValue);
         }
 
@@ -241,16 +251,16 @@ public class UpdateDaoImpl<T>
     }
 
     @Override
-    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name,
-                                Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations,Boolean isWrapperParamValue,ResolvableType entityAttrType, String name,
+                                ResolvableType varType, Object value, Annotation opAnnotation) {
 
-//        if (isIgnore(varAnnotations)) {
-//            return;
-//        }
+        if (isIgnore(fieldOrMethod, varAnnotations)) {
+            return;
+        }
 
         if (isPackageStartsWith(UPDATE_PACKAGE_NAME, opAnnotation)) {
 
-            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
+            genExprAndProcess(bean, fieldOrMethod, entityAttrType, name, varType,value, isWrapperParamValue, opAnnotation, varAnnotations, (expr, holder) -> {
 
                 Update updateOp = (opAnnotation instanceof Update) ? (Update) opAnnotation : null;
 
@@ -270,7 +280,7 @@ public class UpdateDaoImpl<T>
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
                             && expr.contains("=")) {
 
-                        expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType, expr, holder);
+                        expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType.resolve(), expr, holder);
                     }
                 }
 
@@ -282,7 +292,7 @@ public class UpdateDaoImpl<T>
 
         //允许 Update 注解和其它注解同时存在
 
-        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        super.processAttrAnno(bean, fieldOrMethod, varAnnotations,  isWrapperParamValue, entityAttrType,name, varType, value, opAnnotation);
     }
 
     /**
@@ -296,7 +306,9 @@ public class UpdateDaoImpl<T>
     protected String genIncrementExpr(boolean isNative, boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
 
         //数据库字段的类型，必须存在更新的对象
-        final Class<?> dbColumnType = QueryAnnotationUtil.getFieldType(entityClass, name);
+        ResolvableType fieldType = QueryAnnotationUtil.getFieldType(entityClass, name, null);
+
+        final Class<?> dbColumnType =  fieldType!= null ? fieldType.resolve() : null;
 
         final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("Increment update can't support type[" + dbColumnType + "]，Only Number or String");
 

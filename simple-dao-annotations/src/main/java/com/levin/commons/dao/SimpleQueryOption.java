@@ -27,6 +27,4 @@ public class SimpleQueryOption implements QueryOption {
 
     JoinOption[] joinOptions;
 
-   // SimpleJoinOption[] simpleJoinOptions;
-
 }

@@ -26,11 +26,13 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.springframework.core.ResolvableType;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -293,26 +295,6 @@ public class SelectDaoImpl<T>
 
         //加入表达式
         join(" , " + targetName + " " + targetAlias + " ");
-
-        return this;
-    }
-
-    /**
-     * 连接
-     *
-     * @param isAppend
-     * @param joinOptions
-     * @return
-     */
-    @Override
-    public SelectDao<T> join(Boolean isAppend, SimpleJoinOption... joinOptions) {
-
-        if (Boolean.TRUE.equals(isAppend) && joinOptions != null) {
-
-            Stream.of(joinOptions).filter(Objects::nonNull).forEachOrdered(
-                    o -> join(true, o.entityClass(), o.alias())
-            );
-        }
 
         return this;
     }
@@ -598,22 +580,25 @@ public class SelectDaoImpl<T>
      * @param opAnnotation
      */
     @Override
-    public void processAttrAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    public void processAttrAnno(Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType varType, Object value, Annotation opAnnotation) {
+
+        if (isIgnore(fieldOrMethod, varAnnotations)) {
+            return;
+        }
 
         //处理SelectColumn注解
-        processSelectAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
+        processSelectAnno(bean, fieldOrMethod, varAnnotations, isWrapperParamValue, entityAttrType, name, varType, value, opAnnotation, null);
 
         //同时处理GroupBy和Having子句
-        processStatAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation, null);
+        processStatAnno(bean, fieldOrMethod, varAnnotations, isWrapperParamValue, entityAttrType, name, varType, value, opAnnotation, null);
 
         //处理排序注解
-        processOrderByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        processOrderByAnno(bean, fieldOrMethod, varAnnotations, isWrapperParamValue, entityAttrType, name, varType, value, opAnnotation);
 
         //处理抓取
-        processFetchSetByAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        processFetchSetByAnno(bean, fieldOrMethod, varAnnotations, isWrapperParamValue, entityAttrType, name, varType, value, opAnnotation);
 
-
-        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, name, varType, value, opAnnotation);
+        super.processAttrAnno(bean, fieldOrMethod, varAnnotations, isWrapperParamValue, entityAttrType, name, varType, value, opAnnotation);
 
     }
 
@@ -628,7 +613,7 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    protected void processOrderByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType varType, Object value, Annotation opAnnotation) {
 
         if ((opAnnotation instanceof OrderBy)) {
 
@@ -667,7 +652,7 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processFetchSetByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation) {
+    protected void processFetchSetByAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType varType, Object value, Annotation opAnnotation) {
 
         if (!(opAnnotation instanceof Fetch)) {
             return;
@@ -783,11 +768,11 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processSelectAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation, String alias) {
+    protected void processSelectAnno(Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType varType, Object value, Annotation opAnnotation, String alias) {
 
         if (isPackageStartsWith(SELECT_PACKAGE_NAME, opAnnotation)) {
 
-            genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
+            genExprAndProcess(bean, fieldOrMethod, entityAttrType, name, varType, value, isWrapperParamValue, opAnnotation, varAnnotations, (expr, holder) -> {
 
                 tryAppendHaving(bean, name, opAnnotation, expr, holder, value);
 
@@ -823,7 +808,7 @@ public class SelectDaoImpl<T>
      * @param value
      * @param opAnnotation
      */
-    protected void processStatAnno(Object bean, Object fieldOrMethod, Annotation[] varAnnotations, String name, Class<?> varType, Object value, Annotation opAnnotation, String alias) {
+    protected void processStatAnno(Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, Boolean isWrapperParamValue, ResolvableType entityAttrType, String name, ResolvableType varType, Object value, Annotation opAnnotation, String alias) {
 
         //如果不是同个包，或是 opAnnotation 为 null
         if (!QueryAnnotationUtil.isSamePackage(opAnnotation, GroupBy.class)) {
@@ -832,7 +817,7 @@ public class SelectDaoImpl<T>
 
         hasStatColumns = true;
 
-        genExprAndProcess(bean, fieldOrMethod, varType, name, value, null, opAnnotation, varAnnotations, (expr, holder) -> {
+        genExprAndProcess(bean, fieldOrMethod, entityAttrType, name, varType, value, isWrapperParamValue, opAnnotation, varAnnotations, (expr, holder) -> {
 
             boolean isGroupBy = opAnnotation instanceof GroupBy;
 
@@ -1644,7 +1629,7 @@ public class SelectDaoImpl<T>
             throw new IllegalArgumentException("Annotation " + name + " not found");
         }
 
-        processStatAnno(null, null, new Annotation[]{annotation}, expr, null, paramValues, annotation, alias);
+        processStatAnno(null, null, new Annotation[]{annotation}, null, null, expr, null, paramValues, annotation, alias);
 
         return this;
     }
@@ -1679,7 +1664,7 @@ public class SelectDaoImpl<T>
 
         Annotation groupBy = QueryAnnotationUtil.getAnnotation(GroupBy.class);
 
-        processStatAnno(null, null, new Annotation[]{groupBy}, expr, null, paramValues, groupBy, alias);
+        processStatAnno(null, null, new Annotation[]{groupBy}, null, null, expr, null, paramValues, groupBy, alias);
 
         return this;
     }

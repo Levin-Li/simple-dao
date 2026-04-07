@@ -296,7 +296,6 @@ public abstract class ExprUtils {
 
         final String oldParamExpr = tempOldParamExpr;
 
-
         //如果需要参数的操作
         if (op.isNeedParamExpr()) {
             paramExpr = genCaseExpr(domain, aroundColumnPrefixFunc, ctxEvalFunc, paramExpr, c.paramCases());

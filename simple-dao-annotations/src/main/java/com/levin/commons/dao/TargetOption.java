@@ -15,7 +15,7 @@ import java.lang.annotation.*;
  * @version 2.0.0
  */
 
-@Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -58,7 +58,6 @@ public @interface TargetOption {
      */
     Class<?> resultClass() default Void.class;
 
-
     /**
      * 别名
      * <p>
@@ -68,25 +67,16 @@ public @interface TargetOption {
      */
     String alias() default "";
 
-
     /**
      * 连接选项
      * <p>
-     * 
+     *
      * <p>
      * 更新和删除操作，此属性无意义
      *
      * @return
      */
     JoinOption[] joinOptions() default {};
-
-    /**
-     * 笛卡儿积连接
-     * 取消支持，请使用 JoinOption
-     *
-     * @return
-     */
-    //SimpleJoinOption[] simpleJoinOptions() default {};
 
     /**
      * 是否是安全模式
@@ -104,13 +94,4 @@ public @interface TargetOption {
      * @return
      */
     int maxResults() default -1;
-
-    /**
-     * 固定条件
-     *
-     * @return
-     */
-    //@Deprecated
-    //String fixedCondition() default "";
-
 }

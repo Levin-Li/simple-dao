@@ -1,6 +1,10 @@
 package com.levin.commons.dao.support;
 
 
+import antlr.CharBuffer;
+import antlr.Token;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.domain.MultiTenantObject;
@@ -22,6 +26,11 @@ import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.internal.antlr.HqlBaseLexer;
+import org.hibernate.hql.internal.antlr.HqlTokenTypes;
+import org.hibernate.hql.internal.ast.HqlParser;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -36,6 +45,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.format.support.FormattingConversionService;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
@@ -48,8 +58,11 @@ import javax.persistence.Parameter;
 import javax.persistence.metamodel.EntityType;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -156,8 +169,10 @@ import static com.levin.commons.dao.util.QueryAnnotationUtil.expandAndFilterNull
 public class JpaDaoImpl
         extends AbstractDaoFactory
         implements JpaDao, ApplicationContextAware {
+
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
-    private final Integer hibernateVersion;
+
+    private final String hibernateVersion;
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -307,7 +322,6 @@ public class JpaDaoImpl
         hibernateVersion = getHibernateVersion();
     }
 
-
     @PostConstruct
     public void init() {
 
@@ -327,33 +341,11 @@ public class JpaDaoImpl
     }
 
 
-    public static Integer getHibernateVersion() {
+    public static String getHibernateVersion() {
 
-        try {
-            //5.2.10.Final
+        String version = org.hibernate.Version.getVersionString();
 
-            String version = (String) ClassUtils
-                    .forName("org.hibernate.Version", JpaDaoImpl.class.getClassLoader())
-                    .getDeclaredMethod("getVersionString")
-                    .invoke(null);
-
-            //
-            logger.info("*** org.hibernate ***  Version:" + version);
-
-            return Integer.parseInt(version.substring(0, version.indexOf(".")));
-
-        } catch (IllegalAccessException e) {
-            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
-        } catch (InvocationTargetException e) {
-            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
-        } catch (NoSuchMethodException e) {
-            logger.error("getHibernateVersion error" + ExceptionUtils.getRootCauseInfo(e));
-        } catch (ClassNotFoundException e) {
-        } catch (Exception e) {
-            logger.warn("getHibernateVersion " + ExceptionUtils.getRootCauseInfo(e));
-        }
-
-        return null;
+        return version;
     }
 
     @Override
@@ -1398,6 +1390,68 @@ public class JpaDaoImpl
     }
 
 
+    /**
+     * 同时提取 命名参数 和 位置参数
+     *
+     * @param statementFragment      JPQL 片段
+     * @param outputNamedParams      接收命名参数 (:xxx)
+     * @param outputPositionalParams 输出位置参数 (?)
+     * @return 位置参数个数
+     */
+    public Integer parseStatementFragmentParameters(String statementFragment, Set<String> outputNamedParams, Set<Integer> outputPositionalParams) {
+
+        if (statementFragment == null || statementFragment.isBlank()) {
+            return null;
+        }
+
+        final HqlBaseLexer lexer = new HqlBaseLexer(new StringReader(statementFragment));
+
+        Token token;
+
+        int positionalParamCnt = 0;
+
+
+        try {
+            while ((token = lexer.nextToken()) != null) {
+
+                if (token.getType() == HqlTokenTypes.PARAM) {
+
+                    String text = token.getText();
+
+                    if (text == null)
+                        continue;
+
+                    text = text.trim();
+
+                    if (text.equals(":?") || text.equals("?")) {
+
+                        outputPositionalParams.add(++positionalParamCnt);
+
+                    } else if (text.startsWith("?")) {
+
+                        try {
+                            outputPositionalParams.add(Integer.parseInt(text.substring(1).trim()));
+                        } catch (NumberFormatException e) {
+                            throw new QuerySyntaxException("Invalid parameter: " + text);
+                        }
+
+                    } else if (text.startsWith(":")) {
+                        // 命名参数 :xxx
+                        outputNamedParams.add(text.substring(1).trim());
+                    } else {
+                        throw new IllegalArgumentException("Invalid parameter: " + text);
+                    }
+                }
+            }
+        } catch (TokenStreamException e) {
+            throw new BadSqlGrammarException("parseStatementFragmentParameters", statementFragment, new SQLException(e));
+        }
+
+        return positionalParamCnt;
+
+    }
+
+
     @Override
     public <T> List<T> find(int start, int count, String statement, Object... paramValues) {
         return find(false, null, start, count, statement, paramValues);
@@ -1458,6 +1512,9 @@ public class JpaDaoImpl
         //@todo hibernate 5.2.17 对结果类的映射，不支持自定义的类型
         // setResultTransformer 实际使用时无法获取到字段名，也许是 hibernate bug
         // query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+
+
+        SessionFactoryImplementor sf = getEntityManagerFactory().unwrap(SessionFactoryImplementor.class);
 
 
         if (isNative) {
@@ -1770,6 +1827,16 @@ public class JpaDaoImpl
         }
 
         for (Object paramValue : paramValueList) {
+
+            //参数解包, 用于兼容复杂的类型
+            if (paramValue instanceof PrimitiveValueWrapper) {
+                paramValue = ((PrimitiveValueWrapper) paramValue).get();
+            }
+
+            if (paramValue instanceof ValueHolder) {
+                paramValue = ((ValueHolder) paramValue).get();
+            }
+
             if (paramValue instanceof Map) {
                 //如果是Map，就设置命名参数
                 for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
@@ -1812,15 +1879,6 @@ public class JpaDaoImpl
             return paramValue;
         }
 
-        //参数解包, 用于兼容复杂的类型
-        if (paramValue instanceof PrimitiveValueWrapper) {
-            paramValue = ((PrimitiveValueWrapper) paramValue).get();
-        }
-
-        if (paramValue == null) {
-            return paramValue;
-        }
-
         Parameter parameter = parameterMap.get(paramKey);
 
         if (parameter == null && (paramKey instanceof Number)) {
@@ -1853,7 +1911,7 @@ public class JpaDaoImpl
     public List flattenParams(List valueHolder, Object... paramValues) {
 
         if (valueHolder == null) {
-            valueHolder = new ArrayList();
+            valueHolder = new ArrayList(7);
         }
 
         if (paramValues == null) {
@@ -1861,12 +1919,18 @@ public class JpaDaoImpl
         }
 
         //扁平化 Map
-        Map<String, Object> namedParams = new LinkedHashMap<>();
+        final Map<String, Object> namedParams = new LinkedHashMap<>();
 
         for (Object paramValue : paramValues) {
-            if (paramValue instanceof Collection) {
-                for (Object pv : ((Collection) paramValue)) {
+
+            if (paramValue instanceof Iterable) {
+                for (Object pv : ((Iterable) paramValue)) {
                     flattenParams(valueHolder, pv);
+                }
+            } else if (paramValue instanceof Iterator) {
+                Iterator iterator = (Iterator) paramValue;
+                while (iterator.hasNext()) {
+                    flattenParams(valueHolder, iterator.next());
                 }
             } else if (paramValue != null && paramValue.getClass().isArray()) {
                 int length = Array.getLength(paramValue);
@@ -1879,6 +1943,7 @@ public class JpaDaoImpl
             } else {
                 valueHolder.add(paramValue);
             }
+
         }
 
         if (namedParams.size() > 0) {

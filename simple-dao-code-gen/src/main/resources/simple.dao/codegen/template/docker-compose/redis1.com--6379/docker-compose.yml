@@ -1,10 +1,10 @@
 
 services:
 
-  dragonfly:
+  redis:
     # 明确指定稳定版，避免 latest 自动更新
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:${DRAGONFLY_VERSION}
-    container_name: dragonfly-redis-${SERVICE_PORT}
+    image: redis:${REDIS_VERSION}
+    container_name: redis-${SERVICE_PORT}
     restart: always
     privileged: true
 
@@ -12,12 +12,16 @@ services:
     #    ports:
     #      - "${SERVICE_PORT}:${SERVICE_PORT}"
     command:
-      - --bind=127.0.0.1
-      - --port=6379
-      - --requirepass=bNBmfftDPvzJWU87
-      - --dbfilename=dump
-      - --dir=/data
-      - --maxmemory=4G
+      - --bind 127.0.0.1
+      - --port 6379
+#      - --requirepass
+      - --dir /data
+      - --maxmemory 2G
+      - --maxclients 50000
+      # 多线程数量 = CPU核心数
+      - --io-threads 2
+      # 开启读多线程
+      - --io-threads-do-reads yes
     volumes:
-      - ./dragonfly-data-${SERVICE_PORT}:/data
+      - ./data-${SERVICE_PORT}:/data
       - ./custom-hosts:/etc/hosts:ro  # 只读挂载

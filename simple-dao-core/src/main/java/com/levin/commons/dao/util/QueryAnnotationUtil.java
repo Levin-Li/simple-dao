@@ -502,9 +502,6 @@ public abstract class QueryAnnotationUtil {
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Class<?> getFieldType(Class<?> type, String propertyName) {
-        return getFieldType(type, propertyName, null);
-    }
 
     /**
      * 获取一个对象属性的数据类型
@@ -515,7 +512,7 @@ public abstract class QueryAnnotationUtil {
      * @param propertyName 支持复杂属性
      * @return
      */
-    public static Class<?> getFieldType(Class<?> type, String propertyName, BiFunction<Field, Class<?>, Class<?>> fieldTypeConvert) {
+    public static ResolvableType getFieldType(Class<?> type, String propertyName, BiFunction<Field, ResolvableType, ResolvableType> fieldTypeConvert) {
 
         if (type == null || !hasText(propertyName)) {
             return null;
@@ -523,25 +520,34 @@ public abstract class QueryAnnotationUtil {
 
         String[] names = propertyName.split("\\.");
 
-        ResolvableType owner = null;
+        ResolvableType owner = ResolvableType.forClass(type);
 
         Field field = null;
 
         for (int i = 0; i < names.length; i++) {
 
-            field = ReflectionUtils.findField(type, names[i].trim());
+            String name = names[i].trim();
+
+            if (name.isBlank()) {
+                continue;
+            }
+
+            field = ReflectionUtils.findField(owner.resolve(), name);
 
             if (field == null) {
                 return null;
             }
 
+            //字段类型
             owner = ResolvableType.forField(field, owner);
-
-            type = owner.resolve(field.getType());
 
         }
 
-        return fieldTypeConvert != null ? fieldTypeConvert.apply(field, type) : type;
+        if (field == null) {
+            return null;
+        }
+
+        return fieldTypeConvert != null ? fieldTypeConvert.apply(field, owner) : owner;
     }
 
 
@@ -1229,10 +1235,6 @@ public abstract class QueryAnnotationUtil {
 
     public static boolean isIgnore(Class<?> clazz) {
         return clazz.isAnnotationPresent(Ignore.class);
-    }
-
-    public static boolean isIgnore(Field field) {
-        return field.isAnnotationPresent(Ignore.class);
     }
 
 }

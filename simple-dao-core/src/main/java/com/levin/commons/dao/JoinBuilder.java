@@ -71,16 +71,6 @@ public interface JoinBuilder<T extends JoinBuilder<T, DOMAIN>, DOMAIN> {
     T join(Boolean isAppend, String... joinStatements);
 
     /**
-     * 笛卡儿积
-     * 自然连接
-     *
-     * @param isAppend
-     * @param joinOptions
-     * @return
-     */
-    T join(Boolean isAppend, SimpleJoinOption... joinOptions);
-
-    /**
      * 增加连接
      *
      * @param isAppend

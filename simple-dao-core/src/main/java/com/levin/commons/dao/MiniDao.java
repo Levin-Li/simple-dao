@@ -9,6 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public interface MiniDao extends DeepCopier {
 
@@ -87,6 +88,16 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     boolean hasPrimitiveAnnotation(Annotation... varAnnotations);
+
+    /**
+     * 解析语句片段, 获取参数列表
+     *
+     * @param statementFragment
+     * @param outputNamedParams
+     * @param outputPositionalParams
+     * @return 返回位置参数的个数
+     */
+    Integer parseStatementFragmentParameters(String statementFragment, Set<String> outputNamedParams, Set<Integer> outputPositionalParams);
 
     /**
      * 是否是实体类
