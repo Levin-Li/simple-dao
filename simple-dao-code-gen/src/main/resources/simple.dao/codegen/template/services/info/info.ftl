@@ -10,7 +10,7 @@ import lombok.experimental.*;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 //import com.fasterxml.jackson.annotation.*;
 /////////////////////////////////////////////////////

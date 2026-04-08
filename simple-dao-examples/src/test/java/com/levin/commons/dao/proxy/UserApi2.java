@@ -4,7 +4,7 @@ import com.levin.commons.dao.JpaDao;
 import com.levin.commons.service.proxy.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 @API2
 /*@API

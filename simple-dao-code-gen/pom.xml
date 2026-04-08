@@ -29,35 +29,35 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact</artifactId>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-repository-metadata</artifactId>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -65,7 +65,7 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-settings</artifactId>
             <scope>provided</scope>
-            <version>${maven-plugin-plugin.version}</version>
+            <version>${maven.version}</version>
         </dependency>
 
         <dependency>
@@ -124,13 +124,13 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
         <dependency>
@@ -146,7 +146,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
 
@@ -218,7 +218,7 @@
 
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc8</artifactId>
+            <artifactId>ojdbc11</artifactId>
         </dependency>
 
         <!-- 达梦 -->
@@ -248,7 +248,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hibernate</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
         </dependency>
 
@@ -271,7 +271,7 @@
         <dependency>
             <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-55</artifactId>
+            <artifactId>hypersistence-utils-hibernate-71</artifactId>
         </dependency>
 
     </dependencies>
@@ -285,6 +285,10 @@
                 <artifactId>maven-plugin-plugin</artifactId>
 
                 <inherited>true</inherited>
+
+                <configuration>
+                    <goalPrefix>simple-dao-codegen</goalPrefix>
+                </configuration>
 
                 <executions>
                     <execution>

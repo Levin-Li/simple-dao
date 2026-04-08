@@ -182,7 +182,7 @@ public class CodeGeneratorMojo extends BaseMojo {
      * springboot 版本
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.7.15";
+    private String springBootStarterParentVersion = "4.0.5";
 
     /**
      * 忽略的实体类，类名正则表达式

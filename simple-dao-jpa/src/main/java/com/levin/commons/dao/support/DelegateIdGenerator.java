@@ -3,29 +3,32 @@ package com.levin.commons.dao.support;
 import com.levin.commons.service.support.SpringContextHolder;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 /**
  * 代理的ID生成器
  */
+
 public class DelegateIdGenerator implements IdentifierGenerator {
 
     IdentifierGenerator identifierGenerator;
 
-    transient Properties params;
     transient Type type;
-    transient ServiceRegistry serviceRegistry;
+
+    transient GeneratorCreationContext creationContext;
+    transient Properties parameters;
 
     static boolean isLoaded = false;
+
     static IdentifierGenerator ctxIdentifierGenerator;
 
     /**
@@ -76,35 +79,32 @@ public class DelegateIdGenerator implements IdentifierGenerator {
 
             if (ctxIdentifierGenerator != null) {
                 //初始一次
-                ctxIdentifierGenerator.configure(type, params, serviceRegistry);
+                ctxIdentifierGenerator.configure(creationContext, parameters);
             }
         }
 
         this.identifierGenerator = ctxIdentifierGenerator;
 
         if (this.identifierGenerator == null) {
-            //使用默认的生成器
-            this.identifierGenerator = new UUIDGenerator();
-            this.identifierGenerator.configure(type, params, serviceRegistry);
+            throw new IdentifierGenerationException("spring context not [IdentifierGenerator] bean");
         }
 
         return identifierGenerator;
     }
 
-    @Override
-    public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-        this.params = new Properties();
-        this.params.putAll(params);
-        this.type = type;
-        this.serviceRegistry = serviceRegistry;
+    public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+
+        this.creationContext = creationContext;
+        this.parameters = parameters;
+        this.type = creationContext.getType();
     }
 
     @Override
-    public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+    public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 
-        Serializable id = getIdentifierGenerator().generate(session, object);
+        Object id = getIdentifierGenerator().generate(session, object);
 
-        Class returnedClass = type.getReturnedClass();
+        Class<?> returnedClass = type.getReturnedClass();
 
         if (!returnedClass.isInstance(id)) {
 

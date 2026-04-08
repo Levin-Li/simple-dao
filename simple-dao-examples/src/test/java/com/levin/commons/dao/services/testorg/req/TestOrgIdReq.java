@@ -11,7 +11,7 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;

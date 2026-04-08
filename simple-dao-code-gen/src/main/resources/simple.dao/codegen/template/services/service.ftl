@@ -13,8 +13,8 @@ import org.springframework.util.*;
 import java.util.*;
 import java.util.stream.*;
 import java.util.function.*;
-import javax.validation.*;
-import javax.validation.constraints.*;
+import jakarta.validation.*;
+import jakarta.validation.constraints.*;
 
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
@@ -93,8 +93,8 @@ public interface ${className} {
     * @return defaultPagingData 分页数据
     */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, PFunction<${entityName},?>... selectColumns){
-        return selectQuery(req, paging, Stream.of(selectColumns).filter(Objects::nonNull).map(PFunction::get).toArray(String[]::new));
+    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, LambdaMethodAttr<${entityName},?>... selectColumns){
+        return selectQuery(req, paging, Stream.of(selectColumns).filter(Objects::nonNull).map(LambdaMethodAttr::get).toArray(String[]::new));
     }
 
     /**

@@ -7,7 +7,7 @@ import com.levin.commons.dao.domain.User;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @TargetOption(entityClass = User.class)
 @Data

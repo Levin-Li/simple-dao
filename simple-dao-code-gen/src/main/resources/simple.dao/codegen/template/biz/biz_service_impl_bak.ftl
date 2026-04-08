@@ -8,7 +8,7 @@ import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.*;
 
-import javax.annotation.*;
+import jakarta.annotation.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 //import org.springframework.dao.*;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import cn.hutool.core.lang.*;
-import javax.persistence.EntityExistsException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.PersistenceException;
 
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
@@ -92,7 +92,7 @@ import ${imp};
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 
-//*** 提示 *** 如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
+//*** 提示 *** 如果要注释缓存注解的代码可以在实体类上加上@jakarta.persistence.Cacheable(false)，然后重新生成代码
 <#if !isCacheableEntity>//</#if>@CacheConfig(cacheNames = ${serviceName}.CACHE_NAME, cacheResolver = PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 
 public class ${className} extends BaseService<${className}> implements Biz${serviceName} {

@@ -47,7 +47,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
      * springboot 版本
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.7.15";
+    private String springBootStarterParentVersion = "4.0.5";
 
     /**
      * 是否允许使用Dubbo，自动生成Dubbo相关的配置

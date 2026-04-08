@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity(name = "simple_dao_test_entity")
 //@DynamicInsert
@@ -41,6 +41,12 @@ public class TestEntity
     @GeneratedValue
     private Long id;
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
+
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
@@ -61,6 +67,18 @@ public class TestEntity
     @Schema(title = "父ID")
     @Column(length = 128)
     protected Long parentId;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getParentId() {
+        return (ID) parentId;
+    }
+
+    @Override
+    public TestEntity setParentId(Long parentId) {
+        this.parentId = parentId;
+        return this;
+    }
 
     @Desc("删除状态")
     @Column(nullable = false)

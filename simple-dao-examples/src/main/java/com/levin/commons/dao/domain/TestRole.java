@@ -4,7 +4,6 @@ import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.AbstractMultiTenantObject;
 import com.levin.commons.dao.domain.support.AbstractNamedMultiTenantObject;
-import com.levin.commons.dao.domain.support.E_AbstractNamedEntityObject;
 import com.levin.commons.service.domain.EnumDesc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
@@ -14,7 +13,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 /**
@@ -72,6 +71,12 @@ public class TestRole extends AbstractNamedMultiTenantObject {
     @GeneratedValue(generator = "default_uuid")
     @Column(length = 64)
     protected String id;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
 
     @Schema(title = "编码")
     @Column(nullable = false, length = 128)

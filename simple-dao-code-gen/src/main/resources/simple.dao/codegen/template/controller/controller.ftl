@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.validation.annotation.*;
 import org.springframework.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import java.util.*;
-import javax.annotation.*;
+import jakarta.annotation.*;
 
-import javax.servlet.http.*;
+import jakarta.servlet.http.*;
 
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
@@ -26,7 +26,7 @@ import com.levin.commons.dao.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.ui.annotation.*;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 import ${modulePackageName}.controller.*;
 import ${modulePackageName}.*;

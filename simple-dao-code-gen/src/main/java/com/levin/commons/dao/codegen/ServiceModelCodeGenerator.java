@@ -63,10 +63,10 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.*;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -587,7 +587,7 @@ public final class ServiceModelCodeGenerator {
                         throw new RuntimeException(e);
                     }
                 })
-                .filter(clazz -> clazz.isAnnotationPresent(javax.persistence.Entity.class))
+                .filter(clazz -> clazz.isAnnotationPresent(jakarta.persistence.Entity.class))
                 .filter(clazz -> !clazz.isAnnotationPresent(Ignore.class))
                 .collect(Collectors.toList());
 
@@ -2184,7 +2184,7 @@ public final class ServiceModelCodeGenerator {
 
             if (isMatch(content.trim(), action)) {
 
-                fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()).stream().filter(s -> !s.contains("javax.persistence.")).collect(Collectors.toList()));
+                fieldModel.getImports().addAll(getImportList(cUnit.getCompilationUnit()).stream().filter(s -> !s.contains("jakarta.persistence.")).collect(Collectors.toList()));
 
                 //复制原样的注解内容
                 result.add(content);
@@ -2641,8 +2641,8 @@ public final class ServiceModelCodeGenerator {
                     , field.getAnnotations());
 
 
-            //javax.validation.constraints.Size
-            //javax.validation.constraints
+            //jakarta.validation.constraints.Size
+            //jakarta.validation.constraints
 
 
             if (fieldModel.getTextLength() != null) {

@@ -9,7 +9,7 @@ import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.service.support.*;
 import com.levin.commons.utils.*;
 
-import javax.annotation.*;
+import jakarta.annotation.*;
 
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.*;
@@ -17,7 +17,8 @@ import org.springframework.core.env.*;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
@@ -33,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  *
  */
-@Configuration(PLUGIN_PREFIX + "${className}")
+@AutoConfiguration(PLUGIN_PREFIX + "${className}")
 @Slf4j
 
 // Spring data jpa scan，jpa querydsl entity class ...

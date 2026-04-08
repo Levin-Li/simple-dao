@@ -3,8 +3,6 @@ package com.levin.commons.dao.codegen.db.table;
 
 import com.levin.commons.dao.codegen.db.DbType;
 
-import javax.annotation.Nullable;
-
 /**
  * Query
  *
@@ -21,7 +19,7 @@ public interface DBTableService {
      * 表信息查询 SQL
      * 不传表面，则查训所有的表
      */
-    String tableSql(@Nullable String tableName);
+    String tableSql(String tableName);
 
     /**
      * 表名称

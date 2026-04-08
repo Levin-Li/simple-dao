@@ -114,7 +114,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
      * springboot 版本
      */
     @Parameter
-    private String springBootStarterParentVersion = "2.7.15";
+    private String springBootStarterParentVersion = "4.0.5";
 
     /**
      * 要忽略的表

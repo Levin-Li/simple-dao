@@ -1,6 +1,6 @@
 package com.levin.commons.dao.support;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjUtil;
@@ -68,7 +68,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     public static final String DELIMITER = " , ";
 
-    protected javax.validation.Validator validator;
+    protected jakarta.validation.Validator validator;
 
     /// ///////////////////////////////////////////////////////
     protected Class<DOMAIN> entityClass;
@@ -214,12 +214,12 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (T) this;
     }
 
-    public javax.validation.Validator getValidator() {
+    public jakarta.validation.Validator getValidator() {
         return validator;
     }
 
 
-    public T setValidator(javax.validation.Validator validator) {
+    public T setValidator(jakarta.validation.Validator validator) {
         this.validator = validator;
         return (T) this;
     }

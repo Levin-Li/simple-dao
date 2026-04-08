@@ -1,7 +1,6 @@
 package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
-import com.levin.commons.dao.support.GenericJsonConverter;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
@@ -11,9 +10,13 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+import org.hibernate.type.SqlTypes;
+
 import java.util.List;
 
 /**
@@ -33,6 +36,12 @@ public class User
     @Id
     @GeneratedValue
     private Long id;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
 
     @Column
     String state;
@@ -57,12 +66,13 @@ public class User
     String belongOrgList;
 
     @Schema(description = "角色列表")
-    @Type(type = "json")
+//    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "varchar", length = 1024)
     List<String> roleList;
 
     @Schema(description = "角色列表")
-    @Type(type = "json")
+    @Type(JsonType.class)
     @Column(columnDefinition = "json")
     List<OperationLog> logs;
 }

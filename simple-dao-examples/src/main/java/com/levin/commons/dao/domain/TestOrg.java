@@ -1,8 +1,6 @@
 package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.annotation.Contains;
-import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
-import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.dao.domain.support.AbstractTreeObject;
 import com.levin.commons.service.domain.EnumDesc;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,9 +8,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 示例代码
@@ -85,9 +84,27 @@ public class TestOrg extends AbstractTreeObject<String, TestOrg>
     @Column(length = 64)
     protected String id;
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
+
     @Schema(title = "父ID")
     @Column(length = 64)
     protected String parentId;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getParentId() {
+        return (ID) parentId;
+    }
+
+    @Override
+    public TestOrg setParentId(String parentId) {
+        this.parentId = parentId;
+        return this;
+    }
 
     @Schema(title = "租户ID")
     @Column(length = 64)
@@ -108,7 +125,8 @@ public class TestOrg extends AbstractTreeObject<String, TestOrg>
 
     @Schema(title = "类型")
     @Column(nullable = false, length = 64)
-    @Type(type = "EnumDesc")
+    @Enumerated(EnumType.STRING)
+    //@JdbcTypeCode(SqlTypes.VARCHAR)
     protected OrgType type;
 
     @Schema(title = "所属行业")

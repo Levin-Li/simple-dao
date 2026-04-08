@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 //1、lobmok get set
@@ -49,6 +49,12 @@ public class WorkerNodeEntity implements Identifiable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
 
     /**
      * Type of CONTAINER: HostName, ACTUAL : IP.

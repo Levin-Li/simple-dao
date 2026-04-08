@@ -13,7 +13,7 @@ import com.levin.commons.utils.ObjectWrapperUtils;
 import com.levin.commons.service.support.SpringCacheEventListener;
 import ${modulePackageName}.cache.ModuleCacheService;
 
-import javax.annotation.*;
+import jakarta.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 import java.util.function.*;
@@ -35,10 +35,10 @@ import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 //import org.springframework.dao.*;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import cn.hutool.core.lang.*;
-import javax.persistence.EntityExistsException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.PersistenceException;
 
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
@@ -87,7 +87,7 @@ import ${imp};
 //@Validated
 @Tag(name = E_${entityName}.BIZ_NAME, description = E_${entityName}.BIZ_NAME + MAINTAIN_ACTION)
 
-//*** 提示 *** 如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
+//*** 提示 *** 如果要注释缓存注解的代码可以在实体类上加上@jakarta.persistence.Cacheable(false)，然后重新生成代码
 <#if !isCacheableEntity>//</#if>@CacheConfig(cacheNames = ${serviceName}.CACHE_NAME, cacheResolver = PLUGIN_PREFIX + "ModuleSpringCacheResolver")
 
 // *** 提示 *** 请尽量不要修改本类，如果需要修改，请在Biz${className}业务类中重写业务逻辑
@@ -149,7 +149,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
     //调用本方法会导致不会对租户ID进行过滤，如果需要调用方对租户ID进行核查
-    //如果要注释缓存注解的代码可以在实体类上加上@javax.persistence.Cacheable(false)，然后重新生成代码
+    //如果要注释缓存注解的代码可以在实体类上加上@jakarta.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return simpleDao.selectFrom(${entityName}.class).eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique(${entityName}Info.class);

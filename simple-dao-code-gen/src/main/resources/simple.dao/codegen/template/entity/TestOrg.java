@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
 
 
@@ -184,7 +184,7 @@ public class TestOrg
 
     @Schema(title = "类型")
     @Column(nullable = false, length = 64)
-    @Type(type = "EnumDesc")
+    @Type(com.levin.commons.dao.support.EnumDescType.class)
     protected OrgType type;
 
     @Schema(title = "所属行业")

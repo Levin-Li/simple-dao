@@ -6,8 +6,8 @@ import static ${modulePackageName}.entities.EntityConst.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 /////////////////////////////////////////////////////
-import javax.validation.constraints.*;
-import javax.annotation.*;
+import jakarta.validation.constraints.*;
+import jakarta.annotation.*;
 import lombok.*;
 import lombok.experimental.*;
 import java.util.*;

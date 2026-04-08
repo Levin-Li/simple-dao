@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Created by echo on 2015/11/17.
@@ -27,6 +27,12 @@ public class Task
     @Id
     @GeneratedValue
     private Long id;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
 
     @Column
     String state;

@@ -7,10 +7,10 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * Created by echo on 2015/11/17.
@@ -27,10 +27,28 @@ public class Group
     @GeneratedValue
     private Long id;
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getId() {
+        return (ID) id;
+    }
+
     //由子类去定义
     @Schema(description = "父ID")
     @Column(length = 128)
     protected Long parentId;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <ID extends java.io.Serializable> ID getParentId() {
+        return (ID) parentId;
+    }
+
+    @Override
+    public Group setParentId(Long parentId) {
+        this.parentId = parentId;
+        return this;
+    }
 
     @Desc("状态")
     String state;
@@ -40,6 +58,7 @@ public class Group
 
     @Desc("分数")
     Integer score;
+
 
 
     public Group() {

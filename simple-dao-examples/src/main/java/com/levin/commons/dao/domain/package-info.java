@@ -28,34 +28,7 @@
 @GenericGenerator(name = "hex_uuid", strategy = "org.hibernate.id.UUIDHexGenerator")
 @GenericGenerator(name = "table_gid", strategy = "org.hibernate.id.TableGenerator")
 
-// Hibernate 字段类型映射器
-//JsonType：通用 JSON 类型（适配任意 POJO / 集合）；
-//JsonBinaryType：PostgreSQL jsonb 类型；
-//JsonStringType：MySQL json 类型（字符串存储）。
-
-
-@TypeDefs({
-        @TypeDef(
-                name = "EnumDesc",
-                defaultForType = EnumDesc.class,
-                typeClass = EnumDescType.class
-        )
-        ,
-        @TypeDef(
-                name = "json",
-                typeClass = io.hypersistence.utils.hibernate.type.json.JsonType.class
-        ) ,
-        @TypeDef(
-                name = "jsonb",
-                typeClass = io.hypersistence.utils.hibernate.type.json.JsonBinaryType.class
-        )
-})
-
 package com.levin.commons.dao.domain;
 
-import com.levin.commons.dao.support.EnumDescType;
-import com.levin.commons.service.domain.EnumDesc;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;

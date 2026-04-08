@@ -16,8 +16,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import com.levin.commons.dao.*;
 
 
-import javax.persistence.Column;
-import javax.validation.constraints.*;
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.*;
 
 import lombok.*;
 import lombok.experimental.*;

@@ -35,10 +35,10 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
+        <!-- https://mvnrepository.com/artifact/jakarta.validation/validation-api -->
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -81,15 +81,6 @@
             <scope>provided</scope>
         </dependency>
         </#if>
-        <#if moduleType == 'starter'>
-
-        <dependency>
-            <!-- 编译时自动生成spring的自举配置文件，支持2.7以后的规则（org.springframework.boot.autoconfigure.AutoConfiguration.imports） -->
-            <groupId>net.dreamlu</groupId>
-            <artifactId>mica-auto</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        </#if>
         <#if moduleType == 'service_impl' || moduleType == 'starter' || moduleType == 'api'>
 
         <dependency>
@@ -129,7 +120,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -191,13 +182,13 @@
         <#-- api spring-boot-starter-web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-webmvc-core</artifactId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <scope>provided</scope>
         </dependency>
         </#if>
@@ -220,7 +211,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
 
@@ -232,7 +223,7 @@
     <dependency>
         <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
         <groupId>io.hypersistence</groupId>
-        <artifactId>hypersistence-utils-hibernate-55</artifactId>
+        <artifactId>hypersistence-utils-hibernate-71</artifactId>
     </dependency>
 
     <#if enableOakBaseFramework>
@@ -329,7 +320,7 @@
 
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
 
         <dependency>
@@ -398,7 +389,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <dependency>
@@ -408,7 +399,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
         <dependency>
@@ -468,7 +459,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-test-classic</artifactId>
             <scope>test</scope>
         </dependency>
 

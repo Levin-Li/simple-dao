@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.validation.annotation.*;
 import org.springframework.util.*;
-import javax.validation.*;
+import jakarta.validation.*;
 import java.util.*;
-import javax.annotation.*;
+import jakarta.annotation.*;
 
 import cn.hutool.core.lang.Assert;
 
-import javax.servlet.http.*;
+import jakarta.servlet.http.*;
 
 //import org.apache.dubbo.config.annotation.*;
 
@@ -28,7 +28,7 @@ import com.levin.commons.dao.support.*;
 import com.levin.commons.ui.annotation.*;
 import com.levin.commons.rbac.ResAuthorize;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 import ${modulePackageName}.controller.*;
 //import ${controllerPackageName}.*;

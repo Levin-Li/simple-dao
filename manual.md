@@ -560,8 +560,8 @@ Dao 类逻辑框图，如下图所示。
 
 #### 4.6 数据初始化注解
 
-   1、使用javax.persistence包下的 PreUpdate ，PreRemove 实现在更新和删除之前，自动执行方法。
-   2、使用注解javax.annotation.PostConstruct ，实现在查询、更新和删除之前自动执行方法。
+   1、使用jakarta.persistence包下的 PreUpdate ，PreRemove 实现在更新和删除之前，自动执行方法。
+   2、使用注解jakarta.annotation.PostConstruct ，实现在查询、更新和删除之前自动执行方法。
 
 
      class UserDto{

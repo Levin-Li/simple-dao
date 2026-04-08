@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 import org.hibernate.annotations.Type;
 
@@ -144,7 +144,7 @@ public class TestRole
 
 
     @Schema(title = "资源权限列表2", description = "Json数组")
-    @Type(type = "json")
+    @Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
     @Column(columnDefinition = "json")
     protected List<String> permissionList2;
 
@@ -160,4 +160,3 @@ public class TestRole
     }
 
 }
-

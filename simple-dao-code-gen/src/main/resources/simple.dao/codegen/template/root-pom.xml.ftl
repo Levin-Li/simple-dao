@@ -23,6 +23,7 @@
         <dubbo.version>3.2.4</dubbo.version>
 
         <spring-boot.version>${spring_boot__version}</spring-boot.version>
+        <spring-cloud.version>2025.1.1</spring-cloud.version>
 
         <levin.simple-dao.groupId>${codegen_plugin__groupId}</levin.simple-dao.groupId>
         <levin.simple-dao.version>${codegen_plugin__version}</levin.simple-dao.version>
@@ -34,7 +35,7 @@
 
         <shardingsphere.version>4.1.1</shardingsphere.version>
 
-        <groovy.version>2.5.23</groovy.version>
+        <groovy.version>5.0.4</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
 
@@ -58,15 +59,14 @@
         <asyncTool.version>V1.4-SNAPSHOT</asyncTool.version>
 
         <knife4j.version>4.5.0</knife4j.version>
-        <springdoc.version>1.8.0</springdoc.version>
-        <springdoc.version>1.6.15</springdoc.version>
+        <springdoc.version>3.0.2</springdoc.version>
 
-        <swagger.version>2.2.7</swagger.version>
+        <swagger.version>2.2.41</swagger.version>
         <swagger.enable>true</swagger.enable>
 
         <redission.version>3.19.3</redission.version>
         <redission.version>3.23.5</redission.version>
-        <hibernateTypes.version>3.9.5</hibernateTypes.version>
+        <hibernateTypes.version>3.12.0</hibernateTypes.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
@@ -87,12 +87,11 @@
 
         <org.dromara.sms4j.version>3.2.1</org.dromara.sms4j.version>
 
-        <openfeign.version>3.1.5</openfeign.version>
-
         <mysql-driver.version>8.0.32</mysql-driver.version>
 
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <!-- 兼容 jdk-21-->
         <!-- <lombok.version>1.18.30</lombok.version> -->
@@ -107,8 +106,6 @@
 
         <spring-boot.repackage-not-single-jar>false</spring-boot.repackage-not-single-jar>
         <spring-boot.repackage-single-jar>true</spring-boot.repackage-single-jar>
-
-        <mica-auto.version>2.3.0</mica-auto.version>
 
     </properties>
 
@@ -258,6 +255,14 @@
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${r"${spring-cloud.version}"}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- dubbo3 https://cn.dubbo.apache.org/zh-cn/overview/core-features/ecosystem/-->
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
@@ -268,7 +273,7 @@
             </dependency>
 
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy</artifactId>
                 <version>${r"${groovy.version}"}</version>
             </dependency>
@@ -358,7 +363,7 @@
             <dependency>
                 <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
                 <groupId>io.hypersistence</groupId>
-                <artifactId>hypersistence-utils-hibernate-55</artifactId>
+                <artifactId>hypersistence-utils-hibernate-71</artifactId>
                 <version>${r"${hibernateTypes.version}"}</version>
             </dependency>
 
@@ -592,13 +597,7 @@
 
             <dependency>
                 <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-webmvc-core</artifactId>
-                <version>${r"${springdoc.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-ui</artifactId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${r"${springdoc.version}"}</version>
             </dependency>
 
@@ -628,14 +627,6 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-starter-openfeign</artifactId>
-                <version>${r"${openfeign.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.dreamlu</groupId>
-                <artifactId>mica-auto</artifactId>
-                <version>${r"${mica-auto.version}"}</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -768,8 +759,8 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -815,7 +806,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-test-classic</artifactId>
             <scope>test</scope>
         </dependency>
 

@@ -41,12 +41,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.net.URLDecoder;
@@ -62,6 +61,47 @@ import java.util.stream.Stream;
 @SpringBootTest(classes = {TestConfiguration.class})
 //@Transactional
 public class DaoExamplesTest {
+
+    private static final class Assert {
+
+        private static final String DEFAULT_MESSAGE = "assertion failed";
+
+        static void isTrue(boolean expression) {
+            org.springframework.util.Assert.isTrue(expression, DEFAULT_MESSAGE);
+        }
+
+        static void isTrue(boolean expression, String message) {
+            org.springframework.util.Assert.isTrue(expression, message);
+        }
+
+        static void notNull(Object object) {
+            org.springframework.util.Assert.notNull(object, DEFAULT_MESSAGE);
+        }
+
+        static void notNull(Object object, String message) {
+            org.springframework.util.Assert.notNull(object, message);
+        }
+
+        static void isNull(Object object) {
+            org.springframework.util.Assert.isNull(object, DEFAULT_MESSAGE);
+        }
+
+        static void isNull(Object object, String message) {
+            org.springframework.util.Assert.isNull(object, message);
+        }
+
+        static void hasText(String text) {
+            org.springframework.util.Assert.hasText(text, DEFAULT_MESSAGE);
+        }
+
+        static void hasText(String text, String message) {
+            org.springframework.util.Assert.hasText(text, message);
+        }
+
+        static void notEmpty(Collection<?> collection, String message) {
+            org.springframework.util.Assert.notEmpty(collection, message);
+        }
+    }
 
     @Autowired
     SimpleDao dao;
@@ -759,7 +799,7 @@ public class DaoExamplesTest {
 
         dao.updateTo(TestEntity.class)
                 .set(E_TestEntity.orderCode, orderCode)
-                .gt(E_TestEntity.id, entity.getId() - 50)
+                .gt(E_TestEntity.id, entity.<Long>getId() - 50)
                 .update();
 
         System.out.println("4------------------------------");
@@ -1440,7 +1480,7 @@ public class DaoExamplesTest {
 
         for (TestEntity testEntity : testEntities) {
 
-            if (testEntity.getId() % 2 == 0) {
+            if (testEntity.<Long>getId() % 2 == 0) {
 
                 int n = this.dao.deleteFrom(TestEntity.class)
                         .eq(E_TestEntity.id, testEntity.getId())
@@ -1471,7 +1511,7 @@ public class DaoExamplesTest {
         testEntities = this.dao.selectFrom(TestEntity.class).find();
 
         for (TestEntity testEntity : testEntities) {
-            Assert.isTrue(testEntity.getId() % 2 == 1, "已经逻辑删除的数据仍然被查询出来");
+            Assert.isTrue(testEntity.<Long>getId() % 2 == 1, "已经逻辑删除的数据仍然被查询出来");
         }
 
 
@@ -1489,7 +1529,7 @@ public class DaoExamplesTest {
 
             boolean disableDel = Stream.of(entityOption.disableActions()).filter(a -> EntityOption.Action.Delete.equals(a)).count() > 0;
 
-            Assert.isTrue(!disableDel || testEntities.stream().filter(e -> e.getId() % 2 == 0).count() > 0, "逻辑删除的数据没有出现");
+            Assert.isTrue(!disableDel || testEntities.stream().filter(e -> e.<Long>getId() % 2 == 0).count() > 0, "逻辑删除的数据没有出现");
         }
 
 

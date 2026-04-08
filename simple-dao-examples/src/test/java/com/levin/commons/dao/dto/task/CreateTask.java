@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.util.List;
 
 

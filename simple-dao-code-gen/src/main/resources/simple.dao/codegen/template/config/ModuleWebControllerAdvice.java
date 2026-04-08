@@ -40,17 +40,17 @@ import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.http.converter.HttpMessageConversionException;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.PersistenceException;
-import javax.servlet.ServletException;
-import javax.servlet.http.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.PersistenceException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.*;
 import java.lang.reflect.Field;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.sql.SQLException;
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 import io.swagger.v3.oas.annotations.media.Schema;

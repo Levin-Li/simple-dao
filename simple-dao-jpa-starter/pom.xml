@@ -27,13 +27,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>net.dreamlu</groupId>
-            <artifactId>mica-auto</artifactId>
-            <version>${mica-auto.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
 <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,10 +59,10 @@
         </dependency>
 
 
-        &lt;!&ndash; https://mvnrepository.com/artifact/javax.validation/validation-api &ndash;&gt;
+        &lt;!&ndash; https://mvnrepository.com/artifact/jakarta.validation/validation-api &ndash;&gt;
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
 

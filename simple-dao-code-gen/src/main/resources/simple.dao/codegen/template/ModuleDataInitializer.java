@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.*;
 import org.springframework.beans.factory.annotation.*;
 
-import javax.annotation.*;
+import jakarta.annotation.*;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executor;

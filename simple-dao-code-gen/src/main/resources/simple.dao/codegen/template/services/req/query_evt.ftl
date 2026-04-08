@@ -21,8 +21,8 @@ import com.levin.commons.service.support.*;
 
 import org.springframework.format.annotation.*;
 
-import javax.validation.constraints.*;
-import javax.annotation.*;
+import jakarta.validation.constraints.*;
+import jakarta.annotation.*;
 import com.fasterxml.jackson.annotation.*;
 
 import lombok.*;

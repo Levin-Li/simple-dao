@@ -8,7 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.TargetOption;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Function;
