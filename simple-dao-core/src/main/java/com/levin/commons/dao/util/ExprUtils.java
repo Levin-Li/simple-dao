@@ -1255,6 +1255,18 @@ public abstract class ExprUtils {
                 targetJoinColumn = targetJoinColumn.substring(C.FIELD_PREFIX.length());
             }
 
+            String selfPkName = miniDao != null && selfEntityClass != null ? miniDao.getPKName(selfEntityClass) : null;
+
+            if (!isNative
+                    && hasText(selfPkName)
+                    && selfPkName.equals(selfJoinColumn)
+                    && !targetJoinColumn.contains(".")
+                    && Optional.ofNullable(getRefFieldNames(joinTargetClass, selfEntityClass))
+                    .orElse(Collections.emptyList())
+                    .contains(targetJoinColumn)) {
+                targetJoinColumn = targetJoinColumn + "." + selfPkName;
+            }
+
             //如果是 SQL 原生查询，需要转换列名
             if (isNative) {
 

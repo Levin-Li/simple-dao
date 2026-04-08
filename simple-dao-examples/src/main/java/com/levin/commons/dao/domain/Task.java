@@ -25,7 +25,7 @@ public class Task
         implements StatefulObject {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Override

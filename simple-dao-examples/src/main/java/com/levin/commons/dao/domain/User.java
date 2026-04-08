@@ -11,11 +11,9 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 
 import jakarta.persistence.*;
-import org.hibernate.type.SqlTypes;
 
 import java.util.List;
 
@@ -34,7 +32,7 @@ public class User
         implements StatefulObject {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Override
@@ -66,9 +64,8 @@ public class User
     String belongOrgList;
 
     @Schema(description = "角色列表")
-//    @Type(JsonType.class)
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "varchar", length = 1024)
+    @Type(JsonType.class)
+    @Column(columnDefinition = "json")
     List<String> roleList;
 
     @Schema(description = "角色列表")

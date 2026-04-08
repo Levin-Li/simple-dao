@@ -1171,17 +1171,21 @@ public class DaoExamplesTest {
     public void testJpaEntityStatusTest() throws Exception {
 
         User user = dao.selectFrom(User.class).findOne();
+        Long id = user.getId();
 
         String description = "Update_" + new Date();
         user.setDescription(description);
 
-        user.setId(10000L);
+        dao.save(user);
+        user = dao.find(User.class, id);
+        Assert.isTrue(user.getDescription().equals(description));
+
+        user.setId(null);
+        user.setOptimisticLock(null);
         dao.save(user);
 
         user.setId(null);
-        dao.save(user);
-
-        user.setId(null);
+        user.setOptimisticLock(null);
         user = (User) dao.create(user);
 
         System.out.println(user);
@@ -2073,6 +2077,7 @@ public class DaoExamplesTest {
         elMap.put("Q_NotIn_name", "12,34,534,546,456");
         elMap.put("Q_Gt_createTime", "2012/01/30 23:59:00");
         elMap.put("Q_Not_parentId", 90);
+        elMap.put("Q_Lt_id", -1);
 
         int r = dao.deleteFrom(Group.class, "e")
                 //  .appendWhere("name like ?", "%0%")

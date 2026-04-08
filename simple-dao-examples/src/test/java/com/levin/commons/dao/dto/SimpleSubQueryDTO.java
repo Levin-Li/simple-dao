@@ -27,11 +27,11 @@ public class SimpleSubQueryDTO {
     Paging paging = new PagingQueryReq(1, 20);
 
 
-    @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskCnt} = ${:_val})")
-    @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id and ${taskSum} > ${:taskCnt} )")
+    @Lt(value = E_User.score, paramExpr = "(select sum(score) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + ".id = u.id and ${taskCnt} = ${:_val})")
+    @Gt(value = "(select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + ".id = u.id and ${taskSum} > ${:taskCnt} )")
 
     @Select(condition = "taskCnt > 0 && #_val > 0 && taskSum > 9875"
-            , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + " = u.id")
+            , value = "select count(*) from " + E_Task.CLASS_NAME + "   where " + E_Task.user + ".id = u.id")
     int taskCnt = 1;
 
     @Ignore
@@ -40,7 +40,7 @@ public class SimpleSubQueryDTO {
     // 以上字段生成语句： (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id) AS taskCnt
 
     @Select(value = "select ${fun}(score) from " + E_Task.CLASS_NAME
-            + "   where  " + E_Task.user + " = u.id and ${p2} != ${:p1}",
+            + "   where  " + E_Task.user + ".id = u.id and ${p2} != ${:p1}",
             alias = "taskSum")
     Map<String, Object> params = MapUtils
             .put("p1", (Object) "9999")

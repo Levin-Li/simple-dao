@@ -22,7 +22,7 @@ import java.util.Date;
 public class TestEntity implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column

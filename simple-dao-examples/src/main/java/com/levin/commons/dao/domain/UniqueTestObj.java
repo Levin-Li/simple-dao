@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class UniqueTestObj implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @Column
