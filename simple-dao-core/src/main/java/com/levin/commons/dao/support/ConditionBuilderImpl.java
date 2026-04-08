@@ -1144,14 +1144,16 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                 column = column.substring(indexOf + 1).trim();
 
+                Class<?> columnEntityClass = domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain);
+
                 //优先使用注解中的列名
-                column = getDao().getColumnName(domain.equalsIgnoreCase(alias) ? entityClass : aliasMap.get(domain), column);
+                column = columnEntityClass != null ? getDao().getColumnName(columnEntityClass, column) : convertColumnNameByNamingStrategy(column);
 
                 column = domain + "." + column;
 
             } else {
 
-                column = getDao().getColumnName(entityClass, column);
+                column = entityClass != null ? getDao().getColumnName(entityClass, column) : convertColumnNameByNamingStrategy(column);
             }
 
         }
