@@ -67,6 +67,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -1886,14 +1887,8 @@ public final class ServiceModelCodeGenerator {
             try {
                 //google-format 并不会移除 .* 的导入
                 fileContent = RemoveUnusedImports.removeUnusedImports(fileContent);
-            } catch (Exception e) {
-                logger.error(path + " -google-format-优化导入失败， " + e.getMessage(), e);
-            }
-
-            try {
-               // fileContent = ImportOptimizer.optimizeImports(path , fileContent);
-            } catch (Exception e) {
-                logger.error(path + " -java-parser-优化导入失败， " + e.getMessage(), e);
+            } catch (Throwable e) {
+                logger.warn("[{}] google-format优化导入失败，改用ImportOptimizer，{}", path, e.getMessage(), e);
             }
 
             //如果是Java类文件，自动格式化
@@ -1905,7 +1900,7 @@ public final class ServiceModelCodeGenerator {
                                     //   .style(JavaFormatterOptions.Style.AOSP)
                                     .build()
                     ).formatSource(fileContent);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     logger.warn("[{}]生成的代码无法格式化，{}", path, e.getMessage());
                 }
             }
