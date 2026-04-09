@@ -2015,7 +2015,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param varAnnotations
      * @return
      */
-    private static List<Annotation> findNeedProcessDaoAnnotations(AnnotatedElement fieldOrMethod, Annotation[] varAnnotations) {
+    private static List<Annotation> findNeedProcessDaoAnnotations(AnnotatedElement fieldOrMethod, Annotation... varAnnotations) {
 
         //@todo 缓存字段
 
@@ -2206,8 +2206,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         //查询对象, 值 复杂, 值 简单
 
+       final AtomicBoolean hasAnyDaoAnnotation = new AtomicBoolean(false);
+
         //合并组件的闭包
         final Consumer<Annotation> addAnnotationConsumer = annotation -> {
+
+            //如果有任何一个 Dao 注解
+            hasAnyDaoAnnotation.set(true);
 
             final boolean valid = isValid(annotation, bean, name, value);
 
@@ -2236,13 +2241,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(addAnnotationConsumer);
 
         //如果字段没有注解，则尝试获取类上面的注解
-        if (daoAnnotations.isEmpty() && bean != null) {
+        if (!hasAnyDaoAnnotation.get() && bean != null) {
             //扫描类级别注解, 只考虑当前类,不考层级
             findNeedProcessDaoAnnotations(fieldOrMethod, bean.getClass().getAnnotations()).forEach(addAnnotationConsumer);
         }
 
         //如果没有注解,特殊情况
-        if (daoAnnotations.isEmpty() && value != null) {
+        if (!hasAnyDaoAnnotation.get() && value != null) {
 
             if (wrapperParamValueByAnno || isArray || isIterable || isSimpleValueType || isMap) {
 
@@ -2268,6 +2273,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             //todo 是否尝试转换名称，表达式转换名称，支持 Spel
             entityFieldName = evalTextByThreadLocal(entityFieldName);
+
+            if(name.startsWith("eq")){
+                logger.info(" *** processAttr [{}]({}) eq[{}], entityFieldName:{}", name, valueType, annotation, entityFieldName);
+            }
 
             final AtomicBoolean isWrapper = new AtomicBoolean(false);
             final ResolvableType entityAttrType = getFieldTypeByEntityAttrName(null, entityFieldName, isWrapper);

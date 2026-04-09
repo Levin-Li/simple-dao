@@ -1,6 +1,7 @@
 package com.levin.commons.dao.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.OR;
@@ -8,6 +9,7 @@ import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.annotation.stat.*;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.service.domain.Desc;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +27,10 @@ public class GroupStatDTO {
     @Ignore
     String state = "S1";
 
+    @Schema(description = "可编辑条件，如果是web环境需要增加可编辑的过滤条件" , hidden = true)
+    @Eq
+    @JsonIgnore
+    final boolean eqEditable = true;
 
     @Desc
     @Select("'2018-03-18'")

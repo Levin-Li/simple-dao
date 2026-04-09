@@ -1,6 +1,7 @@
 package com.levin.commons.dao.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
@@ -8,6 +9,7 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.support.PagingQueryReq;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -35,6 +37,12 @@ public class GroupDTO {
 
     @Eq.List(value = @Eq, condition = "false")
     String state = "A";
+
+
+    @Schema(description = "可编辑条件，如果是web环境需要增加可编辑的过滤条件" , hidden = true)
+    @Eq
+    @JsonIgnore
+    final boolean eqEditable = true;
 
     @Eq
     @Eq(condition = "false")
