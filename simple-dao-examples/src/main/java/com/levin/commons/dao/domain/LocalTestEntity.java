@@ -1,10 +1,8 @@
 package com.levin.commons.dao.domain;
 
-import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
 import com.levin.commons.service.domain.Desc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
@@ -19,7 +17,7 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 @FieldNameConstants
-public class TestEntity implements Serializable {
+public class LocalTestEntity implements Serializable {
 
     @Id
     @GeneratedValue
