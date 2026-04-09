@@ -19,6 +19,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.sql.SQLSyntaxErrorException;
@@ -415,7 +418,7 @@ public class JpaDaoImpl
 
         return Stream.of(varAnnotations)
                 .filter(Objects::nonNull).anyMatch(a ->
-                        Stream.of(org.hibernate.annotations.Type.class, Convert.class, Converts.class, Embedded.class, EmbeddedId.class, PrimitiveValue.class, Id.class, MapsId.class, Lob.class)
+                        Stream.of(org.hibernate.annotations.Type.class, Convert.class, Converts.class, Embedded.class, JdbcTypeCode.class, JdbcType.class, EmbeddedId.class, PrimitiveValue.class, Id.class, MapsId.class, Lob.class)
                                 .anyMatch(t -> t == a.annotationType())
                 );
     }
