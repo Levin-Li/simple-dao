@@ -130,7 +130,7 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     T notEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue);
 
     default T notEq(String entityAttrName, Object paramValue) {
-        return eq((Class<?>) null, entityAttrName, paramValue);
+        return notEq((Class<?>) null, entityAttrName, paramValue);
     }
 
     default T notEq(Boolean isAppend, String entityAttrName, Object paramValue) {

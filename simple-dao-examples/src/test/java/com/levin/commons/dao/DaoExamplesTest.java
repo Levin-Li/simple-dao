@@ -1282,6 +1282,8 @@ public class DaoExamplesTest {
                 //
                 .set(User::getRoleList, Arrays.asList("R_NEW_ADMIN1", "R_NEW_ADMIN2"))
 
+                .notEq(User::getScore,-123456)
+
                 .eq(E_User.enable, false);
 
         String statement = userUpdateDao.genFinalStatement();
@@ -1290,6 +1292,7 @@ public class DaoExamplesTest {
 
         Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )"));
         Assert.isTrue(statement.contains("roleList = :?"));
+        Assert.isTrue(statement.contains("score != :?"));
 
         userUpdateDao.update();
     }
