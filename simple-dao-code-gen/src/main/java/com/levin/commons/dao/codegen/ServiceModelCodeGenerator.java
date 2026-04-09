@@ -666,7 +666,7 @@ public final class ServiceModelCodeGenerator {
 
 
         genFileByTemplate(genParams, serviceImplDir, "services", "BaseService.java");
-        genFileByTemplate(genParams, serviceImplDir, "services", "code-gen-rule.md");
+        genFileByTemplate(genParams, serviceImplDir, "services", "code-gen.md");
         genFileByTemplate(genParams, serviceImplDir, "services", "基础服务类开发规范.md");
 
         genFileByTemplate(genParams, serviceImplDir, "job", "DemoJob.java");
@@ -678,7 +678,7 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(genParams, serviceDir, "services", "package-info.java");
         genFileByTemplate(genParams, serviceDir, "services", "ModuleVersion.java");
-        genFileByTemplate(genParams, serviceDir, "services", "code-gen-rule.md");
+        genFileByTemplate(genParams, serviceDir, "services", "code-gen.md");
         genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");

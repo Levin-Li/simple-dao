@@ -184,7 +184,7 @@ public class TestOrg
 
     @Schema(title = "类型")
     @Column(nullable = false, length = 64)
-    @Type(com.levin.commons.dao.support.EnumDescType.class)
+    @Enumerated(EnumType.STRING)
     protected OrgType type;
 
     @Schema(title = "所属行业")
