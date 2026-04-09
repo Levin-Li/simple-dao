@@ -7,14 +7,14 @@ import com.levin.commons.dao.annotation.NotIn;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.stat.*;
-import com.levin.commons.dao.domain.TestEntity;
+import com.levin.commons.dao.domain.LocalTestEntity;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@TargetOption(entityClass = TestEntity.class, resultClass = TestEntityStatDto.class)
+@TargetOption(entityClass = LocalTestEntity.class, resultClass = TestEntityStatDto.class)
 public class TestEntityStatDto {
 
     @Min

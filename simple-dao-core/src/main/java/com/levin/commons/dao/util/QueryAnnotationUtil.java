@@ -1,6 +1,7 @@
 package com.levin.commons.dao.util;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.DaoContext;
 import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.exception.StatementBuildException;
@@ -293,7 +294,9 @@ public abstract class QueryAnnotationUtil {
 
         if (!ExprUtils.isValidClass(entityClass)
                 || !hasText(fieldName) || containsWhitespace(fieldName.trim())) {
-            return fieldName;
+
+            return (StrUtil.isNotBlank(fieldName) && columnNameConvert != null) ? columnNameConvert.apply(fieldName) : fieldName;
+
         }
 
         //
@@ -328,7 +331,7 @@ public abstract class QueryAnnotationUtil {
         });
 
 
-        return fieldMap.getOrDefault(fieldName, fieldName);
+        return fieldMap.getOrDefault(fieldName, columnNameConvert.apply(fieldName));
     }
 
 

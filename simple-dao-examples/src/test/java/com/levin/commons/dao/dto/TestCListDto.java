@@ -3,7 +3,6 @@ package com.levin.commons.dao.dto;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.domain.E_TestEntity;
 import com.levin.commons.dao.domain.support.TestEntity;
 import lombok.Data;
 

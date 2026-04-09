@@ -1,5 +1,6 @@
 package com.levin.commons.dao.support;
 
+import cn.hutool.core.util.StrUtil;
 import com.levin.commons.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -150,16 +151,7 @@ public abstract class AbstractDaoFactory implements DaoFactory {
 
 
     private String getAlias(String... alias) {
-
-        if (alias != null) {
-            for (String a : alias) {
-                if (hasText(a)) {
-                    return a;
-                }
-            }
-        }
-
-        return null;
+        return StrUtil.firstNonBlank( alias);
     }
 
     private String checkTableName(String tableName) {
