@@ -55,6 +55,9 @@ import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -2236,9 +2239,9 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            if (field.isAnnotationPresent(Ignore.class)) {
-                continue;
-            }
+//            if (field.isAnnotationPresent(Ignore.class)) {
+//                continue;
+//            }
 
 
             final ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
@@ -2295,8 +2298,9 @@ public final class ServiceModelCodeGenerator {
 
 
             fieldModel.setPrimitiveAttrAnnotation(Stream.of(field.getAnnotations()).filter(an ->
-                            Stream.of(PrimitiveValue.class, Convert.class, EmbeddedId.class,
-                                            Embedded.class, org.hibernate.annotations.Type.class)
+                            Stream.of(PrimitiveValue.class, Convert.class, EmbeddedId.class, Embedded.class
+                                            , JavaType.class, JdbcType.class, JdbcTypeCode.class
+                                            , org.hibernate.annotations.Type.class)
                                     .anyMatch(t -> t == an.annotationType()))
                     .findFirst()
                     .orElse(null)
@@ -2305,8 +2309,8 @@ public final class ServiceModelCodeGenerator {
             if (Map.class.isAssignableFrom(fieldType)
                     && !fieldModel.isPrimitiveAttr()) {
                 //暂不支持Map
-                logger.warn("*** " + entityClass + "[" + action + "] 发现不支持的字段 : " + field + " --> " + fieldType);
-                continue;
+//                logger.warn("*** " + entityClass + "[" + action + "] 发现不支持的字段 : " + field + " --> " + fieldType);
+//                continue;
             }
 
 
@@ -2321,7 +2325,7 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            fieldModel.setTypeName(fieldType.getSimpleName());
+            fieldModel.setTypeName(FieldModel.getSimpleGenericString(forField, fieldModel::addImport));
 
             fieldModel.setType(fieldType);
             fieldModel.setEleType(subType);
@@ -2376,7 +2380,7 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setBaseType(isBaseType(forField, subType));
                 }
 
-                fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
+                // fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
 
             }
 
@@ -2499,12 +2503,11 @@ public final class ServiceModelCodeGenerator {
                 annotations.add(CharSequence.class.isAssignableFrom(fieldType) ? "@NotBlank" : "@NotNull");
             }
 
-
             //Dao 忽略字段
-            if (fieldModel.isTransient()) {
-                annotations.add("@" + Ignore.class.getName());
+            if (fieldModel.isTransient()
+                    || field.isAnnotationPresent(Ignore.class)) {
+                fieldModel.addAnnotation(Ignore.class);
             }
-
 
             Consumer<List<Class<? extends Annotation>>> addAnnotation =
                     classes -> classes.stream().filter(Objects::nonNull)
@@ -2730,7 +2733,7 @@ public final class ServiceModelCodeGenerator {
             }
 
             //对应对象类型，查询对象要忽略
-            if ((isQueryObj) && !fieldModel.isBaseType()) {
+            if ((isQueryObj) && !fieldModel.isBaseType() && !fieldModel.isPrimitiveAttr()) {
                 fieldModel.addAnnotation(Ignore.class);
             }
 
