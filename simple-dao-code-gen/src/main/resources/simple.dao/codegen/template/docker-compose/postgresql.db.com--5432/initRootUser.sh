@@ -13,15 +13,9 @@ findLastValue(){
 dbPort=$(findLastValue ".env" 'SERVICE_PORT')
 dbUser=$(findLastValue ".env" 'POSTGRES_USER')
 dbPwd=$(findLastValue ".env" 'POSTGRES_PASSWORD')
-rootPwd=$(findLastValue ".env" 'POSTGRES_ROOT_PASSWORD')
 
 if [ -z "${dbUser}" ]; then
   dbUser="postgres"
-fi
-
-if [ -z "${dbPwd}" ]; then
-  echo "未找到数据库管理员密码[POSTGRES_PASSWORD], 跳过附加用户初始化"
-  exit 0
 fi
 
 echo "等待PostgreSQL启动完成..."
@@ -38,37 +32,19 @@ do
   echo "等待PostgreSQL启动完成..."
 done
 
-if [ -z "${rootPwd}" ]; then
-  echo "未设置[POSTGRES_ROOT_PASSWORD], 默认使用[${dbUser}]超级用户登录数据库"
-  exit 0
-fi
+echo "PostgreSQL 已就绪，使用[${dbUser}]用户登录数据库成功"
 
-echo "初始化兼容root登录角色..."
-
-docker exec -i -e PGPASSWORD="${dbPwd}" postgresql-${dbPort} \
-  psql -v ON_ERROR_STOP=1 -U "${dbUser}" -d postgres \
-  -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'root') THEN CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD '${rootPwd}'; ELSE ALTER ROLE root WITH LOGIN SUPERUSER PASSWORD '${rootPwd}'; END IF; END \$\$;"
-
-execStatus=$?
-
-if [ $execStatus -eq 0 ]; then
-
-  echo "兼容root登录角色初始化完成, 请牢记root密码:${rootPwd}"
-
+if [ -n "${dbPwd}" ]; then
   if [ "$(uname)" = "Darwin" ]; then
-    sed -i '' "s/^POSTGRES_ROOT_PASSWORD=.*/POSTGRES_ROOT_PASSWORD=/g" .env
+    sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=/g" .env
   else
-    sed -i "s/^POSTGRES_ROOT_PASSWORD=.*/POSTGRES_ROOT_PASSWORD=/g" .env
+    sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=/g" .env
   fi
 
   execStatus=$?
 
   if [ $execStatus -eq 0 ]; then
-    echo "配置文件[.env]中的POSTGRES_ROOT_PASSWORD已清除"
+    echo "数据库root用户初始化完成, 请牢记数据库[${dbUser}]用户密码:${dbPwd}"
+    echo "配置文件[.env]中的POSTGRES_PASSWORD已清除"
   fi
-
-else
-
-  echo "初始化兼容root登录角色失败"
-
 fi

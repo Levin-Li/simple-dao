@@ -5,5 +5,4 @@
 2 设置./.env文件中的数据库管理员密码
    POSTGRES_PASSWORD=XXXPWD
 
-3 如需额外生成兼容旧工具的 root 超级用户, 可设置
-   POSTGRES_ROOT_PASSWORD=XXXPWD
+3 数据库首次启动成功后，脚本会自动清除./.env中的 POSTGRES_PASSWORD

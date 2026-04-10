@@ -26,6 +26,6 @@ services:
       - "POSTGRES_USER=${POSTGRES_USER}"
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
       - "POSTGRES_DB=${POSTGRES_DB}"
-      - "PGDATA=/var/lib/postgresql/data/pgdata"
+      - "PGDATA=/var/lib/postgresql/data"
     privileged: true
     restart: always
