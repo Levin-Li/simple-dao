@@ -153,7 +153,7 @@ public class ${className} extends ${reqExtendClass} {
 
 <#list fields as field>
 <#--    <#if !field.notUpdate && (!field.lazy || field.baseType) && field.baseType && !field.jpaEntity >-->
-    <#if !field.notUpdate && !field.jpaEntity && !field.hasJpaJoinColumn() >
+    <#if !field.notUpdate && !field.jpaEntity && !field.hasJpaJoinColumn() && !field.hasIgnoreAnnotation() >
     public <T extends ${className}> T set${field.name?cap_first}(${field.typeName} ${field.name}) {
         this.${field.name} = ${field.name};
         this.autoForceUpdateFields.add(E_${entityName}.${field.name});

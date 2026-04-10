@@ -129,11 +129,11 @@ public class ${className} extends ${reqExtendClass} {
 <#-- 注解宏 -->
 <#macro FieldAnnotationList field keyword = ''>
     <#list field.annotations as annotation>
-        <#if annotation?contains('PrimitiveArrayJsonConverter.class')>
+        <#if annotation?contains('PrimitiveArrayJsonConverter.class') && !field.contains>
     @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max')  || annotation?trim?starts_with('@Size')>
+        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || field.isPrimitiveAttr() || annotation?trim?starts_with('@Ignore') || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max')  || annotation?trim?starts_with('@Size')>
     ${annotation}
         </#if>
     </#list>
@@ -167,10 +167,13 @@ public class ${className} extends ${reqExtendClass} {
     <@FieldAnnotationList field = field  keyword='@Options'/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#-- 模糊匹配 -->
-    <#if field.contains && field.typeName = 'String'>
+    <#if field.contains>
 
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
-    <@FieldAnnotationList field = field/>
+<#--    <@FieldAnnotationList field = field />-->
+        <#if field.isIterable()>
+    @OR(autoClose = true)
+        </#if>
     @${field.extras.nameSuffix}
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>

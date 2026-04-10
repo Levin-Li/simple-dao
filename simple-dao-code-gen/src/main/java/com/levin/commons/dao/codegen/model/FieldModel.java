@@ -1,6 +1,7 @@
 package com.levin.commons.dao.codegen.model;
 
 import com.levin.commons.dao.annotation.Between;
+import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.InjectConst;
 import lombok.Data;
@@ -18,6 +19,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.time.temporal.Temporal;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -128,6 +130,30 @@ public class FieldModel implements Cloneable {
     private Class<?> optionsRefTargetType;
 
 
+
+    public static String getSimpleGenericString(ResolvableType type, Consumer<Class<?>> classConsumer) {
+
+        if (type.getGenerics().length == 0) {
+            return type.resolve().getSimpleName();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(type.resolve().getSimpleName());
+        sb.append("<");
+
+        ResolvableType[] generics = type.getGenerics();
+
+        for (int i = 0; i < generics.length; i++) {
+            if (i > 0)
+                sb.append(",");
+            sb.append(getSimpleGenericString(generics[i],classConsumer));
+        }
+
+        sb.append(">");
+
+        return sb.toString();
+    }
+
     /**
      * 使用常量应用
      */
@@ -143,7 +169,7 @@ public class FieldModel implements Cloneable {
         return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
-    public boolean isTransient(){
+    public boolean isTransient() {
         return field.isAnnotationPresent(Transient.class) || Modifier.isTransient(field.getModifiers());
     }
 
@@ -151,6 +177,14 @@ public class FieldModel implements Cloneable {
         Class<? extends Annotation> annotationType = an.annotationType();
         String prefix = "@" + annotationType.getPackage().getName();
         return "@" + an.toString().substring(prefix.length() + 1);
+    }
+
+    public boolean isIterable() {
+        return field.getType().isArray() || Iterable.class.isAssignableFrom(field.getType());
+    }
+
+    public boolean hasIgnoreAnnotation(){
+        return annotations.stream().anyMatch(an -> an.trim().startsWith("@" + Ignore.class.getName()) || an.trim().startsWith("@" + Ignore.class.getSimpleName()));
     }
 
     /**
@@ -190,7 +224,7 @@ public class FieldModel implements Cloneable {
                 });
     }
 
-    public boolean hasJpaJoinColumn(){
+    public boolean hasJpaJoinColumn() {
         return field.isAnnotationPresent(JoinColumn.class)
                 || field.isAnnotationPresent(ManyToMany.class)
                 || field.isAnnotationPresent(ManyToOne.class)
@@ -247,7 +281,7 @@ public class FieldModel implements Cloneable {
         return field.getDeclaringClass().getName().equals(className);
     }
 
-    public FieldModel addImport(Class type) {
+    public FieldModel addImport(Class<?> type) {
 
         if (type == null) {
             return this;
