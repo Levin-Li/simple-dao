@@ -89,9 +89,7 @@ public class FieldModel implements Cloneable {
 
     private boolean baseType = true;//基础封装类型
 
-
     private Annotation primitiveAttrAnnotation;
-
 
     private boolean enumerable = false;//是否enum
 

@@ -133,14 +133,13 @@ public class ${className} extends ${reqExtendClass} {
     @OR(autoClose = true)
     @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
-        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || field.isPrimitiveAttr() || annotation?trim?starts_with('@Ignore') || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max')  || annotation?trim?starts_with('@Size')>
+        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@PrimitiveValue') || annotation?trim?starts_with('@Ignore') || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max') || annotation?trim?starts_with('@Size')>
     ${annotation}
         </#if>
     </#list>
 </#macro>
 <#--  注解宏结束 -->
 <#list fields as field>
-
 
    <#-- 是否有between注解 -->
     <#if field.hasBetweenAnnotation() || field.isDateTimeType() >
@@ -175,6 +174,7 @@ public class ${className} extends ${reqExtendClass} {
     @OR(autoClose = true)
         </#if>
     @${field.extras.nameSuffix}
+
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
