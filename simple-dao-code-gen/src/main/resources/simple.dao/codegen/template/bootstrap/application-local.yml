@@ -2,21 +2,16 @@
 
 spring:
   datasource:
+    url: jdbc:postgresql://localhost:5432/${moduleName}
+    username: postgres
+    password: postgres
 
-    #h2 内存数据库
-#    url: jdbc:h2:tcp://localhost:9092/mem:dev;MODE=MySQL;
-
-    #h2 文件数据库，项目位置的文件数据库，默认会自动数据库，如果想删除库，直接删除项目位置下的dev.mv.db文件即可
-    url: jdbc:h2:tcp://localhost:9092/dev;MODE=MySQL;
-
-    username: dev
-    password: dev
 
   jpa:
     show-sql: true
     generate-ddl: true
     #强制数据库类型
-    database: MYSQL
+    database: POSTGRESQL
     hibernate:
       ddl-auto: update
 

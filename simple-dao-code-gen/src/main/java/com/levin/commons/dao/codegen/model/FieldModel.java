@@ -21,6 +21,7 @@ import java.lang.reflect.Modifier;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -132,15 +133,14 @@ public class FieldModel implements Cloneable {
     private Class<?> optionsRefTargetType;
 
 
-
-    public static String getSimpleGenericString(ResolvableType type, Consumer<Class<?>> classConsumer) {
+    public static String getSimpleGenericString(ResolvableType type, Function<ResolvableType, String> classConsumer) {
 
         if (type.getGenerics().length == 0) {
-            return type.resolve().getSimpleName();
+            return classConsumer.apply(type);
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(type.resolve().getSimpleName());
+        sb.append(classConsumer.apply(type));
         sb.append("<");
 
         ResolvableType[] generics = type.getGenerics();
@@ -148,7 +148,7 @@ public class FieldModel implements Cloneable {
         for (int i = 0; i < generics.length; i++) {
             if (i > 0)
                 sb.append(",");
-            sb.append(getSimpleGenericString(generics[i],classConsumer));
+            sb.append(getSimpleGenericString(generics[i], classConsumer));
         }
 
         sb.append(">");
@@ -185,7 +185,7 @@ public class FieldModel implements Cloneable {
         return field.getType().isArray() || Iterable.class.isAssignableFrom(field.getType());
     }
 
-    public boolean hasIgnoreAnnotation(){
+    public boolean hasIgnoreAnnotation() {
         return annotations.stream().anyMatch(an -> an.trim().startsWith("@" + Ignore.class.getName()) || an.trim().startsWith("@" + Ignore.class.getSimpleName()));
     }
 

@@ -1,12 +1,11 @@
 #@author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/${moduleName}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    url: jdbc:postgresql://localhost:5432/${moduleName}
     username: test
     password: test
 
   jpa:
     show-sql: true
     generate-ddl: true
-    database: MYSQL     # DB2, DERBY,  H2,  HANA,  HSQL,  INFORMIX,   MYSQL,  ORACLE,  POSTGRESQL, SQL_SERVER,   SYBASE;
-#    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    database: POSTGRESQL     # DB2, DERBY, H2, HANA, HSQL, INFORMIX, MYSQL, ORACLE, POSTGRESQL, SQL_SERVER, SYBASE

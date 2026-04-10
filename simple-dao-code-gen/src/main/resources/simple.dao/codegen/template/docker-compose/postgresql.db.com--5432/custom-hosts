@@ -5,8 +5,9 @@
 # 172.18.0.5     db-master        postgresql
 # 10.0.0.1       cache-server     redis
 
-#通一个主机名称映射多个IP时, 在Linux/macOS按hosts 文件中出现的顺序，第一个有效IP被使用.
-
 ######################################
 127.0.0.1 localhost
 #######################################
+
+#自动添加[服务主机]主机(postgresql.db.com --> 192.168.65.29)映射记录, 添加时间: Fri Apr 10 16:44:24 CST 2026
+192.168.65.29 postgresql.db.com

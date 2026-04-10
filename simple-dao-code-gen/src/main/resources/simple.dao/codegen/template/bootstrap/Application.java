@@ -86,7 +86,7 @@ public class Application {
                 Server server = Server.createTcpServer("-tcpPort", "" + h2Port, "-tcpAllowOthers", "-ifNotExists", "-baseDir", new File("").getAbsolutePath()).start();
 
                 System.out.println("***INFO***  H2数据库(支持自动建库)启动成功，URL：" + server.getURL()
-                        + "\n\t\t\t可以连接内存数据库和文件数据库，例如：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=MySQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=MySQL");
+                        + "\n\t\t\t如需临时使用兼容 PostgreSQL 的 H2，可连接：jdbc:h2:" + server.getURL() + "/mem:dev;MODE=PostgreSQL ，jdbc:h2:" + server.getURL() + "/~/dev;MODE=PostgreSQL");
 
                 break;
             } catch (SQLException e) {

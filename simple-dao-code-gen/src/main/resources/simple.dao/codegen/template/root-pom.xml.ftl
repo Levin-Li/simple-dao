@@ -87,7 +87,7 @@
 
         <org.dromara.sms4j.version>3.2.1</org.dromara.sms4j.version>
 
-        <mysql-driver.version>8.0.32</mysql-driver.version>
+        <postgresql-driver.version>42.7.7</postgresql-driver.version>
 
         <maven.compiler.release>21</maven.compiler.release>
         <maven.compiler.source>21</maven.compiler.source>
@@ -619,9 +619,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.mysql</groupId>
-                <artifactId>mysql-connector-j</artifactId>
-                <version>${r"${mysql-driver.version}"}</version>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${r"${postgresql-driver.version}"}</version>
             </dependency>
 
             <dependency>

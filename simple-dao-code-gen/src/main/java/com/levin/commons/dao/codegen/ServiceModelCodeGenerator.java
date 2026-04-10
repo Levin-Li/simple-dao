@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
@@ -2283,9 +2284,9 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            boolean isCollection = fieldType.isArray() || Collection.class.isAssignableFrom(fieldType);
+            boolean isIterable = fieldType.isArray() || Iterable.class.isAssignableFrom(fieldType);
 
-            Class subType = isCollection ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
+            Class<?> subType = isIterable ? (fieldType.isArray() ? forField.getComponentType().resolve() : forField.resolveGeneric()) : null;
 
             FieldModel fieldModel = new FieldModel(entityClass)
                     .setSchemaDescUseConstRef(isSchemaDescUseConstRef());
@@ -2313,7 +2314,6 @@ public final class ServiceModelCodeGenerator {
 //                continue;
             }
 
-
             if (CharSequence.class.isAssignableFrom(fieldType)) {
 
                 if (field.isAnnotationPresent(Column.class)) {
@@ -2325,7 +2325,6 @@ public final class ServiceModelCodeGenerator {
                 }
             }
 
-            fieldModel.setTypeName(FieldModel.getSimpleGenericString(forField, fieldModel::addImport));
 
             fieldModel.setType(fieldType);
             fieldModel.setEleType(subType);
@@ -2334,7 +2333,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setEnumerable(fieldType.isEnum());
 
-            fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
+            //fieldModel.setJpaEntity(fieldType.isAnnotationPresent(Entity.class));
 
             fieldModel.addImport(fieldType);
 
@@ -2345,44 +2344,29 @@ public final class ServiceModelCodeGenerator {
             //  字段
             fieldModelList.add(fieldModel);
 
-            if (fieldModel.isJpaEntity()) {
-
-                fieldModel.getImports().add(getInfoClassImport(fieldType));
-                fieldModel.setTypeName(fieldType.getSimpleName() + "Info");
-                fieldModel.setBaseType(false);
-
-                if (isCreateObj) {
-                    //
-//                    continue;
-                }
-
-            }
 
             setLazy(fieldModel);
 
-            if (isCollection && subType != null) {
+            fieldModel.setTypeName(FieldModel.getSimpleGenericString(forField, type -> {
 
-                String subTypeName = subType.getSimpleName();
+                Class<?> resolve = type.resolve();
+                fieldModel.addImport(resolve);
 
-                if (subType.isAnnotationPresent(Entity.class)) {
+                if (resolve.isAnnotationPresent(Entity.class) || resolve.isAnnotationPresent(MappedSuperclass.class)) {
 
-                    subTypeName = subTypeName + "Info";
-                    fieldModel.getImports().add(getInfoClassImport(subType));
+                    fieldModel.getImports().add(getInfoClassImport(resolve));
+
                     fieldModel.setLazy(true);
                     fieldModel.setBaseType(false);
 
-                    if (isCreateObj) {
-                        // continue;
-                    }
+                    fieldModel.setJpaEntity(true);
 
+                    return resolve.getSimpleName() + "Info";
                 } else {
-                    fieldModel.addImport(subType);
-                    fieldModel.setBaseType(isBaseType(forField, subType));
+                    return resolve.getSimpleName();
                 }
 
-                // fieldModel.setTypeName(fieldType.isArray() ? subTypeName + "[]" : fieldType.getSimpleName() + "<" + subTypeName + ">");
-
-            }
+            }));
 
             //是否乐观锁字段
             fieldModel.setOptimisticLock(field.isAnnotationPresent(Version.class));
@@ -2971,7 +2955,7 @@ public final class ServiceModelCodeGenerator {
         return aTxt;
     }
 
-    private static boolean isBaseType(ResolvableType parent, Class type) {
+    private static boolean isBaseType(ResolvableType parent, Class<?> type) {
 
         return ClassUtils.isPrimitiveOrWrapper(type)
                 || CharSequence.class.isAssignableFrom(type)

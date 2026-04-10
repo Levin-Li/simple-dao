@@ -257,9 +257,10 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             FileUtil.writeString(
                     "spring.datasource:\n" +
-                            "  url: 'jdbc:mysql://127.0.0.1:3306/db'\n" +
-                            "  username: root\n" +
+                            "  url: 'jdbc:postgresql://127.0.0.1:5432/db'\n" +
+                            "  username: postgres\n" +
                             "  password: \n" +
+                            "  driver-class-name: org.postgresql.Driver\n" +
 
                             "codegen:\n" +
                             "  #需要生成实体类的表前缀,可以*模糊匹配,默认所有的表都生成\n" +
@@ -274,7 +275,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
             // dbConfigRes = new ClassPathResource(dbConfigRes.getPath());
 
-            logger.error("请在{}中配置数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
+            logger.error("请在{}中配置数据库连接相关信息，目前支持 PostgreSQL、MySQL、Oracle、SQL Server、DM 等数据库。", dbConfigRes.getFile());
 
             return;
         }
@@ -294,7 +295,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
                 .setPassword(genProps.getProperty(dsPrefix + "password", defaultJdbcPassword));
 
         if (StrUtil.isBlank(dbConfig.getJdbcUrl())) {
-            logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 mysql oracle sqlserver dm 等数据库。", dbConfigRes.getFile());
+            logger.error("请在{}中配置有效的数据库连接相关信息，目前支持 PostgreSQL、MySQL、Oracle、SQL Server、DM 等数据库。", dbConfigRes.getFile());
             return;
         }
 
