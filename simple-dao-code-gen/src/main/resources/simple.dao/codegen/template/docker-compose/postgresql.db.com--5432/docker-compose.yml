@@ -1,0 +1,31 @@
+#version: '3.8'
+services:
+  postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: postgresql-${SERVICE_PORT} #指定服务名
+
+    #数据库和Redis 网络模式尽量不用桥接模式，使用host模式,以免损失性能, mac os 会失败
+    #    network_mode: host
+
+    ports:
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
+
+    #以下command部分不能有空行,注释行,和尾巴注释
+    command:
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c port=${SERVICE_PORT}
+      -c listen_addresses='*'
+      -c max_connections=1500
+    volumes:
+      - ./custom-hosts:/etc/hosts:ro  # 只读挂载
+      - ./postgresql/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgresql/logs:/var/log/postgresql
+      - ./postgresql/data:/var/lib/postgresql/data
+    environment:
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "PGDATA=/var/lib/postgresql/data"
+    privileged: true
+    restart: always

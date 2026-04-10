@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -20,11 +21,13 @@ import java.lang.reflect.Modifier;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Data
 @EqualsAndHashCode(of = "name")
 @ToString()
@@ -128,15 +131,14 @@ public class FieldModel implements Cloneable {
     private Class<?> optionsRefTargetType;
 
 
-
-    public static String getSimpleGenericString(ResolvableType type, Consumer<Class<?>> classConsumer) {
+    public static String getSimpleGenericString(ResolvableType type, Function<ResolvableType, String> classConsumer) {
 
         if (type.getGenerics().length == 0) {
-            return type.resolve().getSimpleName();
+            return classConsumer.apply(type);
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(type.resolve().getSimpleName());
+        sb.append(classConsumer.apply(type));
         sb.append("<");
 
         ResolvableType[] generics = type.getGenerics();
@@ -144,7 +146,7 @@ public class FieldModel implements Cloneable {
         for (int i = 0; i < generics.length; i++) {
             if (i > 0)
                 sb.append(",");
-            sb.append(getSimpleGenericString(generics[i],classConsumer));
+            sb.append(getSimpleGenericString(generics[i], classConsumer));
         }
 
         sb.append(">");
@@ -181,7 +183,7 @@ public class FieldModel implements Cloneable {
         return field.getType().isArray() || Iterable.class.isAssignableFrom(field.getType());
     }
 
-    public boolean hasIgnoreAnnotation(){
+    public boolean hasIgnoreAnnotation() {
         return annotations.stream().anyMatch(an -> an.trim().startsWith("@" + Ignore.class.getName()) || an.trim().startsWith("@" + Ignore.class.getSimpleName()));
     }
 
@@ -261,6 +263,7 @@ public class FieldModel implements Cloneable {
     public boolean isBaseEntityField() {
         return isClassField("com.levin.commons.dao.domain.support.AbstractBaseEntityObject");
     }
+
     @SneakyThrows
     public boolean isType(String className) {
         return Class.forName(className).isAssignableFrom(entityType);
