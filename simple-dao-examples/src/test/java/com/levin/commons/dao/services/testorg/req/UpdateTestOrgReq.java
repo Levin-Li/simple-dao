@@ -52,7 +52,7 @@ public class UpdateTestOrgReq extends MultiTenantReq {
     String id;
 
     @Schema(description = "可编辑条件", hidden = true)
-    @Eq(condition = "!#" + InjectConst.IS_SUPER_ADMIN)
+    @Eq
     final boolean eqEditable = true;
 
     @Size(max = 64)

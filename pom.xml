@@ -28,10 +28,9 @@
         <maven-plugin-plugin.version>3.15.2</maven-plugin-plugin.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
 
+        <maven.compiler.source>25</maven.compiler.source>
+
         <maven.compiler.release>17</maven.compiler.release>
-
-        <maven.compiler.source>17</maven.compiler.source>
-
         <maven.compiler.target>17</maven.compiler.target>
 
         <maven.test.skip>false</maven.test.skip>
