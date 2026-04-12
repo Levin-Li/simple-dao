@@ -23,6 +23,7 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +38,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.format.support.FormattingConversionService;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
@@ -1388,137 +1390,19 @@ public class JpaDaoImpl
      * @param outputPositionalParams 输出位置参数 (?)
      * @return 位置参数个数
      */
+    @Override
     public Integer parseStatementFragmentParameters(String statementFragment, Set<String> outputNamedParams, Set<Integer> outputPositionalParams) {
 
         if (statementFragment == null || statementFragment.isBlank()) {
             return null;
         }
 
+
         int positionalParamCnt = 0;
 
-        for (int i = 0; i < statementFragment.length(); i++) {
-
-            char ch = statementFragment.charAt(i);
-
-            if (ch == '\'' || ch == '"') {
-                i = skipQuotedText(statementFragment, i, ch);
-                continue;
-            }
-
-            if (ch == '-' && i + 1 < statementFragment.length() && statementFragment.charAt(i + 1) == '-') {
-                i = skipLineComment(statementFragment, i + 2);
-                continue;
-            }
-
-            if (ch == '/' && i + 1 < statementFragment.length() && statementFragment.charAt(i + 1) == '*') {
-                i = skipBlockComment(statementFragment, i + 2);
-                continue;
-            }
-
-            if (ch == '?') {
-
-                int begin = i + 1;
-                int end = readDigits(statementFragment, begin);
-
-                if (end > begin) {
-                    outputPositionalParams.add(Integer.parseInt(statementFragment.substring(begin, end)));
-                    i = end - 1;
-                } else {
-                    outputPositionalParams.add(++positionalParamCnt);
-                }
-
-                continue;
-            }
-
-            if (ch == ':') {
-
-                if (i + 1 >= statementFragment.length() || statementFragment.charAt(i + 1) == ':') {
-                    continue;
-                }
-
-                if (statementFragment.charAt(i + 1) == '?') {
-                    outputPositionalParams.add(++positionalParamCnt);
-                    i++;
-                    continue;
-                }
-
-                int begin = i + 1;
-                int end = readIdentifier(statementFragment, begin);
-
-                if (end > begin) {
-                    outputNamedParams.add(statementFragment.substring(begin, end));
-                    i = end - 1;
-                    continue;
-                }
-
-                throw new IllegalArgumentException("Invalid parameter near index " + i + ": " + statementFragment);
-            }
-        }
 
         return positionalParamCnt;
 
-    }
-
-    private static int skipQuotedText(String text, int start, char quote) {
-
-        for (int i = start + 1; i < text.length(); i++) {
-            char ch = text.charAt(i);
-
-            if (ch == '\\') {
-                i++;
-                continue;
-            }
-
-            if (ch == quote) {
-                if (i + 1 < text.length() && text.charAt(i + 1) == quote) {
-                    i++;
-                    continue;
-                }
-                return i;
-            }
-        }
-
-        return text.length() - 1;
-    }
-
-    private static int skipLineComment(String text, int start) {
-
-        int lineEnd = text.indexOf('\n', start);
-
-        return lineEnd >= 0 ? lineEnd : text.length() - 1;
-    }
-
-    private static int skipBlockComment(String text, int start) {
-
-        int commentEnd = text.indexOf("*/", start);
-
-        return commentEnd >= 0 ? commentEnd + 1 : text.length() - 1;
-    }
-
-    private static int readDigits(String text, int start) {
-
-        int i = start;
-
-        while (i < text.length() && Character.isDigit(text.charAt(i))) {
-            i++;
-        }
-
-        return i;
-    }
-
-    private static int readIdentifier(String text, int start) {
-
-        if (start >= text.length() || !Character.isJavaIdentifierStart(text.charAt(start))) {
-            return start;
-        }
-
-        int i = start + 1;
-
-        while (i < text.length() && Character.isJavaIdentifierPart(text.charAt(i))) {
-            i++;
-        }
-
-        return i;
     }
 
 

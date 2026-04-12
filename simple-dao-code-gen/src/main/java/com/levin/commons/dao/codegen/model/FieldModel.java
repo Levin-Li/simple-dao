@@ -284,7 +284,7 @@ public class FieldModel implements Cloneable {
         return field.getDeclaringClass().getName().equals(className);
     }
 
-    public FieldModel addImport(Class type) {
+    public FieldModel addImport(Class<?> type) {
 
         if (type == null) {
             return this;

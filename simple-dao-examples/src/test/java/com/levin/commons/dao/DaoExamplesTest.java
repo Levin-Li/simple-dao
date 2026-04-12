@@ -1279,6 +1279,8 @@ public class DaoExamplesTest {
                 .set(true, true, E_User.score, 1)
                 .set(true, true, E_User.name, "+")
 
+               // .set()
+
                 //
                 .set(User::getRoleList, Arrays.asList("R_NEW_ADMIN1", "R_NEW_ADMIN2"))
 
@@ -1286,11 +1288,11 @@ public class DaoExamplesTest {
 
                 .eq(E_User.enable, false);
 
-        String statement = userUpdateDao.genFinalStatement();
+        String statement = userUpdateDao.genFinalStatement().replace("  ","");
 
         System.out.println(statement);
 
-        Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )"));
+        Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )".replace("  ","")));
         Assert.isTrue(statement.contains("roleList = :?"));
         Assert.isTrue(statement.contains("score != :?"));
 
