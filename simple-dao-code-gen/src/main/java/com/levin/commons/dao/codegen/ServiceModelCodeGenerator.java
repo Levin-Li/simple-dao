@@ -444,7 +444,6 @@ public final class ServiceModelCodeGenerator {
         Arrays.asList("ModuleStarterConfiguration"
         ).forEach(className -> genJavaFile(starterDir, "", className, params));
 
-        simpleGen("starter/resources/META-INF/spring.factories.ftl", params, mavenProject);
         simpleGen("starter/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports", params, mavenProject);
     }
 

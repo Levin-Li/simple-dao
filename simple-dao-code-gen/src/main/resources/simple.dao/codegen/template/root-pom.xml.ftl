@@ -20,7 +20,7 @@
 
         <revision>${project__version}</revision>
 
-        <dubbo.version>3.2.4</dubbo.version>
+        <dubbo.version>3.3.5</dubbo.version>
 
         <spring-boot.version>${spring_boot__version}</spring-boot.version>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
@@ -39,13 +39,13 @@
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
 
-        <druid.version>1.1.24</druid.version>
+        <druid.version>1.2.23</druid.version>
         <hutool.version>5.8.43</hutool.version>
         <orika.version>1.5.4</orika.version>
 
         <sa-token.version>1.38.0</sa-token.version>
-        <fastjson.version>1.2.83</fastjson.version>
-        <fastjson2.version>2.0.55</fastjson2.version>
+        <fastjson.version>2.0.60</fastjson.version>
+        <fastjson2.version>2.0.60</fastjson2.version>
 
         <j2cache.version>2.8.5-release</j2cache.version>
         <j2cache_starter.version>2.8.0-release</j2cache_starter.version>
@@ -66,7 +66,7 @@
 
         <redission.version>3.19.3</redission.version>
         <redission.version>3.23.5</redission.version>
-        <hibernateTypes.version>3.12.0</hibernateTypes.version>
+        <hibernateTypes.version>3.15.2</hibernateTypes.version>
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
