@@ -127,12 +127,12 @@ public class ${className} extends ${reqExtendClass} {
 
 </#if>
 <#-- 注解宏 -->
-<#macro FieldAnnotationList field keyword = ''>
+<#macro FieldAnnotationList field keyword = '' ignoreInjectVar = false>
     <#list field.annotations as annotation>
-        <#if annotation?contains('PrimitiveArrayJsonConverter.class') && !field.contains>
+        <#if annotation?contains('PrimitiveArrayJsonConverter.class') && !ignoreInjectVar> <#-- 兼容旧版本 -->
     @OR(autoClose = true)
-    @Contains
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
+    @Contains
         <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@PrimitiveValue') || annotation?trim?starts_with('@Ignore') || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max') || annotation?trim?starts_with('@Size')>
     ${annotation}
         </#if>
@@ -169,7 +169,7 @@ public class ${className} extends ${reqExtendClass} {
     <#if field.contains>
 
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
-<#--    <@FieldAnnotationList field = field />-->
+    <@FieldAnnotationList field = field ignoreInjectVar = true /> <#-- 兼容旧版本 -->
         <#if field.isIterable()>
     @OR(autoClose = true)
         </#if>
