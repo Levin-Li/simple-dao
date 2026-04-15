@@ -120,7 +120,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     @PostMapping({"create"})
     @Operation(summary = CREATE_ACTION, description = CREATE_ACTION + " " + BIZ_NAME)
-    @CRUD.Op(recordRefType = CRUD.RecordRefType.None)
+    @CRUD.Op(opRefTargetType = CRUD.OpRefTargetType.None)
 <#if pkField?exists>
     public ApiResp<${pkField.typeName}> create(@RequestBody @Form @Valid Create${entityName}Req req) {
 <#else>
@@ -238,7 +238,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     @DeleteMapping({"batchDelete"})
     @Operation(summary = BATCH_DELETE_ACTION, description = BATCH_DELETE_ACTION + " " + BIZ_NAME)
-    @CRUD.Op(recordRefType = CRUD.RecordRefType.Multiple)
+    @CRUD.Op(opRefTargetType = CRUD.OpRefTargetType.MultipleRow)
     public ApiResp<Integer> batchDelete(@Valid @NotNull Delete${entityName}Req req) {
 
         req = checkRequest(BATCH_DELETE_ACTION, req);
