@@ -67,6 +67,11 @@ public @interface GroupBy {
      */
     String value() default "";
 
+    /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
 
     /**
      * aving 操作

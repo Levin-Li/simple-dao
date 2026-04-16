@@ -43,6 +43,11 @@ public @interface Count {
      */
     String value() default "1";
 
+    /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
 
     /**
      * aving 操作

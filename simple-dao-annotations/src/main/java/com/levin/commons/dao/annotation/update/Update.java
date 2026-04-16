@@ -54,6 +54,11 @@ public @interface Update {
     String value() default "";
 
     /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
+    /**
      * 动态的 where 条件，通常用于乐观锁条件。
      * <p>
      * 可以支持SPEL_PREFIX，以"#!spel:"为前缀，表示是Spel表达式

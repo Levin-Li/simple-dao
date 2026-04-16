@@ -63,6 +63,11 @@ public @interface Select {
     String value() default "";
 
     /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
+    /**
      * 统计字段的排序
      *
      * @return

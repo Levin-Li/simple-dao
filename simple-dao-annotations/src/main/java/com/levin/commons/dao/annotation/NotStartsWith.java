@@ -40,6 +40,11 @@ public @interface NotStartsWith {
      */
     String value() default "";
 
+    /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
 
     /**
      * 是否是having 操作

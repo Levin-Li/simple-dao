@@ -49,6 +49,11 @@ public @interface Where {
     String value() default C.BLANK_VALUE;
 
     /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
+    /**
      * 子查询表达式
      * <p>
      * <p/>

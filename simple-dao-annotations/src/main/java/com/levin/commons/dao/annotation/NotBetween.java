@@ -40,6 +40,11 @@ public @interface NotBetween {
      */
     String value() default "";
 
+    /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
 
     /**
      * 操作

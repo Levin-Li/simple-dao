@@ -124,6 +124,11 @@ public @interface C {
      */
     String value() default "";
 
+    /**
+     * JSON 路径表达式。
+     */
+    String jsonPath() default "";
+
 
     /**
      * 是否为 操作数（既字段） value 变量值 自动增加别名前缀

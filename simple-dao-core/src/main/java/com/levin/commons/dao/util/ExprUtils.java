@@ -12,6 +12,8 @@ import com.levin.commons.dao.annotation.Func;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.annotation.misc.Fetch;
+import com.levin.commons.dao.support.JsonExprSupport;
+import com.levin.commons.dao.support.JsonPathSpec;
 import com.levin.commons.dao.support.SelectDaoImpl;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.service.support.SpringContextHolder;
@@ -112,6 +114,8 @@ public abstract class ExprUtils {
             fieldExpr = aroundColumnPrefixFunc.apply(domain, name);
         }
 
+        String rawFieldExpr = fieldExpr;
+
         //优先使用 fieldExpr
 
         // 表达式生成原理： 字段表达式（fieldExpr）  + 操作符 （op） +  参数表达式（c.paramExpr()） ---> 对应的变量
@@ -154,6 +158,30 @@ public abstract class ExprUtils {
 
             //如果字段表达式中有函数，用函数包围
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
+        }
+
+        if (hasText(c.jsonPath()) && hasText(fieldExpr)) {
+            JsonPathSpec jsonPathSpec = JsonPathSpec.parse(c.jsonPath());
+            validateJsonPathUsage(op, jsonPathSpec);
+
+            if (Op.Exists.equals(op) || Op.NotExists.equals(op)) {
+                String jsonExistsExpr = JsonExprSupport.jsonExistsExpr(rawFieldExpr, jsonPathSpec.getRawPath());
+                String ql = c.surroundPrefix() + " "
+                        + (Op.NotExists.equals(op) ? "Not " : "")
+                        + jsonExistsExpr
+                        + " " + c.surroundSuffix();
+                holder.value = Collections.emptyList();
+                return surroundNotExpr(c, replace(ql, contexts, true,
+                        column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
+            }
+
+            if (jsonPathSpec.isWildcard()) {
+                fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
+            } else if (Op.Select.equals(op)) {
+                fieldExpr = JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
+            } else {
+                fieldExpr = JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+            }
         }
 
 
@@ -325,7 +353,16 @@ public abstract class ExprUtils {
 
         //===================================以下部分替换占位符参数等========================================
         //替换参数
-        String ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
+        String ql;
+
+        if (hasText(c.jsonPath()) && Op.Update.equals(op)) {
+            ql = c.surroundPrefix() + " "
+                    + rawFieldExpr + " = "
+                    + JsonExprSupport.jsonSetExpr(rawFieldExpr, c.jsonPath(), paramExpr)
+                    + " " + c.surroundSuffix();
+        } else {
+            ql = c.surroundPrefix() + " " + op.gen(fieldExpr, paramExpr) + " " + c.surroundSuffix();
+        }
 
         //生成后的语句进行替换参数
         ql = processParamPlaceholder(ql, (key, ctxs) -> {
@@ -364,6 +401,26 @@ public abstract class ExprUtils {
                 column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
     }
 
+
+    private static void validateJsonPathUsage(Op op, JsonPathSpec jsonPathSpec) {
+
+        if (!jsonPathSpec.isWildcard()) {
+            return;
+        }
+
+        if (Op.Update.equals(op)) {
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 Update 注解中使用 wildcard [*]");
+        }
+
+        if (Op.GroupBy.equals(op)
+                || Op.Avg.equals(op)
+                || Op.Sum.equals(op)
+                || Op.Count.equals(op)
+                || Op.Max.equals(op)
+                || Op.Min.equals(op)) {
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在统计注解中使用 wildcard [*]");
+        }
+    }
 
     private static String expandExpr(String delimiter, Object value, String defaultValue) {
 
