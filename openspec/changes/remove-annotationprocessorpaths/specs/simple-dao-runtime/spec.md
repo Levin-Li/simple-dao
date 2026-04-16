@@ -12,4 +12,5 @@
 #### Scenario: 不显式配置 annotationProcessorPaths
 - **WHEN** 仓库在当前 Maven 与 JDK 基线下执行 `compile` 或 `test-compile`
 - **THEN** 构建链必须能够在不配置 `maven-compiler-plugin.annotationProcessorPaths` 的前提下发现并执行所需注解处理器
+- **AND** 父 POM 必须通过标准编译器配置显式启用当前 JDK 所需的注解处理流程
 - **AND** 各模块必须通过直接依赖声明支撑其主源码和测试源码编译
