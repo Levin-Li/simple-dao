@@ -340,6 +340,16 @@
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
+                        <path>
+                            <groupId>${levin.service-support.groupId}</groupId>
+                            <artifactId>service-support</artifactId>
+                            <version>${levin.service-support.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.swagger.core.v3</groupId>
+                            <artifactId>swagger-annotations</artifactId>
+                            <version>${io.swagger.core.v3.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
