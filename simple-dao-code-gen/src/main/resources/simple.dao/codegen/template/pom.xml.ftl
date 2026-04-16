@@ -215,11 +215,6 @@
             <artifactId>groovy</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
-        </dependency>
-
     <dependency>
         <!--   https://github.com/vladmihalcea/hypersistence-utils   -->
         <groupId>io.hypersistence</groupId>
@@ -320,7 +315,7 @@
 
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
 
         <dependency>
@@ -351,7 +346,7 @@
         <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
         <dependency>
             <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-spring-boot-starter</artifactId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
         </dependency>
 
         <!-- Sa-Token 整合 Redis （使用 jackson 序列化方式） -->
@@ -428,11 +423,6 @@
         </dependency>
 
         <dependency>
-            <groupId>net.oschina.j2cache</groupId>
-            <artifactId>j2cache-spring-boot2-starter</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
@@ -454,7 +444,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test-classic</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 

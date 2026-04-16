@@ -33,8 +33,6 @@
 
         <levin-framework-base.version>2.2.2</levin-framework-base.version>
 
-        <shardingsphere.version>4.1.1</shardingsphere.version>
-
         <groovy.version>5.0.4</groovy.version>
         <easyexcel.version>3.2.1</easyexcel.version>
         <easypoi.version>4.4.0</easypoi.version>
@@ -43,12 +41,11 @@
         <hutool.version>5.8.43</hutool.version>
         <orika.version>1.5.4</orika.version>
 
-        <sa-token.version>1.38.0</sa-token.version>
+        <sa-token.version>1.45.0</sa-token.version>
         <fastjson.version>2.0.60</fastjson.version>
         <fastjson2.version>2.0.60</fastjson2.version>
 
         <j2cache.version>2.8.5-release</j2cache.version>
-        <j2cache_starter.version>2.8.0-release</j2cache_starter.version>
 
         <lock4j.version>2.2.7</lock4j.version>
         <baomidou-ds.version>4.3.1</baomidou-ds.version>
@@ -70,7 +67,7 @@
 
         <net.java.dev.jna.version>5.2.0</net.java.dev.jna.version>
 
-        <com.github.oshi.version>3.12.2</com.github.oshi.version>
+        <com.github.oshi.version>6.11.1</com.github.oshi.version>
 
         <IJPay.version>2.9.11</IJPay.version>
 
@@ -89,12 +86,9 @@
 
         <postgresql-driver.version>42.7.7</postgresql-driver.version>
 
-        <maven.compiler.release>21</maven.compiler.release>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-
-        <!-- 兼容 jdk-21-->
-        <!-- <lombok.version>1.18.30</lombok.version> -->
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -458,25 +452,6 @@
             </dependency>
 
             <dependency>
-                <groupId>net.oschina.j2cache</groupId>
-                <artifactId>j2cache-spring-boot2-starter</artifactId>
-                <version>${r"${j2cache_starter.version}"}</version>
-
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-
-            </dependency>
-
-            <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${r"${hutool.version}"}</version>
@@ -484,8 +459,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.oshi</groupId>
-                <artifactId>oshi-core</artifactId>
+                    <groupId>com.github.oshi</groupId>
+                    <artifactId>oshi-core-java11</artifactId>
+                    <scope>provided</scope>
                 <version>${r"${com.github.oshi.version}"}</version>
                 <exclusions>
                     <exclusion>
@@ -542,16 +518,10 @@
                 <version>${r"${JustAuth.version}"}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
-                <version>${r"${shardingsphere.version}"}</version>
-            </dependency>
-
             <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
             <dependency>
                 <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-spring-boot-starter</artifactId>
+                <artifactId>sa-token-spring-boot3-starter</artifactId>
                 <version>${r"${sa-token.version}"}</version>
             </dependency>
 
@@ -603,7 +573,7 @@
 
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${r"${knife4j.version}"}</version>
                 <exclusions>
                     <exclusion>
@@ -806,7 +776,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test-classic</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 

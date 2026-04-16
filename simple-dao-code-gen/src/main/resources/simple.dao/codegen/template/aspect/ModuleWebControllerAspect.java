@@ -221,8 +221,7 @@ public class ModuleWebControllerAspect {
 
         final String className = signature.getDeclaringTypeName();
 
-        if (className.startsWith("springfox.")
-                || className.startsWith("org.springframework.")
+        if (className.startsWith("org.springframework.")
                 || className.startsWith("org.springdoc.")
         ) {
             return joinPoint.proceed();

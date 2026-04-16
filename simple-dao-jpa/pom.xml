@@ -43,22 +43,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-<!--        <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-jpa</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-apt</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
             <scope>provided</scope>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -109,6 +103,7 @@
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -125,36 +120,5 @@
 
 
     </dependencies>
-
-
- <!--   <build>
-        <plugins>
-            <plugin>
-                <groupId>com.mysema.maven</groupId>
-                <artifactId>apt-maven-plugin</artifactId>
-                <version>1.1.3</version>
-                <inherited>true</inherited>
-
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/generated-sources/querydsl</outputDirectory>
-                            <logOnlyOnError>true</logOnlyOnError>
-                            <processors>
-                                <processor>com.querydsl.apt.QuerydslAnnotationProcessor</processor>
-&lt;!&ndash;                                <processor>com.querydsl.apt.hibernate.HibernateAnnotationProcessor</processor>&ndash;&gt;
-                                <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
-                                &lt;!&ndash;                                <processor>com.querydsl.apt.jdo.JDOAnnotationProcessor</processor> &ndash;&gt;
-                                &lt;!&ndash;                                <processor>com.querydsl.apt.roo.RooAnnotationProcessor</processor> &ndash;&gt;
-                            </processors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>-->
 
 </project>
