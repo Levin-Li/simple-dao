@@ -22,7 +22,8 @@ import com.levin.commons.dao.annotation.misc.*;
 import jakarta.validation.constraints.*;
 import jakarta.annotation.*;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.*;
 import lombok.experimental.*;

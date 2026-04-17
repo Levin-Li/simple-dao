@@ -1,6 +1,8 @@
 package com.levin.commons.dao.codegen.model;
 
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.dao.support.ConditionBuilderImpl;
+import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.RefInject;
 import com.levin.commons.service.support.InjectConst;
 import lombok.Data;
@@ -187,17 +189,27 @@ public class FieldModel implements Cloneable {
         return false;
     }
 
+
+    public boolean hasDaoAnnotation() {
+
+        List<Annotation> needProcessDaoAnnotations = ConditionBuilderImpl.findNeedProcessDaoAnnotations(field, field.getAnnotations());
+
+        return needProcessDaoAnnotations.size() > 0;
+    }
+
     public boolean isSimpleCollectionType() {
 
-        if(!isIterable()  ){
+        if (!isIterable()) {
             return false;
         }
 
-       if(resolvableType.isArray()){
-           return BeanUtils.isSimpleValueType(resolvableType.getComponentType().getRawClass());
-       }
+        if (resolvableType.isArray()) {
+            return BeanUtils.isSimpleValueType(resolvableType.getComponentType().getRawClass());
+        }
 
-       return resolvableType.hasGenerics() && resolvableType.getGenerics().length == 1
+        return resolvableType.hasGenerics()
+                && resolvableType.getGenerics().length == 1
+                && resolvableType.getGeneric(0).getRawClass() != null
                 && BeanUtils.isSimpleValueType(resolvableType.getGeneric(0).getRawClass());
 
     }

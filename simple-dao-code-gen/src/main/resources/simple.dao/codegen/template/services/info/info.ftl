@@ -12,7 +12,7 @@ import java.io.Serializable;
 import java.util.Date;
 import jakarta.validation.constraints.*;
 
-//import com.fasterxml.jackson.annotation.*;
+
 /////////////////////////////////////////////////////
 import com.levin.commons.dao.*;
 

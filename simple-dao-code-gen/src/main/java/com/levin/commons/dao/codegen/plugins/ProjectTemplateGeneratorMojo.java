@@ -88,6 +88,9 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
     @Parameter(defaultValue = "true")
     private boolean isCreateBizController = true;
 
+    @Parameter
+    protected String[] ignoreEntities = {".+\\.TestOrg", ".+\\.TestRole"};
+
 
     {
         independentPluginClassLoader = false;
@@ -159,6 +162,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
         mapBuilder.put("projectName", mavenProject.getName());
         mapBuilder.put("projectDesc", mavenProject.getDescription());
 
+        mapBuilder.put("ignoreEntities", Arrays.asList(ignoreEntities));
 
         copyAndReplace(false, resTemplateEntityDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateEntityDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());

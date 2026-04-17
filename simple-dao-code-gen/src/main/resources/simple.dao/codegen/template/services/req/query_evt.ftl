@@ -21,9 +21,11 @@ import com.levin.commons.service.support.*;
 
 import org.springframework.format.annotation.*;
 
-import javax.validation.constraints.*;
-import javax.annotation.*;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.validation.constraints.*;
+import jakarta.annotation.*;
 
 import lombok.*;
 import lombok.experimental.*;
@@ -129,11 +131,15 @@ public class ${className} extends ${reqExtendClass} {
 <#-- 注解宏 -->
 <#macro FieldAnnotationList field keyword = '' ignoreInjectVar = false>
     <#list field.annotations as annotation>
-        <#if annotation?contains('PrimitiveArrayJsonConverter.class') && !ignoreInjectVar> <#-- 兼容旧版本 -->
+    <#-- 兼容旧版本 -->
+        <#if annotation?contains('PrimitiveArrayJsonConverter.class') && !ignoreInjectVar>
     @OR(autoClose = true)
     @InjectVar(domain = "dao", converter = JsonStrLikeConverter.class, isRequired = "false")
     @Contains
-        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@PrimitiveValue') || annotation?trim?starts_with('@Ignore') || annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max') || annotation?trim?starts_with('@Size')>
+        <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@PrimitiveValue') || annotation?trim?starts_with('@Ignore')  || annotation?trim?starts_with('@Eq')|| annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max') || annotation?trim?starts_with('@Size')>
+           <#if annotation?trim?starts_with('@Eq') && field.isJsonColumn() && field.isSimpleCollectionType() >
+    @OR(autoClose = true)
+           </#if>
     ${annotation}
         </#if>
     </#list>
@@ -160,7 +166,7 @@ public class ${className} extends ${reqExtendClass} {
     <@FieldAnnotationList field = field/>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
-    <#-- 基本类型 field.baseType -->
+    <#-- 非关联对象 -->
     <#elseif !field.hasJpaJoinColumn()>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
     <@FieldAnnotationList field = field  keyword='@Options'/>
@@ -169,7 +175,7 @@ public class ${className} extends ${reqExtendClass} {
     <#if field.contains>
 
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
-    <@FieldAnnotationList field = field ignoreInjectVar = true /> <#-- 兼容旧版本 -->
+    <@FieldAnnotationList field = field ignoreInjectVar = true />
         <#if field.isIterable()>
     @OR(autoClose = true)
         </#if>

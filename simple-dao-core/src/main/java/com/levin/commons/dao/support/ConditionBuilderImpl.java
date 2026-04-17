@@ -2015,7 +2015,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      * @param varAnnotations
      * @return
      */
-    private static List<Annotation> findNeedProcessDaoAnnotations(AnnotatedElement fieldOrMethod, Annotation[] varAnnotations) {
+    public static List<Annotation> findNeedProcessDaoAnnotations(AnnotatedElement fieldOrMethod, Annotation[] varAnnotations) {
 
         //@todo 缓存字段
 

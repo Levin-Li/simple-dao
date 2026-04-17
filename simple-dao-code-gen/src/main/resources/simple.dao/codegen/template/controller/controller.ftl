@@ -77,7 +77,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Validated //@Valid
 
 //CRUD的控制器
-@CRUD(refEntityClass = ${entityName}.class)
+@CRUD
 
 @Slf4j
 
@@ -104,7 +104,7 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
      */
     @GetMapping({"list"})
     @Operation(summary = QUERY_LIST_ACTION, description = QUERY_ACTION + " " + BIZ_NAME) //, extensions = @Extension(properties = @ExtensionProperty(name = "x-order", value = "${classModel.nextOrderNum}"))
-    @CRUD.ListTable
+    @CRUD.ListTable(refEntityClass = ${entityName}.class)
     public ApiResp<PagingData<${entityName}Info>> list(@Form @Valid Query${entityName}Req req, SimplePaging paging) {
 
         req = checkRequest(QUERY_LIST_ACTION, req);

@@ -827,6 +827,12 @@
 
                     <enableDubbo>${enableDubbo?c}</enableDubbo>
 
+                    <ignoreEntities>
+                        <#list ignoreEntities as ignoreEntity>
+                        <ignoreEntity>${ignoreEntity!}</ignoreEntity>
+                        </#list>
+                    </ignoreEntities>
+
                 </configuration>
 
                 <dependencies>

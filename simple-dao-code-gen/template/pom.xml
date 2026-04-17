@@ -31,6 +31,11 @@
         <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>
         <levin.service-support.version>2.0.0-SNAPSHOT</levin.service-support.version>
 
+        <!-- 跳过 install -->
+        <maven.install.skip>true</maven.install.skip>
+        <!-- 跳过 deploy -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+
     </properties>
 
     <repositories>
@@ -67,6 +72,8 @@
 
                     <!-- 集成 OakBaseFramework -->
                     <enableOakBaseFramework>false</enableOakBaseFramework>
+
+                    <ignoreEntities></ignoreEntities>
 
                     <!-- 集成 DubboFramework -->
                     <enableDubbo>false</enableDubbo>

@@ -81,7 +81,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
 @Validated //@Valid
 
 //CRUD的控制器
-@CRUD(refEntityClass = ${entityName}.class)
+@CRUD
 
 @Slf4j
 

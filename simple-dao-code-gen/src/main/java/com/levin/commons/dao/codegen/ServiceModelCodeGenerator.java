@@ -21,10 +21,7 @@ import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
-import com.levin.commons.dao.annotation.Contains;
-import com.levin.commons.dao.annotation.EndsWith;
-import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.StartsWith;
+import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
@@ -2244,6 +2241,9 @@ public final class ServiceModelCodeGenerator {
 //            }
 
 
+            final boolean isFieldIgnore = field.isAnnotationPresent(Ignore.class);
+
+
             final ResolvableType forField = ResolvableType.forField(field, resolvableTypeForClass);
 
 
@@ -2621,6 +2621,21 @@ public final class ServiceModelCodeGenerator {
 
                     , field.getAnnotations());
 
+
+            //如果是JSON字段, 且没有Dao注解
+            if (!isFieldIgnore
+                    && fieldModel.isSimpleCollectionType()
+                    && fieldModel.isJsonColumn()
+                    && !fieldModel.hasDaoAnnotation()) {
+
+                if (isQueryObj) {
+                    fieldModel.addAnnotation(Eq.class, "jsonPath = \"$[*]\"");
+                    logger.info("*** 类模型 {} 的JSON字段({})，加上默认的注解：@{}", entityClass.getSimpleName(), field.getName(), Eq.class.getSimpleName());
+                }
+            }
+
+            //打印上面的语句的条件
+            //logger.info("*** {} isFieldIgnore:{} isQueryObj:{} isSimpleCollectionType:{} isJsonColumn:{} hasDaoAnnotation:{}", field, isFieldIgnore, isQueryObj, fieldModel.isSimpleCollectionType(), fieldModel.isJsonColumn(), fieldModel.hasDaoAnnotation());
 
             //jakarta.validation.constraints.Size
             //jakarta.validation.constraints

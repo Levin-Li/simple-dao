@@ -1,6 +1,6 @@
 package com.levin.commons.dao.codegen.db;
 
-//import com.fasterxml.jackson.annotation.JsonIgnore;
+//import tools.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
