@@ -173,7 +173,7 @@ public class ${className} extends ${reqExtendClass} {
         <#if field.isIterable()>
     @OR(autoClose = true)
         </#if>
-    @${field.extras.nameSuffix}
+    @${field.extras.nameSuffix}(<#if field.isJsonColumn() && field.isSimpleCollectionType()>jsonPath="$[*]"</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>

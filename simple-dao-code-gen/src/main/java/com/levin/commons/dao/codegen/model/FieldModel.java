@@ -9,6 +9,10 @@ import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -164,6 +168,38 @@ public class FieldModel implements Cloneable {
     public FieldModel(Class entityType) {
         Assert.notNull(entityType, "实体类型为空");
         this.entityType = entityType;
+    }
+
+    public boolean isJsonColumn() {
+
+        JdbcTypeCode an = field.getAnnotation(JdbcTypeCode.class);
+
+        if (an != null && an.value() == SqlTypes.JSON) {
+            return true;
+        }
+
+        Type type1 = field.getAnnotation(Type.class);
+
+        if (type1 != null && type1.value().getName().startsWith(io.hypersistence.utils.hibernate.type.json.JsonType.class.getPackageName())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isSimpleCollectionType() {
+
+        if(!isIterable()  ){
+            return false;
+        }
+
+       if(resolvableType.isArray()){
+           return BeanUtils.isSimpleValueType(resolvableType.getComponentType().getRawClass());
+       }
+
+       return resolvableType.hasGenerics() && resolvableType.getGenerics().length == 1
+                && BeanUtils.isSimpleValueType(resolvableType.getGeneric(0).getRawClass());
+
     }
 
 

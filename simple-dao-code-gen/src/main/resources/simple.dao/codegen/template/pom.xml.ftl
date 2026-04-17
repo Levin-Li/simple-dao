@@ -69,6 +69,12 @@
             <scope>provided</scope>
         </dependency>
 
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
@@ -200,6 +206,11 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
+
+    <dependency>
+        <groupId>tools.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+    </dependency>
 
     <dependency>
         <!--   https://github.com/vladmihalcea/hypersistence-utils   -->

@@ -35,6 +35,8 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+import tools.jackson.databind.DeserializationFeature;
+
 //import org.apache.dubbo.config.spring.context.annotation.*;
 
 import org.h2.tools.Server;
@@ -140,13 +142,14 @@ public class Application {
                     .entryTtl(Duration.of(60, ChronoUnit.MINUTES))
                     .disableCachingNullValues()
                     .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                            new GenericJackson2JsonRedisSerializer(
-                                    new ObjectMapper()
-                                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+
+                            GenericJacksonJsonRedisSerializer.builder()
+                                    .enableSpringCacheNullValueSupport()
+                                    .customize(mapper -> mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+                                    .build()
                     )));
         };
     }
-
     /**
      * redisson 序列化
      *
