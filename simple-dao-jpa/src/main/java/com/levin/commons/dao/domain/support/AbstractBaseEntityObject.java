@@ -15,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @MappedSuperclass
@@ -41,14 +42,14 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(title = "创建时间")
     @Column(nullable = false)
-    @Temporal(value = TemporalType.TIMESTAMP)
+//    @Temporal(value = TemporalType.TIMESTAMP)
 //    @CreatedDate
-    protected Date createTime;
+    protected LocalDateTime createTime;
 
     @Schema(title = "更新时间")
-    @Temporal(value = TemporalType.TIMESTAMP)
+//    @Temporal(value = TemporalType.TIMESTAMP)
 //    @LastModifiedDate
-    protected Date lastUpdateTime;
+    protected LocalDateTime lastUpdateTime;
 
     //@OrderBy
     @Schema(title = "排序代码")
@@ -75,7 +76,7 @@ public abstract class AbstractBaseEntityObject
     public void prePersist() {
 
         if (createTime == null) {
-            createTime = new Date();
+            createTime = LocalDateTime.now();
         }
 
         if (orderCode == null) {
@@ -95,7 +96,7 @@ public abstract class AbstractBaseEntityObject
     @PreUpdate
     public void preUpdate() {
         if (lastUpdateTime == null) {
-            lastUpdateTime = new Date();
+            lastUpdateTime = LocalDateTime.now();
         }
     }
 

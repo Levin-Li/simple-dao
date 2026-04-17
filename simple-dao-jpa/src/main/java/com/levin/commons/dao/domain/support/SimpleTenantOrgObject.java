@@ -13,6 +13,8 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
 //1、lobmok get set
@@ -47,8 +49,8 @@ public abstract class SimpleTenantOrgObject
 
     @Schema(title = "创建时间")
     @Column(nullable = false)
-    @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date createTime;
+//    @Temporal(value = TemporalType.TIMESTAMP)
+    protected LocalDateTime createTime;
 
     @Schema(title = "乐观锁")
     @Version
@@ -57,7 +59,7 @@ public abstract class SimpleTenantOrgObject
     @PrePersist
     public void prePersist() {
         if (createTime == null) {
-            createTime = new Date();
+            createTime = LocalDateTime.now();
         }
     }
 }
