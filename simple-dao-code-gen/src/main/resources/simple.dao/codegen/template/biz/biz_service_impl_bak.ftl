@@ -275,7 +275,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                           //未过期的
                           .or()
                           .isNull(E_${entityName}.expiredTime)
-                          .gte(E_${entityName}.expiredTime, new java.util.Date())
+                          .gte(E_${entityName}.expiredTime, LocalDateTime.now())
                           .end()
                          </#if>
 
@@ -292,7 +292,7 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
         );
 
          <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
-         return ${entityName?uncap_first}InfoList.stream().filter(r -> r.getExpiredTime() == null || r.getExpiredTime().after(new Date())).collect(Collectors.toList());
+         return ${entityName?uncap_first}InfoList.stream().filter(r -> r.getExpiredTime() == null || r.getExpiredTime().after(LocalDateTime .now())).collect(Collectors.toList());
          <#else>
          //复制一个列表，防止列表被修改，因为有使用内存缓存
          return Collections.unmodifiableList(${entityName?uncap_first}InfoList);

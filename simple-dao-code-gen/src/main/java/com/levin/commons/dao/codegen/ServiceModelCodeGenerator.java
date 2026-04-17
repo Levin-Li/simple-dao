@@ -76,6 +76,10 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -2478,7 +2482,6 @@ public final class ServiceModelCodeGenerator {
                 // fieldModel.setTestValue("null");
             }
 
-
             //生成注解
             ArrayList<String> annotations = new ArrayList<>(getCopyAnnotation(nonSrcClassFieldMap, fieldModel, action));
 
@@ -2708,8 +2711,8 @@ public final class ServiceModelCodeGenerator {
                     fieldModel.setTestValue("0.1d");
                 } else if (fieldModel.getType().equals(Float.class)) {
                     fieldModel.setTestValue("0.1f");
-                } else if (fieldModel.getType().equals(Date.class)) {
-                    fieldModel.setTestValue("new Date()");
+                } else if (fieldModel.getType().equals(LocalDateTime.class)) {
+                    fieldModel.setTestValue("LocalDateTime.now()");
                 } else {
                     // fieldModel.setTestValue("null");
                 }
@@ -2752,7 +2755,7 @@ public final class ServiceModelCodeGenerator {
                 } else if (defaultFieldValue instanceof Enum) {
                     fieldModel.setDefaultValue(fieldType.getSimpleName() + "." + ((Enum<?>) defaultFieldValue).name());
                     fieldModel.setDefaultValue(toJsonStr(((Enum<?>) defaultFieldValue).name()));
-                } else if (defaultFieldValue instanceof Date) {
+                } else if (defaultFieldValue instanceof LocalDateTime) {
                     fieldModel.setDefaultValue("new Date()");
                     fieldModel.setDefaultValue("");
                 }
@@ -2976,6 +2979,7 @@ public final class ServiceModelCodeGenerator {
                 || type.isEnum()
                 || Number.class.isAssignableFrom(type)
                 || Date.class.isAssignableFrom(type)
+                || Temporal.class.isAssignableFrom(type) //时间
                 || (type.isArray() && ClassUtils.isPrimitiveWrapper(parent.getComponentType().resolve()))
                 || BeanUtils.isSimpleProperty(type)
                 ;

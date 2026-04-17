@@ -9,7 +9,7 @@ import lombok.*;
 import lombok.experimental.*;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import jakarta.validation.constraints.*;
 
 

@@ -171,7 +171,7 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
 
 //     const aesEncrypt = path => {
 //
-//       const now = new Date()
+//       const now = LocalDateTime .now()
 //
 //       const n = now.getDay() + now.getDate() + now.getMonth() + 1
 //
@@ -202,7 +202,7 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
 //      const dataTxt = resp.data
 //      const signStr = resp.sign
 //
-//      const now = new Date()
+//      const now = LocalDateTime .now()
 //
 //      const n = now.getDay() + now.getDate() + now.getMonth() + 1
 //

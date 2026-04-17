@@ -40,6 +40,8 @@ public class ClassModel {
 
         this.entityType = entityType;
 
+        this.imports.add("java.time.*");
+
         for (Annotation annotation : this.entityType.getAnnotations()) {
             //加入Json的注解
             if (annotation.annotationType().getPackage()

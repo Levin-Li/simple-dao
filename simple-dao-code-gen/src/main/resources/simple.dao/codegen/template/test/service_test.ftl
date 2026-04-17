@@ -32,7 +32,7 @@ import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 
 import org.springframework.util.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 
 import org.slf4j.Logger;
@@ -137,8 +137,8 @@ public class ${className} {
 
 <#list fields as field>
     <#if field.typeName=='Date'>
-        // req.setGte${field.name?cap_first}(DateUtils.getZoneHour(new Date()));//最小${field.desc}
-        // req.setLte${field.name?cap_first}(DateUtils.getEndHour(new Date()));//最大${field.desc}
+        // req.setGte${field.name?cap_first}(DateUtils.getZoneHour(LocalDateTime .now()));//最小${field.desc}
+        // req.setLte${field.name?cap_first}(DateUtils.getEndHour(LocalDateTime .now()));//最大${field.desc}
     <#elseif !field.jpaEntity && field.baseType>
         // req.set${field.name?cap_first}(${(!field.testValue?? || field.uk || field.pk)?string('null',field.testValue!'null')});//${field.desc}
     <#elseif field.lazy!>
