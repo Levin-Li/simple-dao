@@ -2,7 +2,14 @@ package com.levin.commons.dao;
 
 import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
+import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.Eq;
+import com.levin.commons.dao.annotation.Op;
+import com.levin.commons.dao.annotation.Where;
 import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.select.Select;
+import com.levin.commons.dao.annotation.stat.Count;
+import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.domain.support.AbstractBaseEntityObject;
 import com.levin.commons.dao.domain.support.AbstractNamedEntityObject;
@@ -27,6 +34,7 @@ import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
 import com.levin.commons.dao.services.testrole.req.CreateTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.QueryTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
+import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.support.DefaultPagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
@@ -34,7 +42,9 @@ import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.experimental.Accessors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +68,9 @@ import java.util.stream.Stream;
 
 @ActiveProfiles("dev")
 //@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {TestConfiguration.class})
+@SpringBootTest(classes = {TestConfiguration.class}, properties = {
+        "spring.jpa.properties.hibernate.query.hql.json_functions_enabled=true"
+})
 //@Transactional
 public class DaoExamplesTest {
 
@@ -2039,6 +2051,81 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testJsonPathSelectAndWhereStatements() {
+
+        String statement = dao.selectFrom(User.class, "u")
+                .appendByQueryObj(new JsonPathSelectQO()
+                        .setRole("R_ADMIN")
+                        .setHasLog(Boolean.TRUE))
+                .genFinalStatement();
+
+        Assert.isTrue(statement.contains("json_query(") && statement.contains("'$[*]'"), "wildcard where 条件应生成 json_query");
+        Assert.isTrue(statement.contains("json_exists(") && statement.contains("'$[0].logText'"), "Exists 注解应生成 json_exists");
+        Assert.isTrue(statement.contains("COALESCE(json_query(") && statement.contains("json_value("), "Select 注解应同时兼容对象/数组和标量 JSON 路径");
+    }
+
+    @Test
+    public void testJsonPathConditionQueryShouldHitDatabase() {
+
+        dao.deleteFrom(Task.class).disableSafeMode().delete();
+        dao.deleteFrom(User.class).disableSafeMode().delete();
+        dao.deleteFrom(Group.class).disableSafeMode().delete();
+
+        prepareJsonPathUser("R_JSON_PATH_MATCH_" + System.nanoTime(), "json-log-select-" + System.currentTimeMillis());
+
+        long count = dao.selectFrom(User.class, "u")
+                .appendByQueryObj(new JsonPathExistsConditionQO().setHasLog(Boolean.TRUE))
+                .count();
+
+        Assert.isTrue(count == 1, "jsonPath 条件查询应命中真实数据库记录");
+    }
+
+    @Test
+    public void testJsonPathUpdateStatement() {
+
+        String statement = dao.updateTo(User.class, "u")
+                .appendByQueryObj(new JsonPathUpdateDTO()
+                        .setFirstLogText("changed")
+                        .setRole("R_ADMIN"))
+                .genFinalStatement();
+
+        Assert.isTrue(statement.contains("u.logs = json_set(u.logs, '$[0].logText'"), "Update 注解应生成 json_set 更新语句");
+        Assert.isTrue(statement.contains("json_query(") && statement.contains("'$[*]'"), "Update 场景中的 where 条件也应支持 wildcard JSON 路径");
+    }
+
+    @Test
+    public void testJsonPathRejectWildcardForStatAnnotations() {
+
+        boolean threw = false;
+
+        try {
+            dao.selectFrom(User.class, "u")
+                    .appendByQueryObj(new JsonPathWildcardStatQO())
+                    .genFinalStatement();
+        } catch (StatementBuildException e) {
+            threw = true;
+        }
+
+        Assert.isTrue(threw, "统计注解使用 wildcard jsonPath 时应抛出异常");
+    }
+
+    @Test
+    public void testJsonPathRejectWildcardForUpdateAnnotations() {
+
+        boolean threw = false;
+
+        try {
+            dao.updateTo(User.class, "u")
+                    .appendByQueryObj(new JsonPathWildcardUpdateDTO().setFirstLogText("changed"))
+                    .genFinalStatement();
+        } catch (StatementBuildException e) {
+            threw = true;
+        }
+
+        Assert.isTrue(threw, "Update 注解使用 wildcard jsonPath 时应抛出异常");
+    }
+
+    @Test
     public void testQueryFrom2() throws Exception {
 
         List<Object> list = dao.selectFrom(Group.class)
@@ -2096,6 +2183,97 @@ public class DaoExamplesTest {
         //以上查询会生成条件，包括map对应的查询条件
 
         System.out.println(r);
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonPathSelectQO {
+
+        @Contains(value = "roleList", jsonPath = "$[*]")
+        String role;
+
+        @Where(op = Op.Exists, value = "logs", jsonPath = "$[0].logText")
+        Boolean hasLog;
+
+        @Select(value = "logs", jsonPath = "$", alias = "logsJson")
+        String logsJson;
+
+        @Select(value = "logs", jsonPath = "$[0].logText", alias = "firstLogText")
+        String firstLogText;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonPathExistsConditionQO {
+
+        @Where(op = Op.Exists, value = "logs", jsonPath = "$[0].logText")
+        Boolean hasLog;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonPathUpdateDTO {
+
+        @Contains(value = "roleList", jsonPath = "$[*]")
+        String role;
+
+        @Update(value = "logs", jsonPath = "$[0].logText")
+        String firstLogText;
+    }
+
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonPathWildcardStatQO {
+
+        @Count(value = "roleList", jsonPath = "$[*]", alias = "roleCount")
+        Long roleCount;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonPathWildcardUpdateDTO {
+
+        @Update(value = "logs", jsonPath = "$[*].logText")
+        String firstLogText;
+    }
+
+    @Data
+    static class JsonPathSelectResult {
+        String logsJson;
+        String firstLogText;
+    }
+
+    private User prepareJsonPathUser(String uniqueRole, String logText) {
+
+        Group group = dao.selectFrom(Group.class).findOne();
+
+        if (group == null) {
+            Group newGroup = new Group("JsonPathGroup-" + System.nanoTime(), null);
+            newGroup.setState("正常");
+            newGroup.setCategory("临时");
+            newGroup.setScore(1);
+            group = dao.create(newGroup);
+        }
+
+        User newUser = new User();
+        newUser.setName("JsonPathUser-" + System.nanoTime());
+        newUser.setState("正常");
+        newUser.setScore(1);
+        newUser.setArea("上海");
+        newUser.setGroup(group);
+        newUser.setRoleList(Arrays.asList(uniqueRole, "R_JSON_PATH_BASE"));
+        newUser.setLogs(StringUtils.hasText(logText)
+                ? Arrays.asList(new OperationLog().setLogText(logText))
+                : Collections.emptyList());
+
+        User user = dao.create(newUser);
+
+        entityManager.clear();
+
+        return user;
     }
 
 }

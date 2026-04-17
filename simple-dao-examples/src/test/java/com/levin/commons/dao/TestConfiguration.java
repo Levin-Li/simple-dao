@@ -3,14 +3,20 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.proxy.*;
 import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
+import com.levin.commons.dao.support.H2JsonFunctions;
 import com.levin.commons.service.proxy.EnableProxyBean;
 import com.levin.commons.service.proxy.ProxyBeanScan;
 import com.levin.commons.service.proxy.ProxyBeanScans;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Statement;
 
 
 @SpringBootConfiguration
@@ -44,5 +50,18 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan("com.levin.commons.dao")
 public class TestConfiguration {
 
+    @Bean
+    public InitializingBean registerH2JsonFunctions(DataSource dataSource) {
+        return () -> {
+            try (Connection connection = dataSource.getConnection();
+                 Statement statement = connection.createStatement()) {
+                statement.execute("CREATE ALIAS IF NOT EXISTS JSON_EXTRACT FOR '" + H2JsonFunctions.class.getName() + ".jsonExtract'");
+                statement.execute("CREATE ALIAS IF NOT EXISTS JSON_UNQUOTE FOR '" + H2JsonFunctions.class.getName() + ".jsonUnquote'");
+                statement.execute("CREATE ALIAS IF NOT EXISTS JSON_CONTAINS_PATH FOR '" + H2JsonFunctions.class.getName() + ".jsonContainsPath'");
+            } catch (Exception e) {
+                throw new IllegalStateException("failed to register H2 JSON function aliases", e);
+            }
+        };
+    }
 
 }

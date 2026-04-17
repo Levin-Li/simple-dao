@@ -9,9 +9,10 @@ spring:
     show-sql: true
     database: mysql
     generate-ddl: true
+    properties:
+      hibernate.query.hql.json_functions_enabled: true
     hibernate:
       ddl-auto: update
       naming:
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
-
 
