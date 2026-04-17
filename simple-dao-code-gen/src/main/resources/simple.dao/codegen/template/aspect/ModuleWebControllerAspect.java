@@ -22,7 +22,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -231,11 +231,11 @@ public class ModuleWebControllerAspect {
 
         final String path = getRequestPath();
         //去除应用路径后，进行匹配
-        if (path.equals(serverProperties.getError().getPath())
-            //    || !frameworkProperties.getInject().isMatched(className, path)
-        ) {
-            return joinPoint.proceed();
-        }
+//        if (path.equals(serverProperties.getError().getPath())
+//            //    || !frameworkProperties.getInject().isMatched(className, path)
+//        ) {
+//            return joinPoint.proceed();
+//        }
 
         //如果不是请求映射方法，直接返回
         if (!AnnotatedElementUtils.hasAnnotation(signature.getMethod(), RequestMapping.class)) {

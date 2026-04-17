@@ -13,7 +13,7 @@
     <artifactId>codegen-example</artifactId>
     <version>${revision}</version>
 
-    <name>XX项目名称</name>
+    <name>code-gen-example</name>
     <description>XX项目描述</description>
 
     <packaging>pom</packaging>

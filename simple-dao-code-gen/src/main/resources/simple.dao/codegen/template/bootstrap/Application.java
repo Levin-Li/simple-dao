@@ -1,25 +1,17 @@
 package ${modulePackageName};
 
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.levin.commons.service.support.ValueHolder;
 import com.levin.commons.service.support.VariableNotFoundException;
 import com.levin.commons.service.support.VariableResolver;
 import com.levin.commons.service.support.VariableResolverConfigurer;
-
 import com.levin.commons.utils.ExceptionUtils;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.task.TaskExecutorBuilder;
+import org.springframework.boot.cache.autoconfigure.RedisCacheManagerBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
@@ -43,17 +35,17 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-<#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
+//import org.apache.dubbo.config.spring.context.annotation.*;
 
 import org.h2.tools.Server;
 
 /**
  *  启动类
- *  @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *  @author Auto gen by simple-dao-codegen, @time: 2026年4月17日 11:46:45, 代码生成哈希校验码：[d7eda5ba716d1cd012ccd5870a3e3e7a]，请不要修改和删除此行内容。
  *
  */
 
-<#if !enableDubbo>//</#if>@EnableDubboConfig
+//@EnableDubboConfig
 @Slf4j
 @SpringBootApplication
 //@EnableWebSocketMessageBroker
@@ -132,20 +124,6 @@ public class Application {
         config.setMaxAge(18000L);
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
-    }
-
-
-    /**
-     * 默认执行器
-     *
-     * @param builder
-     * @return
-     */
-    @Lazy
-    @Bean(name = {"applicationTaskExecutor", "taskExecutor"})
-    @ConditionalOnMissingBean(name = {"applicationTaskExecutor", "taskExecutor"})
-    public ThreadPoolTaskExecutor applicationTaskExecutor(@Autowired ThreadPoolTaskExecutorBuilder builder) {
-        return builder.build();
     }
 
     /**
