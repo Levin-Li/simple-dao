@@ -864,41 +864,6 @@
                 </dependencies>
             </plugin>
 
-            <plugin>
-                <!--  flatten-maven-plugin 插件由 spring boot 进行版本管理 -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-
-                <executions>
-
-                    <execution>
-                        <id>flatten</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                        <configuration>
-                            <!--   <outputDirectory>${r"${project.build.directory}"}</outputDirectory> -->
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                    </execution>
-
-                </executions>
-
-            </plugin>
-
         </plugins>
     </build>
 

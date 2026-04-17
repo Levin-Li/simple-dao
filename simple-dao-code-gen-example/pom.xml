@@ -4,33 +4,32 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-
+    <groupId>com.levin.commons</groupId>
+    <version>${revision}</version>
     <artifactId>simple-dao-codegen-example</artifactId>
 
     <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
 
     <properties>
 
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <revision>4.2.0-SNAPSHOT</revision>
 
-        <maven.test.skip>false</maven.test.skip>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.source.skip>true</maven.source.skip>
-        <simple-dao-codegen.skip>false</simple-dao-codegen.skip>
+        <!-- Spring Boot 版本，请根据需要修改 -->
+        <spring-boot.version>4.0.5</spring-boot.version>
 
-        <maven-source-plugin.attach>true</maven-source-plugin.attach>
-        <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
+        <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
+        <levin.simple-dao.version>4.2.0-SNAPSHOT</levin.simple-dao.version>
+
+        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>
+        <levin.service-support.version>2.0.0-SNAPSHOT</levin.service-support.version>
 
     </properties>
 
     <repositories>
-
         <repository>
             <id>jitpack.io</id>
             <url>https://www.jitpack.io</url>
         </repository>
-
     </repositories>
 
     <pluginRepositories>
@@ -41,272 +40,30 @@
         </pluginRepository>
     </pluginRepositories>
 
-
-    <distributionManagement>
-
-        <!--具体变量来自 Setting 文件-->
-        <repository>
-            <id>${dist-repo}</id>
-            <url>${dist-repo.releases.url}</url>
-        </repository>
-
-        <snapshotRepository>
-            <id>${dist-repo}</id>
-            <url>${dist-repo.snapshots.url}</url>
-        </snapshotRepository>
-
-    </distributionManagement>
-
-    <profiles>
-
-        <profile>
-            <id>01-跳过测试</id>
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-
-        </profile>
-
-        <profile>
-            <id>02-上传源代码到 Maven</id>
-            <properties>
-                <maven.source.skip>false</maven.source.skip>
-            </properties>
-        </profile>
-
-
-        <profile>
-            <id>03-上传JavaDoc到 Maven</id>
-            <properties>
-                <maven.javadoc.skip>false</maven.javadoc.skip>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>04-启用simple-dao代码生成</id>
-            <properties>
-                <simple-dao-codegen.skip>false</simple-dao-codegen.skip>
-            </properties>
-        </profile>
-
-    </profiles>
-
-
-    <dependencyManagement>
-        <dependencies>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>simple-dao-jpa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>simple-dao-jpa-starter</artifactId>
-                <version>${project.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>${levin.service-support.groupId}</groupId>
-                <artifactId>service-support</artifactId>
-                <version>${levin.service-support.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-annotations</artifactId>
-                <version>${io.swagger.core.v3.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid</artifactId>
-                <version>${com.alibaba.druid.version}</version>
-            </dependency>
-
-        </dependencies>
-    </dependencyManagement>
-
-    <dependencies>
-
-        <!--        <dependency>
-                    <groupId>org.redisson</groupId>
-                    <artifactId>redisson-spring-boot-starter</artifactId>
-                    <version>3.14.0</version>
-                </dependency>-->
-
-
-        <!--        <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-quartz</artifactId>
-                </dependency>-->
-
-        <!--        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
-        </dependency>-->
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/jakarta.validation/validation-api -->
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.groovy</groupId>
-            <artifactId>groovy</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-jpa</artifactId>
-            <version>${querydsl.version}</version>
-            <classifier>jakarta</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-apt</artifactId>
-            <version>${querydsl.version}</version>
-            <classifier>jakarta</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aspectj</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-cache</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>${levin.service-support.groupId}</groupId>
-            <artifactId>service-support</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>simple-dao-jpa-starter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-        </dependency>
-
-    </dependencies>
-
     <build>
-
         <plugins>
 
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <inherited>true</inherited>
-                <configuration>
-                    <archive>
-                        <addMavenDescriptor>${maven-jar-plugin.addMavenDescriptor}</addMavenDescriptor>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${levin.simple-dao.groupId}</groupId>
                 <artifactId>simple-dao-codegen</artifactId>
-                <version>${project.version}</version>
+                <version>${levin.simple-dao.version}</version>
                 <configuration>
-                    <skip>${simple-dao-codegen.skip}</skip>
-                    <!--    <entitiesModuleDirName>实体目录名称</entitiesModuleDirName> -->
-                    <ignoreEntities>
-                        <entity>QQQ</entity>
-                    </ignoreEntities>
-                </configuration>
+                    <!-- 生成的控制器代码是否包括目录-->
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
 
+                    <!-- 是否生成BizController -->
+                    <isCreateBizController>true</isCreateBizController>
+
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+
+                    <!-- 集成 OakBaseFramework -->
+                    <enableOakBaseFramework>false</enableOakBaseFramework>
+
+                    <!-- 集成 DubboFramework -->
+                    <enableDubbo>false</enableDubbo>
+
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>${levin.service-support.groupId}</groupId>
@@ -315,58 +72,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-
-            <plugin>
-
-                <!--  flatten-maven-plugin 插件由 spring boot 进行版本管理-->
-
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-
-                <executions>
-
-                    <execution>
-                        <id>flatten</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                        <configuration>
-                            <!--                            <outputDirectory>${project.build.directory}</outputDirectory>-->
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-            </plugin>
-
-
-            <plugin>
-                <artifactId>maven-install-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
 
         </plugins>
     </build>
