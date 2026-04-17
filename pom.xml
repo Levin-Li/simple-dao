@@ -490,6 +490,7 @@
                             </includes>
                             <!-- 这里配置：不删除的文件/文件夹 -->
                             <excludes>
+                                <exclude>pom.xml</exclude>
                                 <exclude>.gitignore</exclude>
                                 <exclude>template/**/*</exclude>
                             </excludes>
@@ -508,7 +509,7 @@
                     <!-- 在 clean 阶段之前执行复制 -->
                     <execution>
                         <id>copy-files-before-clean</id>
-                        <phase>post-clean</phase>
+                        <phase>pre-clean</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -518,16 +519,13 @@
                             <!-- 从哪里复制 -->
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/simple-dao-code-gen-example/template</directory>
+                                    <directory>${project.basedir}/simple-dao-code-gen/template</directory>
                                     <!-- 包含哪些文件（**/* 表示全部） -->
                                     <includes>
-                                        <include>**/*.yml</include>
-                                        <include>**/*.properties</include>
-                                        <include>**/*.xml</include>
+                                        <include>**/*</include>
                                     </includes>
                                     <!-- 不复制哪些 -->
                                     <excludes>
-                                        <exclude>application-dev.yml</exclude>
                                     </excludes>
                                 </resource>
                             </resources>
