@@ -45,7 +45,7 @@
         <fastjson.version>2.0.60</fastjson.version>
         <fastjson2.version>2.0.60</fastjson2.version>
 
-        <j2cache.version>2.8.5-release</j2cache.version>
+        <j2cache.version>4.0.0-SNAPSHOT</j2cache.version>
 
         <lock4j.version>2.2.7</lock4j.version>
         <baomidou-ds.version>4.3.1</baomidou-ds.version>
@@ -809,6 +809,17 @@
         </resources>
 
         <plugins>
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <!-- 编译时保留参数名称 -->
+                    <parameters>true</parameters>
+                    <!-- JDK 23+ 默认不再自动执行 classpath 上的注解处理器，这里显式恢复完整处理流程 -->
+                    <proc>full</proc>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>

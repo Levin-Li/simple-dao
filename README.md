@@ -181,16 +181,13 @@
         <revision>1.0.0-SNAPSHOT</revision>
 
         <!-- Spring Boot 版本，请根据需要修改 -->
-        <spring-boot.version>2.7.15</spring-boot.version>
+        <spring-boot.version>4.0.5</spring-boot.version>
 
-        <levin.simple-dao.groupId>com.github.Levin-Li.simple-dao</levin.simple-dao.groupId>
-
-        <!-- 本地版本包名，请先在本机maven安装simple-dao -->
         <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
-        <levin.simple-dao.version>2.6.5-SNAPSHOT</levin.simple-dao.version> 
+        <levin.simple-dao.version>4.2.0-SNAPSHOT</levin.simple-dao.version>
 
-        <levin.service-support.groupId>com.github.Levin-Li</levin.service-support.groupId>
-        <levin.service-support.version>1.2.30-SNAPSHOT</levin.service-support.version>
+        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>
+        <levin.service-support.version>2.0.0-SNAPSHOT</levin.service-support.version>
 
     </properties>
   

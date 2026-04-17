@@ -420,33 +420,6 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <inherited>true</inherited>
-
-                <executions>
-                    <execution>
-
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-
-                        <configuration>
-                            <attach>true</attach>
-                            <skip>${maven.javadoc.skip}</skip>
-                        </configuration>
-
-                    </execution>
-                </executions>
-
-                <configuration>
-                    <docencoding>UTF-8</docencoding>
-                    <additionalJOption>-Xdoclint:none</additionalJOption>
-                    <skip>${maven.javadoc.skip}</skip>
-                </configuration>
-
-            </plugin>
 
 
             <plugin>
@@ -474,19 +447,7 @@
                 </executions>
 
             </plugin>
-
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
-
-            <!--            <plugin>-->
-            <!--                <artifactId>maven-deploy-plugin</artifactId>-->
-            <!--                <inherited>true</inherited>-->
-
-            <!--                <configuration>-->
-            <!--                    <uniqueVersion>true</uniqueVersion>-->
-            <!--                </configuration> -->
-            <!--            </plugin>-->
+ <!--
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -503,7 +464,7 @@
                         <configuration>
                             <updatePomFile>true</updatePomFile>
                             <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                            <!--                            <outputDirectory>${project.build.directory}</outputDirectory>-->
+                            &lt;!&ndash;                            <outputDirectory>${project.build.directory}</outputDirectory>&ndash;&gt;
                         </configuration>
                     </execution>
 
@@ -516,7 +477,7 @@
                     </execution>
                 </executions>
 
-            </plugin>
+            </plugin>-->
 
 
         </plugins>

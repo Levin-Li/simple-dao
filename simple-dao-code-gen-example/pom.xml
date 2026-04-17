@@ -4,18 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.levin.commons</groupId>
-        <artifactId>simple-dao-parent</artifactId>
-        <version>${revision}</version>
-    </parent>
 
     <artifactId>simple-dao-codegen-example</artifactId>
 
     <!--  代码生成插件  请把以下配置加入到项目的根 pom.xml 文件中    -->
 
     <properties>
-
 
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -27,7 +21,6 @@
 
         <maven-source-plugin.attach>true</maven-source-plugin.attach>
         <maven-jar-plugin.addMavenDescriptor>false</maven-jar-plugin.addMavenDescriptor>
-
 
     </properties>
 
@@ -344,7 +337,7 @@
                             <goal>flatten</goal>
                         </goals>
                         <configuration>
-<!--                            <outputDirectory>${project.build.directory}</outputDirectory>-->
+                            <!--                            <outputDirectory>${project.build.directory}</outputDirectory>-->
                         </configuration>
                     </execution>
 

@@ -16,7 +16,10 @@ import lombok.experimental.FieldNameConstants;
 
 import jakarta.persistence.*;
 import java.util.List;
+
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 示例代码
@@ -132,16 +135,14 @@ public class TestRole
     protected OrgDataScope orgDataScope;
 
     @Schema(title = "指定的部门列表", description = "Json数组")
-    @Lob
-    @InjectVar(domain = "dao" /* 固定字符串 */, expectBaseType = List.class , expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false", remark="数据库存取时的值转换定义")
-    protected String assignedOrgIdList;
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected List<String> assignedOrgIdList;
 
-    @Schema(title = "资源权限列表", description = "Json数组")
+    @Schema(title = "资源权限列表", description = "兼容旧的表达方式")
     @Lob
     @Basic(fetch = FetchType.LAZY) //延迟抓取
     @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false", remark="数据库存取时的值转换定义")
     protected String permissionList;
-
 
     @Schema(title = "资源权限列表2", description = "Json数组")
     @Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
