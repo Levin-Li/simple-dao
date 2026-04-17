@@ -326,8 +326,8 @@
 
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
                 <inherited>true</inherited>
+                <version>3.15.0</version>
                 <configuration>
                     <!-- 编译时保留参数名称 -->
                     <parameters>true</parameters>
@@ -421,7 +421,6 @@
             </plugin>
 
 
-
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
                 <inherited>true</inherited>
@@ -447,7 +446,7 @@
                 </executions>
 
             </plugin>
- <!--
+
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -464,7 +463,6 @@
                         <configuration>
                             <updatePomFile>true</updatePomFile>
                             <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                            &lt;!&ndash;                            <outputDirectory>${project.build.directory}</outputDirectory>&ndash;&gt;
                         </configuration>
                     </execution>
 
@@ -477,8 +475,67 @@
                     </execution>
                 </executions>
 
-            </plugin>-->
+            </plugin>
 
+            <!-- 清理插件：自定义清理规则 -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <!-- 你要清空的目录（例如：files、upload、dist、generated 等） -->
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/simple-dao-code-gen-example</directory>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <!-- 这里配置：不删除的文件/文件夹 -->
+                            <excludes>
+                                <exclude>.gitignore</exclude>
+                                <exclude>template/**/*</exclude>
+                            </excludes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+
+                        <!-- 你可以加多个需要清空的目录 -->
+                    </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <!-- 在 clean 阶段之前执行复制 -->
+                    <execution>
+                        <id>copy-files-before-clean</id>
+                        <phase>post-clean</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 复制到哪里 -->
+                            <outputDirectory>${project.basedir}/simple-dao-code-gen-example</outputDirectory>
+                            <!-- 从哪里复制 -->
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/simple-dao-code-gen-example/template</directory>
+                                    <!-- 包含哪些文件（**/* 表示全部） -->
+                                    <includes>
+                                        <include>**/*.yml</include>
+                                        <include>**/*.properties</include>
+                                        <include>**/*.xml</include>
+                                    </includes>
+                                    <!-- 不复制哪些 -->
+                                    <excludes>
+                                        <exclude>application-dev.yml</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                            <overwrite>true</overwrite>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
         </plugins>
 

@@ -91,18 +91,6 @@ public class DemoJob
     }
 
     /**
-     * 需要覆盖这个方法，返回任务执行器
-     * 返回 null 则使用调度器的线程执行
-     *
-     * @return
-     */
-    @Override
-    protected Executor getExecutor() {
-        return executor;
-    }
-
-
-    /**
      * 返回一个批次要处理的数据
      *
      * @param startTime

@@ -136,11 +136,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         </#if>
 
@@ -170,11 +165,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <scope>provided</scope>
-        </dependency>
+
 
         </#if>
 
@@ -197,12 +188,7 @@
 
         <dependency>
             <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ma.glasnost.orika</groupId>
-            <artifactId>orika-core</artifactId>
+            <artifactId>oshi-core-java11</artifactId>
         </dependency>
 
         <dependency>
@@ -346,13 +332,7 @@
         <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
         <dependency>
             <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-spring-boot3-starter</artifactId>
-        </dependency>
-
-        <!-- Sa-Token 整合 Redis （使用 jackson 序列化方式） -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-redisson-jackson</artifactId>
+            <artifactId>sa-token-spring-boot4-starter</artifactId>
         </dependency>
 
         <!-- Sa-Token 整合 SpringAOP 实现注解鉴权 -->
@@ -422,6 +402,11 @@
             <artifactId>j2cache-core</artifactId>
         </dependency>
 
+    <dependency>
+        <groupId>net.oschina.j2cache</groupId>
+        <artifactId>j2cache-spring-boot4-starter</artifactId>
+    </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
@@ -456,11 +441,6 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
         </#if>

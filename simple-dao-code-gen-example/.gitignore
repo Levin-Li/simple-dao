@@ -26,4 +26,6 @@ out
 
 #做为 demo 不提交生成的代码
 **/src
+pom.xml
+*/**
 

@@ -134,6 +134,7 @@ public class Application {
         return new CorsFilter(source);
     }
 
+
     /**
      * 默认执行器
      *
@@ -143,7 +144,7 @@ public class Application {
     @Lazy
     @Bean(name = {"applicationTaskExecutor", "taskExecutor"})
     @ConditionalOnMissingBean(name = {"applicationTaskExecutor", "taskExecutor"})
-    public ThreadPoolTaskExecutor applicationTaskExecutor(@Autowired TaskExecutorBuilder builder) {
+    public ThreadPoolTaskExecutor applicationTaskExecutor(@Autowired ThreadPoolTaskExecutorBuilder builder) {
         return builder.build();
     }
 

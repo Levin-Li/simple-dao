@@ -10,7 +10,7 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.info.Info;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.GroupedOpenApi;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -34,7 +34,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 //Swagger3
-
+/**
+ *
+ *
+ * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+ *
+ */
 @Slf4j
 @Configuration(PLUGIN_PREFIX + "ModuleSwaggerConfigurer")
 @ConditionalOnProperty(prefix = PLUGIN_PREFIX, name = "ModuleSwaggerConfigurer", matchIfMissing = true)
@@ -87,7 +92,7 @@ public class ModuleSwaggerConfigurer
         GroupedOpenApi.Builder builder = GroupedOpenApi.builder()
                 .group(ID)
                 .displayName(GROUP_NAME)
-                .addOpenApiCustomiser(openApi ->
+                .addOpenApiCustomizer(openApi ->
                         //Tag排序
                         openApi
                                 //设置模块信息
@@ -105,7 +110,7 @@ public class ModuleSwaggerConfigurer
 
         return builder
                 .packagesToScan(PACKAGE_NAME)
-                .addOpenApiCustomiser(openApi ->
+                .addOpenApiCustomizer(openApi ->
                         //Tag排序
                         openApi
                                 //设置模块信息
@@ -136,7 +141,7 @@ public class ModuleSwaggerConfigurer
                             && AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), RequestMapping.class)
                             && DisableApiOperationUtils.isApiEnable(handlerMethod.getBeanType(), handlerMethod.getMethod()) ? operation : null;
                 })
-                .addOpenApiCustomiser(openApi -> {
+                .addOpenApiCustomizer(openApi -> {
                     //删除调没有接口的tag
                     Set<String> tags = openApi.getPaths().values().stream()
                             .flatMap(pathItem -> getOperations(pathItem).stream())

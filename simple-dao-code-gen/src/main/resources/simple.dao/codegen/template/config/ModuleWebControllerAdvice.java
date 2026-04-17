@@ -16,7 +16,6 @@ import com.levin.commons.utils.ExceptionUtils;
 import com.levin.commons.dao.exception.*;
 
 
-import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
@@ -90,8 +89,6 @@ public class ModuleWebControllerAdvice {
     @Autowired
     HttpServletResponse response;
 
-    @Autowired
-    MultipartProperties multipartProperties;
 
     @Autowired
     Environment env;

@@ -20,7 +20,7 @@
 
         <revision>${project__version}</revision>
 
-        <dubbo.version>3.3.5</dubbo.version>
+        <dubbo.version>3.3.6</dubbo.version>
 
         <spring-boot.version>${spring_boot__version}</spring-boot.version>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
@@ -39,7 +39,6 @@
 
         <druid.version>1.2.23</druid.version>
         <hutool.version>5.8.43</hutool.version>
-        <orika.version>1.5.4</orika.version>
 
         <sa-token.version>1.45.0</sa-token.version>
         <fastjson.version>2.0.60</fastjson.version>
@@ -50,8 +49,8 @@
         <lock4j.version>2.2.7</lock4j.version>
         <baomidou-ds.version>4.3.1</baomidou-ds.version>
 
-        <powerjob.version>5.1.0</powerjob.version>
-        <liteflow.version>2.12.2.1</liteflow.version>
+        <powerjob.version>5.1.2</powerjob.version>
+        <liteflow.version>6.12.0</liteflow.version>
 
         <asyncTool.version>V1.4-SNAPSHOT</asyncTool.version>
 
@@ -273,14 +272,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.dubbo</groupId>
-                <artifactId>dubbo-dependencies-zookeeper</artifactId>
-                <version>${r"${dubbo.version}"}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
                 <groupId>${r"${levin.simple-dao.groupId}"}</groupId>
                 <artifactId>simple-dao-annotations</artifactId>
                 <version>${r"${levin.simple-dao.version}"}</version>
@@ -411,6 +402,7 @@
 
            <!--  https://liteflow.cc/   -->
             <dependency>
+                <!-- ✅ LiteFlow 官方 Spring Boot 4 兼容 Starter -->
                 <groupId>com.yomahub</groupId>
                 <artifactId>liteflow-spring-boot-starter</artifactId>
                 <version>${r"${liteflow.version}"}</version>
@@ -449,6 +441,12 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>net.oschina.j2cache</groupId>
+                <artifactId>j2cache-spring-boot4-starter</artifactId>
+                <version>${r"${j2cache.version}"}</version>
             </dependency>
 
             <dependency>
@@ -521,20 +519,7 @@
             <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
             <dependency>
                 <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-spring-boot3-starter</artifactId>
-                <version>${r"${sa-token.version}"}</version>
-            </dependency>
-
-            <!-- Sa-Token 整合 Redis （使用 jackson 序列化方式） -->
-            <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-redis-jackson</artifactId>
-                <version>${r"${sa-token.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-redisson-jackson</artifactId>
+                <artifactId>sa-token-spring-boot4-starter</artifactId>
                 <version>${r"${sa-token.version}"}</version>
             </dependency>
 
@@ -550,12 +535,6 @@
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-quick-login</artifactId>
                 <version>${r"${sa-token.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ma.glasnost.orika</groupId>
-                <artifactId>orika-core</artifactId>
-                <version>${r"${orika.version}"}</version>
             </dependency>
 
             <!-- 引入Swagger3依赖 -->
@@ -592,11 +571,6 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${r"${postgresql-driver.version}"}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-openfeign</artifactId>
             </dependency>
 
             <dependency>
@@ -862,6 +836,37 @@
                         <version>${r"${levin.service-support.version}"}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+
+                    <execution>
+                        <id>flatten</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                        <configuration>
+                            <updatePomFile>true</updatePomFile>
+                            <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
             </plugin>
 
         </plugins>
