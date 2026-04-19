@@ -1588,44 +1588,37 @@ public final class ServiceModelCodeGenerator {
         classModel.getImports().add(Serializable.class.getName());
         classModel.getImplementsList().add("Serializable");
 
-        if (EnableObject.class.isAssignableFrom(entityClass)) {
-            classModel.getImports().add(EnableObject.class.getName());
-            classModel.getImplementsList().add("EnableObject");
-        }
-
-        if (EditableObject.class.isAssignableFrom(entityClass)) {
-            classModel.getImports().add(EditableObject.class.getName());
-            classModel.getImplementsList().add("EditableObject");
-        }
-
-        if (SelfAuditableObject.class.isAssignableFrom(entityClass)) {
-            classModel.getImports().add(SelfAuditableObject.class.getName());
-            classModel.getImplementsList().add("SelfAuditableObject");
-        }
-
-        if (TreeObject.class.isAssignableFrom(entityClass)) {
-            classModel.getImports().add(TreeObject.class.getName());
-            classModel.getImplementsList().add("TreeObject<" + genClassName + ", " + genClassName + ">");
-        }
 
         ResolvableType root = ResolvableType.forClass(entityClass);
 
-        for (Type si : entityClass.getGenericInterfaces()) {
+        Class<?> tempClass = entityClass;
 
-            ResolvableType forType = ResolvableType.forType(si, root);
+        while (tempClass != Object.class && tempClass != null) {
 
-            Class<?> resolve = forType.resolve();
+            for (Type si : tempClass.getGenericInterfaces()) {
 
-            if (BaseTreeObject.class.isAssignableFrom(resolve)) {
-                continue;
+                ResolvableType forType = ResolvableType.forType(si, root);
+
+
+                final String genericStr = com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(forType, resolve -> {
+
+                    classModel.getImports().add(resolve.getName());
+
+                    if (resolve.isAnnotationPresent(Entity.class) || resolve.isAnnotationPresent(MappedSuperclass.class)) {
+
+                        classModel.getImports().add(getInfoClassImport(resolve));
+
+                        return resolve.getSimpleName() + "Info";
+                    } else {
+                        return resolve.getSimpleName();
+                    }
+
+                });
+
+                classModel.getImplementsList().add(genericStr);
             }
 
-            if (!forType.hasUnresolvableGenerics()) {
-                classModel.getImports().add(resolve.getName());
-                classModel.getImplementsList().add(resolve.getSimpleName());
-            } else {
-                classModel.getImplementsList().add(forType.getType().getTypeName());
-            }
+            tempClass = tempClass.getSuperclass();
 
         }
 
@@ -2196,6 +2189,7 @@ public final class ServiceModelCodeGenerator {
         return result;
     }
 
+
     private static List<FieldModel> buildFieldModel(Class entityClass, Map<String, Object> entityMapping
             , boolean ignoreSpecificField/*是否生成约定处理字段，如：枚举新增以Desc结尾的字段*/, String action) throws Exception {
 
@@ -2350,9 +2344,8 @@ public final class ServiceModelCodeGenerator {
 
             setLazy(fieldModel);
 
-            fieldModel.setTypeName(FieldModel.getSimpleGenericString(forField, type -> {
+            fieldModel.setTypeName(com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(forField, resolve -> {
 
-                Class<?> resolve = type.resolve();
                 fieldModel.addImport(resolve);
 
                 if (resolve.isAnnotationPresent(Entity.class) || resolve.isAnnotationPresent(MappedSuperclass.class)) {

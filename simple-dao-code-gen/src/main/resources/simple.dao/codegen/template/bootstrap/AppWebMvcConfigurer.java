@@ -162,7 +162,7 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                 //
                 //return BeanUtil.copyProperties(pData, parameter.getParameterType());
 
-               return BeanCopyUtils.copyProperties(pData, parameter.getParameterType())
+               return BeanCopyUtils.copyProperties(pData, parameter.getParameterType());
             }
         });
     }

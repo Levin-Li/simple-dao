@@ -139,29 +139,6 @@ public class FieldModel implements Cloneable {
     private Class<?> optionsRefTargetType;
 
 
-    public static String getSimpleGenericString(ResolvableType type, Function<ResolvableType, String> classConsumer) {
-
-        if (type.getGenerics().length == 0) {
-            return classConsumer.apply(type);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(classConsumer.apply(type));
-        sb.append("<");
-
-        ResolvableType[] generics = type.getGenerics();
-
-        for (int i = 0; i < generics.length; i++) {
-            if (i > 0)
-                sb.append(",");
-            sb.append(getSimpleGenericString(generics[i], classConsumer));
-        }
-
-        sb.append(">");
-
-        return sb.toString();
-    }
-
     /**
      * 使用常量应用
      */
