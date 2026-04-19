@@ -88,7 +88,7 @@ public class ${className} extends Query${entityName}Req{
 
     @Ignore
     @CtxVar //该注解增加当前字段名称和字段值到环境变量中
-    final LocalDateTime _7dayAgo = DateUtil.offsetDay(today, -7).toJdkDate();
+    final LocalDateTime _7dayAgo = today.minusDays(7);
 
     @PostConstruct
     public void preStat() {
