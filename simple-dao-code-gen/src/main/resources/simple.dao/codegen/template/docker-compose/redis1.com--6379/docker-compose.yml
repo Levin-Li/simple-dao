@@ -8,13 +8,15 @@ services:
     restart: always
     privileged: true
 
-    network_mode: host  # mac os 会失效  ports:  去掉！！！
-    #    ports:
-    #      - "${SERVICE_PORT}:${SERVICE_PORT}"
+#    network_mode: host      #数据库和Redis网络模式尽量不用桥接模式，使用host模式, 以免损失性能; 但是在 mac os host模式会导致服务无法访问
+
+    ports:
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
+
     command:
-      - --bind 127.0.0.1
+#      - --bind 127.0.0.1
       - --port 6379
-#      - --requirepass
+#      - --requirepas
       - --dir /data
       - --maxmemory 2G
       - --maxclients 50000

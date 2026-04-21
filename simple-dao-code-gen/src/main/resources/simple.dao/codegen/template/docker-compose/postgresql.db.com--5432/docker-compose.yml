@@ -4,8 +4,8 @@ services:
     image: postgres:${POSTGRES_VERSION}
     container_name: postgresql-${SERVICE_PORT} #指定服务名
 
-    #数据库和Redis 网络模式尽量不用桥接模式，使用host模式,以免损失性能, mac os 会失败
-    #    network_mode: host
+    #数据库和Redis网络模式尽量不用桥接模式，使用host模式, 以免损失性能; 但是在 mac os host模式会导致服务无法访问
+    # network_mode: host
 
     ports:
       - "${SERVICE_PORT}:${SERVICE_PORT}"

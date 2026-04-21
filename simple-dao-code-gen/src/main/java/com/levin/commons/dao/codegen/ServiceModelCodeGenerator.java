@@ -1588,23 +1588,30 @@ public final class ServiceModelCodeGenerator {
         classModel.getImports().add(Serializable.class.getName());
         classModel.getImplementsList().add("Serializable");
 
+        Set<Class<?>> visited = new HashSet<>();
 
-        ResolvableType root = ResolvableType.forClass(entityClass);
+        // 从当前类开始，一直往上遍历所有父类
+        for (ResolvableType currentType = ResolvableType.forClass(entityClass);
+             currentType != ResolvableType.NONE;
+             currentType = currentType.getSuperType()) {
 
-        Class<?> tempClass = entityClass;
+            // 获取当前类实现的所有接口
+            for (ResolvableType interfaceType : currentType.getInterfaces()) {
 
-        while (tempClass != Object.class && tempClass != null) {
+                Class<?> rawInterface = interfaceType.getRawClass();
 
-            for (Type si : tempClass.getGenericInterfaces()) {
+                if (rawInterface == null || visited.contains(rawInterface)) {
+                    continue;
+                }
 
-                ResolvableType forType = ResolvableType.forType(si, root);
+                visited.add(rawInterface);
 
-
-                final String genericStr = com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(forType, resolve -> {
+                // 解析接口上的泛型实际类型
+                final String genericStr = com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(interfaceType, resolve -> {
 
                     classModel.getImports().add(resolve.getName());
 
-                    if (resolve.isAnnotationPresent(Entity.class) || resolve.isAnnotationPresent(MappedSuperclass.class)) {
+                    if (resolve.isAnnotationPresent(Entity.class)) { // || resolve.isAnnotationPresent(MappedSuperclass.class)
 
                         classModel.getImports().add(getInfoClassImport(resolve));
 
@@ -1616,10 +1623,8 @@ public final class ServiceModelCodeGenerator {
                 });
 
                 classModel.getImplementsList().add(genericStr);
+
             }
-
-            tempClass = tempClass.getSuperclass();
-
         }
 
         params.put("classModel", classModel);
@@ -2348,7 +2353,7 @@ public final class ServiceModelCodeGenerator {
 
                 fieldModel.addImport(resolve);
 
-                if (resolve.isAnnotationPresent(Entity.class) || resolve.isAnnotationPresent(MappedSuperclass.class)) {
+                if (resolve.isAnnotationPresent(Entity.class)) { // || resolve.isAnnotationPresent(MappedSuperclass.class)
 
                     fieldModel.getImports().add(getInfoClassImport(resolve));
 
