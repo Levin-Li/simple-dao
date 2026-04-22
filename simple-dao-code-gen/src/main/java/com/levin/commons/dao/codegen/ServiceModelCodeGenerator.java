@@ -662,7 +662,10 @@ public final class ServiceModelCodeGenerator {
 //                        + "controller" + File.separatorChar + "BaseController.java");
 
         genFileByTemplate(genParams, adminApiDir, "controller", "BaseController.java");
+        genFileByTemplate(genParams, adminApiDir, "controller/base", "code-gen.md");
+
         genFileByTemplate(genParams, clientApiDir, "controller", "BaseController.java");
+        genFileByTemplate(genParams, clientApiDir, "controller/base", "code-gen.md");
 
 //        genFileByTemplate("services/BaseService.java",
 //                MapUtils.put(genParams).put("modulePackageName", modulePackageName()).build(), serviceDir + File.separatorChar

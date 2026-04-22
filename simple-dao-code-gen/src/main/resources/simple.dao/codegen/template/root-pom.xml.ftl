@@ -85,9 +85,9 @@
 
         <postgresql-driver.version>42.7.7</postgresql-driver.version>
 
-        <maven.compiler.release>17</maven.compiler.release>
         <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>

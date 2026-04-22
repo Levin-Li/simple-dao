@@ -52,6 +52,13 @@ spring:
     time-zone: GMT+8
     locale: zh_CN
 
+    # 枚举序列化：不使用 toString()，输出枚举名（REWRITE）
+    # Jackson 3 枚举配置：不使用 toString()，按枚举 name() 序列化和反序列化。
+    datatype:
+      enum:
+        WRITE_ENUMS_USING_TO_STRING: false
+        READ_ENUMS_USING_TO_STRING: false
+
   # 数据源配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
