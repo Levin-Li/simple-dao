@@ -1,6 +1,7 @@
 package ${modulePackageName};
 
 import static ${modulePackageName}.ModuleOption.*;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class AppDataInitializer  {
 
-    @Override
-    protected void initData() {
+    @PostConstruct
+    public void initData() {
     }
 
 }
