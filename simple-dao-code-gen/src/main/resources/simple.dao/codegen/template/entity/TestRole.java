@@ -134,9 +134,6 @@ public class TestRole
 
         super.prePersist();
 
-        if (orgDataScope == null) {
-            orgDataScope = OrgDataScope.MySelf;
-        }
     }
 
 }

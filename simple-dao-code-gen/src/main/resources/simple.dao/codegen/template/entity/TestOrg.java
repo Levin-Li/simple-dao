@@ -268,7 +268,6 @@ public class TestOrg
     protected String zipCode;
 
     @Schema(title = "扩展信息")
-    @Column
     @JdbcTypeCode(SqlTypes.JSON)
     protected JSONObject exInfo;
 
