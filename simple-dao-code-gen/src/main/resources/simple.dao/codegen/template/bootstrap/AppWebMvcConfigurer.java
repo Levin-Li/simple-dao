@@ -6,9 +6,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 
 import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.JsonSerializer;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializerProvider;
 import tools.jackson.databind.module.SimpleModule;
 
 import com.levin.commons.dao.Paging;
@@ -28,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -253,104 +250,4 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
 
     }
 
-    /**
-     * 数据转换和加密
-     * @param converters
-     */
-    @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-
-        for (HttpMessageConverter<?> converter : converters) {
-            if (converter instanceof MappingJackson2HttpMessageConverter) {
-
-                final ObjectMapper objectMapper = ((MappingJackson2HttpMessageConverter) converter).getObjectMapper();
-
-                SimpleModule module = new SimpleModule().addSerializer(ApiResp.class, new JsonSerializer<ApiResp>() {
-                    @Override
-                    public void serialize(ApiResp apiResp, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-
-                        jsonGenerator.writeStartObject();
-
-                        jsonGenerator.writeNumberField(BaseResp.Fields.code, (apiResp.getCode() > 100) ? (apiResp.getCode() / 100) : apiResp.getCode());
-
-                        jsonGenerator.writeBooleanField("successful", apiResp.isSuccessful());
-                        jsonGenerator.writeBooleanField("bizError", apiResp.isBizError());
-
-                        //jsonGenerator.writeBooleanField("errType", apiResp.getErrorType().name());
-
-                        if (StringUtils.hasText(apiResp.getMsg())) {
-                            jsonGenerator.writeStringField(BaseResp.Fields.msg, apiResp.getMsg());
-                        }
-
-                        Object data = apiResp.getData();
-
-                        //分页对象单独处理
-                        if (data instanceof PageableData) {
-
-                            PageableData pd = (PageableData) data;
-
-                            HashMap<Object, Object> pdMap = new HashMap<>();
-
-                            pdMap.put("total", pd.getTotals());
-                            pdMap.put("hasNext", pd.hasMore());
-
-                            if (pd.getItems() != null) {
-                                pdMap.put("items", pd.getItems());
-                            }
-
-                            data = pdMap;
-                        }
-
-                        if (data != null) {
-
-                            //如果是对象类型
-                            if (!BeanUtils.isSimpleValueType(data.getClass())) {
-
-                                final String json = objectMapper.writeValueAsString(data);
-
-                                final String sign = SecureUtil.sha1(json);
-
-                                //加密重写数据，并且签名
-                                data = aesEncrypt(json, sign);
-
-                                jsonGenerator.writeStringField(ApiResp.Fields.sign, sign);
-                            }
-
-                            jsonGenerator.writeObjectField(BaseResp.Fields.data, data);
-
-                        }
-
-                        jsonGenerator.writeEndObject();
-
-                    }
-                });
-
-                objectMapper.registerModule(module);
-
-//
-//                SimpleModule pdModule = new SimpleModule().addSerializer(PageableData.class, new JsonSerializer<PageableData>() {
-//                    @Override
-//                    public void serialize(PageableData pd, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-//
-//                        jsonGenerator.writeStartObject();
-//
-//                        jsonGenerator.writeNumberField("total", pd.getTotals());
-//
-//                        if (pd.getItems() != null) {
-//                            jsonGenerator.writeObjectField(PagingData.Fields.items, pd.getItems());
-//                        }
-//
-//                        jsonGenerator.writeBooleanField("hasNext", pd.hasMore());
-//
-//                        jsonGenerator.writeEndObject();
-//
-//                    }
-//                });
-//
-//                objectMapper.registerModule(pdModule);
-
-            }
-        }
-
-    }
 }
