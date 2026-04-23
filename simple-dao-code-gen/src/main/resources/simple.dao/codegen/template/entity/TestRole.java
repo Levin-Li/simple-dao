@@ -1,8 +1,10 @@
 package ${CLASS_PACKAGE_NAME};
 
+import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.annotation.*;
+import com.levin.commons.rbac.SimpleOrgScope;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.support.*;
 
@@ -100,21 +102,6 @@ import org.hibernate.type.SqlTypes;
 public class TestRole
         extends AbstractNamedMultiTenantObject {
 
-    @Schema(title = "数据范围")
-    public enum OrgDataScope implements EnumDesc {
-        @Schema(title = "所有部门") All,
-        @Schema(title = "指定部门") Assigned,
-        @Schema(title = "仅本部门（不含子部门）") MyDept,
-        @Schema(title = "本部门及子部门") MyDeptAndChildren,
-        @Schema(title = "仅本人数据") MySelf,
-
-        ;
-        @Override
-        public String toString() {
-            return nameAndDesc();
-        }
-    }
-
     @Id
 //    @GeneratedValue
     @GeneratedValue(generator = "default_uuid")
@@ -129,25 +116,17 @@ public class TestRole
     @Schema(title = "图标")
     protected String icon;
 
-    @Schema(title = "部门数据权限")
-    @Column(nullable = false, length = 64)
-    @Enumerated(EnumType.STRING)
-    protected OrgDataScope orgDataScope;
-
-    @Schema(title = "指定的部门列表", description = "Json数组")
+    @Schema(title = "组织数据权限", description = "个人的数据范围优先于个角色赋予的数据范围")
     @JdbcTypeCode(SqlTypes.JSON)
-    protected List<String> assignedOrgIdList;
+    protected List<SimpleOrgScope> orgScopeList;
 
-    @Schema(title = "资源权限列表", description = "兼容旧的表达方式")
-    @Lob
-    @Basic(fetch = FetchType.LAZY) //延迟抓取
-    @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class}, converter = PrimitiveArrayJsonConverter.class, isRequired = "false", remark="数据库存取时的值转换定义")
-    protected String permissionList;
+    @Schema(title = "资源权限列表", description = "Json数组")
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected List<String> permissionList;
 
-    @Schema(title = "资源权限列表2", description = "Json数组")
-    @Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
-    @Column(columnDefinition = "json")
-    protected List<String> permissionList2;
+    @Schema(title = "扩展信息")
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected JSONObject exInfo;
 
     @Override
     @PrePersist

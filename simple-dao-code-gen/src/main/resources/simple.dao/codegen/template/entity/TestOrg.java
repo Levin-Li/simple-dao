@@ -1,5 +1,6 @@
 package ${CLASS_PACKAGE_NAME};
 
+import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.annotation.*;
@@ -11,6 +12,7 @@ import com.levin.commons.dao.domain.support.*;
 
 import com.levin.commons.service.support.*;
 
+import com.levin.commons.ui.annotation.Options;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +20,12 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+
+import java.io.Serializable;
+import java.util.List;
 
 
 /**
@@ -149,6 +156,24 @@ public class TestOrg
         }
     }
 
+    @Data
+    @Accessors(chain = true)
+    @FieldNameConstants
+    @Schema(title = "领导")
+    public static class Leader implements Castable, Serializable {
+
+        @Schema(title = "名称")
+        @Column(nullable = false)
+        protected String name;
+
+        @Schema(title = "用户ID")
+        @Column(nullable = false)
+        protected String userId;
+
+        @Schema(title = "备注")
+        protected String remark;
+    }
+
     @Id
 //    @GeneratedValue
     @GeneratedValue(generator = "default_id")
@@ -165,6 +190,14 @@ public class TestOrg
     @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.SA_ROLE, RbacRoleInfo.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
     protected String tenantId;
 
+    @Schema(title = "部门经理", description = "一个部门只有一个部门经理")
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected Leader primaryLeader;
+
+    @Schema(title = "部门副经理", description = "允许多个")
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected List<Leader> secondaryLeaderList;
+
     @Schema(title = "编码", description = "对于公司是统一信用码")
     @Column(length = 64)
     @Contains
@@ -179,7 +212,6 @@ public class TestOrg
 
     @Schema(title = "状态")
     @Column(nullable = false, length = 32)
-    @Enumerated(EnumType.STRING)
     protected State state;
 
     @Schema(title = "类型")
@@ -187,6 +219,7 @@ public class TestOrg
     @Enumerated(EnumType.STRING)
     protected OrgType type;
 
+    @Options(dictCode = "$@")
     @Schema(title = "所属行业")
     @Column(length = 64)
     protected String industries;
@@ -196,15 +229,12 @@ public class TestOrg
     @Contains
     protected String areaCode;
 
-//    @Schema(title = "所属区域")
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "areaCode", insertable = false, updatable = false)
-//    protected Area area;
-
+    @Options(dictCode = "$@")
     @Schema(title = "机构级别", description = "使用字典值配置")
     @Column(length = 128)
     protected String level;
 
+    @Options(dictCode = "$@")
     @Column(nullable = false, length = 128)
     @Schema(title = "机构类别", description = "使用字典值配置")
     protected String category;
@@ -213,10 +243,6 @@ public class TestOrg
     @Schema(title = "是否外部机构")
     protected Boolean isExternal;
 
-    @Lob
-    @Basic(fetch = FetchType.LAZY) //默认延迟加载
-    @Schema(title = "机构扩展信息")
-    protected String extInfo;
     //////////////////////////////////////////////////////////////////////
 
     @Schema(title = "联系人")
@@ -240,6 +266,11 @@ public class TestOrg
     @Schema(title = "邮政编码")
     @Column(length = 32)
     protected String zipCode;
+
+    @Schema(title = "扩展信息")
+    @Column
+    @JdbcTypeCode(SqlTypes.JSON)
+    protected JSONObject exInfo;
 
     @Override
     @PrePersist
