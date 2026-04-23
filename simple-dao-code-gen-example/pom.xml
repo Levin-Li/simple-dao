@@ -108,6 +108,14 @@
         <module>entities</module>
 
 
+    
+        <module>services</module>
+        <module>services-impl</module>
+        <module>starter</module>
+        <module>admin-api</module>
+        <module>admin-bootstrap</module>
+        <module>client-api</module>
+        <module>client-bootstrap</module>
     </modules>
 
     <profiles>
