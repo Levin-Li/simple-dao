@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 注意：
  * 当没有使用@Table和@Column注解时，implicit-strategy配置项才会被使用，即implicit-strategy定义的是一种缺省场景的处理策略；
  * 而physical-strategy属于一种高优先级的策略，只要设置就会被执行，而不管是否有@Table和@Column注解。
+ *
  * @author lilw
  */
 @Slf4j
@@ -51,6 +52,10 @@ public class EntityNamingStrategy extends PhysicalNamingStrategySnakeCaseImpl {
 
         final String text = name.getText();
 
+        if (name.isQuoted() && (text.trim().startsWith("\"") || text.trim().startsWith("`"))) {
+            return name;
+        }
+
         int index = text.indexOf("-");
 
         if (index > 1) {
@@ -82,7 +87,7 @@ public class EntityNamingStrategy extends PhysicalNamingStrategySnakeCaseImpl {
 
             }
 
-            name = new Identifier(prefix + "_" + tabName, name.isQuoted());
+            name = new Identifier(prefix + "_" + tabName, false);
 
         }
 
