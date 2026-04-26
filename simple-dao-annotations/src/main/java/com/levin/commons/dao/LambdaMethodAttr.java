@@ -3,6 +3,7 @@ package com.levin.commons.dao;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
+import java.beans.Introspector;
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.InvocationTargetException;
@@ -39,19 +40,59 @@ public interface LambdaMethodAttr<T, R> extends Function<T, R>, Supplier<String>
         public String getAttrName() {
 
             if (attrName == null) {
-
-                attrName = serializedLambda.getImplMethodName();
-
-                attrName = Stream.of("get", "set", "is", "has", "can", "will")
-                        //字母是大写
-                        .filter(prefix -> attrName.length() > prefix.length() && Character.isUpperCase(attrName.charAt(prefix.length())))
-                        .filter(attrName::startsWith)
-                        .map(prefix -> Character.toLowerCase(attrName.charAt(prefix.length())) + attrName.substring(prefix.length() + 1))
-                        .findFirst()
-                        .orElse(attrName);
+                attrName = resolveAttrName(serializedLambda);
             }
 
             return attrName;
+        }
+
+        private String resolveAttrName(SerializedLambda lambda) {
+
+            String attrName = methodToAttrName(lambda.getImplMethodName());
+
+            if (attrName != null) {
+                return attrName;
+            }
+
+            for (int i = 0; i < lambda.getCapturedArgCount(); i++) {
+                SerializedLambda nestedLambda = tryExtractSerializedLambda(lambda.getCapturedArg(i));
+
+                if (nestedLambda != null) {
+                    String nestedAttrName = resolveAttrName(nestedLambda);
+
+                    if (nestedAttrName != null) {
+                        return nestedAttrName;
+                    }
+                }
+            }
+
+            return lambda.getImplMethodName();
+        }
+
+        private String methodToAttrName(String methodName) {
+            return Stream.of("get", "set", "is", "has", "can", "will")
+                    //字母是大写
+                    .filter(prefix -> methodName.length() > prefix.length() && Character.isUpperCase(methodName.charAt(prefix.length())))
+                    .filter(methodName::startsWith)
+                    .map(prefix -> Introspector.decapitalize(methodName.substring(prefix.length())))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        private SerializedLambda tryExtractSerializedLambda(Object target) {
+
+            if (!(target instanceof Serializable serializable)) {
+                return null;
+            }
+
+            try {
+                Method writeReplaceMethod = serializable.getClass().getDeclaredMethod("writeReplace");
+                writeReplaceMethod.setAccessible(true);
+                Object result = writeReplaceMethod.invoke(serializable);
+                return (result instanceof SerializedLambda) ? (SerializedLambda) result : null;
+            } catch (Exception e) {
+                return null;
+            }
         }
 
         public Class<?> getAttrClass() {
