@@ -28,6 +28,7 @@ class ExprUtilsTest {
                 .put("value", value)
                 .put("domain", domain)
                 .put("jsonPath", jsonPath)
+                .put("incrementMode", false)
                 .put("isAddAliasPrefixForValue", true)
                 .put("having", false)
                 .put("not", false)

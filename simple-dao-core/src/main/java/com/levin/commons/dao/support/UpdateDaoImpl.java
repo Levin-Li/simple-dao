@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -117,7 +119,7 @@ public class UpdateDaoImpl<T>
 
             ValueHolder<Object> holder = new ValueHolder<>(paramValue);
 
-            expr = genIncrementExpr(isNative(), autoConvertNullValueForIncrementMode, entityAttrName, null, expr, holder);
+            expr = genIncrementExpr(isNative(), autoConvertNullValueForIncrementMode, entityAttrName, null, null, expr, holder);
 
             //参数
             paramValue = holder.value;
@@ -127,6 +129,7 @@ public class UpdateDaoImpl<T>
                 && !(paramValue instanceof ValueHolder)
                 && !(paramValue instanceof Map)
                 && !(paramValue instanceof PrimitiveValueWrapper)
+                && !(paramValue instanceof IncrementParamValues)
                 && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
 
             //转为包装类
@@ -280,7 +283,7 @@ public class UpdateDaoImpl<T>
                             && hasText(expr = ExprUtils.trimParenthesesPair(expr))
                             && expr.contains("=")) {
 
-                        expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType.resolve(), expr, holder);
+                        expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType.resolve(), updateOp.jsonPath(), expr, holder);
                     }
                 }
 
@@ -303,14 +306,14 @@ public class UpdateDaoImpl<T>
      * @param expr
      * @return
      */
-    protected String genIncrementExpr(boolean isNative, boolean convertNullValueForIncrementMode, String name, Class<?> varType, String expr, ValueHolder<Object> holder) {
+    protected String genIncrementExpr(boolean isNative, boolean convertNullValueForIncrementMode, String name, Class<?> varType, String jsonPath, String expr, ValueHolder<Object> holder) {
 
         //数据库字段的类型，必须存在更新的对象
         ResolvableType fieldType = QueryAnnotationUtil.getFieldType(entityClass, name, null);
 
         final Class<?> dbColumnType =  fieldType!= null ? fieldType.resolve() : null;
 
-        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("Increment update can't support type[" + dbColumnType + "]，Only Number or String");
+        final Supplier<StatementBuildException> exSupplier = () -> new StatementBuildException("Increment update can't support type[" + dbColumnType + "]，Only Number, String, Collection or Array");
 
         Assert.notNull(dbColumnType, exSupplier);
 
@@ -360,11 +363,74 @@ public class UpdateDaoImpl<T>
         } else if (CharSequence.class.isAssignableFrom(dbColumnType)) {
             //字符串相加 使用 CONCAT 函数
             expr = genFunc.apply("CONCAT", "''");
+        } else if (Collection.class.isAssignableFrom(dbColumnType) || dbColumnType.isArray()) {
+            expr = genJsonArrayAppendExpr(convertNullValueForIncrementMode, colExpr, jsonPath, paramExpr, holder);
         } else {
             throw exSupplier.get();
         }
 
         return expr;
+    }
+
+    protected String genJsonArrayAppendExpr(boolean convertNullValueForIncrementMode, String colExpr, String jsonPath, String paramExpr, ValueHolder<Object> holder) {
+
+        final IncrementParamValues appendValues = new IncrementParamValues();
+        Object appendValue = holder.value instanceof Supplier
+                ? ((Supplier<?>) holder.value).get()
+                : holder.value;
+
+        flattenIncrementParamValues(appendValues, appendValue);
+
+        if (appendValues.isEmpty()) {
+            throw new StatementBuildException("Increment update can't append empty value to json array column[" + colExpr + "]");
+        }
+
+        holder.value = appendValues;
+
+        String baseExpr = convertNullValueForIncrementMode
+                ? "COALESCE(" + colExpr + " , " + JsonExprSupport.jsonArrayExpr() + ")"
+                : colExpr;
+
+        StringBuilder valueExpr = new StringBuilder(paramExpr);
+
+        for (int i = 1; i < appendValues.size(); i++) {
+            valueExpr.append(" , ").append(paramExpr);
+        }
+
+        return colExpr + " = " + JsonExprSupport.jsonArrayAppendExpr(baseExpr, hasText(jsonPath) ? jsonPath.trim() : "$", valueExpr.toString());
+    }
+
+    private void flattenIncrementParamValues(List<Object> result, Object value) {
+
+        if (value instanceof Supplier) {
+            flattenIncrementParamValues(result, ((Supplier<?>) value).get());
+            return;
+        }
+
+        if (value instanceof Map) {
+            result.add(value);
+            return;
+        }
+
+        if (value instanceof Iterable) {
+            for (Object item : (Iterable<?>) value) {
+                flattenIncrementParamValues(result, item);
+            }
+            return;
+        }
+
+        if (value != null && value.getClass().isArray()) {
+            int length = Array.getLength(value);
+            for (int i = 0; i < length; i++) {
+                flattenIncrementParamValues(result, Array.get(value, i));
+            }
+            return;
+        }
+
+        result.add(value);
+    }
+
+    private static class IncrementParamValues extends ArrayList<Object> {
     }
 
 }

@@ -162,9 +162,12 @@ public abstract class ExprUtils {
 
         if (hasText(c.jsonPath()) && hasText(fieldExpr)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(c.jsonPath());
-            validateJsonPathUsage(op, jsonPathSpec);
+            boolean incrementUpdate = Op.Update.equals(op) && c.incrementMode();
+            validateJsonPathUsage(op, jsonPathSpec, incrementUpdate);
 
-            if (Op.Exists.equals(op) || Op.NotExists.equals(op)) {
+            if (incrementUpdate) {
+                // 增量更新需要保留原字段表达式，由 UpdateDaoImpl 生成 json_array_append。
+            } else if (Op.Exists.equals(op) || Op.NotExists.equals(op)) {
                 String jsonExistsExpr = JsonExprSupport.jsonExistsExpr(rawFieldExpr, jsonPathSpec.getRawPath());
                 String ql = c.surroundPrefix() + " "
                         + (Op.NotExists.equals(op) ? "Not " : "")
@@ -175,12 +178,14 @@ public abstract class ExprUtils {
                         column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
             }
 
-            if (jsonPathSpec.isWildcard()) {
-                fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
-            } else if (Op.Select.equals(op)) {
-                fieldExpr = JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
-            } else {
-                fieldExpr = JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+            if (!incrementUpdate) {
+                if (jsonPathSpec.isWildcard()) {
+                    fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
+                } else if (Op.Select.equals(op)) {
+                    fieldExpr = JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
+                } else {
+                    fieldExpr = JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+                }
             }
         }
 
@@ -355,7 +360,7 @@ public abstract class ExprUtils {
         //替换参数
         String ql;
 
-        if (hasText(c.jsonPath()) && Op.Update.equals(op)) {
+        if (hasText(c.jsonPath()) && Op.Update.equals(op) && !c.incrementMode()) {
             ql = c.surroundPrefix() + " "
                     + rawFieldExpr + " = "
                     + JsonExprSupport.jsonSetExpr(rawFieldExpr, c.jsonPath(), paramExpr)
@@ -402,7 +407,7 @@ public abstract class ExprUtils {
     }
 
 
-    private static void validateJsonPathUsage(Op op, JsonPathSpec jsonPathSpec) {
+    private static void validateJsonPathUsage(Op op, JsonPathSpec jsonPathSpec, boolean incrementUpdate) {
 
         if (!jsonPathSpec.isWildcard()) {
             return;

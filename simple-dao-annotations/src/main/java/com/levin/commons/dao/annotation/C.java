@@ -129,6 +129,14 @@ public @interface C {
      */
     String jsonPath() default "";
 
+    /**
+     * 是否增量更新。
+     * <p>
+     * 主要用于把 {@link com.levin.commons.dao.annotation.update.Update}
+     * 转换为 C 注解后，保留增量更新语义。
+     */
+    boolean incrementMode() default false;
+
 
     /**
      * 是否为 操作数（既字段） value 变量值 自动增加别名前缀

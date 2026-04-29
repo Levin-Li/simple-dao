@@ -1306,9 +1306,62 @@ public class DaoExamplesTest {
 
         Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )".replace("  ","")));
         Assert.isTrue(statement.contains("roleList = :?"));
-        Assert.isTrue(statement.contains("score != :?"));
+        Assert.isTrue(statement.replace(" ", "").contains("score!=:?"));
 
         userUpdateDao.update();
+    }
+
+    @Test
+    public void testIncrementModeJsonArrayAppendStatement() {
+
+        UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
+
+        userUpdateDao
+                .set(true, true, User::getRoleList, Arrays.asList("R_APPEND_1", "R_APPEND_2"))
+                .eq(E_User.enable, false);
+
+        String statement = userUpdateDao.genFinalStatement().replace("  ", "");
+        List<Object> params = userUpdateDao.genFinalParamList();
+
+        Assert.isTrue(statement.contains("roleList = json_array_append(COALESCE(roleList , json_array()) , '$' , :? , :?)".replace("  ", "")),
+                "Json 数组字段增量更新应生成 json_array_append 追加表达式");
+        Assert.isTrue(params.contains("R_APPEND_1") && params.contains("R_APPEND_2"),
+                "Json 数组字段增量更新应展开集合参数为多个追加元素");
+    }
+
+    @Test
+    public void testIncrementModeJsonArrayAppendByUpdateAnnotation() {
+
+        UpdateDao<User> userUpdateDao = dao.updateTo(User.class, "u")
+                .appendByQueryObj(new JsonArrayAppendUpdateDTO()
+                        .setRoleList(Arrays.asList("R_DTO_APPEND_1", "R_DTO_APPEND_2")))
+                .eq(E_User.enable, false);
+
+        String statement = userUpdateDao.genFinalStatement().replace("  ", "");
+        List<Object> params = userUpdateDao.genFinalParamList();
+
+        Assert.isTrue(statement.contains("u.roleList = json_array_append(COALESCE(u.roleList , json_array()) , '$' , :? , :?)".replace("  ", "")),
+                "Update 注解的 Json 数组字段增量更新应生成 json_array_append 追加表达式: " + statement);
+        Assert.isTrue(params.contains("R_DTO_APPEND_1") && params.contains("R_DTO_APPEND_2"),
+                "Update 注解的 Json 数组字段增量更新应展开集合参数为多个追加元素");
+    }
+
+    @Test
+    public void testIncrementModeJsonArrayAppendByUpdateAnnotationShouldRejectWildcardJsonPath() {
+
+        boolean threw = false;
+
+        try {
+            dao.updateTo(User.class, "u")
+                    .appendByQueryObj(new JsonArrayAppendWildcardUpdateDTO()
+                            .setRoleList(Arrays.asList("R_DTO_APPEND_WILDCARD_1", "R_DTO_APPEND_WILDCARD_2")))
+                    .eq(E_User.enable, false)
+                    .genFinalStatement();
+        } catch (StatementBuildException e) {
+            threw = true;
+        }
+
+        Assert.isTrue(threw, "Update 注解的 Json 数组字段增量更新不应支持 wildcard jsonPath");
     }
 
     @Test
@@ -2222,6 +2275,24 @@ public class DaoExamplesTest {
 
         @Update(value = "logs", jsonPath = "$[0].logText")
         String firstLogText;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonArrayAppendUpdateDTO {
+
+        @Update(value = "roleList", incrementMode = true)
+        List<String> roleList;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonArrayAppendWildcardUpdateDTO {
+
+        @Update(value = "roleList", jsonPath = "$[*]", incrementMode = true)
+        List<String> roleList;
     }
 
     @TargetOption(entityClass = User.class, alias = "u")

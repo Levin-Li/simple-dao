@@ -26,4 +26,12 @@ public abstract class JsonExprSupport {
     public static String jsonSetExpr(String fieldExpr, String jsonPath, String valueExpr) {
         return "json_set(" + fieldExpr + ", '" + jsonPath + "', " + valueExpr + ")";
     }
+
+    public static String jsonArrayExpr() {
+        return "json_array()";
+    }
+
+    public static String jsonArrayAppendExpr(String fieldExpr, String jsonPath, String valueExpr) {
+        return "json_array_append(" + fieldExpr + " , '" + jsonPath + "' , " + valueExpr + ")";
+    }
 }

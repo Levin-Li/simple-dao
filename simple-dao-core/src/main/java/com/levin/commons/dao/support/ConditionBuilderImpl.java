@@ -2300,6 +2300,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                             || (!isArray && !isIterable)
 
+                            // Update 的右值是字段值本身，Collection/Array 也应按原子值处理。
+                            || op == Op.Update
+
                             || wrapperParamValue
 
                             //如果是扩展参数的操作，如 IN NotIn Between等

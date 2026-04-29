@@ -76,6 +76,8 @@ public @interface Update {
      * <p>
      * 对应字符串，增量更语句为 v = CONCAT(v  ,  参数值)
      * <p>
+     * 对应 JSON 数组字段，增量更新语句为 v = json_array_append(v, jsonPath 或 '$', 参数值...)
+     * <p>
      * 对于时间，不支持，将抛出异常
      *
      * @return
