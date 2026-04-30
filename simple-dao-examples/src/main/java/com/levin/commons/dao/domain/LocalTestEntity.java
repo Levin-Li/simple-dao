@@ -8,7 +8,7 @@ import lombok.experimental.FieldNameConstants;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Created by echo on 2015/11/17.
@@ -30,12 +30,12 @@ public class LocalTestEntity implements Serializable {
     @Schema(description = "创建时间")
     @Column(nullable = false)
     @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date createTime;
+    protected LocalDateTime createTime;
 
     @Schema(description = "更新时间")
     @Column
     @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date lastUpdateTime;
+    protected LocalDateTime lastUpdateTime;
 
     //@OrderBy
     @Schema(description = "排序代码")

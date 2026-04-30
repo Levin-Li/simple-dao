@@ -5,25 +5,25 @@ import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.E_TestOrg;
 import com.levin.commons.dao.domain.TestOrg;
-import com.levin.commons.dao.domain.TestOrg.*;
+import com.levin.commons.dao.domain.TestOrg.OrgType;
+import com.levin.commons.dao.domain.TestOrg.State;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
-import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.Date;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
+import java.time.LocalDateTime;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.UPDATE_ACTION;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 更新测试机构
@@ -129,7 +129,7 @@ public class UpdateTestOrgReq extends MultiTenantReq {
     String pinyinName;
 
     @Schema(title = L_lastUpdateTime)
-    Date lastUpdateTime;
+    LocalDateTime  lastUpdateTime;
 
     @Schema(title = L_orderCode)
     Integer orderCode;
@@ -160,7 +160,7 @@ public class UpdateTestOrgReq extends MultiTenantReq {
         // @todo 更新之前初始化数据
 
         if (getLastUpdateTime() == null) {
-            setLastUpdateTime(new Date());
+            setLastUpdateTime(LocalDateTime.now());
         }
     }
 }

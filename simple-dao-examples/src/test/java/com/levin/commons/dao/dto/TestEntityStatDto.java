@@ -34,7 +34,6 @@ public class TestEntityStatDto {
     String[] state = {"A", "B", "C"};
 
 
-
     @IsNull
     @NotIn
     @OR(autoClose = true)

@@ -8,6 +8,8 @@ import com.levin.commons.dao.domain.TestOrg;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,14 +17,11 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.validation.constraints.NotEmpty;
-
 import static com.levin.commons.dao.domain.E_TestOrg.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.DELETE_ACTION;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 删除测试机构

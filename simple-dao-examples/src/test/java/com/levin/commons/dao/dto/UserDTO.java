@@ -11,12 +11,10 @@ import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.update.Update;
-import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 
 @TargetOption(entityClass = User.class, alias = "u", maxResults = 100, tableName = "jpa_dao_test_User")
@@ -47,7 +45,7 @@ public class UserDTO {
 
     @C(op = Op.Gt)
     @OR
-    protected Date createTime = new Date();
+    protected LocalDateTime  createTime = LocalDateTime.now();
 
     @Between("score")
     @END
@@ -62,6 +60,6 @@ public class UserDTO {
     final String betweenCreateTime = "20190101-20220201";
 
     @Update
-    protected Date lastUpdateTime = new Date();
+    protected LocalDateTime  lastUpdateTime = LocalDateTime.now();
 
 }

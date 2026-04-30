@@ -1,8 +1,12 @@
 package com.levin.commons.dao.services.testorg.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.levin.commons.dao.domain.TestOrg.*;
+import com.levin.commons.dao.domain.TestOrg.OrgType;
+import com.levin.commons.dao.domain.TestOrg.State;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -10,16 +14,13 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 测试机构
@@ -33,8 +34,8 @@ import static com.levin.commons.dao.domain.E_TestOrg.*;
 @EqualsAndHashCode(of = {"id"})
 @ToString(
         exclude = {
-            "parent",
-            "children",
+                "parent",
+                "children",
         })
 @FieldNameConstants
 @JsonIgnoreProperties({tenantId})
@@ -141,10 +142,10 @@ public class TestOrgInfo implements Serializable {
 
     @NotNull
     @Schema(title = L_createTime)
-    Date createTime;
+    LocalDateTime  createTime;
 
     @Schema(title = L_lastUpdateTime)
-    Date lastUpdateTime;
+    LocalDateTime  lastUpdateTime;
 
     @Schema(title = L_orderCode)
     Integer orderCode;

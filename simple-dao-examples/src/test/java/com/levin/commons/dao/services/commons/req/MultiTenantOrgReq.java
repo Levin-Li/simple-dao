@@ -36,7 +36,7 @@ public class MultiTenantOrgReq extends MultiTenantReq implements MultiTenantObje
                             + InjectConst.IS_SUPER_ADMIN
                             + " && !#"
                             + InjectConst.IS_TENANT_ADMIN // 如果不是超管 也不是 租户管理员，那么值是必须的
-            )
+    )
     @Schema(title = "机构ID", hidden = true)
     @Eq
     protected String orgId;
@@ -45,8 +45,8 @@ public class MultiTenantOrgReq extends MultiTenantReq implements MultiTenantObje
      * 设置部门ID
      *
      * @param orgId
-     * @return
      * @param <T>
+     * @return
      */
     public <T extends MultiTenantOrgReq> T setOrgId(String orgId) {
         this.orgId = orgId;

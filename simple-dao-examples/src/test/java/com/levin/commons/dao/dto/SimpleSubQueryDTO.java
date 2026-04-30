@@ -3,21 +3,17 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.*;
-import com.levin.commons.dao.annotation.logic.AND;
-import com.levin.commons.dao.annotation.logic.END;
-import com.levin.commons.dao.annotation.logic.OR;
-import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.Gt;
+import com.levin.commons.dao.annotation.Ignore;
+import com.levin.commons.dao.annotation.Lt;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Task;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.utils.MapUtils;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -58,6 +54,6 @@ public class SimpleSubQueryDTO {
     //     AND (select count(*) from com.levin.commons.dao.domain.Task   where user = u.id and 9876 >  ?3  ) >   ?4
 
     //生成的参数列表
-   // Params:[9999, {requireTotals=false, requireResultList=true, pageIndex=1, pageSize=20, fromCache=null}, 1, 1, 1, {taskCnt=1, taskSum=9876}]
+    // Params:[9999, {requireTotals=false, requireResultList=true, pageIndex=1, pageSize=20, fromCache=null}, 1, 1, 1, {taskCnt=1, taskSum=9876}]
 
 }

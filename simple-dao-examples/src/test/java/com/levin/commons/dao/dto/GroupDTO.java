@@ -8,11 +8,11 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.support.PagingQueryReq;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import jakarta.annotation.PostConstruct;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Accessors(chain = true)
@@ -47,10 +47,10 @@ public class GroupDTO {
 
     //    @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {C.ORIGIN_EXPR, "${:format}"}, condition = "true"))
     @Lt
-    protected Date createTime = new Date();
+    protected LocalDateTime  createTime = LocalDateTime.now();
 
     @Update
-    protected Date lastUpdateTime = new Date();
+    protected LocalDateTime  lastUpdateTime = LocalDateTime.now();
 
     @Like
     protected String remark = " info ";

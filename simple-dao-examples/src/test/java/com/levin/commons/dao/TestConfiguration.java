@@ -38,7 +38,7 @@ import java.sql.Statement;
                 , basePackages = {"com. levin."}),
 
 
-        @ProxyBeanScan(scanType = API3.class, invocationHandlerClass = AopProxyHandler.class,onlyScan = true
+        @ProxyBeanScan(scanType = API3.class, invocationHandlerClass = AopProxyHandler.class, onlyScan = true
                 , basePackages = {"com. levin."}),
 })
 

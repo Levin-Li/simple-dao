@@ -1,17 +1,13 @@
 package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.stat.Count;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.service.domain.Desc;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import java.util.Date;
 
 @Data
 @Accessors(chain = true)

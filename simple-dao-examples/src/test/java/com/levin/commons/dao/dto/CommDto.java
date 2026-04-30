@@ -1,14 +1,14 @@
 package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.service.domain.Desc;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.annotation.PostConstruct;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 
 @Data
 @Accessors(chain = true)
@@ -25,10 +25,10 @@ public class CommDto {
     protected Boolean editable = true;
 
 //    @Desc("创建时间")
-//    protected Date createTime;
+//    protected LocalDateTime  createTime;
 
     @Desc("更新时间")
-    protected Date lastUpdateTime;
+    protected LocalDateTime lastUpdateTime;
 
     @Desc("备注")
     protected String remark;

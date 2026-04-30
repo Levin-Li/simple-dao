@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Accessors(chain = true)
@@ -29,7 +29,7 @@ public class GroupStatDTO {
     @Desc
     @Select("'2018-03-18'")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    Date groupByCreateTime;
+    LocalDateTime groupByCreateTime;
 //
 //    @Desc
 //    @Select

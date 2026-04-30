@@ -11,12 +11,11 @@ import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
-import lombok.Data;
-import lombok.experimental.Accessors;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)

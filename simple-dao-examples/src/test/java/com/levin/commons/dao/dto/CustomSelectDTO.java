@@ -9,9 +9,6 @@ import com.levin.commons.dao.domain.Group;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Data
 @Accessors(chain = true)
 @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 100, resultClass = CustomSelectDTO.class)

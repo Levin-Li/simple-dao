@@ -6,7 +6,6 @@ import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.order.OrderBy;
-import com.levin.commons.dao.annotation.stat.Avg;
 import com.levin.commons.dao.annotation.stat.GroupBy;
 import com.levin.commons.dao.annotation.stat.Sum;
 import com.levin.commons.dao.domain.User;
@@ -19,7 +18,7 @@ import lombok.Data;
 /**
  * 数据传输对象(兼查询对象，通过注解产生SQL语句)
  */
-@TargetOption(entityClass = User.class,alias = "u")
+@TargetOption(entityClass = User.class, alias = "u")
 @Data
 public class UserStatDTO {
 
@@ -27,7 +26,7 @@ public class UserStatDTO {
     @OrderBy
     String state;
 
-    @Sum(havingOp = Op.Gt,domain = C.BLANK_VALUE)
+    @Sum(havingOp = Op.Gt, domain = C.BLANK_VALUE)
     Integer score = 500;
 
     @Contains

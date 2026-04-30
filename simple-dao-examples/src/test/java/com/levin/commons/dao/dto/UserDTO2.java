@@ -6,7 +6,6 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.AND;
 import com.levin.commons.dao.annotation.logic.END;
-import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.select.Select;
@@ -18,7 +17,7 @@ import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -58,7 +57,7 @@ public class UserDTO2 {
 
     @Lt
     @OR(condition = "#_val!=null")
-    protected Date createTime = new Date();
+    protected LocalDateTime  createTime = LocalDateTime.now();
 
     @In
     String[] state = new String[]{"A", "B", "C"};
@@ -73,6 +72,6 @@ public class UserDTO2 {
 
 
     @Update
-    protected Date lastUpdateTime = new Date();
+    protected LocalDateTime  lastUpdateTime = LocalDateTime.now();
 
 }

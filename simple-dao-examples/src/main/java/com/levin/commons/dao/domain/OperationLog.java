@@ -5,7 +5,7 @@ import lombok.experimental.Accessors;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -25,6 +25,6 @@ public class OperationLog  implements Serializable {
     String logText;
 
     @Temporal(value = TemporalType.TIMESTAMP)
-    protected Date lastUpdateTime;
+    protected LocalDateTime lastUpdateTime;
 
 }

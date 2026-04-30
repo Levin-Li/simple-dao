@@ -1,10 +1,13 @@
 package com.levin.commons.dao.services.testrole.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.levin.commons.dao.domain.TestRole.*;
+import com.levin.commons.dao.domain.TestRole.OrgDataScope;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,17 +15,13 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.levin.commons.dao.domain.E_TestRole.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 测试角色
@@ -85,10 +84,10 @@ public class TestRoleInfo implements Serializable {
 
     @NotNull
     @Schema(title = L_createTime)
-    Date createTime;
+    LocalDateTime  createTime;
 
     @Schema(title = L_lastUpdateTime)
-    Date lastUpdateTime;
+    LocalDateTime  lastUpdateTime;
 
     @Schema(title = L_orderCode)
     Integer orderCode;

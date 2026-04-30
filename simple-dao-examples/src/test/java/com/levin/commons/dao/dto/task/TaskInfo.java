@@ -7,11 +7,11 @@ import com.levin.commons.dao.domain.Task;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.DefaultJsonConverter;
+import jakarta.persistence.Column;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.persistence.Column;
 import java.util.List;
 
 

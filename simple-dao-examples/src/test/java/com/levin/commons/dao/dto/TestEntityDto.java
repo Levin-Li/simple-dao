@@ -15,15 +15,15 @@ public class TestEntityDto {
     String[] state = {"A", "B", "C"};
 
     @OR
-    @CList({@C(op = Op.StartsWith),@C(op = Op.IsNull)})
-    String name="test";
+    @CList({@C(op = Op.StartsWith), @C(op = Op.IsNull)})
+    String name = "test";
 
     // c.name like ? or c.name is null or c.phone like ? or c.nickName like
 
 
-    @Like(paramFuncs = @Func( prefix = "'%#' || ",suffix = " || '#%'"))
-    @Contains(paramFuncs = @Func( prefix = "'#' || ",suffix = " || '%'"))
-     String category="T1";
+    @Like(paramFuncs = @Func(prefix = "'%#' || ", suffix = " || '#%'"))
+    @Contains(paramFuncs = @Func(prefix = "'#' || ", suffix = " || '%'"))
+    String category = "T1";
 
 
     @SimpleOrderBy(condition = "state.length > 0")

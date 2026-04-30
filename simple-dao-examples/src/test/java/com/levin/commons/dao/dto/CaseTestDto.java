@@ -34,7 +34,7 @@ public class CaseTestDto {
 
             , @Case(column = E_User.state, elseExpr = "5", condition = "#_val == 2 && queryState"
             , whenOptions = {
-              @Case.When(whenExpr = "'正常'", thenExpr = "1")
+            @Case.When(whenExpr = "'正常'", thenExpr = "1")
             , @Case.When(whenExpr = "'已取消'", thenExpr = "2")
             , @Case.When(whenExpr = "'审请中'", thenExpr = "3")
             , @Case.When(whenExpr = "'已删除'", thenExpr = "4")

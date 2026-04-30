@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = User.class,alias= E_User.ALIAS)
+@TargetOption(entityClass = User.class, alias = E_User.ALIAS)
 public class UserInfo {
 
     String id;
@@ -33,7 +33,7 @@ public class UserInfo {
     @Fetch(value = "group.parent.parent.name b")
     String groupName;
 
-    @Fetch(value = "group.children c" )
+    @Fetch(value = "group.children c")
     List<Group> parentChildren;
 
 }

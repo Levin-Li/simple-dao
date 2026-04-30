@@ -2,9 +2,8 @@ package com.levin.commons.dao.proxy;
 
 import com.levin.commons.dao.JpaDao;
 import com.levin.commons.service.proxy.ProxyFactoryBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import jakarta.persistence.EntityManagerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @API3
 public abstract class UserApi3 {

@@ -7,16 +7,15 @@ import com.levin.commons.dao.domain.TestOrg;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import com.levin.commons.dao.services.testorg.info.TestOrgInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.PostConstruct;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.annotation.PostConstruct;
-
 import static com.levin.commons.dao.domain.E_TestOrg.*;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 测试机构 主键通用请求

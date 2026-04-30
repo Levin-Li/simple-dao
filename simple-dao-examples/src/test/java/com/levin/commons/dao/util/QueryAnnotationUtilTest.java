@@ -1,20 +1,13 @@
 package com.levin.commons.dao.util;
 
 import cn.hutool.core.lang.Assert;
-import com.levin.commons.dao.ConditionBuilder;
-import com.levin.commons.dao.DaoFactory;
-import com.levin.commons.dao.SimpleDao;
-import com.levin.commons.dao.UpdateDao;
-import org.h2.engine.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -61,16 +54,16 @@ public class QueryAnnotationUtilTest {
         param.put("Q_name", "llw");
         param.put("nickName", "llw");
         param.put("Q_Like_name", "llw");
-        param.put("Q_Gt_date1", new Date());
-        param.put("Q_Lt_date2", new Date());
-        param.put("Q_Gte_date3", new Date());
-        param.put("Q_Lte_date4", new Date());
-        param.put("Q_Not_gt_date5", new Date());
-        param.put("Q_NotLike_date6", new Date());
-        param.put("Q_NotEq_date7", new Date());
+        param.put("Q_Gt_date1", LocalDateTime.now());
+        param.put("Q_Lt_date2", LocalDateTime.now());
+        param.put("Q_Gte_date3", LocalDateTime.now());
+        param.put("Q_Lte_date4", LocalDateTime.now());
+        param.put("Q_Not_gt_date5", LocalDateTime.now());
+        param.put("Q_NotLike_date6", LocalDateTime.now());
+        param.put("Q_NotEq_date7", LocalDateTime.now());
 
-        param.put("Q_NotNull_date8", new Date());
-        param.put("Q_NotLike_date9", new Date());
+        param.put("Q_NotNull_date8", LocalDateTime.now());
+        param.put("Q_NotLike_date9", LocalDateTime.now());
 
 
         param.put("Q_NotLike_", "llw");
@@ -102,7 +95,6 @@ public class QueryAnnotationUtilTest {
                 .map(this::getName).allMatch("test"::equals);
 
         Assert.isTrue(allMatch, "not matched");
-
 
 
         System.out.println(toSnapshotVersion("2.2.27-SNAPSHOT"));

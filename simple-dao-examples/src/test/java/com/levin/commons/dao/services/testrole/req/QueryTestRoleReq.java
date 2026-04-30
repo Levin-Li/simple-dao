@@ -10,27 +10,27 @@ import com.levin.commons.dao.annotation.order.OrderBy;
 import com.levin.commons.dao.annotation.order.SimpleOrderBy;
 import com.levin.commons.dao.domain.E_TestRole;
 import com.levin.commons.dao.domain.TestRole;
-import com.levin.commons.dao.domain.TestRole.*;
+import com.levin.commons.dao.domain.TestRole.OrgDataScope;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.JsonStrLikeConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.Date;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.levin.commons.dao.domain.E_TestRole.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.QUERY_ACTION;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 查询测试角色
@@ -128,11 +128,11 @@ public class QueryTestRoleReq extends MultiTenantReq {
     @NotNull
     @Schema(title = L_createTime, description = "大于等于" + L_createTime)
     @Gte
-    Date gteCreateTime;
+    LocalDateTime  gteCreateTime;
 
     @Schema(title = L_createTime, description = "小于等于" + L_createTime)
     @Lte
-    Date lteCreateTime;
+    LocalDateTime  lteCreateTime;
 
     // @Schema(title = L_createTime + "-日期范围")
     // @Between(paramDelimiter = "-")
@@ -140,11 +140,11 @@ public class QueryTestRoleReq extends MultiTenantReq {
 
     @Schema(title = L_lastUpdateTime, description = "大于等于" + L_lastUpdateTime)
     @Gte
-    Date gteLastUpdateTime;
+    LocalDateTime  gteLastUpdateTime;
 
     @Schema(title = L_lastUpdateTime, description = "小于等于" + L_lastUpdateTime)
     @Lte
-    Date lteLastUpdateTime;
+    LocalDateTime  lteLastUpdateTime;
 
     // @Schema(title = L_lastUpdateTime + "-日期范围")
     // @Between(paramDelimiter = "-")

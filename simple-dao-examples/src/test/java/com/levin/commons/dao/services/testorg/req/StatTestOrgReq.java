@@ -8,24 +8,25 @@ import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.stat.Count;
 import com.levin.commons.dao.domain.E_TestOrg;
 import com.levin.commons.dao.domain.TestOrg;
-import com.levin.commons.dao.domain.TestOrg.*;
+import com.levin.commons.dao.domain.TestOrg.OrgType;
+import com.levin.commons.dao.domain.TestOrg.State;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.STAT_ACTION;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 统计测试机构
@@ -176,11 +177,11 @@ public class StatTestOrgReq extends MultiTenantReq {
     @NotNull
     @Schema(title = L_createTime, description = "大于等于" + L_createTime)
     @Gte
-    Date gteCreateTime;
+    LocalDateTime  gteCreateTime;
 
     @Schema(title = L_createTime, description = "小于等于" + L_createTime)
     @Lte
-    Date lteCreateTime;
+    LocalDateTime  lteCreateTime;
 
     // @Schema(title = L_createTime + "-日期范围")
     // @Between(paramDelimiter = "-")
@@ -188,11 +189,11 @@ public class StatTestOrgReq extends MultiTenantReq {
 
     @Schema(title = L_lastUpdateTime, description = "大于等于" + L_lastUpdateTime)
     @Gte
-    Date gteLastUpdateTime;
+    LocalDateTime  gteLastUpdateTime;
 
     @Schema(title = L_lastUpdateTime, description = "小于等于" + L_lastUpdateTime)
     @Lte
-    Date lteLastUpdateTime;
+    LocalDateTime  lteLastUpdateTime;
 
     // @Schema(title = L_lastUpdateTime + "-日期范围")
     // @Between(paramDelimiter = "-")
@@ -244,7 +245,7 @@ public class StatTestOrgReq extends MultiTenantReq {
         // Status status;
 
         // @Schema(description = "时间分组统计")
-        // @GroupBy(condition = "#isGroupByDate", value = "date_format(" + E_TestOrg.createDate +
+        // @GroupBy(condition = "#isGroupByDate", value = "date_format(" + E_TestOrg.createLocalDateTime  +
         // ",'%Y-%m-%d')", orderBy = @OrderBy(type = OrderBy.Type.Asc))
         // String createDate;
 

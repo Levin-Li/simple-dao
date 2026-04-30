@@ -19,7 +19,7 @@ public class TestCListDto {
     List<String> inName = Arrays.asList("Test", "LLW");
 
     @Contains
-    @CList({@C(op = Op.In,value = "name")})
+    @CList({@C(op = Op.In, value = "name")})
     String[] containsName = new String[]{"Test", null, "LLW"};
 
     @StartsWith

@@ -2,22 +2,18 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.CtxVar;
-import com.levin.commons.dao.Paging;
 import com.levin.commons.dao.TargetOption;
-import com.levin.commons.dao.annotation.*;
-import com.levin.commons.dao.annotation.order.OrderBy;
+import com.levin.commons.dao.annotation.Ignore;
+import com.levin.commons.dao.annotation.Lt;
 import com.levin.commons.dao.annotation.select.Select;
-import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.E_User;
-import com.levin.commons.dao.domain.Group;
 import com.levin.commons.dao.domain.User;
-import com.levin.commons.dao.support.PagingQueryReq;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Accessors(chain = true)
@@ -50,7 +46,7 @@ public class SimpleUserQO {
     }
 
     @Lt
-    protected Date createTime = new Date();
+    protected LocalDateTime  createTime = LocalDateTime.now();
 
     @Ignore
     String format = "YYYY-MM-DD";

@@ -4,15 +4,12 @@ package com.levin.commons.dao.dto;
 import com.levin.commons.dao.CtxVar;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Ignore;
-import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.Group;
-import com.levin.commons.dao.domain.support.E_TestEntity;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.List;
 
 @Data
 @Accessors(chain = true)

@@ -2,9 +2,6 @@ package com.levin.commons.dao.dto;
 
 
 import com.levin.commons.dao.annotation.*;
-import com.levin.commons.dao.annotation.logic.AND;
-import com.levin.commons.dao.annotation.logic.END;
-import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.select.Select;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -33,7 +30,7 @@ public class UserSelectDTO extends UserDTO {
     //子查询，并使用命名参数，命名参数从Map变量中取
     @NotExists(paramExpr = "select '${_name}' from jpa_dao_test_User t where u.id = t.id and t.score > ${:minScore} and t.name like ${groupName}")
 //            int minScore =5;
-    Map<String, Object> namedParams = new HashMap<>();
+            Map<String, Object> namedParams = new HashMap<>();
 
 
     //子查询，子查询将从subQueryDTO查询对象中生成

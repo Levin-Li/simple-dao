@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TargetOption(nativeQL = true,
         tableName = "jpa_dao_test_User u left join jpa_dao_test_Group g on u.group_id = g.id"
-       // , fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
+        // , fromStatement = "from jpa_dao_test_User u left join jpa_dao_test_Group g on u.group = g.id"
 )
 public class FromStatementDTO {
 

@@ -5,28 +5,27 @@ import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.E_TestRole;
 import com.levin.commons.dao.domain.TestRole;
-import com.levin.commons.dao.domain.TestRole.*;
+import com.levin.commons.dao.domain.TestRole.OrgDataScope;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.service.support.PrimitiveArrayJsonConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.Date;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.levin.commons.dao.domain.E_TestRole.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.UPDATE_ACTION;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 更新测试角色
@@ -95,7 +94,7 @@ public class UpdateTestRoleReq extends MultiTenantReq {
     String pinyinName;
 
     @Schema(title = L_lastUpdateTime)
-    Date lastUpdateTime;
+    LocalDateTime  lastUpdateTime;
 
     @Schema(title = L_orderCode)
     Integer orderCode;

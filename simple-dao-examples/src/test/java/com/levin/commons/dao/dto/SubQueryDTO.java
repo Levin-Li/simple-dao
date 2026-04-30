@@ -12,7 +12,7 @@ import com.levin.commons.dao.domain.E_User;
 import com.levin.commons.dao.domain.User;
 import com.levin.commons.dao.support.PagingQueryReq;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 
 @TargetOption(entityClass = User.class, maxResults = 100)
@@ -35,7 +35,7 @@ public class SubQueryDTO {
 
     @Lt(fieldFuncs = @Func(value = "DATE_FORMAT", params = {"$$", "${:_this.format}"}), paramExpr = "select createTime from " + E_User.CLASS_NAME + " ")
     @OR
-    protected Date createTime = new Date();
+    protected LocalDateTime  createTime = LocalDateTime.now();
 
     @Between("score")
     @END

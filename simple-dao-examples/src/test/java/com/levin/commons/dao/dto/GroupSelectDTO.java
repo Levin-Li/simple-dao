@@ -3,15 +3,12 @@ package com.levin.commons.dao.dto;
 
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.Eq;
-import com.levin.commons.dao.annotation.misc.Fetch;
 import com.levin.commons.dao.annotation.select.Select;
 import com.levin.commons.dao.domain.E_Group;
 import com.levin.commons.dao.domain.Group;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
-
-import java.util.List;
 
 @Data
 @Accessors(chain = true)

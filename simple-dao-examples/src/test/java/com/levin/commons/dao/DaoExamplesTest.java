@@ -3,7 +3,6 @@ package com.levin.commons.dao;
 import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
 import com.levin.commons.dao.annotation.Contains;
-import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.Where;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -19,6 +18,7 @@ import com.levin.commons.dao.dto.*;
 import com.levin.commons.dao.dto.task.CreateTask;
 import com.levin.commons.dao.dto.task.QueryTaskReq;
 import com.levin.commons.dao.dto.task.TaskInfo;
+import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.inject.InjectTestObj;
 import com.levin.commons.dao.proxy.UserApi;
 import com.levin.commons.dao.proxy.UserApi2;
@@ -34,7 +34,6 @@ import com.levin.commons.dao.services.testrole.info.TestRoleInfo;
 import com.levin.commons.dao.services.testrole.req.CreateTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.QueryTestRoleReq;
 import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
-import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.support.DefaultPagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
@@ -42,6 +41,9 @@ import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
@@ -53,12 +55,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.EntityType;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.net.URLDecoder;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -471,7 +471,7 @@ public class DaoExamplesTest {
 
 
         try {
-            incrUpdateUserDTO.setCreateTime(new Date());
+            incrUpdateUserDTO.setCreateTime(LocalDateTime.now());
 
             dao.singleUpdateByQueryObj(incrUpdateUserDTO);
 
@@ -1008,7 +1008,7 @@ public class DaoExamplesTest {
     @Test
     public void testNullOrEq() {
 
-        Date paramValue = new Date();
+        LocalDateTime  paramValue = LocalDateTime.now();
 
         long cnt = dao.updateTo(User.class).set(E_User.lastUpdateTime, paramValue)
                 .disableSafeMode()
@@ -1185,7 +1185,7 @@ public class DaoExamplesTest {
         User user = dao.selectFrom(User.class).findOne();
         Long id = user.getId();
 
-        String description = "Update_" + new Date();
+        String description = "Update_" + LocalDateTime.now();
         user.setDescription(description);
 
         dao.save(user);
@@ -1214,7 +1214,7 @@ public class DaoExamplesTest {
 
         user = dao.find(User.class, uid);
 
-        String description = "Update_" + new Date();
+        String description = "Update_" + LocalDateTime.now();
 
         user.setDescription(description);
 
@@ -1291,20 +1291,20 @@ public class DaoExamplesTest {
                 .set(true, true, E_User.score, 1)
                 .set(true, true, E_User.name, "+")
 
-               // .set()
+                // .set()
 
                 //
                 .set(User::getRoleList, Arrays.asList("R_NEW_ADMIN1", "R_NEW_ADMIN2"))
 
-                .notEq(User::getScore,-123456)
+                .notEq(User::getScore, -123456)
 
                 .eq(E_User.enable, false);
 
-        String statement = userUpdateDao.genFinalStatement().replace("  ","");
+        String statement = userUpdateDao.genFinalStatement().replace("  ", "");
 
         System.out.println(statement);
 
-        Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )".replace("  ","")));
+        Assert.isTrue(statement.contains("score = ( COALESCE(score , 0)  +  COALESCE(:? , 0) ) , name = CONCAT( COALESCE(name , '')  ,  COALESCE(:? , '') )".replace("  ", "")));
         Assert.isTrue(statement.contains("roleList = :?"));
         Assert.isTrue(statement.replace(" ", "").contains("score!=:?"));
 
@@ -1913,7 +1913,7 @@ public class DaoExamplesTest {
 
         int n = dao.updateTo(E_User.E_ENTITY_NAME, "u")
                 .setByStatement(String.format("%s = %s + 1", E_User.score, E_User.score))
-                .set(E_User.lastUpdateTime, new Date())
+                .set(E_User.lastUpdateTime, LocalDateTime.now())
                 .or()
                 .isNull(E_User.score)
                 .isNotNull(E_User.createTime)
@@ -1928,7 +1928,7 @@ public class DaoExamplesTest {
 
         n = dao.updateByNative(User.class, E_User.ALIAS)
                 .set(true, true, User::getScore, 3)
-                .set(E_User.lastUpdateTime, new Date())
+                .set(E_User.lastUpdateTime, LocalDateTime.now())
                 .or()
                 .isNull(User::getScore)
                 .isNotNull(E_User.createTime)
@@ -2031,7 +2031,7 @@ public class DaoExamplesTest {
 
 
         int n = dao.updateTo(Group.class)
-                .set(E_Group.lastUpdateTime, new Date())
+                .set(E_Group.lastUpdateTime, LocalDateTime.now())
 //                .appendColumn(E_Group.description, "" + System.currentTimeMillis())
                 .contains(E_Group.name, "2")
                 .update();
@@ -2040,7 +2040,7 @@ public class DaoExamplesTest {
 
 
         n = dao.updateTo(User.class)
-                .set(E_User.lastUpdateTime, new Date())
+                .set(E_User.lastUpdateTime, LocalDateTime.now())
 //                .appendColumn(E_User.description, "" + System.currentTimeMillis())
                 .contains(E_User.name, "2")
                 .update();

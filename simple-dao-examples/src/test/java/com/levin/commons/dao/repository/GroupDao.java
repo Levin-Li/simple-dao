@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @EntityRepository("组DAO")
-@TargetOption(entityClass = Group.class )
+@TargetOption(entityClass = Group.class)
 public abstract class GroupDao {
 
     @Autowired

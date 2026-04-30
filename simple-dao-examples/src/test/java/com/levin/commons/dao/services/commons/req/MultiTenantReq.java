@@ -30,7 +30,7 @@ public class MultiTenantReq extends BaseReq implements MultiTenantObject {
             ,
             isRequired =
                     InjectVar.SPEL_PREFIX + "!#" + InjectConst.IS_SUPER_ADMIN // 如果不是超级管理员，那么值是必须的
-            )
+    )
     @OR(autoClose = true)
     @Eq
     @IsNull(condition = "#_this.isContainsPublicData()") // 如果是公共数据，允许包括非该租户的数据
@@ -50,8 +50,8 @@ public class MultiTenantReq extends BaseReq implements MultiTenantObject {
      * 设置租户ID
      *
      * @param tenantId
-     * @return
      * @param <T>
+     * @return
      */
     public <T extends MultiTenantReq> T setTenantId(String tenantId) {
         this.tenantId = tenantId;

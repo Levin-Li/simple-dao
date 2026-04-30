@@ -5,23 +5,24 @@ package com.levin.commons.dao.services.testorg.req;
 import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.domain.E_TestOrg;
 import com.levin.commons.dao.domain.TestOrg;
-import com.levin.commons.dao.domain.TestOrg.*;
+import com.levin.commons.dao.domain.TestOrg.OrgType;
+import com.levin.commons.dao.domain.TestOrg.State;
 import com.levin.commons.dao.services.commons.req.MultiTenantReq;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldNameConstants;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.Date;
+import lombok.*;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
+import java.time.LocalDateTime;
 
 import static com.levin.commons.dao.domain.E_TestOrg.*;
-import static com.levin.commons.dao.domain.EntityConst.*;
+import static com.levin.commons.dao.domain.EntityConst.CREATE_ACTION;
 
-////////////////////////////////////
+/// /////////////////////////////////
 
 /**
  * 新增测试机构
@@ -124,10 +125,10 @@ public class CreateTestOrgReq extends MultiTenantReq {
 
     @Schema(title = L_createTime, hidden = true)
     // @NotNull
-    Date createTime;
+    LocalDateTime  createTime;
 
     @Schema(title = L_lastUpdateTime, hidden = true)
-    Date lastUpdateTime;
+    LocalDateTime  lastUpdateTime;
 
     @Schema(title = L_orderCode, hidden = true)
     Integer orderCode;
@@ -149,7 +150,7 @@ public class CreateTestOrgReq extends MultiTenantReq {
         // @todo 保存之前初始化数据，比如时间，初始状态等
 
         if (getCreateTime() == null) {
-            setCreateTime(new Date());
+            setCreateTime(LocalDateTime.now());
         }
     }
 }

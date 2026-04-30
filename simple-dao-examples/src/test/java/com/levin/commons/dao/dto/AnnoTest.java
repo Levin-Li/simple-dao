@@ -4,10 +4,9 @@ import com.levin.commons.dao.TargetOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.domain.User;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.experimental.Accessors;
-
-import jakarta.annotation.PostConstruct;
 
 @TargetOption(entityClass = User.class)
 @Data
@@ -31,13 +30,11 @@ public class AnnoTest {
     @Lte
     @Gt
     @Gte(not = true)
-    String state ="S1";
+    String state = "S1";
 
 
-
-    @IsNotNull(value = "name",condition = "#_val != null and #_val")
+    @IsNotNull(value = "name", condition = "#_val != null and #_val")
     Boolean onStore = true;
-
 
 
     @Eq
@@ -53,7 +50,7 @@ public class AnnoTest {
     @Lte
     @Gt
     @Gte(not = true)
-    String name ="S1";
+    String name = "S1";
 
 
     @PostConstruct
