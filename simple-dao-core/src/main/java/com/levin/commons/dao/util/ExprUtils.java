@@ -34,7 +34,12 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -563,12 +568,49 @@ public abstract class ExprUtils {
         } else if (Temporal.class.isAssignableFrom(eleType)) {
 
             return hasPattern ?
-                    Stream.of(patterns).filter(StringUtils::hasText).map(format -> DateUtil.parseLocalDateTime(dataStr, format)).findFirst().get()
+                    Stream.of(patterns).filter(StringUtils::hasText).map(format -> parseTemporal(eleType, dataStr, format)).findFirst().get()
                     : DateUtil.parseLocalDateTime(dataStr);
 
         }
 
         return data;
+    }
+
+    private static Temporal parseTemporal(Class<?> eleType, String dataStr, String pattern) {
+
+        DateTimeParseException firstException = null;
+
+        for (String format : new String[]{pattern, normalizeDatePattern(pattern)}) {
+
+            if (!StringUtils.hasText(format)) {
+                continue;
+            }
+
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+
+                if (LocalDate.class.isAssignableFrom(eleType)) {
+                    return LocalDate.parse(dataStr, formatter);
+                } else if (LocalTime.class.isAssignableFrom(eleType)) {
+                    return LocalTime.parse(dataStr, formatter);
+                } else if (LocalDateTime.class.isAssignableFrom(eleType)) {
+                    TemporalAccessor parsed = formatter.parseBest(dataStr, LocalDateTime::from, LocalDate::from);
+                    return parsed instanceof LocalDate ? ((LocalDate) parsed).atStartOfDay() : LocalDateTime.from(parsed);
+                }
+
+                return DateUtil.parseLocalDateTime(dataStr, format);
+            } catch (DateTimeParseException e) {
+                if (firstException == null) {
+                    firstException = e;
+                }
+            }
+        }
+
+        throw firstException;
+    }
+
+    private static String normalizeDatePattern(String pattern) {
+        return pattern != null && pattern.contains("M") ? pattern.replace('D', 'd') : pattern;
     }
 
     /**

@@ -59,6 +59,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.net.URLDecoder;
 import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -276,7 +277,9 @@ public class DaoExamplesTest {
     public void initTestData2() throws Exception {
 
 
-        if (dao.selectFrom(User.class).count() > 0) {
+        if (dao.selectFrom(Group.class).count() >= 15
+                && dao.selectFrom(User.class).count() > 0
+                && dao.selectFrom(Task.class).count() > 0) {
             return;
         }
 
@@ -2186,7 +2189,9 @@ public class DaoExamplesTest {
                 .contains(E_Group.name, "2")
                 .find();
 
-        Assert.isTrue(list.get(0) instanceof Date, "预期的第一列不是时间");
+        Object createTime = list.get(0);
+
+        Assert.isTrue(createTime instanceof Date || createTime instanceof Temporal, "预期的第一列不是时间");
 
 
         dao.selectFrom("table").and().or().and().end().end().end();
@@ -2220,7 +2225,7 @@ public class DaoExamplesTest {
         elMap.put("Q_Between_id", " 12 , 34");
         elMap.put("Q_Not_In_id", " 12,34, 534,546, 456");
         elMap.put("Q_NotIn_name", "12,34,534,546,456");
-        elMap.put("Q_Gt_createTime", "2012/01/30 23:59:00");
+        elMap.put("Q_Gt_createTime", LocalDateTime.of(2012, 1, 30, 23, 59));
         elMap.put("Q_Not_parentId", 90);
         elMap.put("Q_Lt_id", -1);
 

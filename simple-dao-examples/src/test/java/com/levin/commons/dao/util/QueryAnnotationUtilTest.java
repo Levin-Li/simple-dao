@@ -45,11 +45,11 @@ public class QueryAnnotationUtilTest {
     static final String SNAPSHOT_VERSION = "SNAPSHOT";
 
 
-    private Map<String, Object> param = new LinkedHashMap<>();
+    private static Map<String, Object> param = new LinkedHashMap<>();
 
 
     @BeforeAll
-    public void init() {
+    public static void init() {
 
         param.put("Q_name", "llw");
         param.put("nickName", "llw");
@@ -82,7 +82,7 @@ public class QueryAnnotationUtilTest {
                 //字母是大写
                 .filter(prefix -> implMethodName.length() > prefix.length() && Character.isUpperCase(implMethodName.charAt(prefix.length())))
                 .filter(implMethodName::startsWith)
-                .map(prefix -> Character.toUpperCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length()))
+                .map(prefix -> Character.toLowerCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length() + 1))
                 .findFirst()
                 .orElse(implMethodName);
     }
