@@ -8,6 +8,7 @@ import com.levin.commons.dao.annotation.misc.Case;
 import com.levin.commons.dao.annotation.misc.E_Case;
 import com.levin.commons.dao.annotation.misc.E_Case_When;
 import com.levin.commons.dao.exception.StatementBuildException;
+import com.levin.commons.dao.support.JsonExprSupport;
 import com.levin.commons.dao.support.ValueHolder;
 import com.levin.commons.utils.ClassUtils;
 import com.levin.commons.utils.MapUtils;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -153,6 +155,32 @@ class ExprUtilsTest {
 
         assertTrue(expr.contains("json_value"), "Eq 的 JSON 路径应转换为 Hibernate 标准 json_value");
         assertTrue(expr.contains("$.profile.name"), "Eq 的 JSON 路径应出现在表达式中");
+    }
+
+    @Test
+    void jsonExprSupportShouldRenderHibernate7JsonFunctions() {
+
+        assertEquals("json_object('name' value u.name)",
+                JsonExprSupport.jsonObjectExpr(JsonExprSupport.jsonObjectEntryExpr("'name'", "u.name")));
+        assertEquals("json_array(:?,:?)", JsonExprSupport.jsonArrayExpr(":?", ":?"));
+        assertEquals("json_value(str(u.ext), '$.name' returning String null on error)",
+                JsonExprSupport.jsonValueExpr("u.ext", "$.name", "returning String", "null on error"));
+        assertEquals("json_query(str(u.ext), '$.items' with wrapper)",
+                JsonExprSupport.jsonQueryExpr("u.ext", "$.items", "with wrapper"));
+        assertEquals("json_exists(str(u.ext), '$.items[0]' false on error)",
+                JsonExprSupport.jsonExistsExpr("u.ext", "$.items[0]", "false on error"));
+        assertEquals("json_set(u.ext, '$.name', :?)", JsonExprSupport.jsonSetExpr("u.ext", "$.name", ":?"));
+        assertEquals("json_remove(u.ext, '$.name', '$.age')", JsonExprSupport.jsonRemoveExpr("u.ext", "$.name", "$.age"));
+        assertEquals("json_replace(u.ext, '$.name', :?)", JsonExprSupport.jsonReplaceExpr("u.ext", "$.name", ":?"));
+        assertEquals("json_insert(u.ext, '$.name', :?)", JsonExprSupport.jsonInsertExpr("u.ext", "$.name", ":?"));
+        assertEquals("json_mergepatch(u.ext, :?)", JsonExprSupport.jsonMergepatchExpr("u.ext", ":?"));
+        assertEquals("json_arrayagg(u.name order by u.name)", JsonExprSupport.jsonArrayAggExpr("u.name", "order by u.name"));
+        assertEquals("json_objectagg(u.id value u.name)", JsonExprSupport.jsonObjectAggExpr("u.id", "u.name"));
+        assertEquals("json_array_append(u.roles , '$' , :?)", JsonExprSupport.jsonArrayAppendExpr("u.roles", "$", ":?"));
+        assertEquals("json_array_insert(u.roles, '$[0]', :?)", JsonExprSupport.jsonArrayInsertExpr("u.roles", "$[0]", ":?"));
+        assertEquals("json_table(u.ext, '$.items[*]' columns(itemId varchar(64) path '$.id'))",
+                JsonExprSupport.jsonTableExpr("u.ext", "$.items[*]", "columns(itemId varchar(64) path '$.id')"));
+        assertEquals("json_custom(u.ext, :?)", JsonExprSupport.jsonFunctionExpr("json_custom", "u.ext", ":?"));
     }
 
     @Test
