@@ -333,7 +333,7 @@ public final class ServiceModelCodeGenerator {
         Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
 
         for (Class entityClass : entityClassList()) {
-            genTestCode(entityClass, bootstrapDir, null);
+          //  genTestCode(entityClass, bootstrapDir, null);
         }
 
     }
