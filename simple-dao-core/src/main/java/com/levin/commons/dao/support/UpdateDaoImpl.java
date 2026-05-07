@@ -364,16 +364,21 @@ public class UpdateDaoImpl<T>
         } else if (Collection.class.isAssignableFrom(dbColumnType) || dbColumnType.isArray()) {
 
             //json array append
+            List<PrimitiveValueWrapper<?>> pList = QueryAnnotationUtil.flattenParams(null, holder.value).stream()
+                    .map(item -> item instanceof PrimitiveValueWrapper ? item : PrimitiveValueWrapper.of(item))
+                    .toList();
 
-            //只支持追加一个元素
-            if(!(holder.value instanceof PrimitiveValueWrapper)) {
-                holder.value = PrimitiveValueWrapper.of(holder.value);
-            }
+            holder.value = pList.size() == 1 ? pList.get(0) : pList;
 
             expr = colExpr + " = " + JsonExprSupport.jsonArrayAppendExpr(
                     (convertNullValueForIncrementMode ? "COALESCE(" + colExpr + " , " + JsonExprSupport.jsonArrayExpr() + ")" : colExpr)
                     , hasText(jsonPath) ? jsonPath.trim() : "$"
-                    , paramExpr);
+                    , String.join(", ", pList.stream().map(item -> paramExpr).toList()));
+
+            //允许为空
+            if (pList.isEmpty()) {
+                expr = "";
+            }
 
         } else {
             throw exSupplier.get();
