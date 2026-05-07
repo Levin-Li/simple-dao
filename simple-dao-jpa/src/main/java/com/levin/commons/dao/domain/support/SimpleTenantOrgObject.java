@@ -30,7 +30,7 @@ import java.util.Date;
 @FieldNameConstants
 
 //5、必须注解业务名称
-@Schema(title = "抽象租户组织实体")
+@Schema(title = "简单租户组织实体")
 
 @MappedSuperclass
 public abstract class SimpleTenantOrgObject

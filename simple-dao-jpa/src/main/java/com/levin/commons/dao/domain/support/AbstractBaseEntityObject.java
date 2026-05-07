@@ -14,10 +14,14 @@ import lombok.experimental.FieldNameConstants;
 //import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+/**
+ * @author lilw
+ */
 @MappedSuperclass
 @Data
 @Accessors(chain = true)
@@ -42,13 +46,9 @@ public abstract class AbstractBaseEntityObject
 
     @Schema(title = "创建时间")
     @Column(nullable = false)
-//    @Temporal(value = TemporalType.TIMESTAMP)
-//    @CreatedDate
     protected LocalDateTime createTime;
 
     @Schema(title = "更新时间")
-//    @Temporal(value = TemporalType.TIMESTAMP)
-//    @LastModifiedDate
     protected LocalDateTime lastUpdateTime;
 
     //@OrderBy

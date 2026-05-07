@@ -14,6 +14,10 @@ import lombok.experimental.FieldNameConstants;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 
+/**
+ * @author lilw
+ */
+
 //1、lobmok get set
 @Data
 
