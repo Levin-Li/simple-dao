@@ -40,6 +40,8 @@
         <druid.version>1.2.23</druid.version>
         <hutool.version>5.8.43</hutool.version>
 
+        <mapstruct.version>1.6.3</mapstruct.version>
+
         <sa-token.version>1.45.0</sa-token.version>
         <fastjson.version>2.0.60</fastjson.version>
         <fastjson2.version>2.0.60</fastjson2.version>
@@ -699,7 +701,18 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${r"${mapstruct.version}"}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${r"${mapstruct.version}"}</version>
         </dependency>
 
         <dependency>
@@ -707,8 +720,6 @@
             <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
-
 
         <dependency>
             <groupId>${r"${levin.simple-dao.groupId}"}</groupId>

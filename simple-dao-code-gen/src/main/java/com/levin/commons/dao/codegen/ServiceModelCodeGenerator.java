@@ -101,6 +101,7 @@ public final class ServiceModelCodeGenerator {
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
     public static final String SERVICE_FTL = "services/service.ftl";
+    public static final String MAPPER_FTL = "services/mapper.ftl";
 
     public static final String BIZ_SERVICE_FTL = "biz/biz_service.ftl";
     public static final String BIZ_SERVICE_IMPL_FTL = "biz/biz_service_impl.ftl";
@@ -1386,10 +1387,12 @@ public final class ServiceModelCodeGenerator {
         String boDir = File.separator + "bo" + File.separator + entityClass.getSimpleName().toLowerCase();
 
         final String serviceName = entityClass.getSimpleName() + "Service";
+        final String mapperName = entityClass.getSimpleName() + "Mapper";
 
         final Consumer<Map<String, Object>> genParams = params -> {
             params.put("servicePackageName", pkgName);
             params.put("serviceName", serviceName);
+            params.put("mapperName", mapperName);
             params.putAll(paramsMap);
             params.put("isService", true);
         };
@@ -1397,6 +1400,7 @@ public final class ServiceModelCodeGenerator {
 
         //生成通用服务类
         genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, genParams);
+        genCode(entityClass, MAPPER_FTL, fields, serviceDir, pkgName, mapperName, genParams);
 
         //生成业务服务类
         genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, genParams);

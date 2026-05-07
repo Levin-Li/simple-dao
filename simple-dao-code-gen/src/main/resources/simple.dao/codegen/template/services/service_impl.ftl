@@ -282,10 +282,9 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     /**
      * 加载所有数据
-     * @param wrapper2Readonly
      * @param exDaoConsumer
      */
-    protected List<${entityName}Info> loadAll(boolean wrapper2Readonly, Consumer<SelectDao<${entityName}>> exDaoConsumer){
+    protected List<${entityName}Info> loadAll(Consumer<SelectDao<${entityName}>> exDaoConsumer){
 
        SelectDao<${entityName}> dao = simpleDao.selectFrom(${entityName}.class)
 
@@ -308,11 +307,6 @@ public class ${className} extends BaseService<${className}> implements ${service
             .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
         </#if>
         .find(${entityName}Info.class);
-
-      //转为只读对象
-      if(wrapper2Readonly){
-        result = result.stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toUnmodifiableList());
-      }
 
      return result;
    }
@@ -467,18 +461,19 @@ public class ${className} extends BaseService<${className}> implements ${service
     public List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter) {
 
         List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
-                loadAll(true, dao ->
+                loadAll(dao ->
                         dao.isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
                  )
         );
 
-
         if(dataList == null) {
            clearCacheListByTenant(tenantId);
         }
 
-        return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
+        if(filter == null){ filter = data -> true; }
+
+        return dataList.stream().filter(filter).map(${entityName}Mapper.INSTANCE::toInfo).collect(Collectors.toList());
     }
 
     @Override
@@ -505,13 +500,15 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     public List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter) {
 
-        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List", (key) -> loadAll(true, null) );
+        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List", (key) -> loadAll(null) );
 
         if(dataList == null) {
            clearCacheList();
         }
 
-        return filter != null ? dataList.stream().filter(filter).collect(Collectors.toList()) : Collections.unmodifiableList(dataList);
+        if(filter == null){ filter = data -> true; }
+
+        return dataList.stream().filter(filter).map(${entityName}Mapper.INSTANCE::toInfo).collect(Collectors.toList());
     }
 
     @Override
