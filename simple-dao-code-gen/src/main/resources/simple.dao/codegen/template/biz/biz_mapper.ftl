@@ -21,8 +21,6 @@ import com.levin.commons.dao.*;
 import static ${modulePackageName}.ModuleOption.*;
 
 import ${entityClassPackage}.*;
-import ${packageName}.req.*;
-import ${packageName}.info.*;
 
 import ${modulePackageName}.*;
 import ${modulePackageName}.entities.*;
