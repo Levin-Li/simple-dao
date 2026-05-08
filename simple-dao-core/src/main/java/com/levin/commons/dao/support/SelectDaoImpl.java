@@ -1308,7 +1308,7 @@ public class SelectDaoImpl<T>
 
         List<E> returnList = new ArrayList<>(queryResultList.size());
 
-        ValueHolder<ArrayAliasMapping> valueHolder = new ValueHolder<>(null);
+        ValueHolder<List<List<String>>> valueHolder = new ValueHolder<>(null);
 
         for (Object data : queryResultList) {
 
@@ -1373,7 +1373,7 @@ public class SelectDaoImpl<T>
 
     }
 
-    private <E> E tryConvertData(Object data, Class<E> targetType, ValueHolder<ArrayAliasMapping> valueHolder, int maxCopyDeep, String... ignoreProperties) {
+    private <E> E tryConvertData(Object data, Class<E> targetType, ValueHolder<List<List<String>>> valueHolder, int maxCopyDeep, String... ignoreProperties) {
 
         if (data == null || targetType.isInstance(data)) {
             return (E) data;
@@ -1394,8 +1394,8 @@ public class SelectDaoImpl<T>
             return (E) ObjectUtil.convert(data, targetType);
         }
 
-        //数组转换到轻量 Map 视图，避免每一行都创建并填充 LinkedHashMap
-        data = tryConvertArray2MapView(data, valueHolder);
+        //数组转换到map
+        data = tryConvertArray2Map(data, valueHolder);
 
         //获取注入的属性
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
@@ -1470,39 +1470,6 @@ public class SelectDaoImpl<T>
 
         return dataMap;
 
-    }
-
-    private Object tryConvertArray2MapView(Object data, ValueHolder<ArrayAliasMapping> valueHolder) {
-
-        if (data == null) {
-            return data;
-        }
-
-        //只有一个元素时，hibernate不会返回数组，直接返回数据
-        if (this.selectColumns.size() == 1
-                && !data.getClass().isArray()) {
-            data = new Object[]{data};
-        }
-
-        if (!data.getClass().isArray()) {
-            return data;
-        }
-
-        final int arrayLen = Array.getLength(data);
-
-        if (valueHolder == null) {
-            valueHolder = new ValueHolder<>(null);
-        }
-
-        if (valueHolder.value == null || valueHolder.value.arrayLen != arrayLen) {
-            valueHolder.value = getArrayAliasMapping(arrayLen);
-        }
-
-        if (valueHolder.value.isEmpty()) {
-            return data;
-        }
-
-        return new ArrayResultMap(data, valueHolder.value);
     }
 
     /**
@@ -1642,93 +1609,6 @@ public class SelectDaoImpl<T>
         }
 
         return columnNames;
-    }
-
-    private ArrayAliasMapping getArrayAliasMapping(int arrayLen) {
-
-        List<List<String>> aliases = getAliases(arrayLen);
-
-        Map<String, Integer> keyIndexMap = new LinkedHashMap<>();
-
-        for (int i = 0; i < aliases.size(); i++) {
-            for (String key : aliases.get(i)) {
-                keyIndexMap.put(key, i);
-            }
-        }
-
-        return new ArrayAliasMapping(arrayLen, keyIndexMap);
-    }
-
-    private static final class ArrayAliasMapping {
-        final int arrayLen;
-        final Map<String, Integer> keyIndexMap;
-
-        ArrayAliasMapping(int arrayLen, Map<String, Integer> keyIndexMap) {
-            this.arrayLen = arrayLen;
-            this.keyIndexMap = keyIndexMap;
-        }
-
-        boolean isEmpty() {
-            return keyIndexMap.isEmpty();
-        }
-    }
-
-    private static final class ArrayResultMap extends AbstractMap<String, Object> {
-        final Object array;
-        final ArrayAliasMapping aliasMapping;
-
-        ArrayResultMap(Object array, ArrayAliasMapping aliasMapping) {
-            this.array = array;
-            this.aliasMapping = aliasMapping;
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return aliasMapping.keyIndexMap.containsKey(key);
-        }
-
-        @Override
-        public Object get(Object key) {
-            Integer index = aliasMapping.keyIndexMap.get(key);
-            return index == null ? null : Array.get(array, index);
-        }
-
-        @Override
-        public int size() {
-            return aliasMapping.keyIndexMap.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return aliasMapping.keyIndexMap.isEmpty();
-        }
-
-        @Override
-        public Set<Entry<String, Object>> entrySet() {
-            return new AbstractSet<Entry<String, Object>>() {
-                @Override
-                public Iterator<Entry<String, Object>> iterator() {
-                    Iterator<Entry<String, Integer>> iterator = aliasMapping.keyIndexMap.entrySet().iterator();
-                    return new Iterator<Entry<String, Object>>() {
-                        @Override
-                        public boolean hasNext() {
-                            return iterator.hasNext();
-                        }
-
-                        @Override
-                        public Entry<String, Object> next() {
-                            Entry<String, Integer> entry = iterator.next();
-                            return new SimpleImmutableEntry<>(entry.getKey(), Array.get(array, entry.getValue()));
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return aliasMapping.keyIndexMap.size();
-                }
-            };
-        }
     }
 
     /// ///////////////////////////////////////////
