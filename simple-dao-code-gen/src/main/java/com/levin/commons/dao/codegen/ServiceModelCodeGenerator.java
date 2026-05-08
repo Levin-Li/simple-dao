@@ -333,7 +333,7 @@ public final class ServiceModelCodeGenerator {
         Utils.copyAndReplace(prefix, false, resTemplateDir + "bootstrap/logback.xml", new File(resPath + "logback.xml"), new HashMap<>());
 
         for (Class entityClass : entityClassList()) {
-          //  genTestCode(entityClass, bootstrapDir, null);
+            //  genTestCode(entityClass, bootstrapDir, null);
         }
 
     }
@@ -1899,7 +1899,7 @@ public final class ServiceModelCodeGenerator {
                 //google-format 并不会移除 .* 的导入
                 fileContent = RemoveUnusedImports.removeUnusedImports(fileContent);
             } catch (Throwable e) {
-                logger.warn("[{}] google-format优化导入失败，改用ImportOptimizer，{}", path, e.getMessage(), e);
+                logger.warn("[{}] google-format优化导入失败，{}", path, e.getMessage());
             }
 
             //如果是Java类文件，自动格式化
