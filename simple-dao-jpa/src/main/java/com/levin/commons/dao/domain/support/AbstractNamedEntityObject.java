@@ -29,11 +29,6 @@ public abstract class AbstractNamedEntityObject
     @Contains
     protected String name;
 
-    @Schema(title = "拼音名", description = "简拼或全拼，逗号隔开")
-    @Column(length = 128)
-    @Contains
-    protected String pinyinName;
-
     @Override
     public String toString() {
         return name;
