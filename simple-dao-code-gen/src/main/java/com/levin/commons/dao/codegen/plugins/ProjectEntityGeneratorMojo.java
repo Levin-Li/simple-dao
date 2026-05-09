@@ -234,6 +234,7 @@ public class ProjectEntityGeneratorMojo extends BaseMojo {
 
 
         copyAndReplace(false, resTemplateDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+        copyAndReplace(false, resTemplateDir + "AGENTS.md", new File(entitiesDir, "AGENTS.md"), mapBuilder.build());
 
 
         Map<String, Object> tempParams = new LinkedHashMap<>(mapBuilder.build());

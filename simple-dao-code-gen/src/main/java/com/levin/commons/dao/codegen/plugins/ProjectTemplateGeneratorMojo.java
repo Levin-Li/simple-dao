@@ -165,6 +165,7 @@ public class ProjectTemplateGeneratorMojo extends BaseMojo {
         mapBuilder.put("ignoreEntities", Arrays.asList(ignoreEntities));
 
         copyAndReplace(false, resTemplateEntityDir + "实体类开发规范.md", new File(entitiesDir, "实体类开发规范.md"), mapBuilder.build());
+        copyAndReplace(false, resTemplateEntityDir + "AGENTS.md", new File(entitiesDir, "AGENTS.md"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateEntityDir + "package-info.java", new File(entitiesDir, "package-info.java"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateEntityDir + "EntityConst.java", new File(entitiesDir, "EntityConst.java"), mapBuilder.build());
 //            copyAndReplace(false, resTemplateEntityDir + "TestOrg.java", new File(entitiesDir, "TestOrg.java"), mapBuilder.build());
