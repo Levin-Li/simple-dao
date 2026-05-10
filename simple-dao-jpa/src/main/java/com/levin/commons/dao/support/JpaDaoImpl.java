@@ -1782,15 +1782,7 @@ public class JpaDaoImpl
 
         for (Object paramValue : paramValueList) {
 
-            //参数解包, 用于兼容复杂的类型
-            if (paramValue instanceof PrimitiveValueWrapper) {
-                paramValue = ((PrimitiveValueWrapper) paramValue).get();
-            }
-
-            if (paramValue instanceof ValueHolder) {
-                paramValue = ((ValueHolder) paramValue).get();
-            }
-
+            //如果是Map,
             if (paramValue instanceof Map) {
                 //如果是Map，就设置命名参数
                 for (Map.Entry<Object, Parameter> entry : parameterMap.entrySet()) {
@@ -1805,6 +1797,15 @@ public class JpaDaoImpl
                     }
                 }
             } else {
+
+                //参数解包, 用于兼容复杂的类型
+                if (paramValue instanceof PrimitiveValueWrapper) {
+                    paramValue = ((PrimitiveValueWrapper) paramValue).get();
+                }
+
+                if (paramValue instanceof ValueHolder) {
+                    paramValue = ((ValueHolder) paramValue).get();
+                }
 
                 paramValue = tryAutoConvertParamValue(isNative, parameterMap, pIndex, paramValue);
 
