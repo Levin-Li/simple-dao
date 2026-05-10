@@ -818,6 +818,139 @@ List<UserListItem> list = dao.findByQueryObj(UserListItem.class, new QueryUserSe
 - `resultClass` 或调用方法里的 `UserListItem.class` 决定结果映射类型。
 - 查询条件字段和选择字段可以在同一个 DTO 中，也可以拆成多个查询对象传入。
 
+#### 6.4.1 Hibernate 7 下的 DTO 字段映射优化
+
+在 JPA 查询、返回 DTO、并且每个选择列都有明确映射关系时，Simple DAO 会优先让 Hibernate 以 `Map` 形式返回投影结果，再把 `Map` 拷贝到 DTO。这样可以减少对查询语句的额外解析，也更贴近 Hibernate 7 的投影能力。
+
+典型写法如下：
+
+```java
+@Data
+@Accessors(chain = true)
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = GroupListItem.class,
+        maxResults = 10)
+public class QueryGroupListReq {
+
+    @Select("name")
+    String name;
+
+    @Select("category")
+    String category;
+
+    @Select("score")
+    Integer score;
+}
+
+@Data
+public class GroupListItem {
+    String name;
+    String category;
+    Integer score;
+}
+
+List<GroupListItem> rows = dao.findByQueryObj(GroupListItem.class, new QueryGroupListReq());
+```
+
+这个场景里，`name`、`category`、`score` 都能按 DTO 字段名稳定映射。
+
+#### 6.4.2 无别名字段的映射
+
+有些场景会显式去掉别名，例如希望生成的选择片段更接近原始字段：
+
+```java
+@Data
+@Accessors(chain = true)
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = GroupListItem.class,
+        maxResults = 10)
+public class QueryGroupNoAliasReq {
+
+    @Select(value = "name", alias = C.BLANK_VALUE)
+    String name;
+
+    @Select(value = "category", alias = C.BLANK_VALUE)
+    String category;
+
+    @Select(value = "score", alias = C.BLANK_VALUE)
+    Integer score;
+}
+```
+
+Hibernate 对没有别名的投影，可能会返回 `"0"`、`"1"` 这类位置 key。Simple DAO 会在目标类型是 DTO 时，按 `@Select` 的顺序把这些位置 key 重新映射到 DTO 字段上：
+
+- 第 1 个选择列 -> `name`
+- 第 2 个选择列 -> `category`
+- 第 3 个选择列 -> `score`
+
+所以无别名查询仍然可以稳定返回 `GroupListItem`。
+
+#### 6.4.3 表达式字段建议显式写别名
+
+表达式字段最好显式写 `alias`，让结果字段含义清楚：
+
+```java
+@Data
+@Accessors(chain = true)
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = GroupScoreItem.class)
+public class QueryGroupScoreReq {
+
+    @Select("name")
+    String name;
+
+    @Select(value = "score + 1", alias = "scorePlusOne")
+    Integer scorePlusOne;
+}
+
+@Data
+public class GroupScoreItem {
+    String name;
+    Integer scorePlusOne;
+}
+```
+
+这里 `score + 1` 会映射到 `scorePlusOne`，比依赖表达式文本自动推断更清楚，也更适合后续维护。
+
+#### 6.4.4 动态选择字段会自动走兼容路径
+
+动态选择字段很常见，例如前端决定本次只返回哪些字段：
+
+```java
+@Data
+@Accessors(chain = true)
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = GroupDynamicItem.class)
+public class QueryGroupDynamicReq {
+
+    @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE)
+    String[] columns = new String[]{"name", "category"};
+
+    String name;
+    String category;
+    Integer score;
+}
+```
+
+这类查询的选择列数量和字段映射关系是运行时决定的。Simple DAO 不会强行启用 Hibernate Map 投影优化，而是走原来的兼容映射路径，避免把未选择的列误填到 DTO 上。
+
+上面的例子里只选择了 `name` 和 `category`，`score` 没有被选择，返回 DTO 的 `score` 应保持为空。
+
+#### 6.4.5 数字别名和 Map 返回值
+
+DTO 字段名本身不能是纯数字，所以 `"0"`、`"1"` 这类 key 只会在 DTO 映射时作为“无别名投影的位置兜底”。如果目标类型就是 `Map`，Simple DAO 不会把数字 key 改成 DTO 字段名。
+
+例如：
+
+```java
+List<Map> rows = dao.selectFrom("jpa_dao_test_Group", "g")
+        .selectByStatement(true, "g.name AS \"0\"")
+        .limit(0, 1)
+        .find(Map.class);
+```
+
+这个查询明确要求返回 `Map`。返回结果会保留数据库/Hibernate 给出的数字别名 key，例如 `"0"` 或带引号的别名形式，而不会被映射成 `name`。
+
 ### 6.5 动态字段选择
 
 有时候是否返回某个字段由参数决定：
@@ -1400,6 +1533,15 @@ order by avgScore desc
 
 CASE 表达式在统计里很实用，适合把“满足某条件记 1，否则记 0”，再通过 `@Sum` 汇总成数量。
 
+这一节按常见业务场景组织，读的时候可以按需求直接跳：
+
+- 要统计高分/低分人数，看第一个基础例子。
+- 要按订单状态拆支付、退款、取消金额，看 `10.5.2`。
+- 要按 `payTime` 是否为空决定金额是否计入统计，看 `10.5.3`。
+- 要统计本周、本月金额，看 `10.5.5`。
+- 要写真实交易流水统计 DTO，看 `10.5.7`。
+- 要在服务层动态生成近 7 天、本月、上月、上上月统计列，看 `10.5.8`。
+
 需求：统计每个状态下的用户数、高分人数、低分人数。
 
 ```java
@@ -1441,6 +1583,8 @@ from User u
 group by u.state
 ```
 
+#### 10.5.1 订单成功笔数和成功金额
+
 再举一个更贴近业务报表的例子：统计交易总笔数、成功笔数、成功金额。
 
 ```java
@@ -1474,10 +1618,580 @@ public class TradeSummaryReq {
 }
 ```
 
+大致生成：
+
+```sql
+select count(1) as tradeCnt,
+       sum(case t.tradingStatus when 'SUCCESS' then 1 else 0 end) as successCnt,
+       sum(case t.tradingStatus when 'SUCCESS' then t.amount else 0 end) as successAmount
+from TradeLog t
+where t.createTime >= ?
+  and t.createTime <= ?
+```
+
+#### 10.5.2 按订单状态拆分金额
+
+很多订单报表会同时展示“支付成功金额、退款金额、取消金额、待支付金额”。这种场景不需要查多次，可以用多个 `@Sum + @Case` 一次统计出来。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o", resultClass = OrderAmountSummary.class)
+@Data
+@Accessors(chain = true)
+public class OrderAmountSummaryReq {
+
+    @Gte("createTime")
+    LocalDateTime beginTime;
+
+    @Lte("createTime")
+    LocalDateTime endTime;
+
+    @Count(alias = "orderCnt")
+    Long orderCnt;
+
+    @Sum(value = "amount", alias = "totalAmount")
+    BigDecimal totalAmount;
+
+    @Sum(value = "amount", alias = "paidAmount", fieldCases = {
+            @Case(column = "state", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'PAID'", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal paidAmount;
+
+    @Sum(value = "amount", alias = "refundAmount", fieldCases = {
+            @Case(column = "state", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'REFUNDED'", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal refundAmount;
+
+    @Sum(value = "amount", alias = "cancelAmount", fieldCases = {
+            @Case(column = "state", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'CANCELLED'", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal cancelAmount;
+}
+```
+
+大致生成：
+
+```sql
+select count(1) as orderCnt,
+       sum(o.amount) as totalAmount,
+       sum(case o.state when 'PAID' then o.amount else 0 end) as paidAmount,
+       sum(case o.state when 'REFUNDED' then o.amount else 0 end) as refundAmount,
+       sum(case o.state when 'CANCELLED' then o.amount else 0 end) as cancelAmount
+from Order o
+where o.createTime >= ?
+  and o.createTime <= ?
+```
+
+这种写法适合首页看板、经营概览、支付渠道日报等场景。优点是查询一次就能得到多列指标，避免业务层查多次再拼。
+
+#### 10.5.3 按支付时间判断成交金额和运费
+
+有些订单不一定通过状态字段判断是否成交，而是通过 `payTime` / `pay_time` 是否为空来判断。比如：
+
+- 未支付：`payTime is null`，成交金额记 0，运费记 0。
+- 已支付：`payTime is not null`，成交金额取商品实付金额，运费取运费字段。
+
+这种场景可以用 `column = ""` 写搜索 CASE。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o", resultClass = OrderPaidAmountSummary.class)
+@Data
+@Accessors(chain = true)
+public class OrderPaidAmountSummaryReq {
+
+    @Schema(description = "成交金额：分")
+    @Sum(value = "productRealPrice", alias = "paidOrderAmount", fieldCases = {
+            @Case(column = "", elseExpr = "F$:productRealPrice", whenOptions = {
+                    @Case.When(whenExpr = "F$:payTime IS NULL", thenExpr = "0")
+            })
+    })
+    Integer paidOrderAmount;
+
+    @Schema(description = "运费金额：分")
+    @Sum(value = "freight", alias = "freight", fieldCases = {
+            @Case(column = "", elseExpr = "F$:freight", whenOptions = {
+                    @Case.When(whenExpr = "F$:payTime IS NULL", thenExpr = "0")
+            })
+    })
+    Integer freight;
+}
+```
+
+大致生成：
+
+```sql
+select sum(case when o.payTime is null then 0 else o.productRealPrice end) as paidOrderAmount,
+       sum(case when o.payTime is null then 0 else o.freight end) as freight
+from Order o
+```
+
+如果项目里习惯使用生成的实体常量，也可以写成下面这种形态。核心意思一样：`pay_time is null` 时统计 0，否则统计对应金额字段。
+
+```java
+@Schema(description = "成交金额:分")
+@Sum(fieldCases = @Case(
+        column = "",
+        whenOptions = @Case.When(
+                whenExpr = E_Order.pay_time + " IS NULL",
+                thenExpr = "0"
+        ),
+        elseExpr = E_Order.product_real_price
+))
+Integer paid_order_amount;
+
+@Schema(description = "运费金额:分")
+@Sum(fieldCases = @Case(
+        column = "",
+        whenOptions = @Case.When(
+                whenExpr = E_Order.pay_time + " IS NULL",
+                thenExpr = "0"
+        ),
+        elseExpr = E_Order.freight
+))
+Integer freight;
+```
+
+这个例子里，`@Sum` 统计的不是原始字段本身，而是 CASE 表达式的结果：
+
+```sql
+sum(case when pay_time is null then 0 else product_real_price end)
+sum(case when pay_time is null then 0 else freight end)
+```
+
+这种写法特别适合“未达成条件就不计入金额”的业务统计，比如未支付订单、未结算订单、未核销记录等。
+
+#### 10.5.4 同时统计不同状态的订单数量
+
+如果只统计数量，不统计金额，可以让 `thenExpr = "1"`，`elseExpr = "0"`。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o", resultClass = OrderStateCountSummary.class)
+@Data
+@Accessors(chain = true)
+public class OrderStateCountSummaryReq {
+
+    @Count(alias = "orderCnt")
+    Long orderCnt;
+
+    @Sum(value = "state", alias = "paidCnt", fieldCases = {
+            @Case(elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'PAID'", thenExpr = "1")
+            })
+    })
+    Long paidCnt;
+
+    @Sum(value = "state", alias = "waitPayCnt", fieldCases = {
+            @Case(elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'WAIT_PAY'", thenExpr = "1")
+            })
+    })
+    Long waitPayCnt;
+
+    @Sum(value = "state", alias = "closedCnt", fieldCases = {
+            @Case(elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'CLOSED'", thenExpr = "1")
+            })
+    })
+    Long closedCnt;
+}
+```
+
+大致生成：
+
+```sql
+select count(1) as orderCnt,
+       sum(case o.state when 'PAID' then 1 else 0 end) as paidCnt,
+       sum(case o.state when 'WAIT_PAY' then 1 else 0 end) as waitPayCnt,
+       sum(case o.state when 'CLOSED' then 1 else 0 end) as closedCnt
+from Order o
+```
+
+这种写法常用于“订单状态分布”卡片，比查出订单后在 Java 里循环计数更直接。
+
+#### 10.5.5 本周、本月订单金额统计
+
+如果报表要同时展示“总金额、本周金额、本月金额”，可以把时间边界作为上下文变量传给 CASE。这里用 `@CtxVar` 暴露 `weekBegin`、`monthBegin`，再在 `whenExpr` 中通过 `${:weekBegin}`、`${:monthBegin}` 作为参数使用。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o", resultClass = OrderPeriodAmountSummary.class)
+@Data
+@Accessors(chain = true)
+public class OrderPeriodAmountSummaryReq {
+
+    @CtxVar
+    @Ignore
+    LocalDateTime weekBegin;
+
+    @CtxVar
+    @Ignore
+    LocalDateTime monthBegin;
+
+    @Sum(value = "amount", alias = "totalAmount")
+    BigDecimal totalAmount;
+
+    @Sum(value = "amount", alias = "weekAmount", fieldCases = {
+            @Case(column = "", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "F$:createTime >= ${:weekBegin}", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal weekAmount;
+
+    @Sum(value = "amount", alias = "monthAmount", fieldCases = {
+            @Case(column = "", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "F$:createTime >= ${:monthBegin}", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal monthAmount;
+}
+```
+
+调用时由业务层计算时间边界：
+
+```java
+OrderPeriodAmountSummaryReq req = new OrderPeriodAmountSummaryReq()
+        .setWeekBegin(LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay())
+        .setMonthBegin(LocalDate.now().withDayOfMonth(1).atStartOfDay());
+
+OrderPeriodAmountSummary stat = dao.findOneByQueryObj(
+        OrderPeriodAmountSummary.class,
+        req
+);
+```
+
+大致生成：
+
+```sql
+select sum(o.amount) as totalAmount,
+       sum(case when o.createTime >= ? then o.amount else 0 end) as weekAmount,
+       sum(case when o.createTime >= ? then o.amount else 0 end) as monthAmount
+from Order o
+```
+
+如果还要区分支付成功状态，可以把时间条件和状态条件写在同一个 `whenExpr` 里：
+
+```java
+@Sum(value = "amount", alias = "weekPaidAmount", fieldCases = {
+        @Case(column = "", elseExpr = "0", whenOptions = {
+                @Case.When(
+                        whenExpr = "F$:createTime >= ${:weekBegin} AND F$:state = 'PAID'",
+                        thenExpr = "F$:amount"
+                )
+        })
+})
+BigDecimal weekPaidAmount;
+```
+
+大致生成：
+
+```sql
+sum(case
+        when o.createTime >= ? and o.state = 'PAID' then o.amount
+        else 0
+    end) as weekPaidAmount
+```
+
+#### 10.5.6 按渠道分组，再按状态拆金额
+
+CASE 可以和 `@GroupBy` 一起使用。例如按支付渠道分组，同时统计每个渠道的总金额、成功金额、退款金额。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o", resultClass = ChannelOrderAmountStat.class)
+@Data
+@Accessors(chain = true)
+public class ChannelOrderAmountStatReq {
+
+    @GroupBy
+    String payChannel;
+
+    @Count(alias = "orderCnt")
+    Long orderCnt;
+
+    @Sum(value = "amount", alias = "totalAmount")
+    BigDecimal totalAmount;
+
+    @Sum(value = "amount", alias = "paidAmount", fieldCases = {
+            @Case(column = "state", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'PAID'", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal paidAmount;
+
+    @Sum(value = "amount", alias = "refundAmount", fieldCases = {
+            @Case(column = "state", elseExpr = "0", whenOptions = {
+                    @Case.When(whenExpr = "'REFUNDED'", thenExpr = "F$:amount")
+            })
+    })
+    BigDecimal refundAmount;
+}
+```
+
+大致生成：
+
+```sql
+select o.payChannel,
+       count(1) as orderCnt,
+       sum(o.amount) as totalAmount,
+       sum(case o.state when 'PAID' then o.amount else 0 end) as paidAmount,
+       sum(case o.state when 'REFUNDED' then o.amount else 0 end) as refundAmount
+from Order o
+group by o.payChannel
+```
+
+#### 10.5.7 交易流水统计：成功笔数、分账、入金、服务费
+
+下面这个例子更接近实际项目里的写法：外层请求对象负责查询条件，内部 `Result` 类负责统计结果。比如按创建时间筛选交易流水，只统计入金和分账两类交易，并返回交易总笔数、成功笔数、分账金额、入金金额、服务费金额。
+
+```java
+@Data
+@Accessors(chain = true)
+@FieldNameConstants
+@TargetOption(
+        entityClass = MemberTradingLog.class,
+        alias = E_MemberTradingLog.ALIAS,
+        resultClass = QueryTenantTradingMemberInfoReq.Result.class
+)
+public class QueryTenantTradingMemberInfoReq
+        extends MultiTenantOrgReq<QueryTenantTradingMemberInfoReq> {
+
+    @NotNull
+    @Schema(title = L_createTime, description = "大于等于" + L_createTime)
+    @Gte
+    Date gteCreateTime;
+
+    @Schema(title = L_createTime, description = "小于等于" + L_createTime)
+    @Lte
+    Date lteCreateTime;
+
+    @Schema(title = "交易类型", hidden = true)
+    @In
+    final List<TradingType> tradingType = Arrays.asList(
+            TradingType.Income,
+            TradingType.Split
+    );
+
+    @Data
+    @NoArgsConstructor
+    @Accessors(chain = true)
+    public static class Result implements Serializable {
+
+        @Schema(title = "交易总笔数")
+        @Count
+        Long tradeNum;
+
+        @Schema(title = "交易成功笔数")
+        @Sum(fieldCases = @Case(
+                column = E_MemberTradingLog.F_tradingStatus,
+                whenOptions = @Case.When(
+                        whenExpr = E_TradingStatus.Succeed_STR,
+                        thenExpr = "1"
+                ),
+                elseExpr = "0"
+        ))
+        Long tradeSuccessNum;
+
+        @Schema(title = "分账金额")
+        @Sum(fieldCases = @Case(
+                column = E_MemberTradingLog.F_tradingType,
+                whenOptions = @Case.When(
+                        whenExpr = E_TradingType.Split_STR,
+                        thenExpr = E_MemberTradingLog.F_tradingAmount
+                ),
+                elseExpr = "0"
+        ))
+        Long allocateAmount;
+
+        @Schema(title = "入金金额")
+        @Sum(fieldCases = @Case(
+                column = E_MemberTradingLog.F_tradingType,
+                whenOptions = @Case.When(
+                        whenExpr = E_TradingType.Income_STR,
+                        thenExpr = E_MemberTradingLog.F_tradingAmount
+                ),
+                elseExpr = "0"
+        ))
+        Long incomeAmount;
+
+        @Schema(title = "服务费金额")
+        @Sum(E_MemberTradingLog.baseServiceFee + " + " + E_MemberTradingLog.serviceFee)
+        Long serviceCharge;
+    }
+}
+```
+
+大致生成：
+
+```sql
+select count(1) as tradeNum,
+       sum(case t.tradingStatus when 'Succeed' then 1 else 0 end) as tradeSuccessNum,
+       sum(case t.tradingType when 'Split' then t.tradingAmount else 0 end) as allocateAmount,
+       sum(case t.tradingType when 'Income' then t.tradingAmount else 0 end) as incomeAmount,
+       sum(t.baseServiceFee + t.serviceFee) as serviceCharge
+from MemberTradingLog t
+where t.createTime >= ?
+  and t.createTime <= ?
+  and t.tradingType in (?, ?)
+```
+
+这个例子里有几个常用技巧：
+
+- `@TargetOption(resultClass = Result.class)` 表示查询结果不是实体，而是内部统计结果类。
+- 外层字段 `gteCreateTime`、`lteCreateTime`、`tradingType` 都是查询条件，不会出现在 select 里。
+- `@Schema(hidden = true) + final List + @In` 适合固定业务范围，比如这个接口只统计入金和分账。
+- `@Sum(fieldCases = @Case(... thenExpr = "1" ...))` 可以把满足条件的记录转成 1，再求和得到数量。
+- `@Sum(fieldCases = @Case(... thenExpr = F_tradingAmount ...))` 可以把满足条件的金额纳入统计，不满足条件按 0 处理。
+- `@Sum("baseServiceFee + serviceFee")` 适合统计多个字段的表达式结果，例如基础服务费加服务费。
+
+#### 10.5.8 编程式统计：近 7 天、本月、上月、上上月
+
+有些报表的统计窗口不是固定字段，而是服务层动态算出来的日期范围，例如：
+
+- 近 7 天入金金额、服务费金额。
+- 本月入金金额、入金笔数、服务费金额。
+- 上月入金金额、入金笔数、服务费金额。
+- 上上月入金金额、入金笔数、服务费金额。
+
+这种情况下可以保留请求对象里的租户、组织、基础条件，然后用 `Case` 和 `selectByStatement` 动态追加统计列。
+
+```java
+Date endDate = DateUtil.endOfDay(
+        ObjUtil.defaultIfNull(req.getGteTradingTime(), new Date())
+).toJdkDate();
+
+Date start7Day = DateUtil.offsetDay(endDate, -7).toJdkDate();
+
+Date startOfMonth = DateUtil.beginOfMonth(endDate).toJdkDate();
+Date endOfMonth = DateUtil.endOfMonth(endDate).toJdkDate();
+
+Date startOfPrevMonth = DateUtil.beginOfMonth(
+        DateUtil.offsetMonth(startOfMonth, -1)
+).toJdkDate();
+Date endOfPrevMonth = DateUtil.endOfMonth(
+        DateUtil.offsetMonth(startOfMonth, -1)
+).toJdkDate();
+
+Date startOfPrevPrevMonth = DateUtil.beginOfMonth(
+        DateUtil.offsetMonth(startOfMonth, -2)
+).toJdkDate();
+Date endOfPrevPrevMonth = DateUtil.endOfMonth(
+        DateUtil.offsetMonth(startOfMonth, -2)
+).toJdkDate();
+
+String placeholder = simpleDao.getParamPlaceholder(true);
+
+String condition = "("
+        + E_MemberTradingLog.F_tradingType + " = " + placeholder
+        + " AND " + E_MemberTradingLog.F_tradingTime
+        + " BETWEEN " + placeholder + " AND " + placeholder
+        + ")";
+
+String sumExpr = "SUM(" + new Case()
+        .elseExpr("0")
+        .when(condition, E_MemberTradingLog.F_tradingAmount)
+        + ")";
+
+String cntExpr = "COUNT(" + new Case()
+        .elseExpr("NULL")
+        .when(condition, "1")
+        + ")";
+
+TradingStatReq.StatResult stat = simpleDao.forSelect(req)
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.incomeAmount7Day,
+                TradingType.Income.name(), start7Day, endDate
+        )
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.serviceFee7Day,
+                TradingType.ServiceFee.name(), start7Day, endDate
+        )
+
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.incomeAmountCM,
+                TradingType.Income.name(), startOfMonth, endOfMonth
+        )
+        .selectByStatement(
+                cntExpr + " AS " + TradingStatReq.StatResult.Fields.incomeCntCM,
+                TradingType.Income.name(), startOfMonth, endOfMonth
+        )
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.serviceFeeCM,
+                TradingType.ServiceFee.name(), startOfMonth, endOfMonth
+        )
+
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.incomeAmountPM,
+                TradingType.Income.name(), startOfPrevMonth, endOfPrevMonth
+        )
+        .selectByStatement(
+                cntExpr + " AS " + TradingStatReq.StatResult.Fields.incomeCntPM,
+                TradingType.Income.name(), startOfPrevMonth, endOfPrevMonth
+        )
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.serviceFeePM,
+                TradingType.ServiceFee.name(), startOfPrevMonth, endOfPrevMonth
+        )
+
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.incomeAmountPPM,
+                TradingType.Income.name(), startOfPrevPrevMonth, endOfPrevPrevMonth
+        )
+        .selectByStatement(
+                cntExpr + " AS " + TradingStatReq.StatResult.Fields.incomeCntPPM,
+                TradingType.Income.name(), startOfPrevPrevMonth, endOfPrevPrevMonth
+        )
+        .selectByStatement(
+                sumExpr + " AS " + TradingStatReq.StatResult.Fields.serviceFeePPM,
+                TradingType.ServiceFee.name(), startOfPrevPrevMonth, endOfPrevPrevMonth
+        )
+        .findOne(TradingStatReq.StatResult.class);
+```
+
+大致生成：
+
+```sql
+select sum(case
+               when t.tradingType = ?
+                and t.tradingTime between ? and ?
+               then t.tradingAmount
+               else 0
+           end) as incomeAmount7Day,
+       count(case
+                 when t.tradingType = ?
+                  and t.tradingTime between ? and ?
+                 then 1
+                 else null
+             end) as incomeCntCM,
+       ...
+from MemberTradingLog t
+where ...
+```
+
+这个写法适合“统计列很多、每列的时间范围或交易类型不一样”的场景。几个注意点：
+
+- `simpleDao.forSelect(req)` 会继续使用 `req` 上已有的查询条件，例如租户、组织、权限、基础时间范围等。
+- `selectByStatement(expr, params...)` 里的参数数量，要和表达式中的占位符数量一致。
+- 金额统计推荐 `SUM(CASE WHEN ... THEN amount ELSE 0 END)`。
+- 数量统计推荐 `COUNT(CASE WHEN ... THEN 1 ELSE NULL END)`，或者 `SUM(CASE WHEN ... THEN 1 ELSE 0 END)`。
+- 如果 CASE 表达式要复用，不要在同一个 `Case` 对象上反复修改 `elseExpr`；可以像上面一样分别 new 一个金额 CASE 和数量 CASE，避免后续维护时看错。
+- 上上月字段别名要单独使用 `incomeCntPPM` 这类字段名，避免误写成上月的 `incomeCntPM`。
+
+选择建议：
+
+- 指标结构固定、接口入参也固定时，优先用注解式统计 DTO，代码更清楚，也方便生成接口文档。
+- 指标列需要根据服务层日期、枚举、配置动态拼出来时，用 `Case + selectByStatement` 更自然。
+- 不管哪种写法，都建议让请求对象继续承载租户、组织、权限等基础条件，避免统计绕过数据范围。
+
 说明：
 
 - `fieldCases` 是对统计字段左侧表达式做 CASE 包装。
-- `F$:score`、`F$:amount` 会按当前查询模式转换成正确字段表达式。
+- `F$:score`、`F$:amount`、`F$:createTime` 会按当前查询模式转换成正确字段表达式。
+- `column = "state"` 表示简单 CASE：`case state when 'PAID' then ... else ... end`。
+- `column = ""` 表示搜索 CASE：`case when createTime >= ? then ... else ... end`，适合时间范围、复合条件等场景。
+- `${:weekBegin}`、`${:monthBegin}` 这类写法表示从查询上下文中取值并作为参数绑定，通常配合 `@CtxVar` 使用。
 - CASE 条件里尽量使用实体字段常量，避免字符串字段名写错。
 
 ## 11. 多表查询例子
@@ -1612,7 +2326,10 @@ where (select count(*) from Task where user = u.id) > ?
 
 ## 13. JSON Path 例子
 
-当前注解支持 `jsonPath`，可用于 JSON 字段的查询、选择、更新。
+当前支持两种 JSON Path 写法：
+
+- 注解式：在 `@Contains`、`@Select`、`@Update` 等注解上声明 `jsonPath`。
+- 编程式：链式 API 直接调用 `jsonEq`、`jsonContains`、`jsonExists`、`jsonSelect`、`jsonSet`、`jsonArrayAppend`。
 
 ### 13.1 JSON 数组包含查询
 
@@ -1698,17 +2415,134 @@ dao.uniqueUpdateByQueryObj(
 - 不要在追加场景写 `jsonPath = "$[*]"`；这个 wildcard 路径在 `@Update` 中会被拒绝。
 - 如果你要替换数组中某个固定位置的对象属性，用明确路径，例如 `jsonPath = "$[0].logText"`；如果你要追加新元素，不写 `jsonPath`。
 
-### 13.5 JSON 使用限制
+### 13.5 编程式 JSON Path API
+
+如果不想创建 DTO，也可以直接使用链式 API。这个能力适合临时查询、服务内部动态拼装条件、少量 JSON 字段更新等场景。
+
+方法分布：
+
+| 方法 | 所属接口 | 适用场景 | 大致表达 |
+| --- | --- | --- | --- |
+| `jsonEq(field, path, value)` | `SimpleConditionBuilder` | JSON 子字段等值查询。 | `json_value(str(field), path) = ?` |
+| `jsonContains(field, path, keyword)` | `SimpleConditionBuilder` | JSON 子字段或数组内容包含查询。 | `json_value/json_query(...) like ?` |
+| `jsonExists(field, path)` | `SimpleConditionBuilder` | 判断 JSON 路径是否存在。 | `json_exists(str(field), path)` |
+| `jsonSelect(field, path, alias)` | `SelectBuilder` | 只返回 JSON 子字段。 | `json_query/json_value(...) as alias` |
+| `jsonSet(field, path, value)` | `UpdateBuilder` | 更新 JSON 中某个明确路径的值。 | `field = json_set(field, path, ?)` |
+| `jsonArrayAppend(field, value)` | `UpdateBuilder` | 向 JSON 数组根路径追加元素。 | `field = json_array_append(field, '$', ?)` |
+| `jsonArrayAppend(field, path, value)` | `UpdateBuilder` | 向 JSON 中指定数组路径追加元素。 | `field = json_array_append(field, path, ?)` |
+
+JSON 条件查询：
+
+```java
+List<User> users = dao.selectFrom(User.class, "u")
+        .jsonEq("logs", "$[0].logText", "created")
+        .jsonContains("roleList", "$[*]", "admin")
+        .jsonExists("logs", "$[0].logText")
+        .find(User.class);
+```
+
+大致语义：
+
+```sql
+where json_value(str(u.logs), '$[0].logText') = ?
+  and json_query(str(u.roleList), '$[*]') like ?
+  and json_exists(str(u.logs), '$[0].logText')
+```
+
+JSON 子字段选择：
+
+```java
+List<UserInfo> list = dao.selectFrom(User.class, "u")
+        .jsonSelect("logs", "$[0].logText", "firstLogText")
+        .find(UserInfo.class);
+```
+
+大致语义：
+
+```sql
+select COALESCE(
+           json_query(str(u.logs), '$[0].logText'),
+           json_value(str(u.logs), '$[0].logText')
+       ) as firstLogText
+```
+
+JSON 子字段更新：
+
+```java
+dao.updateTo(User.class, "u")
+        .jsonSet("logs", "$[0].logText", "updated")
+        .eq("id", userId)
+        .limit(0, 1)
+        .update();
+```
+
+大致语义：
+
+```sql
+update User u
+   set u.logs = json_set(u.logs, '$[0].logText', ?)
+ where u.id = ?
+```
+
+JSON 数组追加：
+
+```java
+dao.updateTo(User.class, "u")
+        .jsonArrayAppend("roleList", "R_MANAGER")
+        .eq("id", userId)
+        .limit(0, 1)
+        .update();
+```
+
+大致语义：
+
+```sql
+update User u
+   set u.roleList = json_array_append(
+           COALESCE(u.roleList, json_array()),
+           '$',
+           ?
+       )
+ where u.id = ?
+```
+
+如果 JSON 数组不在根路径，可以显式传入数组路径：
+
+```java
+dao.updateTo(User.class, "u")
+        .jsonArrayAppend("profile", "$.roles", "R_MANAGER")
+        .eq("id", userId)
+        .limit(0, 1)
+        .update();
+```
+
+这些方法分别放在不同的链式接口里：
+
+- `jsonEq`、`jsonContains`、`jsonExists`：条件构建器，查询、更新、删除都可以作为条件使用。
+- `jsonSelect`：选择字段构建器，只用于查询。
+- `jsonSet`、`jsonArrayAppend`：更新字段构建器，只用于更新。
+
+使用建议：
+
+- 如果 JSON 条件是接口入参的一部分，优先写 DTO 注解，便于复用和生成接口说明。
+- 如果 JSON 条件只在某个服务方法里临时使用，优先用编程式 JSON API，不要手写 `json_value(...)`。
+- 更新场景仍然建议配合 `eq("id", id)`、租户条件、乐观锁或 `limit(0, 1)` 使用，避免误更新。
+- 编程式 API 复用了 `JsonExprSupport` 和 `JsonPathSpec`，和注解式 JSON Path 生成规则保持一致。
+
+### 13.6 JSON 使用限制
 
 仓库中的测试说明了几个边界：
 
-- `@Select` 可以选择 JSON 根路径或具体路径。
-- `@Contains` 可以对 JSON 数组使用通配路径。
-- `@Update` 更新具体 JSON 路径时应使用明确路径，例如 `$[0].logText`。
-- `@Update(incrementMode = true)` 追加数组时不要使用 wildcard 路径。
+- `@Select` 和 `jsonSelect` 可以选择 JSON 根路径或具体路径。
+- `@Contains` 和 `jsonContains` 可以对 JSON 数组使用通配路径。
+- `@Update` 和 `jsonSet` 更新具体 JSON 路径时应使用明确路径，例如 `$[0].logText`。
+- `@Update(incrementMode = true)` 和 `jsonArrayAppend` 追加数组时不要使用 wildcard 路径。
 - 统计注解和增量更新不应随意使用通配 JSON Path，例如 `$[*]`，框架会拒绝部分不安全组合。
 
-可参考：`simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java` 里的 JSON Path 测试片段。
+可参考：
+
+- 注解式 JSON Path 测试：`simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java`
+- 编程式 JSON Path 测试：`simple-dao-core/src/test/java/com/levin/commons/dao/support/JsonProgrammaticBuilderTest.java`
 
 ## 14. Repository 代理例子
 
@@ -2008,6 +2842,11 @@ public class Area extends AbstractNamedEntityObject {
 - `havingOp = Op.Gt` 等定义指标过滤。
 - `@OrderBy(scope = OrderBy.Scope.OnlyForGroupBy)` 或统计注解里的 `orderBy` 定义排序。
 - 多表维度用 `@JoinOption`。
+- 条件数量统计：`@Sum(fieldCases = @Case(... thenExpr = "1", elseExpr = "0"))`。
+- 条件金额统计：`@Sum(fieldCases = @Case(... thenExpr = "F$:amount", elseExpr = "0"))`。
+- 支付时间判断金额：`@Case(column = "", whenExpr = "F$:payTime IS NULL", thenExpr = "0", elseExpr = "F$:amount")`。
+- 固定结果结构优先用注解 DTO；动态周期、动态枚举、动态统计列可用 `Case + selectByStatement`。
+- 编程式统计仍建议从 `simpleDao.forSelect(req)` 开始，让租户、组织、权限、基础查询条件继续生效。
 
 ### 19.6 JSON 字段筛选
 
@@ -2018,6 +2857,9 @@ public class Area extends AbstractNamedEntityObject {
 - JSON 子字段返回：`@Select(value = "logs", jsonPath = "$[0].logText", alias = "firstLogText")`
 - JSON 子字段更新：`@Update(value = "logs", jsonPath = "$[0].logText")`
 - JSON 数组追加：`@Update(value = "roleList", incrementMode = true)`，不要写 `jsonPath = "$[*]"`。
+- 编程式查询：`jsonEq("logs", "$[0].logText", value)`、`jsonContains("roleList", "$[*]", "admin")`、`jsonExists("logs", "$[0].logText")`
+- 编程式选择：`jsonSelect("logs", "$[0].logText", "firstLogText")`
+- 编程式更新：`jsonSet("logs", "$[0].logText", value)`、`jsonArrayAppend("roleList", "admin")`
 
 ## 20. 常见问题排查
 
@@ -2086,6 +2928,8 @@ public class Area extends AbstractNamedEntityObject {
 
 ## 22. 新增功能时的建议流程
 
+完整开发和验证规则见：[docs/project-development-rules.md](./docs/project-development-rules.md)。下面是手册里的简版流程。
+
 1. 先判断是不是普通 CRUD、列表筛选、状态变更或统计报表。
 2. 能用现有默认服务和生成请求对象解决的，优先复用。
 3. 需要扩展条件时，优先定义新的 DTO/Req，并使用 Simple DAO 注解表达。
@@ -2093,5 +2937,12 @@ public class Area extends AbstractNamedEntityObject {
 5. 只有 DTO 注解和链式 API 都无法表达时，再考虑 DAO 扩展或手写 SQL。
 6. 涉及实体变更时，先编译实体模块，再执行 `gen-code`。
 7. 给业务服务补测试，至少覆盖正常路径、空条件、安全条件、边界条件。
+8. 这是公共组件，凡是改动 DAO 行为、注解解析、查询/更新语句生成、JPA 实现、JSON 支持或公共 API，都必须运行综合示例测试：
+
+```bash
+mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
+```
+
+`DaoExamplesTest` 位于 `simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java`，应视为项目的端到端使用契约测试。文档-only 变更可以不跑；但如果同一个工作会话里已经包含代码变更，完成前要跑这个测试，并在结果里说明是否通过。
 
 用一句话总结：Simple DAO 的最佳实践是“实体描述数据结构，DTO 描述查询/更新意图，业务服务编排流程，生成代码提供默认 CRUD 能力”。

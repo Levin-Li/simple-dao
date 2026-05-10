@@ -179,6 +179,18 @@ public class SelectDaoImpl<T>
     }
 
     @Override
+    public SelectDao<T> jsonSelect(String entityAttrName, String jsonPath, String alias) {
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        String jsonExpr = jsonPathSpec.isWildcard()
+                ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
+                : JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
+
+        return selectByStatement(jsonExpr + (hasText(alias) ? " as " + alias : ""));
+    }
+
+    @Override
     public String getAlias() {
         return alias;
     }
@@ -788,7 +800,7 @@ public class SelectDaoImpl<T>
 
                 selectByStatement(expr, holder.value);
 
-                //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字典名称，只好通过 druid 解析 SQL 语句
+                //@todo 目前由于Hibernate 5.2.17 版本对 Tuple 返回的数据无法获取字段名称，只好通过 druid 解析 SQL 语句
                 appendColumnMap(expr, newAlias, fieldOrMethod, name);
 
             });
@@ -1032,13 +1044,19 @@ public class SelectDaoImpl<T>
      * @return
      */
     String genQL(boolean isCountQueryResult) {
+        return genQL(isCountQueryResult, false);
+    }
+
+    String genQL(boolean isCountQueryResult, boolean keepSelectColumnsForCount) {
 
         final StringBuilder builder = new StringBuilder();
 
         //目前如果没有要选择字段，不会加入select 子句
         if (isCountQueryResult) {
             //count 语句
-            if (isNative()) {
+            if (keepSelectColumnsForCount && selectColumns.isNotEmpty()) {
+                builder.insert(0, "Select " + selectColumns);
+            } else if (isNative()) {
                 builder.insert(0, "Select 1");
             }
         } else if (selectColumns.isNotEmpty()) {
@@ -1154,9 +1172,16 @@ public class SelectDaoImpl<T>
                     , getDaoContextValues(), whereParamValues, havingParamValues, getLastStatementParamValues());
         }
 
-        //JPA 暂时不支持对统计查询进行二次统计
         if (hasStatColumns()) {
-            throw new StatementBuildException("JPA暂时不支持对统计查询进行二次统计，请使用原生查询");
+
+            Long resultCount = getDao().countQueryResult(false, genQL(true, true)
+                    , getDaoContextValues(), selectParamValues, whereParamValues, groupByParamValues, havingParamValues, getLastStatementParamValues());
+
+            if (resultCount != null) {
+                return resultCount;
+            }
+
+            throw new StatementBuildException("当前DAO实现不支持对统计查询进行二次统计，请使用原生查询");
         }
 
         String column = "1";
@@ -1291,7 +1316,7 @@ public class SelectDaoImpl<T>
             appendByQueryObj(resultType);
         }
 
-        List<E> queryResultList = this.findList(null);
+        List queryResultList = this.findList(getProjectionResultClass(resultType, noResultType));
 
         if (queryResultList == null || queryResultList.isEmpty()) {
             return Collections.emptyList();
@@ -1352,7 +1377,7 @@ public class SelectDaoImpl<T>
         //预期唯一结果时，故意允许查询2条记录，如果多余一条记录则视为异常情况
         setRowCount(isExpectUniqueResult ? 2 : 1);
 
-        List<E> list = findList(null);
+        List list = findList(getProjectionResultClass(resultType, notResultType));
 
         if (list == null || list.isEmpty()) {
             return null;
@@ -1363,7 +1388,7 @@ public class SelectDaoImpl<T>
             throw new IncorrectResultSizeDataAccessException(1, list.size());
         }
 
-        E result = list.get(0);
+        E result = (E) list.get(0);
 
         if (notResultType) {
             return result;
@@ -1397,6 +1422,9 @@ public class SelectDaoImpl<T>
         //数组转换到map
         data = tryConvertArray2Map(data, valueHolder);
 
+        //Hibernate Map 投影在无别名时会使用 "0"、"1" 这类下标 key，这里按 select 顺序重映射成 DTO 字段名。
+        data = tryConvertMap2DtoMap(data, valueHolder, targetType);
+
         //获取注入的属性
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
 
@@ -1416,6 +1444,30 @@ public class SelectDaoImpl<T>
         ClassUtils.invokePostConstructMethod(e);
 
         return e;
+    }
+
+    private <E> Class getProjectionResultClass(Class<E> resultType, boolean noResultType) {
+
+        if (!canUseMapProjectionForDto(resultType, noResultType)) {
+            return null;
+        }
+
+        return Map.class;
+    }
+
+    private boolean canUseMapProjectionForDto(Class<?> resultType, boolean noResultType) {
+
+        return !noResultType
+                && resultType != null
+                && resultType != Void.class
+                && hasSelectColumns()
+                && selectColumnsMap.size() >= selectColumns.size()
+                && getDao().isJpa()
+                && !isNative()
+                && !resultType.isArray()
+                && !Map.class.isAssignableFrom(resultType)
+                && !QueryAnnotationUtil.isSimpleType(resultType)
+                && !getDao().isEntityClass(resultType);
     }
 
     /**
@@ -1470,6 +1522,124 @@ public class SelectDaoImpl<T>
 
         return dataMap;
 
+    }
+
+    public Object tryConvertMap2DtoMap(Object data, ValueHolder<List<List<String>>> valueHolder) {
+        return tryConvertMap2DtoMap(data, valueHolder, null);
+    }
+
+    private Object tryConvertMap2DtoMap(Object data, ValueHolder<List<List<String>>> valueHolder, Class<?> targetType) {
+
+        if (!(data instanceof Map) || selectColumns.isEmpty()) {
+            return data;
+        }
+
+        Map<?, ?> sourceMap = (Map<?, ?>) data;
+
+        if (sourceMap.isEmpty()) {
+            return data;
+        }
+
+        if (containsTargetPropertyKey(sourceMap, targetType)) {
+            return data;
+        }
+
+        if (valueHolder == null) {
+            valueHolder = new ValueHolder<>(null);
+        }
+
+        if (valueHolder.value == null) {
+            valueHolder.value = getAliases(selectColumns.size());
+        }
+
+        if (valueHolder.value == null || valueHolder.value.size() != selectColumns.size()) {
+            return data;
+        }
+
+        Map<String, Object> dataMap = new LinkedHashMap<>(sourceMap.size() + selectColumns.size());
+        sourceMap.forEach((key, value) -> {
+            if (key != null) {
+                dataMap.put(String.valueOf(key), value);
+            }
+        });
+
+        for (int i = 0; i < valueHolder.value.size(); i++) {
+
+            Object value = getSelectValue(sourceMap, valueHolder.value.get(i), i);
+
+            if (value == null) {
+                continue;
+            }
+
+            for (String key : valueHolder.value.get(i)) {
+                dataMap.put(key, value);
+            }
+        }
+
+        return dataMap;
+    }
+
+    private boolean containsTargetPropertyKey(Map<?, ?> sourceMap, Class<?> targetType) {
+
+        if (targetType == null) {
+            return false;
+        }
+
+        Class<?> type = targetType;
+        while (type != null && type != Object.class) {
+            for (Field field : type.getDeclaredFields()) {
+                if (sourceMap.containsKey(field.getName())) {
+                    return true;
+                }
+            }
+            type = type.getSuperclass();
+        }
+
+        for (Method method : targetType.getMethods()) {
+
+            String name = method.getName();
+
+            if (name.length() <= 3
+                    || !name.startsWith("set")
+                    || method.getParameterCount() != 1
+                    || !Character.isUpperCase(name.charAt(3))) {
+                continue;
+            }
+
+            String propertyName = Character.toLowerCase(name.charAt(3)) + (name.length() > 4 ? name.substring(4) : "");
+
+            if (sourceMap.containsKey(propertyName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Object getSelectValue(Map<?, ?> sourceMap, List<String> aliases, int index) {
+
+        for (String alias : aliases) {
+            if (sourceMap.containsKey(alias)) {
+                return sourceMap.get(alias);
+            }
+
+            String lowerAlias = alias.toLowerCase(Locale.ROOT);
+            if (sourceMap.containsKey(lowerAlias)) {
+                return sourceMap.get(lowerAlias);
+            }
+        }
+
+        String indexKey = String.valueOf(index);
+
+        if (sourceMap.containsKey(indexKey)) {
+            return sourceMap.get(indexKey);
+        }
+
+        if (sourceMap.containsKey(index)) {
+            return sourceMap.get(index);
+        }
+
+        return null;
     }
 
     /**
@@ -1605,6 +1775,11 @@ public class SelectDaoImpl<T>
                 aliases.add(fieldName);
             } else {
                 aliases.add(expr);
+
+                String key = removeAlias(expr);
+                if (hasText(key) && !expr.equals(key)) {
+                    aliases.add(key);
+                }
             }
         }
 

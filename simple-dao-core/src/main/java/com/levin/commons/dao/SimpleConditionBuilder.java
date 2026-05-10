@@ -70,6 +70,27 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * JSON 路径存在性查询。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @return this
+     */
+    T jsonExists(String entityAttrName, String jsonPath);
+
+    default T jsonExists(Boolean isAppend, String entityAttrName, String jsonPath) {
+        return TRUE.equals(isAppend) ? jsonExists(entityAttrName, jsonPath) : (T) this;
+    }
+
+    default T jsonExists(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath) {
+        return jsonExists(lambdaMethodAttr.getAttrName(), jsonPath);
+    }
+
+    default T jsonExists(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath) {
+        return TRUE.equals(isAppend) ? jsonExists(lambdaMethodAttr, jsonPath) : (T) this;
+    }
+
+    /**
      * xx is null or xx = paramValue
      *
      * @param entityAttrName 如 name
@@ -118,6 +139,28 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T eq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
         return TRUE.equals(isAppend) ? eq(lambdaMethodAttr, paramValue) : (T) this;
+    }
+
+    /**
+     * JSON 路径等值查询。
+     *
+     * @param entityAttrName JSON 字段名，如 logs
+     * @param jsonPath       JSON 路径，如 $.profile.name 或 $[0].logText
+     * @param paramValue     查询值
+     * @return this
+     */
+    T jsonEq(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonEq(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonEq(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonEq(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonEq(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonEq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonEq(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
     }
 
     /**
@@ -365,6 +408,30 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T contains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String keyword) {
         return TRUE.equals(isAppend) ? contains(lambdaMethodAttr, keyword) : (T) this;
+    }
+
+    /**
+     * JSON 路径包含查询。
+     * <p>
+     * 普通路径使用 json_value，通配路径（如 $[*]）使用 json_query。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param keyword        关键字
+     * @return this
+     */
+    T jsonContains(String entityAttrName, String jsonPath, String keyword);
+
+    default T jsonContains(Boolean isAppend, String entityAttrName, String jsonPath, String keyword) {
+        return TRUE.equals(isAppend) ? jsonContains(entityAttrName, jsonPath, keyword) : (T) this;
+    }
+
+    default T jsonContains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
+        return jsonContains(lambdaMethodAttr.getAttrName(), jsonPath, keyword);
+    }
+
+    default T jsonContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
+        return TRUE.equals(isAppend) ? jsonContains(lambdaMethodAttr, jsonPath, keyword) : (T) this;
     }
 
     T notContains(Class<?> attrBelongClass, String entityAttrName, String keyword);

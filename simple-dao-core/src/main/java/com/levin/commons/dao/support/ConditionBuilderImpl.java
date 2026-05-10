@@ -660,6 +660,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     @Override
+    public T jsonExists(String entityAttrName, String jsonPath) {
+        where(JsonExprSupport.jsonExistsExpr(
+                aroundColumnPrefix(entityAttrName),
+                JsonPathSpec.parse(jsonPath).getRawPath()));
+        return (T) this;
+    }
+
+    @Override
     public T isNullOrEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
         appendByAnnotations(true, attrBelongClass, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
         return (T) this;
@@ -676,6 +684,17 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     @Override
     public T eq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
         return processAnno(2, attrBelongClass, entityAttrName, paramValue);
+    }
+
+    @Override
+    public T jsonEq(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
+            String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
+            where(fieldExpr + " = " + getParamPlaceholder(), paramValue);
+        }
+
+        return (T) this;
     }
 
     /**
@@ -872,6 +891,21 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     @Override
     public T contains(Class<?> attrBelongClass, String entityAttrName, String keyword) {
         return processAnno(2, attrBelongClass, entityAttrName, keyword);
+    }
+
+    @Override
+    public T jsonContains(String entityAttrName, String jsonPath, String keyword) {
+
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(keyword)) {
+            JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+            String fieldExpr = aroundColumnPrefix(entityAttrName);
+            String jsonExpr = jsonPathSpec.isWildcard()
+                    ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
+                    : JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+            where(jsonExpr + " like " + getParamPlaceholder(), "%" + keyword + "%");
+        }
+
+        return (T) this;
     }
 
     /**

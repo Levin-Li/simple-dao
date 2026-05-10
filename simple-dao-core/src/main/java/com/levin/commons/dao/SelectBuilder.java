@@ -48,6 +48,28 @@ public interface SelectBuilder<T extends SelectBuilder<T, DOMAIN>, DOMAIN> {
      */
     T select(Boolean isAppend, String... columnNames);
 
+    /**
+     * 选择 JSON 路径的值。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param alias          结果别名
+     * @return this
+     */
+    T jsonSelect(String entityAttrName, String jsonPath, String alias);
+
+    default T jsonSelect(Boolean isAppend, String entityAttrName, String jsonPath, String alias) {
+        return Boolean.TRUE.equals(isAppend) ? jsonSelect(entityAttrName, jsonPath, alias) : (T) this;
+    }
+
+    default <R> T jsonSelect(LambdaMethodAttr<DOMAIN, R> lambdaMethodAttr, String jsonPath, String alias) {
+        return jsonSelect(lambdaMethodAttr.getAttrName(), jsonPath, alias);
+    }
+
+    default <R> T jsonSelect(Boolean isAppend, LambdaMethodAttr<DOMAIN, R> lambdaMethodAttr, String jsonPath, String alias) {
+        return Boolean.TRUE.equals(isAppend) ? jsonSelect(lambdaMethodAttr, jsonPath, alias) : (T) this;
+    }
+
 
     /**
      * 增加选择表达式，可设置参数

@@ -381,4 +381,19 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues);
+
+    /**
+     * 统计查询结果行数。
+     * <p>
+     * 普通 count 统计原表行数，统计查询分页需要统计的是查询结果行数，例如 group by 后的分组数量。
+     * 返回 null 表示当前 DAO 实现不支持该能力。
+     *
+     * @param isNative    是否是原生查询
+     * @param statement   完整查询语句
+     * @param paramValues 查询参数
+     * @return 查询结果行数，null 表示不支持
+     */
+    default Long countQueryResult(boolean isNative, String statement, Object... paramValues) {
+        return null;
+    }
 }

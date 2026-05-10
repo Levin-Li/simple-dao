@@ -90,7 +90,7 @@ public class UpdateTestRoleReq extends MultiTenantReq {
     String name;
 
     @Size(max = 128)
-    @Schema(title = L_pinyinName, description = D_pinyinName)
+    @Schema(title = "拼音名称")
     String pinyinName;
 
     @Schema(title = L_lastUpdateTime)

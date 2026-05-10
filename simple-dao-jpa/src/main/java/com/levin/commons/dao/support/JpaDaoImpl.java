@@ -1499,6 +1499,33 @@ public class JpaDaoImpl
     }
 
     @Override
+    public Long countQueryResult(boolean isNative, String statement, Object... paramValues) {
+
+        List paramValueList = flattenParams(null, paramValues);
+
+        if (!paramValueList.isEmpty()) {
+            statement = replacePlaceholder(isNative, statement);
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Count result JPQL:[" + statement + "]"
+                    + ", native: " + isNative
+                    + " , StartIndex: " + getParamStartIndex(isNative)
+                    + " , Params:" + paramValueList.stream().map(this::toStrAndTrimMax).collect(Collectors.joining(",", "[", "]")));
+        }
+
+        EntityManager em = getEntityManager();
+
+        Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
+
+        setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
+
+        autoFlushAndClearBeforeQuery(em);
+
+        return query.unwrap(org.hibernate.query.SelectionQuery.class).getResultCount();
+    }
+
+    @Override
     public String getPKName(Object tableOrEntityClass) {
 
         if (tableOrEntityClass instanceof Class) {

@@ -140,6 +140,70 @@ public class UpdateDaoImpl<T>
         return this;
     }
 
+    @Override
+    public UpdateDao<T> jsonSet(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+
+        if (jsonPathSpec.isWildcard()) {
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 jsonSet 中使用 wildcard [*]");
+        }
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        append(fieldExpr + " = " + JsonExprSupport.jsonSetExpr(fieldExpr, jsonPathSpec.getRawPath(), getParamPlaceholder()),
+                wrapJsonParam(paramValue));
+
+        return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonArrayAppend(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(hasText(jsonPath) ? jsonPath : "$");
+
+        if (jsonPathSpec.isWildcard()) {
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 jsonArrayAppend 中使用 wildcard [*]");
+        }
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        List<PrimitiveValueWrapper<?>> pList = QueryAnnotationUtil.flattenParams(null, paramValue).stream()
+                .map(item -> item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item))
+                .toList();
+
+        if (pList.isEmpty()) {
+            return this;
+        }
+
+        append(fieldExpr + " = " + JsonExprSupport.jsonArrayAppendExpr(
+                        "COALESCE(" + fieldExpr + " , " + JsonExprSupport.jsonArrayExpr() + ")",
+                        jsonPathSpec.getRawPath(),
+                        String.join(", ", pList.stream().map(item -> getParamPlaceholder()).toList())),
+                pList.size() == 1 ? pList.get(0) : pList);
+
+        return this;
+    }
+
+    private Object wrapJsonParam(Object paramValue) {
+
+        if (paramValue != null
+                && !(paramValue instanceof ValueHolder)
+                && !(paramValue instanceof Map)
+                && !(paramValue instanceof PrimitiveValueWrapper)
+                && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
+            return PrimitiveValueWrapper.of(paramValue);
+        }
+
+        return paramValue;
+    }
+
     private void append(String expr, Object... values) {
         if (updateColumns.add(expr)) {
             updateParamValues.add(values);

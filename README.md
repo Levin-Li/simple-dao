@@ -429,7 +429,7 @@ Simple DAO 不试图替代所有数据库访问方案。它最适合：
 - 删除：按查询对象删除，支持安全模式和逻辑删除。
 - 统计：`@Count`、`@Sum`、`@Avg`、`@Min`、`@Max`、`@GroupBy`、`havingOp`。
 - 多表：`@JoinOption`、链式 `join`、JPA `joinFetch`。
-- JSON：JSON Path 查询、选择、更新、数组追加。
+- JSON：注解式 `jsonPath`，以及链式 `jsonEq`、`jsonSelect`、`jsonSet`、`jsonArrayAppend`。
 - 查询模式：默认 JPA/JPQL，可切换原生 SQL。
 - 代码生成：实体驱动生成默认服务、控制器、请求对象和项目模板。
 
@@ -577,6 +577,8 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-code
 
 ## 开发命令
 
+完整开发规则见：[项目开发规则](./docs/project-development-rules.md)。
+
 ```bash
 # 编译全部模块
 mvn compile
@@ -584,13 +586,19 @@ mvn compile
 # 显式运行测试
 mvn test -P '!01-跳过测试'
 
+# DAO 行为或公共 API 变更后，必须运行综合示例测试
+mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
+
 # 只运行示例模块及其依赖
 mvn -pl simple-dao-examples -am test -P '!01-跳过测试'
 ```
 
+`DaoExamplesTest` 是这个公共组件最重要的综合使用测试，覆盖大量真实注解、链式 API、Repository、JSON Path、统计等用法。凡是改动 DAO 行为、注解解析、查询/更新语句生成、JPA 实现、JSON 支持或公共 API，都要运行它；如果因为已有环境或生成代码问题无法通过，需要在提交说明或交付说明里明确写出失败原因。
+
 ## 文档
 
 - 完整操作手册：[manual.md](./manual.md)
+- 项目开发规则：[docs/project-development-rules.md](./docs/project-development-rules.md)
 - 核心入口：[SimpleDao.java](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
 - JPA 实现：[JpaDaoImpl.java](./simple-dao-jpa/src/main/java/com/levin/commons/dao/support/JpaDaoImpl.java)
 - 代码生成插件：[CodeGeneratorMojo.java](./simple-dao-code-gen/src/main/java/com/levin/commons/dao/codegen/plugins/CodeGeneratorMojo.java)

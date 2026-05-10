@@ -139,6 +139,73 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     T set(Boolean isAppend, boolean incrementMode, boolean autoConvertNullValueForIncrementMode, String entityAttrName, Object paramValue);
 
     /**
+     * 更新 JSON 路径的值。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param paramValue     新值
+     * @return this
+     */
+    T jsonSet(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonSet(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonSet(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonSet(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonSet(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonSet(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonSet(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
+     * 向 JSON 数组根路径追加元素。
+     *
+     * @param entityAttrName JSON 数组字段名
+     * @param paramValue     追加值
+     * @return this
+     */
+    default T jsonArrayAppend(String entityAttrName, Object paramValue) {
+        return jsonArrayAppend(entityAttrName, "$", paramValue);
+    }
+
+    default T jsonArrayAppend(Boolean isAppend, String entityAttrName, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayAppend(entityAttrName, paramValue) : (T) this;
+    }
+
+    default T jsonArrayAppend(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return jsonArrayAppend(lambdaMethodAttr.getAttrName(), paramValue);
+    }
+
+    default T jsonArrayAppend(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayAppend(lambdaMethodAttr, paramValue) : (T) this;
+    }
+
+    /**
+     * 向 JSON 数组指定路径追加元素。
+     *
+     * @param entityAttrName JSON 数组字段名
+     * @param jsonPath       JSON 数组路径
+     * @param paramValue     追加值
+     * @return this
+     */
+    T jsonArrayAppend(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonArrayAppend(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayAppend(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonArrayAppend(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonArrayAppend(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonArrayAppend(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayAppend(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
      * 增加更新表达式，可设置参数
      *
      * @param statement

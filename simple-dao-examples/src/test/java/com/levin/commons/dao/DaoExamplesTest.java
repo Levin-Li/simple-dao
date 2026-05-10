@@ -2,6 +2,7 @@ package com.levin.commons.dao;
 
 import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
+import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.Where;
@@ -626,6 +627,87 @@ public class DaoExamplesTest {
         Assert.hasText(dto.getCategory(), "类别为空");
         Assert.notNull(dto.getScore(), "分数为空");
 
+    }
+
+    @Test
+    public void testJpaMapProjectionDefaultAliasDTO() {
+
+        List<JpaMapProjectionDefaultAliasDTO> list = dao.findByQueryObj(JpaMapProjectionDefaultAliasDTO.class,
+                new JpaMapProjectionDefaultAliasDTO());
+
+        Assert.notEmpty(list, "默认别名 DTO 查询结果为空");
+
+        JpaMapProjectionDefaultAliasDTO dto = list.get(0);
+
+        Assert.hasText(dto.getName(), "默认别名 DTO 名称映射失败");
+        Assert.hasText(dto.getCategory(), "默认别名 DTO 类别映射失败");
+        Assert.notNull(dto.getScore(), "默认别名 DTO 分数映射失败");
+    }
+
+    @Test
+    public void testJpaMapProjectionNoAliasDTO() {
+
+        List<JpaMapProjectionNoAliasDTO> list = dao.findByQueryObj(JpaMapProjectionNoAliasDTO.class,
+                new JpaMapProjectionNoAliasDTO());
+
+        Assert.notEmpty(list, "无别名 DTO 查询结果为空");
+
+        JpaMapProjectionNoAliasDTO dto = list.get(0);
+
+        Assert.hasText(dto.getName(), "无别名 DTO 名称映射失败");
+        Assert.hasText(dto.getCategory(), "无别名 DTO 类别映射失败");
+        Assert.notNull(dto.getScore(), "无别名 DTO 分数映射失败");
+    }
+
+    @Test
+    public void testJpaMapProjectionExpressionAliasDTO() {
+
+        List<JpaMapProjectionExpressionAliasDTO> list = dao.findByQueryObj(JpaMapProjectionExpressionAliasDTO.class,
+                new JpaMapProjectionExpressionAliasDTO());
+
+        Assert.notEmpty(list, "表达式 DTO 查询结果为空");
+
+        JpaMapProjectionExpressionAliasDTO dto = list.get(0);
+
+        Assert.hasText(dto.getName(), "表达式 DTO 名称映射失败");
+        Assert.notNull(dto.getScorePlusOne(), "表达式 DTO 分数映射失败");
+        Assert.isTrue(dto.getScorePlusOne() > 0, "表达式 DTO 分数结果异常");
+    }
+
+    @Test
+    public void testJpaMapProjectionDoesNotBreakDynamicSelectDTO() {
+
+        CustomSelectDTO query = new CustomSelectDTO();
+        query.setColumns(new String[]{"name", "category"});
+
+        List<CustomSelectDTO> list = dao.findByQueryObj(query);
+
+        Assert.notEmpty(list, "动态字段 DTO 查询结果为空");
+
+        CustomSelectDTO dto = list.get(0);
+
+        Assert.hasText(dto.getName(), "动态字段 DTO 名称映射失败");
+        Assert.hasText(dto.getCategory(), "动态字段 DTO 类别映射失败");
+        Assert.isNull(dto.getScore(), "动态字段未选择 score 时不应被错误映射");
+    }
+
+    @Test
+    public void testNumericAliasMapResultKeepsNumericKey() {
+
+        List<Map> list = dao.selectFrom("jpa_dao_test_Group", "g")
+                .selectByStatement(true, "g.name AS \"0\"")
+                .limit(0, 1)
+                .find(Map.class);
+
+        Assert.notEmpty(list, "数字别名 Map 查询结果为空");
+
+        Map row = list.get(0);
+        Object aliasKey = row.keySet().iterator().next();
+        Object numericAliasValue = row.get(aliasKey);
+
+        Assert.isTrue(!row.containsKey("name") && String.valueOf(aliasKey).contains("0"),
+                "目标类型是 Map 时，数字别名应作为 Map key 保留，不应被映射成 DTO 字段：" + row.keySet());
+        Assert.hasText(String.valueOf(numericAliasValue), "数字别名 Map 值为空");
     }
 
     @Test
@@ -1469,6 +1551,18 @@ public class DaoExamplesTest {
         List<UserStatDTO> byQueryObj = dao.findByQueryObj(UserStatDTO.class, new UserStatDTO());
 
         System.out.println(byQueryObj);
+    }
+
+    @Test
+    public void testJpaStatDTOCount() throws Exception {
+
+        UserStatDTO query = new UserStatDTO();
+
+        long totals = dao.forSelect(query).count();
+
+        List<UserStatDTO> resultList = dao.findByQueryObj(UserStatDTO.class, query);
+
+        Assert.isTrue(totals == resultList.size(), "统计查询总数应该等于分组后的结果行数");
     }
 
     @Test
@@ -2320,6 +2414,48 @@ public class DaoExamplesTest {
     static class JsonPathSelectResult {
         String logsJson;
         String firstLogText;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionDefaultAliasDTO.class)
+    static class JpaMapProjectionDefaultAliasDTO {
+
+        @Select(E_Group.name)
+        String name;
+
+        @Select(E_Group.category)
+        String category;
+
+        @Select(E_Group.score)
+        Integer score;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionNoAliasDTO.class)
+    static class JpaMapProjectionNoAliasDTO {
+
+        @Select(value = E_Group.name, alias = C.BLANK_VALUE)
+        String name;
+
+        @Select(value = E_Group.category, alias = C.BLANK_VALUE)
+        String category;
+
+        @Select(value = E_Group.score, alias = C.BLANK_VALUE)
+        Integer score;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionExpressionAliasDTO.class)
+    static class JpaMapProjectionExpressionAliasDTO {
+
+        @Select(E_Group.name)
+        String name;
+
+        @Select(value = E_Group.score + " + 1", alias = "scorePlusOne")
+        Integer scorePlusOne;
     }
 
     private User prepareJsonPathUser(String uniqueRole, String logText) {

@@ -113,7 +113,7 @@ public class SimpleCreateTestOrgReq extends MultiTenantReq {
     @Size(max = 128)
     String name;
 
-    @Schema(title = L_pinyinName, description = D_pinyinName)
+    @Schema(title = "拼音名称")
     @Size(max = 128)
     String pinyinName;
 
