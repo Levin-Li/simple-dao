@@ -1798,13 +1798,13 @@ public class JpaDaoImpl
                 }
             } else {
 
+                if (paramValue instanceof ValueHolder) {
+                    paramValue = ((ValueHolder) paramValue).get();
+                }
+
                 //参数解包, 用于兼容复杂的类型
                 if (paramValue instanceof PrimitiveValueWrapper) {
                     paramValue = ((PrimitiveValueWrapper) paramValue).get();
-                }
-
-                if (paramValue instanceof ValueHolder) {
-                    paramValue = ((ValueHolder) paramValue).get();
                 }
 
                 paramValue = tryAutoConvertParamValue(isNative, parameterMap, pIndex, paramValue);
