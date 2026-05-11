@@ -21,9 +21,13 @@ Simple DAO 的核心价值不是“换一个 ORM”，而是把业务系统里�
 - **更安全**：关键条件可以声明为必填，避免空条件被忽略后查全表、改全表、删全表。
 - **更适合后台系统**：CRUD、筛选、分页、统计、数据权限、代码生成都是中后台项目的高频工作。
 
-## 完整操作手册
+## 快速上手和完整操作手册
 
-想系统了解分页查询、唯一查询、唯一更新、JSON 数组追加、`condition` 内置变量、DAO 注解默认策略、防数据泄露、统计报表、原生查询和 JPA 查询，请直接阅读：
+第一次接入项目，建议先用 Quick Start 跑通一个完整查询闭环：
+
+**[5 分钟 Quick Start](./quickstart.md)**
+
+想系统了解分页查询、唯一查询、唯一更新、JSON 数组追加、`condition` 内置变量、DAO 注解默认策略、防数据泄露、统计报表、原生查询和 JPA 查询，再阅读：
 
 **[Simple DAO 完整操作手册](./manual.md)**
 
@@ -617,6 +621,7 @@ mvn -pl simple-dao-examples -am test -P '!01-跳过测试'
 
 ## 文档
 
+- 快速上手：[quickstart.md](./quickstart.md)
 - 完整操作手册：[manual.md](./manual.md)
 - 项目开发规则：[docs/project-development-rules.md](./docs/project-development-rules.md)
 - 核心入口：[SimpleDao.java](./simple-dao-core/src/main/java/com/levin/commons/dao/SimpleDao.java)
