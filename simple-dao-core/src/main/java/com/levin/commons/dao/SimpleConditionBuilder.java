@@ -91,6 +91,27 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * JSON 路径不存在查询。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @return this
+     */
+    T jsonNotExists(String entityAttrName, String jsonPath);
+
+    default T jsonNotExists(Boolean isAppend, String entityAttrName, String jsonPath) {
+        return TRUE.equals(isAppend) ? jsonNotExists(entityAttrName, jsonPath) : (T) this;
+    }
+
+    default T jsonNotExists(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath) {
+        return jsonNotExists(lambdaMethodAttr.getAttrName(), jsonPath);
+    }
+
+    default T jsonNotExists(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath) {
+        return TRUE.equals(isAppend) ? jsonNotExists(lambdaMethodAttr, jsonPath) : (T) this;
+    }
+
+    /**
      * xx is null or xx = paramValue
      *
      * @param entityAttrName 如 name
@@ -161,6 +182,28 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T jsonEq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
         return TRUE.equals(isAppend) ? jsonEq(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
+     * JSON 路径 like 查询。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param paramValue     like 参数值，调用方可自行传入 % 通配符
+     * @return this
+     */
+    T jsonLike(String entityAttrName, String jsonPath, String paramValue);
+
+    default T jsonLike(Boolean isAppend, String entityAttrName, String jsonPath, String paramValue) {
+        return TRUE.equals(isAppend) ? jsonLike(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonLike(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String paramValue) {
+        return jsonLike(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonLike(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String paramValue) {
+        return TRUE.equals(isAppend) ? jsonLike(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
     }
 
     /**

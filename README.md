@@ -429,7 +429,7 @@ Simple DAO 不试图替代所有数据库访问方案。它最适合：
 - 删除：按查询对象删除，支持安全模式和逻辑删除。
 - 统计：`@Count`、`@Sum`、`@Avg`、`@Min`、`@Max`、`@GroupBy`、`havingOp`。
 - 多表：`@JoinOption`、链式 `join`、JPA `joinFetch`。
-- JSON：注解式 `jsonPath`，以及链式 `jsonEq`、`jsonSelect`、`jsonSet`、`jsonArrayAppend`。
+- JSON：注解式 `jsonPath`，以及链式 `jsonEq`、`jsonLike`、`jsonExists`、`jsonSelect`、`jsonValueSelect`、`jsonSet`、`jsonReplace`、`jsonArrayAppend` 等。
 - 查询模式：默认 JPA/JPQL，可切换原生 SQL。
 - 代码生成：实体驱动生成默认服务、控制器、请求对象和项目模板。
 
@@ -499,6 +499,24 @@ String role;
 ```
 
 会生成类似 `json_array_append(...)` 的追加语义，适合角色、标签等数组字段。
+
+编程式 API 也可以直接处理 JSON 查询、选择和更新：
+
+```java
+dao.selectFrom(User.class, "u")
+        .jsonEq("profile", "$.level", "VIP")
+        .jsonValueSelect("profile", "$.nickName", "nickName")
+        .find(UserInfo.class);
+
+dao.updateTo(User.class, "u")
+        .jsonSet("profile", "$.level", "VIP")
+        .jsonArrayAppend("roleList", "R_MANAGER")
+        .eq("id", userId)
+        .limit(0, 1)
+        .update();
+```
+
+复杂且不通用的 JSON 表达式仍建议使用 `selectByStatement`、`where` 或 `setByStatement` 明确表达。
 
 ## JPA 查询和原生查询
 

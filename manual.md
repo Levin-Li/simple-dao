@@ -2424,20 +2424,35 @@ dao.uniqueUpdateByQueryObj(
 | 方法 | 所属接口 | 适用场景 | 大致表达 |
 | --- | --- | --- | --- |
 | `jsonEq(field, path, value)` | `SimpleConditionBuilder` | JSON 子字段等值查询。 | `json_value(str(field), path) = ?` |
+| `jsonLike(field, path, value)` | `SimpleConditionBuilder` | JSON 标量路径 like 查询，`%` 由调用方控制。 | `json_value(str(field), path) like ?` |
 | `jsonContains(field, path, keyword)` | `SimpleConditionBuilder` | JSON 子字段或数组内容包含查询。 | `json_value/json_query(...) like ?` |
 | `jsonExists(field, path)` | `SimpleConditionBuilder` | 判断 JSON 路径是否存在。 | `json_exists(str(field), path)` |
-| `jsonSelect(field, path, alias)` | `SelectBuilder` | 只返回 JSON 子字段。 | `json_query/json_value(...) as alias` |
-| `jsonSet(field, path, value)` | `UpdateBuilder` | 更新 JSON 中某个明确路径的值。 | `field = json_set(field, path, ?)` |
+| `jsonNotExists(field, path)` | `SimpleConditionBuilder` | 判断 JSON 路径不存在。 | `not json_exists(str(field), path)` |
+| `jsonSelect(field, path, alias)` | `SelectBuilder` | 通用选择 JSON 子字段，标量/对象/数组都尽量可用。 | `COALESCE(json_query(...), json_value(...)) as alias` |
+| `jsonValueSelect(field, path, alias)` | `SelectBuilder` | 明确选择 JSON 标量，例如字符串、数字、状态。 | `json_value(str(field), path) as alias` |
+| `jsonQuerySelect(field, path, alias)` | `SelectBuilder` | 明确选择 JSON 对象或数组。 | `json_query(str(field), path) as alias` |
+| `jsonObjectSelect(alias, entries...)` | `SelectBuilder` | 构造 JSON 对象。 | `json_object(...) as alias` |
+| `jsonArraySelect(alias, values...)` | `SelectBuilder` | 构造 JSON 数组。 | `json_array(...) as alias` |
+| `jsonArrayAggSelect(valueExpr, alias, clauses...)` | `SelectBuilder` | 聚合为 JSON 数组。 | `json_arrayagg(...) as alias` |
+| `jsonObjectAggSelect(keyExpr, valueExpr, alias, clauses...)` | `SelectBuilder` | 聚合为 JSON 对象。 | `json_objectagg(...) as alias` |
+| `jsonSet(field, path, value)` | `UpdateBuilder` | 新增或替换 JSON 中某个明确路径的值。 | `field = json_set(field, path, ?)` |
+| `jsonReplace(field, path, value)` | `UpdateBuilder` | 仅替换已存在的 JSON 路径。 | `field = json_replace(field, path, ?)` |
+| `jsonInsert(field, path, value)` | `UpdateBuilder` | 仅在 JSON 路径不存在时插入。 | `field = json_insert(field, path, ?)` |
+| `jsonRemove(field, paths...)` | `UpdateBuilder` | 删除一个或多个明确 JSON 路径。 | `field = json_remove(field, path...)` |
+| `jsonMergePatch(field, patch)` | `UpdateBuilder` | 使用 RFC 7396 merge patch 合并 JSON。 | `field = json_mergepatch(field, ?)` |
 | `jsonArrayAppend(field, value)` | `UpdateBuilder` | 向 JSON 数组根路径追加元素。 | `field = json_array_append(field, '$', ?)` |
 | `jsonArrayAppend(field, path, value)` | `UpdateBuilder` | 向 JSON 中指定数组路径追加元素。 | `field = json_array_append(field, path, ?)` |
+| `jsonArrayInsert(field, path, value)` | `UpdateBuilder` | 向 JSON 数组指定位置插入元素。 | `field = json_array_insert(field, path, ?)` |
 
 JSON 条件查询：
 
 ```java
 List<User> users = dao.selectFrom(User.class, "u")
         .jsonEq("logs", "$[0].logText", "created")
+        .jsonLike("profile", "$.nickName", "%张%")
         .jsonContains("roleList", "$[*]", "admin")
         .jsonExists("logs", "$[0].logText")
+        .jsonNotExists("profile", "$.deletedAt")
         .find(User.class);
 ```
 
@@ -2445,8 +2460,10 @@ List<User> users = dao.selectFrom(User.class, "u")
 
 ```sql
 where json_value(str(u.logs), '$[0].logText') = ?
+  and json_value(str(u.profile), '$.nickName') like ?
   and json_query(str(u.roleList), '$[*]') like ?
   and json_exists(str(u.logs), '$[0].logText')
+  and not json_exists(str(u.profile), '$.deletedAt')
 ```
 
 JSON 子字段选择：
@@ -2454,6 +2471,8 @@ JSON 子字段选择：
 ```java
 List<UserInfo> list = dao.selectFrom(User.class, "u")
         .jsonSelect("logs", "$[0].logText", "firstLogText")
+        .jsonValueSelect("profile", "$.age", "age", "returning Integer", "null on error")
+        .jsonQuerySelect("profile", "$.address", "addressJson")
         .find(UserInfo.class);
 ```
 
@@ -2463,14 +2482,41 @@ List<UserInfo> list = dao.selectFrom(User.class, "u")
 select COALESCE(
            json_query(str(u.logs), '$[0].logText'),
            json_value(str(u.logs), '$[0].logText')
-       ) as firstLogText
+       ) as firstLogText,
+       json_value(str(u.profile), '$.age' returning Integer null on error) as age,
+       json_query(str(u.profile), '$.address') as addressJson
 ```
+
+`jsonSelect` 和 `jsonValueSelect` 的区别：
+
+- `jsonSelect` 是通用兜底版，适合不确定路径结果是对象、数组还是标量的场景。
+- `jsonValueSelect` 是明确标量版，适合确定取字符串、数字、状态、时间等单值，并且需要 `returning`、`null on error` 等 Hibernate JSON 子句的场景。
+- 如果明确取对象或数组，用 `jsonQuerySelect`，表达更直接。
+
+JSON 构造和聚合选择：
+
+```java
+List<UserSummary> list = dao.selectFrom(User.class, "u")
+        .jsonObjectSelect("userJson",
+                "'name' value u.name",
+                "'roles' value u.roleList")
+        .jsonArraySelect("userArray", "u.name", "u.mobile")
+        .jsonArrayAggSelect("u.name", "nameList", "order by u.name")
+        .jsonObjectAggSelect("u.status", "u.id", "statusUserMap")
+        .find(UserSummary.class);
+```
+
+这类方法适合报表、统计、接口聚合返回等场景。如果表达式已经很复杂，直接用 `selectByStatement(...)` 会更清楚。
 
 JSON 子字段更新：
 
 ```java
 dao.updateTo(User.class, "u")
         .jsonSet("logs", "$[0].logText", "updated")
+        .jsonReplace("profile", "$.nickName", "newName")
+        .jsonInsert("profile", "$.createdBy", "system")
+        .jsonRemove("profile", "$.temp")
+        .jsonMergePatch("profile", "{\"vip\":true}")
         .eq("id", userId)
         .limit(0, 1)
         .update();
@@ -2480,9 +2526,21 @@ dao.updateTo(User.class, "u")
 
 ```sql
 update User u
-   set u.logs = json_set(u.logs, '$[0].logText', ?)
+   set u.logs = json_set(u.logs, '$[0].logText', ?),
+       u.profile = json_replace(u.profile, '$.nickName', ?),
+       u.profile = json_insert(u.profile, '$.createdBy', ?),
+       u.profile = json_remove(u.profile, '$.temp'),
+       u.profile = json_mergepatch(u.profile, ?)
  where u.id = ?
 ```
+
+说明：
+
+- `jsonSet`：路径不存在时新增，路径存在时替换。
+- `jsonReplace`：只替换已存在路径，路径不存在时不新增。
+- `jsonInsert`：只在路径不存在时插入，路径已存在时不覆盖。
+- `jsonRemove`：删除一个或多个明确路径。
+- `jsonMergePatch`：适合一次性合并多个 JSON 字段，patch 文档建议使用 JSON 字符串、Map 或简单 DTO。
 
 JSON 数组追加：
 
@@ -2516,11 +2574,21 @@ dao.updateTo(User.class, "u")
         .update();
 ```
 
+如果需要插入到数组指定位置，用 `jsonArrayInsert`：
+
+```java
+dao.updateTo(User.class, "u")
+        .jsonArrayInsert("roleList", "$[0]", "R_OWNER")
+        .eq("id", userId)
+        .limit(0, 1)
+        .update();
+```
+
 这些方法分别放在不同的链式接口里：
 
-- `jsonEq`、`jsonContains`、`jsonExists`：条件构建器，查询、更新、删除都可以作为条件使用。
-- `jsonSelect`：选择字段构建器，只用于查询。
-- `jsonSet`、`jsonArrayAppend`：更新字段构建器，只用于更新。
+- `jsonEq`、`jsonLike`、`jsonContains`、`jsonExists`、`jsonNotExists`：条件构建器，查询、更新、删除都可以作为条件使用。
+- `jsonSelect`、`jsonValueSelect`、`jsonQuerySelect`、`jsonObjectSelect`、`jsonArraySelect`、`jsonArrayAggSelect`、`jsonObjectAggSelect`：选择字段构建器，只用于查询。
+- `jsonSet`、`jsonReplace`、`jsonInsert`、`jsonRemove`、`jsonMergePatch`、`jsonArrayAppend`、`jsonArrayInsert`：更新字段构建器，只用于更新。
 
 使用建议：
 
@@ -2528,6 +2596,7 @@ dao.updateTo(User.class, "u")
 - 如果 JSON 条件只在某个服务方法里临时使用，优先用编程式 JSON API，不要手写 `json_value(...)`。
 - 更新场景仍然建议配合 `eq("id", id)`、租户条件、乐观锁或 `limit(0, 1)` 使用，避免误更新。
 - 编程式 API 复用了 `JsonExprSupport` 和 `JsonPathSpec`，和注解式 JSON Path 生成规则保持一致。
+- `json_table(...)`、自定义 JSON 函数、复杂嵌套表达式这类不够通用的语句，本手册不建议封装成链式方法；可以用 `JsonExprSupport` 生成表达式，再交给 `selectByStatement(...)`、`where(...)` 或 `setByStatement(...)`。
 
 ### 13.6 JSON 使用限制
 
@@ -2535,8 +2604,8 @@ dao.updateTo(User.class, "u")
 
 - `@Select` 和 `jsonSelect` 可以选择 JSON 根路径或具体路径。
 - `@Contains` 和 `jsonContains` 可以对 JSON 数组使用通配路径。
-- `@Update` 和 `jsonSet` 更新具体 JSON 路径时应使用明确路径，例如 `$[0].logText`。
-- `@Update(incrementMode = true)` 和 `jsonArrayAppend` 追加数组时不要使用 wildcard 路径。
+- `@Update`、`jsonSet`、`jsonReplace`、`jsonInsert`、`jsonRemove`、`jsonArrayAppend`、`jsonArrayInsert` 更新具体 JSON 路径时应使用明确路径，例如 `$[0].logText`。
+- `@Update(incrementMode = true)` 和 JSON 数组追加、插入方法不要使用 wildcard 路径。
 - 统计注解和增量更新不应随意使用通配 JSON Path，例如 `$[*]`，框架会拒绝部分不安全组合。
 
 可参考：

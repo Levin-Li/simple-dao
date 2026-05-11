@@ -191,6 +191,48 @@ public class SelectDaoImpl<T>
     }
 
     @Override
+    public SelectDao<T> jsonValueSelect(String entityAttrName, String jsonPath, String alias, String... clauses) {
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+
+        return selectByStatement(JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath(), clauses) + asAlias(alias));
+    }
+
+    @Override
+    public SelectDao<T> jsonQuerySelect(String entityAttrName, String jsonPath, String alias, String... clauses) {
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+
+        return selectByStatement(JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath(), clauses) + asAlias(alias));
+    }
+
+    @Override
+    public SelectDao<T> jsonObjectSelect(String alias, String... entryExprList) {
+        return selectByStatement(JsonExprSupport.jsonObjectExpr(entryExprList) + asAlias(alias));
+    }
+
+    @Override
+    public SelectDao<T> jsonArraySelect(String alias, String... valueExprList) {
+        return selectByStatement(JsonExprSupport.jsonArrayExpr(valueExprList) + asAlias(alias));
+    }
+
+    @Override
+    public SelectDao<T> jsonArrayAggSelect(String valueExpr, String alias, String... clauses) {
+        return selectByStatement(JsonExprSupport.jsonArrayAggExpr(valueExpr, clauses) + asAlias(alias));
+    }
+
+    @Override
+    public SelectDao<T> jsonObjectAggSelect(String keyExpr, String valueExpr, String alias, String... clauses) {
+        return selectByStatement(JsonExprSupport.jsonObjectAggExpr(keyExpr, valueExpr, clauses) + asAlias(alias));
+    }
+
+    private String asAlias(String alias) {
+        return hasText(alias) ? " as " + alias : "";
+    }
+
+    @Override
     public String getAlias() {
         return alias;
     }

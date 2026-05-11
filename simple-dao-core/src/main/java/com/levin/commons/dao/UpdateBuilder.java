@@ -161,6 +161,92 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
     }
 
     /**
+     * 仅替换 JSON 中已存在路径的值。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param paramValue     新值
+     * @return this
+     */
+    T jsonReplace(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonReplace(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonReplace(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonReplace(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonReplace(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonReplace(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonReplace(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
+     * 仅在 JSON 路径不存在时插入值。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param paramValue     新值
+     * @return this
+     */
+    T jsonInsert(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonInsert(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonInsert(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonInsert(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonInsert(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonInsert(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonInsert(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
+     * 删除 JSON 中一个或多个明确路径。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPathList   JSON 路径列表
+     * @return this
+     */
+    T jsonRemove(String entityAttrName, String... jsonPathList);
+
+    default T jsonRemove(Boolean isAppend, String entityAttrName, String... jsonPathList) {
+        return Boolean.TRUE.equals(isAppend) ? jsonRemove(entityAttrName, jsonPathList) : (T) this;
+    }
+
+    default T jsonRemove(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String... jsonPathList) {
+        return jsonRemove(lambdaMethodAttr.getAttrName(), jsonPathList);
+    }
+
+    default T jsonRemove(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String... jsonPathList) {
+        return Boolean.TRUE.equals(isAppend) ? jsonRemove(lambdaMethodAttr, jsonPathList) : (T) this;
+    }
+
+    /**
+     * 按 RFC 7396 合并 JSON patch。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param patchValue     patch 文档
+     * @return this
+     */
+    T jsonMergePatch(String entityAttrName, Object patchValue);
+
+    default T jsonMergePatch(Boolean isAppend, String entityAttrName, Object patchValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonMergePatch(entityAttrName, patchValue) : (T) this;
+    }
+
+    default T jsonMergePatch(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object patchValue) {
+        return jsonMergePatch(lambdaMethodAttr.getAttrName(), patchValue);
+    }
+
+    default T jsonMergePatch(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object patchValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonMergePatch(lambdaMethodAttr, patchValue) : (T) this;
+    }
+
+    /**
      * 向 JSON 数组根路径追加元素。
      *
      * @param entityAttrName JSON 数组字段名
@@ -203,6 +289,28 @@ public interface UpdateBuilder<T extends UpdateBuilder<T, DOMAIN>, DOMAIN> {
 
     default T jsonArrayAppend(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
         return Boolean.TRUE.equals(isAppend) ? jsonArrayAppend(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
+     * 向 JSON 数组指定位置插入元素。
+     *
+     * @param entityAttrName JSON 数组字段名
+     * @param jsonPath       JSON 数组位置路径
+     * @param paramValue     插入值
+     * @return this
+     */
+    T jsonArrayInsert(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonArrayInsert(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayInsert(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonArrayInsert(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonArrayInsert(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonArrayInsert(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return Boolean.TRUE.equals(isAppend) ? jsonArrayInsert(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
     }
 
     /**

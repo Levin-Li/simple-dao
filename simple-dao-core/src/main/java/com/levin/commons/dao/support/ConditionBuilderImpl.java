@@ -668,6 +668,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     @Override
+    public T jsonNotExists(String entityAttrName, String jsonPath) {
+        where("not " + JsonExprSupport.jsonExistsExpr(
+                aroundColumnPrefix(entityAttrName),
+                JsonPathSpec.parse(jsonPath).getRawPath()));
+        return (T) this;
+    }
+
+    @Override
     public T isNullOrEq(Class<?> attrBelongClass, String entityAttrName, Object paramValue) {
         appendByAnnotations(true, attrBelongClass, entityAttrName, paramValue, OR.class, IsNull.class, Eq.class, END.class);
         return (T) this;
@@ -692,6 +700,17 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
             String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
             where(fieldExpr + " = " + getParamPlaceholder(), paramValue);
+        }
+
+        return (T) this;
+    }
+
+    @Override
+    public T jsonLike(String entityAttrName, String jsonPath, String paramValue) {
+
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
+            String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
+            where(fieldExpr + " like " + getParamPlaceholder(), paramValue);
         }
 
         return (T) this;

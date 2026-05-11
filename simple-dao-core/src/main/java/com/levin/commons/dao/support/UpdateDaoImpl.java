@@ -147,15 +147,76 @@ public class UpdateDaoImpl<T>
             return this;
         }
 
-        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
-
-        if (jsonPathSpec.isWildcard()) {
-            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 jsonSet 中使用 wildcard [*]");
-        }
+        JsonPathSpec jsonPathSpec = requireMutationJsonPath(jsonPath, "jsonSet");
 
         String fieldExpr = aroundColumnPrefix(entityAttrName);
         append(fieldExpr + " = " + JsonExprSupport.jsonSetExpr(fieldExpr, jsonPathSpec.getRawPath(), getParamPlaceholder()),
                 wrapJsonParam(paramValue));
+
+        return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonReplace(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        JsonPathSpec jsonPathSpec = requireMutationJsonPath(jsonPath, "jsonReplace");
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        append(fieldExpr + " = " + JsonExprSupport.jsonReplaceExpr(fieldExpr, jsonPathSpec.getRawPath(), getParamPlaceholder()),
+                wrapJsonParam(paramValue));
+
+        return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonInsert(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        JsonPathSpec jsonPathSpec = requireMutationJsonPath(jsonPath, "jsonInsert");
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        append(fieldExpr + " = " + JsonExprSupport.jsonInsertExpr(fieldExpr, jsonPathSpec.getRawPath(), getParamPlaceholder()),
+                wrapJsonParam(paramValue));
+
+        return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonRemove(String entityAttrName, String... jsonPathList) {
+
+        if (StrUtil.isBlank(entityAttrName) || jsonPathList == null || jsonPathList.length == 0) {
+            return this;
+        }
+
+        String[] rawPathList = new String[jsonPathList.length];
+
+        for (int i = 0; i < jsonPathList.length; i++) {
+            rawPathList[i] = requireMutationJsonPath(jsonPathList[i], "jsonRemove").getRawPath();
+        }
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        append(fieldExpr + " = " + JsonExprSupport.jsonRemoveExpr(fieldExpr, rawPathList));
+
+        return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonMergePatch(String entityAttrName, Object patchValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        append(fieldExpr + " = " + JsonExprSupport.jsonMergepatchExpr(fieldExpr, getParamPlaceholder()),
+                wrapJsonParam(patchValue));
 
         return this;
     }
@@ -167,16 +228,10 @@ public class UpdateDaoImpl<T>
             return this;
         }
 
-        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(hasText(jsonPath) ? jsonPath : "$");
-
-        if (jsonPathSpec.isWildcard()) {
-            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 jsonArrayAppend 中使用 wildcard [*]");
-        }
+        JsonPathSpec jsonPathSpec = requireMutationJsonPath(hasText(jsonPath) ? jsonPath : "$", "jsonArrayAppend");
 
         String fieldExpr = aroundColumnPrefix(entityAttrName);
-        List<PrimitiveValueWrapper<?>> pList = QueryAnnotationUtil.flattenParams(null, paramValue).stream()
-                .map(item -> item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item))
-                .toList();
+        List<PrimitiveValueWrapper<?>> pList = flattenJsonArrayValues(paramValue);
 
         if (pList.isEmpty()) {
             return this;
@@ -189,6 +244,48 @@ public class UpdateDaoImpl<T>
                 pList.size() == 1 ? pList.get(0) : pList);
 
         return this;
+    }
+
+    @Override
+    public UpdateDao<T> jsonArrayInsert(String entityAttrName, String jsonPath, Object paramValue) {
+
+        if (StrUtil.isBlank(entityAttrName)) {
+            return this;
+        }
+
+        JsonPathSpec jsonPathSpec = requireMutationJsonPath(jsonPath, "jsonArrayInsert");
+
+        String fieldExpr = aroundColumnPrefix(entityAttrName);
+        List<PrimitiveValueWrapper<?>> pList = flattenJsonArrayValues(paramValue);
+
+        if (pList.isEmpty()) {
+            return this;
+        }
+
+        append(fieldExpr + " = " + JsonExprSupport.jsonArrayInsertExpr(
+                        "COALESCE(" + fieldExpr + " , " + JsonExprSupport.jsonArrayExpr() + ")",
+                        jsonPathSpec.getRawPath(),
+                        String.join(", ", pList.stream().map(item -> getParamPlaceholder()).toList())),
+                pList.size() == 1 ? pList.get(0) : pList);
+
+        return this;
+    }
+
+    private JsonPathSpec requireMutationJsonPath(String jsonPath, String methodName) {
+
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+
+        if (jsonPathSpec.isWildcard()) {
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 " + methodName + " 中使用 wildcard [*]");
+        }
+
+        return jsonPathSpec;
+    }
+
+    private List<PrimitiveValueWrapper<?>> flattenJsonArrayValues(Object paramValue) {
+        return QueryAnnotationUtil.flattenParams(null, paramValue).stream()
+                .map(item -> item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item))
+                .toList();
     }
 
     private Object wrapJsonParam(Object paramValue) {
