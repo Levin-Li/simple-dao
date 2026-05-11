@@ -2424,7 +2424,6 @@ dao.uniqueUpdateByQueryObj(
 | 方法 | 所属接口 | 适用场景 | 大致表达 |
 | --- | --- | --- | --- |
 | `jsonEq(field, path, value)` | `SimpleConditionBuilder` | JSON 子字段等值查询。 | `json_value(str(field), path) = ?` |
-| `jsonLike(field, path, value)` | `SimpleConditionBuilder` | JSON 标量路径 like 查询，`%` 由调用方控制。 | `json_value(str(field), path) like ?` |
 | `jsonContains(field, path, keyword)` | `SimpleConditionBuilder` | JSON 子字段或数组内容包含查询。 | `json_value/json_query(...) like ?` |
 | `jsonExists(field, path)` | `SimpleConditionBuilder` | 判断 JSON 路径是否存在。 | `json_exists(str(field), path)` |
 | `jsonNotExists(field, path)` | `SimpleConditionBuilder` | 判断 JSON 路径不存在。 | `not json_exists(str(field), path)` |
@@ -2449,7 +2448,6 @@ JSON 条件查询：
 ```java
 List<User> users = dao.selectFrom(User.class, "u")
         .jsonEq("logs", "$[0].logText", "created")
-        .jsonLike("profile", "$.nickName", "%张%")
         .jsonContains("roleList", "$[*]", "admin")
         .jsonExists("logs", "$[0].logText")
         .jsonNotExists("profile", "$.deletedAt")
@@ -2460,7 +2458,6 @@ List<User> users = dao.selectFrom(User.class, "u")
 
 ```sql
 where json_value(str(u.logs), '$[0].logText') = ?
-  and json_value(str(u.profile), '$.nickName') like ?
   and json_query(str(u.roleList), '$[*]') like ?
   and json_exists(str(u.logs), '$[0].logText')
   and not json_exists(str(u.profile), '$.deletedAt')
@@ -2586,7 +2583,7 @@ dao.updateTo(User.class, "u")
 
 这些方法分别放在不同的链式接口里：
 
-- `jsonEq`、`jsonLike`、`jsonContains`、`jsonExists`、`jsonNotExists`：条件构建器，查询、更新、删除都可以作为条件使用。
+- `jsonEq`、`jsonContains`、`jsonExists`、`jsonNotExists`：条件构建器，查询、更新、删除都可以作为条件使用。
 - `jsonSelect`、`jsonValueSelect`、`jsonQuerySelect`、`jsonObjectSelect`、`jsonArraySelect`、`jsonArrayAggSelect`、`jsonObjectAggSelect`：选择字段构建器，只用于查询。
 - `jsonSet`、`jsonReplace`、`jsonInsert`、`jsonRemove`、`jsonMergePatch`、`jsonArrayAppend`、`jsonArrayInsert`：更新字段构建器，只用于更新。
 

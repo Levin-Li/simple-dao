@@ -429,7 +429,7 @@ Simple DAO 不试图替代所有数据库访问方案。它最适合：
 - 删除：按查询对象删除，支持安全模式和逻辑删除。
 - 统计：`@Count`、`@Sum`、`@Avg`、`@Min`、`@Max`、`@GroupBy`、`havingOp`。
 - 多表：`@JoinOption`、链式 `join`、JPA `joinFetch`。
-- JSON：注解式 `jsonPath`，以及链式 `jsonEq`、`jsonLike`、`jsonExists`、`jsonSelect`、`jsonValueSelect`、`jsonSet`、`jsonReplace`、`jsonArrayAppend` 等。
+- JSON：注解式 `jsonPath`，以及链式 `jsonEq`、`jsonContains`、`jsonExists`、`jsonSelect`、`jsonValueSelect`、`jsonSet`、`jsonReplace`、`jsonArrayAppend` 等。
 - 查询模式：默认 JPA/JPQL，可切换原生 SQL。
 - 代码生成：实体驱动生成默认服务、控制器、请求对象和项目模板。
 

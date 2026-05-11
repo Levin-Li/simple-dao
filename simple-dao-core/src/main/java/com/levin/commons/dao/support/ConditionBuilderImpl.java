@@ -705,17 +705,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (T) this;
     }
 
-    @Override
-    public T jsonLike(String entityAttrName, String jsonPath, String paramValue) {
-
-        if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
-            String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
-            where(fieldExpr + " like " + getParamPlaceholder(), paramValue);
-        }
-
-        return (T) this;
-    }
-
     /**
      * !=
      *
