@@ -1509,6 +1509,61 @@ where state = ?
   and (name like ? or description like ?)
 ```
 
+`@AND`、`@OR` 是“开启一个逻辑分组”，`@END` 是“关闭当前逻辑分组”。默认情况下，`@AND`、`@OR` 开启后会一直影响后面的字段，直到遇到 `@END`。
+
+`autoClose` 用来处理更轻量的场景：逻辑分组只包住当前字段上的条件，字段处理完以后自动闭合，不需要再额外写一个 `@END` 字段或在后续字段上写 `@END`。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o")
+@Data
+public class QueryTenantOrderReq {
+
+    @OR(autoClose = true)
+    @Eq("tenantId")
+    @IsNull(condition = "#_this.includePublicData")
+    String tenantId;
+
+    @Ignore
+    boolean includePublicData;
+}
+```
+
+上面的 `tenantId` 字段会生成类似：
+
+```sql
+(tenantId = ? or tenantId is null)
+```
+
+这里 `@OR(autoClose = true)` 的意思是：在当前字段开始一个 `OR` 分组，当前字段上的 `@Eq`、`@IsNull` 都放进这个分组，字段处理完成后自动关闭。它适合“同一个字段上挂了多个条件注解，并且这些条件之间要用 OR/AND 组合”的情况。
+
+如果分组要跨多个字段，就不要用 `autoClose`，而是用显式 `@END`：
+
+```java
+@AND
+Boolean keywordBlock = true;
+
+@Contains("name")
+@OR
+String keyword;
+
+@Contains("description")
+@END
+String keywordInDescription;
+```
+
+另外，`@END` 有一个 `containCurrentField` 属性，默认是 `true`，表示“当前字段也包含在要关闭的分组里”。少数情况下，如果当前字段只是用来关闭前面的分组，不希望它自己进入该分组，可以写：
+
+```java
+@END(containCurrentField = false)
+String afterGroupField;
+```
+
+简单记忆：
+
+- 同一个字段上的多个条件要临时分组：用 `@OR(autoClose = true)` 或 `@AND(autoClose = true)`。
+- 多个字段共同组成一个分组：用 `@AND` / `@OR` 开始，用 `@END` 结束。
+- `@END` 默认包含当前字段；不想包含当前字段时，使用 `containCurrentField = false`。
+
 ### 7.4 选择部分列并映射到结果 DTO
 
 结果对象：
