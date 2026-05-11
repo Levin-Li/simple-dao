@@ -362,17 +362,18 @@ where createTime >= ?
 多表查询时，`value` 经常和 `domain` 一起使用：
 
 ```java
-@Contains(value = "name", domain = "g")
+@Contains(value = E_Group.name, domain = E_Group.ALIAS)
 String groupName;
 
-@Select(value = "name", domain = "u")
+@Select(value = E_User.name, domain = E_User.ALIAS)
 String userName;
 ```
 
 含义是：
 
-- `groupName` 这个 DTO 字段用于过滤 `g.name`。
-- `userName` 这个 DTO 字段用于选择 `u.name`。
+- `groupName` 这个 DTO 字段用于过滤分组表的 `name`。
+- `userName` 这个 DTO 字段用于选择用户表的 `name`。
+- 多表场景里，别名本身也尽量使用 `E_XXX.ALIAS`，例如 `E_Group.ALIAS`、`E_User.ALIAS`。这样后续统一调整别名时，`@TargetOption(alias = ...)`、`@JoinOption(alias = ...)`、`domain = ...`、`joinTargetAlias = ...` 能保持一致。
 
 更新时也一样：
 
@@ -3412,6 +3413,7 @@ where o.state = ?
 - `domain = E_Order.ALIAS`：条件或结果字段来自订单表。
 - `domain = E_Member.ALIAS`：条件或结果字段来自会员表。
 - `domain = E_Product.ALIAS`：条件或结果字段来自商品表。
+- 多表关联时，`@TargetOption(alias = ...)`、`@JoinOption(alias = ...)`、`domain = ...`、`joinTargetAlias = ...` 都尽量使用 `E_XXX.ALIAS` 常量，不要手写 `"o"`、`"m"`、`"p"` 这类字符串别名。
 - `value = E_XXX.xxx`：表示这个 `domain` 对应实体上的字段名。
 - 如果不写 `domain`，字段通常会落到主表别名上；多表里一旦字段重名，就很容易查错表或生成错误语句。
 
