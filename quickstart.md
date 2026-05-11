@@ -178,7 +178,9 @@ public class UserService {
 调用示例：
 
 ```java
-PagingQueryReq paging = new PagingQueryReq(1, 20);
+SimplePaging paging = new SimplePaging();
+paging.setPageIndex(1);
+paging.setPageSize(20);
 paging.setRequireTotals(true);
 
 PagingData<QueryUserReq.Result> page = userService.queryUsers(
@@ -196,7 +198,7 @@ PagingData<QueryUserReq.Result> page = userService.queryUsers(
 - `QueryUserReq req`：普通查询条件，例如关键字、分数区间、状态集合、排序字段。
 - `Paging paging`：分页条件，例如 `pageIndex = 1`、`pageSize = 20`、`requireTotals = true`。
 
-`PagingQueryReq` 是框架提供的一个 `Paging` 实现类，把它作为 `queryObjs` 参数之一传进去，DAO 会自动识别并应用分页。
+`SimplePaging` 是框架提供的一个 `Paging` 实现类，把它作为 `queryObjs` 参数之一传进去，DAO 会自动识别并应用分页。
 
 返回值 `PagingData` 通常包含：
 
@@ -282,7 +284,7 @@ dao.uniqueUpdateByQueryObj(new UpdateUserStateReq()
 大多数业务查询可以只靠 DTO 注解完成。如果某个接口需要临时追加复杂条件，可以用 Consumer 扩展 DAO：
 
 ```java
-public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req) {
+public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req, Paging paging) {
 
     Consumer<SelectDao<User>> callback = dao -> dao
             .or()
@@ -290,11 +292,11 @@ public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req) {
                 .eq("state", "B")
             .end();
 
-    return dao.findPagingDataByQueryObj(QueryUserReq.Result.class, req, callback);
+    return dao.findPagingDataByQueryObj(QueryUserReq.Result.class, req, paging, callback);
 }
 ```
 
-这表示：基础条件来自 `QueryUserReq` 注解，额外条件由 `callback` 补充。适合少量动态条件、调试条件或注解不方便表达的场景。
+这表示：基础条件来自 `QueryUserReq` 注解，分页来自 `paging`，额外条件由 `callback` 补充。适合少量动态条件、调试条件或注解不方便表达的场景。
 
 完整用法见：[Consumer 扩展 DAO](./manual.md#9-consumer-扩展-dao混合注解和编程式查询)。
 
