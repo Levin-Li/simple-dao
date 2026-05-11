@@ -1099,11 +1099,41 @@ long cnt = dao.selectFrom(User.class)
 字段名替换：
 
 ```java
-@Sum("F$:amount")
+@Sum(E_Order.F_amount)
 Long amount;
 ```
 
 `F$:amount` 会按当前查询模式转换字段名；原生查询时也会参与物理列名转换。复杂表达式中建议使用这种写法，而不是自己拼死字段名。
+
+和普通字段名一样，`F$:` 表达式也尽量使用生成常量。生成的 `E_XXX` 通常同时提供两类字段常量：
+
+```java
+E_Order.amount      // 普通实体字段名：amount
+E_Order.F_amount    // 可替换字段表达式：F$:amount
+```
+
+所以不要优先写裸字符串：
+
+```java
+@Sum("F$:amount")
+Long amount;
+```
+
+更推荐写：
+
+```java
+@Sum(E_Order.F_amount)
+Long amount;
+```
+
+如果当前项目只拿到了普通字段常量，也可以显式拼出 `F$:`：
+
+```java
+@Sum("F$:" + E_Order.amount)
+Long amount;
+```
+
+同理，`F$:score`、`F$:amount`、`F$:createTime` 这类写法，优先使用 `E_User.F_score`、`E_Order.F_amount`、`E_Order.F_createTime`。这样字段重命名时，生成常量会跟着变化或编译失败，比在表达式字符串里手写字段名更安全。
 
 表名替换：
 
@@ -3175,6 +3205,7 @@ where ...
 
 - `fieldCases` 是对统计字段左侧表达式做 CASE 包装。
 - `F$:score`、`F$:amount`、`F$:createTime` 会按当前查询模式转换成正确字段表达式。
+- 这些 `F$:` 字段表达式也有生成常量，优先写 `E_User.F_score`、`E_Order.F_amount`、`E_Order.F_createTime`，不要把字段名藏在字符串里。
 - `column = "state"` 表示简单 CASE：`case state when 'PAID' then ... else ... end`。
 - `column = ""` 表示搜索 CASE：`case when createTime >= ? then ... else ... end`，适合时间范围、复合条件等场景。
 - `${:weekBegin}`、`${:monthBegin}` 这类写法表示从查询上下文中取值并作为参数绑定，通常配合 `@CtxVar` 使用。
