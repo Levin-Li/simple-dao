@@ -200,6 +200,12 @@ public class QueryUserReq {
 | `safeMode` | 安全模式，默认开启，避免无条件更新/删除等危险操作。 |
 | `maxResults` | 限制最大结果数。 |
 
+查询最佳实践：
+
+- 字段名尽量使用生成的常量，例如 `E_Order.tenantId`、`E_Order.orgId`、`E_Order.name`，不要到处散落字符串字段名。这样实体字段重命名时，编译器会报错，重构更安全。
+- 没有特殊原因时，不建议使用原生查询。默认的 JPA/JPQL 模式面向实体类和实体属性，字段重构、DTO 映射、跨数据库兼容性都更稳。
+- 只有确实需要数据库专用函数、复杂 SQL、性能调优、特殊原生统计或无法用 JPQL 表达的语句时，再开启 `nativeQL = true` 或使用 `selectByNative(...)`。
+
 ### 4.2 字段注解决定 SQL 片段
 
 字段上最常见的注解：
