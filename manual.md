@@ -203,6 +203,7 @@ public class QueryUserReq {
 查询最佳实践：
 
 - 字段名尽量使用生成的常量，例如 `E_Order.tenantId`、`E_Order.orgId`、`E_Order.name`，不要到处散落字符串字段名。这样实体字段重命名时，编译器会报错，重构更安全。
+- 平时查询、更新、删除优先使用注解 DTO，把业务语义、必填条件、安全范围和结果映射固定下来；编程式链式 API 只建议用于少量动态组合、临时扩展、后台任务、调试或 DTO 注解不方便表达的场景。
 - 没有特殊原因时，不建议使用原生查询。默认的 JPA/JPQL 模式面向实体类和实体属性，字段重构、DTO 映射、跨数据库兼容性都更稳。
 - 只有确实需要数据库专用函数、复杂 SQL、性能调优、特殊原生统计或无法用 JPQL 表达的语句时，再开启 `nativeQL = true` 或使用 `selectByNative(...)`。
 
@@ -1818,7 +1819,9 @@ List<QueryGroupInfoReq.Info> withParent = dao.findByQueryObj(
 
 ## 8. 链式 API 例子
 
-如果查询条件临时性强，不想专门定义 DTO，可以用 `SelectDao`：
+链式 API 是补充能力，不是默认推荐入口。普通业务接口尽量先定义查询/更新 DTO，并通过注解表达条件、更新字段、统计字段和安全约束；只有条件临时性强、组合逻辑很动态、服务内部少量扩展、后台任务或调试场景，才建议直接使用 `SelectDao`、`UpdateDao`、`DeleteDao`。
+
+如果确实不想专门定义 DTO，可以用 `SelectDao`：
 
 ```java
 List<User> users = dao.selectFrom(User.class, "u")
@@ -1845,6 +1848,7 @@ List<Object> rows = dao.selectFrom(User.class, "u")
 
 - 可复用的业务查询优先写 DTO，便于复用、校验、生成接口文档。
 - 临时后台任务、调试、少量动态条件可以用链式 API。
+- 链式 API 里也尽量使用 `E_XXX.xxx` 字段常量，不要散落字符串字段名。
 - 复杂原生 SQL 不要一开始就手写，先判断 DTO 注解或链式 API 是否已经能表达。
 
 ### 8.1 原生查询和 JPA 查询
