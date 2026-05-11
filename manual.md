@@ -1145,6 +1145,86 @@ Boolean existsUser;
 
 `E$:User` 会按当前查询模式转换实体名或表名。普通业务查询一般不需要直接使用，复杂片段、原生查询、子查询里才会用到。
 
+#### 6.3.1 特殊占位常量：`C.BLANK_VALUE`、`C.ORIGIN_EXPR`、`C.FIELD_VALUE`
+
+这三个常量不是普通业务值，而是给语句构建器看的特殊标记。它们建议放在“动态变量与上下文变量”章节理解，因为它们改变的是语句生成规则。
+
+| 常量 | 值 | 主要用途 |
+| --- | --- | --- |
+| `C.BLANK_VALUE` | `#BLANK#` | 强制指定“空值”，常用于 `domain`、`alias`，表示不要自动补默认别名或不要生成结果别名。 |
+| `C.ORIGIN_EXPR` | `$$` | 表示“原始表达式”，目前主要用于 `@Func`、`@Case`，把当前字段表达式放进函数或 CASE 中。 |
+| `C.FIELD_VALUE` | `$$FIELD_VALUE` | 表示“使用字段值作为选择字段”，主要用于动态选择列，例如前端传本次要返回的字段列表。 |
+
+`C.BLANK_VALUE`：强制不使用默认 `domain` 或 `alias`。
+
+```java
+@Select(value = E_Group.name, alias = C.BLANK_VALUE)
+String name;
+
+@Sum(value = E_User.score, domain = C.BLANK_VALUE)
+Long scoreSum;
+```
+
+第一段表示选择 `name` 时不生成结果别名；第二段表示统计字段不自动加主表别名前缀。多表查询、普通字段查询通常不要随意用它；只有确实要去掉默认别名行为时再使用。
+
+`C.ORIGIN_EXPR`：在函数或 CASE 里引用当前字段表达式。
+
+```java
+@Select(
+        value = E_User.createTime,
+        alias = "createMonth",
+        fieldFuncs = @Func(
+                value = "DATE_FORMAT",
+                params = {C.ORIGIN_EXPR, "'%Y-%m'"}
+        )
+)
+String createMonth;
+```
+
+这里 `C.ORIGIN_EXPR` 会被替换成当前字段表达式，也就是 `createTime` 经过别名、字段名转换后的结果。大致效果是：
+
+```sql
+DATE_FORMAT(u.createTime, '%Y-%m') as createMonth
+```
+
+`@Case` 里也会用到它。`@Case(column = C.ORIGIN_EXPR, ...)` 表示简单 CASE 使用当前字段表达式作为 `CASE xxx WHEN ...` 的 `xxx`；`column = ""` 则是搜索 CASE，生成 `CASE WHEN 条件 THEN ...`。
+
+```java
+@Select(
+        value = E_Order.state,
+        alias = "stateText",
+        fieldCases = @Case(
+                column = C.ORIGIN_EXPR,
+                whenOptions = {
+                        @Case.When(whenExpr = "'PAID'", thenExpr = "'已支付'"),
+                        @Case.When(whenExpr = "'CLOSED'", thenExpr = "'已关闭'")
+                },
+                elseExpr = "'其它'"
+        )
+)
+String stateText;
+```
+
+`C.FIELD_VALUE`：字段值就是要选择的列。
+
+```java
+@Data
+@Accessors(chain = true)
+@TargetOption(entityClass = Group.class, alias = E_Group.ALIAS,
+        resultClass = GroupDynamicItem.class)
+public class QueryGroupDynamicReq {
+
+    @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE)
+    String[] columns = new String[]{E_Group.name, E_Group.category};
+
+    String name;
+    String category;
+    Integer score;
+}
+```
+
+这里 `columns` 不是结果字段本身，而是“本次要选择哪些字段”的参数。`C.FIELD_VALUE` 告诉框架使用字段值里的 `name`、`category` 去生成 select 列；`alias = C.BLANK_VALUE` 表示这些动态列不要统一映射成 `columns` 这个字段名。动态字段仍建议来自白名单或 `E_XXX.xxx` 常量，不要直接信任前端传来的任意字符串。
+
 ### 6.4 参数绑定变量：`${:...}`
 
 `${:name}` 会从 DAO 上下文中取值，并作为参数绑定到 SQL/JPQL，而不是直接把值拼到语句文本中。
@@ -1777,12 +1857,12 @@ public class GroupScoreItem {
 ```java
 @Data
 @Accessors(chain = true)
-@TargetOption(entityClass = Group.class, alias = "g",
+@TargetOption(entityClass = Group.class, alias = E_Group.ALIAS,
         resultClass = GroupDynamicItem.class)
 public class QueryGroupDynamicReq {
 
     @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE)
-    String[] columns = new String[]{"name", "category"};
+    String[] columns = new String[]{E_Group.name, E_Group.category};
 
     String name;
     String category;
@@ -1791,6 +1871,8 @@ public class QueryGroupDynamicReq {
 ```
 
 这类查询的选择列数量和字段映射关系是运行时决定的。Simple DAO 不会强行启用 Hibernate Map 投影优化，而是走原来的兼容映射路径，避免把未选择的列误填到 DTO 上。
+
+这里 `C.FIELD_VALUE` 表示“选择字段来自当前字段值”，`C.BLANK_VALUE` 表示不要把这些动态字段统一映射成 `columns` 这个别名。完整语义见第 6.3.1 节“特殊占位常量”。
 
 上面的例子里只选择了 `name` 和 `category`，`score` 没有被选择，返回 DTO 的 `score` 应保持为空。
 
