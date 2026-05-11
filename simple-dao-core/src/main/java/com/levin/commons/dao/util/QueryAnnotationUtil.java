@@ -919,7 +919,7 @@ public abstract class QueryAnnotationUtil {
      * @return
      */
     public static boolean hasSelectStatementField(Class<?> type) {
-        return hasSelectStatementField(type, null);
+        return hasSelectStatementField(type, null, new HashSet<>());
     }
 
     /**
@@ -931,52 +931,67 @@ public abstract class QueryAnnotationUtil {
      * @return
      */
     public static boolean hasSelectStatementField(Class<?> type, ResolvableType resolvableType) {
+        return hasSelectStatementField(type, resolvableType, new HashSet<>());
+    }
+
+    private static boolean hasSelectStatementField(Class<?> type, ResolvableType resolvableType, Set<String> visitingTypes) {
 
         if (type == null) {
             return false;
         }
 
-        Boolean hasAnno = hasSelectAnnotationCache.get(type.getName());
+        String typeName = type.getName();
+
+        Boolean hasAnno = hasSelectAnnotationCache.get(typeName);
 
         if (hasAnno == null) {
 
+            if (!visitingTypes.add(typeName)) {
+                return false;
+            }
+
             hasAnno = hasSelectAnnotation(type.getAnnotations());
 
-            if (hasAnno) {
-                hasSelectAnnotationCache.put(type.getName(), hasAnno);
-                return hasAnno;
-            }
-
-            if (resolvableType == null) {
-                resolvableType = ResolvableType.forClass(type);
-            }
-
-            List<Field> cacheFields = getNonStaticFields(type);
-
-            for (Field field : cacheFields) {
-
-                //如果是统计或是选择注解
-                if (hasSelectAnnotation(field.getAnnotations())) {
-                    hasAnno = true;
-                    break;
-                }
-                //如果示复杂对象
-                ResolvableType forField = ResolvableType.forField(field, resolvableType);
-
-                Class<?> fieldType = forField.resolve(field.getType());
-
-                //防止无限递归
-                if (fieldType != type && isComplexType(fieldType, null)) {
-                    hasAnno = hasSelectStatementField(fieldType, forField);
-                }
+            try {
 
                 if (hasAnno) {
-                    break;
+                    hasSelectAnnotationCache.put(typeName, hasAnno);
+                    return hasAnno;
                 }
 
-            }
+                if (resolvableType == null) {
+                    resolvableType = ResolvableType.forClass(type);
+                }
 
-            hasSelectAnnotationCache.put(type.getName(), hasAnno);
+                List<Field> cacheFields = getNonStaticFields(type);
+
+                for (Field field : cacheFields) {
+
+                    //如果是统计或是选择注解
+                    if (hasSelectAnnotation(field.getAnnotations())) {
+                        hasAnno = true;
+                        break;
+                    }
+                    //如果示复杂对象
+                    ResolvableType forField = ResolvableType.forField(field, resolvableType);
+
+                    Class<?> fieldType = forField.resolve(field.getType());
+
+                    //防止无限递归
+                    if (fieldType != type && isComplexType(fieldType, null)) {
+                        hasAnno = hasSelectStatementField(fieldType, forField, visitingTypes);
+                    }
+
+                    if (hasAnno) {
+                        break;
+                    }
+
+                }
+
+                hasSelectAnnotationCache.put(typeName, hasAnno);
+            } finally {
+                visitingTypes.remove(typeName);
+            }
         }
 
         return hasAnno;
