@@ -3579,42 +3579,10 @@ String firstLogText;
 
 ### 15.4 JSON 数组追加
 
-JSON 数组追加本质上是更新场景，推荐看 `10.5 JSON 数组追加`。这里再给一个完整请求对象形态：
+JSON 数组追加本质上是更新场景，完整的注解 DTO 写法见第 10.5 节“JSON 数组追加”。这里记住两点即可：
 
-```java
-@TargetOption(entityClass = User.class, alias = "u")
-@Data
-@Accessors(chain = true)
-public class AppendRoleReq {
-
-    @Eq(value = "tenantId", require = true)
-    String tenantId;
-
-    @Eq(value = "id", require = true)
-    Long userId;
-
-    @Update(value = "roleList", incrementMode = true)
-    String roleCode;
-}
-```
-
-调用：
-
-```java
-dao.uniqueUpdateByQueryObj(
-        new AppendRoleReq()
-                .setTenantId("T001")
-                .setUserId(1L)
-                .setRoleCode("R_MANAGER")
-);
-```
-
-说明：
-
-- `incrementMode = true` 让集合字段走追加语义，而不是整体覆盖。
-- 对集合或数组字段，框架会生成类似 `json_array_append(...)` 的表达式。
-- 不要在追加场景写 `jsonPath = "$[*]"`；这个 wildcard 路径在 `@Update` 中会被拒绝。
-- 如果你要替换数组中某个固定位置的对象属性，用明确路径，例如 `jsonPath = "$[0].logText"`；如果你要追加新元素，不写 `jsonPath`。
+- 注解式追加用 `@Update(value = E_User.roleList, incrementMode = true)`，不要写 `jsonPath = "$[*]"`。
+- 编程式追加用 `jsonArrayAppend(...)`，完整链式 API 见下一节。
 
 ### 15.5 编程式 JSON Path API
 
@@ -3937,20 +3905,7 @@ public void delete(Long id) {
 }
 ```
 
-更推荐：
-
-```java
-@TargetOption(entityClass = Order.class, alias = "o")
-@Data
-@Accessors(chain = true)
-public class DeleteOrderReq extends MultiTenantOrgReq<DeleteOrderReq> {
-
-    @Eq(require = true)
-    Long id;
-}
-```
-
-这样租户、组织等数据范围可以前置到查询条件中，减少越权数据被加载后再判断的风险。
+更推荐定义请求 DTO，把 `id`、租户、组织、个人等数据范围都作为查询条件，并对关键条件使用 `require = true`。完整写法见第 4.6 节“防止数据泄露的必填条件写法”；唯一更新场景见第 10.2 节。
 
 ## 19. 代码生成工作流
 
