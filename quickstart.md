@@ -196,6 +196,28 @@ PagingData<QueryUserReq.Result> page = userService.queryUsers(
 - `QueryUserReq req`：普通查询条件，例如关键字、分数区间、状态集合、排序字段。
 - `Paging paging`：分页条件，例如 `pageIndex = 1`、`pageSize = 20`、`requireTotals = true`。
 
+分页对象不一定必须使用 `PagingQueryReq`。只要你的对象实现了 `com.levin.commons.dao.Paging` 接口，Simple DAO 就可以从方法参数里识别它并应用分页逻辑：
+
+```java
+@Data
+@Accessors(chain = true)
+public class PageReq implements Paging {
+
+    int pageIndex = 1;
+
+    int pageSize = 20;
+
+    boolean requireTotals = true;
+}
+```
+
+```java
+PagingData<QueryUserReq.Result> page = userService.queryUsers(
+        req,
+        new PageReq().setPageIndex(2).setPageSize(50)
+);
+```
+
 返回值 `PagingData` 通常包含：
 
 - 当前页数据列表。
