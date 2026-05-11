@@ -34,8 +34,6 @@ Simple DAO 的核心目标是：把常见的查询、更新、删除、统计、
 @Accessors(chain = true)
 public class QueryUserReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Contains
     String name;
 
@@ -56,8 +54,8 @@ public class UserQueryService {
     @Autowired
     SimpleDao dao;
 
-    public PagingData<UserListItem> query(QueryUserReq req) {
-        return dao.findPagingDataByQueryObj(UserListItem.class, req);
+    public PagingData<UserListItem> query(QueryUserReq req, Paging paging) {
+        return dao.findPagingDataByQueryObj(UserListItem.class, req, paging);
     }
 }
 ```
@@ -475,8 +473,6 @@ public OrderInfo detail(QueryOrderDetailReq req) {
 @Accessors(chain = true)
 public class QueryOrderListReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Eq(value = "tenantId", require = true)
     String tenantId;
 
@@ -497,8 +493,6 @@ public class QueryOrderListReq {
 @Data
 @Accessors(chain = true)
 public class QueryOrderListReq {
-
-    Paging paging = new PagingQueryReq(1, 20);
 
     @Eq(value = E_Order.tenantId, require = true)
     String tenantId;
@@ -624,8 +618,6 @@ User unique = dao.findUnique(new QueryUserReq().setName("Echo"));
 @Accessors(chain = true)
 public class QueryUserPageReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Contains
     String name;
 }
@@ -634,13 +626,19 @@ public class QueryUserPageReq {
 调用：
 
 ```java
+SimplePaging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
+        .setRequireTotals(true);
+
 PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
         UserListItem.class,
-        new QueryUserPageReq().setName("Echo")
+        new QueryUserPageReq().setName("Echo"),
+        paging
 );
 ```
 
-分页对象单独传入、自定义分页返回对象、只查总数、不查结果集、`PageOption` 等完整用法见下一节。
+推荐把分页对象作为独立参数传入 DAO，不放在查询 DTO 字段里。自定义分页返回对象、只查总数、不查结果集、`PageOption` 等完整用法见下一节。
 
 ### 5.6 分页查询专题：`Paging`、`PagingData`、`PageOption`
 
@@ -655,7 +653,9 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 `Paging` 是分页输入接口，表示“要查第几页、每页多少条、是否需要总数、是否需要结果集”：
 
 ```java
-Paging paging = new PagingQueryReq(1, 20)
+Paging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
         .setRequireTotals(true)
         .setRequireResultList(true);
 
@@ -666,13 +666,16 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 );
 ```
 
-常用实现是 `PagingQueryReq` 和 `SimplePaging`。`pageIndex` 从 1 开始，`pageSize` 或 `pageIndex` 为负数时表示不限制。`requireTotals = true` 时会额外执行总数查询；只做导出或只要列表时，可以不查总数。
+常用实现是 `SimplePaging` 和 `PagingQueryReq`。推荐把 `Paging` 作为 DAO 参数之一传入，而不是放在查询 DTO 字段里。`pageIndex` 从 1 开始，`pageSize` 或 `pageIndex` 为负数时表示不限制。`requireTotals = true` 时会额外执行总数查询；只做导出或只要列表时，可以不查总数。
 
-如果查询对象不想持有分页字段，可以把 `Paging` 单独作为参数传入：
+分页对象单独作为参数传入：
 
 ```java
 QueryUserReq req = new QueryUserReq().setName("Echo");
-Paging paging = new PagingQueryReq(1, 20).setRequireTotals(true);
+Paging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
+        .setRequireTotals(true);
 
 PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
         UserListItem.class,
@@ -688,7 +691,7 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
         UserListItem.class,
         req,
-        new PagingQueryReq(1, 20)
+        new SimplePaging().setPageIndex(1).setPageSize(20)
 );
 
 // 导出全部：不传 Paging，或传 pageSize = -1 的 Paging
@@ -711,7 +714,10 @@ List<UserListItem> all = dao.findByQueryObj(UserListItem.class, req);
 PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
         UserListItem.class,
         req,
-        new PagingQueryReq(1, 20).setRequireTotals(true)
+        new SimplePaging()
+                .setPageIndex(1)
+                .setPageSize(20)
+                .setRequireTotals(true)
 );
 
 Long totals = page.getTotals();
@@ -723,7 +729,9 @@ List<UserListItem> items = page.getItems();
 有些接口只需要总数，不需要结果集，可以关闭结果列表：
 
 ```java
-Paging onlyCount = new PagingQueryReq(1, 20)
+Paging onlyCount = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
         .setRequireTotals(true)
         .setRequireResultList(false);
 
@@ -740,7 +748,9 @@ List<UserListItem> items = page.getItems(); // 通常为 null
 反过来，如果只要列表、不需要总数，把 `requireTotals` 设为 `false`，可以少执行一次 count 查询：
 
 ```java
-Paging listOnly = new PagingQueryReq(1, 20)
+Paging listOnly = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
         .setRequireTotals(false)
         .setRequireResultList(true);
 
@@ -785,7 +795,10 @@ UserPageResp page = dao.findPageByQueryObj(
         UserListItem.class,
         UserPageResp.class,
         req,
-        new PagingQueryReq(1, 20).setRequireTotals(true)
+        new SimplePaging()
+                .setPageIndex(1)
+                .setPageSize(20)
+                .setRequireTotals(true)
 );
 ```
 
@@ -815,7 +828,11 @@ public class QueryUserReq {
 常规业务列表，优先使用：
 
 ```java
-dao.findPagingDataByQueryObj(UserListItem.class, req, new PagingQueryReq(1, 20));
+dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        new SimplePaging().setPageIndex(1).setPageSize(20)
+);
 ```
 
 如果项目已有统一响应类，优先用 `PageOption` 接入：
@@ -830,7 +847,7 @@ UserPageResp page = dao.findPageByQueryObj(UserListItem.class, UserPageResp.clas
 List<UserListItem> rows = dao.findByQueryObj(
         UserListItem.class,
         req,
-        new PagingQueryReq(1, 20)
+        new SimplePaging().setPageIndex(1).setPageSize(20)
 );
 ```
 
@@ -850,7 +867,7 @@ List<UserListItem> users = dao.findByQueryObj(
         entity,
         result,
         new QueryUserReq().setName("Echo"),
-        new PagingQueryReq(1, 20)
+        new SimplePaging().setPageIndex(1).setPageSize(20)
 );
 ```
 
@@ -941,7 +958,7 @@ ResultClassSupplier result = () -> UserListItem.class;
 List<UserListItem> rows = dao.findByQueryObj(
         result,
         new QueryUserReq().setName("Echo"),
-        new PagingQueryReq(1, 20)
+        new SimplePaging().setPageIndex(1).setPageSize(20)
 );
 ```
 
@@ -1525,8 +1542,6 @@ DaoContext.globalContext.put("DATE_FORMAT", "yyyy/MM/dd");
 @Accessors(chain = true)
 public class QueryUserListReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Eq
     Long id;
 
@@ -1556,7 +1571,11 @@ QueryUserListReq req = new QueryUserListReq()
         .setMinScore(60)
         .setMaxScore(100);
 
-PagingData<UserListItem> page = dao.findPagingDataByQueryObj(UserListItem.class, req);
+SimplePaging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20);
+
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(UserListItem.class, req, paging);
 ```
 
 大致生成：
@@ -2044,7 +2063,7 @@ Consumer<SelectDao<User>> callback = dao -> dao
 List<UserListItem> users = simpleDao.findByQueryObj(
         UserListItem.class,
         req,
-        new PagingQueryReq(1, 20),
+        new SimplePaging().setPageIndex(1).setPageSize(20),
         callback
 );
 ```
@@ -3465,8 +3484,6 @@ public class QueryUserGroupByManualJoinReq {
 @Accessors(chain = true)
 public class QueryOrderMemberProductReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Eq(domain = E_Order.ALIAS, value = E_Order.state)
     String orderState;
 
@@ -3593,8 +3610,6 @@ where o.state = ?
 @TargetOption(entityClass = User.class, alias = "u", resultClass = UserTaskSummary.class)
 @Data
 public class QueryUserTaskSummaryReq {
-
-    Paging paging = new PagingQueryReq(1, 20);
 
     @Select
     String name;
@@ -4128,7 +4143,7 @@ public class Area extends AbstractNamedEntityObject {
 用法组合：
 
 - `@TargetOption(entityClass = Xxx.class, resultClass = XxxInfo.class)`
-- `Paging paging = new PagingQueryReq(pageIndex, pageSize)`
+- `new SimplePaging().setPageIndex(pageIndex).setPageSize(pageSize)` 作为 DAO 参数之一
 - 字符串搜索用 `@Contains`
 - 枚举/状态多选用 `@In`
 - 时间范围用 `@Gte` + `@Lte` 或 `@Between`

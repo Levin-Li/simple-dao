@@ -41,8 +41,6 @@ Simple DAO 的核心价值不是“换一个 ORM”，而是把业务系统里�
 @Accessors(chain = true)
 public class QueryUserReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Contains(value = "name")
     String keyword;
 
@@ -63,13 +61,19 @@ public class QueryUserReq {
 服务层只做一件事：
 
 ```java
+SimplePaging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
+        .setRequireTotals(true);
+
 PagingData<UserInfo> page = dao.findPagingDataByQueryObj(
         UserInfo.class,
         new QueryUserReq()
                 .setKeyword("Echo")
                 .setMinScore(60)
                 .setMaxScore(100)
-                .setStates(new String[]{"A", "B"})
+                .setStates(new String[]{"A", "B"}),
+        paging
 );
 ```
 
@@ -174,15 +178,13 @@ Long id;
 
 需求：按关键字模糊查询用户，按分数区间过滤，按状态过滤，按创建时间倒序分页。
 
-Simple DAO 写法：查询条件直接长在请求 DTO 上。
+Simple DAO 写法：查询条件直接长在请求 DTO 上，分页对象作为独立参数传给 DAO。
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u", resultClass = UserInfo.class)
 @Data
 @Accessors(chain = true)
 public class QueryUserReq {
-
-    Paging paging = new PagingQueryReq(1, 20);
 
     @Contains("name")
     String keyword;
@@ -204,13 +206,19 @@ public class QueryUserReq {
 调用时基本没有查询拼装代码：
 
 ```java
+SimplePaging paging = new SimplePaging()
+        .setPageIndex(1)
+        .setPageSize(20)
+        .setRequireTotals(true);
+
 PagingData<UserInfo> page = dao.findPagingDataByQueryObj(
         UserInfo.class,
         new QueryUserReq()
                 .setKeyword("Echo")
                 .setMinScore(60)
                 .setMaxScore(100)
-                .setStates(new String[]{"A", "B"})
+                .setStates(new String[]{"A", "B"}),
+        paging
 );
 ```
 
