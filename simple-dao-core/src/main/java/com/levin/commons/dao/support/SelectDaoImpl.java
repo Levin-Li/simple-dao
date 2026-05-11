@@ -1358,7 +1358,7 @@ public class SelectDaoImpl<T>
             appendByQueryObj(resultType);
         }
 
-        List queryResultList = this.findList(getProjectionResultClass(resultType, noResultType));
+        List queryResultList = this.findList(null);
 
         if (queryResultList == null || queryResultList.isEmpty()) {
             return Collections.emptyList();
@@ -1419,7 +1419,7 @@ public class SelectDaoImpl<T>
         //预期唯一结果时，故意允许查询2条记录，如果多余一条记录则视为异常情况
         setRowCount(isExpectUniqueResult ? 2 : 1);
 
-        List list = findList(getProjectionResultClass(resultType, notResultType));
+        List list = findList(null);
 
         if (list == null || list.isEmpty()) {
             return null;
@@ -1464,9 +1464,6 @@ public class SelectDaoImpl<T>
         //数组转换到map
         data = tryConvertArray2Map(data, valueHolder);
 
-        //Hibernate Map 投影在无别名时会使用 "0"、"1" 这类下标 key，这里按 select 顺序重映射成 DTO 字段名。
-        data = tryConvertMap2DtoMap(data, valueHolder, targetType);
-
         //获取注入的属性
         String[] daoInjectAttrs = QueryAnnotationUtil.getDaoInjectAttrs(targetType);
 
@@ -1486,30 +1483,6 @@ public class SelectDaoImpl<T>
         ClassUtils.invokePostConstructMethod(e);
 
         return e;
-    }
-
-    private <E> Class getProjectionResultClass(Class<E> resultType, boolean noResultType) {
-
-        if (!canUseMapProjectionForDto(resultType, noResultType)) {
-            return null;
-        }
-
-        return Map.class;
-    }
-
-    private boolean canUseMapProjectionForDto(Class<?> resultType, boolean noResultType) {
-
-        return !noResultType
-                && resultType != null
-                && resultType != Void.class
-                && hasSelectColumns()
-                && selectColumnsMap.size() >= selectColumns.size()
-                && getDao().isJpa()
-                && !isNative()
-                && !resultType.isArray()
-                && !Map.class.isAssignableFrom(resultType)
-                && !QueryAnnotationUtil.isSimpleType(resultType)
-                && !getDao().isEntityClass(resultType);
     }
 
     /**
@@ -1564,124 +1537,6 @@ public class SelectDaoImpl<T>
 
         return dataMap;
 
-    }
-
-    public Object tryConvertMap2DtoMap(Object data, ValueHolder<List<List<String>>> valueHolder) {
-        return tryConvertMap2DtoMap(data, valueHolder, null);
-    }
-
-    private Object tryConvertMap2DtoMap(Object data, ValueHolder<List<List<String>>> valueHolder, Class<?> targetType) {
-
-        if (!(data instanceof Map) || selectColumns.isEmpty()) {
-            return data;
-        }
-
-        Map<?, ?> sourceMap = (Map<?, ?>) data;
-
-        if (sourceMap.isEmpty()) {
-            return data;
-        }
-
-        if (containsTargetPropertyKey(sourceMap, targetType)) {
-            return data;
-        }
-
-        if (valueHolder == null) {
-            valueHolder = new ValueHolder<>(null);
-        }
-
-        if (valueHolder.value == null) {
-            valueHolder.value = getAliases(selectColumns.size());
-        }
-
-        if (valueHolder.value == null || valueHolder.value.size() != selectColumns.size()) {
-            return data;
-        }
-
-        Map<String, Object> dataMap = new LinkedHashMap<>(sourceMap.size() + selectColumns.size());
-        sourceMap.forEach((key, value) -> {
-            if (key != null) {
-                dataMap.put(String.valueOf(key), value);
-            }
-        });
-
-        for (int i = 0; i < valueHolder.value.size(); i++) {
-
-            Object value = getSelectValue(sourceMap, valueHolder.value.get(i), i);
-
-            if (value == null) {
-                continue;
-            }
-
-            for (String key : valueHolder.value.get(i)) {
-                dataMap.put(key, value);
-            }
-        }
-
-        return dataMap;
-    }
-
-    private boolean containsTargetPropertyKey(Map<?, ?> sourceMap, Class<?> targetType) {
-
-        if (targetType == null) {
-            return false;
-        }
-
-        Class<?> type = targetType;
-        while (type != null && type != Object.class) {
-            for (Field field : type.getDeclaredFields()) {
-                if (sourceMap.containsKey(field.getName())) {
-                    return true;
-                }
-            }
-            type = type.getSuperclass();
-        }
-
-        for (Method method : targetType.getMethods()) {
-
-            String name = method.getName();
-
-            if (name.length() <= 3
-                    || !name.startsWith("set")
-                    || method.getParameterCount() != 1
-                    || !Character.isUpperCase(name.charAt(3))) {
-                continue;
-            }
-
-            String propertyName = Character.toLowerCase(name.charAt(3)) + (name.length() > 4 ? name.substring(4) : "");
-
-            if (sourceMap.containsKey(propertyName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Object getSelectValue(Map<?, ?> sourceMap, List<String> aliases, int index) {
-
-        for (String alias : aliases) {
-            if (sourceMap.containsKey(alias)) {
-                return sourceMap.get(alias);
-            }
-
-            String lowerAlias = alias.toLowerCase(Locale.ROOT);
-            if (sourceMap.containsKey(lowerAlias)) {
-                return sourceMap.get(lowerAlias);
-            }
-        }
-
-        String indexKey = String.valueOf(index);
-
-        if (sourceMap.containsKey(indexKey)) {
-            return sourceMap.get(indexKey);
-        }
-
-        if (sourceMap.containsKey(index)) {
-            return sourceMap.get(index);
-        }
-
-        return null;
     }
 
     /**

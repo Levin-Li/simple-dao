@@ -1886,7 +1886,9 @@ public class QueryGroupDynamicReq {
 
 #### 7.4.5 数字别名和 Map 返回值
 
-DTO 字段名本身不能是纯数字，所以 `"0"`、`"1"` 这类 key 只会在 DTO 映射时作为“无别名投影的位置兜底”。如果目标类型就是 `Map`，Simple DAO 不会把数字 key 改成 DTO 字段名。
+DTO 映射不依赖 Hibernate 7 的 `Map` 投影模式，通常会走数组/标量结果再按选择列顺序映射到 DTO 字段。只有当你明确把目标类型写成 `Map.class` 时，Simple DAO 才会按 Map 结果返回。
+
+如果目标类型就是 `Map`，Simple DAO 不会把数字 key 改成 DTO 字段名。
 
 例如：
 

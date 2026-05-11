@@ -630,14 +630,14 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testJpaMapProjectionDefaultAliasDTO() {
+    public void testJpaDtoProjectionDefaultAliasDTO() {
 
-        List<JpaMapProjectionDefaultAliasDTO> list = dao.findByQueryObj(JpaMapProjectionDefaultAliasDTO.class,
-                new JpaMapProjectionDefaultAliasDTO());
+        List<JpaDtoProjectionDefaultAliasDTO> list = dao.findByQueryObj(JpaDtoProjectionDefaultAliasDTO.class,
+                new JpaDtoProjectionDefaultAliasDTO());
 
         Assert.notEmpty(list, "默认别名 DTO 查询结果为空");
 
-        JpaMapProjectionDefaultAliasDTO dto = list.get(0);
+        JpaDtoProjectionDefaultAliasDTO dto = list.get(0);
 
         Assert.hasText(dto.getName(), "默认别名 DTO 名称映射失败");
         Assert.hasText(dto.getCategory(), "默认别名 DTO 类别映射失败");
@@ -645,14 +645,14 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testJpaMapProjectionNoAliasDTO() {
+    public void testJpaDtoProjectionNoAliasDTO() {
 
-        List<JpaMapProjectionNoAliasDTO> list = dao.findByQueryObj(JpaMapProjectionNoAliasDTO.class,
-                new JpaMapProjectionNoAliasDTO());
+        List<JpaDtoProjectionNoAliasDTO> list = dao.findByQueryObj(JpaDtoProjectionNoAliasDTO.class,
+                new JpaDtoProjectionNoAliasDTO());
 
         Assert.notEmpty(list, "无别名 DTO 查询结果为空");
 
-        JpaMapProjectionNoAliasDTO dto = list.get(0);
+        JpaDtoProjectionNoAliasDTO dto = list.get(0);
 
         Assert.hasText(dto.getName(), "无别名 DTO 名称映射失败");
         Assert.hasText(dto.getCategory(), "无别名 DTO 类别映射失败");
@@ -660,14 +660,14 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testJpaMapProjectionExpressionAliasDTO() {
+    public void testJpaDtoProjectionExpressionAliasDTO() {
 
-        List<JpaMapProjectionExpressionAliasDTO> list = dao.findByQueryObj(JpaMapProjectionExpressionAliasDTO.class,
-                new JpaMapProjectionExpressionAliasDTO());
+        List<JpaDtoProjectionExpressionAliasDTO> list = dao.findByQueryObj(JpaDtoProjectionExpressionAliasDTO.class,
+                new JpaDtoProjectionExpressionAliasDTO());
 
         Assert.notEmpty(list, "表达式 DTO 查询结果为空");
 
-        JpaMapProjectionExpressionAliasDTO dto = list.get(0);
+        JpaDtoProjectionExpressionAliasDTO dto = list.get(0);
 
         Assert.hasText(dto.getName(), "表达式 DTO 名称映射失败");
         Assert.notNull(dto.getScorePlusOne(), "表达式 DTO 分数映射失败");
@@ -675,7 +675,7 @@ public class DaoExamplesTest {
     }
 
     @Test
-    public void testJpaMapProjectionDoesNotBreakDynamicSelectDTO() {
+    public void testJpaDtoProjectionDoesNotBreakDynamicSelectDTO() {
 
         CustomSelectDTO query = new CustomSelectDTO();
         query.setColumns(new String[]{"name", "category"});
@@ -689,6 +689,16 @@ public class DaoExamplesTest {
         Assert.hasText(dto.getName(), "动态字段 DTO 名称映射失败");
         Assert.hasText(dto.getCategory(), "动态字段 DTO 类别映射失败");
         Assert.isNull(dto.getScore(), "动态字段未选择 score 时不应被错误映射");
+    }
+
+    @Test
+    public void testJpaDtoProjectionCountAliasTotalsDTO() {
+
+        JpaDtoProjectionTotalsDTO.Result result = dao.findOneByQueryObj(new JpaDtoProjectionTotalsDTO());
+
+        Assert.notNull(result, "统计 DTO 查询结果为空");
+        Assert.notNull(result.getTotals(), "统计 DTO totals 映射失败");
+        Assert.isTrue(result.getTotals() > 0, "统计 DTO totals 结果异常");
     }
 
     @Test
@@ -2440,8 +2450,8 @@ public class DaoExamplesTest {
 
     @Data
     @Accessors(chain = true)
-    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionDefaultAliasDTO.class)
-    static class JpaMapProjectionDefaultAliasDTO {
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaDtoProjectionDefaultAliasDTO.class)
+    static class JpaDtoProjectionDefaultAliasDTO {
 
         @Select(E_Group.name)
         String name;
@@ -2455,8 +2465,8 @@ public class DaoExamplesTest {
 
     @Data
     @Accessors(chain = true)
-    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionNoAliasDTO.class)
-    static class JpaMapProjectionNoAliasDTO {
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaDtoProjectionNoAliasDTO.class)
+    static class JpaDtoProjectionNoAliasDTO {
 
         @Select(value = E_Group.name, alias = C.BLANK_VALUE)
         String name;
@@ -2470,14 +2480,27 @@ public class DaoExamplesTest {
 
     @Data
     @Accessors(chain = true)
-    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaMapProjectionExpressionAliasDTO.class)
-    static class JpaMapProjectionExpressionAliasDTO {
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, maxResults = 10, resultClass = JpaDtoProjectionExpressionAliasDTO.class)
+    static class JpaDtoProjectionExpressionAliasDTO {
 
         @Select(E_Group.name)
         String name;
 
         @Select(value = E_Group.score + " + 1", alias = "scorePlusOne")
         Integer scorePlusOne;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = Group.class, alias = E_Group.ALIAS, resultClass = JpaDtoProjectionTotalsDTO.Result.class)
+    static class JpaDtoProjectionTotalsDTO {
+
+        @Data
+        static class Result {
+
+            @Count
+            Integer totals;
+        }
     }
 
     private User prepareJsonPathUser(String uniqueRole, String logText) {
