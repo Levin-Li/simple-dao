@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * 查询接口
+ * @author lilw
  */
 public interface SelectDao<T> extends
         ConditionBuilder<SelectDao<T>, T>,
