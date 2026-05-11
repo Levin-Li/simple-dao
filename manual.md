@@ -3253,32 +3253,123 @@ where ...
 
 ## 13. 多表查询例子
 
-### 13.1 自动关联实体
+### 13.1 `JoinOption` 连接注解
+
+`JoinOption` 用来描述“当前查询主表要连接哪张表，以及 ON 条件怎么生成”。它既可以写在 `@TargetOption(joinOptions = {...})` 里，也可以在编程式 `dao.join(...)` 中使用同一套生成规则。
+
+几个属性先记住方向：
+
+- `entityClass`：要连接进来的实体类，优先级高于已废弃的 `tableOrStatement`。普通业务建议使用实体类，不建议直接写表名或子语句。
+- `alias`：连接表自己的别名，必须唯一。建议使用 `E_XXX.ALIAS`，避免字段名或别名改动后文档看不出来、编译也发现不了。
+- `type`：连接类型，默认 `Left`。
+- `joinColumn`：连接表自己的字段；不填时默认连接实体主键。
+- `joinTargetAlias`：要连接到哪个已有别名；不填时默认连接到主表别名。
+- `joinTargetColumn`：目标别名上的字段；不填时会尝试自动推断。
+- `onExpr`：完整 ON 表达式。只要填写了它，框架就不会再自动生成 ON 条件。
+
+#### 13.1.1 属性为空时的自动推断
+
+例如：
+
+```java
+@TargetOption(entityClass = User.class, alias = E_User.ALIAS,
+        joinOptions = {
+                @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)
+        })
+```
+
+上面没有写 `joinColumn`、`joinTargetAlias`、`joinTargetColumn`，框架会按源码里的规则推断：
+
+1. 先确定主表和连接表别名。主表别名来自 `@TargetOption(alias = ...)`，连接表别名来自 `@JoinOption(alias = ...)`；如果实体类可识别且没有手写别名，框架会尝试生成默认别名，但业务代码仍建议显式使用 `E_XXX.ALIAS`。
+2. `joinTargetAlias` 为空时，默认关联到主表别名，也就是 `@TargetOption` 的 `alias`。
+3. `joinTargetColumn` 为空时，框架会在目标实体里查找“字段类型等于连接实体类型”的字段。例如主表 `User` 里有且只有一个 `Group group` 字段，连接实体是 `Group.class`，就会推断目标字段为 `group`。
+4. `joinColumn` 为空时，默认使用连接实体的主键字段。例如连接 `Group` 时，通常是 `Group.id`。
+5. 如果是 JPA/JPQL 查询，并且连接字段是连接实体主键，目标字段又是实体引用字段，框架会把 `u.group` 补成 `u.group.id`，形成类似 `u.group.id = g.id` 的条件。
+6. 如果是原生查询，框架会把实体字段转换成物理列名，例如 `group` 可能转换成 `group_id`，最终按数据库列名拼接。
+
+因此，常见实体关系：
+
+```java
+class User {
+    Group group;
+}
+```
+
+配合：
+
+```java
+@JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)
+```
+
+大致可以理解为自动生成：
+
+```sql
+left join Group g on u.group.id = g.id
+```
+
+什么时候不要依赖自动推断：
+
+- 主表里有多个同类型字段，例如 `Group group`、`Group ownerGroup`，框架无法判断该连哪一个，会抛“无法确定关联的目标列”。
+- 主表里没有指向连接实体的字段时，框架可能退回到主表主键和连接表主键相连，这通常只适合同主键关联；普通业务关联建议手动写 `joinTargetColumn`。
+- 连接目标不是主表，而是另一个已连接表时，要显式写 `joinTargetAlias = E_XXX.ALIAS`。
+- 连接条件不只是两个字段相等，还包含状态、租户、有效期等附加条件时，用 `onExpr` 写完整 ON 条件。
+
+#### 13.1.2 附加条件和非 ID 连接
+
+如果连接条件只是“目标字段 = 连接表字段”，优先用 `joinColumn`、`joinTargetAlias`、`joinTargetColumn`，让框架处理 JPA 字段名和原生列名转换。具体例子见 [13.3 手动指定连接字段](#133-手动指定连接字段)。
+
+如果 ON 条件里还要加状态、租户、时间范围，或者根本不是 ID 相等，使用 `onExpr`。注意：`onExpr` 要写完整表达式，框架不会再追加自动推断出来的条件。
+
+```java
+@JoinOption(
+        entityClass = Group.class,
+        alias = E_Group.ALIAS,
+        onExpr = E_User.ALIAS + "." + E_User.group + "." + E_Group.id
+                + " = " + E_Group.ALIAS + "." + E_Group.id
+                + " and " + E_Group.ALIAS + "." + E_Group.state + " = 'A'"
+)
+```
+
+也可以按业务编码连接，而不是按 ID 连接：
+
+```java
+@JoinOption(
+        entityClass = MemberLevel.class,
+        alias = E_MemberLevel.ALIAS,
+        onExpr = E_Member.ALIAS + "." + E_Member.levelCode
+                + " = " + E_MemberLevel.ALIAS + "." + E_MemberLevel.code
+                + " and " + E_MemberLevel.ALIAS + "." + E_MemberLevel.enabled + " = true"
+)
+```
+
+多表连接时，后面的连接也可以连到前面已经加入的表，而不一定只能连主表。写法见 [13.4 三表连接](#134-三表连接用-domain-明确字段属于哪张表)。
+
+### 13.2 自动关联实体
 
 如果 `User` 中存在 `Group group` 这类实体关系，可以让 `JoinOption` 自动推断：
 
 ```java
 @TargetOption(
         entityClass = User.class,
-        alias = "u",
+        alias = E_User.ALIAS,
         resultClass = UserGroupInfo.class,
         joinOptions = {
-                @JoinOption(entityClass = Group.class, alias = "g")
+                @JoinOption(entityClass = Group.class, alias = E_Group.ALIAS)
         }
 )
 @Data
 public class QueryUserGroupReq {
 
-    @Select(domain = "u", value = "id")
+    @Select(domain = E_User.ALIAS, value = E_User.id)
     Long userId;
 
-    @Select(domain = "u", value = "name")
+    @Select(domain = E_User.ALIAS, value = E_User.name)
     String userName;
 
-    @Select(domain = "g", value = "name")
+    @Select(domain = E_Group.ALIAS, value = E_Group.name)
     String groupName;
 
-    @Contains(domain = "g", value = "name")
+    @Contains(domain = E_Group.ALIAS, value = E_Group.name)
     String groupKeyword;
 }
 ```
@@ -3292,47 +3383,49 @@ List<UserGroupInfo> list = dao.findByQueryObj(
 );
 ```
 
-### 13.2 手动指定连接字段
+### 13.3 手动指定连接字段
 
 当实体里有多个同类型关联，或者你不想依赖自动推断时：
 
 ```java
 @TargetOption(
         entityClass = User.class,
-        alias = "u",
+        alias = E_User.ALIAS,
         resultClass = UserGroupInfo.class,
         joinOptions = {
                 @JoinOption(
                         entityClass = Group.class,
-                        alias = "g",
-                        joinColumn = "id",
-                        joinTargetAlias = "u",
-                        joinTargetColumn = "group"
+                        alias = E_Group.ALIAS,
+                        joinColumn = E_Group.id,
+                        joinTargetAlias = E_User.ALIAS,
+                        joinTargetColumn = E_User.group
                 )
         }
 )
 @Data
 public class QueryUserGroupByManualJoinReq {
 
-    @Select(domain = "u", value = "name")
+    @Select(domain = E_User.ALIAS, value = E_User.name)
     String userName;
 
-    @Select(domain = "g", value = "name")
+    @Select(domain = E_Group.ALIAS, value = E_Group.name)
     String groupName;
 }
 ```
 
-如果连接条件非常特殊，可以使用 `onExpr`：
+如果还有附加条件，参考 [13.1.2 附加条件和非 ID 连接](#1312-附加条件和非-id-连接)，用 `onExpr` 写完整 ON 条件：
 
 ```java
 @JoinOption(
         entityClass = Group.class,
-        alias = "g",
-        onExpr = "u.group = g.id and g.state = 'A'"
+        alias = E_Group.ALIAS,
+        onExpr = E_User.ALIAS + "." + E_User.group + "." + E_Group.id
+                + " = " + E_Group.ALIAS + "." + E_Group.id
+                + " and " + E_Group.ALIAS + "." + E_Group.state + " = 'A'"
 )
 ```
 
-### 13.3 三表连接：用 `domain` 明确字段属于哪张表
+### 13.4 三表连接：用 `domain` 明确字段属于哪张表
 
 多表查询最容易出错的地方是：几个表都有 `id`、`name`、`state`、`createTime` 这类字段。Simple DAO 通过 `domain` 指定字段归属的表别名，通过 `value` 指定这个表上的字段名。
 
@@ -3438,8 +3531,8 @@ select o.id as orderId,
        p.id as productId,
        p.name as productName
 from Order o
-left join Member m on m.id = o.member
-left join Product p on p.id = o.product
+left join Member m on o.member.id = m.id
+left join Product p on o.product.id = p.id
 where o.state = ?
   and o.createTime >= ?
   and m.level = ?
@@ -3462,14 +3555,26 @@ where o.state = ?
 - `joinTargetAlias = E_Order.ALIAS`：要关联到哪个目标表别名。
 - `joinTargetColumn = E_Order.member`：目标表 `Order` 上指向会员的字段。
 
+如果第三张表不是直接连主表，而是连前面已经加入的表，就把 `joinTargetAlias` 指向那个已加入表。例如商品分类从商品表继续连接：
+
+```java
+@JoinOption(
+        entityClass = ProductCategory.class,
+        alias = E_ProductCategory.ALIAS,
+        joinColumn = E_ProductCategory.id,
+        joinTargetAlias = E_Product.ALIAS,
+        joinTargetColumn = E_Product.category
+)
+```
+
 如果连接条件还要额外限制，例如只连接有效商品，可以用 `onExpr` 显式写完整 ON 条件：
 
 ```java
 @JoinOption(
         entityClass = Product.class,
         alias = E_Product.ALIAS,
-        onExpr = E_Product.ALIAS + "." + E_Product.id
-                + " = " + E_Order.ALIAS + "." + E_Order.product
+        onExpr = E_Order.ALIAS + "." + E_Order.product + "." + E_Product.id
+                + " = " + E_Product.ALIAS + "." + E_Product.id
                 + " and " + E_Product.ALIAS + "." + E_Product.enable + " = true"
 )
 ```
