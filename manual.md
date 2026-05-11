@@ -331,6 +331,8 @@ String notEqState;       // 推断为 state
 
 注意：自动截取只会按注解名截取，例如 `Gte`、`Lte`、`Contains`、`StartsWith`、`NotEq`。像 `beginTime`、`endTime`、`minScore`、`maxScore` 这种业务化字段名，不是注解名前缀，不能稳定自动推断目标字段，建议显式写 `value`。
 
+最佳实践：生产代码里只要需要显式写字段名，优先使用生成的实体常量，例如 `E_Order.tenantId`、`E_Order.orgId`、`E_Order.name`，而不是直接写 `"tenantId"`、`"orgId"`、`"name"`。这样实体字段重命名时，编译器会立刻报错；如果写字符串，字段名写错或重构遗漏通常要到运行时才暴露。
+
 最常见场景是 DTO 字段名和实体字段名不一致：
 
 ```java
@@ -477,6 +479,29 @@ public class QueryOrderListReq {
 ```
 
 如果业务要求“组织条件也必须有”，就把 `orgId` 改成 `@Eq(value = "orgId", require = true)`。不要依赖控制器里手写 `if` 后再传 DTO，最好把必填语义放进 DTO 注解里，这样服务层、测试、Repository 复用时都能保持同一套保护。
+
+如果项目已经生成了 `E_XXX` 字段常量，上面的字段名建议写成常量形式：
+
+```java
+@TargetOption(entityClass = Order.class, alias = E_Order.ALIAS, resultClass = OrderInfo.class)
+@Data
+@Accessors(chain = true)
+public class QueryOrderListReq {
+
+    Paging paging = new PagingQueryReq(1, 20);
+
+    @Eq(value = E_Order.tenantId, require = true)
+    String tenantId;
+
+    @Eq(E_Order.orgId)
+    String orgId;
+
+    @Contains(E_Order.name)
+    String keyword;
+}
+```
+
+这里的收益不是少写几个字符，而是把“字段名是否存在”交给编译器检查。以后 `tenantId`、`orgId`、`name` 如果在实体里被重命名，`E_Order.xxx` 会编译失败，提醒你同步修改查询 DTO；字符串常量则很容易漏掉。
 
 ## 5. 基础 CRUD 例子
 
