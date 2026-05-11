@@ -108,8 +108,6 @@ public class User {
 @Accessors(chain = true)
 public class QueryUserReq {
 
-    Paging paging = new PagingQueryReq(1, 20);
-
     @Contains("name")
     String keyword;
 
@@ -122,22 +120,22 @@ public class QueryUserReq {
     @In("state")
     List<String> states;
 
-    @OrderBy(value = "createTime", type = OrderBy.Type.Desc)
-    LocalDateTime orderByCreateTime;
+    @OrderBy(type = OrderBy.Type.Desc)
+    LocalDateTime createTime;
 
     @Data
     public static class Result {
 
-        @Select("id")
+        @Select
         Long id;
 
-        @Select("name")
+        @Select
         String name;
 
-        @Select("score")
+        @Select
         Integer score;
 
-        @Select("state")
+        @Select
         String state;
     }
 }
@@ -157,8 +155,9 @@ limit ?, ?
 几个规则先记住：
 
 - 字段值为空时，大多数查询注解默认不生成条件，适合列表筛选。
-- `Paging paging = new PagingQueryReq(1, 20)` 表示默认第一页、每页 20 条。
+- 查询对象和分页对象可以分开传入；框架会从 `Object... queryObjs` 里自动识别 `Paging` 参数。
 - `resultClass` 指定返回 DTO；不指定时通常返回实体。
+- 当注解目标字段名和当前属性名一致时，`value` 可以不填，例如 `id` 字段上只写 `@Select`，`createTime` 字段上只写 `@OrderBy(type = OrderBy.Type.Desc)`。
 - 简单场景优先使用“DTO + 注解”，复杂补充条件再用 Consumer 或链式 API。
 
 ## 5. 在服务里调用
@@ -170,8 +169,8 @@ public class UserService {
     @Autowired
     JpaDao dao;
 
-    public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req) {
-        return dao.findPagingDataByQueryObj(QueryUserReq.Result.class, req);
+    public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req, Paging paging) {
+        return dao.findPagingDataByQueryObj(QueryUserReq.Result.class, req, paging);
     }
 }
 ```
@@ -179,14 +178,23 @@ public class UserService {
 调用示例：
 
 ```java
+PagingQueryReq paging = new PagingQueryReq(1, 20);
+paging.setRequireTotals(true);
+
 PagingData<QueryUserReq.Result> page = userService.queryUsers(
         new QueryUserReq()
                 .setKeyword("Echo")
                 .setMinScore(60)
                 .setMaxScore(100)
-                .setStates(Arrays.asList("A", "B"))
+                .setStates(Arrays.asList("A", "B")),
+        paging
 );
 ```
+
+这里是两个参数：
+
+- `QueryUserReq req`：普通查询条件，例如关键字、分数区间、状态集合、排序字段。
+- `Paging paging`：分页条件，例如 `pageIndex = 1`、`pageSize = 20`、`requireTotals = true`。
 
 返回值 `PagingData` 通常包含：
 
@@ -303,4 +311,3 @@ public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req) {
 
 - [DaoExamplesTest.java](./simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java)
 - `simple-dao-examples/src/test/java/com/levin/commons/dao/dto`
-
