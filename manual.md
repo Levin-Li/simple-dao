@@ -3292,6 +3292,149 @@ public class QueryUserGroupByManualJoinReq {
 )
 ```
 
+### 13.3 三表连接：用 `domain` 明确字段属于哪张表
+
+多表查询最容易出错的地方是：几个表都有 `id`、`name`、`state`、`createTime` 这类字段。Simple DAO 通过 `domain` 指定字段归属的表别名，通过 `value` 指定这个表上的字段名。
+
+下面例子查询订单，同时关联会员和商品：
+
+- 主表：订单 `Order`，别名使用 `E_Order.ALIAS`。
+- 连接表一：会员 `Member`，别名使用 `E_Member.ALIAS`。
+- 连接表二：商品 `Product`，别名使用 `E_Product.ALIAS`。
+- 查询条件分别来自订单、会员、商品三张表。
+- 返回结果字段也分别来自三张表。
+
+```java
+@TargetOption(
+        entityClass = Order.class,
+        alias = E_Order.ALIAS,
+        resultClass = QueryOrderMemberProductReq.Result.class,
+        joinOptions = {
+                @JoinOption(
+                        entityClass = Member.class,
+                        alias = E_Member.ALIAS,
+                        joinColumn = E_Member.id,
+                        joinTargetAlias = E_Order.ALIAS,
+                        joinTargetColumn = E_Order.member
+                ),
+                @JoinOption(
+                        entityClass = Product.class,
+                        alias = E_Product.ALIAS,
+                        joinColumn = E_Product.id,
+                        joinTargetAlias = E_Order.ALIAS,
+                        joinTargetColumn = E_Order.product
+                )
+        }
+)
+@Data
+@Accessors(chain = true)
+public class QueryOrderMemberProductReq {
+
+    Paging paging = new PagingQueryReq(1, 20);
+
+    @Eq(domain = E_Order.ALIAS, value = E_Order.state)
+    String orderState;
+
+    @Gte(domain = E_Order.ALIAS, value = E_Order.createTime)
+    LocalDateTime orderBeginTime;
+
+    @Eq(domain = E_Member.ALIAS, value = E_Member.level)
+    String memberLevel;
+
+    @Contains(domain = E_Member.ALIAS, value = E_Member.name)
+    String memberKeyword;
+
+    @Eq(domain = E_Product.ALIAS, value = E_Product.category)
+    String productCategory;
+
+    @Data
+    public static class Result {
+
+        @Select(domain = E_Order.ALIAS, value = E_Order.id)
+        Long orderId;
+
+        @Select(domain = E_Order.ALIAS, value = E_Order.orderNo)
+        String orderNo;
+
+        @Select(domain = E_Order.ALIAS, value = E_Order.amount)
+        Long orderAmount;
+
+        @Select(domain = E_Member.ALIAS, value = E_Member.id)
+        Long memberId;
+
+        @Select(domain = E_Member.ALIAS, value = E_Member.name)
+        String memberName;
+
+        @Select(domain = E_Product.ALIAS, value = E_Product.id)
+        Long productId;
+
+        @Select(domain = E_Product.ALIAS, value = E_Product.name)
+        String productName;
+    }
+}
+```
+
+这个 DTO 里每个字段的归属很明确：
+
+| 字段 | 注解 | `domain` | 使用哪张表 |
+| --- | --- | --- | --- |
+| `orderState` | `@Eq` | `E_Order.ALIAS` | 订单表 `Order` |
+| `orderBeginTime` | `@Gte` | `E_Order.ALIAS` | 订单表 `Order` |
+| `memberLevel` | `@Eq` | `E_Member.ALIAS` | 会员表 `Member` |
+| `memberKeyword` | `@Contains` | `E_Member.ALIAS` | 会员表 `Member` |
+| `productCategory` | `@Eq` | `E_Product.ALIAS` | 商品表 `Product` |
+| `Result.orderNo` | `@Select` | `E_Order.ALIAS` | 从订单表取返回字段 |
+| `Result.memberName` | `@Select` | `E_Member.ALIAS` | 从会员表取返回字段 |
+| `Result.productName` | `@Select` | `E_Product.ALIAS` | 从商品表取返回字段 |
+
+大致会生成类似下面的 JPQL/HQL 结构。为了阅读方便，这里用 `o`、`m`、`p` 表示订单、会员、商品三个别名；实际项目里建议继续用 `E_XXX.ALIAS` 常量。
+
+```sql
+select o.id as orderId,
+       o.orderNo as orderNo,
+       o.amount as orderAmount,
+       m.id as memberId,
+       m.name as memberName,
+       p.id as productId,
+       p.name as productName
+from Order o
+left join Member m on m.id = o.member
+left join Product p on p.id = o.product
+where o.state = ?
+  and o.createTime >= ?
+  and m.level = ?
+  and m.name like ?
+  and p.category = ?
+```
+
+这里最重要的是：
+
+- `domain = E_Order.ALIAS`：条件或结果字段来自订单表。
+- `domain = E_Member.ALIAS`：条件或结果字段来自会员表。
+- `domain = E_Product.ALIAS`：条件或结果字段来自商品表。
+- `value = E_XXX.xxx`：表示这个 `domain` 对应实体上的字段名。
+- 如果不写 `domain`，字段通常会落到主表别名上；多表里一旦字段重名，就很容易查错表或生成错误语句。
+
+连接本身也要分清两个方向：
+
+- `joinColumn = E_Member.id`：连接表 `Member` 自己用于关联的字段。
+- `joinTargetAlias = E_Order.ALIAS`：要关联到哪个目标表别名。
+- `joinTargetColumn = E_Order.member`：目标表 `Order` 上指向会员的字段。
+
+如果连接条件还要额外限制，例如只连接有效商品，可以用 `onExpr` 显式写完整 ON 条件：
+
+```java
+@JoinOption(
+        entityClass = Product.class,
+        alias = E_Product.ALIAS,
+        onExpr = E_Product.ALIAS + "." + E_Product.id
+                + " = " + E_Order.ALIAS + "." + E_Order.product
+                + " and " + E_Product.ALIAS + "." + E_Product.enable + " = true"
+)
+```
+
+`onExpr` 是完整连接条件，写了以后框架不会再根据 `joinColumn`、`joinTargetColumn` 自动生成 ON 表达式。因此只在连接逻辑确实比较特殊时使用；普通关联优先使用 `joinColumn`、`joinTargetAlias`、`joinTargetColumn`，并继续用常量避免字段名写错。
+
 ## 14. 子查询
 
 ### 14.1 子查询选择列
