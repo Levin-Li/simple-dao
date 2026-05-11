@@ -208,7 +208,65 @@ PagingData<QueryUserReq.Result> page = userService.queryUsers(
 
 更完整的分页写法见：[分页查询专题](./manual.md#56-分页查询专题pagingpagingdatapageoption)。
 
-## 6. 查询一条记录
+## 6. 顺手做一个统计查询
+
+统计查询也可以继续用 DTO 表达。比如按同样的用户条件，统计用户数、最高分、最低分、平均分：
+
+```java
+@TargetOption(entityClass = User.class, alias = "u", resultClass = UserScoreStatReq.Result.class)
+@Data
+@Accessors(chain = true)
+public class UserScoreStatReq {
+
+    @Contains("name")
+    String keyword;
+
+    @In("state")
+    List<String> states;
+
+    @Data
+    public static class Result {
+
+        @Count
+        Long userCnt;
+
+        @Max("score")
+        Integer maxScore;
+
+        @Min("score")
+        Integer minScore;
+
+        @Avg("score")
+        Double avgScore;
+    }
+}
+```
+
+调用：
+
+```java
+UserScoreStatReq.Result stat = dao.findOneByQueryObj(
+        new UserScoreStatReq()
+                .setKeyword("Echo")
+                .setStates(Arrays.asList("A", "B"))
+);
+```
+
+大致表达：
+
+```sql
+select count(1) as userCnt,
+       max(score) as maxScore,
+       min(score) as minScore,
+       avg(score) as avgScore
+from User
+where name like ?
+  and state in (?, ?)
+```
+
+统计查询通常返回一行结果，所以常用 `findOneByQueryObj(...)`。更复杂的分组统计、`having`、`case when` 见：[统计查询例子](./manual.md#12-统计查询例子)。
+
+## 7. 查询一条记录
 
 如果业务语义是“最多只允许一条”，用 `findUnique`：
 
@@ -237,7 +295,7 @@ User user = dao.findUnique(new QueryUserDetailReq().setId(1L));
 
 更多说明见：[查询单条或唯一记录](./manual.md#54-查询单条或唯一记录)。
 
-## 7. 更新一条记录
+## 8. 更新一条记录
 
 更新建议把关键条件声明为 `require = true`，避免空条件被忽略。
 
@@ -279,7 +337,7 @@ dao.uniqueUpdateByQueryObj(new UpdateUserStateReq()
 
 更多说明见：[唯一更新](./manual.md#102-只允许更新一条)。
 
-## 8. 混合注解和编程条件
+## 9. 混合注解和编程条件
 
 大多数业务查询可以只靠 DTO 注解完成。如果某个接口需要临时追加复杂条件，可以用 Consumer 扩展 DAO：
 
@@ -300,7 +358,7 @@ public PagingData<QueryUserReq.Result> queryUsers(QueryUserReq req, Paging pagin
 
 完整用法见：[Consumer 扩展 DAO](./manual.md#9-consumer-扩展-dao混合注解和编程式查询)。
 
-## 9. 下一步看什么
+## 10. 下一步看什么
 
 按你的使用目标选择阅读路径：
 
