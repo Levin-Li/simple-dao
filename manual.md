@@ -638,19 +638,6 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 );
 ```
 
-也可以把 `Paging` 单独作为参数传入：
-
-```java
-QueryUserReq req = new QueryUserReq().setName("Echo");
-Paging paging = new PagingQueryReq(1, 20);
-
-PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
-        UserListItem.class,
-        req,
-        paging
-);
-```
-
 分页对象单独传入、自定义分页返回对象、只查总数、不查结果集、`PageOption` 等完整用法见下一节。
 
 ### 5.6 分页查询专题：`Paging`、`PagingData`、`PageOption`
@@ -1893,42 +1880,12 @@ List<Map> rows = dao.selectFrom("jpa_dao_test_Group", "g")
 
 ### 7.5 动态字段选择
 
-有时候是否返回某个字段由请求参数决定。推荐写法是：控制参数放在查询对象上，用 `@CtxVar` 导出；选择字段放在结果对象上，通过 `condition` 读取变量。完整原理见第 6 章“动态变量与上下文变量”。
+动态字段有两类，别混在一起：
 
-```java
-@TargetOption(entityClass = Group.class, alias = "g",
-        resultClass = QueryGroupInfoReq.Info.class)
-@Data
-@Accessors(chain = true)
-public class QueryGroupInfoReq {
+- 按请求开关决定是否返回某个结果字段：见第 6.8 节，使用 `@CtxVar + @Select(condition = ...)`。
+- 前端传入本次要选择的字段列表：见第 7.4.4 节，使用 `@Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE)`。
 
-    @Ignore
-    @CtxVar
-    boolean queryParentName;
-
-    @Data
-    public static class Info {
-
-        @Select
-        String name;
-
-        @Select(value = "parent.name", condition = "#queryParentName")
-        String parentName;
-    }
-}
-```
-
-调用：
-
-```java
-List<QueryGroupInfoReq.Info> basic = dao.findByQueryObj(new QueryGroupInfoReq());
-
-List<QueryGroupInfoReq.Info> withParent = dao.findByQueryObj(
-        new QueryGroupInfoReq().setQueryParentName(true)
-);
-```
-
-这里 `queryParentName` 在查询对象上，`parentName` 的 `@Select` 在结果对象上。`@CtxVar` 会把控制字段注入当前 DAO 上下文，让结果对象解析时能够读取它。
+两种写法解决的是不同问题：前者控制“某个结果字段是否生成”，后者控制“本次选择哪些列”。需要跨请求对象和结果对象传值时，仍按第 6.8 节使用 `@CtxVar`。
 
 ## 8. 链式 API 例子
 
