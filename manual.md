@@ -262,6 +262,75 @@ Long id;
 
 DAO 注解里的 `value` 是“目标字段/表达式”，不是当前 DTO 字段值。DTO 字段值来自字段本身，`value` 用来告诉框架条件、选择、更新、统计要落到实体的哪个字段上。
 
+如果 `value` 为空，框架会尝试自动推断目标字段名。它不是简单地永远使用 DTO 字段名，而是按下面的顺序处理：
+
+1. 注解上显式写了 `value`：直接使用 `value`。
+2. 没有写 `value`，并且实体类里存在同名字段：使用 DTO 字段名。
+3. 没有写 `value`，实体类里不存在同名字段：尝试按“注解名作为前缀”截取字段名。
+4. 截取后的字段名在实体类里存在：使用截取后的字段名。
+5. 仍然找不到：退回使用 DTO 字段名，后续如果实体字段不存在，就可能在构建或执行查询时暴露问题。
+
+```java
+@Eq
+Long id;
+
+@Contains
+String name;
+
+@Update
+String remark;
+```
+
+上面三个注解等价于：
+
+```java
+@Eq("id")
+Long id;
+
+@Contains("name")
+String name;
+
+@Update("remark")
+String remark;
+```
+
+所以 DTO 字段名和实体字段名一致时，`value` 可以不写。这个“自动取字段名”的规则是 Simple DAO 用起来比较轻的原因之一：常规等值、模糊、更新、排序、选择字段，不需要每个注解都重复写一遍字段名。
+
+更实用的是“按注解名前缀自动截取”。例如实体字段是 `createTime`，DTO 里为了表达查询语义写成 `gteCreateTime`、`lteCreateTime`：
+
+```java
+@Gte
+LocalDateTime gteCreateTime;
+
+@Lte
+LocalDateTime lteCreateTime;
+```
+
+框架会发现实体里没有 `gteCreateTime` / `lteCreateTime`，然后根据注解名 `Gte` / `Lte` 去掉字段名前缀，自动推断出目标字段 `createTime`。它大致等价于：
+
+```java
+@Gte("createTime")
+LocalDateTime gteCreateTime;
+
+@Lte("createTime")
+LocalDateTime lteCreateTime;
+```
+
+这个规则也适用于其它按注解名命名的字段，例如：
+
+```java
+@Contains
+String containsName;      // 推断为 name
+
+@StartsWith
+String startsWithCode;   // 推断为 code
+
+@NotEq
+String notEqState;       // 推断为 state
+```
+
+注意：自动截取只会按注解名截取，例如 `Gte`、`Lte`、`Contains`、`StartsWith`、`NotEq`。像 `beginTime`、`endTime`、`minScore`、`maxScore` 这种业务化字段名，不是注解名前缀，不能稳定自动推断目标字段，建议显式写 `value`。
+
 最常见场景是 DTO 字段名和实体字段名不一致：
 
 ```java
@@ -349,74 +418,7 @@ Long id;
 
 适合详情、编辑、删除、状态变更等接口，尤其是多租户或组织隔离的数据。
 
-常用内置变量：
-
-| 变量 | 说明 |
-| --- | --- |
-| `_this` | 当前 DTO 对象。 |
-| `_name` / `_fieldName` | 当前字段名。 |
-| `_val` / `_fieldVal` | 当前字段值。 |
-| `_isQuery` | 当前是否查询。 |
-| `_isUpdate` | 当前是否更新。 |
-| `_isDelete` | 当前是否删除。 |
-| `VALUE_NOT_EMPTY` | 当前字段值非空。 |
-| `VALUE_EMPTY` | 当前字段值为空。 |
-
-常用函数：
-
-```java
-#isEmpty(value)
-#isNotEmpty(value)
-```
-
-常见实用案例：
-
-```java
-// 1. 关键字为空时，不追加模糊查询
-@Contains(value = "name", condition = "#isNotEmpty(keyword)")
-String keyword;
-
-// 2. 只有打开开关时才查询父级名称
-@Ignore
-@CtxVar
-Boolean queryParentName;
-
-@Select(value = "parent.name", condition = "#queryParentName == true")
-String parentName;
-
-// 3. 根据操作类型决定哪个条件生效
-@Eq(value = "state", condition = "#_isQuery")
-String queryState;
-
-@Update(value = "state", condition = "#_isUpdate")
-String newState;
-
-// 4. 字段值是集合时，非空才生成 In 条件
-@In(value = "id", condition = "#isNotEmpty(ids)")
-Long[] ids;
-
-// 5. 只有两个边界都有值时，才生成 Between
-@Between(value = "score", condition = "#_fieldVal != null && #_fieldVal.length == 2")
-Integer[] scoreRange;
-
-// 6. 根据同一个 DTO 上的字段控制条件
-@Ignore
-Boolean includeDisabled = false;
-
-@Eq(value = "enable", condition = "#includeDisabled != true")
-Boolean enable = true;
-
-// 7. 必须满足条件，否则抛异常
-@Eq(value = "tenantId", require = true, condition = "#isNotEmpty(tenantId)")
-String tenantId;
-```
-
-几个判断思路：
-
-- `#_fieldVal` / `#_val` 用于判断当前字段自己的值。
-- `#_this.xxx` 或直接 `xxx` 用于读取当前 DTO 的其它字段。
-- `#_isQuery`、`#_isUpdate`、`#_isDelete` 适合同一个 DTO 在不同操作里复用时区分行为。
-- `condition` 只是“是否生成该注解语句”；如果业务要求必须生成，要加 `require = true`。
+更多内置变量、参数绑定变量、文本替换变量的完整说明，见第 6 章“动态变量与上下文变量”。这里先记住一个原则：`condition` 只是“是否生成该注解语句”；如果业务要求条件必须生成，要加 `require = true`。
 
 ### 4.6 防止数据泄露的必填条件写法
 
@@ -577,9 +579,9 @@ User unique = dao.findUnique(new QueryUserReq().setName("Echo"));
 
 如果业务语义是“可以不存在，但不能重复”，用 `findUnique`。如果业务语义是“必须存在且必须只更新一条”，用 `uniqueUpdateByQueryObj`。
 
-### 5.5 分页查询
+### 5.5 最常用分页入口
 
-DTO 中放一个 `Paging` 字段：
+分页最常用的入口是 `findPagingDataByQueryObj(...)`，返回默认的 `PagingData<T>`：
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u", resultClass = UserListItem.class)
@@ -603,20 +605,7 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 );
 ```
 
-也可以把分页对象单独作为一个参数传入。这种写法适合请求对象不想继承或持有分页字段、同一个查询对象既要支持导出全量又要支持分页的场景：
-
-```java
-@TargetOption(entityClass = User.class, alias = "u", resultClass = UserListItem.class)
-@Data
-@Accessors(chain = true)
-public class QueryUserReq {
-
-    @Contains
-    String name;
-}
-```
-
-调用分页查询：
+也可以把 `Paging` 单独作为参数传入：
 
 ```java
 QueryUserReq req = new QueryUserReq().setName("Echo");
@@ -629,21 +618,772 @@ PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
 );
 ```
 
-如果你只需要限制列表结果，不需要分页包装对象，也可以把分页对象作为普通查询参数传给 `findByQueryObj`：
+分页对象单独传入、自定义分页返回对象、只查总数、不查结果集、`PageOption` 等完整用法见下一节。
+
+### 5.6 分页查询专题：`Paging`、`PagingData`、`PageOption`
+
+分页是业务接口里最高频的能力之一，可以分成三件事理解：
+
+1. `Paging` 描述分页请求：第几页、每页多少条、是否查总数、是否查结果集。
+2. `PagingData` 描述分页返回：总数、当前页、页大小、数据列表。
+3. `PageOption` 用注解把现有请求类或响应类接入分页机制。
+
+#### 5.6.1 `Paging`
+
+`Paging` 是分页输入接口，表示“要查第几页、每页多少条、是否需要总数、是否需要结果集”：
 
 ```java
-List<UserListItem> list = dao.findByQueryObj(
+Paging paging = new PagingQueryReq(1, 20)
+        .setRequireTotals(true)
+        .setRequireResultList(true);
+
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        new QueryUserReq().setName("Echo"),
+        paging
+);
+```
+
+常用实现是 `PagingQueryReq` 和 `SimplePaging`。`pageIndex` 从 1 开始，`pageSize` 或 `pageIndex` 为负数时表示不限制。`requireTotals = true` 时会额外执行总数查询；只做导出或只要列表时，可以不查总数。
+
+如果查询对象不想持有分页字段，可以把 `Paging` 单独作为参数传入：
+
+```java
+QueryUserReq req = new QueryUserReq().setName("Echo");
+Paging paging = new PagingQueryReq(1, 20).setRequireTotals(true);
+
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        paging
+);
+```
+
+这种写法很适合一个查询对象同时服务“分页列表”和“导出全部”：
+
+```java
+// 分页列表
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        new PagingQueryReq(1, 20)
+);
+
+// 导出全部：不传 Paging，或传 pageSize = -1 的 Paging
+List<UserListItem> all = dao.findByQueryObj(UserListItem.class, req);
+```
+
+#### 5.6.2 `PagingData`
+
+`PagingData<T>` 是分页输出接口。默认实现是 `DefaultPagingData<T>`，包含：
+
+- `totals`：总记录数，未查询总数时通常为 `-1`。
+- `pageIndex`：当前页码。
+- `pageSize`：分页大小。
+- `items`：当前页结果列表。
+- `hasMore()`：根据 `items.size()` 和 `pageSize` 判断是否可能还有下一页。
+
+常见用法：
+
+```java
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        new PagingQueryReq(1, 20).setRequireTotals(true)
+);
+
+Long totals = page.getTotals();
+List<UserListItem> items = page.getItems();
+```
+
+如果只想用自己的返回对象，也可以调用 `findPageByQueryObj(...)`。
+
+有些接口只需要总数，不需要结果集，可以关闭结果列表：
+
+```java
+Paging onlyCount = new PagingQueryReq(1, 20)
+        .setRequireTotals(true)
+        .setRequireResultList(false);
+
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        onlyCount
+);
+
+Long totals = page.getTotals();
+List<UserListItem> items = page.getItems(); // 通常为 null
+```
+
+反过来，如果只要列表、不需要总数，把 `requireTotals` 设为 `false`，可以少执行一次 count 查询：
+
+```java
+Paging listOnly = new PagingQueryReq(1, 20)
+        .setRequireTotals(false)
+        .setRequireResultList(true);
+
+PagingData<UserListItem> page = dao.findPagingDataByQueryObj(
+        UserListItem.class,
+        req,
+        listOnly
+);
+```
+
+#### 5.6.3 `PageOption`
+
+`PageOption` 是分页字段注解。它主要用于两类场景：
+
+1. 从请求对象中读取 `PageIndex`、`PageSize`。
+2. 把分页查询结果写入自定义分页返回对象。
+
+例如自定义分页返回对象：
+
+```java
+@Data
+public class UserPageResp {
+
+    @PageOption(PageOption.Type.RequireTotals)
+    Long total;
+
+    @PageOption(PageOption.Type.PageIndex)
+    Integer pageNo;
+
+    @PageOption(PageOption.Type.PageSize)
+    Integer size;
+
+    @PageOption(PageOption.Type.RequireResultList)
+    List<UserListItem> rows;
+}
+```
+
+调用：
+
+```java
+UserPageResp page = dao.findPageByQueryObj(
+        UserListItem.class,
+        UserPageResp.class,
+        req,
+        new PagingQueryReq(1, 20).setRequireTotals(true)
+);
+```
+
+这里 `UserPageResp.class` 是分页结果持有对象。查询完成后，框架会把总数、页码、页大小、结果集写回对应字段。
+
+如果请求对象本身不实现 `Paging`，也可以用 `PageOption` 标记页码和页大小：
+
+```java
+@Data
+public class QueryUserReq {
+
+    @PageOption(PageOption.Type.PageIndex)
+    Integer pageNo = 1;
+
+    @PageOption(PageOption.Type.PageSize)
+    Integer size = 20;
+
+    @Contains("name")
+    String keyword;
+}
+```
+
+不过更推荐直接传 `Paging` 对象，因为 `Paging` 可以明确表达是否查询总数、是否查询结果集。
+
+#### 5.6.4 分页写法选择建议
+
+常规业务列表，优先使用：
+
+```java
+dao.findPagingDataByQueryObj(UserListItem.class, req, new PagingQueryReq(1, 20));
+```
+
+如果项目已有统一响应类，优先用 `PageOption` 接入：
+
+```java
+UserPageResp page = dao.findPageByQueryObj(UserListItem.class, UserPageResp.class, req, paging);
+```
+
+如果只是临时限制查询条数，不需要分页包装，直接把 `Paging` 当普通查询参数传给 `findByQueryObj(...)`：
+
+```java
+List<UserListItem> rows = dao.findByQueryObj(
         UserListItem.class,
         req,
         new PagingQueryReq(1, 20)
 );
 ```
 
-如果查询对象里没有分页设置，框架会使用默认分页对象。
+如果是后台统计或导出，要非常明确是否需要总数、是否需要结果集，不要默认把 `requireTotals` 打开。大数据量接口里，一次额外的 count 可能比当前页查询更重。
 
-## 6. 查询对象实用例子
+### 5.7 常用辅助类：`EntityClassSupplier`、`ResultClassSupplier`
 
-### 6.1 等值、模糊、范围、集合组合查询
+这些类适合在“查询对象本身不方便写死实体类或结果类”时，动态告诉 DAO 本次查询的目标实体和返回类型。
+
+#### 5.7.1 `EntityClassSupplier` 和 `ResultClassSupplier`
+
+```java
+EntityClassSupplier entity = () -> User.class;
+ResultClassSupplier result = () -> UserListItem.class;
+
+List<UserListItem> users = dao.findByQueryObj(
+        entity,
+        result,
+        new QueryUserReq().setName("Echo"),
+        new PagingQueryReq(1, 20)
+);
+```
+
+`EntityClassSupplier` 提供实体类。框架还会根据实体类名推导默认别名，例如 `UserInfo` 会推导出类似 `u_i` 的别名；复杂查询里仍建议在 `@TargetOption(alias = "...")` 中显式写别名。
+
+`ResultClassSupplier` 提供结果类，效果类似调用：
+
+```java
+dao.findByQueryObj(UserListItem.class, req);
+```
+
+它的价值在于可以把结果类型作为普通查询参数传递，适合通用方法、组合查询、运行时决定返回 DTO 的场景。普通业务查询如果类型固定，优先使用 `@TargetOption(resultClass = ...)` 或方法参数里的 `UserListItem.class`，代码更直观。
+
+### 5.8 DAO 动态性的核心：方法参数自动识别
+
+Simple DAO 的动态性，很大一部分来自 DAO 方法参数的自动识别机制。
+
+它不是为“查询 DTO、分页、结果类、实体类、回调扩展”分别设计一堆复杂重载，而是让很多方法统一接收 `Object... queryObjs`，再在内部识别每个参数的真实角色。这样同一个方法就可以同时支持：
+
+- 普通查询 DTO
+- 分页对象 `Paging`
+- 分页返回对象 `PagingData` / `PageOption`
+- 查询实体 `Class` / `EntityClassSupplier`
+- 结果类型 `Class` / `ResultClassSupplier`
+- 编程式扩展 `Consumer<SelectDao>`、`Consumer<UpdateDao>`、`Consumer<DeleteDao>`
+- Map 条件和其它带 DAO 注解的对象
+
+所以它的重点不是“参数可以随便传”，而是“参数可以按类型组合”。这也是注解式 DAO 和编程式 DAO 能混合使用的基础。
+
+很多 `SimpleDao` 方法都使用 `Object... queryObjs`，例如：
+
+```java
+dao.findOneByQueryObj(req, paging, callback);
+dao.findByQueryObj(UserListItem.class, User.class, req, paging, callback);
+dao.updateByQueryObj(updateReq, updateCallback);
+dao.deleteByQueryObj(deleteReq, deleteCallback);
+```
+
+这里的 `Object...` 不是只支持普通 DTO。源码会根据参数类型自动识别它们的角色，所以可以把分页对象、结果类型、实体类型、回调、普通查询 DTO 混在一起传入。
+
+源码里的大致处理流程是：
+
+1. 先展开参数：数组、集合会被递归展开，`null` 会被过滤。
+2. 再过滤简单值：字符串、数字、枚举、注解、根对象类型等不会被当成查询对象直接解析。
+3. 如果参数实现了 `EntityClassSupplier`，会尝试用它提供查询实体和默认别名。
+4. 如果参数里有 JPA 实体 `Class`，会优先作为查询实体，并从后续字段解析列表中移除。
+5. 如果参数里有 `QueryOption` 或带 `@TargetOption` 的对象，会读取实体类、别名、是否原生查询、连接配置、安全模式等目标信息。
+6. 如果参数实现了 `ResultClassSupplier`，会参与结果类型识别。
+7. 如果参数实现了 `Paging`，会调用 `page(paging)` 设置分页。
+8. 如果参数是 `Consumer`，会把当前正在构建的 DAO 传进去执行。
+9. 如果参数是 `Map`，会按 Map 条件解析。
+10. 其它对象会按普通查询 DTO 解析字段注解，例如 `@Eq`、`@Select`、`@Update`、`@Sum`、`@OrderBy` 等。
+
+参数顺序也有明确影响，尤其是混合多个 DTO 和 `Consumer` 时要注意：
+
+- 数组、集合展开后会保持原来的顺序，后续 DTO、Map、`Consumer` 基本按这个顺序处理。
+- `EntityClassSupplier` 会在没有有效查询实体时尝试提供实体类；如果前面已经通过 DAO 创建方法或目标配置确定了实体，它不会再覆盖。
+- JPA 实体 `Class` 会先被识别为查询实体，并从后续字段解析列表中移除。建议只传一个实体类，避免读者和维护者误解。
+- `QueryOption`、`@TargetOption` 会在实体还没有确定时生效；一旦实体已经确定，后面的目标配置不会再覆盖它。
+- 结果类型如果通过方法参数显式传入，例如 `findByQueryObj(UserListItem.class, ...)`，优先级最高。
+- 如果结果类型放在 `queryObjs` 里，框架会按参数顺序找第一个有效的 `ResultClassSupplier`、`QueryOption`、`@TargetOption` 或 `@ResultOption`。
+- 普通 DTO 和 Map 会按顺序追加条件；单个 DTO 内部字段按父类字段优先、再到子类字段的顺序解析。
+- `Consumer` 也按它在参数列表中的位置执行。通常建议把 `Consumer` 放在最后，让它在 DTO 注解条件之后补充 OR 分组、排序、分页、安全模式等配置。
+- 普通查询中如果传入多个 `Paging`，后执行的分页设置可能覆盖前面的分页设置；`findPageByQueryObj(...)` 会优先取参数中第一个 `Paging`。业务代码里不要传多个分页对象。
+
+结果类型也有单独的识别逻辑。调用方法里显式传入的 `resultType` 优先级最高：
+
+```java
+List<UserListItem> rows = dao.findByQueryObj(
+        UserListItem.class,
+        req,
+        paging
+);
+```
+
+如果没有显式传 `resultType`，框架会从参数里继续尝试识别：
+
+- `ResultClassSupplier#get()` 返回的结果类。
+- `QueryOption#getResultClass()` 返回的结果类。
+- 查询 DTO 类上的 `@TargetOption(resultClass = ...)`。
+- 查询 DTO 类上的 `@ResultOption(resultClass = ...)`。
+
+所以这种写法也是可以的：
+
+```java
+ResultClassSupplier result = () -> UserListItem.class;
+
+List<UserListItem> rows = dao.findByQueryObj(
+        result,
+        new QueryUserReq().setName("Echo"),
+        new PagingQueryReq(1, 20)
+);
+```
+
+分页查询还有一层特殊处理：`findPageByQueryObj(...)` 会优先从参数中找 `Paging`。如果没有找到 `Paging`，会尝试从请求对象字段上的 `@PageOption(PageIndex)`、`@PageOption(PageSize)` 读取页码和页大小，并创建默认分页对象。
+
+这就是下面这个方法为什么能工作：
+
+```java
+public StatExternalWorkflowOperationReq.Result stat(
+        StatExternalWorkflowOperationReq req,
+        Paging paging) {
+
+    Consumer<SelectDao<ExternalWorkflowOperation>> callback = dao -> dao
+            .or()
+                .isNull(ExternalWorkflowOperation::getEnable)
+                .eq(ExternalWorkflowOperation::getEnable, true)
+            .end()
+            .setSafeModeMaxLimit(-1)
+            .disableSafeMode();
+
+    return simpleDao.findOneByQueryObj(req, paging, callback);
+}
+```
+
+参数识别结果是：
+
+- `req`：普通查询 DTO，解析 `@TargetOption`、查询条件、统计字段、结果类。
+- `paging`：分页对象，设置 `pageIndex`、`pageSize`、是否查总数和结果集。
+- `callback`：编程式扩展回调，拿到 `SelectDao` 后追加 OR 分组、安全模式等链式配置。
+
+使用建议：
+
+- 参数顺序通常不需要死记，但建议按“目标/结果类型、查询 DTO、分页、Consumer 回调”的顺序写，最容易读。
+- 不要把裸字符串、数字直接当查询参数传给 `queryObjs`；它们会被当成简单值过滤掉。业务条件要放在 DTO 字段、Map、或 `Consumer` 回调里。
+- 一个方法里可以传多个 DTO，框架会按顺序解析字段；但公共条件和安全条件最好放在明确的 DTO 上，方便审计。
+- `Consumer` 会拿到当前操作类型对应的 DAO：查询是 `SelectDao`，更新是 `UpdateDao`，删除是 `DeleteDao`。
+
+## 6. 动态变量与上下文变量
+
+动态变量是 Simple DAO 里很重要的一类能力。它主要解决的是：**查询对象和结果对象分开解析时，结果对象无法直接访问查询对象上的字段**。
+
+例如列表请求对象里有 `queryName`、`weekBegin` 这类控制参数，而真正的 `@Select`、`@Sum`、`@Case` 写在结果 DTO 上。结果 DTO 不是请求对象的内部运行实例，它不能通过普通 SpEL 直接读取请求对象字段。这时就需要 `@CtxVar` 先把请求对象字段导出到当前查询 DAO 的上下文中，后续解析结果对象时再从上下文里读取。
+
+常见来源有三类：
+
+- 查询 DTO 字段或 getter 上的 `@CtxVar`：把字段值或表达式结果导出为本次 DAO 构建过程的局部变量。
+- DAO 链式 API 的 `setContext(...)`：在编程式查询中手动放入上下文变量。
+- `DaoContext.globalContext` / `DaoContext.threadContext`：放入全局或线程级变量，适合框架级配置或请求级公共上下文。
+
+这些变量可以被 `condition`、SpEL 表达式、`${...}` / `${:...}` 占位、CASE 统计等地方读取。
+
+### 6.1 先区分三类变量使用位置
+
+Simple DAO 里常见的“变量”有三种使用位置，它们语法相近，但含义不一样：
+
+| 使用位置 | 常见语法 | 作用 |
+| --- | --- | --- |
+| `condition` | `#_fieldVal != null`、`#_isUpdate`、`#queryName` | 判断当前注解是否生效。返回 `true` 才生成对应语句。 |
+| 语句文本替换 | `${tab}`、`F$:amount`、`E$:User` | 把上下文变量、字段名、表名替换到语句文本中。 |
+| 参数绑定 | `${:weekBegin}`、`${:_val}` | 从上下文取值并作为查询参数绑定，不直接拼值到 SQL/JPQL 文本。 |
+
+最容易混淆的是 `${name}` 和 `${:name}`：
+
+- `${name}` 是文本替换，适合替换表名、字段片段、固定 SQL/JPQL 片段。
+- `${:name}` 是参数变量，适合替换用户输入、时间边界、金额、状态等运行时值。
+
+业务值优先用 `${:name}` 绑定参数，不要用 `${name}` 直接拼进去。
+
+### 6.2 `condition` 内置变量怎么用
+
+`condition` 是最常见的动态表达式位置。它只决定“当前注解是否生成语句”，不负责校验业务必须满足；如果业务要求必须生成，要配合 `require = true`。
+
+常用内置变量：
+
+| 变量 | 说明 |
+| --- | --- |
+| `_this` | 当前正在解析的 DTO 对象。 |
+| `_name` / `_fieldName` | 当前字段名。 |
+| `_val` / `_fieldVal` | 当前字段值。 |
+| `_isSelect` / `_isQuery` | 当前是否查询 DAO。 |
+| `_isUpdate` | 当前是否更新 DAO。 |
+| `_isDelete` | 当前是否删除 DAO。 |
+| `VALUE_NOT_EMPTY` | 当前字段值非空。 |
+| `VALUE_EMPTY` | 当前字段值为空。 |
+
+常用函数：
+
+```java
+#isEmpty(value)
+#isNotEmpty(value)
+```
+
+判断当前字段自己的值：
+
+```java
+@In(value = "id", condition = "#isNotEmpty(#_fieldVal)")
+Long[] ids;
+
+@Between(value = "score", condition = "#_fieldVal != null && #_fieldVal.length == 2")
+Integer[] scoreRange;
+```
+
+读取当前 DTO 的其它字段：
+
+```java
+@Ignore
+Boolean includeDisabled = false;
+
+@Eq(value = "enable", condition = "#includeDisabled != true")
+Boolean enable = true;
+```
+
+同一个 DTO 复用在查询和更新里：
+
+```java
+@Eq(value = "state", condition = "#_isQuery")
+String queryState;
+
+@Update(value = "state", condition = "#_isUpdate")
+String newState;
+```
+
+强制条件必须生效：
+
+```java
+@Eq(value = "tenantId", require = true, condition = "#isNotEmpty(tenantId)")
+String tenantId;
+```
+
+这里 `condition` 不满足时，因为有 `require = true`，框架会抛异常，而不是悄悄忽略租户条件。
+
+### 6.3 语句文本替换变量：`${...}`、`F$:...`、`E$:...`
+
+语句文本替换适合替换“语句结构”，例如表名、字段名、固定片段。
+
+链式 API 中设置上下文：
+
+```java
+long cnt = dao.selectFrom(User.class)
+        .setContext(MapUtils.put("tab", (Object) User.class.getName()).build())
+        .exists("select count(1) from ${tab}")
+        .count();
+```
+
+字段名替换：
+
+```java
+@Sum("F$:amount")
+Long amount;
+```
+
+`F$:amount` 会按当前查询模式转换字段名；原生查询时也会参与物理列名转换。复杂表达式中建议使用这种写法，而不是自己拼死字段名。
+
+表名替换：
+
+```java
+@Where(paramExpr = "exists (select 1 from E$:User u2 where u2.id = u.id)")
+Boolean existsUser;
+```
+
+`E$:User` 会按当前查询模式转换实体名或表名。普通业务查询一般不需要直接使用，复杂片段、原生查询、子查询里才会用到。
+
+### 6.4 参数绑定变量：`${:...}`
+
+`${:name}` 会从 DAO 上下文中取值，并作为参数绑定到 SQL/JPQL，而不是直接把值拼到语句文本中。
+
+它适合用户输入、时间、金额、状态、ID 等运行时值：
+
+```java
+@Ignore
+@CtxVar
+Date weekBegin;
+
+@Sum(fieldCases = @Case(
+        column = "",
+        whenOptions = @Case.When(
+                whenExpr = "o.payTime >= ${:weekBegin}",
+                thenExpr = "o.amount"
+        ),
+        elseExpr = "0"
+))
+Long paidAmountThisWeek;
+```
+
+常见内置值也可以作为参数绑定：
+
+```java
+@Update(value = "score", paramExpr = "${_name} + ${:_val}")
+Integer scoreDelta;
+```
+
+这里 `${_name}` 是字段文本替换，表示当前字段名；`${:_val}` 是当前字段值的参数绑定。更新时会生成类似“原字段 + 参数值”的表达式。
+
+### 6.5 更新里的动态变量和 `paramExpr`
+
+更新场景里，动态变量常用于“字段值不是直接覆盖，而是参与表达式计算”。
+
+增量更新：
+
+```java
+@Update(value = "score", paramExpr = "${_name} + ${:_val}")
+Integer scoreDelta;
+```
+
+乐观锁版本号加一：
+
+```java
+@Update(value = "version", incrementMode = true, paramExpr = "1", condition = "")
+Integer version;
+```
+
+带条件的更新片段：
+
+```java
+@Update(value = "state", condition = "#_isUpdate")
+String newState;
+```
+
+更新里要特别注意：
+
+- `paramExpr` 是右侧表达式，适合字段计算、函数调用、JSON 更新等。
+- 用户输入值要用 `${:_val}` 这类参数绑定形式。
+- 如果只是普通赋值，直接 `@Update("fieldName")` 更清楚。
+- 更新范围仍然要靠 `@Eq(require = true)`、租户条件、主键条件等保护。
+
+### 6.6 `@CtxVar`：跨查询对象和结果对象传递变量
+
+`@CtxVar` 最常见的用法是：请求 DTO 上有一个控制字段，结果 DTO 上的注解要读取这个控制字段。
+
+```java
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = QueryGroupInfoReq.Info.class)
+@Data
+@Accessors(chain = true)
+public class QueryGroupInfoReq {
+
+    @Ignore
+    @CtxVar
+    Boolean queryName = true;
+
+    @Contains("name")
+    String keyword;
+
+    @Data
+    public static class Info {
+
+        @Select
+        String id;
+
+        @Select(condition = "#queryName")
+        String name;
+
+        @Select(value = "parent.name")
+        String parentName;
+    }
+}
+```
+
+调用：
+
+```java
+List<QueryGroupInfoReq.Info> withName = dao.findByQueryObj(
+        new QueryGroupInfoReq().setQueryName(true)
+);
+
+List<QueryGroupInfoReq.Info> withoutName = dao.findByQueryObj(
+        new QueryGroupInfoReq().setQueryName(false)
+);
+```
+
+这里 `queryName` 在查询请求对象上，但 `@Select(condition = "#queryName")` 在结果对象 `Info` 上。如果不通过 `@CtxVar` 导出，结果对象解析时无法直接访问请求对象里的 `queryName`。
+
+`@CtxVar` 的作用就是把 `queryName` 注入到当前 `SelectDao` 的局部上下文里。后续解析 `Info` 的 `@Select` 注解时，`condition = "#queryName"` 才能拿到这个变量。
+
+所以这个字段通常也要加 `@Ignore`：它是控制变量，不是数据库查询条件。
+
+### 6.7 `@CtxVar` 的常用属性
+
+`@CtxVar` 可以标在字段上，也可以标在 getter 方法上；框架会先处理 getter 方法，再处理字段。它的常用属性如下：
+
+- `varName`：导出的变量名；不写时默认使用字段名或属性名。
+- `value`：导出的变量值表达式；不写时默认使用当前字段值或 getter 返回值。
+- `condition`：满足条件时才导出变量。
+- `forceOverride`：上下文已有同名变量时是否覆盖，默认覆盖。
+
+例如把多个字段组合成一个变量：
+
+```java
+@Ignore
+Boolean queryGroupName;
+
+@Ignore
+Boolean queryRoleName;
+
+@Ignore
+@CtxVar(
+        varName = "queryExt",
+        value = "#queryGroupName == true || #queryRoleName == true"
+)
+Boolean queryExt;
+```
+
+后续注解就可以使用：
+
+```java
+@Select(value = "group.name", condition = "#queryExt")
+String groupName;
+```
+
+如果只想在值不为空时导出变量：
+
+```java
+@Ignore
+@CtxVar(varName = "keyword", condition = "#isNotEmpty(#_fieldVal)")
+String keyword;
+```
+
+### 6.8 使用场景一：动态控制结果对象上的选择字段
+
+这个场景适合“同一个接口按开关决定是否返回扩展字段”。重点是：开关在请求对象上，选择字段在结果对象上。
+
+```java
+@TargetOption(entityClass = User.class, alias = "u",
+        resultClass = QueryUserInfoReq.Result.class)
+@Data
+@Accessors(chain = true)
+public class QueryUserInfoReq {
+
+    @Ignore
+    @CtxVar
+    Boolean queryGroupName = false;
+
+    @Contains("name")
+    String keyword;
+
+    @Data
+    public static class Result {
+
+        @Select
+        String name;
+
+        @Select(value = "group.name", condition = "#queryGroupName == true")
+        String groupName;
+    }
+}
+```
+
+基础查询：
+
+```java
+List<QueryUserInfoReq.Result> list = dao.findByQueryObj(
+        new QueryUserInfoReq().setKeyword("Echo")
+);
+```
+
+带扩展字段：
+
+```java
+List<QueryUserInfoReq.Result> list = dao.findByQueryObj(
+        new QueryUserInfoReq()
+                .setKeyword("Echo")
+                .setQueryGroupName(true)
+);
+```
+
+### 6.9 使用场景二：结果对象 CASE 统计中的动态参数
+
+统计经常需要“本周、本月、上月”这类运行时边界。通常这些时间边界在请求对象上，而 CASE 统计字段在结果对象上。不要把日期直接拼进 SQL，可以通过 `@CtxVar` 暴露为 DAO 上下文变量，再用 `${:varName}` 作为绑定参数。
+
+```java
+@TargetOption(entityClass = Order.class, alias = "o",
+        resultClass = StatOrderReq.Result.class)
+@Data
+@Accessors(chain = true)
+public class StatOrderReq {
+
+    @Ignore
+    @CtxVar
+    Date weekBegin;
+
+    @Ignore
+    @CtxVar
+    Date monthBegin;
+
+    @Data
+    public static class Result {
+
+        @Sum(fieldCases = @Case(
+                column = "",
+                whenOptions = @Case.When(
+                        whenExpr = "o.payTime >= ${:weekBegin}",
+                        thenExpr = "o.amount"
+                ),
+                elseExpr = "0"
+        ))
+        Long paidAmountThisWeek;
+
+        @Sum(fieldCases = @Case(
+                column = "",
+                whenOptions = @Case.When(
+                        whenExpr = "o.payTime >= ${:monthBegin}",
+                        thenExpr = "o.amount"
+                ),
+                elseExpr = "0"
+        ))
+        Long paidAmountThisMonth;
+    }
+}
+```
+
+调用：
+
+```java
+StatOrderReq req = new StatOrderReq()
+        .setWeekBegin(weekBegin)
+        .setMonthBegin(monthBegin);
+
+StatOrderReq.Result stat = dao.findOneByQueryObj(req);
+```
+
+`weekBegin`、`monthBegin` 在请求对象上，不参与普通 where 条件；`Result` 上的 CASE 表达式通过 DAO 上下文读取它们，并作为绑定参数使用。
+
+这个模式已在示例测试 `DaoExamplesTest.testCtxVarCaseStat` 中验证：请求 DTO 用 `@CtxVar` 暴露时间边界，结果 DTO 的 `@Sum(fieldCases = @Case(...))` 在 `whenExpr` 中使用 `${:beginTime}` 这类绑定参数，统计结果可以正确映射回结果对象字段。
+
+### 6.10 使用场景三：链式 API 里手动设置上下文
+
+编程式 DAO 可以直接用 `setContext(...)` 放变量。适合少量临时查询、存在子查询片段、或要在语句模板里替换变量的场景。
+
+```java
+long cnt = dao.selectFrom(User.class)
+        .setContext(MapUtils.put("tab", (Object) User.class.getName()).build())
+        .exists("select count(1) from ${tab}")
+        .count();
+```
+
+这里 `tab` 来自当前 DAO 的局部上下文。`setContext(...)` 只影响当前 DAO 构建过程，不适合存放跨请求共享状态。
+
+### 6.11 使用场景四：请求级或全局上下文
+
+如果一些变量是请求级公共信息，可以放在线程上下文；如果是框架级默认配置，可以放在全局上下文：
+
+```java
+DaoContext.threadContext.put("orgId", 5L);
+DaoContext.globalContext.put("DATE_FORMAT", "yyyy/MM/dd");
+```
+
+这些上下文会参与表达式求值和占位替换。使用时要注意：
+
+- 线程上下文适合请求级变量，用完后要按项目规范清理，避免线程复用导致串值。
+- 全局上下文适合真正全局稳定的配置，不要放用户、租户、组织这类请求级数据。
+- 业务查询更推荐把关键安全条件放在 DTO 字段和 `require = true` 上，动态变量只做辅助。
+
+### 6.12 动态变量使用建议
+
+- 查询对象和结果对象分开时，结果对象需要读取查询对象参数：优先用 `@CtxVar`。
+- 控制结果字段是否查询、是否统计：优先用 `@CtxVar + condition`。
+- 给结果对象里的 CASE、子查询、表达式传运行时参数：优先用 `@CtxVar` 或 `setContext(...)`，并使用参数绑定形式。
+- 多租户、组织隔离这类安全条件：不要只依赖动态变量，最好在 DTO 字段上用 `@Eq(require = true)` 明确表达。
+- 标了 `@CtxVar` 的控制字段如果不想生成查询条件，要同时加 `@Ignore`。
+- 变量名要业务化，例如 `queryGroupName`、`weekBegin`、`monthBegin`，不要用 `flag1`、`v1` 这类难维护名字。
+
+## 7. 查询对象实用例子
+
+### 7.1 等值、模糊、范围、集合组合查询
 
 这个例子适合“列表筛选页”：
 
@@ -704,7 +1444,7 @@ order by u.createTime desc
 - `@Gte("score")` 表示 DTO 字段名是 `minScore`，但目标实体字段是 `score`。
 - 空字段默认不生成条件，所以同一个 DTO 可以同时服务多种筛选组合。
 
-### 6.2 区间查询：`@Between`
+### 7.2 区间查询：`@Between`
 
 `@Between` 适合前端一次传入范围值：
 
@@ -728,7 +1468,7 @@ String createTimeRange = "20260101-20260131";
 
 适合搜索表单里传 `20260101-20260131` 这种轻量格式。
 
-### 6.3 逻辑嵌套：`@AND`、`@OR`、`@END`
+### 7.3 逻辑嵌套：`@AND`、`@OR`、`@END`
 
 当需求是“状态必须匹配，并且姓名或描述命中关键字”：
 
@@ -769,7 +1509,7 @@ where state = ?
   and (name like ? or description like ?)
 ```
 
-### 6.4 选择部分列并映射到结果 DTO
+### 7.4 选择部分列并映射到结果 DTO
 
 结果对象：
 
@@ -818,7 +1558,7 @@ List<UserListItem> list = dao.findByQueryObj(UserListItem.class, new QueryUserSe
 - `resultClass` 或调用方法里的 `UserListItem.class` 决定结果映射类型。
 - 查询条件字段和选择字段可以在同一个 DTO 中，也可以拆成多个查询对象传入。
 
-#### 6.4.1 Hibernate 7 下的 DTO 字段映射优化
+#### 7.4.1 Hibernate 7 下的 DTO 字段映射优化
 
 在 JPA 查询、返回 DTO、并且每个选择列都有明确映射关系时，Simple DAO 会优先让 Hibernate 以 `Map` 形式返回投影结果，再把 `Map` 拷贝到 DTO。这样可以减少对查询语句的额外解析，也更贴近 Hibernate 7 的投影能力。
 
@@ -854,7 +1594,7 @@ List<GroupListItem> rows = dao.findByQueryObj(GroupListItem.class, new QueryGrou
 
 这个场景里，`name`、`category`、`score` 都能按 DTO 字段名稳定映射。
 
-#### 6.4.2 无别名字段的映射
+#### 7.4.2 无别名字段的映射
 
 有些场景会显式去掉别名，例如希望生成的选择片段更接近原始字段：
 
@@ -885,7 +1625,7 @@ Hibernate 对没有别名的投影，可能会返回 `"0"`、`"1"` 这类位置 
 
 所以无别名查询仍然可以稳定返回 `GroupListItem`。
 
-#### 6.4.3 表达式字段建议显式写别名
+#### 7.4.3 表达式字段建议显式写别名
 
 表达式字段最好显式写 `alias`，让结果字段含义清楚：
 
@@ -912,7 +1652,7 @@ public class GroupScoreItem {
 
 这里 `score + 1` 会映射到 `scorePlusOne`，比依赖表达式文本自动推断更清楚，也更适合后续维护。
 
-#### 6.4.4 动态选择字段会自动走兼容路径
+#### 7.4.4 动态选择字段会自动走兼容路径
 
 动态选择字段很常见，例如前端决定本次只返回哪些字段：
 
@@ -936,7 +1676,7 @@ public class QueryGroupDynamicReq {
 
 上面的例子里只选择了 `name` 和 `category`，`score` 没有被选择，返回 DTO 的 `score` 应保持为空。
 
-#### 6.4.5 数字别名和 Map 返回值
+#### 7.4.5 数字别名和 Map 返回值
 
 DTO 字段名本身不能是纯数字，所以 `"0"`、`"1"` 这类 key 只会在 DTO 映射时作为“无别名投影的位置兜底”。如果目标类型就是 `Map`，Simple DAO 不会把数字 key 改成 DTO 字段名。
 
@@ -951,12 +1691,13 @@ List<Map> rows = dao.selectFrom("jpa_dao_test_Group", "g")
 
 这个查询明确要求返回 `Map`。返回结果会保留数据库/Hibernate 给出的数字别名 key，例如 `"0"` 或带引号的别名形式，而不会被映射成 `name`。
 
-### 6.5 动态字段选择
+### 7.5 动态字段选择
 
-有时候是否返回某个字段由参数决定：
+有时候是否返回某个字段由请求参数决定。推荐写法是：控制参数放在查询对象上，用 `@CtxVar` 导出；选择字段放在结果对象上，通过 `condition` 读取变量。完整原理见第 6 章“动态变量与上下文变量”。
 
 ```java
-@TargetOption(entityClass = Group.class, alias = "g", resultClass = GroupInfo.class)
+@TargetOption(entityClass = Group.class, alias = "g",
+        resultClass = QueryGroupInfoReq.Info.class)
 @Data
 @Accessors(chain = true)
 public class QueryGroupInfoReq {
@@ -965,27 +1706,31 @@ public class QueryGroupInfoReq {
     @CtxVar
     boolean queryParentName;
 
-    @Select
-    String name;
+    @Data
+    public static class Info {
 
-    @Select(value = "parent.name", condition = "#queryParentName")
-    String parentName;
+        @Select
+        String name;
+
+        @Select(value = "parent.name", condition = "#queryParentName")
+        String parentName;
+    }
 }
 ```
 
 调用：
 
 ```java
-List<GroupInfo> basic = dao.findByQueryObj(new QueryGroupInfoReq());
+List<QueryGroupInfoReq.Info> basic = dao.findByQueryObj(new QueryGroupInfoReq());
 
-List<GroupInfo> withParent = dao.findByQueryObj(
+List<QueryGroupInfoReq.Info> withParent = dao.findByQueryObj(
         new QueryGroupInfoReq().setQueryParentName(true)
 );
 ```
 
-`@CtxVar` 会把字段放入查询上下文，供 `condition` 使用。
+这里 `queryParentName` 在查询对象上，`parentName` 的 `@Select` 在结果对象上。`@CtxVar` 会把控制字段注入当前 DAO 上下文，让结果对象解析时能够读取它。
 
-## 7. 链式 API 例子
+## 8. 链式 API 例子
 
 如果查询条件临时性强，不想专门定义 DTO，可以用 `SelectDao`：
 
@@ -1016,7 +1761,7 @@ List<Object> rows = dao.selectFrom(User.class, "u")
 - 临时后台任务、调试、少量动态条件可以用链式 API。
 - 复杂原生 SQL 不要一开始就手写，先判断 DTO 注解或链式 API 是否已经能表达。
 
-### 7.1 原生查询和 JPA 查询
+### 8.1 原生查询和 JPA 查询
 
 Simple DAO 同时支持 JPA/JPQL 查询和原生 SQL 查询。默认使用 JPA 查询；只有显式开启 `nativeQL = true`、调用 `selectByNative(...)`，或用表名字符串创建 DAO 时，才进入原生查询模式。
 
@@ -1081,9 +1826,160 @@ public class NativeQueryUserReq {
 - 原生查询里要特别注意字段名、表名和数据库方言；把它当成“直接写给数据库看的 SQL”，不要期待 Hibernate/JPA 再替你翻译。
 - 多表查询时无论哪种模式，都建议显式写 `alias`、`domain`、`value`，避免字段落错表。
 
-## 8. 更新例子
+## 9. `Consumer` 扩展 DAO：混合注解和编程式查询
 
-### 8.1 普通更新
+`Consumer` 扩展 DAO 的核心价值是：**把稳定的业务规则写在注解 DTO 上，把临时变化、复杂分支、少量链式条件写在编程式回调里**。
+
+也就是说，它不是要替代注解查询，也不是要求所有条件都改成链式 API，而是让两种方式混合使用：
+
+- 注解 DTO 负责稳定条件：租户、组织、主键、状态、统计字段、必填条件、结果类型。
+- 编程式 `Consumer` 负责临时扩展：OR 分组、动态排序、额外分页、安全模式、JSON 条件、手写条件片段。
+- 同一个 DTO 可以被多个服务方法复用，每个方法只通过 `Consumer` 补充自己的差异。
+
+`SimpleDao` 的 `findByQueryObj(...)`、`findOneByQueryObj(...)`、`updateByQueryObj(...)`、`deleteByQueryObj(...)` 都可以接收 `Consumer` 作为额外参数。框架解析查询对象时，如果发现参数是 `Consumer`，会把当前正在构建的 DAO 传进去执行。
+
+### 9.1 混合注解和编程式查询 `SelectDao`
+
+下面这个例子和业务统计接口很接近：请求对象负责统计字段和基础过滤，`Paging` 单独传入，`Consumer<SelectDao<...>>` 追加额外条件。
+
+```java
+public StatExternalWorkflowOperationReq.Result stat(
+        StatExternalWorkflowOperationReq req,
+        Paging paging) {
+
+    Consumer<SelectDao<ExternalWorkflowOperation>> callback = dao -> {
+        dao
+                // 回调中可以继续构造更多查询条件
+                .or()
+                    .isNull(ExternalWorkflowOperation::getEnable)
+                    .eq(ExternalWorkflowOperation::getEnable, true)
+                .end()
+
+                // 统计场景可能需要放开默认 limit，务必确认前面的条件足够安全
+                .setSafeModeMaxLimit(-1)
+                .disableSafeMode();
+    };
+
+    return simpleDao.findOneByQueryObj(req, paging, callback);
+}
+```
+
+这个调用顺序可以理解为：
+
+1. `req` 先提供 `@TargetOption`、`@Eq`、`@Gte`、`@Sum`、`@Count` 等注解条件。
+2. `paging` 提供分页或限制参数。
+3. `callback` 拿到正在构建的 `SelectDao`，继续追加链式条件。
+4. `findOneByQueryObj(...)` 执行查询，并按 `req` 上的 `resultClass` 或方法参数映射结果。
+
+再比如只在参数存在时追加排序和查询条件：
+
+```java
+Consumer<SelectDao<User>> callback = dao -> dao
+        .eq(Boolean.TRUE.equals(req.getOnlyEnabled()), User::getEnable, true)
+        .where(req.getMinScore() != null, "score >= ?", req.getMinScore())
+        .orderBy(OrderBy.Type.Desc, "createTime");
+
+List<UserListItem> users = simpleDao.findByQueryObj(
+        UserListItem.class,
+        req,
+        new PagingQueryReq(1, 20),
+        callback
+);
+```
+
+这里 `req` 仍然是主角：它决定查询目标、稳定条件、返回 DTO。`callback` 只是给本次调用补充“额外条件”。这种写法比把所有条件都写成字符串更容易维护，也比为每个小差异都新建一个 DTO 更轻。
+
+### 9.2 混合注解和编程式更新 `UpdateDao`
+
+更新时，`Consumer<UpdateDao<T>>` 可以追加 `where` 条件，也可以补充 `set(...)`、`setByStatement(...)`、JSON 更新等链式更新内容。
+
+```java
+@TargetOption(entityClass = User.class, alias = "u")
+@Data
+@Accessors(chain = true)
+public class UpdateUserStateReq {
+
+    @Eq(require = true)
+    Long id;
+
+    @Update("state")
+    String newState;
+}
+```
+
+服务层：
+
+```java
+public boolean updateState(UpdateUserStateReq req, String tenantId) {
+
+    Consumer<UpdateDao<User>> callback = dao -> dao
+            // 追加租户保护条件
+            .eq("tenantId", tenantId)
+
+            // 补充通用更新时间
+            .set("lastUpdateTime", new Date());
+
+    return simpleDao.singleUpdateByQueryObj(req, callback);
+}
+```
+
+如果更新 JSON 字段，也可以把 JSON 链式方法放在回调里：
+
+```java
+Consumer<UpdateDao<User>> callback = dao -> dao
+        .jsonSet(User::getExtInfo, "$.profile.nickName", req.getNickName())
+        .jsonArrayAppend(User::getRoleList, "$", "R_MEMBER")
+        .eq(User::getId, req.getId());
+
+int rows = simpleDao.updateByQueryObj(User.class, callback);
+```
+
+建议更新类回调仍然保留必要的 `@Eq(require = true)` 或显式 `eq(...)` 条件。`Consumer` 很灵活，但也更容易绕开 DTO 上的保护语义；凡是会影响数据范围的条件，都要明确写出来。
+
+### 9.3 混合注解和编程式删除 `DeleteDao`
+
+删除时，`Consumer<DeleteDao<T>>` 主要用于追加删除范围和安全保护条件：
+
+```java
+@TargetOption(entityClass = User.class, alias = "u")
+@Data
+@Accessors(chain = true)
+public class DeleteDisabledUserReq {
+
+    @Eq(value = "tenantId", require = true)
+    String tenantId;
+
+    @Eq("enable")
+    Boolean enable = false;
+}
+```
+
+调用：
+
+```java
+public int deleteDisabled(DeleteDisabledUserReq req, Date beforeTime) {
+
+    Consumer<DeleteDao<User>> callback = dao -> dao
+            .where("lastLoginTime < ?", beforeTime)
+            .limit(0, 100);
+
+    return simpleDao.deleteByQueryObj(req, callback);
+}
+```
+
+删除回调尤其要谨慎。推荐至少满足一个强约束条件，例如 `tenantId`、`orgId`、主键、状态、时间范围；如果是单条删除，优先使用 `singleDelete()` / `uniqueDelete()` 或对应的 DAO 方法，避免条件意外放宽。
+
+### 9.4 使用建议
+
+- 可复用、可审计的业务规则优先写在 DTO 注解上。
+- 方法级临时差异再放到 `Consumer`，不要为了一个排序或一个 OR 条件复制一整个 DTO。
+- `Consumer` 的泛型要和操作类型匹配：查询用 `Consumer<SelectDao<T>>`，更新用 `Consumer<UpdateDao<T>>`，删除用 `Consumer<DeleteDao<T>>`。
+- 如果回调里调用 `disableSafeMode()`，要在同一段代码里清楚地写出保护条件。公共组件里不要让安全模式禁用变成默认习惯。
+- 当 `Consumer` 里出现很多手写 SQL 片段时，说明这个查询可能已经超出“补充差异”的范围，要考虑拆成专门的查询对象或链式 DAO 方法。
+
+## 10. 更新例子
+
+### 10.1 普通更新
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u")
@@ -1123,7 +2019,7 @@ where id = ?
 - `@Eq(require = true)` 表示必须有这个条件，适合保护更新范围。
 - 更新和删除默认受安全模式保护，不建议禁用。
 
-### 8.2 只允许更新一条
+### 10.2 只允许更新一条
 
 ```java
 boolean updated = dao.singleUpdateByQueryObj(req);
@@ -1185,7 +2081,7 @@ dao.uniqueUpdateByQueryObj(
 - 更新结果必须等于 1 条；0 条通常表示数据不存在、租户不匹配或乐观锁失败。
 - 多于 1 条说明条件不够唯一，会抛异常并回滚。
 
-### 8.3 增量更新
+### 10.3 增量更新
 
 适合“计数器 +1”“分数增加 N”“乐观锁版本号 +1”：
 
@@ -1229,7 +2125,7 @@ where id = ?
 - `${:_val}` 表示当前字段值以参数方式绑定。
 - `incrementMode = true` 会按增量模式处理字段。
 
-### 8.4 JSON 字段更新
+### 10.4 JSON 字段更新
 
 当前代码支持在部分注解上使用 `jsonPath`。例如更新 JSON 字段 `logs` 的第一条日志文本：
 
@@ -1263,7 +2159,7 @@ dao.updateByQueryObj(
 - 统计和更新场景对通配路径有限制，通配路径不适合所有更新/统计操作。
 - 相关测试可看 `DaoExamplesTest` 中的 `JsonPathSelectQO`、`JsonPathUpdateDTO`。
 
-### 8.5 JSON 数组追加
+### 10.5 JSON 数组追加
 
 如果实体字段本身是集合或数组类型，`@Update(incrementMode = true)` 可以生成 JSON 数组追加表达式。仓库测试里 `roleList` 就是这类场景。
 
@@ -1316,7 +2212,7 @@ dao.updateTo(User.class)
 - `@Update(value = "roleList", jsonPath = "$[*]", incrementMode = true)` 这类 wildcard 路径会被拒绝；追加数组时不要写 `"$[*]"`。
 - 更新接口仍然要加 `@Eq(require = true)`、租户条件或其它唯一条件，避免把角色追加到过多数据上。
 
-## 9. 删除例子
+## 11. 删除例子
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u")
@@ -1343,9 +2239,9 @@ boolean deleted = dao.singleDeleteByQueryObj(new DeleteUserReq().setId(1L));
 
 如果实体上配置了 `EntityOption` 的逻辑删除字段，删除会按实体配置处理。业务接口里建议优先使用请求对象承载租户、组织、个人等数据范围，不要只传裸 `id`。
 
-## 10. 统计查询例子
+## 12. 统计查询例子
 
-### 10.1 单表分组统计
+### 12.1 单表分组统计
 
 需求：按用户状态分组，统计总分，过滤“总分大于 500”的状态。
 
@@ -1383,7 +2279,7 @@ having sum(u.score) > ?
 order by u.state desc
 ```
 
-### 10.2 多表分组统计
+### 12.2 多表分组统计
 
 需求：按用户所在组统计人数、总分、平均分。
 
@@ -1438,7 +2334,7 @@ order by count(1) desc, avgScore desc, g.name desc
 - `@JoinOption(entityClass = Group.class, alias = "g")` 会尽量根据实体关系推断连接条件。
 - 关系不明确时，需要指定 `joinColumn`、`joinTargetAlias`、`joinTargetColumn` 或 `onExpr`。
 
-### 10.3 多指标统计
+### 12.3 多指标统计
 
 需求：在一个请求里同时返回用户数、总分、平均分、最高分、最低分。
 
@@ -1496,7 +2392,7 @@ where u.name like ?
 
 说明：没有 `@GroupBy` 时，这是一个汇总行；加上 `@GroupBy` 后，就会变成按维度分组的多行统计。
 
-### 10.4 分组 + Having + 排序
+### 12.4 分组 + Having + 排序
 
 需求：按状态统计人数和平均分，只返回人数大于 10 且平均分大于 80 的状态，并按平均分倒序。
 
@@ -1529,18 +2425,18 @@ having count(1) > ? and avg(u.score) > ?
 order by avgScore desc
 ```
 
-### 10.5 CASE 条件统计
+### 12.5 CASE 条件统计
 
 CASE 表达式在统计里很实用，适合把“满足某条件记 1，否则记 0”，再通过 `@Sum` 汇总成数量。
 
 这一节按常见业务场景组织，读的时候可以按需求直接跳：
 
 - 要统计高分/低分人数，看第一个基础例子。
-- 要按订单状态拆支付、退款、取消金额，看 `10.5.2`。
-- 要按 `payTime` 是否为空决定金额是否计入统计，看 `10.5.3`。
-- 要统计本周、本月金额，看 `10.5.5`。
-- 要写真实交易流水统计 DTO，看 `10.5.7`。
-- 要在服务层动态生成近 7 天、本月、上月、上上月统计列，看 `10.5.8`。
+- 要按订单状态拆支付、退款、取消金额，看 `12.5.2`。
+- 要按 `payTime` 是否为空决定金额是否计入统计，看 `12.5.3`。
+- 要统计本周、本月金额，看 `12.5.5`。
+- 要写真实交易流水统计 DTO，看 `12.5.7`。
+- 要在服务层动态生成近 7 天、本月、上月、上上月统计列，看 `12.5.8`。
 
 需求：统计每个状态下的用户数、高分人数、低分人数。
 
@@ -1583,7 +2479,7 @@ from User u
 group by u.state
 ```
 
-#### 10.5.1 订单成功笔数和成功金额
+#### 12.5.1 订单成功笔数和成功金额
 
 再举一个更贴近业务报表的例子：统计交易总笔数、成功笔数、成功金额。
 
@@ -1629,7 +2525,7 @@ where t.createTime >= ?
   and t.createTime <= ?
 ```
 
-#### 10.5.2 按订单状态拆分金额
+#### 12.5.2 按订单状态拆分金额
 
 很多订单报表会同时展示“支付成功金额、退款金额、取消金额、待支付金额”。这种场景不需要查多次，可以用多个 `@Sum + @Case` 一次统计出来。
 
@@ -1689,7 +2585,7 @@ where o.createTime >= ?
 
 这种写法适合首页看板、经营概览、支付渠道日报等场景。优点是查询一次就能得到多列指标，避免业务层查多次再拼。
 
-#### 10.5.3 按支付时间判断成交金额和运费
+#### 12.5.3 按支付时间判断成交金额和运费
 
 有些订单不一定通过状态字段判断是否成交，而是通过 `payTime` / `pay_time` 是否为空来判断。比如：
 
@@ -1765,7 +2661,7 @@ sum(case when pay_time is null then 0 else freight end)
 
 这种写法特别适合“未达成条件就不计入金额”的业务统计，比如未支付订单、未结算订单、未核销记录等。
 
-#### 10.5.4 同时统计不同状态的订单数量
+#### 12.5.4 同时统计不同状态的订单数量
 
 如果只统计数量，不统计金额，可以让 `thenExpr = "1"`，`elseExpr = "0"`。
 
@@ -1813,7 +2709,7 @@ from Order o
 
 这种写法常用于“订单状态分布”卡片，比查出订单后在 Java 里循环计数更直接。
 
-#### 10.5.5 本周、本月订单金额统计
+#### 12.5.5 本周、本月订单金额统计
 
 如果报表要同时展示“总金额、本周金额、本月金额”，可以把时间边界作为上下文变量传给 CASE。这里用 `@CtxVar` 暴露 `weekBegin`、`monthBegin`，再在 `whenExpr` 中通过 `${:weekBegin}`、`${:monthBegin}` 作为参数使用。
 
@@ -1895,7 +2791,7 @@ sum(case
     end) as weekPaidAmount
 ```
 
-#### 10.5.6 按渠道分组，再按状态拆金额
+#### 12.5.6 按渠道分组，再按状态拆金额
 
 CASE 可以和 `@GroupBy` 一起使用。例如按支付渠道分组，同时统计每个渠道的总金额、成功金额、退款金额。
 
@@ -1942,7 +2838,7 @@ from Order o
 group by o.payChannel
 ```
 
-#### 10.5.7 交易流水统计：成功笔数、分账、入金、服务费
+#### 12.5.7 交易流水统计：成功笔数、分账、入金、服务费
 
 下面这个例子更接近实际项目里的写法：外层请求对象负责查询条件，内部 `Result` 类负责统计结果。比如按创建时间筛选交易流水，只统计入金和分账两类交易，并返回交易总笔数、成功笔数、分账金额、入金金额、服务费金额。
 
@@ -2046,7 +2942,7 @@ where t.createTime >= ?
 - `@Sum(fieldCases = @Case(... thenExpr = F_tradingAmount ...))` 可以把满足条件的金额纳入统计，不满足条件按 0 处理。
 - `@Sum("baseServiceFee + serviceFee")` 适合统计多个字段的表达式结果，例如基础服务费加服务费。
 
-#### 10.5.8 编程式统计：近 7 天、本月、上月、上上月
+#### 12.5.8 编程式统计：近 7 天、本月、上月、上上月
 
 有些报表的统计窗口不是固定字段，而是服务层动态算出来的日期范围，例如：
 
@@ -2194,9 +3090,9 @@ where ...
 - `${:weekBegin}`、`${:monthBegin}` 这类写法表示从查询上下文中取值并作为参数绑定，通常配合 `@CtxVar` 使用。
 - CASE 条件里尽量使用实体字段常量，避免字符串字段名写错。
 
-## 11. 多表查询例子
+## 13. 多表查询例子
 
-### 11.1 自动关联实体
+### 13.1 自动关联实体
 
 如果 `User` 中存在 `Group group` 这类实体关系，可以让 `JoinOption` 自动推断：
 
@@ -2235,7 +3131,7 @@ List<UserGroupInfo> list = dao.findByQueryObj(
 );
 ```
 
-### 11.2 手动指定连接字段
+### 13.2 手动指定连接字段
 
 当实体里有多个同类型关联，或者你不想依赖自动推断时：
 
@@ -2275,9 +3171,9 @@ public class QueryUserGroupByManualJoinReq {
 )
 ```
 
-## 12. 子查询
+## 14. 子查询
 
-### 12.1 子查询选择列
+### 14.1 子查询选择列
 
 需求：查询用户，同时返回用户任务数。
 
@@ -2308,7 +3204,7 @@ select u.name,
 from User u
 ```
 
-### 12.2 子查询条件
+### 14.2 子查询条件
 
 需求：只查询任务数大于 0 的用户。
 
@@ -2324,14 +3220,14 @@ Integer minTaskCnt = 0;
 where (select count(*) from Task where user = u.id) > ?
 ```
 
-## 13. JSON Path 例子
+## 15. JSON Path 例子
 
 当前支持两种 JSON Path 写法：
 
 - 注解式：在 `@Contains`、`@Select`、`@Update` 等注解上声明 `jsonPath`。
 - 编程式：链式 API 直接调用 `jsonEq`、`jsonContains`、`jsonExists`、`jsonSelect`、`jsonSet`、`jsonArrayAppend`。
 
-### 13.1 JSON 数组包含查询
+### 15.1 JSON 数组包含查询
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u")
@@ -2355,7 +3251,7 @@ List<User> admins = dao.findByQueryObj(
 
 含义：在 `roleList` JSON 数组中匹配包含 `admin` 的元素。
 
-### 13.2 JSON 字段存在性查询
+### 15.2 JSON 字段存在性查询
 
 ```java
 @Where(op = Op.Exists, value = "logs", jsonPath = "$[0].logText")
@@ -2364,7 +3260,7 @@ Boolean hasFirstLog = true;
 
 含义：只查询第一条日志存在 `logText` 的用户。
 
-### 13.3 JSON 字段选择
+### 15.3 JSON 字段选择
 
 ```java
 @Select(value = "logs", jsonPath = "$", alias = "logsJson")
@@ -2376,9 +3272,9 @@ String firstLogText;
 
 适合列表页只展示 JSON 中的一小部分内容，不把整个实体加载到业务层再拆。
 
-### 13.4 JSON 数组追加
+### 15.4 JSON 数组追加
 
-JSON 数组追加本质上是更新场景，推荐看 `8.5 JSON 数组追加`。这里再给一个完整请求对象形态：
+JSON 数组追加本质上是更新场景，推荐看 `10.5 JSON 数组追加`。这里再给一个完整请求对象形态：
 
 ```java
 @TargetOption(entityClass = User.class, alias = "u")
@@ -2415,7 +3311,7 @@ dao.uniqueUpdateByQueryObj(
 - 不要在追加场景写 `jsonPath = "$[*]"`；这个 wildcard 路径在 `@Update` 中会被拒绝。
 - 如果你要替换数组中某个固定位置的对象属性，用明确路径，例如 `jsonPath = "$[0].logText"`；如果你要追加新元素，不写 `jsonPath`。
 
-### 13.5 编程式 JSON Path API
+### 15.5 编程式 JSON Path API
 
 如果不想创建 DTO，也可以直接使用链式 API。这个能力适合临时查询、服务内部动态拼装条件、少量 JSON 字段更新等场景。
 
@@ -2595,7 +3491,7 @@ dao.updateTo(User.class, "u")
 - 编程式 API 复用了 `JsonExprSupport` 和 `JsonPathSpec`，和注解式 JSON Path 生成规则保持一致。
 - `json_table(...)`、自定义 JSON 函数、复杂嵌套表达式这类不够通用的语句，本手册不建议封装成链式方法；可以用 `JsonExprSupport` 生成表达式，再交给 `selectByStatement(...)`、`where(...)` 或 `setByStatement(...)`。
 
-### 13.6 JSON 使用限制
+### 15.6 JSON 使用限制
 
 仓库中的测试说明了几个边界：
 
@@ -2610,7 +3506,7 @@ dao.updateTo(User.class, "u")
 - 注解式 JSON Path 测试：`simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java`
 - 编程式 JSON Path 测试：`simple-dao-core/src/test/java/com/levin/commons/dao/support/JsonProgrammaticBuilderTest.java`
 
-## 14. Repository 代理例子
+## 16. Repository 代理例子
 
 如果想把 DAO 能力包装成更像 Repository 的接口，可以使用 `@EntityRepository`、`@QueryRequest`、`@UpdateRequest`、`@DeleteRequest`。
 
@@ -2644,9 +3540,9 @@ public interface UserDao {
 - 方法上没有 `@QueryRequest`、`@UpdateRequest`、`@DeleteRequest` 时，默认行为要看代理配置，不建议依赖隐式规则。
 - 复杂业务仍建议定义清晰的请求 DTO，Repository 方法适合轻量封装。
 
-## 15. 避免 N + 1 查询
+## 17. 避免 N + 1 查询
 
-### 15.1 关闭 Open In View
+### 17.1 关闭 Open In View
 
 ```yaml
 spring:
@@ -2656,7 +3552,7 @@ spring:
 
 这样可以避免视图层在事务外隐式触发懒加载。
 
-### 15.2 链式 `joinFetch`
+### 17.2 链式 `joinFetch`
 
 ```java
 List<User> users = dao.selectFrom(User.class, "u")
@@ -2665,7 +3561,7 @@ List<User> users = dao.selectFrom(User.class, "u")
         .find(User.class);
 ```
 
-### 15.3 结果 DTO 上使用抓取注解
+### 17.3 结果 DTO 上使用抓取注解
 
 ```java
 @Data
@@ -2685,11 +3581,11 @@ public class UserInfo {
 - 必须展示关联对象时，明确 `joinFetch` 或 `@Fetch`。
 - 不要靠前端序列化实体时触发懒加载。
 
-## 16. 安全模式与数据范围
+## 18. 安全模式与数据范围
 
 Simple DAO 默认强调安全模式，尤其是更新和删除。
 
-### 16.1 不要无条件更新/删除
+### 18.1 不要无条件更新/删除
 
 推荐：
 
@@ -2726,7 +3622,7 @@ dao.deleteFrom(User.class)
 
 禁用安全模式只适合本地维护脚本或明确受控的批处理，业务接口里不建议使用。
 
-### 16.2 业务接口不要只传裸 ID
+### 18.2 业务接口不要只传裸 ID
 
 如果业务数据有租户、组织、个人归属，查询、修改、删除请求对象应承载这些上下文。不要只写：
 
@@ -2751,7 +3647,7 @@ public class DeleteOrderReq extends MultiTenantOrgReq<DeleteOrderReq> {
 
 这样租户、组织等数据范围可以前置到查询条件中，减少越权数据被加载后再判断的风险。
 
-## 17. 代码生成工作流
+## 19. 代码生成工作流
 
 `simple-dao-codegen` 是 Maven 插件，主要目标包括：
 
@@ -2762,7 +3658,7 @@ public class DeleteOrderReq extends MultiTenantOrgReq<DeleteOrderReq> {
 | `gen-project-entity-form-db` | 根据数据库表生成项目实体。 |
 | `copy-template` | 拷贝模板资源，例如开发环境 docker-compose 模板。 |
 
-### 17.1 插件配置示例
+### 19.1 插件配置示例
 
 ```xml
 <plugin>
@@ -2779,7 +3675,7 @@ public class DeleteOrderReq extends MultiTenantOrgReq<DeleteOrderReq> {
 </plugin>
 ```
 
-### 17.2 实体变更后的标准顺序
+### 19.2 实体变更后的标准顺序
 
 只要新增或修改实体类，按这个顺序执行：
 
@@ -2800,7 +3696,7 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-code
 
 如果通过 JitPack 坐标使用插件，`groupId` 需要按项目实际配置调整。
 
-### 17.3 生成文件边界
+### 19.3 生成文件边界
 
 如果某个目录中存在 `code-gen.md`，表示该目录及子目录由代码生成器维护：
 
@@ -2815,7 +3711,7 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-code
 - 业务服务类：类名通常是 `Biz<实体名>Service`，接口放 `services` 模块的 `biz` 目录，实现放 `services-impl` 模块的 `biz` 目录。
 - 业务控制器类：类名通常是 `Biz<实体名>Controller`。
 
-### 17.4 生成项目模板
+### 19.4 生成项目模板
 
 在一个空 Maven 项目中配置好插件后，可以执行：
 
@@ -2825,7 +3721,7 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-demo-project-templat
 
 插件会生成示例实体模块、基础目录、模板说明等。之后刷新 Maven 项目，再按“编译实体模块 -> gen-code”的顺序继续。
 
-## 18. 实体类开发建议
+## 20. 实体类开发建议
 
 代码生成模板中对实体类有比较明确的约束，常用规则如下。
 
@@ -2858,9 +3754,9 @@ public class Area extends AbstractNamedEntityObject {
 - 关联字段的 `@JoinColumn(name = "...")` 应写 Java 字段名，并按项目规范设置 `insertable`、`updatable`。
 - 枚举字段应使用 `@Enumerated(EnumType.STRING)`，数据库存枚举常量名，不存 ordinal。
 
-## 19. 常见业务场景速查
+## 21. 常见业务场景速查
 
-### 19.1 列表页查询
+### 21.1 列表页查询
 
 用法组合：
 
@@ -2871,7 +3767,7 @@ public class Area extends AbstractNamedEntityObject {
 - 时间范围用 `@Gte` + `@Lte` 或 `@Between`
 - 排序用 `@OrderBy`
 
-### 19.2 详情页查询
+### 21.2 详情页查询
 
 用法组合：
 
@@ -2880,7 +3776,7 @@ public class Area extends AbstractNamedEntityObject {
 - 返回 DTO 用 `@Select` 控制字段。
 - 需要关联字段时用 `joinFetch`、`@Fetch` 或 `@JoinOption`。
 
-### 19.3 状态变更
+### 21.3 状态变更
 
 用法组合：
 
@@ -2890,7 +3786,7 @@ public class Area extends AbstractNamedEntityObject {
 - 乐观锁字段用 `@Eq` 做条件、`@Update(incrementMode = true)` 做版本号 +1。
 - 普通可选命中用 `singleUpdateByQueryObj`；必须命中一条的状态流转用 `uniqueUpdateByQueryObj`。
 
-### 19.4 批量修改
+### 21.4 批量修改
 
 用法组合：
 
@@ -2899,7 +3795,7 @@ public class Area extends AbstractNamedEntityObject {
 - 谨慎设置 `maxResults` 或额外数据范围条件。
 - 不要禁用安全模式。
 
-### 19.5 报表统计
+### 21.5 报表统计
 
 用法组合：
 
@@ -2914,7 +3810,7 @@ public class Area extends AbstractNamedEntityObject {
 - 固定结果结构优先用注解 DTO；动态周期、动态枚举、动态统计列可用 `Case + selectByStatement`。
 - 编程式统计仍建议从 `simpleDao.forSelect(req)` 开始，让租户、组织、权限、基础查询条件继续生效。
 
-### 19.6 JSON 字段筛选
+### 21.6 JSON 字段筛选
 
 用法组合：
 
@@ -2927,9 +3823,9 @@ public class Area extends AbstractNamedEntityObject {
 - 编程式选择：`jsonSelect("logs", "$[0].logText", "firstLogText")`
 - 编程式更新：`jsonSet("logs", "$[0].logText", value)`、`jsonArrayAppend("roleList", "admin")`
 
-## 20. 常见问题排查
+## 22. 常见问题排查
 
-### 20.1 DTO 字段没有生成条件
+### 22.1 DTO 字段没有生成条件
 
 检查：
 
@@ -2938,7 +3834,7 @@ public class Area extends AbstractNamedEntityObject {
 - 字段是否被 `@Ignore`、`static`、`final`、`transient` 忽略。
 - 目标字段名是否写错，尤其是 DTO 字段名和实体字段名不一致时。
 
-### 20.2 更新没有执行
+### 22.2 更新没有执行
 
 检查：
 
@@ -2947,7 +3843,7 @@ public class Area extends AbstractNamedEntityObject {
 - 是否应该调用 `singleUpdateByQueryObj` 或 `uniqueUpdateByQueryObj` 来暴露异常。
 - `@Update(condition = ...)` 是否导致字段被忽略。
 
-### 20.3 多表关联生成不符合预期
+### 22.3 多表关联生成不符合预期
 
 检查：
 
@@ -2956,7 +3852,7 @@ public class Area extends AbstractNamedEntityObject {
 - `domain` 是否写成了正确的别名。
 - 原生 SQL 和 JPQL 模式下字段表达式是否不同。
 
-### 20.4 代码生成没有更新文件
+### 22.4 代码生成没有更新文件
 
 检查：
 
@@ -2966,7 +3862,7 @@ public class Area extends AbstractNamedEntityObject {
 - 生成器是否因为文件校验码不匹配、文件被手改而跳过覆盖。
 - 实体注解、包名、模块名是否符合模板约定。
 
-### 20.5 JSON Path 报错
+### 22.5 JSON Path 报错
 
 检查：
 
@@ -2975,7 +3871,7 @@ public class Area extends AbstractNamedEntityObject {
 - 当前数据库方言是否支持生成器使用的 JSON 函数。
 - 测试里已有的 JSON Path 用法是否覆盖你的场景。
 
-## 21. 推荐阅读源码路径
+## 23. 推荐阅读源码路径
 
 | 想了解 | 建议文件 |
 | --- | --- |
@@ -2992,7 +3888,7 @@ public class Area extends AbstractNamedEntityObject {
 | 代码生成插件 | `simple-dao-code-gen/src/main/java/com/levin/commons/dao/codegen/plugins/CodeGeneratorMojo.java` |
 | 综合示例测试 | `simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java` |
 
-## 22. 新增功能时的建议流程
+## 24. 新增功能时的建议流程
 
 完整开发和验证规则见：[docs/project-development-rules.md](./docs/project-development-rules.md)。下面是手册里的简版流程。
 

@@ -2170,6 +2170,28 @@ public class DaoExamplesTest {
 
     }
 
+    @Test
+    public void testCtxVarCaseStat() throws Exception {
+
+        long expectedScore = dao.selectFrom(TestEntity.class, "e")
+                .find(TestEntity.class)
+                .stream()
+                .map(TestEntity::getScore)
+                .filter(Objects::nonNull)
+                .mapToLong(Integer::longValue)
+                .sum();
+
+        CtxVarCaseStatReq.Result result = dao.findOneByQueryObj(new CtxVarCaseStatReq()
+                .setBeginTime(LocalDateTime.now().minusDays(1))
+                .setFutureTime(LocalDateTime.now().plusDays(1)));
+
+        Assert.notNull(result, "CtxVar Case 统计结果为空");
+        Assert.isTrue(Objects.equals(expectedScore, Objects.requireNonNullElse(result.getScoreFromBegin(), 0L)),
+                "CtxVar Case 统计未正确读取 beginTime：" + result);
+        Assert.isTrue(Objects.equals(0L, Objects.requireNonNullElse(result.getScoreFromFuture(), 0L)),
+                "CtxVar Case 统计未正确读取 futureTime：" + result);
+    }
+
 
     @Test
     public void testObjectUtils() {
