@@ -13,6 +13,8 @@ findLastValue(){
 dbPort=$(findLastValue ".env" 'SERVICE_PORT')
 dbUser=$(findLastValue ".env" 'POSTGRES_USER')
 dbPwd=$(findLastValue ".env" 'POSTGRES_PASSWORD')
+maxRetry=30
+retry=0
 
 if [ -z "${dbUser}" ]; then
   dbUser="postgres"
@@ -28,8 +30,18 @@ do
     break
   fi
 
+  retry=$((retry + 1))
+
+  if [ $retry -ge $maxRetry ]; then
+    echo "PostgreSQL 启动超时，输出容器最近200行日志..."
+    docker logs --tail 200 postgresql-${dbPort} 2>&1 || docker compose logs --tail 200 2>&1 || true
+    exit 1
+  fi
+
   sleep 2
-  echo "等待PostgreSQL启动完成..."
+  echo "等待PostgreSQL启动完成...(${retry}/${maxRetry})"
+  echo "========== postgresql-${dbPort} 最近20行容器日志 =========="
+  docker logs --tail 20 postgresql-${dbPort} 2>&1 || docker compose logs --tail 20 2>&1 || true
 done
 
 echo "PostgreSQL 已就绪，使用[${dbUser}]用户登录数据库成功"
