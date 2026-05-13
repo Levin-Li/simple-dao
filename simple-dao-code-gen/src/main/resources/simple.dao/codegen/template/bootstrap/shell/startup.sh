@@ -2,6 +2,9 @@
 #Author Lilw @2012
 ### 代码生成哈希校验码：[], 请不要修改和删除此行内容。
 
+#导入执行env.sh
+. env.sh
+
 execDir=`pwd`
 
 #sh文件所在目录
