@@ -298,6 +298,7 @@ public final class ServiceModelCodeGenerator {
         genSameNameFileByTemplate("bootstrap/application-test.yml", params, resPath);
         genSameNameFileByTemplate("bootstrap/application-prod.yml", params, resPath);
 
+        genSameNameFileByTemplate("bootstrap/shell/env.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/startup.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/restart.sh", params, resPath + "shell");
         genSameNameFileByTemplate("bootstrap/shell/shutdown.sh", params, resPath + "shell");
