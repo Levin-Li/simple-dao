@@ -499,7 +499,7 @@
                             <configuration>
                                 <!--  包含的业务包名  -->
                                 <includeGroupIds>${r"${parent.groupId}"},${r"${levin.service-support.groupId}"},${r"${levin.simple-dao.groupId}"},com.levin.oak.base</includeGroupIds>
-                                <outputDirectory>${r"${project.build.directory}/biz-libs"}</outputDirectory>
+                                <outputDirectory>${r"${project.build.directory}/deploy-app/biz-libs"}</outputDirectory>
                             </configuration>
                         </execution>
 
@@ -512,7 +512,7 @@
                             <configuration>
                                 <!--  排除的业务包名  -->
                                 <excludeGroupIds>${r"${parent.groupId}"},${r"${levin.service-support.groupId}"},${r"${levin.simple-dao.groupId}"},com.levin.oak.base</excludeGroupIds>
-                                <outputDirectory>${r"${project.build.directory}/third-libs"}</outputDirectory>
+                                <outputDirectory>${r"${project.build.directory}/deploy-app/third-libs"}</outputDirectory>
                             </configuration>
                         </execution>
                     </executions>
@@ -586,7 +586,7 @@
                                 <goal>copy-resources</goal>
                             </goals>
                             <configuration>
-                                <outputDirectory>${r"${project.build.directory}"}</outputDirectory>
+                                <outputDirectory>${r"${project.build.directory}"}/deploy-app</outputDirectory>
                                 <resources>
                                     <resource>
                                         <directory>${r"${project.basedir}/src/main/resources/shell"}</directory>
