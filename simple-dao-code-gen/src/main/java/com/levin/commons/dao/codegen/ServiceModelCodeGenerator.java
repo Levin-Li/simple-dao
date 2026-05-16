@@ -56,6 +56,7 @@ import org.apache.maven.project.MavenProject;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -91,6 +92,9 @@ import java.util.stream.Stream;
 public final class ServiceModelCodeGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceModelCodeGenerator.class);
+
+    private static final Set<String> UNBOUNDED_TEXT_COLUMN_TYPES = Set.of(
+            "text", "clob", "nclob", "longtext", "mediumtext", "tinytext", "json", "jsonb", "xml");
 
     public static final String DEL_EVT_FTL = "services/req/del_evt.ftl";
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
@@ -2327,11 +2331,10 @@ public final class ServiceModelCodeGenerator {
             }
 
             if (CharSequence.class.isAssignableFrom(fieldType)) {
-
-                if (field.isAnnotationPresent(Column.class)) {
+                if (isUnboundedTextField(field)) {
+                    fieldModel.setTextLength(null);
+                } else if (field.isAnnotationPresent(Column.class)) {
                     fieldModel.setTextLength(field.getAnnotation(Column.class).length());
-                } else if (field.isAnnotationPresent(Lob.class)) {
-                    fieldModel.setTextLength(Integer.MAX_VALUE);
                 } else {
                     fieldModel.setTextLength(null);
                 }
@@ -2992,6 +2995,49 @@ public final class ServiceModelCodeGenerator {
                 || BeanUtils.isSimpleProperty(type)
                 ;
 
+    }
+
+    private static boolean isUnboundedTextField(Field field) {
+        if (field == null) {
+            return false;
+        }
+
+        if (field.isAnnotationPresent(Lob.class)) {
+            return true;
+        }
+
+        Column column = field.getAnnotation(Column.class);
+        if (column != null && isUnboundedTextColumnDefinition(column.columnDefinition())) {
+            return true;
+        }
+
+        JdbcTypeCode jdbcTypeCode = field.getAnnotation(JdbcTypeCode.class);
+        return jdbcTypeCode != null && isUnboundedTextJdbcType(jdbcTypeCode.value());
+    }
+
+    private static boolean isUnboundedTextColumnDefinition(String columnDefinition) {
+        String definition = StrUtil.trimToEmpty(columnDefinition).toLowerCase(Locale.ROOT);
+        if (StrUtil.isBlank(definition)) {
+            return false;
+        }
+
+        return Stream.of(definition.split("[^a-z0-9_]+"))
+                .anyMatch(UNBOUNDED_TEXT_COLUMN_TYPES::contains);
+    }
+
+    private static boolean isUnboundedTextJdbcType(int jdbcTypeCode) {
+        return Stream.of(
+                        SqlTypes.LONGVARCHAR,
+                        SqlTypes.LONGNVARCHAR,
+                        SqlTypes.LONG32VARCHAR,
+                        SqlTypes.LONG32NVARCHAR,
+                        SqlTypes.CLOB,
+                        SqlTypes.NCLOB,
+                        SqlTypes.MATERIALIZED_CLOB,
+                        SqlTypes.MATERIALIZED_NCLOB,
+                        SqlTypes.JSON,
+                        SqlTypes.JSON_ARRAY)
+                .anyMatch(type -> type == jdbcTypeCode);
     }
 
 
