@@ -80,7 +80,7 @@ public abstract class AbstractBaseEntityObject
         }
 
         if (orderCode == null) {
-            orderCode = 100;
+            orderCode = 1000;
         }
 
         if (editable == null) {
