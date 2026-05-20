@@ -129,6 +129,7 @@ public class UpdateDaoImpl<T>
                 && !(paramValue instanceof ValueHolder)
                 && !(paramValue instanceof Map)
                 && !(paramValue instanceof PrimitiveValueWrapper)
+                && !(incrementMode && isFlattenedPrimitiveValueWrapperList(paramValue))
                 && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
 
             //转为包装类
@@ -284,8 +285,21 @@ public class UpdateDaoImpl<T>
 
     private List<PrimitiveValueWrapper<?>> flattenJsonArrayValues(Object paramValue) {
         return QueryAnnotationUtil.flattenParams(null, paramValue).stream()
-                .map(item -> item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item))
+                .flatMap(item -> {
+                    Object value = item instanceof PrimitiveValueWrapper ? ((PrimitiveValueWrapper<?>) item).get() : item;
+                    if (value instanceof Iterable || (value != null && value.getClass().isArray())) {
+                        return QueryAnnotationUtil.flattenParams(null, value).stream()
+                                .map(v -> v instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) v : PrimitiveValueWrapper.of(v));
+                    }
+                    return java.util.stream.Stream.of(item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item));
+                })
                 .toList();
+    }
+
+    private boolean isFlattenedPrimitiveValueWrapperList(Object paramValue) {
+        return paramValue instanceof Iterable
+                && QueryAnnotationUtil.flattenParams(null, paramValue).stream()
+                .allMatch(PrimitiveValueWrapper.class::isInstance);
     }
 
     private Object wrapJsonParam(Object paramValue) {
@@ -525,9 +539,7 @@ public class UpdateDaoImpl<T>
         } else if (Collection.class.isAssignableFrom(dbColumnType) || dbColumnType.isArray()) {
 
             //json array append
-            List<PrimitiveValueWrapper<?>> pList = QueryAnnotationUtil.flattenParams(null, holder.value).stream()
-                    .map(item -> item instanceof PrimitiveValueWrapper ? item : PrimitiveValueWrapper.of(item))
-                    .toList();
+            List<PrimitiveValueWrapper<?>> pList = flattenJsonArrayValues(holder.value);
 
             holder.value = pList.size() == 1 ? pList.get(0) : pList;
 
