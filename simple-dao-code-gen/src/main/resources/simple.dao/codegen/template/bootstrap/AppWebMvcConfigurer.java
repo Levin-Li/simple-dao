@@ -1,7 +1,5 @@
 package ${modulePackageName};
 
-
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 
@@ -148,16 +146,6 @@ public class AppWebMvcConfigurer implements WebMvcConfigurer {
                 if (StringUtils.hasText(requireResultList)) {
                     pData.put(SimplePaging.Fields.requireResultList, "true".equalsIgnoreCase(requireResultList.trim()));
                 }
-
-//                Object bean = BeanUtils.instantiateClass(parameter.getParameterType());
-
-//                return BeanUtil.copyProperties(pData, parameter.getParameterType());
-
-//                BeanUtils.copyProperties(pData, bean);
-//                return bean;
-
-                //
-                //return BeanUtil.copyProperties(pData, parameter.getParameterType());
 
                return BeanCopyUtils.copyProperties(pData, parameter.getParameterType());
             }
