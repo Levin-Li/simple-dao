@@ -2,13 +2,23 @@ package com.levin.commons.dao.support.hibernate;
 
 import org.hibernate.Version;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.jpa.autoconfigure.JpaProperties;
 
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -34,6 +44,26 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
                 "jsonb_set_lax(t.d,t.p,(t.d)#>t.p||to_jsonb(?),false,'return_target')"
                         + " from (values(doc,array[]::text[])) t(d,p)"
         ));
+    }
+
+    @Test
+    void workaroundShouldRenderCoalescedEmptyJsonArrayAsJsonb() {
+        StringBuilder sql = new StringBuilder();
+        SqlAppender appender = sql::append;
+        Expression json = new SelfRenderingSqlFragmentExpression("coalesce(action_log,json_array())");
+        Expression path = expression("'$'", "$");
+        SqlAstNode value = node("?1");
+        SqlAstTranslator<?> translator = translator(sql, path);
+
+        new SimpleDaoPostgreSQLJsonArrayAppendFunction(new TypeConfiguration()).render(
+                appender,
+                List.of(json, path, value),
+                (ReturnableType<?>) null,
+                translator
+        );
+
+        assertFalse(sql.toString().contains("json_array()"), sql.toString());
+        assertTrue(sql.toString().contains("jsonb_build_array()"), sql.toString());
     }
 
     @Test
@@ -78,5 +108,117 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
             assertTrue(SimpleDaoPostgreSQLDialect.class.getName()
                     .equals(hibernateProperties.get("hibernate.dialect")));
         }
+    }
+
+    private static Expression expression(String sql, Object literalValue) {
+        return (Expression) Proxy.newProxyInstance(
+                Expression.class.getClassLoader(),
+                new Class<?>[]{Expression.class},
+                nodeInvocationHandler(sql, literalValue)
+        );
+    }
+
+    private static SqlAstNode node(String sql) {
+        return (SqlAstNode) Proxy.newProxyInstance(
+                SqlAstNode.class.getClassLoader(),
+                new Class<?>[]{SqlAstNode.class},
+                nodeInvocationHandler(sql, null)
+        );
+    }
+
+    private static InvocationHandler nodeInvocationHandler(String sql, Object literalValue) {
+        return (proxy, method, args) -> {
+            String methodName = method.getName();
+            if ("accept".equals(methodName)) {
+                ((SqlAppender) args[0]).appendSql(sql);
+                return null;
+            }
+            if ("getExpressionType".equals(methodName)) {
+                return null;
+            }
+            if ("toString".equals(methodName)) {
+                return sql;
+            }
+            if ("hashCode".equals(methodName)) {
+                return System.identityHashCode(proxy);
+            }
+            if ("equals".equals(methodName)) {
+                return proxy == args[0];
+            }
+            if ("getLiteralValue".equals(methodName)) {
+                return literalValue;
+            }
+            return defaultValue(method.getReturnType());
+        };
+    }
+
+    private static SqlAstTranslator<?> translator(StringBuilder sql, Expression path) {
+        return (SqlAstTranslator<?>) Proxy.newProxyInstance(
+                SqlAstTranslator.class.getClassLoader(),
+                new Class<?>[]{SqlAstTranslator.class, SqlAppender.class},
+                (proxy, method, args) -> {
+                    String methodName = method.getName();
+                    if ("getLiteralValue".equals(methodName)) {
+                        return args[0] == path ? "$" : null;
+                    }
+                    if ("appendSql".equals(methodName)) {
+                        sql.append(args[0]);
+                        return null;
+                    }
+                    if ("append".equals(methodName)) {
+                        sql.append(args[0]);
+                        return proxy;
+                    }
+                    if ("visitSelfRenderingExpression".equals(methodName)) {
+                        ((SelfRenderingExpression) args[0]).renderToSql(
+                                (SqlAppender) proxy,
+                                (SqlAstTranslator<?>) proxy,
+                                null
+                        );
+                        return null;
+                    }
+                    if ("toString".equals(methodName)) {
+                        return "json_array_append_test_translator";
+                    }
+                    if ("hashCode".equals(methodName)) {
+                        return System.identityHashCode(proxy);
+                    }
+                    if ("equals".equals(methodName)) {
+                        return proxy == args[0];
+                    }
+                    return defaultValue(method.getReturnType());
+                }
+        );
+    }
+
+    private static Object defaultValue(Class<?> returnType) {
+        if (!returnType.isPrimitive()) {
+            return null;
+        }
+        if (boolean.class == returnType) {
+            return false;
+        }
+        if (char.class == returnType) {
+            return '\0';
+        }
+        if (byte.class == returnType) {
+            return (byte) 0;
+        }
+        if (short.class == returnType) {
+            return (short) 0;
+        }
+        if (int.class == returnType) {
+            return 0;
+        }
+        if (long.class == returnType) {
+            return 0L;
+        }
+        if (float.class == returnType) {
+            return 0F;
+        }
+        if (double.class == returnType) {
+            return 0D;
+        }
+        return null;
     }
 }

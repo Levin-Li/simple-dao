@@ -46,7 +46,41 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
             assertTrue(sql.contains("jsonb_set_lax"), sql);
             assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("json_array()"), sql);
+            assertTrue(sql.contains("jsonb_build_array()"), sql);
             assertFalse(sql.contains("array]::text[]"), sql);
+        }
+    }
+
+    @Test
+    void rootPathShouldRenderJsonColumnCoalescedEmptyArrayAsJsonb() {
+        String sql = renderRootPathAppendSql(
+                SimpleDaoPostgreSQLDialect.class,
+                PgJsonColumnEntity.class,
+                "select json_array_append(coalesce(e.actionLog, json_array()), '$', :role) from PgJsonColumnEntity e"
+        );
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(sql.contains("jsonb_set_lax"), sql);
+            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("json_array()"), sql);
+            assertTrue(sql.contains("jsonb_build_array()"), sql);
+        }
+    }
+
+    @Test
+    void rootPathShouldRenderUntypedCoalescedEmptyArrayAsJsonb() {
+        String sql = renderRootPathAppendSql(
+                SimpleDaoPostgreSQLDialect.class,
+                PgUntypedJsonColumnEntity.class,
+                "select json_array_append(coalesce(e.actionLog, json_array()), '$', :role) from PgUntypedJsonColumnEntity e"
+        );
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(sql.contains("jsonb_set_lax"), sql);
+            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("json_array()"), sql);
+            assertTrue(sql.contains("jsonb_build_array()"), sql);
         }
     }
 
@@ -81,6 +115,10 @@ class PostgreSQLJsonArrayAppendFunctionTest {
     }
 
     private static String renderRootPathAppendSql(Object dialect, String hql) {
+        return renderRootPathAppendSql(dialect, PgJsonEntity.class, hql);
+    }
+
+    private static String renderRootPathAppendSql(Object dialect, Class<?> entityClass, String hql) {
         CapturingStatementInspector statementInspector = new CapturingStatementInspector();
 
         StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
@@ -95,7 +133,7 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
         try {
             try (SessionFactory sessionFactory = new MetadataSources(serviceRegistry)
-                    .addAnnotatedClass(PgJsonEntity.class)
+                    .addAnnotatedClass(entityClass)
                     .buildMetadata()
                     .buildSessionFactory();
                  Session session = sessionFactory.openSession()) {
@@ -126,6 +164,29 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         @JdbcTypeCode(SqlTypes.JSON)
         @Column(columnDefinition = "jsonb")
         List<String> roles;
+    }
+
+    @Entity(name = "PgJsonColumnEntity")
+    @Table(name = "pg_json_column_entity")
+    static class PgJsonColumnEntity {
+
+        @Id
+        Long id;
+
+        @JdbcTypeCode(SqlTypes.JSON)
+        @Column(name = "action_log", columnDefinition = "json")
+        List<String> actionLog;
+    }
+
+    @Entity(name = "PgUntypedJsonColumnEntity")
+    @Table(name = "pg_untyped_json_column_entity")
+    static class PgUntypedJsonColumnEntity {
+
+        @Id
+        Long id;
+
+        @Column(name = "action_log", columnDefinition = "jsonb")
+        String actionLog;
     }
 
     private static class CapturingStatementInspector implements StatementInspector {

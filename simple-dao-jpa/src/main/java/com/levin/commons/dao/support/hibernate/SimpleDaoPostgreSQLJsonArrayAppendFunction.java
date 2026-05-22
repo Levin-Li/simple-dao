@@ -10,14 +10,19 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Fixes Hibernate PostgreSQL root-path rendering for json_array_append(..., '$', ...) when the runtime probe detects the bug.
  */
 class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppendFunction {
+
+    private static final Pattern EMPTY_JSON_ARRAY_FUNCTION =
+            Pattern.compile("\\bjson_array\\s*\\(\\s*\\)", Pattern.CASE_INSENSITIVE);
 
     SimpleDaoPostgreSQLJsonArrayAppendFunction(TypeConfiguration typeConfiguration) {
         super(true, typeConfiguration);
@@ -57,10 +62,26 @@ class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppe
         if (needsCast) {
             sqlAppender.appendSql("cast(");
         }
-        json.accept(translator);
+        renderJsonDocumentExpression(sqlAppender, json, translator);
         if (needsCast) {
             sqlAppender.appendSql(" as jsonb)");
         }
+    }
+
+    private static void renderJsonDocumentExpression(
+            SqlAppender sqlAppender,
+            Expression json,
+            SqlAstTranslator<?> translator) {
+        if (json instanceof SelfRenderingSqlFragmentExpression sqlFragmentExpression) {
+            sqlAppender.appendSql(forceEmptyJsonArrayToJsonb(sqlFragmentExpression.getExpression()));
+            return;
+        }
+
+        json.accept(translator);
+    }
+
+    private static String forceEmptyJsonArrayToJsonb(String sql) {
+        return EMPTY_JSON_ARRAY_FUNCTION.matcher(sql).replaceAll("jsonb_build_array()");
     }
 
     private static void renderAppendValue(
