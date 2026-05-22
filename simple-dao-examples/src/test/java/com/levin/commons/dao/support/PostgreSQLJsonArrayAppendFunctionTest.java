@@ -32,8 +32,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PostgreSQLJsonArrayAppendFunctionTest {
 
     @Test
-    void rootPathShouldRenderPostgreSQLAppendWithoutJsonbSetPathMutation() {
+    void rootPathShouldRenderPostgreSQLAppendWithEmptyPathArray() {
         assertRootPathAppendSql(SimpleDaoPostgreSQLDialect.class);
+    }
+
+    @Test
+    void rootPathShouldRenderCoalescedEmptyJsonArrayWithEmptyPathArray() {
+        String sql = renderRootPathAppendSql(
+                SimpleDaoPostgreSQLDialect.class,
+                "select json_array_append(coalesce(e.roles, json_array()), '$', :role) from PgJsonEntity e"
+        );
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(sql.contains("jsonb_set_lax"), sql);
+            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("array]::text[]"), sql);
+        }
     }
 
     @Test
@@ -52,6 +66,21 @@ class PostgreSQLJsonArrayAppendFunctionTest {
     }
 
     private static void assertRootPathAppendSql(Object dialect) {
+        String sql = renderRootPathAppendSql(
+                dialect,
+                "select json_array_append(e.roles, '$', :role) from PgJsonEntity e"
+        );
+
+        assertFalse(sql.contains("array]::text[]"), sql);
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(sql.contains("json_array_append") || sql.contains("jsonb"), sql);
+            assertTrue(sql.contains("jsonb_set_lax"), sql);
+            assertTrue(sql.contains("array[]::text[]"), sql);
+        }
+    }
+
+    private static String renderRootPathAppendSql(Object dialect, String hql) {
         CapturingStatementInspector statementInspector = new CapturingStatementInspector();
 
         StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
@@ -73,7 +102,7 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
                 assertThrows(RuntimeException.class, () -> session
                         .createSelectionQuery(
-                                "select json_array_append(e.roles, '$', :role) from PgJsonEntity e",
+                                hql,
                                 String.class)
                         .setParameter("role", "admin")
                         .getResultList());
@@ -84,14 +113,7 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
         String sql = statementInspector.lastSql();
         assertNotNull(sql, "Hibernate should render SQL before the missing H2 table error");
-        assertFalse(sql.contains("array]::text[]"), sql);
-
-        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
-            assertTrue(sql.contains("json_array_append") || sql.contains("jsonb"), sql);
-            assertTrue(sql.contains("||"), sql);
-            assertFalse(sql.contains("jsonb_set"), sql);
-            assertFalse(sql.contains("jsonb_set_lax"), sql);
-        }
+        return sql;
     }
 
     @Entity(name = "PgJsonEntity")

@@ -3,6 +3,7 @@ package com.levin.commons.dao.support.hibernate;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.jpa.autoconfigure.JpaProperties;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +50,21 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
         hibernateProperties.put("hibernate.dialect", PostgreSQLDialect.class.getName());
 
         SimpleDaoHibernateAutoConfiguration.postgreSQLJsonFunctionHibernatePropertiesCustomizer()
+                .customize(hibernateProperties);
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(SimpleDaoPostgreSQLDialect.class.getName()
+                    .equals(hibernateProperties.get("hibernate.dialect")));
+        }
+    }
+
+    @Test
+    void shouldRewriteSpringJpaDatabasePlatformWhenWorkaroundIsRequired() {
+        Map<String, Object> hibernateProperties = new HashMap<>();
+        JpaProperties jpaProperties = new JpaProperties();
+        jpaProperties.setDatabasePlatform(PostgreSQLDialect.class.getName());
+
+        SimpleDaoHibernateAutoConfiguration.postgreSQLJsonFunctionHibernatePropertiesCustomizer(jpaProperties)
                 .customize(hibernateProperties);
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
