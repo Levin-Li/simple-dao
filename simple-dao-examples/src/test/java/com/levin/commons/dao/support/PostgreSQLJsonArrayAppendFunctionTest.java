@@ -1,11 +1,13 @@
 package com.levin.commons.dao.support;
 
+import com.levin.commons.dao.support.hibernate.SimpleDaoHibernateAutoConfiguration;
 import com.levin.commons.dao.support.hibernate.SimpleDaoHibernateFunctionContributor;
 import com.levin.commons.dao.support.hibernate.SimpleDaoPostgreSQLDialect;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -18,7 +20,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,10 +33,29 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
     @Test
     void rootPathShouldRenderPostgreSQLAppendWithoutJsonbSetPathMutation() {
+        assertRootPathAppendSql(SimpleDaoPostgreSQLDialect.class);
+    }
+
+    @Test
+    void springBootCustomizerShouldRewriteExplicitNativePostgreSQLDialect() {
+        Map<String, Object> hibernateProperties = new HashMap<>();
+        hibernateProperties.put(AvailableSettings.DIALECT, PostgreSQLDialect.class.getName());
+
+        SimpleDaoHibernateAutoConfiguration.postgreSQLJsonFunctionHibernatePropertiesCustomizer()
+                .customize(hibernateProperties);
+
+        Object dialect = hibernateProperties.get(AvailableSettings.DIALECT);
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(SimpleDaoPostgreSQLDialect.class.getName().equals(dialect), String.valueOf(dialect));
+        }
+        assertRootPathAppendSql(dialect);
+    }
+
+    private static void assertRootPathAppendSql(Object dialect) {
         CapturingStatementInspector statementInspector = new CapturingStatementInspector();
 
         StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-                .applySetting(AvailableSettings.DIALECT, SimpleDaoPostgreSQLDialect.class)
+                .applySetting(AvailableSettings.DIALECT, dialect)
                 .applySetting(AvailableSettings.URL, "jdbc:h2:mem:pg_json_array_append;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE")
                 .applySetting(AvailableSettings.USER, "sa")
                 .applySetting(AvailableSettings.PASS, "")
