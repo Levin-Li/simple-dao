@@ -11,6 +11,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Detects whether Hibernate's native PostgreSQL json_array_append root-path rendering still needs the workaround.
@@ -30,7 +31,9 @@ final class NativePostgreSQLJsonArrayAppendFunctionProbe {
     }
 
     static boolean isRenderingBroken(String sql) {
-        return sql.contains("array]::text[]");
+        String normalized = sql.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
+        return normalized.contains("array]::text[]")
+                || (normalized.contains("jsonb_set_lax(") && normalized.contains("array[]::text[]"));
     }
 
     private static String renderNativeRootPathAppend(TypeConfiguration typeConfiguration) {

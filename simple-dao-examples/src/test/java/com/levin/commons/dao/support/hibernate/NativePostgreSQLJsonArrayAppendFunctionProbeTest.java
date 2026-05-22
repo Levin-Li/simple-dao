@@ -40,10 +40,17 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
     }
 
     @Test
-    void shouldNotRequireOverrideWhenRootPathArrayIsWellFormed() {
-        assertFalse(NativePostgreSQLJsonArrayAppendFunctionProbe.isRenderingBroken(
+    void shouldRequireOverrideWhenRootPathUsesJsonbSetLaxWithEmptyPath() {
+        assertTrue(NativePostgreSQLJsonArrayAppendFunctionProbe.isRenderingBroken(
                 "jsonb_set_lax(t.d,t.p,(t.d)#>t.p||to_jsonb(?),false,'return_target')"
                         + " from (values(doc,array[]::text[])) t(d,p)"
+        ));
+    }
+
+    @Test
+    void shouldNotRequireOverrideWhenRootPathRendersDirectConcatenation() {
+        assertFalse(NativePostgreSQLJsonArrayAppendFunctionProbe.isRenderingBroken(
+                "json_doc||to_jsonb(append_value)"
         ));
     }
 
@@ -65,6 +72,8 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
 
         assertFalse(sql.toString().contains("json_array()"), sql.toString());
         assertTrue(sql.toString().contains("jsonb_build_array()"), sql.toString());
+        assertFalse(sql.toString().contains("jsonb_set_lax"), sql.toString());
+        assertTrue(sql.toString().contains("||to_jsonb"), sql.toString());
     }
 
     @Test
@@ -89,6 +98,8 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
 
         assertFalse(sql.toString().contains("json_array()"), sql.toString());
         assertTrue(sql.toString().contains("jsonb_build_array()"), sql.toString());
+        assertFalse(sql.toString().contains("jsonb_set_lax"), sql.toString());
+        assertTrue(sql.toString().contains("||to_jsonb"), sql.toString());
     }
 
     @Test

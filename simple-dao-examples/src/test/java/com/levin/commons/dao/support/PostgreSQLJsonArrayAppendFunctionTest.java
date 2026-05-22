@@ -44,10 +44,11 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         );
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
-            assertTrue(sql.contains("jsonb_set_lax"), sql);
-            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("jsonb_set_lax"), sql);
+            assertFalse(sql.contains("array[]::text[]"), sql);
             assertFalse(sql.contains("json_array()"), sql);
             assertTrue(sql.contains("jsonb_build_array()"), sql);
+            assertTrue(sql.contains("||to_jsonb"), sql);
             assertFalse(sql.contains("array]::text[]"), sql);
         }
     }
@@ -61,10 +62,11 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         );
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
-            assertTrue(sql.contains("jsonb_set_lax"), sql);
-            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("jsonb_set_lax"), sql);
+            assertFalse(sql.contains("array[]::text[]"), sql);
             assertFalse(sql.contains("json_array()"), sql);
             assertTrue(sql.contains("jsonb_build_array()"), sql);
+            assertTrue(sql.contains("||to_jsonb"), sql);
         }
     }
 
@@ -77,10 +79,11 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         );
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
-            assertTrue(sql.contains("jsonb_set_lax"), sql);
-            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("jsonb_set_lax"), sql);
+            assertFalse(sql.contains("array[]::text[]"), sql);
             assertFalse(sql.contains("json_array()"), sql);
             assertTrue(sql.contains("jsonb_build_array()"), sql);
+            assertTrue(sql.contains("||to_jsonb"), sql);
         }
     }
 
@@ -93,10 +96,11 @@ class PostgreSQLJsonArrayAppendFunctionTest {
         );
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
-            assertTrue(sql.contains("jsonb_set_lax"), sql);
-            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("jsonb_set_lax"), sql);
+            assertFalse(sql.contains("array[]::text[]"), sql);
             assertFalse(sql.contains("json_array()"), sql);
             assertTrue(sql.contains("jsonb_build_array()"), sql);
+            assertTrue(sql.contains("||to_jsonb"), sql);
         }
     }
 
@@ -125,8 +129,9 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
         if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
             assertTrue(sql.contains("json_array_append") || sql.contains("jsonb"), sql);
-            assertTrue(sql.contains("jsonb_set_lax"), sql);
-            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("jsonb_set_lax"), sql);
+            assertFalse(sql.contains("array[]::text[]"), sql);
+            assertTrue(sql.contains("||to_jsonb"), sql);
         }
     }
 
