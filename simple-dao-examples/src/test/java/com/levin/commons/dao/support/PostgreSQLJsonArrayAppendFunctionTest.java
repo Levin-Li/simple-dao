@@ -69,6 +69,22 @@ class PostgreSQLJsonArrayAppendFunctionTest {
     }
 
     @Test
+    void rootPathUpdateShouldRenderCoalescedEmptyArrayAsJsonb() {
+        String sql = renderRootPathMutationSql(
+                SimpleDaoPostgreSQLDialect.class,
+                PgJsonColumnEntity.class,
+                "update PgJsonColumnEntity e set e.actionLog = json_array_append(coalesce(e.actionLog, json_array()), '$', :role)"
+        );
+
+        if (SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            assertTrue(sql.contains("jsonb_set_lax"), sql);
+            assertTrue(sql.contains("array[]::text[]"), sql);
+            assertFalse(sql.contains("json_array()"), sql);
+            assertTrue(sql.contains("jsonb_build_array()"), sql);
+        }
+    }
+
+    @Test
     void rootPathShouldRenderUntypedCoalescedEmptyArrayAsJsonb() {
         String sql = renderRootPathAppendSql(
                 SimpleDaoPostgreSQLDialect.class,
@@ -151,6 +167,41 @@ class PostgreSQLJsonArrayAppendFunctionTest {
 
         String sql = statementInspector.lastSql();
         assertNotNull(sql, "Hibernate should render SQL before the missing H2 table error");
+        return sql;
+    }
+
+    private static String renderRootPathMutationSql(Object dialect, Class<?> entityClass, String hql) {
+        CapturingStatementInspector statementInspector = new CapturingStatementInspector();
+
+        StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+                .applySetting(AvailableSettings.DIALECT, dialect)
+                .applySetting(AvailableSettings.URL, "jdbc:h2:mem:pg_json_array_append_mutation;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE")
+                .applySetting(AvailableSettings.USER, "sa")
+                .applySetting(AvailableSettings.PASS, "")
+                .applySetting(AvailableSettings.HBM2DDL_AUTO, "none")
+                .applySetting(AvailableSettings.STATEMENT_INSPECTOR, statementInspector)
+                .applySetting("hibernate.query.hql.json_functions_enabled", true)
+                .build();
+
+        try {
+            try (SessionFactory sessionFactory = new MetadataSources(serviceRegistry)
+                    .addAnnotatedClass(entityClass)
+                    .buildMetadata()
+                    .buildSessionFactory();
+                 Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+
+                assertThrows(RuntimeException.class, () -> session
+                        .createMutationQuery(hql)
+                        .setParameter("role", "admin")
+                        .executeUpdate());
+            }
+        } finally {
+            StandardServiceRegistryBuilder.destroy(serviceRegistry);
+        }
+
+        String sql = statementInspector.lastSql();
+        assertNotNull(sql, "Hibernate should render mutation SQL before the missing H2 table error");
         return sql;
     }
 

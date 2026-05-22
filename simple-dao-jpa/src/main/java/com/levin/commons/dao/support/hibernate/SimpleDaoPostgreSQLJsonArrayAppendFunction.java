@@ -9,6 +9,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -72,12 +73,49 @@ class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppe
             SqlAppender sqlAppender,
             Expression json,
             SqlAstTranslator<?> translator) {
+        if (isEmptyJsonArrayFunction(json)) {
+            sqlAppender.appendSql("jsonb_build_array()");
+            return;
+        }
+
+        if (json instanceof FunctionExpression functionExpression
+                && "coalesce".equalsIgnoreCase(functionExpression.getFunctionName())) {
+            renderCoalesceJsonDocumentExpression(sqlAppender, functionExpression, translator);
+            return;
+        }
+
         if (json instanceof SelfRenderingSqlFragmentExpression sqlFragmentExpression) {
             sqlAppender.appendSql(forceEmptyJsonArrayToJsonb(sqlFragmentExpression.getExpression()));
             return;
         }
 
         json.accept(translator);
+    }
+
+    private static void renderCoalesceJsonDocumentExpression(
+            SqlAppender sqlAppender,
+            FunctionExpression coalesceExpression,
+            SqlAstTranslator<?> translator) {
+        sqlAppender.appendSql("coalesce(");
+        char separator = ' ';
+        for (SqlAstNode argument : coalesceExpression.getArguments()) {
+            if (separator != ' ') {
+                sqlAppender.appendSql(separator);
+            }
+            if (argument instanceof Expression expression) {
+                renderJsonDocumentExpression(sqlAppender, expression, translator);
+            } else {
+                argument.accept(translator);
+            }
+            separator = ',';
+        }
+        sqlAppender.appendSql(')');
+    }
+
+    private static boolean isEmptyJsonArrayFunction(Expression expression) {
+        return expression instanceof FunctionExpression functionExpression
+                && "json_array".equalsIgnoreCase(functionExpression.getFunctionName())
+                && functionExpression.getArguments().isEmpty();
     }
 
     private static String forceEmptyJsonArrayToJsonb(String sql) {

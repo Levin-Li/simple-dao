@@ -8,6 +8,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,30 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
         StringBuilder sql = new StringBuilder();
         SqlAppender appender = sql::append;
         Expression json = new SelfRenderingSqlFragmentExpression("coalesce(action_log,json_array())");
+        Expression path = expression("'$'", "$");
+        SqlAstNode value = node("?1");
+        SqlAstTranslator<?> translator = translator(sql, path);
+
+        new SimpleDaoPostgreSQLJsonArrayAppendFunction(new TypeConfiguration()).render(
+                appender,
+                List.of(json, path, value),
+                (ReturnableType<?>) null,
+                translator
+        );
+
+        assertFalse(sql.toString().contains("json_array()"), sql.toString());
+        assertTrue(sql.toString().contains("jsonb_build_array()"), sql.toString());
+    }
+
+    @Test
+    void workaroundShouldRenderCoalescedFunctionExpressionEmptyJsonArrayAsJsonb() {
+        StringBuilder sql = new StringBuilder();
+        SqlAppender appender = sql::append;
+        Expression json = functionExpression(
+                "coalesce",
+                "coalesce(action_log,json_array())",
+                List.of(node("action_log"), functionExpression("json_array", "json_array()", List.of()))
+        );
         Expression path = expression("'$'", "$");
         SqlAstNode value = node("?1");
         SqlAstTranslator<?> translator = translator(sql, path);
@@ -123,6 +148,26 @@ class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
                 SqlAstNode.class.getClassLoader(),
                 new Class<?>[]{SqlAstNode.class},
                 nodeInvocationHandler(sql, null)
+        );
+    }
+
+    private static Expression functionExpression(
+            String functionName,
+            String sql,
+            List<? extends SqlAstNode> arguments) {
+        return (Expression) Proxy.newProxyInstance(
+                Expression.class.getClassLoader(),
+                new Class<?>[]{Expression.class, FunctionExpression.class},
+                (proxy, method, args) -> {
+                    String methodName = method.getName();
+                    if ("getFunctionName".equals(methodName)) {
+                        return functionName;
+                    }
+                    if ("getArguments".equals(methodName)) {
+                        return arguments;
+                    }
+                    return nodeInvocationHandler(sql, null).invoke(proxy, method, args);
+                }
         );
     }
 
