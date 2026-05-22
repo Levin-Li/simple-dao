@@ -16,6 +16,7 @@ import com.levin.commons.dao.repository.RepositoryFactoryBean;
 import com.levin.commons.dao.repository.annotation.EntityRepository;
 import com.levin.commons.dao.support.EntityNamingStrategy;
 import com.levin.commons.dao.support.JpaDaoImpl;
+import com.levin.commons.dao.support.hibernate.SimpleDaoHibernateFunctionContributor;
 import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.domain.Desc;
 import com.levin.commons.service.proxy.ProxyBeanScan;
@@ -30,6 +31,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.hibernate.autoconfigure.HibernateProperties;
 import org.springframework.boot.jpa.autoconfigure.JpaProperties;
@@ -158,6 +160,29 @@ public class JpaDaoConfiguration implements ApplicationContextAware, Application
         log.info("init jpa dao, default identifierGenerator:" + (identifierGenerator != null ? identifierGenerator.getClass() : "null"));
 
         return new JpaDaoImpl();
+    }
+
+    @Bean("com.levin.commons.dao.starter.PostgreSQLJsonFunctionHibernatePropertiesCustomizer")
+    static HibernatePropertiesCustomizer postgreSQLJsonFunctionHibernatePropertiesCustomizer() {
+        return hibernateProperties -> {
+            if (!SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+                return;
+            }
+
+            Object dialect = hibernateProperties.get("hibernate.dialect");
+            if (isPostgreSQLDialect(dialect)) {
+                hibernateProperties.put("hibernate.dialect",
+                        "com.levin.commons.dao.support.hibernate.SimpleDaoPostgreSQLDialect");
+            }
+        };
+    }
+
+    private static boolean isPostgreSQLDialect(Object dialect) {
+        if (dialect instanceof Class<?> dialectClass) {
+            return org.hibernate.dialect.PostgreSQLDialect.class.isAssignableFrom(dialectClass);
+        }
+        return dialect != null
+                && "org.hibernate.dialect.PostgreSQLDialect".equals(dialect.toString().trim());
     }
 
 //    @Bean
