@@ -1,5 +1,6 @@
 package com.levin.commons.dao.support.hibernate;
 
+import org.hibernate.Version;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
@@ -11,13 +12,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NativePostgreSQLJsonArrayAppendFunctionProbeTest {
 
     @Test
-    void shouldDetectHibernate727RootPathRenderingBug() {
+    void shouldReadHibernateRuntimeVersionDynamically() {
+        assertEquals(Version.getVersionString(), SimpleDaoHibernateFunctionContributor.getHibernateVersion());
+    }
+
+    @Test
+    void shouldDetectRuntimeHibernateRootPathRenderingBug() {
         assertTrue(NativePostgreSQLJsonArrayAppendFunctionProbe.isRootPathRenderingBroken(new TypeConfiguration()));
     }
 

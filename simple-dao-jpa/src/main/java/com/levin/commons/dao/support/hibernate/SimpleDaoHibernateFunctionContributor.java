@@ -14,7 +14,7 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
 
     private static final Logger log = Logger.getLogger(SimpleDaoHibernateFunctionContributor.class);
 
-    private static final int USER_DEFINED_FUNCTION_ORDINAL = 1000;
+    private static final int USER_DEFINED_FUNCTION_ORDINAL = 1001;
 
     private static volatile Boolean postgreSQLJsonArrayAppendOverrideRequired;
 
@@ -60,7 +60,7 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
     }
 
     private static void logPostgreSQLJsonArrayAppendProbeResult(boolean overrideRequired) {
-        String hibernateVersion = Version.getVersionString();
+        String hibernateVersion = getHibernateVersion();
         if (overrideRequired) {
             log.infof(
                     "Hibernate ORM %s native PostgreSQL json_array_append root-path rendering still needs the Simple DAO workaround.",
@@ -72,6 +72,10 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
                     hibernateVersion
             );
         }
+    }
+
+    static String getHibernateVersion() {
+        return Version.getVersionString();
     }
 
     @Override

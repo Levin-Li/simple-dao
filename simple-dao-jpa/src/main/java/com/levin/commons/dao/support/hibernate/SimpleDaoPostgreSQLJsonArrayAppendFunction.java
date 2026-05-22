@@ -15,7 +15,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 
 /**
- * Fixes Hibernate 7.2.7 PostgreSQL root-path rendering for json_array_append(..., '$', ...).
+ * Fixes Hibernate PostgreSQL root-path rendering for json_array_append(..., '$', ...) when the runtime probe detects the bug.
  */
 class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppendFunction {
 
