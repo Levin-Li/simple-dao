@@ -48,6 +48,8 @@ import jakarta.persistence.metamodel.EntityType;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
+import org.hibernate.Session;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1460,6 +1462,89 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testPostgreSQLJsonArrayAppendObjectKeepsJsonObjectElement() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonAppendUser-" + System.nanoTime())
+                .setActionLog(Collections.emptyList()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 10:30:00")
+                .setOperator("codex-test")
+                .setAction("提交审核");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .set(true, true, PgJsonAppendUser::getActionLog, actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_typeof(action_log),
+                               jsonb_typeof(action_log -> 0),
+                               jsonb_array_length(action_log),
+                               action_log -> 0 ->> 'action'
+                        from pg_json_append_user
+                        where id = ?1
+                        """)
+                .setParameter(1, user.getId())
+                .getSingleResult();
+
+        Assert.isTrue("array".equals(row[0]), "action_log 应该仍然是 JSON 数组: " + Arrays.toString(row));
+        Assert.isTrue("object".equals(row[1]), "追加元素应该是 JSON object，不应该是 string: " + Arrays.toString(row));
+        Assert.isTrue(((Number) row[2]).intValue() == 1, "action_log 应该追加 1 个元素: " + Arrays.toString(row));
+        Assert.isTrue("提交审核".equals(row[3]), "追加对象字段内容不正确: " + Arrays.toString(row));
+    }
+
+    @Test
+    public void testPostgreSQLJsonArrayAppendObjectByUpdateDtoKeepsJsonObjectElement() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonAppendUser-DTO-" + System.nanoTime())
+                .setActionLog(Collections.emptyList()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 11:10:00")
+                .setOperator("codex-dto-test")
+                .setAction("提交审核");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .appendByQueryObj(new PgJsonActionLogAppendReq().setActionLog(Collections.singletonList(actionLog)))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_typeof(action_log),
+                               jsonb_typeof(action_log -> 0),
+                               jsonb_array_length(action_log),
+                               action_log -> 0 ->> 'action'
+                        from pg_json_append_user
+                        where id = ?1
+                        """)
+                .setParameter(1, user.getId())
+                .getSingleResult();
+
+        Assert.isTrue("array".equals(row[0]), "action_log 应该仍然是 JSON 数组: " + Arrays.toString(row));
+        Assert.isTrue("object".equals(row[1]), "DTO 追加元素应该是 JSON object，不应该是 string: " + Arrays.toString(row));
+        Assert.isTrue(((Number) row[2]).intValue() == 1, "DTO action_log 应该追加 1 个元素: " + Arrays.toString(row));
+        Assert.isTrue("提交审核".equals(row[3]), "DTO 追加对象字段内容不正确: " + Arrays.toString(row));
+    }
+
+    private boolean isPostgreSQL() {
+        return entityManager.unwrap(Session.class).doReturningWork(connection -> {
+            String databaseName = connection.getMetaData().getDatabaseProductName();
+            return databaseName != null && databaseName.toLowerCase().contains("postgresql");
+        });
+    }
+
+    @Test
     public void testUpdateDTO() throws Exception {
 
         UpdateDao<User> userUpdateDao = dao.updateTo(User.class);
@@ -2424,6 +2509,15 @@ public class DaoExamplesTest {
 
         @Update(value = "roleList", jsonPath = "$[*]", incrementMode = true)
         List<String> roleList;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = PgJsonAppendUser.class, alias = "u")
+    static class PgJsonActionLogAppendReq {
+
+        @Update(value = "actionLog", incrementMode = true)
+        List<PgJsonAppendUser.ActionLog> actionLog;
     }
 
     @TargetOption(entityClass = User.class, alias = "u")

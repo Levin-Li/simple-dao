@@ -24,6 +24,7 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.SqlTypes;
 
@@ -1882,12 +1883,12 @@ public class JpaDaoImpl
     static Object toJsonTypedParameterValue(Query query, JsonParam<?> jsonParam) {
         org.hibernate.query.Query<?> hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
         SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) hibernateQuery.getSession().getFactory();
-        return new TypedParameterValue<>(
-                sessionFactory.getTypeConfiguration()
-                        .getBasicTypeRegistry()
-                        .resolve(Object.class, SqlTypes.JSON),
-                jsonParam.get()
-        );
+        Object value = jsonParam.get();
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        BasicType<Object> jsonType = (BasicType) sessionFactory.getTypeConfiguration()
+                .getBasicTypeRegistry()
+                .resolve(value != null ? value.getClass() : Object.class, SqlTypes.JSON);
+        return new TypedParameterValue<>(jsonType, value);
     }
 
     private static void setParameterValue(Query query, Object paramKey, Object paramValue) {

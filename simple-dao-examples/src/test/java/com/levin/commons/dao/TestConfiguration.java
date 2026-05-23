@@ -16,6 +16,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 
 
@@ -55,6 +56,11 @@ public class TestConfiguration {
         return () -> {
             try (Connection connection = dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
+                DatabaseMetaData metaData = connection.getMetaData();
+                String databaseName = metaData.getDatabaseProductName();
+                if (databaseName == null || !databaseName.toLowerCase().contains("h2")) {
+                    return;
+                }
                 statement.execute("CREATE ALIAS IF NOT EXISTS JSON_EXTRACT FOR '" + H2JsonFunctions.class.getName() + ".jsonExtract'");
                 statement.execute("CREATE ALIAS IF NOT EXISTS JSON_UNQUOTE FOR '" + H2JsonFunctions.class.getName() + ".jsonUnquote'");
                 statement.execute("CREATE ALIAS IF NOT EXISTS JSON_CONTAINS_PATH FOR '" + H2JsonFunctions.class.getName() + ".jsonContainsPath'");

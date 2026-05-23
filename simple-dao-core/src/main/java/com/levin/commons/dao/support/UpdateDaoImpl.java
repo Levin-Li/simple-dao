@@ -289,11 +289,19 @@ public class UpdateDaoImpl<T>
                     Object value = item instanceof PrimitiveValueWrapper ? ((PrimitiveValueWrapper<?>) item).get() : item;
                     if (value instanceof Iterable || (value != null && value.getClass().isArray())) {
                         return QueryAnnotationUtil.flattenParams(null, value).stream()
-                                .map(v -> v instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) v : JsonParam.of(v));
+                                .map(this::toJsonParam);
                     }
-                    return java.util.stream.Stream.of(item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : JsonParam.of(item));
+                    return java.util.stream.Stream.of(toJsonParam(item));
                 })
                 .toList();
+    }
+
+    private PrimitiveValueWrapper<?> toJsonParam(Object item) {
+        if (item instanceof JsonParam) {
+            return (JsonParam<?>) item;
+        }
+        Object value = item instanceof PrimitiveValueWrapper ? ((PrimitiveValueWrapper<?>) item).get() : item;
+        return JsonParam.of(value);
     }
 
     private boolean isFlattenedPrimitiveValueWrapperList(Object paramValue) {
