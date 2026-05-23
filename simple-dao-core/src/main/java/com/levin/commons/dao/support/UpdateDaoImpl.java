@@ -312,12 +312,18 @@ public class UpdateDaoImpl<T>
 
     private Object wrapJsonParam(Object paramValue) {
 
+        if (paramValue instanceof JsonParam) {
+            return paramValue;
+        }
+
+        if (paramValue instanceof PrimitiveValueWrapper) {
+            return JsonParam.of(((PrimitiveValueWrapper<?>) paramValue).get());
+        }
+
         if (paramValue != null
                 && !(paramValue instanceof ValueHolder)
-                && !(paramValue instanceof Map)
-                && !(paramValue instanceof PrimitiveValueWrapper)
                 && !BeanUtils.isSimpleValueType(paramValue.getClass())) {
-            return PrimitiveValueWrapper.of(paramValue);
+            return JsonParam.of(paramValue);
         }
 
         return paramValue;
@@ -466,6 +472,8 @@ public class UpdateDaoImpl<T>
                             && expr.contains("=")) {
 
                         expr = genIncrementExpr(isNative(), updateOp.convertNullValueForIncrementMode(), name, varType.resolve(), updateOp.jsonPath(), expr, holder);
+                    } else if (hasText(updateOp.jsonPath())) {
+                        holder.value = wrapJsonParam(holder.value);
                     }
                 }
 

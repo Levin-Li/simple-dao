@@ -13,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "pg_json_append_user")
@@ -30,6 +31,10 @@ public class PgJsonAppendUser {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "action_log", columnDefinition = "jsonb")
     private List<ActionLog> actionLog;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, Object> profile;
 
     @Data
     @Accessors(chain = true)

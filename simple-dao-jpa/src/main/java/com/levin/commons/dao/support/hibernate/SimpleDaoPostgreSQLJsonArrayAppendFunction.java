@@ -47,11 +47,11 @@ class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppe
         sqlAppender.appendSql('(');
         renderJsonDocument(sqlAppender, json, translator);
         sqlAppender.appendSql("||");
-        renderAppendValue(sqlAppender, value, translator);
+        renderJsonValue(sqlAppender, value, translator);
         sqlAppender.appendSql(')');
     }
 
-    private static void renderJsonDocument(
+    static void renderJsonDocument(
             SqlAppender sqlAppender,
             Expression json,
             SqlAstTranslator<?> translator) {
@@ -118,7 +118,7 @@ class SimpleDaoPostgreSQLJsonArrayAppendFunction extends PostgreSQLJsonArrayAppe
         return EMPTY_JSON_ARRAY_FUNCTION.matcher(sql).replaceAll("jsonb_build_array()");
     }
 
-    private static void renderAppendValue(
+    static void renderJsonValue(
             SqlAppender sqlAppender,
             SqlAstNode value,
             SqlAstTranslator<?> translator) {

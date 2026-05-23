@@ -1537,6 +1537,343 @@ public class DaoExamplesTest {
         Assert.isTrue("提交审核".equals(row[3]), "DTO 追加对象字段内容不正确: " + Arrays.toString(row));
     }
 
+    @Test
+    public void testPostgreSQLJsonArrayAppendMethodObjectKeepsJsonObjectElement() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonArrayAppendMethodUser-" + System.nanoTime())
+                .setActionLog(Collections.emptyList()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 11:15:00")
+                .setOperator("codex-array-append-method")
+                .setAction("直接追加数组对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(PgJsonAppendUser::getActionLog, "$", actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertActionLogElement(user.getId(), 0, 1, "直接追加数组对象", "直接追加元素应该是 JSON object，不应该是 string");
+    }
+
+    @Test
+    public void testPostgreSQLJsonArrayInsertObjectKeepsJsonObjectElement() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser.ActionLog oldActionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 11:20:00")
+                .setOperator("codex-array-insert-old")
+                .setAction("旧对象");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonArrayInsertUser-" + System.nanoTime())
+                .setActionLog(Collections.singletonList(oldActionLog)));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 11:30:00")
+                .setOperator("codex-array-insert")
+                .setAction("插入数组对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayInsert(PgJsonAppendUser::getActionLog, "$[0]", actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertActionLogElement(user.getId(), 0, 2, "插入数组对象", "插入元素应该是 JSON object，不应该是 string");
+    }
+
+    @Test
+    public void testPostgreSQLJsonSetObjectKeepsJsonObjectValue() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonSetUser-" + System.nanoTime())
+                .setProfile(new LinkedHashMap<>()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 12:10:00")
+                .setOperator("codex-json-set")
+                .setAction("设置 JSON 对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet(PgJsonAppendUser::getProfile, "$.latestAction", actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "latestAction", "设置 JSON 对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonSetObjectByUpdateDtoKeepsJsonObjectValue() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonSetDtoUser-" + System.nanoTime())
+                .setProfile(new LinkedHashMap<>()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 12:20:00")
+                .setOperator("codex-json-set-dto")
+                .setAction("DTO 设置 JSON 对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .appendByQueryObj(new PgJsonProfileSetReq().setActionLog(actionLog))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "latestAction", "DTO 设置 JSON 对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonInsertObjectKeepsJsonObjectValue() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonInsertUser-" + System.nanoTime())
+                .setProfile(new LinkedHashMap<>()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 12:30:00")
+                .setOperator("codex-json-insert")
+                .setAction("插入 JSON 对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonInsert(PgJsonAppendUser::getProfile, "$.insertedAction", actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "insertedAction", "插入 JSON 对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonReplaceObjectKeepsJsonObjectValue() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        Map<String, Object> profile = new LinkedHashMap<>();
+        profile.put("replaceAction", Map.of("action", "旧值"));
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonReplaceUser-" + System.nanoTime())
+                .setProfile(profile));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 12:40:00")
+                .setOperator("codex-json-replace")
+                .setAction("替换 JSON 对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonReplace(PgJsonAppendUser::getProfile, "$.replaceAction", actionLog)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "replaceAction", "替换 JSON 对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonMergePatchObjectKeepsJsonObjectValue() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonMergePatchUser-" + System.nanoTime())
+                .setProfile(new LinkedHashMap<>()));
+
+        PgJsonAppendUser.ActionLog actionLog = new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 12:50:00")
+                .setOperator("codex-json-mergepatch")
+                .setAction("合并 JSON 对象");
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonMergePatch(PgJsonAppendUser::getProfile, Map.of("patchAction", actionLog))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "patchAction", "合并 JSON 对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonRemoveDeletesPath() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 jsonb_typeof");
+
+        Map<String, Object> profile = new LinkedHashMap<>();
+        profile.put("removeAction", Map.of("action", "待删除"));
+        profile.put("keepAction", Map.of("action", "保留对象"));
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonRemoveUser-" + System.nanoTime())
+                .setProfile(profile));
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonRemove(PgJsonAppendUser::getProfile, "$.removeAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_exists(profile, 'removeAction'),
+                               jsonb_typeof(profile -> 'keepAction'),
+                               profile -> 'keepAction' ->> 'action'
+                        from pg_json_append_user
+                        where id = ?1
+                        """)
+                .setParameter(1, user.getId())
+                .getSingleResult();
+
+        Assert.isTrue(Boolean.FALSE.equals(row[0]), "jsonRemove 应该删除指定路径: " + Arrays.toString(row));
+        Assert.isTrue("object".equals(row[1]), "jsonRemove 不应该破坏保留对象: " + Arrays.toString(row));
+        Assert.isTrue("保留对象".equals(row[2]), "jsonRemove 保留对象内容不正确: " + Arrays.toString(row));
+    }
+
+    @Test
+    public void testPostgreSQLJsonConditionMethods() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 Hibernate PostgreSQL JSON 条件函数");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonConditionUser-" + System.nanoTime())
+                .setProfile(profileWithAction("conditionAction", "条件 JSON 对象")));
+
+        long existsCount = dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists(PgJsonAppendUser::getProfile, "$.conditionAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count();
+        long notExistsCount = dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotExists(PgJsonAppendUser::getProfile, "$.missingAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count();
+        long eqCount = dao.selectFrom(PgJsonAppendUser.class)
+                .jsonEq(PgJsonAppendUser::getProfile, "$.conditionAction.action", "条件 JSON 对象")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count();
+        long containsCount = dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(PgJsonAppendUser::getProfile, "$.conditionAction.action", "JSON")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count();
+
+        Assert.isTrue(existsCount == 1, "jsonExists 应该命中 PG JSON 路径");
+        Assert.isTrue(notExistsCount == 1, "jsonNotExists 应该命中缺失 PG JSON 路径");
+        Assert.isTrue(eqCount == 1, "jsonEq 应该命中 PG JSON 标量值");
+        Assert.isTrue(containsCount == 1, "jsonContains 应该命中 PG JSON 标量值");
+    }
+
+    @Test
+    public void testPostgreSQLJsonSelectMethods() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 Hibernate PostgreSQL JSON select 函数");
+
+        String name = "PgJsonSelectUser-" + System.nanoTime();
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName(name)
+                .setProfile(profileWithAction("selectAction", "选择 JSON 对象")));
+
+        String jsonSelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect(PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonValueSelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonValueSelect(PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonQuerySelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonQuerySelect(PgJsonAppendUser::getProfile, "$.selectAction", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonObjectSelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectSelect("jsonObject", "'name' value u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonArraySelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArraySelect("jsonArray", "u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonArrayAggSelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArrayAggSelect("u.name", "jsonArrayAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+        String jsonObjectAggSelect = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectAggSelect("u.name", "u.name", "jsonObjectAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+
+        Assert.isTrue(jsonTextEquals("选择 JSON 对象", jsonSelect), "jsonSelect 应该返回 PG JSON 标量值: " + jsonSelect);
+        Assert.isTrue("选择 JSON 对象".equals(jsonValueSelect), "jsonValueSelect 应该返回 PG JSON 标量值: " + jsonValueSelect);
+        Assert.isTrue(jsonQuerySelect != null && jsonQuerySelect.contains("选择 JSON 对象"),
+                "jsonQuerySelect 应该返回 PG JSON 对象文本: " + jsonQuerySelect);
+        Assert.isTrue(jsonObjectSelect != null && jsonObjectSelect.contains(name),
+                "jsonObjectSelect 应该构造 PG JSON 对象: " + jsonObjectSelect);
+        Assert.isTrue(jsonArraySelect != null && jsonArraySelect.contains(name),
+                "jsonArraySelect 应该构造 PG JSON 数组: " + jsonArraySelect);
+        Assert.isTrue(jsonArrayAggSelect != null && jsonArrayAggSelect.contains(name),
+                "jsonArrayAggSelect 应该聚合 PG JSON 数组: " + jsonArrayAggSelect);
+        Assert.isTrue(jsonObjectAggSelect != null && jsonObjectAggSelect.contains(name),
+                "jsonObjectAggSelect 应该聚合 PG JSON 对象: " + jsonObjectAggSelect);
+    }
+
+    private boolean jsonTextEquals(String expected, String actual) {
+        if (Objects.equals(expected, actual)) {
+            return true;
+        }
+        return actual != null
+                && actual.length() >= 2
+                && actual.startsWith("\"")
+                && actual.endsWith("\"")
+                && Objects.equals(expected, actual.substring(1, actual.length() - 1));
+    }
+
+    private Map<String, Object> profileWithAction(String key, String action) {
+        Map<String, Object> profile = new LinkedHashMap<>();
+        profile.put(key, Map.of("action", action));
+        return profile;
+    }
+
+    private void assertActionLogElement(Long id, int index, int length, String action, String typeMessage) {
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_typeof(action_log),
+                               jsonb_typeof(action_log -> ?1),
+                               jsonb_array_length(action_log),
+                               action_log -> ?1 ->> 'action'
+                        from pg_json_append_user
+                        where id = ?2
+                        """)
+                .setParameter(1, index)
+                .setParameter(2, id)
+                .getSingleResult();
+
+        Assert.isTrue("array".equals(row[0]), "action_log 应该仍然是 JSON 数组: " + Arrays.toString(row));
+        Assert.isTrue("object".equals(row[1]), typeMessage + ": " + Arrays.toString(row));
+        Assert.isTrue(((Number) row[2]).intValue() == length, "action_log 数组长度不正确: " + Arrays.toString(row));
+        Assert.isTrue(action.equals(row[3]), "action_log 对象字段内容不正确: " + Arrays.toString(row));
+    }
+
+    private void assertProfileJsonObject(Long id, String key, String action) {
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_typeof(profile -> ?1),
+                               profile -> ?1 ->> 'action'
+                        from pg_json_append_user
+                        where id = ?2
+                        """)
+                .setParameter(1, key)
+                .setParameter(2, id)
+                .getSingleResult();
+
+        Assert.isTrue("object".equals(row[0]), key + " 应该是 JSON object，不应该是 string: " + Arrays.toString(row));
+        Assert.isTrue(action.equals(row[1]), key + " 的 action 字段内容不正确: " + Arrays.toString(row));
+    }
+
     private boolean isPostgreSQL() {
         return entityManager.unwrap(Session.class).doReturningWork(connection -> {
             String databaseName = connection.getMetaData().getDatabaseProductName();
@@ -2328,7 +2665,7 @@ public class DaoExamplesTest {
 
         Assert.isTrue(statement.contains("json_query(") && statement.contains("'$[*]'"), "wildcard where 条件应生成 json_query");
         Assert.isTrue(statement.contains("json_exists(") && statement.contains("'$[0].logText'"), "Exists 注解应生成 json_exists");
-        Assert.isTrue(statement.contains("COALESCE(json_query(") && statement.contains("json_value("), "Select 注解应同时兼容对象/数组和标量 JSON 路径");
+        Assert.isTrue(statement.contains("COALESCE(str(json_query(") && statement.contains("json_value("), "Select 注解应同时兼容对象/数组和标量 JSON 路径");
     }
 
     @Test
@@ -2518,6 +2855,15 @@ public class DaoExamplesTest {
 
         @Update(value = "actionLog", incrementMode = true)
         List<PgJsonAppendUser.ActionLog> actionLog;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = PgJsonAppendUser.class, alias = "u")
+    static class PgJsonProfileSetReq {
+
+        @Update(value = "profile", jsonPath = "$.latestAction")
+        PgJsonAppendUser.ActionLog actionLog;
     }
 
     @TargetOption(entityClass = User.class, alias = "u")

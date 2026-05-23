@@ -1,11 +1,13 @@
 package com.levin.commons.dao.support.hibernate;
 
-import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAppendFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonArrayInsertFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.lang.reflect.InvocationHandler;
@@ -14,16 +16,16 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Detects whether Hibernate's native PostgreSQL json_array_append root-path rendering still needs the workaround.
+ * Detects whether Hibernate's native PostgreSQL json_array_insert rendering still needs the workaround.
  */
-final class NativePostgreSQLJsonArrayAppendFunctionProbe {
+final class NativePostgreSQLJsonArrayInsertFunctionProbe {
 
-    private NativePostgreSQLJsonArrayAppendFunctionProbe() {
+    private NativePostgreSQLJsonArrayInsertFunctionProbe() {
     }
 
-    static boolean isRootPathRenderingBroken(TypeConfiguration typeConfiguration) {
+    static boolean isCoalesceRenderingBroken(TypeConfiguration typeConfiguration) {
         try {
-            String sql = renderNativeRootPathAppend(typeConfiguration);
+            String sql = renderNativeCoalesceInsert(typeConfiguration);
             return isRenderingBroken(sql);
         } catch (RuntimeException ex) {
             return true;
@@ -32,19 +34,20 @@ final class NativePostgreSQLJsonArrayAppendFunctionProbe {
 
     static boolean isRenderingBroken(String sql) {
         String normalized = sql.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
-        return normalized.contains("array]::text[]")
-                || (normalized.contains("jsonb_set_lax(") && normalized.contains("array[]::text[]"));
+        return normalized.contains("jsonb_insert(")
+                && normalized.contains("coalesce(")
+                && normalized.contains("json_array()");
     }
 
-    private static String renderNativeRootPathAppend(TypeConfiguration typeConfiguration) {
+    private static String renderNativeCoalesceInsert(TypeConfiguration typeConfiguration) {
         StringBuilder sql = new StringBuilder();
         SqlAppender appender = sql::append;
-        Expression json = expression("json_doc", null);
-        Expression path = expression("'$'", "$");
-        SqlAstNode value = node("append_value");
-        SqlAstTranslator<?> translator = translator(path);
+        Expression json = new SelfRenderingSqlFragmentExpression("coalesce(action_log,json_array())");
+        Expression path = expression("'$[0]'", "$[0]");
+        SqlAstNode value = node("insert_value");
+        SqlAstTranslator<?> translator = translator(path, appender);
 
-        new PostgreSQLJsonArrayAppendFunction(true, typeConfiguration).render(
+        new PostgreSQLJsonArrayInsertFunction(typeConfiguration).render(
                 appender,
                 List.of(json, path, value),
                 (ReturnableType<?>) null,
@@ -91,21 +94,25 @@ final class NativePostgreSQLJsonArrayAppendFunctionProbe {
             if ("getLiteralValue".equals(methodName)) {
                 return literalValue;
             }
-            return defaultValue(method.getReturnType());
+            return NativePostgreSQLJsonArrayAppendFunctionProbe.defaultValue(method.getReturnType());
         };
     }
 
-    private static SqlAstTranslator<?> translator(Expression path) {
+    private static SqlAstTranslator<?> translator(Expression path, SqlAppender appender) {
         return (SqlAstTranslator<?>) Proxy.newProxyInstance(
                 SqlAstTranslator.class.getClassLoader(),
                 new Class<?>[]{SqlAstTranslator.class},
                 (proxy, method, args) -> {
                     String methodName = method.getName();
                     if ("getLiteralValue".equals(methodName)) {
-                        return args[0] == path ? "$" : null;
+                        return args[0] == path ? "$[0]" : null;
+                    }
+                    if ("visitSelfRenderingExpression".equals(methodName)) {
+                        ((SelfRenderingExpression) args[0]).renderToSql(appender, (SqlAstTranslator<?>) proxy, null);
+                        return null;
                     }
                     if ("toString".equals(methodName)) {
-                        return "json_array_append_probe_translator";
+                        return "json_array_insert_probe_translator";
                     }
                     if ("hashCode".equals(methodName)) {
                         return System.identityHashCode(proxy);
@@ -113,39 +120,8 @@ final class NativePostgreSQLJsonArrayAppendFunctionProbe {
                     if ("equals".equals(methodName)) {
                         return proxy == args[0];
                     }
-                    return defaultValue(method.getReturnType());
+                    return NativePostgreSQLJsonArrayAppendFunctionProbe.defaultValue(method.getReturnType());
                 }
         );
-    }
-
-    static Object defaultValue(Class<?> returnType) {
-        if (!returnType.isPrimitive()) {
-            return null;
-        }
-        if (boolean.class == returnType) {
-            return false;
-        }
-        if (char.class == returnType) {
-            return '\0';
-        }
-        if (byte.class == returnType) {
-            return (byte) 0;
-        }
-        if (short.class == returnType) {
-            return (short) 0;
-        }
-        if (int.class == returnType) {
-            return 0;
-        }
-        if (long.class == returnType) {
-            return 0L;
-        }
-        if (float.class == returnType) {
-            return 0F;
-        }
-        if (double.class == returnType) {
-            return 0D;
-        }
-        return null;
     }
 }

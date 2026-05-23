@@ -44,7 +44,7 @@ public abstract class JsonExprSupport {
      */
     public static String jsonSelectableExpr(String fieldExpr, String jsonPath) {
         String jsonExpr = queryJsonExpr(fieldExpr);
-        return "COALESCE(json_query(" + jsonExpr + ", '" + jsonPath + "'), json_value(" + jsonExpr + ", '" + jsonPath + "'))";
+        return "COALESCE(str(json_query(" + jsonExpr + ", '" + jsonPath + "')), json_value(" + jsonExpr + ", '" + jsonPath + "'))";
     }
 
     /**

@@ -17,6 +17,7 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
     private static final int USER_DEFINED_FUNCTION_ORDINAL = 1001;
 
     private static volatile Boolean postgreSQLJsonArrayAppendOverrideRequired;
+    private static volatile Boolean postgreSQLJsonArrayInsertOverrideRequired;
 
     @Override
     public void contributeFunctions(FunctionContributions functionContributions) {
@@ -28,18 +29,29 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
     }
 
     static void contributePostgreSQLFunctions(FunctionContributions functionContributions) {
-        if (!requiresPostgreSQLJsonArrayAppendOverride(functionContributions.getTypeConfiguration())) {
-            return;
+        TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+        if (requiresPostgreSQLJsonArrayAppendOverride(typeConfiguration)) {
+            functionContributions.getFunctionRegistry().register(
+                    "json_array_append",
+                    new SimpleDaoPostgreSQLJsonArrayAppendFunction(typeConfiguration)
+            );
         }
-
-        functionContributions.getFunctionRegistry().register(
-                "json_array_append",
-                new SimpleDaoPostgreSQLJsonArrayAppendFunction(functionContributions.getTypeConfiguration())
-        );
+        if (requiresPostgreSQLJsonArrayInsertOverride(typeConfiguration)) {
+            functionContributions.getFunctionRegistry().register(
+                    "json_array_insert",
+                    new SimpleDaoPostgreSQLJsonArrayInsertFunction(typeConfiguration)
+            );
+        }
     }
 
     public static boolean requiresPostgreSQLJsonArrayAppendOverride() {
         return requiresPostgreSQLJsonArrayAppendOverride(new TypeConfiguration());
+    }
+
+    public static boolean requiresPostgreSQLJsonFunctionOverride() {
+        TypeConfiguration typeConfiguration = new TypeConfiguration();
+        return requiresPostgreSQLJsonArrayAppendOverride(typeConfiguration)
+                || requiresPostgreSQLJsonArrayInsertOverride(typeConfiguration);
     }
 
     static boolean requiresPostgreSQLJsonArrayAppendOverride(TypeConfiguration typeConfiguration) {
@@ -59,6 +71,23 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
         return required;
     }
 
+    static boolean requiresPostgreSQLJsonArrayInsertOverride(TypeConfiguration typeConfiguration) {
+        Boolean required = postgreSQLJsonArrayInsertOverrideRequired;
+        if (required != null) {
+            return required;
+        }
+
+        synchronized (SimpleDaoHibernateFunctionContributor.class) {
+            required = postgreSQLJsonArrayInsertOverrideRequired;
+            if (required == null) {
+                required = NativePostgreSQLJsonArrayInsertFunctionProbe.isCoalesceRenderingBroken(typeConfiguration);
+                postgreSQLJsonArrayInsertOverrideRequired = required;
+                logPostgreSQLJsonArrayInsertProbeResult(required);
+            }
+        }
+        return required;
+    }
+
     private static void logPostgreSQLJsonArrayAppendProbeResult(boolean overrideRequired) {
         String hibernateVersion = getHibernateVersion();
         if (overrideRequired) {
@@ -69,6 +98,21 @@ public class SimpleDaoHibernateFunctionContributor implements FunctionContributo
         } else {
             log.infof(
                     "Hibernate ORM %s has fixed native PostgreSQL json_array_append root-path rendering; Simple DAO workaround disabled.",
+                    hibernateVersion
+            );
+        }
+    }
+
+    private static void logPostgreSQLJsonArrayInsertProbeResult(boolean overrideRequired) {
+        String hibernateVersion = getHibernateVersion();
+        if (overrideRequired) {
+            log.infof(
+                    "Hibernate ORM %s native PostgreSQL json_array_insert coalesce rendering still needs the Simple DAO workaround.",
+                    hibernateVersion
+            );
+        } else {
+            log.infof(
+                    "Hibernate ORM %s has fixed native PostgreSQL json_array_insert coalesce rendering; Simple DAO workaround disabled.",
                     hibernateVersion
             );
         }

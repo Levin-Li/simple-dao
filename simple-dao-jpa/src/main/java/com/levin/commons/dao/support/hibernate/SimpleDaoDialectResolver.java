@@ -13,7 +13,7 @@ public class SimpleDaoDialectResolver implements DialectResolver {
     public Dialect resolveDialect(DialectResolutionInfo info) {
         if (info != null
                 && "PostgreSQL".equalsIgnoreCase(info.getDatabaseName())
-                && SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+                && SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonFunctionOverride()) {
             return new SimpleDaoPostgreSQLDialect(info);
         }
         return null;

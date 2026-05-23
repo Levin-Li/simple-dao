@@ -26,7 +26,7 @@ public class SimpleDaoHibernateAutoConfiguration {
 
     static HibernatePropertiesCustomizer postgreSQLJsonFunctionHibernatePropertiesCustomizer(JpaProperties jpaProperties) {
         return hibernateProperties -> {
-            if (!SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonArrayAppendOverride()) {
+            if (!SimpleDaoHibernateFunctionContributor.requiresPostgreSQLJsonFunctionOverride()) {
                 return;
             }
 
