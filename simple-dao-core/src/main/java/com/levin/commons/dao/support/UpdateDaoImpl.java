@@ -289,9 +289,9 @@ public class UpdateDaoImpl<T>
                     Object value = item instanceof PrimitiveValueWrapper ? ((PrimitiveValueWrapper<?>) item).get() : item;
                     if (value instanceof Iterable || (value != null && value.getClass().isArray())) {
                         return QueryAnnotationUtil.flattenParams(null, value).stream()
-                                .map(v -> v instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) v : PrimitiveValueWrapper.of(v));
+                                .map(v -> v instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) v : JsonParam.of(v));
                     }
-                    return java.util.stream.Stream.of(item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : PrimitiveValueWrapper.of(item));
+                    return java.util.stream.Stream.of(item instanceof PrimitiveValueWrapper ? (PrimitiveValueWrapper<?>) item : JsonParam.of(item));
                 })
                 .toList();
     }

@@ -34,6 +34,19 @@ class JsonArrayIncrementUpdateTest {
     }
 
     @Test
+    void chainIncrementSetWithListKeepsJsonParameterSemantics() {
+        UpdateDaoImpl<TestUser> dao = new UpdateDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        dao.set(true, true, TestUser::getRoleList, Arrays.asList("R_A", "R_B"))
+                .where("u.id = :?", 1L)
+                .limit(0, 1);
+
+        List<Object> params = dao.genFinalParamList();
+
+        assertTrue(params.stream().anyMatch(JsonParam.class::isInstance), String.valueOf(params));
+    }
+
+    @Test
     void annotationIncrementUpdateWithListExpandsParams() {
         UpdateDaoImpl<TestUser> dao = new UpdateDaoImpl<>(stubDao(), false, TestUser.class, "u");
 

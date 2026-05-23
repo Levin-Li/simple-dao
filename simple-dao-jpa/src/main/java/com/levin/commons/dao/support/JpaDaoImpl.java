@@ -14,6 +14,7 @@ import com.levin.commons.dao.util.QueryAnnotationUtil;
 import com.levin.commons.service.support.ContextHolder;
 import com.levin.commons.service.support.SimpleEventBus;
 import com.levin.commons.utils.ExceptionUtils;
+import com.alibaba.fastjson2.JSON;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,8 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.TypedParameterValue;
+import org.hibernate.type.SqlTypes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1817,7 +1820,12 @@ public class JpaDaoImpl
                         //没有属性会抛出异常, 就继续尝试下一个属性
                         final Object keyParamValue = ObjectUtil.getIndexValue(paramValue, (String) entry.getKey(), true);
 
-                        query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), keyParamValue));
+                        Object convertedParamValue = unwrapValueHolder(keyParamValue);
+                        if (convertedParamValue instanceof JsonParam) {
+                            setJsonParam(query, entry.getKey(), (JsonParam<?>) convertedParamValue);
+                        } else {
+                            query.setParameter((String) entry.getKey(), tryAutoConvertParamValue(isNative, parameterMap, entry.getKey(), convertedParamValue));
+                        }
 
                     } catch (Exception e) {
 
@@ -1827,6 +1835,12 @@ public class JpaDaoImpl
 
                 if (paramValue instanceof ValueHolder) {
                     paramValue = ((ValueHolder) paramValue).get();
+                }
+
+                if (paramValue instanceof JsonParam) {
+                    setJsonParam(query, pIndex, (JsonParam<?>) paramValue);
+                    pIndex++;
+                    continue;
                 }
 
                 //参数解包, 用于兼容复杂的类型
@@ -1849,6 +1863,39 @@ public class JpaDaoImpl
         }
 
         return pIndex;
+    }
+
+    private Object unwrapValueHolder(Object paramValue) {
+        return paramValue instanceof ValueHolder ? ((ValueHolder) paramValue).get() : paramValue;
+    }
+
+    private void setJsonParam(Query query, Object paramKey, JsonParam<?> jsonParam) {
+        try {
+            setParameterValue(query, paramKey, toJsonTypedParameterValue(query, jsonParam));
+        } catch (Exception e) {
+            logger.warn("Bind JSON parameter [{}] as Hibernate JSON type failed, fallback to JSON string: {}",
+                    paramKey, ExceptionUtils.getRootCauseInfo(e));
+            setParameterValue(query, paramKey, JSON.toJSONString(jsonParam.get()));
+        }
+    }
+
+    static Object toJsonTypedParameterValue(Query query, JsonParam<?> jsonParam) {
+        org.hibernate.query.Query<?> hibernateQuery = query.unwrap(org.hibernate.query.Query.class);
+        SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) hibernateQuery.getSession().getFactory();
+        return new TypedParameterValue<>(
+                sessionFactory.getTypeConfiguration()
+                        .getBasicTypeRegistry()
+                        .resolve(Object.class, SqlTypes.JSON),
+                jsonParam.get()
+        );
+    }
+
+    private static void setParameterValue(Query query, Object paramKey, Object paramValue) {
+        if (paramKey instanceof String) {
+            query.setParameter((String) paramKey, paramValue);
+        } else {
+            query.setParameter(((Number) paramKey).intValue(), paramValue);
+        }
     }
 
     private Object tryAutoConvertParamValue(boolean isNative, Map<Object, Parameter> parameterMap, Object paramKey, Object paramValue) {
