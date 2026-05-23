@@ -14,3 +14,8 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecif
 
 - `DaoExamplesTest` is the key end-to-end usage test for this project. Do not claim a code change is fully verified unless this test has been run successfully, or clearly report why it could not run.
 - Documentation-only changes do not require `DaoExamplesTest`, but if code changes are already present in the same work session, run it before completion.
+
+## Git 提交说明
+
+- 本仓库的 git 提交说明默认必须使用中文，包括提交标题、正文说明，以及有实际内容的 git trailers。
+- 继续遵守现有结构化提交协议，但除非用户明确要求其它语言，否则协议中的内容也要翻译成中文。
