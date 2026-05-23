@@ -1819,6 +1819,506 @@ public class DaoExamplesTest {
                 "jsonObjectAggSelect 应该聚合 PG JSON 对象: " + jsonObjectAggSelect);
     }
 
+    @Test
+    public void testDaoJsonPublicApiCoverageMatrixIsCurrent() {
+
+        Assert.isTrue(jsonMethodSignatures(UpdateBuilder.class).equals(new TreeSet<>(List.of(
+                "jsonArrayAppend(Boolean,LambdaMethodAttr,Object)",
+                "jsonArrayAppend(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonArrayAppend(Boolean,String,Object)",
+                "jsonArrayAppend(Boolean,String,String,Object)",
+                "jsonArrayAppend(LambdaMethodAttr,Object)",
+                "jsonArrayAppend(LambdaMethodAttr,String,Object)",
+                "jsonArrayAppend(String,Object)",
+                "jsonArrayAppend(String,String,Object)",
+                "jsonArrayInsert(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonArrayInsert(Boolean,String,String,Object)",
+                "jsonArrayInsert(LambdaMethodAttr,String,Object)",
+                "jsonArrayInsert(String,String,Object)",
+                "jsonInsert(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonInsert(Boolean,String,String,Object)",
+                "jsonInsert(LambdaMethodAttr,String,Object)",
+                "jsonInsert(String,String,Object)",
+                "jsonMergePatch(Boolean,LambdaMethodAttr,Object)",
+                "jsonMergePatch(Boolean,String,Object)",
+                "jsonMergePatch(LambdaMethodAttr,Object)",
+                "jsonMergePatch(String,Object)",
+                "jsonRemove(Boolean,LambdaMethodAttr,String[])",
+                "jsonRemove(Boolean,String,String[])",
+                "jsonRemove(LambdaMethodAttr,String[])",
+                "jsonRemove(String,String[])",
+                "jsonReplace(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonReplace(Boolean,String,String,Object)",
+                "jsonReplace(LambdaMethodAttr,String,Object)",
+                "jsonReplace(String,String,Object)",
+                "jsonSet(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonSet(Boolean,String,String,Object)",
+                "jsonSet(LambdaMethodAttr,String,Object)",
+                "jsonSet(String,String,Object)"
+        ))), "UpdateBuilder JSON 方法清单变化时，需要同步补齐测试矩阵");
+
+        Assert.isTrue(jsonMethodSignatures(SimpleConditionBuilder.class).equals(new TreeSet<>(List.of(
+                "jsonContains(Boolean,LambdaMethodAttr,String,String)",
+                "jsonContains(Boolean,String,String,String)",
+                "jsonContains(LambdaMethodAttr,String,String)",
+                "jsonContains(String,String,String)",
+                "jsonEq(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonEq(Boolean,String,String,Object)",
+                "jsonEq(LambdaMethodAttr,String,Object)",
+                "jsonEq(String,String,Object)",
+                "jsonExists(Boolean,LambdaMethodAttr,String)",
+                "jsonExists(Boolean,String,String)",
+                "jsonExists(LambdaMethodAttr,String)",
+                "jsonExists(String,String)",
+                "jsonNotExists(Boolean,LambdaMethodAttr,String)",
+                "jsonNotExists(Boolean,String,String)",
+                "jsonNotExists(LambdaMethodAttr,String)",
+                "jsonNotExists(String,String)"
+        ))), "SimpleConditionBuilder JSON 方法清单变化时，需要同步补齐测试矩阵");
+
+        Assert.isTrue(jsonMethodSignatures(SelectBuilder.class).equals(new TreeSet<>(List.of(
+                "jsonArrayAggSelect(Boolean,String,String,String[])",
+                "jsonArrayAggSelect(String,String,String[])",
+                "jsonArraySelect(Boolean,String,String[])",
+                "jsonArraySelect(String,String[])",
+                "jsonObjectAggSelect(Boolean,String,String,String,String[])",
+                "jsonObjectAggSelect(String,String,String,String[])",
+                "jsonObjectSelect(Boolean,String,String[])",
+                "jsonObjectSelect(String,String[])",
+                "jsonQuerySelect(Boolean,LambdaMethodAttr,String,String,String[])",
+                "jsonQuerySelect(Boolean,String,String,String,String[])",
+                "jsonQuerySelect(LambdaMethodAttr,String,String,String[])",
+                "jsonQuerySelect(String,String,String,String[])",
+                "jsonSelect(Boolean,LambdaMethodAttr,String,String)",
+                "jsonSelect(Boolean,String,String,String)",
+                "jsonSelect(LambdaMethodAttr,String,String)",
+                "jsonSelect(String,String,String)",
+                "jsonValueSelect(Boolean,LambdaMethodAttr,String,String,String[])",
+                "jsonValueSelect(Boolean,String,String,String,String[])",
+                "jsonValueSelect(LambdaMethodAttr,String,String,String[])",
+                "jsonValueSelect(String,String,String,String[])"
+        ))), "SelectBuilder JSON 方法清单变化时，需要同步补齐测试矩阵");
+    }
+
+    @Test
+    public void testPostgreSQLJsonUpdateBuilderEveryMethodOverload() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 DAO JSON 更新方法重载");
+
+        Map<String, Object> profile = new LinkedHashMap<>();
+        profile.put("replaceAttr", Map.of("action", "旧值"));
+        profile.put("replaceBoolAttr", Map.of("action", "旧值"));
+        profile.put("replaceLambda", Map.of("action", "旧值"));
+        profile.put("replaceBoolLambda", Map.of("action", "旧值"));
+        profile.put("removeAttr", Map.of("action", "待删除"));
+        profile.put("removeBoolAttr", Map.of("action", "待删除"));
+        profile.put("removeLambda", Map.of("action", "待删除"));
+        profile.put("removeBoolLambda", Map.of("action", "待删除"));
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonUpdateOverloadUser-" + System.nanoTime())
+                .setActionLog(Collections.emptyList())
+                .setProfile(profile));
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet("profile", "$.setAttr", actionLog("setAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet(true, "profile", "$.setBoolAttr", actionLog("setBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet(PgJsonAppendUser::getProfile, "$.setLambda", actionLog("setLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet(true, PgJsonAppendUser::getProfile, "$.setBoolLambda", actionLog("setBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonReplace("profile", "$.replaceAttr", actionLog("replaceAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonReplace(true, "profile", "$.replaceBoolAttr", actionLog("replaceBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonReplace(PgJsonAppendUser::getProfile, "$.replaceLambda", actionLog("replaceLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonReplace(true, PgJsonAppendUser::getProfile, "$.replaceBoolLambda", actionLog("replaceBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonInsert("profile", "$.insertAttr", actionLog("insertAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonInsert(true, "profile", "$.insertBoolAttr", actionLog("insertBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonInsert(PgJsonAppendUser::getProfile, "$.insertLambda", actionLog("insertLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonInsert(true, PgJsonAppendUser::getProfile, "$.insertBoolLambda", actionLog("insertBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonMergePatch("profile", Map.of("patchAttr", actionLog("patchAttr")))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonMergePatch(true, "profile", Map.of("patchBoolAttr", actionLog("patchBoolAttr")))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonMergePatch(PgJsonAppendUser::getProfile, Map.of("patchLambda", actionLog("patchLambda")))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonMergePatch(true, PgJsonAppendUser::getProfile, Map.of("patchBoolLambda", actionLog("patchBoolLambda")))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonRemove("profile", "$.removeAttr")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonRemove(true, "profile", "$.removeBoolAttr")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonRemove(PgJsonAppendUser::getProfile, "$.removeLambda")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonRemove(true, PgJsonAppendUser::getProfile, "$.removeBoolLambda")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend("actionLog", actionLog("appendDefaultAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(true, "actionLog", actionLog("appendDefaultBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(PgJsonAppendUser::getActionLog, actionLog("appendDefaultLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(true, PgJsonAppendUser::getActionLog, actionLog("appendDefaultBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend("actionLog", "$", actionLog("appendPathAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(true, "actionLog", "$", actionLog("appendPathBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(PgJsonAppendUser::getActionLog, "$", actionLog("appendPathLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayAppend(true, PgJsonAppendUser::getActionLog, "$", actionLog("appendPathBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayInsert("actionLog", "$[0]", actionLog("insertArrayAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayInsert(true, "actionLog", "$[0]", actionLog("insertArrayBoolAttr"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayInsert(PgJsonAppendUser::getActionLog, "$[0]", actionLog("insertArrayLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonArrayInsert(true, PgJsonAppendUser::getActionLog, "$[0]", actionLog("insertArrayBoolLambda"))
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        assertProfileJsonObject(user.getId(), "setAttr", "setAttr");
+        assertProfileJsonObject(user.getId(), "setBoolAttr", "setBoolAttr");
+        assertProfileJsonObject(user.getId(), "setLambda", "setLambda");
+        assertProfileJsonObject(user.getId(), "setBoolLambda", "setBoolLambda");
+        assertProfileJsonObject(user.getId(), "replaceAttr", "replaceAttr");
+        assertProfileJsonObject(user.getId(), "replaceBoolAttr", "replaceBoolAttr");
+        assertProfileJsonObject(user.getId(), "replaceLambda", "replaceLambda");
+        assertProfileJsonObject(user.getId(), "replaceBoolLambda", "replaceBoolLambda");
+        assertProfileJsonObject(user.getId(), "insertAttr", "insertAttr");
+        assertProfileJsonObject(user.getId(), "insertBoolAttr", "insertBoolAttr");
+        assertProfileJsonObject(user.getId(), "insertLambda", "insertLambda");
+        assertProfileJsonObject(user.getId(), "insertBoolLambda", "insertBoolLambda");
+        assertProfileJsonObject(user.getId(), "patchAttr", "patchAttr");
+        assertProfileJsonObject(user.getId(), "patchBoolAttr", "patchBoolAttr");
+        assertProfileJsonObject(user.getId(), "patchLambda", "patchLambda");
+        assertProfileJsonObject(user.getId(), "patchBoolLambda", "patchBoolLambda");
+        assertProfileKeysRemoved(user.getId(), "removeAttr", "removeBoolAttr", "removeLambda", "removeBoolLambda");
+        assertActionLogAllObjects(user.getId(), 12);
+    }
+
+    @Test
+    public void testPostgreSQLJsonConditionBuilderEveryMethodOverload() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 DAO JSON 条件方法重载");
+
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName("PgJsonConditionOverloadUser-" + System.nanoTime())
+                .setProfile(profileWithAction("conditionAction", "条件重载对象")));
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists("profile", "$.conditionAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonExists(String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists(true, "profile", "$.conditionAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonExists(Boolean, String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists(PgJsonAppendUser::getProfile, "$.conditionAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonExists(Lambda, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists(true, PgJsonAppendUser::getProfile, "$.conditionAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonExists(Boolean, Lambda, String) 应命中");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotExists("profile", "$.missingAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotExists(String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotExists(true, "profile", "$.missingAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotExists(Boolean, String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotExists(PgJsonAppendUser::getProfile, "$.missingAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotExists(Lambda, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotExists(true, PgJsonAppendUser::getProfile, "$.missingAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotExists(Boolean, Lambda, String) 应命中");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonEq("profile", "$.conditionAction.action", "条件重载对象")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonEq(String, String, Object) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonEq(true, "profile", "$.conditionAction.action", "条件重载对象")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonEq(Boolean, String, String, Object) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonEq(PgJsonAppendUser::getProfile, "$.conditionAction.action", "条件重载对象")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonEq(Lambda, String, Object) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonEq(true, PgJsonAppendUser::getProfile, "$.conditionAction.action", "条件重载对象")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonEq(Boolean, Lambda, String, Object) 应命中");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains("profile", "$.conditionAction.action", "重载")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(String, String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(true, "profile", "$.conditionAction.action", "重载")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Boolean, String, String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(PgJsonAppendUser::getProfile, "$.conditionAction.action", "重载")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Lambda, String, String) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(true, PgJsonAppendUser::getProfile, "$.conditionAction.action", "重载")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Boolean, Lambda, String, String) 应命中");
+    }
+
+    @Test
+    public void testPostgreSQLJsonSelectBuilderEveryMethodOverload() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 DAO JSON select 方法重载");
+
+        String name = "PgJsonSelectOverloadUser-" + System.nanoTime();
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName(name)
+                .setProfile(profileWithAction("selectAction", "选择重载对象")));
+
+        Assert.isTrue(jsonTextEquals("选择重载对象", dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect("profile", "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonSelect(String, String, String) 应返回标量");
+        Assert.isTrue(jsonTextEquals("选择重载对象", dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect(true, "profile", "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonSelect(Boolean, String, String, String) 应返回标量");
+        Assert.isTrue(jsonTextEquals("选择重载对象", dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect(PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonSelect(Lambda, String, String) 应返回标量");
+        Assert.isTrue(jsonTextEquals("选择重载对象", dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect(true, PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonSelect(Boolean, Lambda, String, String) 应返回标量");
+
+        Assert.isTrue("选择重载对象".equals(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonValueSelect("profile", "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonValueSelect(String, String, String) 应返回标量");
+        Assert.isTrue("选择重载对象".equals(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonValueSelect(true, "profile", "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonValueSelect(Boolean, String, String, String) 应返回标量");
+        Assert.isTrue("选择重载对象".equals(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonValueSelect(PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonValueSelect(Lambda, String, String) 应返回标量");
+        Assert.isTrue("选择重载对象".equals(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonValueSelect(true, PgJsonAppendUser::getProfile, "$.selectAction.action", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "jsonValueSelect(Boolean, Lambda, String, String) 应返回标量");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonQuerySelect("profile", "$.selectAction", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains("选择重载对象"), "jsonQuerySelect(String, String, String) 应返回对象");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonQuerySelect(true, "profile", "$.selectAction", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains("选择重载对象"), "jsonQuerySelect(Boolean, String, String, String) 应返回对象");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonQuerySelect(PgJsonAppendUser::getProfile, "$.selectAction", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains("选择重载对象"), "jsonQuerySelect(Lambda, String, String) 应返回对象");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonQuerySelect(true, PgJsonAppendUser::getProfile, "$.selectAction", "selectedAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains("选择重载对象"), "jsonQuerySelect(Boolean, Lambda, String, String) 应返回对象");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectSelect("jsonObject", "'name' value u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonObjectSelect(String, String...) 应构造对象");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectSelect(true, "jsonObject", "'name' value u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonObjectSelect(Boolean, String, String...) 应构造对象");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArraySelect("jsonArray", "u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonArraySelect(String, String...) 应构造数组");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArraySelect(true, "jsonArray", "u.name")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonArraySelect(Boolean, String, String...) 应构造数组");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArrayAggSelect("u.name", "jsonArrayAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonArrayAggSelect(String, String, String...) 应聚合数组");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonArrayAggSelect(true, "u.name", "jsonArrayAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonArrayAggSelect(Boolean, String, String, String...) 应聚合数组");
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectAggSelect("u.name", "u.name", "jsonObjectAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonObjectAggSelect(String, String, String, String...) 应聚合对象");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonObjectAggSelect(true, "u.name", "u.name", "jsonObjectAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class).contains(name), "jsonObjectAggSelect(Boolean, String, String, String, String...) 应聚合对象");
+    }
+
+    @Test
+    public void testPostgreSQLJsonBooleanGuardOverloadsAreNoop() {
+
+        Assumptions.assumeTrue(isPostgreSQL(), "仅在 PostgreSQL 上验证 DAO JSON Boolean isAppend=false 重载");
+
+        String name = "PgJsonBooleanGuardUser-" + System.nanoTime();
+        String updatedName = name + "-updated";
+        PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
+                .setName(name)
+                .setActionLog(Collections.emptyList())
+                .setProfile(profileWithAction("guardAction", "布尔保护对象")));
+
+        dao.updateTo(PgJsonAppendUser.class)
+                .jsonSet(false, "profile", "$.shouldNotSetAttr", actionLog("shouldNotSetAttr"))
+                .jsonSet(false, PgJsonAppendUser::getProfile, "$.shouldNotSetLambda", actionLog("shouldNotSetLambda"))
+                .jsonReplace(false, "profile", "$.guardAction", actionLog("shouldNotReplaceAttr"))
+                .jsonReplace(false, PgJsonAppendUser::getProfile, "$.guardAction", actionLog("shouldNotReplaceLambda"))
+                .jsonInsert(false, "profile", "$.shouldNotInsertAttr", actionLog("shouldNotInsertAttr"))
+                .jsonInsert(false, PgJsonAppendUser::getProfile, "$.shouldNotInsertLambda", actionLog("shouldNotInsertLambda"))
+                .jsonRemove(false, "profile", "$.guardAction")
+                .jsonRemove(false, PgJsonAppendUser::getProfile, "$.guardAction")
+                .jsonMergePatch(false, "profile", Map.of("shouldNotPatchAttr", actionLog("shouldNotPatchAttr")))
+                .jsonMergePatch(false, PgJsonAppendUser::getProfile, Map.of("shouldNotPatchLambda", actionLog("shouldNotPatchLambda")))
+                .jsonArrayAppend(false, "actionLog", actionLog("shouldNotAppendDefaultAttr"))
+                .jsonArrayAppend(false, PgJsonAppendUser::getActionLog, actionLog("shouldNotAppendDefaultLambda"))
+                .jsonArrayAppend(false, "actionLog", "$", actionLog("shouldNotAppendPathAttr"))
+                .jsonArrayAppend(false, PgJsonAppendUser::getActionLog, "$", actionLog("shouldNotAppendPathLambda"))
+                .jsonArrayInsert(false, "actionLog", "$[0]", actionLog("shouldNotInsertArrayAttr"))
+                .jsonArrayInsert(false, PgJsonAppendUser::getActionLog, "$[0]", actionLog("shouldNotInsertArrayLambda"))
+                .set("name", updatedName)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .update();
+
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonExists(false, "profile", "$.missingGuard")
+                .jsonExists(false, PgJsonAppendUser::getProfile, "$.missingGuard")
+                .jsonNotExists(false, "profile", "$.guardAction")
+                .jsonNotExists(false, PgJsonAppendUser::getProfile, "$.guardAction")
+                .jsonEq(false, "profile", "$.guardAction.action", "不应该命中")
+                .jsonEq(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "不应该命中")
+                .jsonContains(false, "profile", "$.guardAction.action", "不应该命中")
+                .jsonContains(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "不应该命中")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "JSON 条件 Boolean isAppend=false 重载不应该追加条件");
+
+        String selectedName = dao.selectFrom(PgJsonAppendUser.class, "u")
+                .select("u.name")
+                .jsonSelect(false, "profile", "$.guardAction.action", "shouldNotSelectAttr")
+                .jsonSelect(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "shouldNotSelectLambda")
+                .jsonValueSelect(false, "profile", "$.guardAction.action", "shouldNotValueAttr")
+                .jsonValueSelect(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "shouldNotValueLambda")
+                .jsonQuerySelect(false, "profile", "$.guardAction", "shouldNotQueryAttr")
+                .jsonQuerySelect(false, PgJsonAppendUser::getProfile, "$.guardAction", "shouldNotQueryLambda")
+                .jsonObjectSelect(false, "shouldNotObject", "'name' value u.name")
+                .jsonArraySelect(false, "shouldNotArray", "u.name")
+                .jsonArrayAggSelect(false, "u.name", "shouldNotArrayAgg")
+                .jsonObjectAggSelect(false, "u.name", "u.name", "shouldNotObjectAgg")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class);
+
+        Assert.isTrue(updatedName.equals(selectedName), "JSON select Boolean isAppend=false 重载不应该追加选择表达式");
+        Assert.isTrue(jsonTextEquals("布尔保护对象", dao.selectFrom(PgJsonAppendUser.class, "u")
+                .jsonSelect(PgJsonAppendUser::getProfile, "$.guardAction.action", "guardAction")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .findOne(String.class)), "JSON 更新 Boolean isAppend=false 重载不应该改变 profile");
+        assertActionLogAllObjects(user.getId(), 0);
+    }
+
     private boolean jsonTextEquals(String expected, String actual) {
         if (Objects.equals(expected, actual)) {
             return true;
@@ -1828,6 +2328,31 @@ public class DaoExamplesTest {
                 && actual.startsWith("\"")
                 && actual.endsWith("\"")
                 && Objects.equals(expected, actual.substring(1, actual.length() - 1));
+    }
+
+    private TreeSet<String> jsonMethodSignatures(Class<?> type) {
+        TreeSet<String> signatures = new TreeSet<>();
+        Arrays.stream(type.getDeclaredMethods())
+                .filter(method -> method.getName().startsWith("json"))
+                .map(this::jsonMethodSignature)
+                .forEach(signatures::add);
+        return signatures;
+    }
+
+    private String jsonMethodSignature(java.lang.reflect.Method method) {
+        return method.getName() + "("
+                + Arrays.stream(method.getParameterTypes())
+                .map(Class::getSimpleName)
+                .reduce((left, right) -> left + "," + right)
+                .orElse("")
+                + ")";
+    }
+
+    private PgJsonAppendUser.ActionLog actionLog(String action) {
+        return new PgJsonAppendUser.ActionLog()
+                .setOccurTime("2026-05-23 13:00:00")
+                .setOperator("codex-json-overload")
+                .setAction(action);
     }
 
     private Map<String, Object> profileWithAction(String key, String action) {
@@ -1855,6 +2380,44 @@ public class DaoExamplesTest {
         Assert.isTrue("object".equals(row[1]), typeMessage + ": " + Arrays.toString(row));
         Assert.isTrue(((Number) row[2]).intValue() == length, "action_log 数组长度不正确: " + Arrays.toString(row));
         Assert.isTrue(action.equals(row[3]), "action_log 对象字段内容不正确: " + Arrays.toString(row));
+    }
+
+    private void assertActionLogAllObjects(Long id, int length) {
+        entityManager.clear();
+
+        Object[] row = (Object[]) entityManager.createNativeQuery("""
+                        select jsonb_typeof(action_log),
+                               jsonb_array_length(action_log),
+                               coalesce((
+                                   select bool_and(jsonb_typeof(elem) = 'object')
+                                   from jsonb_array_elements(action_log) elem
+                               ), true)
+                        from pg_json_append_user
+                        where id = ?1
+                        """)
+                .setParameter(1, id)
+                .getSingleResult();
+
+        Assert.isTrue("array".equals(row[0]), "action_log 应该仍然是 JSON 数组: " + Arrays.toString(row));
+        Assert.isTrue(((Number) row[1]).intValue() == length, "action_log 数组长度不正确: " + Arrays.toString(row));
+        Assert.isTrue(Boolean.TRUE.equals(row[2]), "action_log 所有元素都应该是 JSON object: " + Arrays.toString(row));
+    }
+
+    private void assertProfileKeysRemoved(Long id, String... keys) {
+        entityManager.clear();
+
+        for (String key : keys) {
+            Object exists = entityManager.createNativeQuery("""
+                            select jsonb_exists(profile, ?1)
+                            from pg_json_append_user
+                            where id = ?2
+                            """)
+                    .setParameter(1, key)
+                    .setParameter(2, id)
+                    .getSingleResult();
+
+            Assert.isTrue(Boolean.FALSE.equals(exists), key + " 应该已被 jsonRemove 删除");
+        }
     }
 
     private void assertProfileJsonObject(Long id, String key, String action) {
