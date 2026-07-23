@@ -10,6 +10,10 @@ Simple DAO 是公共组件，改动影响的不只是当前业务代码，还包
 - 生成目录如果存在 `code-gen.md`，说明该目录由生成器维护，不要手工改生成文件。
 - 提交或交付前要说明做了什么验证；如果某个关键测试无法运行，要明确写出原因。
 
+## 后端开发规则
+
+- 属性拷贝优先使用 MapStruct，不要使用 `cn.hutool.core.bean.BeanUtil`。如果 MapStruct 不满足场景要求，也应使用 Spring 的 `BeanUtils` 完成属性拷贝。
+
 ## 必跑测试
 
 每次代码变更后，至少运行与改动模块相关的测试。只改 README、手册、注释等纯文档内容时，可以不跑完整测试。
@@ -60,4 +64,3 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecif
 4. 能影响使用方式的能力，要补 `DaoExamplesTest` 或示例模块测试。
 5. README 和 `manual.md` 要补充入口、使用示例、边界说明。
 6. 运行相关模块测试和 `DaoExamplesTest`，再报告完成情况。
-

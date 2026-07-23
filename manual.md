@@ -996,6 +996,63 @@ public StatExternalWorkflowOperationReq.Result stat(
 - 一个方法里可以传多个 DTO，框架会按顺序解析字段；但公共条件和安全条件最好放在明确的 DTO 上，方便审计。
 - `Consumer` 会拿到当前操作类型对应的 DAO：查询是 `SelectDao`，更新是 `UpdateDao`，删除是 `DeleteDao`。
 
+### 5.9 查询对象预处理：`@PostConstruct`
+
+查询对象如果需要在 DAO 解析字段之前做参数检查、默认值补齐或派生条件初始化，可以在无参方法上标记 `jakarta.annotation.PostConstruct`。
+
+这里的 `@PostConstruct` 不是要求查询 DTO 成为 Spring Bean。业务代码通常会手动 `new XxxReq()`，然后把它传给 `findByQueryObj(...)`、`findPagingDataByQueryObj(...)`、`updateByQueryObj(...)` 或 `deleteByQueryObj(...)`。Simple DAO 在解析每个非 `Class` 查询对象字段之前，会主动调用该对象上的 `@PostConstruct` 方法。
+
+典型用途：
+
+- 给固定报表、首页统计、快捷入口查询设置默认时间范围、默认方向、默认排序开关等。
+- 根据业务入参派生出真正参与查询的字段，例如把“今天”转换成 `beginTime` / `endTime`。
+- 做跨字段参数检查，例如开始时间不能晚于结束时间、两个互斥条件不能同时传。
+- 初始化 `@CtxVar` 依赖的字段，让后续统计、CASE、动态表达式能读取到稳定的上下文值。
+
+例如“今日收入统计”可以在查询前固定查询范围和方向：
+
+```java
+@TargetOption(entityClass = TradeLog.class, alias = "t", resultClass = TodayIncomeStatReq.Result.class)
+@Data
+@Accessors(chain = true)
+public class TodayIncomeStatReq {
+
+    @Gte("tradingTime")
+    LocalDateTime beginTime;
+
+    @Lt("tradingTime")
+    LocalDateTime endTime;
+
+    @Eq("direction")
+    FundTradingDirection direction;
+
+    @PostConstruct
+    public void preQuery() {
+        LocalDate today = LocalDate.now();
+        setBeginTime(today.atStartOfDay());
+        setEndTime(today.plusDays(1).atStartOfDay());
+        setDirection(FundTradingDirection.Income);
+    }
+}
+```
+
+如果是参数检查，也可以直接抛出异常，让本次 DAO 调用中止：
+
+```java
+@PostConstruct
+public void checkParams() {
+    if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
+        throw new IllegalArgumentException("开始时间不能晚于结束时间");
+    }
+}
+```
+
+使用时注意：
+
+- `@PostConstruct` 方法应保持无参、幂等，避免写数据库、发消息、调用远程服务等副作用；同一个请求对象每次被 DAO 解析时都可能再次执行。
+- 必填单字段条件优先用 `@Eq(require = true)`、`@Contains(require = true)` 等注解自身的 `require` 能力；`@PostConstruct` 更适合默认值、派生值和跨字段规则。
+- 查询 DTO 如果只是普通筛选条件，不需要为了“看起来完整”额外写空的 `preQuery()` 方法。
+
 ## 6. 动态变量与上下文变量
 
 动态变量是 Simple DAO 里很重要的一类能力。它主要解决的是：**查询对象和结果对象分开解析时，结果对象无法直接访问查询对象上的字段**。

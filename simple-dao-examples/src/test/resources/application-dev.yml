@@ -1,13 +1,12 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:dev;MODE=MySQL;
-    #    url: jdbc:h2:file:./dev;MODE=MySQL;
-    username: dev
-    password: dev
+    url: jdbc:postgresql://localhost:5432/oak_base
+    username: postgres
+    password: DbPwd2026
 
   jpa:
     show-sql: true
-    database: mysql
+    database: postgresql
     generate-ddl: true
     properties:
       hibernate.query.hql.json_functions_enabled: true
@@ -15,4 +14,3 @@ spring:
       ddl-auto: update
       naming:
         physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
-
