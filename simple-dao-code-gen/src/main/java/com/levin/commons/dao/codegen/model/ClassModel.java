@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
@@ -139,6 +140,12 @@ public class ClassModel {
     public boolean hasAnno(String annoType) {
         return entityType.isAnnotationPresent((Class<? extends Annotation>) Class.forName(annoType));
     }
+
+
+    public boolean hasOptimisticLockField() {
+        return ReflectionUtils.findField(entityType, "optimisticLock") != null;
+    }
+
 
     public String attrName(String attrName, String prefix, String suffix) {
         return hasAttr(attrName) ? (prefix + attrName + suffix) : "";

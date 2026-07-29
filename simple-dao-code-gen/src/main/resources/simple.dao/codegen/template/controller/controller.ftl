@@ -172,6 +172,8 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
 
         //req.update${pkField.name?cap_first}WhenNotBlank(${pkField.name});
 
+        <#if classModel.hasOptimisticLockField()>Assert.notNull(req.getOptimisticLock(), "更新时必须指定乐观锁");</#if>
+
         Assert.isTrue(isNotEmpty(req.get${pkField.name?cap_first}()), "${pkField.name}不能为空");
 
         req = checkRequest(UPDATE_ACTION, req);
@@ -228,6 +230,12 @@ public<#if isCreateBizController> abstract</#if> class ${className} extends Base
     public ApiResp<Integer> batchUpdate(@Valid @RequestBody List<Update${entityName}Req> reqList) {
 
         reqList = checkRequest(BATCH_UPDATE_ACTION, reqList);
+
+       <#if classModel.hasOptimisticLockField()>
+        for (Update${entityName}Req req : reqList) {
+           Assert.notNull(req.getOptimisticLock(), "更新时必须指定乐观锁-" + req.get${pkField.name?cap_first}());
+        }
+       </#if>
 
         return expectGtZero(get${serviceName}().batchUpdate(reqList), BATCH_UPDATE_ACTION + BIZ_NAME + "失败");
     }
