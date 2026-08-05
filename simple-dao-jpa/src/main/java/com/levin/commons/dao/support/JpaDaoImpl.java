@@ -2,6 +2,7 @@ package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
+import com.levin.commons.dao.domain.EditableObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.TreeObject;
@@ -745,6 +746,10 @@ public class JpaDaoImpl
         if (isCheckUniqueValue) {
             //查询重复
             checkUniqueEntity(entity);
+        }
+
+        if (entity instanceof MultiTenantObject) {
+
         }
 
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);

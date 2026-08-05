@@ -3,6 +3,7 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.annotation.GenNameConstant;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.BaseEntityObject;
+import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.domain.ServiceReq;
 import com.levin.commons.service.support.InjectConst;
@@ -84,7 +85,8 @@ public abstract class AbstractBaseEntityObject
         }
 
         if (editable == null) {
-            editable = true;
+            //如果是租户为空的记录,默认普通用户不可编辑
+            editable = (this instanceof MultiTenantObject) && ((MultiTenantObject) this).getTenantId() != null;
         }
 
         if (enable == null) {
