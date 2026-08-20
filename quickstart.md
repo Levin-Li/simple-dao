@@ -10,68 +10,115 @@
 
 完整能力请看：[Simple DAO 完整操作手册](./manual.md)。
 
-## 1. 引入依赖
+## 1. 创建pom.xml
 
 通过 JitPack 使用：
 
 ```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://www.jitpack.io</url>
-    </repository>
-</repositories>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<dependency>
-    <groupId>com.github.Levin-Li.simple-dao</groupId>
-    <artifactId>simple-dao-jpa-starter</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
-</dependency>
+    <!-- Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。 -->
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 项目包名，将被作为模块的唯一标识  -->
+    <groupId>com.levin.codegen.example</groupId>
+
+    <artifactId>codegen-example</artifactId>
+    <version>${revision}</version>
+
+    <name>code-gen-example</name>
+    <description>XX项目描述</description>
+
+    <packaging>pom</packaging>
+
+    <properties>
+        <!-- 项目版本号-->
+        <revision>1.0.0-SNAPSHOT</revision>
+
+        <!-- Spring Boot 版本，请根据需要修改 -->
+        <spring-boot.version>4.0.5</spring-boot.version>
+
+        <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
+        <levin.simple-dao.version>4.3.0-SNAPSHOT</levin.simple-dao.version>
+
+        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>
+        <levin.service-support.version>2.0.0-SNAPSHOT</levin.service-support.version>
+
+        <!-- 跳过 install -->
+        <maven.install.skip>true</maven.install.skip>
+        <!-- 跳过 deploy -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>${levin.simple-dao.groupId}</groupId>
+                <artifactId>simple-dao-codegen</artifactId>
+                <version>${levin.simple-dao.version}</version>
+                <configuration>
+                    <!-- 生成的控制器代码是否包括目录-->
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+
+                    <!-- 是否生成BizController -->
+                    <isCreateBizController>true</isCreateBizController>
+
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+
+                    <!-- 集成 OakBaseFramework -->
+                    <enableOakBaseFramework>false</enableOakBaseFramework>
+
+                    <ignoreEntities></ignoreEntities>
+
+                    <!-- 集成 DubboFramework -->
+                    <enableDubbo>false</enableDubbo>
+
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>${levin.service-support.groupId}</groupId>
+                        <artifactId>service-support</artifactId>
+                        <version>${levin.service-support.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
 ```
+## 2. 生成基础代码模板
+  
+ 2.1 在[根模块]插件中点击 [gen-demo-project-template] 生成实体模块
 
-如果是在同一个多模块工程里直接依赖本仓库构件：
+ ![img.png](./public/img.png)
 
-```xml
-<dependency>
-    <groupId>com.levin.commons</groupId>
-    <artifactId>simple-dao-jpa-starter</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
-</dependency>
-```
+ 2.2 刷新项目,在[实体模块]插件中点击 [gen-code] 生成基础服务和控制器等代码
 
-业务项目还需要正常引入数据库驱动和 Spring Data JPA 相关依赖。
-
-## 2. 准备 JPA 配置
-
-开发环境可以先用最小配置跑通：
-
-```yaml
-spring:
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-      naming:
-        physical-strategy: com.levin.commons.dao.support.EntityNamingStrategy
-```
-
-说明：
-
-- `open-in-view: false` 可以减少接口返回阶段触发懒加载的问题。
-- `EntityNamingStrategy` 用于实体名和物理表名转换。
-- `ddl-auto: update` 只适合开发环境；生产环境按项目规范管理表结构。
-
-启动类一般只需要正常的 Spring Boot 配置。如果需要显式启用，也可以加：
-
-```java
-@SpringBootApplication
-@EnableSimpleDao
-public class DemoApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
-}
-```
+  ![img_1.png](./public/img_1.png)
 
 ## 3. 定义实体
 

@@ -4102,18 +4102,100 @@ public void delete(Long id) {
 ### 19.1 插件配置示例
 
 ```xml
-<plugin>
-    <groupId>com.levin.commons</groupId>
-    <artifactId>simple-dao-codegen</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
-    <configuration>
-        <isCreateControllerSubDir>true</isCreateControllerSubDir>
-        <isCreateBizController>true</isCreateBizController>
-        <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
-        <enableOakBaseFramework>false</enableOakBaseFramework>
-        <enableDubbo>false</enableDubbo>
-    </configuration>
-</plugin>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。 -->
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 项目包名，将被作为模块的唯一标识  -->
+    <groupId>com.levin.codegen.example</groupId>
+
+    <artifactId>codegen-example</artifactId>
+    <version>${revision}</version>
+
+    <name>code-gen-example</name>
+    <description>XX项目描述</description>
+
+    <packaging>pom</packaging>
+
+    <properties>
+        <!-- 项目版本号-->
+        <revision>1.0.0-SNAPSHOT</revision>
+
+        <!-- Spring Boot 版本，请根据需要修改 -->
+        <spring-boot.version>4.0.5</spring-boot.version>
+
+        <levin.simple-dao.groupId>com.levin.commons</levin.simple-dao.groupId>
+        <levin.simple-dao.version>4.3.0-SNAPSHOT</levin.simple-dao.version>
+
+        <levin.service-support.groupId>com.levin.commons</levin.service-support.groupId>
+        <levin.service-support.version>2.0.0-SNAPSHOT</levin.service-support.version>
+
+        <!-- 跳过 install -->
+        <maven.install.skip>true</maven.install.skip>
+        <!-- 跳过 deploy -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <!--  插件库 -->
+            <id>jitpack.io</id>
+            <url>https://www.jitpack.io</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>${levin.simple-dao.groupId}</groupId>
+                <artifactId>simple-dao-codegen</artifactId>
+                <version>${levin.simple-dao.version}</version>
+                <configuration>
+                    <!-- 生成的控制器代码是否包括目录-->
+                    <isCreateControllerSubDir>true</isCreateControllerSubDir>
+
+                    <!-- 是否生成BizController -->
+                    <isCreateBizController>true</isCreateBizController>
+
+                    <!-- 生成的DTO的Schema注解中描述的配置是否使用类引用-->
+                    <isSchemaDescUseConstRef>true</isSchemaDescUseConstRef>
+
+                    <!-- 集成 OakBaseFramework -->
+                    <enableOakBaseFramework>false</enableOakBaseFramework>
+
+                    <ignoreEntities></ignoreEntities>
+
+                    <!-- 集成 DubboFramework -->
+                    <enableDubbo>false</enableDubbo>
+
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>${levin.service-support.groupId}</groupId>
+                        <artifactId>service-support</artifactId>
+                        <version>${levin.service-support.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
 ```
 
 ### 19.2 实体变更后的标准顺序
