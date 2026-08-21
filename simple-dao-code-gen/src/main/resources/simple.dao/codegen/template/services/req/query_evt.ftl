@@ -139,6 +139,7 @@ public class ${className} extends ${reqExtendClass} {
         <#elseif (keyword != '' &&  annotation?trim?starts_with(keyword)) || annotation?trim?starts_with('@PrimitiveValue') || annotation?trim?starts_with('@Ignore')  || annotation?trim?starts_with('@Eq')|| annotation?trim?starts_with('@Id') || annotation?trim?starts_with('@Version') || annotation?trim?starts_with('@Max') || annotation?trim?starts_with('@Size')>
            <#if annotation?trim?starts_with('@Eq') && field.isJsonColumn() && field.isSimpleCollectionType() >
     @OR(autoClose = true)
+    @ForceSplitCondition
            </#if>
     ${annotation}
         </#if>
@@ -178,6 +179,7 @@ public class ${className} extends ${reqExtendClass} {
     <@FieldAnnotationList field = field ignoreInjectVar = true />
         <#if field.isIterable()>
     @OR(autoClose = true)
+    @ForceSplitCondition
         </#if>
     @${field.extras.nameSuffix}(<#if field.isJsonColumn() && field.isSimpleCollectionType()>jsonPath="$[*]"</#if>)
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};

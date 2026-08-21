@@ -33,7 +33,7 @@ class JsonProgrammaticBuilderTest {
         assertTrue(statement.contains("json_query(str(u.roleList), '$[*]') like :?"), statement);
         assertTrue(statement.contains("json_exists(str(u.logs), '$[0].logText')"), statement);
         assertTrue(statement.contains("not json_exists(str(u.logs), '$[1].logText')"), statement);
-        assertTrue(statement.contains("COALESCE(json_query(str(u.logs), '$[0].logText'), json_value(str(u.logs), '$[0].logText')) as firstLogText"), statement);
+        assertTrue(statement.contains("COALESCE(str(json_query(str(u.logs), '$[0].logText')), json_value(str(u.logs), '$[0].logText')) as firstLogText"), statement);
         assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') as firstLogValue"), statement);
         assertTrue(statement.contains("json_query(str(u.logs), '$[*]') as allLogs"), statement);
     }

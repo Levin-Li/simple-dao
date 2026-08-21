@@ -232,7 +232,7 @@ class ExprUtilsTest {
                 holder -> "",
                 new ArrayList<>());
 
-        assertTrue(expr.contains("COALESCE(json_query"), "非 wildcard 的 Select 应同时兼容 JSON 对象/数组和标量提取");
+        assertTrue(expr.contains("COALESCE(str(json_query"), "非 wildcard 的 Select 应同时兼容 JSON 对象/数组和标量提取");
         assertTrue(expr.contains("json_value"), "非 wildcard 的 Select 应包含 json_value 兜底");
     }
 

@@ -12,6 +12,7 @@ import com.levin.commons.dao.annotation.logic.END;
 import com.levin.commons.dao.annotation.logic.NOT;
 import com.levin.commons.dao.annotation.logic.OR;
 
+import com.levin.commons.dao.annotation.misc.ForceSplitCondition;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.misc.Validator;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -2067,6 +2068,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             for (Annotation annotation : varAnnotations) {
 
                 if (annotation == null
+                        || annotation instanceof ForceSplitCondition
                         || annotation instanceof PrimitiveValue
                         || annotation instanceof Validator
                         || annotation instanceof Immutable
@@ -2331,6 +2333,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 continue;
             }
 
+            final boolean expandCollection = shouldExpandCollection(varAnnotations, op, isArray, isIterable);
+
             if (
                 //空值直接忽略迭代
                     value == null
@@ -2345,10 +2349,10 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                             // Update 的右值是字段值本身，Collection/Array 也应按原子值处理。
                             || op == Op.Update
 
-                            || wrapperParamValue
+                            || (wrapperParamValue && !expandCollection)
 
                             //如果是扩展参数的操作，如 IN NotIn Between等
-                            || op.isExpandParamValue()
+                            || (op.isExpandParamValue() && !expandCollection)
 
                             //如果是不需要参的操作，如 IS NULL，IS NOT NULL
                             || !op.isNeedParamExpr()) {
@@ -2361,7 +2365,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                 // 如果
                 //可迭代参数
-                Iterable<?> iterableData = isArray ? Arrays.asList((Object[]) value) : (Iterable<?>) value;
+                Iterable<?> iterableData = toIterable(value, isArray);
 
                 for (Object paramValue : iterableData) {
 
@@ -2374,6 +2378,27 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             }
         }
 
+    }
+
+    private boolean shouldExpandCollection(Annotation[] varAnnotations, Op op, boolean isArray, boolean isIterable) {
+        return (isArray || isIterable)
+                && op != null
+                && op != Op.Update
+                && op.isNeedParamExpr()
+                && findFirstMatched(varAnnotations, ForceSplitCondition.class) != null;
+    }
+
+    private Iterable<?> toIterable(Object value, boolean isArray) {
+        if (!isArray) {
+            return (Iterable<?>) value;
+        }
+
+        int length = Array.getLength(value);
+        List<Object> values = new ArrayList<>(length);
+        for (int index = 0; index < length; index++) {
+            values.add(Array.get(value, index));
+        }
+        return values;
     }
 
 
