@@ -165,6 +165,8 @@ public abstract class ExprUtils {
             fieldExpr = genFuncExpr(ctxEvalFunc, fieldExpr, c.fieldFuncs());
         }
 
+        String jsonArrayContainsFieldExpr = null;
+
         if (hasText(c.jsonPath()) && hasText(fieldExpr)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(c.jsonPath());
             boolean incrementUpdate = Op.Update.equals(op) && c.incrementMode();
@@ -185,9 +187,13 @@ public abstract class ExprUtils {
 
             if (!incrementUpdate) {
                 if (jsonPathSpec.isWildcard()) {
-                    fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
-                    if (isJsonTextMatchOp(op)) {
-                        fieldExpr = JsonExprSupport.jsonTextExpr(fieldExpr);
+                    if (Op.Contains.equals(op) || Op.NotContains.equals(op)) {
+                        jsonArrayContainsFieldExpr = fieldExpr;
+                    } else {
+                        fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
+                        if (isJsonTextMatchOp(op)) {
+                            fieldExpr = JsonExprSupport.jsonTextExpr(fieldExpr);
+                        }
                     }
                 } else if (Op.Select.equals(op)) {
                     fieldExpr = JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
@@ -368,7 +374,12 @@ public abstract class ExprUtils {
         //替换参数
         String ql;
 
-        if (hasText(c.jsonPath()) && Op.Update.equals(op) && !c.incrementMode()) {
+        if (hasText(jsonArrayContainsFieldExpr)) {
+            ql = c.surroundPrefix() + " "
+                    + JsonExprSupport.jsonArrayContainsExpr(jsonArrayContainsFieldExpr, c.jsonPath(), paramExpr,
+                    Op.NotContains.equals(op))
+                    + " " + c.surroundSuffix();
+        } else if (hasText(c.jsonPath()) && Op.Update.equals(op) && !c.incrementMode()) {
             ql = c.surroundPrefix() + " "
                     + rawFieldExpr + " = "
                     + JsonExprSupport.jsonSetExpr(rawFieldExpr, c.jsonPath(), paramExpr)

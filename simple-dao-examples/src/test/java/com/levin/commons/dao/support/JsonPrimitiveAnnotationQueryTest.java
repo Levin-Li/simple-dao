@@ -37,7 +37,7 @@ class JsonPrimitiveAnnotationQueryTest {
                         .setContainsDomainList(List.of("example.com", "example.org")))
                 .genFinalStatement();
 
-        assertEquals(1, countOccurrences(statement.toLowerCase(), " like "), statement);
+        assertEquals(1, countOccurrences(statement, "json_exists("), statement);
         assertTrue(dao.genFinalParamList().stream()
                         .filter(PrimitiveValueWrapper.class::isInstance)
                         .map(PrimitiveValueWrapper.class::cast)
@@ -55,7 +55,7 @@ class JsonPrimitiveAnnotationQueryTest {
                         .setContainsDomainList(List.of("example.com", "example.org")))
                 .genFinalStatement();
 
-        assertEquals(2, countOccurrences(statement.toLowerCase(), " like "), statement);
+        assertEquals(2, countOccurrences(statement, "json_exists("), statement);
         assertTrue(statement.toLowerCase().contains(" or "), statement);
         assertFalse(dao.genFinalParamList().stream()
                         .filter(PrimitiveValueWrapper.class::isInstance)
@@ -74,7 +74,7 @@ class JsonPrimitiveAnnotationQueryTest {
                         .setContainsDomainArray(new String[]{"example.com", "example.org"}))
                 .genFinalStatement();
 
-        assertEquals(2, countOccurrences(arrayStatement.toLowerCase(), " like "), arrayStatement);
+        assertEquals(2, countOccurrences(arrayStatement, "json_exists("), arrayStatement);
         assertTrue(arrayStatement.toLowerCase().contains(" or "), arrayStatement);
 
         SelectDaoImpl<TestUser> emptyDao = new SelectDaoImpl<>(primitiveAwareStub(jpaDao), false, TestUser.class, "u");

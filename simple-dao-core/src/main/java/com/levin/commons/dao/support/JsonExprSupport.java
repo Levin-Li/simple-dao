@@ -1,6 +1,7 @@
 package com.levin.commons.dao.support;
 
 import org.springframework.util.StringUtils;
+import org.springframework.util.Assert;
 
 public abstract class JsonExprSupport {
 
@@ -16,14 +17,26 @@ public abstract class JsonExprSupport {
      * 参考：{@value #HIBERNATE_USER_GUIDE_JSON_FUNCTIONS}。
      */
     private static String queryJsonExpr(String fieldExpr) {
-        return "str(" + fieldExpr + ")";
+        return "cast(" + fieldExpr + " as String)";
     }
 
     /**
      * 将 JSON 查询结果转换为文本表达式，供 LIKE、NOT LIKE 等字符串条件使用。
      */
     public static String jsonTextExpr(String jsonExpr) {
-        return "str(" + jsonExpr + ")";
+        return "cast(" + jsonExpr + " as String)";
+    }
+
+    /**
+     * 生成 JSON 数组元素精确匹配表达式。
+     */
+    public static String jsonArrayContainsExpr(String jsonDocumentExpr, String wildcardJsonPath,
+                                               String paramExpr, boolean not) {
+        Assert.isTrue(StringUtils.hasText(wildcardJsonPath) && wildcardJsonPath.contains("[*]"),
+                "JSON 数组包含查询的 jsonPath 必须包含 [*]");
+        String predicatePath = wildcardJsonPath.trim() + "?(@ == $value)";
+        return (not ? "not " : "") + "json_exists(" + jsonDocumentExpr + ", '" + predicatePath
+                + "' passing " + paramExpr + " as \"value\")";
     }
 
     /**

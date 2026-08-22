@@ -914,27 +914,43 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     @Override
     public T jsonContains(String entityAttrName, String jsonPath, String keyword) {
-
-        return jsonContains(entityAttrName, jsonPath, keyword, false);
+        return jsonArrayContains(entityAttrName, jsonPath, keyword, false);
     }
 
     @Override
     public T jsonNotContains(String entityAttrName, String jsonPath, String keyword) {
-
-        return jsonContains(entityAttrName, jsonPath, keyword, true);
+        return jsonArrayContains(entityAttrName, jsonPath, keyword, true);
     }
 
-    private T jsonContains(String entityAttrName, String jsonPath, String keyword, boolean not) {
+    private T jsonArrayContains(String entityAttrName, String jsonPath, String keyword, boolean not) {
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(keyword)) {
+            JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+            Assert.isTrue(jsonPathSpec.isWildcard(), "jsonContains/jsonNotContains 的 jsonPath 必须包含 [*]；文本模糊匹配请使用 jsonTextLike/jsonTextNotLike");
+            where(JsonExprSupport.jsonArrayContainsExpr(aroundColumnPrefix(entityAttrName),
+                    jsonPathSpec.getRawPath(), getParamPlaceholder(), not), keyword);
+        }
+
+        return (T) this;
+    }
+
+    @Override
+    public T jsonTextLike(String entityAttrName, String jsonPath, String pattern) {
+        return jsonTextLike(entityAttrName, jsonPath, pattern, false);
+    }
+
+    @Override
+    public T jsonTextNotLike(String entityAttrName, String jsonPath, String pattern) {
+        return jsonTextLike(entityAttrName, jsonPath, pattern, true);
+    }
+
+    private T jsonTextLike(String entityAttrName, String jsonPath, String pattern, boolean not) {
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(pattern)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
             String fieldExpr = aroundColumnPrefix(entityAttrName);
             String jsonExpr = jsonPathSpec.isWildcard()
-                    ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
+                    ? JsonExprSupport.jsonTextExpr(JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath()))
                     : JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
-            if (jsonPathSpec.isWildcard()) {
-                jsonExpr = JsonExprSupport.jsonTextExpr(jsonExpr);
-            }
-            where(jsonExpr + (not ? " not like " : " like ") + getParamPlaceholder(), "%" + keyword + "%");
+            where(jsonExpr + (not ? " not like " : " like ") + getParamPlaceholder(), pattern);
         }
 
         return (T) this;

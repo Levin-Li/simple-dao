@@ -24,6 +24,8 @@ class JsonProgrammaticBuilderTest {
                 .jsonNotEq("logs", "$[0].logText", "goodbye")
                 .jsonContains("roleList", "$[*]", "admin")
                 .jsonNotContains("roleList", "$[*]", "guest")
+                .jsonTextLike("roleList", "$[*]", "%admin%")
+                .jsonTextNotLike("roleList", "$[*]", "%guest%")
                 .jsonExists("logs", "$[0].logText")
                 .jsonNotExists("logs", "$[1].logText")
                 .jsonSelect("logs", "$[0].logText", "firstLogText")
@@ -31,15 +33,17 @@ class JsonProgrammaticBuilderTest {
                 .jsonQuerySelect("logs", "$[*]", "allLogs")
                 .genFinalStatement();
 
-        assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') = :?"), statement);
-        assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') != :?"), statement);
-        assertTrue(statement.contains("str(json_query(str(u.roleList), '$[*]')) like :?"), statement);
-        assertTrue(statement.contains("str(json_query(str(u.roleList), '$[*]')) not like :?"), statement);
-        assertTrue(statement.contains("json_exists(str(u.logs), '$[0].logText')"), statement);
-        assertTrue(statement.contains("not json_exists(str(u.logs), '$[1].logText')"), statement);
-        assertTrue(statement.contains("COALESCE(str(json_query(str(u.logs), '$[0].logText')), json_value(str(u.logs), '$[0].logText')) as firstLogText"), statement);
-        assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') as firstLogValue"), statement);
-        assertTrue(statement.contains("json_query(str(u.logs), '$[*]') as allLogs"), statement);
+        assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') = :?"), statement);
+        assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') != :?"), statement);
+        assertTrue(statement.contains("json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as \"value\")"), statement);
+        assertTrue(statement.contains("not json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as \"value\")"), statement);
+        assertTrue(statement.contains("cast(json_query(cast(u.roleList as String), '$[*]') as String) like :?"), statement);
+        assertTrue(statement.contains("cast(json_query(cast(u.roleList as String), '$[*]') as String) not like :?"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$[0].logText')"), statement);
+        assertTrue(statement.contains("not json_exists(cast(u.logs as String), '$[1].logText')"), statement);
+        assertTrue(statement.contains("COALESCE(cast(json_query(cast(u.logs as String), '$[0].logText') as String), json_value(cast(u.logs as String), '$[0].logText')) as firstLogText"), statement);
+        assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') as firstLogValue"), statement);
+        assertTrue(statement.contains("json_query(cast(u.logs as String), '$[*]') as allLogs"), statement);
     }
 
     @Test

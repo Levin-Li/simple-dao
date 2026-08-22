@@ -454,13 +454,13 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
-     * JSON 路径包含查询。
+     * JSON 数组路径包含查询。
      * <p>
-     * 普通路径使用 json_value，通配路径（如 $[*]）使用 json_query。
+     * 对通配数组路径（如 $[*]）的任一元素执行精确匹配。
      *
      * @param entityAttrName JSON 字段名
      * @param jsonPath       JSON 路径
-     * @param keyword        关键字
+     * @param keyword        数组元素值
      * @return this
      */
     T jsonContains(String entityAttrName, String jsonPath, String keyword);
@@ -478,13 +478,35 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
-     * JSON 路径不包含查询。
-     * <p>
-     * 普通路径使用 json_value，通配路径（如 $[*]）使用 json_query。
+     * JSON 路径文本 LIKE 查询。
      *
      * @param entityAttrName JSON 字段名
      * @param jsonPath       JSON 路径
-     * @param keyword        关键字
+     * @param pattern        LIKE 模式
+     * @return this
+     */
+    T jsonTextLike(String entityAttrName, String jsonPath, String pattern);
+
+    default T jsonTextLike(Boolean isAppend, String entityAttrName, String jsonPath, String pattern) {
+        return TRUE.equals(isAppend) ? jsonTextLike(entityAttrName, jsonPath, pattern) : (T) this;
+    }
+
+    default T jsonTextLike(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String pattern) {
+        return jsonTextLike(lambdaMethodAttr.getAttrName(), jsonPath, pattern);
+    }
+
+    default T jsonTextLike(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String pattern) {
+        return TRUE.equals(isAppend) ? jsonTextLike(lambdaMethodAttr, jsonPath, pattern) : (T) this;
+    }
+
+    /**
+     * JSON 数组路径不包含查询。
+     * <p>
+     * 要求通配数组路径（如 $[*]）中不存在精确匹配的元素。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param keyword        数组元素值
      * @return this
      */
     T jsonNotContains(String entityAttrName, String jsonPath, String keyword);
@@ -499,6 +521,28 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T jsonNotContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
         return TRUE.equals(isAppend) ? jsonNotContains(lambdaMethodAttr, jsonPath, keyword) : (T) this;
+    }
+
+    /**
+     * JSON 路径文本 NOT LIKE 查询。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param pattern        LIKE 模式
+     * @return this
+     */
+    T jsonTextNotLike(String entityAttrName, String jsonPath, String pattern);
+
+    default T jsonTextNotLike(Boolean isAppend, String entityAttrName, String jsonPath, String pattern) {
+        return TRUE.equals(isAppend) ? jsonTextNotLike(entityAttrName, jsonPath, pattern) : (T) this;
+    }
+
+    default T jsonTextNotLike(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String pattern) {
+        return jsonTextNotLike(lambdaMethodAttr.getAttrName(), jsonPath, pattern);
+    }
+
+    default T jsonTextNotLike(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String pattern) {
+        return TRUE.equals(isAppend) ? jsonTextNotLike(lambdaMethodAttr, jsonPath, pattern) : (T) this;
     }
 
     T notContains(Class<?> attrBelongClass, String entityAttrName, String keyword);

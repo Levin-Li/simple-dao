@@ -163,11 +163,11 @@ class ExprUtilsTest {
         assertEquals("json_object('name' value u.name)",
                 JsonExprSupport.jsonObjectExpr(JsonExprSupport.jsonObjectEntryExpr("'name'", "u.name")));
         assertEquals("json_array(:?,:?)", JsonExprSupport.jsonArrayExpr(":?", ":?"));
-        assertEquals("json_value(str(u.ext), '$.name' returning String null on error)",
+        assertEquals("json_value(cast(u.ext as String), '$.name' returning String null on error)",
                 JsonExprSupport.jsonValueExpr("u.ext", "$.name", "returning String", "null on error"));
-        assertEquals("json_query(str(u.ext), '$.items' with wrapper)",
+        assertEquals("json_query(cast(u.ext as String), '$.items' with wrapper)",
                 JsonExprSupport.jsonQueryExpr("u.ext", "$.items", "with wrapper"));
-        assertEquals("json_exists(str(u.ext), '$.items[0]' false on error)",
+        assertEquals("json_exists(cast(u.ext as String), '$.items[0]' false on error)",
                 JsonExprSupport.jsonExistsExpr("u.ext", "$.items[0]", "false on error"));
         assertEquals("json_set(u.ext, '$.name', :?)", JsonExprSupport.jsonSetExpr("u.ext", "$.name", ":?"));
         assertEquals("json_remove(u.ext, '$.name', '$.age')", JsonExprSupport.jsonRemoveExpr("u.ext", "$.name", "$.age"));
@@ -197,8 +197,8 @@ class ExprUtilsTest {
                 holder -> "",
                 new ArrayList<>());
 
-        assertTrue(expr.contains("json_query"), "wildcard JSON 路径应转换为 Hibernate 标准 json_query");
-        assertTrue(expr.contains("str(json_query"), "wildcard JSON 文本匹配应将 json_query 结果转换为文本");
+        assertTrue(expr.contains("json_exists"), "wildcard JSON 数组包含应转换为 Hibernate 标准 json_exists");
+        assertTrue(expr.contains("passing :? as \"value\""), "wildcard JSON 数组包含应通过 JSON path 变量传入元素值");
         assertTrue(expr.contains("$.items[*].sku"), "wildcard JSON 路径应出现在表达式中");
     }
 
@@ -233,7 +233,7 @@ class ExprUtilsTest {
                 holder -> "",
                 new ArrayList<>());
 
-        assertTrue(expr.contains("COALESCE(str(json_query"), "非 wildcard 的 Select 应同时兼容 JSON 对象/数组和标量提取");
+        assertTrue(expr.contains("COALESCE(cast(json_query"), "非 wildcard 的 Select 应同时兼容 JSON 对象/数组和标量提取");
         assertTrue(expr.contains("json_value"), "非 wildcard 的 Select 应包含 json_value 兜底");
     }
 
