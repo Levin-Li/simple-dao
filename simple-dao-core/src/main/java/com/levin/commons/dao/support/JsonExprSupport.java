@@ -20,6 +20,13 @@ public abstract class JsonExprSupport {
     }
 
     /**
+     * 将 JSON 查询结果转换为文本表达式，供 LIKE、NOT LIKE 等字符串条件使用。
+     */
+    public static String jsonTextExpr(String jsonExpr) {
+        return "str(" + jsonExpr + ")";
+    }
+
+    /**
      * 生成 Hibernate 7 `json_value(jsonDocument, jsonPath)` 表达式，用于从 JSON 中提取标量值。
      * 来源文档：Hibernate ORM 7 User Guide，JSON functions: `json_value()`;
      * Javadocs: `JsonValueFunction`，参考 {@value #HIBERNATE_USER_GUIDE_JSON_FUNCTIONS} 和 {@value #HIBERNATE_JSON_FUNCTION_JAVADOCS}。
@@ -44,7 +51,8 @@ public abstract class JsonExprSupport {
      */
     public static String jsonSelectableExpr(String fieldExpr, String jsonPath) {
         String jsonExpr = queryJsonExpr(fieldExpr);
-        return "COALESCE(str(json_query(" + jsonExpr + ", '" + jsonPath + "')), json_value(" + jsonExpr + ", '" + jsonPath + "'))";
+        return "COALESCE(" + jsonTextExpr("json_query(" + jsonExpr + ", '" + jsonPath + "')")
+                + ", json_value(" + jsonExpr + ", '" + jsonPath + "'))";
     }
 
     /**

@@ -198,6 +198,7 @@ class ExprUtilsTest {
                 new ArrayList<>());
 
         assertTrue(expr.contains("json_query"), "wildcard JSON 路径应转换为 Hibernate 标准 json_query");
+        assertTrue(expr.contains("str(json_query"), "wildcard JSON 文本匹配应将 json_query 结果转换为文本");
         assertTrue(expr.contains("$.items[*].sku"), "wildcard JSON 路径应出现在表达式中");
     }
 

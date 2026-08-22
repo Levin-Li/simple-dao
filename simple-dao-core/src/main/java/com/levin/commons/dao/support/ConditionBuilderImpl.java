@@ -931,6 +931,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             String jsonExpr = jsonPathSpec.isWildcard()
                     ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
                     : JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+            if (jsonPathSpec.isWildcard()) {
+                jsonExpr = JsonExprSupport.jsonTextExpr(jsonExpr);
+            }
             where(jsonExpr + (not ? " not like " : " like ") + getParamPlaceholder(), "%" + keyword + "%");
         }
 

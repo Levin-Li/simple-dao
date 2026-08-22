@@ -186,6 +186,9 @@ public abstract class ExprUtils {
             if (!incrementUpdate) {
                 if (jsonPathSpec.isWildcard()) {
                     fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());
+                    if (isJsonTextMatchOp(op)) {
+                        fieldExpr = JsonExprSupport.jsonTextExpr(fieldExpr);
+                    }
                 } else if (Op.Select.equals(op)) {
                     fieldExpr = JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
                 } else {
@@ -409,6 +412,17 @@ public abstract class ExprUtils {
 
         return surroundNotExpr(c, replace(ql, contexts, true,
                 column -> aroundColumnPrefixFunc.apply(domain, column), null).trim());
+    }
+
+    private static boolean isJsonTextMatchOp(Op op) {
+        return Op.Like.equals(op)
+                || Op.NotLike.equals(op)
+                || Op.Contains.equals(op)
+                || Op.NotContains.equals(op)
+                || Op.StartsWith.equals(op)
+                || Op.NotStartsWith.equals(op)
+                || Op.EndsWith.equals(op)
+                || Op.NotEndsWith.equals(op);
     }
 
 
