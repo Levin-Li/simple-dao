@@ -698,9 +698,19 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     @Override
     public T jsonEq(String entityAttrName, String jsonPath, Object paramValue) {
 
+        return jsonEq(entityAttrName, jsonPath, paramValue, false);
+    }
+
+    @Override
+    public T jsonNotEq(String entityAttrName, String jsonPath, Object paramValue) {
+
+        return jsonEq(entityAttrName, jsonPath, paramValue, true);
+    }
+
+    private T jsonEq(String entityAttrName, String jsonPath, Object paramValue, boolean not) {
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
             String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
-            where(fieldExpr + " = " + getParamPlaceholder(), paramValue);
+            where(fieldExpr + (not ? " != " : " = ") + getParamPlaceholder(), paramValue);
         }
 
         return (T) this;

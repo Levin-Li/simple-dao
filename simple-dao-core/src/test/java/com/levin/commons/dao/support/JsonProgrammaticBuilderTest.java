@@ -21,6 +21,7 @@ class JsonProgrammaticBuilderTest {
 
         String statement = dao
                 .jsonEq("logs", "$[0].logText", "hello")
+                .jsonNotEq("logs", "$[0].logText", "goodbye")
                 .jsonContains("roleList", "$[*]", "admin")
                 .jsonNotContains("roleList", "$[*]", "guest")
                 .jsonExists("logs", "$[0].logText")
@@ -31,6 +32,7 @@ class JsonProgrammaticBuilderTest {
                 .genFinalStatement();
 
         assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') = :?"), statement);
+        assertTrue(statement.contains("json_value(str(u.logs), '$[0].logText') != :?"), statement);
         assertTrue(statement.contains("json_query(str(u.roleList), '$[*]') like :?"), statement);
         assertTrue(statement.contains("json_query(str(u.roleList), '$[*]') not like :?"), statement);
         assertTrue(statement.contains("json_exists(str(u.logs), '$[0].logText')"), statement);

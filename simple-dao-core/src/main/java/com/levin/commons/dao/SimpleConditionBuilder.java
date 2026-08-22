@@ -185,6 +185,28 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * JSON 路径不等于查询。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param paramValue     参数值
+     * @return this
+     */
+    T jsonNotEq(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonNotEq(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonNotEq(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonNotEq(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonNotEq(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonNotEq(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonNotEq(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
      * !=
      *
      * @param entityAttrName 如 name
