@@ -455,6 +455,30 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
         return TRUE.equals(isAppend) ? jsonContains(lambdaMethodAttr, jsonPath, keyword) : (T) this;
     }
 
+    /**
+     * JSON 路径不包含查询。
+     * <p>
+     * 普通路径使用 json_value，通配路径（如 $[*]）使用 json_query。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 路径
+     * @param keyword        关键字
+     * @return this
+     */
+    T jsonNotContains(String entityAttrName, String jsonPath, String keyword);
+
+    default T jsonNotContains(Boolean isAppend, String entityAttrName, String jsonPath, String keyword) {
+        return TRUE.equals(isAppend) ? jsonNotContains(entityAttrName, jsonPath, keyword) : (T) this;
+    }
+
+    default T jsonNotContains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
+        return jsonNotContains(lambdaMethodAttr.getAttrName(), jsonPath, keyword);
+    }
+
+    default T jsonNotContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
+        return TRUE.equals(isAppend) ? jsonNotContains(lambdaMethodAttr, jsonPath, keyword) : (T) this;
+    }
+
     T notContains(Class<?> attrBelongClass, String entityAttrName, String keyword);
 
     default T notContains(String entityAttrName, String keyword) {

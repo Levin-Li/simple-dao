@@ -905,13 +905,23 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     @Override
     public T jsonContains(String entityAttrName, String jsonPath, String keyword) {
 
+        return jsonContains(entityAttrName, jsonPath, keyword, false);
+    }
+
+    @Override
+    public T jsonNotContains(String entityAttrName, String jsonPath, String keyword) {
+
+        return jsonContains(entityAttrName, jsonPath, keyword, true);
+    }
+
+    private T jsonContains(String entityAttrName, String jsonPath, String keyword, boolean not) {
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(keyword)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
             String fieldExpr = aroundColumnPrefix(entityAttrName);
             String jsonExpr = jsonPathSpec.isWildcard()
                     ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
                     : JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
-            where(jsonExpr + " like " + getParamPlaceholder(), "%" + keyword + "%");
+            where(jsonExpr + (not ? " not like " : " like ") + getParamPlaceholder(), "%" + keyword + "%");
         }
 
         return (T) this;
