@@ -42,9 +42,9 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
            // , isRequired = InjectVar.SPEL_PREFIX + NOT_SAAS_USER // 如果不是SAAS用户，那么值是必须的 @2024.10.20 注释变更，变更后，允许普通SAAS用户代租户做部分操作
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN // 如果不是超级管理员，那么值是必须的
     )
-//    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && isSaasUser && #isEmpty(#_fieldVal)", type = OrderBy.Type.Asc
+//    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && isPlatformUser && #isEmpty(#_fieldVal)", type = OrderBy.Type.Asc
 //            , order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID为NULL的排在前面")
-    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && !isSaasUser() && #isNotEmpty(#_fieldVal) && isContainsPublicData() && !isTenantShared()",
+    @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && !isPlatformUser() && #isNotEmpty(#_fieldVal) && isContainsPublicData() && !isTenantShared()",
             order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID不为NULL的排在前面")
     @OR(autoClose = true)
     @Eq

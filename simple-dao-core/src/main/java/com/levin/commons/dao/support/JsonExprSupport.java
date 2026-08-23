@@ -35,7 +35,7 @@ public abstract class JsonExprSupport {
         Assert.isTrue(StringUtils.hasText(wildcardJsonPath) && wildcardJsonPath.contains("[*]"),
                 "JSON 数组包含查询的 jsonPath 必须包含 [*]");
         String predicatePath = wildcardJsonPath.trim() + "?(@ == $value)";
-        return (not ? "not " : "") + "json_exists(" + jsonDocumentExpr + ", '" + predicatePath
+        return (not ? "not " : "") + "json_exists(" + queryJsonExpr(jsonDocumentExpr) + ", '" + predicatePath
                 + "' passing " + paramExpr + " as value)";
     }
 

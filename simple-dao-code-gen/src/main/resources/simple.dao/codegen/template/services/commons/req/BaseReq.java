@@ -48,6 +48,14 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
 
+    public static final String IS_PLATFORM_USER = " (#" + InjectConst.IS_PLATFORM_USER + "?:false) ";
+
+    public static final String IS_TENANT_USER = " (#" + InjectConst.IS_TENANT_USER + "?:false) ";
+
+    /**
+     * @deprecated 使用 {@link #IS_PLATFORM_USER} 代替。
+     */
+    @Deprecated
     public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
@@ -60,6 +68,14 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
 
+    public static final String NOT_PLATFORM_USER = " !" + IS_PLATFORM_USER;
+
+    public static final String NOT_TENANT_USER = " !" + IS_TENANT_USER;
+
+    /**
+     * @deprecated 使用 {@link #NOT_PLATFORM_USER} 代替。
+     */
+    @Deprecated
     public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
 
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
@@ -93,10 +109,15 @@ public abstract class BaseReq implements ServiceReq {
     @CtxVar
     protected boolean isSaasAdmin = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_USER)
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_PLATFORM_USER)
     @Ignore
     @CtxVar
-    protected boolean isSaasUser = false;
+    protected boolean isPlatformUser = false;
+
+    @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_USER)
+    @Ignore
+    @CtxVar
+    protected boolean isTenantUser = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
     @Ignore
@@ -175,9 +196,25 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
+    @Schema(title = "是否平台用户", hidden = true)
+    public boolean isPlatformUser() {
+        return this.isPlatformUser;
+    }
+
+    @Ignore
+    @Schema(title = "是否租户用户", hidden = true)
+    public boolean isTenantUser() {
+        return this.isTenantUser;
+    }
+
+    /**
+     * @deprecated 使用 {@link #isPlatformUser()} 代替。
+     */
+    @Deprecated
+    @Ignore
     @Schema(title = "是否SAAS用户", hidden = true)
     public boolean isSaasUser() {
-        return this.isSaasUser;
+        return isPlatformUser();
     }
 
     @Ignore

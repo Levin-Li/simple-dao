@@ -73,7 +73,10 @@ import java.util.stream.Stream;
 @ActiveProfiles("dev")
 //@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestConfiguration.class}, properties = {
-        "spring.jpa.properties.hibernate.query.hql.json_functions_enabled=true"
+        "spring.jpa.properties.hibernate.query.hql.json_functions_enabled=true",
+        // DAO 集成测试不需要 MVC/Jackson 扩展；service-support 的该扩展与当前 Jackson 运行时独立演进。
+        "com.levin.commons.service.support.DefaultSpringMvcEnumFormatterConfiguration.enabled=false",
+        "com.levin.commons.service.support.DefaultSpringMvcJsonDeserializerConfiguration.enabled=false"
 })
 //@Transactional
 public class DaoExamplesTest {
@@ -3336,7 +3339,8 @@ public class DaoExamplesTest {
                         .setHasLog(Boolean.TRUE))
                 .genFinalStatement();
 
-        Assert.isTrue(statement.contains("json_query(") && statement.contains("'$[*]'"), "wildcard where 条件应生成 json_query");
+        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"),
+                "Contains 注解的 wildcard JSON 路径应生成数组元素精确匹配条件");
         Assert.isTrue(statement.contains("json_exists(") && statement.contains("'$[0].logText'"), "Exists 注解应生成 json_exists");
         Assert.isTrue(statement.contains("COALESCE(cast(json_query(") && statement.contains("json_value("), "Select 注解应同时兼容对象/数组和标量 JSON 路径");
     }
@@ -3358,6 +3362,34 @@ public class DaoExamplesTest {
     }
 
     @Test
+    public void testJsonArrayContainsShouldUseUnquotedPassingAlias() {
+
+        dao.deleteFrom(Task.class).disableSafeMode().delete();
+        dao.deleteFrom(User.class).disableSafeMode().delete();
+        dao.deleteFrom(Group.class).disableSafeMode().delete();
+
+        String uniqueRole = "R_JSON_ARRAY_MATCH_" + System.nanoTime();
+        User user = prepareJsonPathUser(uniqueRole, null);
+
+        String statement = dao.selectFrom(User.class, "u")
+                .jsonContains("roleList", "$[*]", uniqueRole)
+                .jsonNotContains("roleList", "$[*]", "R_JSON_ARRAY_MISSING")
+                .eq(User::getId, user.getId())
+                .genFinalStatement();
+
+        Assert.isTrue(statement.contains("passing :? as value"), "JSON path passing 别名必须是不带双引号的标识符：" + statement);
+        Assert.isTrue(!statement.contains("as \"value\""), "JSON path passing 别名不应包含双引号：" + statement);
+
+        long count = dao.selectFrom(User.class, "u")
+                .jsonContains("roleList", "$[*]", uniqueRole)
+                .jsonNotContains("roleList", "$[*]", "R_JSON_ARRAY_MISSING")
+                .eq(User::getId, user.getId())
+                .count();
+
+        Assert.isTrue(count == 1, "jsonContains/jsonNotContains 应在 JSON 数组元素级完成精确匹配");
+    }
+
+    @Test
     public void testJsonPathUpdateStatement() {
 
         String statement = dao.updateTo(User.class, "u")
@@ -3367,7 +3399,8 @@ public class DaoExamplesTest {
                 .genFinalStatement();
 
         Assert.isTrue(statement.contains("u.logs = json_set(u.logs, '$[0].logText'"), "Update 注解应生成 json_set 更新语句");
-        Assert.isTrue(statement.contains("json_query(") && statement.contains("'$[*]'"), "Update 场景中的 where 条件也应支持 wildcard JSON 路径");
+        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"),
+                "Update 场景的 Contains 注解应支持数组元素精确匹配");
     }
 
     @Test
