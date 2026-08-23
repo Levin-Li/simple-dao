@@ -35,8 +35,8 @@ class JsonProgrammaticBuilderTest {
 
         assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') = :?"), statement);
         assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') != :?"), statement);
-        assertTrue(statement.contains("json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as \"value\")"), statement);
-        assertTrue(statement.contains("not json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as \"value\")"), statement);
+        assertTrue(statement.contains("json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("not json_exists(u.roleList, '$[*]?(@ == $value)' passing :? as value)"), statement);
         assertTrue(statement.contains("cast(json_query(cast(u.roleList as String), '$[*]') as String) like :?"), statement);
         assertTrue(statement.contains("cast(json_query(cast(u.roleList as String), '$[*]') as String) not like :?"), statement);
         assertTrue(statement.contains("json_exists(cast(u.logs as String), '$[0].logText')"), statement);

@@ -198,7 +198,7 @@ class ExprUtilsTest {
                 new ArrayList<>());
 
         assertTrue(expr.contains("json_exists"), "wildcard JSON 数组包含应转换为 Hibernate 标准 json_exists");
-        assertTrue(expr.contains("passing :? as \"value\""), "wildcard JSON 数组包含应通过 JSON path 变量传入元素值");
+        assertTrue(expr.contains("passing :? as value"), "wildcard JSON 数组包含应通过 JSON path 变量传入元素值");
         assertTrue(expr.contains("$.items[*].sku"), "wildcard JSON 路径应出现在表达式中");
     }
 
