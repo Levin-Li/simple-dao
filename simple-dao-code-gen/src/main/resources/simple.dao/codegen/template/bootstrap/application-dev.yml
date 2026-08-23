@@ -3,7 +3,7 @@ spring:
 
   data:
     redis:
-      database: 8
+      database: 3
 
   datasource:
     url: jdbc:postgresql://localhost:5432/${moduleName}
