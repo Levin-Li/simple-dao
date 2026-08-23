@@ -1,11 +1,15 @@
 #@author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
 
 spring:
+
+  data:
+    redis:
+      database: 8
+
   datasource:
     url: jdbc:postgresql://localhost:5432/${moduleName}
     username: postgres
     password: postgres
-
 
   jpa:
     show-sql: true
@@ -21,12 +25,3 @@ logging:
     root: warn
     com.levin: debug
     ${modulePackageName}: debug
-
-
-plugin:
-  com:
-    levin:
-      oak:
-        base:
-          framework:
-            enable-mock-sms-send: true
