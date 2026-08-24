@@ -21,6 +21,7 @@ import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
+import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
@@ -1244,10 +1245,18 @@ public final class ServiceModelCodeGenerator {
 
         buildService(entityClass, fields, params);
 
-        buildAdminApiController(entityClass, fields, adminApiDir, params);
+        if (shouldGenerateController(entityClass)) {
+            buildAdminApiController(entityClass, fields, adminApiDir, params);
+            buildClientApiController(entityClass, fields, clientApiDir(), params);
+        } else {
+            logger.info("实体类 {} 标记为仅内部访问，跳过控制器生成", entityClass.getName());
+        }
 
-        buildClientApiController(entityClass, fields, clientApiDir(), params);
+    }
 
+    static boolean shouldGenerateController(Class<?> entityClass) {
+        EntityOption entityOption = AnnotatedElementUtils.findMergedAnnotation(entityClass, EntityOption.class);
+        return entityOption == null || !entityOption.innerAccessOnly();
     }
 
     private static void genTestCode(Class entityClass, String srcDir, Map<String, Object> entityMapping) throws Exception {

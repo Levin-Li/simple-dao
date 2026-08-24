@@ -86,6 +86,8 @@ import java.math.*;
 @EntityCategory(EntityOpConst.BIZ_TYPE_NAME)
 //逻辑删除的例子
 //@EntityOption(disableActions = EntityOption.Action.Delete,logicalDeleteFieldName = "deleted",logicalDeleteValue = "true")
+//仅供内部服务调用：保留实体、DAO、Service、DTO 和请求对象，不生成管理端或客户端 HTTP 控制器
+//@EntityOption(innerAccessOnly = true)
 
 //JPA 监听器
 //@EntityListener(${entityName}Listener.class)
@@ -166,4 +168,3 @@ public class ${entityName}
     }
 
 }
-

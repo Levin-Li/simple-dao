@@ -30,6 +30,19 @@ import java.lang.annotation.*;
 public @interface EntityOption {
 
     /**
+     * 是否仅允许内部访问。
+     * <p>
+     * 该属性只影响 {@code simple-dao-codegen} 的控制器生成：设为 {@code true} 时，
+     * 不生成管理端或客户端 HTTP 控制器，从而不暴露该实体的默认 CRUD 接口。
+     * 实体、DAO、服务、DTO、请求对象及其内部调用不受影响。
+     * <p>
+     * 默认值为 {@code false}，保持原有的控制器生成行为。
+     *
+     * @return {@code true} 表示只生成内部访问所需代码并跳过控制器生成
+     */
+    boolean innerAccessOnly() default false;
+
+    /**
      * Dao 实体操作
      */
     enum Action {
