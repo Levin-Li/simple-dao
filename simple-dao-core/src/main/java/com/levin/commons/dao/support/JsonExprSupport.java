@@ -40,6 +40,18 @@ public abstract class JsonExprSupport {
     }
 
     /**
+     * 生成 JSON 标量路径与参数值比较的存在性表达式。
+     * 比较动作在 JSONPath 内执行，以保留字符串、数值和布尔值的 JSON 类型语义。
+     */
+    public static String jsonScalarCompareExpr(String jsonDocumentExpr, String scalarJsonPath,
+                                               String operator, String paramExpr) {
+        Assert.isTrue(StringUtils.hasText(scalarJsonPath) && !scalarJsonPath.contains("[*]"),
+                "JSON 标量比较的 jsonPath 不支持 wildcard [*]");
+        return "json_exists(" + queryJsonExpr(jsonDocumentExpr) + ", '" + scalarJsonPath.trim()
+                + "?(@ " + operator + " $value)' passing " + paramExpr + " as value)";
+    }
+
+    /**
      * 生成 Hibernate 7 `json_value(jsonDocument, jsonPath)` 表达式，用于从 JSON 中提取标量值。
      * 来源文档：Hibernate ORM 7 User Guide，JSON functions: `json_value()`;
      * Javadocs: `JsonValueFunction`，参考 {@value #HIBERNATE_USER_GUIDE_JSON_FUNCTIONS} 和 {@value #HIBERNATE_JSON_FUNCTION_JAVADOCS}。

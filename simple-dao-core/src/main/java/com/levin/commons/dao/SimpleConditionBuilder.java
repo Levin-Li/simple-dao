@@ -207,6 +207,91 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * JSON 路径不等于或为空查询。
+     * <p>
+     * 路径不存在、JSON null 或路径值不等于 {@code paramValue} 时均匹配。
+     * 与 {@link #jsonNotEq(String, String, Object)} 的严格不等于语义不同。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       JSON 标量路径
+     * @param paramValue     参数值
+     * @return this
+     */
+    T jsonNotEqOrNull(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonNotEqOrNull(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonNotEqOrNull(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonNotEqOrNull(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonNotEqOrNull(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonNotEqOrNull(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonNotEqOrNull(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /** JSON 标量路径大于比较。 */
+    T jsonGt(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonGt(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonGt(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonGt(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonGt(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonGt(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonGt(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /** JSON 标量路径大于等于比较。 */
+    T jsonGte(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonGte(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonGte(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonGte(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonGte(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonGte(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonGte(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /** JSON 标量路径小于比较。 */
+    T jsonLt(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonLt(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonLt(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonLt(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonLt(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonLt(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonLt(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /** JSON 标量路径小于等于比较。 */
+    T jsonLte(String entityAttrName, String jsonPath, Object paramValue);
+
+    default T jsonLte(Boolean isAppend, String entityAttrName, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonLte(entityAttrName, jsonPath, paramValue) : (T) this;
+    }
+
+    default T jsonLte(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return jsonLte(lambdaMethodAttr.getAttrName(), jsonPath, paramValue);
+    }
+
+    default T jsonLte(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object paramValue) {
+        return TRUE.equals(isAppend) ? jsonLte(lambdaMethodAttr, jsonPath, paramValue) : (T) this;
+    }
+
+    /**
      * !=
      *
      * @param entityAttrName 如 name
@@ -478,6 +563,32 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
     }
 
     /**
+     * JSON 数组路径包含查询。
+     * <p>
+     * 对通配数组路径（如 {@code $[*]}) 的任一元素执行 JSON 标量精确匹配；
+     * {@code value} 可以是字符串、数值或布尔值。
+     * 对象或嵌套数组会在 lax JSONPath 中被展开，不能使用本方法表达结构相等。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       通配数组路径
+     * @param value          待匹配的 JSON 标量数组元素
+     * @return this
+     */
+    T jsonContains(String entityAttrName, String jsonPath, Object value);
+
+    default T jsonContains(Boolean isAppend, String entityAttrName, String jsonPath, Object value) {
+        return TRUE.equals(isAppend) ? jsonContains(entityAttrName, jsonPath, value) : (T) this;
+    }
+
+    default T jsonContains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object value) {
+        return jsonContains(lambdaMethodAttr.getAttrName(), jsonPath, value);
+    }
+
+    default T jsonContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object value) {
+        return TRUE.equals(isAppend) ? jsonContains(lambdaMethodAttr, jsonPath, value) : (T) this;
+    }
+
+    /**
      * JSON 路径文本 LIKE 查询。
      *
      * @param entityAttrName JSON 字段名
@@ -521,6 +632,31 @@ public interface SimpleConditionBuilder<T extends SimpleConditionBuilder<T, DOMA
 
     default T jsonNotContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, String keyword) {
         return TRUE.equals(isAppend) ? jsonNotContains(lambdaMethodAttr, jsonPath, keyword) : (T) this;
+    }
+
+    /**
+     * JSON 数组路径不包含查询。
+     * <p>
+     * 对通配数组路径（如 {@code $[*]}) 的任一元素执行 JSON 标量精确匹配；
+     * 仅当不存在匹配元素时命中。对象或嵌套数组不支持作为匹配值。
+     *
+     * @param entityAttrName JSON 字段名
+     * @param jsonPath       通配数组路径
+     * @param value          不应存在的 JSON 标量数组元素
+     * @return this
+     */
+    T jsonNotContains(String entityAttrName, String jsonPath, Object value);
+
+    default T jsonNotContains(Boolean isAppend, String entityAttrName, String jsonPath, Object value) {
+        return TRUE.equals(isAppend) ? jsonNotContains(entityAttrName, jsonPath, value) : (T) this;
+    }
+
+    default T jsonNotContains(LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object value) {
+        return jsonNotContains(lambdaMethodAttr.getAttrName(), jsonPath, value);
+    }
+
+    default T jsonNotContains(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, String jsonPath, Object value) {
+        return TRUE.equals(isAppend) ? jsonNotContains(lambdaMethodAttr, jsonPath, value) : (T) this;
     }
 
     /**

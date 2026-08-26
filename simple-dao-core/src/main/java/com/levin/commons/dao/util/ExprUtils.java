@@ -439,12 +439,12 @@ public abstract class ExprUtils {
 
     private static void validateJsonPathUsage(Op op, JsonPathSpec jsonPathSpec, boolean incrementUpdate) {
 
-        if (!jsonPathSpec.isWildcard()) {
+        if (jsonPathSpec.isScalarOnlyAllowed()) {
             return;
         }
 
         if (Op.Update.equals(op)) {
-            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 Update 注解中使用 wildcard [*]");
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在 Update 注解中使用多值路径");
         }
 
         if (Op.GroupBy.equals(op)
@@ -453,7 +453,7 @@ public abstract class ExprUtils {
                 || Op.Count.equals(op)
                 || Op.Max.equals(op)
                 || Op.Min.equals(op)) {
-            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在统计注解中使用 wildcard [*]");
+            throw new StatementBuildException("JSON 路径 [" + jsonPathSpec.getRawPath() + "] 不支持在统计注解中使用多值路径");
         }
     }
 

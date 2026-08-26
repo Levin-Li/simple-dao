@@ -707,10 +707,49 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return jsonEq(entityAttrName, jsonPath, paramValue, true);
     }
 
+    @Override
+    public T jsonNotEqOrNull(String entityAttrName, String jsonPath, Object paramValue) {
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
+            Assert.isTrue(isJsonScalar(paramValue), "JSON 标量比较仅支持字符串、数值或布尔值");
+            where("not " + jsonScalarCompareExpr(entityAttrName, jsonPath, "=="), paramValue);
+        }
+
+        return (T) this;
+    }
+
+    @Override
+    public T jsonGt(String entityAttrName, String jsonPath, Object paramValue) {
+        return jsonScalarCompare(entityAttrName, jsonPath, paramValue, ">");
+    }
+
+    @Override
+    public T jsonGte(String entityAttrName, String jsonPath, Object paramValue) {
+        return jsonScalarCompare(entityAttrName, jsonPath, paramValue, ">=");
+    }
+
+    @Override
+    public T jsonLt(String entityAttrName, String jsonPath, Object paramValue) {
+        return jsonScalarCompare(entityAttrName, jsonPath, paramValue, "<");
+    }
+
+    @Override
+    public T jsonLte(String entityAttrName, String jsonPath, Object paramValue) {
+        return jsonScalarCompare(entityAttrName, jsonPath, paramValue, "<=");
+    }
+
     private T jsonEq(String entityAttrName, String jsonPath, Object paramValue, boolean not) {
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
-            String fieldExpr = JsonExprSupport.jsonValueExpr(aroundColumnPrefix(entityAttrName), JsonPathSpec.parse(jsonPath).getRawPath());
-            where(fieldExpr + (not ? " != " : " = ") + getParamPlaceholder(), paramValue);
+            Assert.isTrue(isJsonScalar(paramValue), "JSON 标量比较仅支持字符串、数值或布尔值");
+            where(jsonScalarCompareExpr(entityAttrName, jsonPath, not ? "!=" : "=="), paramValue);
+        }
+
+        return (T) this;
+    }
+
+    private T jsonScalarCompare(String entityAttrName, String jsonPath, Object paramValue, String operator) {
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(paramValue)) {
+            Assert.isTrue(isJsonScalar(paramValue), "JSON 标量比较仅支持字符串、数值或布尔值");
+            where(jsonScalarCompareExpr(entityAttrName, jsonPath, operator), paramValue);
         }
 
         return (T) this;
@@ -918,19 +957,49 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     }
 
     @Override
+    public T jsonContains(String entityAttrName, String jsonPath, Object value) {
+        return jsonArrayContains(entityAttrName, jsonPath, value, false);
+    }
+
+    @Override
     public T jsonNotContains(String entityAttrName, String jsonPath, String keyword) {
         return jsonArrayContains(entityAttrName, jsonPath, keyword, true);
     }
 
-    private T jsonArrayContains(String entityAttrName, String jsonPath, String keyword, boolean not) {
-        if (disableEmptyValueFilter || !isNullOrEmptyTxt(keyword)) {
+    @Override
+    public T jsonNotContains(String entityAttrName, String jsonPath, Object value) {
+        return jsonArrayContains(entityAttrName, jsonPath, value, true);
+    }
+
+    private T jsonArrayContains(String entityAttrName, String jsonPath, Object value, boolean not) {
+        if (disableEmptyValueFilter || !isNullOrEmptyTxt(value)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
             Assert.isTrue(jsonPathSpec.isWildcard(), "jsonContains/jsonNotContains 的 jsonPath 必须包含 [*]；文本模糊匹配请使用 jsonTextLike/jsonTextNotLike");
+            Assert.isTrue(isJsonScalar(value), "jsonContains/jsonNotContains 仅支持字符串、数值或布尔数组元素；对象和嵌套数组不支持结构相等匹配");
             where(JsonExprSupport.jsonArrayContainsExpr(aroundColumnPrefix(entityAttrName),
-                    jsonPathSpec.getRawPath(), getParamPlaceholder(), not), keyword);
+                    jsonPathSpec.getRawPath(), getParamPlaceholder(), not), value);
         }
 
         return (T) this;
+    }
+
+    private boolean isJsonScalar(Object value) {
+        if (value instanceof PrimitiveValueWrapper) {
+            value = ((PrimitiveValueWrapper<?>) value).get();
+        }
+        return value == null || value instanceof CharSequence || value instanceof Number || value instanceof Boolean;
+    }
+
+    private String jsonScalarCompareExpr(String entityAttrName, String jsonPath, String operator) {
+        JsonPathSpec jsonPathSpec = requireScalarJsonPath(jsonPath);
+        return JsonExprSupport.jsonScalarCompareExpr(aroundColumnPrefix(entityAttrName),
+                jsonPathSpec.getRawPath(), operator, getParamPlaceholder());
+    }
+
+    private JsonPathSpec requireScalarJsonPath(String jsonPath) {
+        JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+        Assert.isTrue(jsonPathSpec.isScalarOnlyAllowed(), "JSON 标量比较不支持多值 JSON 路径");
+        return jsonPathSpec;
     }
 
     @Override
@@ -947,9 +1016,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         if (disableEmptyValueFilter || !isNullOrEmptyTxt(pattern)) {
             JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
             String fieldExpr = aroundColumnPrefix(entityAttrName);
-            String jsonExpr = jsonPathSpec.isWildcard()
+            String jsonExpr = jsonPathSpec.isMultiValued()
                     ? JsonExprSupport.jsonTextExpr(JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath()))
-                    : JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath());
+                    : JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
             where(jsonExpr + (not ? " not like " : " like ") + getParamPlaceholder(), pattern);
         }
 

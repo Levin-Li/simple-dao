@@ -75,6 +75,13 @@ class JsonPathAnnotationSupportTest {
     }
 
     @Test
+    void jsonPathSpecShouldRecognizeOtherMultiValuedPaths() {
+        assertTrue(JsonPathSpec.parse("$.items[0 to 2]").isMultiValued(), "数组范围路径必须被识别为多值路径");
+        assertTrue(JsonPathSpec.parse("$.**.code").isMultiValued(), "递归路径必须被识别为多值路径");
+        assertTrue(JsonPathSpec.parse("$.items?(@.enabled == true)").isMultiValued(), "过滤路径必须被识别为多值路径");
+    }
+
+    @Test
     void jsonPathSpecShouldRecognizeScalarPath() {
         JsonPathSpec spec = JsonPathSpec.parse("$.profile.name");
 
@@ -88,5 +95,11 @@ class JsonPathAnnotationSupportTest {
 
         assertFalse(spec.isWildcard(), "对象路径不应被识别为 wildcard");
         assertTrue(spec.isScalarOnlyAllowed(), "非 wildcard 路径不应在框架层被静态判定为非法标量路径");
+    }
+
+    @Test
+    void jsonPathSpecShouldRejectUnsafeOrRelativePath() {
+        assertThrows(IllegalArgumentException.class, () -> JsonPathSpec.parse("profile.name"));
+        assertThrows(IllegalArgumentException.class, () -> JsonPathSpec.parse("$.profile['name']"));
     }
 }

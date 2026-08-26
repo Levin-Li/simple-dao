@@ -282,4 +282,37 @@ public interface OrderByBuilder<T extends OrderByBuilder<T, DOMAIN>, DOMAIN> {
      */
     T orderBy(Boolean isAppend, OrderBy.Type type, OrderBy.Scope scope, String... columnNames);
 
+
+    /**
+     * 这是一个基于Null和相等匹配进行排序的方法, 把相等的记录放在最前面, 把这个被匹配字段值为空的放在第二位, 不等的放在最后一位
+     * <p>
+     * 相等  排序值 = 2
+     * Null 排序值 = 1
+     * 不等  排序值 = 0
+     * <p>
+     * 先不支持json字段
+     *
+     * @param lambdaMethodAttr
+     * @return
+     */
+    default T orderByDescForEqOrNull(Boolean isAppend, LambdaMethodAttr<DOMAIN, ?> lambdaMethodAttr, Object paramValue) {
+        return orderByDescForEqOrNull(isAppend, lambdaMethodAttr.getAttrName(), paramValue);
+    }
+
+    /**
+     * 这是一个基于Null和相等匹配进行排序的方法, 把相等的记录放在最前面, 把这个被匹配字段值为空的放在第二位, 不等的放在最后一位
+     * <p>
+     * 相等  排序值 = 2
+     * Null 排序值 = 1
+     * 不等  排序值 = 0
+     * <p>
+     * 先不支持json字段
+     *
+     * @param isAppend
+     * @param columnName
+     * @param paramValue
+     * @return
+     */
+    T orderByDescForEqOrNull(Boolean isAppend, String columnName, Object paramValue);
+
 }

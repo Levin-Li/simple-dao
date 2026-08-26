@@ -183,7 +183,7 @@ public class SelectDaoImpl<T>
 
         JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
         String fieldExpr = aroundColumnPrefix(entityAttrName);
-        String jsonExpr = jsonPathSpec.isWildcard()
+        String jsonExpr = jsonPathSpec.isMultiValued()
                 ? JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath())
                 : JsonExprSupport.jsonSelectableExpr(fieldExpr, jsonPathSpec.getRawPath());
 
@@ -194,6 +194,7 @@ public class SelectDaoImpl<T>
     public SelectDao<T> jsonValueSelect(String entityAttrName, String jsonPath, String alias, String... clauses) {
 
         JsonPathSpec jsonPathSpec = JsonPathSpec.parse(jsonPath);
+        Assert.isTrue(jsonPathSpec.isScalarOnlyAllowed(), "jsonValueSelect 不支持多值 JSON 路径；请使用 jsonQuerySelect");
         String fieldExpr = aroundColumnPrefix(entityAttrName);
 
         return selectByStatement(JsonExprSupport.jsonValueExpr(fieldExpr, jsonPathSpec.getRawPath(), clauses) + asAlias(alias));
@@ -597,6 +598,39 @@ public class SelectDaoImpl<T>
                 .forEachOrdered(columnName -> addOrderBy(0, aroundColumnPrefix(columnName), scope, type));
 
         return this;
+    }
+
+
+    /**
+     * 这是一个基于Null和相等匹配进行排序的方法, 把相等的记录放在最前面, 把这个被匹配字段值为空的放在第二位, 不等的放在最后一位
+     * <p>
+     * 相等  排序值 = 2
+     * Null 排序值 = 1
+     * 不等  排序值 = 0
+     *
+     * @param isAppend
+     * @param columnName
+     * @param paramValue
+     * @return
+     */
+    @Override
+    public SelectDao<T> orderByDescForEqOrNull(Boolean isAppend, String columnName, Object paramValue) {
+
+        if (!Boolean.TRUE.equals(isAppend)) {
+            return this;
+        }
+        // WHEN m.tenant_id = :tenantId THEN 2
+        //        WHEN m.tenant_id IS NULL THEN 1
+        //        ELSE 0
+
+        columnName = aroundColumnPrefix(columnName);
+
+        columnName = new Case().when(columnName + " = " + getParamPlaceholder(), "2")
+                .when(columnName + " IS NULL ", "1")
+                .elseExpr("0")
+                .toString();
+
+        return orderByStatement(true, OrderBy.Type.Desc, OrderBy.Scope.All, columnName, paramValue);
     }
 
     /**

@@ -64,6 +64,7 @@ import java.net.URLDecoder;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -1885,13 +1886,21 @@ public class DaoExamplesTest {
 
         Assert.isTrue(jsonMethodSignatures(SimpleConditionBuilder.class).equals(new TreeSet<>(List.of(
                 "jsonContains(Boolean,LambdaMethodAttr,String,String)",
+                "jsonContains(Boolean,LambdaMethodAttr,String,Object)",
                 "jsonContains(Boolean,String,String,String)",
+                "jsonContains(Boolean,String,String,Object)",
                 "jsonContains(LambdaMethodAttr,String,String)",
+                "jsonContains(LambdaMethodAttr,String,Object)",
                 "jsonContains(String,String,String)",
+                "jsonContains(String,String,Object)",
                 "jsonNotContains(Boolean,LambdaMethodAttr,String,String)",
+                "jsonNotContains(Boolean,LambdaMethodAttr,String,Object)",
                 "jsonNotContains(Boolean,String,String,String)",
+                "jsonNotContains(Boolean,String,String,Object)",
                 "jsonNotContains(LambdaMethodAttr,String,String)",
+                "jsonNotContains(LambdaMethodAttr,String,Object)",
                 "jsonNotContains(String,String,String)",
+                "jsonNotContains(String,String,Object)",
                 "jsonTextLike(Boolean,LambdaMethodAttr,String,String)",
                 "jsonTextLike(Boolean,String,String,String)",
                 "jsonTextLike(LambdaMethodAttr,String,String)",
@@ -1904,10 +1913,30 @@ public class DaoExamplesTest {
                 "jsonEq(Boolean,String,String,Object)",
                 "jsonEq(LambdaMethodAttr,String,Object)",
                 "jsonEq(String,String,Object)",
+                "jsonGt(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonGt(Boolean,String,String,Object)",
+                "jsonGt(LambdaMethodAttr,String,Object)",
+                "jsonGt(String,String,Object)",
+                "jsonGte(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonGte(Boolean,String,String,Object)",
+                "jsonGte(LambdaMethodAttr,String,Object)",
+                "jsonGte(String,String,Object)",
+                "jsonLt(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonLt(Boolean,String,String,Object)",
+                "jsonLt(LambdaMethodAttr,String,Object)",
+                "jsonLt(String,String,Object)",
+                "jsonLte(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonLte(Boolean,String,String,Object)",
+                "jsonLte(LambdaMethodAttr,String,Object)",
+                "jsonLte(String,String,Object)",
                 "jsonNotEq(Boolean,LambdaMethodAttr,String,Object)",
                 "jsonNotEq(Boolean,String,String,Object)",
                 "jsonNotEq(LambdaMethodAttr,String,Object)",
                 "jsonNotEq(String,String,Object)",
+                "jsonNotEqOrNull(Boolean,LambdaMethodAttr,String,Object)",
+                "jsonNotEqOrNull(Boolean,String,String,Object)",
+                "jsonNotEqOrNull(LambdaMethodAttr,String,Object)",
+                "jsonNotEqOrNull(String,String,Object)",
                 "jsonExists(Boolean,LambdaMethodAttr,String)",
                 "jsonExists(Boolean,String,String)",
                 "jsonExists(LambdaMethodAttr,String)",
@@ -2124,6 +2153,8 @@ public class DaoExamplesTest {
 
         Map<String, Object> profile = profileWithAction("conditionAction", "条件重载对象");
         profile.put("roles", List.of("ROLE_MATCH"));
+        profile.put("scalarValues", List.of(7, true));
+        profile.put("score", 7);
 
         PgJsonAppendUser user = dao.create(new PgJsonAppendUser()
                 .setName("PgJsonConditionOverloadUser-" + System.nanoTime())
@@ -2179,6 +2210,22 @@ public class DaoExamplesTest {
                 .jsonContains(true, PgJsonAppendUser::getProfile, "$.roles[*]", "ROLE_MATCH")
                 .eq(PgJsonAppendUser::getId, user.getId())
                 .count() == 1, "jsonContains(Boolean, Lambda, String, String) 应命中数组元素");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains("profile", "$.scalarValues[*]", 7)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Object) 应命中数值数组元素");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(true, "profile", "$.scalarValues[*]", 7)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Boolean, String, String, Object) 应命中数值数组元素");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(PgJsonAppendUser::getProfile, "$.scalarValues[*]", Boolean.TRUE)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Object) 应命中布尔数组元素");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonContains(true, PgJsonAppendUser::getProfile, "$.scalarValues[*]", Boolean.TRUE)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonContains(Boolean, Lambda, String, Object) 应命中布尔数组元素");
 
         Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
                 .jsonNotContains("profile", "$.roles[*]", "MISSING_ROLE")
@@ -2196,6 +2243,22 @@ public class DaoExamplesTest {
                 .jsonNotContains(true, PgJsonAppendUser::getProfile, "$.roles[*]", "MISSING_ROLE")
                 .eq(PgJsonAppendUser::getId, user.getId())
                 .count() == 1, "jsonNotContains(Boolean, Lambda, String, String) 应命中数组元素");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotContains("profile", "$.scalarValues[*]", 8)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotContains(Object) 应对缺失的数值数组元素命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotContains(true, "profile", "$.scalarValues[*]", 8)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotContains(Boolean, String, String, Object) 应对缺失的数值数组元素命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotContains(PgJsonAppendUser::getProfile, "$.scalarValues[*]", 8)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotContains(Lambda, String, Object) 应对缺失的数值数组元素命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotContains(true, PgJsonAppendUser::getProfile, "$.scalarValues[*]", 8)
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotContains(Boolean, Lambda, String, Object) 应对缺失的数值数组元素命中");
 
         Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
                 .jsonEq("profile", "$.conditionAction.action", "条件重载对象")
@@ -2230,6 +2293,42 @@ public class DaoExamplesTest {
                 .jsonNotEq(true, PgJsonAppendUser::getProfile, "$.conditionAction.action", "错误值")
                 .eq(PgJsonAppendUser::getId, user.getId())
                 .count() == 1, "jsonNotEq(Boolean, Lambda, String, Object) 应命中");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotEqOrNull("profile", "$.missingAction.action", "错误值")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotEqOrNull(String, String, Object) 应把缺失路径视为匹配");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotEqOrNull(true, "profile", "$.missingAction.action", "错误值")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotEqOrNull(Boolean, String, String, Object) 应把缺失路径视为匹配");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotEqOrNull(PgJsonAppendUser::getProfile, "$.missingAction.action", "错误值")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotEqOrNull(Lambda, String, Object) 应把缺失路径视为匹配");
+        Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
+                .jsonNotEqOrNull(true, PgJsonAppendUser::getProfile, "$.missingAction.action", "错误值")
+                .eq(PgJsonAppendUser::getId, user.getId())
+                .count() == 1, "jsonNotEqOrNull(Boolean, Lambda, String, Object) 应把缺失路径视为匹配");
+
+        assertJsonConditionMatches(user, "jsonGt(String, String, Object) 应按 JSON 数值比较", query -> query.jsonGt("profile", "$.score", 6));
+        assertJsonConditionMatches(user, "jsonGt(Boolean, String, String, Object) 应按 JSON 数值比较", query -> query.jsonGt(true, "profile", "$.score", 6));
+        assertJsonConditionMatches(user, "jsonGt(Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonGt(PgJsonAppendUser::getProfile, "$.score", 6));
+        assertJsonConditionMatches(user, "jsonGt(Boolean, Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonGt(true, PgJsonAppendUser::getProfile, "$.score", 6));
+
+        assertJsonConditionMatches(user, "jsonGte(String, String, Object) 应按 JSON 数值比较", query -> query.jsonGte("profile", "$.score", 7));
+        assertJsonConditionMatches(user, "jsonGte(Boolean, String, String, Object) 应按 JSON 数值比较", query -> query.jsonGte(true, "profile", "$.score", 7));
+        assertJsonConditionMatches(user, "jsonGte(Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonGte(PgJsonAppendUser::getProfile, "$.score", 7));
+        assertJsonConditionMatches(user, "jsonGte(Boolean, Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonGte(true, PgJsonAppendUser::getProfile, "$.score", 7));
+
+        assertJsonConditionMatches(user, "jsonLt(String, String, Object) 应按 JSON 数值比较", query -> query.jsonLt("profile", "$.score", 8));
+        assertJsonConditionMatches(user, "jsonLt(Boolean, String, String, Object) 应按 JSON 数值比较", query -> query.jsonLt(true, "profile", "$.score", 8));
+        assertJsonConditionMatches(user, "jsonLt(Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonLt(PgJsonAppendUser::getProfile, "$.score", 8));
+        assertJsonConditionMatches(user, "jsonLt(Boolean, Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonLt(true, PgJsonAppendUser::getProfile, "$.score", 8));
+
+        assertJsonConditionMatches(user, "jsonLte(String, String, Object) 应按 JSON 数值比较", query -> query.jsonLte("profile", "$.score", 7));
+        assertJsonConditionMatches(user, "jsonLte(Boolean, String, String, Object) 应按 JSON 数值比较", query -> query.jsonLte(true, "profile", "$.score", 7));
+        assertJsonConditionMatches(user, "jsonLte(Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonLte(PgJsonAppendUser::getProfile, "$.score", 7));
+        assertJsonConditionMatches(user, "jsonLte(Boolean, Lambda, String, Object) 应按 JSON 数值比较", query -> query.jsonLte(true, PgJsonAppendUser::getProfile, "$.score", 7));
 
         Assert.isTrue(dao.selectFrom(PgJsonAppendUser.class)
                 .jsonTextLike("profile", "$.conditionAction.action", "%重载%")
@@ -2404,6 +2503,20 @@ public class DaoExamplesTest {
                 .jsonNotExists(false, PgJsonAppendUser::getProfile, "$.guardAction")
                 .jsonEq(false, "profile", "$.guardAction.action", "不应该命中")
                 .jsonEq(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "不应该命中")
+                .jsonNotEqOrNull(false, "profile", "$.guardAction.action", "不应该命中")
+                .jsonNotEqOrNull(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "不应该命中")
+                .jsonGt(false, "profile", "$.score", 0)
+                .jsonGt(false, PgJsonAppendUser::getProfile, "$.score", 0)
+                .jsonGte(false, "profile", "$.score", 0)
+                .jsonGte(false, PgJsonAppendUser::getProfile, "$.score", 0)
+                .jsonLt(false, "profile", "$.score", 0)
+                .jsonLt(false, PgJsonAppendUser::getProfile, "$.score", 0)
+                .jsonLte(false, "profile", "$.score", 0)
+                .jsonLte(false, PgJsonAppendUser::getProfile, "$.score", 0)
+                .jsonContains(false, "profile", "$.roles[*]", 7)
+                .jsonContains(false, PgJsonAppendUser::getProfile, "$.roles[*]", 7)
+                .jsonNotContains(false, "profile", "$.roles[*]", 7)
+                .jsonNotContains(false, PgJsonAppendUser::getProfile, "$.roles[*]", 7)
                 .jsonTextLike(false, "profile", "$.guardAction.action", "%不应该命中%")
                 .jsonTextLike(false, PgJsonAppendUser::getProfile, "$.guardAction.action", "%不应该命中%")
                 .eq(PgJsonAppendUser::getId, user.getId())
@@ -2430,6 +2543,13 @@ public class DaoExamplesTest {
                 .eq(PgJsonAppendUser::getId, user.getId())
                 .findOne(String.class)), "JSON 更新 Boolean isAppend=false 重载不应该改变 profile");
         assertActionLogAllObjects(user.getId(), 0);
+    }
+
+    private void assertJsonConditionMatches(PgJsonAppendUser user, String message,
+                                            Consumer<SelectDao<PgJsonAppendUser>> conditionAppender) {
+        SelectDao<PgJsonAppendUser> query = dao.selectFrom(PgJsonAppendUser.class);
+        conditionAppender.accept(query);
+        Assert.isTrue(query.eq(PgJsonAppendUser::getId, user.getId()).count() == 1, message);
     }
 
     private boolean jsonTextEquals(String expected, String actual) {

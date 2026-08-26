@@ -22,6 +22,10 @@ class JsonProgrammaticBuilderTest {
         String statement = dao
                 .jsonEq("logs", "$[0].logText", "hello")
                 .jsonNotEq("logs", "$[0].logText", "goodbye")
+                .jsonGt("logs", "$.score", 6)
+                .jsonGte("logs", "$.score", 7)
+                .jsonLt("logs", "$.score", 8)
+                .jsonLte("logs", "$.score", 7)
                 .jsonContains("roleList", "$[*]", "admin")
                 .jsonNotContains("roleList", "$[*]", "guest")
                 .jsonTextLike("roleList", "$[*]", "%admin%")
@@ -33,8 +37,12 @@ class JsonProgrammaticBuilderTest {
                 .jsonQuerySelect("logs", "$[*]", "allLogs")
                 .genFinalStatement();
 
-        assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') = :?"), statement);
-        assertTrue(statement.contains("json_value(cast(u.logs as String), '$[0].logText') != :?"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$[0].logText?(@ == $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$[0].logText?(@ != $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$.score?(@ > $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$.score?(@ >= $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$.score?(@ < $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("json_exists(cast(u.logs as String), '$.score?(@ <= $value)' passing :? as value)"), statement);
         assertTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"), statement);
         assertTrue(statement.contains("not json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"), statement);
         assertTrue(statement.contains("cast(json_query(cast(u.roleList as String), '$[*]') as String) like :?"), statement);
@@ -61,6 +69,44 @@ class JsonProgrammaticBuilderTest {
         assertTrue(statement.contains("json_array(u.name,u.roleList) as userArray"), statement);
         assertTrue(statement.contains("json_arrayagg(u.name order by u.name) as nameList"), statement);
         assertTrue(statement.contains("json_objectagg(u.name value u.id) as nameIdMap"), statement);
+    }
+
+    @Test
+    void selectDaoShouldBuildJsonArrayElementConditionsForScalarsOnly() {
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        String statement = dao
+                .jsonContains("roleList", "$[*]", 7)
+                .jsonNotContains("roleList", "$[*]", Boolean.FALSE)
+                .jsonNotEqOrNull("logs", "$.state", "disabled")
+                .genFinalStatement();
+
+        assertTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("not json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"), statement);
+        assertTrue(statement.contains("not json_exists(cast(u.logs as String), '$.state?(@ == $value)' passing :? as value)"), statement);
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.jsonContains("roleList", "$[*]", List.of("nested", "array")));
+    }
+
+    @Test
+    void jsonValueSelectShouldRejectWildcardPath() {
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.jsonValueSelect("logs", "$[*]", "allLogs"));
+        assertThrows(IllegalArgumentException.class,
+                () -> dao.jsonValueSelect("logs", "$.items[0 to 2]", "allLogs"));
+    }
+
+    @Test
+    void selectDaoShouldOrderEqualValueThenNullThenOtherValues() {
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        String statement = dao.orderByDescForEqOrNull(true, "state", "preferred").genFinalStatement();
+
+        assertTrue(statement.contains("CASE") && statement.contains("WHEN u.state = :? THEN 2"), statement);
+        assertTrue(statement.contains("WHEN u.state IS NULL  THEN 1"), statement);
+        assertTrue(statement.contains("ELSE 0 END") && statement.contains("Desc"), statement);
     }
 
     @Test
