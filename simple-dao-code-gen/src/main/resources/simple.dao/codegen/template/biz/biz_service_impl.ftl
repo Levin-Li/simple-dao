@@ -11,6 +11,7 @@ import com.levin.commons.dao.domain.*;
 
 import jakarta.annotation.*;
 import java.util.*;
+import java.time.LocalDateTime;
 import java.util.function.*;
 import java.util.stream.*;
 import org.springframework.cache.annotation.*;
@@ -106,6 +107,38 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
+
+<#if selfOverridableMatchFields?has_content>
+    /**
+    * 获取最匹配的${entityTitle}。
+    * <p>
+    * 只保留每个字段精确匹配或公共值（null）的记录；随后按字段声明顺序让精确匹配优先于公共值。
+    */
+    @Override
+    @Operation(summary = "获取最匹配的" + E_${entityName}.BIZ_NAME)
+    public ${entityName}Info findBestMatch(
+<#list selfOverridableMatchFields as field>
+            ${field.typeName} ${field.name}<#if field_has_next>,</#if>
+</#list>
+    ) {
+        return simpleDao.selectFrom(${entityName}.class)
+<#list selfOverridableMatchFields as field>
+                .isNullOrEq(E_${entityName}.${field.name}, ${field.name})
+</#list>
+<#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
+                .or()
+                .isNull(E_${entityName}.expiredTime)
+                .gte(E_${entityName}.expiredTime, LocalDateTime.now())
+                .end()
+</#if>
+<#list selfOverridableMatchFields as field>
+                .orderByDescForEqOrNull(true, E_${entityName}.${field.name}, ${field.name})
+</#list>
+                .limit(0, 1)
+                .findOne(${entityName}Info.class);
+    }
+
+</#if>
 
     /** 参考示例
 

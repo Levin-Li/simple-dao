@@ -47,6 +47,20 @@ import ${imp};
 
 @Tag(name = E_${entityName}.BIZ_NAME + "-业务服务", description = "")
 public interface ${className} {
+<#if selfOverridableMatchFields?has_content>
+    /**
+    * 获取最匹配的${entityTitle}。
+    * <p>
+    * 每个字段均匹配参数值或公共值（null），并按参数声明顺序优先返回精确匹配的数据。
+    */
+    @Operation(summary = "获取最匹配的" + E_${entityName}.BIZ_NAME)
+    ${entityName}Info findBestMatch(
+<#list selfOverridableMatchFields as field>
+            ${field.typeName} ${field.name}<#if field_has_next>,</#if>
+</#list>
+    );
+
+</#if>
     /**
     * 统计
     *

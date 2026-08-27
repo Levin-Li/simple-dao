@@ -1201,6 +1201,7 @@ public final class ServiceModelCodeGenerator {
         String action = "info";
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, action);
+        params.put("selfOverridableMatchFields", getSelfOverridableMatchFields(entityClass, fields));
 
 //        postProcess(fields, action);
 
@@ -1257,6 +1258,45 @@ public final class ServiceModelCodeGenerator {
     static boolean shouldGenerateController(Class<?> entityClass) {
         EntityOption entityOption = AnnotatedElementUtils.findMergedAnnotation(entityClass, EntityOption.class);
         return entityOption == null || !entityOption.innerAccessOnly();
+    }
+
+    /**
+     * 计算 {@link SelfOverridableObject} 对应的最匹配查询参数。
+     * <p>
+     * 公开租户和公开组织字段分别固定排在第一、第二位；其余字段严格遵循注解中的声明顺序。
+     * 相同字段只保留一次，避免生成重复的筛选和排序条件。
+     */
+    static List<FieldModel> getSelfOverridableMatchFields(Class<?> entityClass, List<FieldModel> fields) {
+
+        SelfOverridableObject selfOverridable = AnnotatedElementUtils.findMergedAnnotation(entityClass, SelfOverridableObject.class);
+
+        if (selfOverridable == null) {
+            return Collections.emptyList();
+        }
+
+        Map<String, FieldModel> fieldsByName = fields.stream()
+                .collect(Collectors.toMap(FieldModel::getName, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+
+        LinkedHashSet<String> matchFieldNames = new LinkedHashSet<>();
+
+        if (MultiTenantPublicObject.class.isAssignableFrom(entityClass)) {
+            matchFieldNames.add("tenantId");
+        }
+
+        if (OrganizedPublicObject.class.isAssignableFrom(entityClass)) {
+            matchFieldNames.add("orgId");
+        }
+
+        Collections.addAll(matchFieldNames, selfOverridable.overrideColumnNames());
+
+        return matchFieldNames.stream()
+                .map(fieldName -> {
+                    FieldModel fieldModel = fieldsByName.get(fieldName);
+                    Assert.notNull(fieldModel, () -> "实体类 " + entityClass.getName()
+                            + " 的 @SelfOverridableObject 匹配字段不存在: " + fieldName);
+                    return fieldModel;
+                })
+                .collect(Collectors.toList());
     }
 
     private static void genTestCode(Class entityClass, String srcDir, Map<String, Object> entityMapping) throws Exception {
