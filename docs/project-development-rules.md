@@ -33,7 +33,7 @@ Simple DAO 是公共组件，改动影响的不只是当前业务代码，还包
 命令：
 
 ```bash
-mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
+mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQueryExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
 ```
 
 说明：
@@ -56,7 +56,7 @@ mvn test -P '!01-跳过测试'
 mvn -pl simple-dao-core -Dtest=JsonProgrammaticBuilderTest,ExprUtilsTest,JsonPathAnnotationSupportTest test -P '!01-跳过测试'
 
 # 运行综合示例契约测试
-mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
+mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQueryExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'
 ```
 
 ## 新增能力流程
