@@ -142,9 +142,10 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                 .end()
 </#if>
 <#list selfOverridableMatchFields as field>
+<#if !field.required>
                 .orderByDescForEqOrNull(true, E_${entityName}.${field.name}, ${field.name})
+</#if>
 </#list>
-                .limit(0, 1)
                 .findOne(${entityName}Info.class);
     }
 

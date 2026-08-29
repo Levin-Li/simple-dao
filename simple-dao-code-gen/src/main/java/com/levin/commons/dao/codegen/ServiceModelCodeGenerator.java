@@ -2532,7 +2532,7 @@ public final class ServiceModelCodeGenerator {
                         && !field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.AUTO));
             } else {
                 fieldModel.setUk(field.isAnnotationPresent(Column.class) && field.getAnnotation(Column.class).unique());
-                fieldModel.setRequired(field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable());
+                fieldModel.setRequired(isRequiredField(entityClass, field));
             }
 
             //是否是自动生成字段
@@ -2877,6 +2877,16 @@ public final class ServiceModelCodeGenerator {
         });
 
         return fieldModelList;
+    }
+
+    static boolean isRequiredField(Class<?> entityClass, Field field) {
+
+        if (field.isAnnotationPresent(Column.class) && !field.getAnnotation(Column.class).nullable()) {
+            return true;
+        }
+
+        return Arrays.stream(entityClass.getAnnotationsByType(AttributeOverride.class))
+                .anyMatch(override -> field.getName().equals(override.name()) && !override.column().nullable());
     }
 
 

@@ -8,6 +8,7 @@ import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.OrganizedPublicObject;
 import com.levin.commons.dao.domain.SelfOverridableObject;
 import jakarta.persistence.Column;
+import jakarta.persistence.AttributeOverride;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -64,6 +65,31 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
+    void requiredTenantAndOrganizationFieldsShouldUseExactMatchWithoutPriorityOrdering() throws Exception {
+        List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(RequiredContextEntity.class,
+                fieldsOf(RequiredContextEntity.class));
+
+        String serviceSource = render("biz/biz_service.ftl", "BizRequiredContextEntityService.java", matchFields,
+                RequiredContextEntity.class);
+        String implSource = render("biz/biz_service_impl.ftl", "BizRequiredContextEntityServiceImpl.java", matchFields,
+                RequiredContextEntity.class);
+
+        assertTrue(serviceSource.contains("@NotNull String tenantId"), serviceSource);
+        assertTrue(serviceSource.contains("@NotNull String orgId"), serviceSource);
+        assertTrue(implSource.contains(".eq(E_RequiredContextEntity.tenantId, tenantId)"), implSource);
+        assertTrue(implSource.contains(".eq(E_RequiredContextEntity.orgId, orgId)"), implSource);
+        assertFalse(implSource.contains(".orderByDescForEqOrNull(true, E_RequiredContextEntity.tenantId, tenantId)"), implSource);
+        assertFalse(implSource.contains(".orderByDescForEqOrNull(true, E_RequiredContextEntity.orgId, orgId)"), implSource);
+    }
+
+    @Test
+    void attributeOverrideNullableFalseShouldMakeInheritedContextFieldRequired() throws Exception {
+        Field tenantId = InheritedContextFields.class.getDeclaredField("tenantId");
+
+        assertTrue(ServiceModelCodeGenerator.isRequiredField(OverriddenTenantEntity.class, tenantId));
+    }
+
+    @Test
     void tenantIdDeclaredInOverrideColumnsMustBeExcludedAsDuplicate() throws Exception {
         List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(TenantIdOverrideEntity.class,
                         fieldsOf(TenantIdOverrideEntity.class))
@@ -104,8 +130,9 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(implSource.contains(".gte(E_PublicOverrideEntity.expiredTime, LocalDateTime.now())"), implSource);
         assertTrue(implSource.contains(".orderByDescForEqOrNull(true, E_PublicOverrideEntity.userType, userType)"), implSource);
         assertTrue(implSource.contains(".orderByDescForEqOrNull(true, E_PublicOverrideEntity.orgType, orgType)"), implSource);
+        assertFalse(implSource.contains(".orderByDescForEqOrNull(true, E_PublicOverrideEntity.domain, domain)"), implSource);
         assertFalse(implSource.contains(".eq(\"domain\""), implSource);
-        assertTrue(implSource.contains(".limit(0, 1)"), implSource);
+        assertFalse(implSource.contains(".limit(0, 1)"), implSource);
     }
 
     @Test
@@ -136,6 +163,8 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(implSource.contains(".isNullOrEq(E_UiSetting.domain, domain)"), implSource);
         assertTrue(implSource.contains(".isNullOrEq(E_UiSetting.orgType, orgType)"), implSource);
         assertTrue(implSource.contains(".isNullOrEq(E_UiSetting.userType, userType)"), implSource);
+        assertFalse(implSource.contains(".orderByDescForEqOrNull(true, E_UiSetting.code, code)"), implSource);
+        assertFalse(implSource.contains(".limit(0, 1)"), implSource);
     }
 
     private String render(String template, String fileName, List<FieldModel> matchFields) throws Exception {
@@ -281,6 +310,37 @@ class SelfOverridableMatchCodegenTest {
         public Serializable getOrgId() {
             return orgId;
         }
+    }
+
+    static final class E_RequiredContextEntity {
+        static final String domain = "domain";
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_RequiredContextEntity.domain})
+    static class RequiredContextEntity implements MultiTenantPublicObject, OrganizedObject {
+        @Column(nullable = false)
+        String tenantId;
+        @Column(nullable = false)
+        String orgId;
+        String domain;
+
+        @Override
+        public Serializable getTenantId() {
+            return tenantId;
+        }
+
+        @Override
+        public Serializable getOrgId() {
+            return orgId;
+        }
+    }
+
+    static class InheritedContextFields {
+        String tenantId;
+    }
+
+    @AttributeOverride(name = "tenantId", column = @Column(nullable = false))
+    static class OverriddenTenantEntity extends InheritedContextFields {
     }
 
     @SelfOverridableObject(overrideColumnNames = {"tenantId", E_PublicOverrideEntity.domain})
