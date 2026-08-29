@@ -10,6 +10,7 @@ import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.*;
 
 import jakarta.annotation.*;
+import jakarta.validation.constraints.*;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.util.function.*;
@@ -112,18 +113,27 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
     /**
     * 获取最匹配的${entityTitle}。
     * <p>
-    * 只保留每个字段精确匹配或公共值（null）的记录；随后按字段声明顺序让精确匹配优先于公共值。
+    * 非空字段必须精确匹配；可空字段允许匹配公共值（null）。随后按字段声明顺序让精确匹配优先于公共值。
     */
     @Override
     @Operation(summary = "获取最匹配的" + E_${entityName}.BIZ_NAME)
     public ${entityName}Info findBestMatch(
 <#list selfOverridableMatchFields as field>
-            ${field.typeName} ${field.name}<#if field_has_next>,</#if>
+            <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
 </#list>
     ) {
+<#list selfOverridableMatchFields as field>
+<#if field.required>
+        Objects.requireNonNull(${field.name}, E_${entityName}.${field.name} + " 不能为空");
+</#if>
+</#list>
         return simpleDao.selectFrom(${entityName}.class)
 <#list selfOverridableMatchFields as field>
+<#if field.required>
+                .eq(E_${entityName}.${field.name}, ${field.name})
+<#else>
                 .isNullOrEq(E_${entityName}.${field.name}, ${field.name})
+</#if>
 </#list>
 <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
                 .or()

@@ -9,6 +9,7 @@ import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 
 import java.util.*;
+import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 import org.springframework.validation.annotation.*;
@@ -56,7 +57,7 @@ public interface ${className} {
     @Operation(summary = "获取最匹配的" + E_${entityName}.BIZ_NAME)
     ${entityName}Info findBestMatch(
 <#list selfOverridableMatchFields as field>
-            ${field.typeName} ${field.name}<#if field_has_next>,</#if>
+            <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
 </#list>
     );
 

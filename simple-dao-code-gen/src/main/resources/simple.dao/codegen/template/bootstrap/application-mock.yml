@@ -1,0 +1,27 @@
+#@author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
+
+spring:
+
+  data:
+    redis:
+      database: 3
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${moduleName}
+    username: postgres
+    password: postgres
+
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    #强制数据库类型
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: update
+
+#日志配置
+logging:
+  level:
+    root: warn
+    com.levin: debug
+    ${modulePackageName}: debug
