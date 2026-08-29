@@ -4,6 +4,7 @@ import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.domain.ExpiredObject;
 import com.levin.commons.dao.domain.MultiTenantPublicObject;
+import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.OrganizedPublicObject;
 import com.levin.commons.dao.domain.SelfOverridableObject;
 import jakarta.persistence.Column;
@@ -43,13 +44,41 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
-    void selfOverridableEntityMustBePublicTenantObject() throws Exception {
+    void nonTenantSelfOverridableEntityShouldUseOnlyAnnotationFields() throws Exception {
         List<FieldModel> fields = fieldsOf(NonTenantOverrideEntity.class);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> ServiceModelCodeGenerator.getSelfOverridableMatchFields(NonTenantOverrideEntity.class, fields));
-        assertTrue(exception.getMessage().contains("必须实现 MultiTenantPublicObject"), exception.getMessage());
+        List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(NonTenantOverrideEntity.class, fields)
+                .stream().map(FieldModel::getName).collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("domain", "userType"), names);
         assertTrue(ServiceModelCodeGenerator.getSelfOverridableMatchFields(NoOverrideEntity.class, fields).isEmpty());
+    }
+
+    @Test
+    void organizedObjectShouldPrecedeOverrideFieldsWithoutRequiringPublicMarker() throws Exception {
+        List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(OrganizedOverrideEntity.class,
+                        fieldsOf(OrganizedOverrideEntity.class))
+                .stream().map(FieldModel::getName).collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("orgId", "domain"), names);
+    }
+
+    @Test
+    void tenantIdDeclaredInOverrideColumnsMustBeExcludedAsDuplicate() throws Exception {
+        List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(TenantIdOverrideEntity.class,
+                        fieldsOf(TenantIdOverrideEntity.class))
+                .stream().map(FieldModel::getName).collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("tenantId", "domain"), names);
+    }
+
+    @Test
+    void duplicateOverrideColumnMustBeExcluded() throws Exception {
+        List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(DuplicateOverrideEntity.class,
+                        fieldsOf(DuplicateOverrideEntity.class))
+                .stream().map(FieldModel::getName).collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("tenantId", "domain"), names);
     }
 
     @Test
@@ -198,9 +227,7 @@ class SelfOverridableMatchCodegenTest {
     @SelfOverridableObject(overrideColumnNames = {
             E_PublicOverrideEntity.domain,
             E_PublicOverrideEntity.userType,
-            E_PublicOverrideEntity.orgType,
-            E_PublicOverrideEntity.tenantId,
-            E_PublicOverrideEntity.orgId
+            E_PublicOverrideEntity.orgType
     })
     static class PublicOverrideEntity implements MultiTenantPublicObject, OrganizedPublicObject, ExpiredObject {
         String tenantId;
@@ -243,6 +270,39 @@ class SelfOverridableMatchCodegenTest {
     static class NonTenantOverrideEntity {
         String domain;
         String userType;
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_PublicOverrideEntity.domain})
+    static class OrganizedOverrideEntity implements OrganizedObject {
+        String orgId;
+        String domain;
+
+        @Override
+        public Serializable getOrgId() {
+            return orgId;
+        }
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {"tenantId", E_PublicOverrideEntity.domain})
+    static class TenantIdOverrideEntity implements MultiTenantPublicObject {
+        String tenantId;
+        String domain;
+
+        @Override
+        public Serializable getTenantId() {
+            return tenantId;
+        }
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_PublicOverrideEntity.domain, E_PublicOverrideEntity.domain})
+    static class DuplicateOverrideEntity implements MultiTenantPublicObject {
+        String tenantId;
+        String domain;
+
+        @Override
+        public Serializable getTenantId() {
+            return tenantId;
+        }
     }
 
     static class NoOverrideEntity {

@@ -1264,31 +1264,41 @@ public final class ServiceModelCodeGenerator {
      * 计算 {@link SelfOverridableObject} 对应的最匹配查询参数。
      * <p>
      * 公开租户和公开组织字段分别固定排在第一、第二位；其余字段严格遵循注解中的声明顺序。
-     * 相同字段只保留一次，避免生成重复的筛选和排序条件。
+     * 相同字段只保留一次，避免生成重复的参数、筛选和排序条件。
      */
     static List<FieldModel> getSelfOverridableMatchFields(Class<?> entityClass, List<FieldModel> fields) {
 
         SelfOverridableObject selfOverridable = AnnotatedElementUtils.findMergedAnnotation(entityClass, SelfOverridableObject.class);
 
-        if (selfOverridable == null) {
+        if (selfOverridable == null || selfOverridable.overrideColumnNames().length < 1) {
             return Collections.emptyList();
         }
-
-        Assert.isTrue(MultiTenantPublicObject.class.isAssignableFrom(entityClass), () -> "实体类 " + entityClass.getName()
-                + " 使用 @SelfOverridableObject 时必须实现 " + MultiTenantPublicObject.class.getSimpleName());
 
         Map<String, FieldModel> fieldsByName = fields.stream()
                 .collect(Collectors.toMap(FieldModel::getName, Function.identity(), (left, right) -> left, LinkedHashMap::new));
 
-        LinkedHashSet<String> matchFieldNames = new LinkedHashSet<>();
+        List<String> matchFieldNames = new ArrayList<>();
 
-        matchFieldNames.add("tenantId");
+        if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
+            // 部分实体通过继承或接口暴露 tenantId，字段模型在生成请求对象时可能不会保留该继承字段。
+            fieldsByName.computeIfAbsent("tenantId", fieldName -> new FieldModel(entityClass)
+                    .setName(fieldName)
+                    .setType(String.class)
+                    .setTypeName(String.class.getSimpleName()));
+            matchFieldNames.add("tenantId");
+        }
 
-        if (OrganizedPublicObject.class.isAssignableFrom(entityClass)) {
+        if (OrganizedObject.class.isAssignableFrom(entityClass)) {
             matchFieldNames.add("orgId");
         }
 
-        Collections.addAll(matchFieldNames, selfOverridable.overrideColumnNames());
+        for (String fieldName : selfOverridable.overrideColumnNames()) {
+            Assert.hasText(fieldName, () -> "实体类 " + entityClass.getName()
+                    + " 的 @SelfOverridableObject.overrideColumnNames 不能包含空字段名");
+            if (!matchFieldNames.contains(fieldName)) {
+                matchFieldNames.add(fieldName);
+            }
+        }
 
         return matchFieldNames.stream()
                 .map(fieldName -> {
