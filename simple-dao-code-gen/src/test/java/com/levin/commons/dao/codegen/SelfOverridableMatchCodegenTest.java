@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SelfOverridableMatchCodegenTest {
@@ -42,13 +43,12 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
-    void annotationFieldsShouldBeUsedAsDeclaredWhenEntityIsNotPublic() throws Exception {
-        List<FieldModel> fields = fieldsOf(LocalOverrideEntity.class);
+    void selfOverridableEntityMustBePublicTenantObject() throws Exception {
+        List<FieldModel> fields = fieldsOf(NonTenantOverrideEntity.class);
 
-        List<String> names = ServiceModelCodeGenerator.getSelfOverridableMatchFields(LocalOverrideEntity.class, fields)
-                .stream().map(FieldModel::getName).collect(Collectors.toList());
-
-        assertEquals(Arrays.asList("domain", "userType"), names);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> ServiceModelCodeGenerator.getSelfOverridableMatchFields(NonTenantOverrideEntity.class, fields));
+        assertTrue(exception.getMessage().contains("必须实现 MultiTenantPublicObject"), exception.getMessage());
         assertTrue(ServiceModelCodeGenerator.getSelfOverridableMatchFields(NoOverrideEntity.class, fields).isEmpty());
     }
 
@@ -228,7 +228,19 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @SelfOverridableObject(overrideColumnNames = {E_PublicOverrideEntity.domain, E_PublicOverrideEntity.userType})
-    static class LocalOverrideEntity {
+    static class LocalOverrideEntity implements MultiTenantPublicObject {
+        String tenantId;
+        String domain;
+        String userType;
+
+        @Override
+        public Serializable getTenantId() {
+            return tenantId;
+        }
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_PublicOverrideEntity.domain, E_PublicOverrideEntity.userType})
+    static class NonTenantOverrideEntity {
         String domain;
         String userType;
     }

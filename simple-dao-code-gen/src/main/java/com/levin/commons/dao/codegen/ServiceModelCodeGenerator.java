@@ -1274,14 +1274,15 @@ public final class ServiceModelCodeGenerator {
             return Collections.emptyList();
         }
 
+        Assert.isTrue(MultiTenantPublicObject.class.isAssignableFrom(entityClass), () -> "实体类 " + entityClass.getName()
+                + " 使用 @SelfOverridableObject 时必须实现 " + MultiTenantPublicObject.class.getSimpleName());
+
         Map<String, FieldModel> fieldsByName = fields.stream()
                 .collect(Collectors.toMap(FieldModel::getName, Function.identity(), (left, right) -> left, LinkedHashMap::new));
 
         LinkedHashSet<String> matchFieldNames = new LinkedHashSet<>();
 
-        if (MultiTenantPublicObject.class.isAssignableFrom(entityClass)) {
-            matchFieldNames.add("tenantId");
-        }
+        matchFieldNames.add("tenantId");
 
         if (OrganizedPublicObject.class.isAssignableFrom(entityClass)) {
             matchFieldNames.add("orgId");
