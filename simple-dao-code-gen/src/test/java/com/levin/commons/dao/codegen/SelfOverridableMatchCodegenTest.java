@@ -3,6 +3,7 @@ package com.levin.commons.dao.codegen;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.domain.ExpiredObject;
+import com.levin.commons.dao.domain.EnableObject;
 import com.levin.commons.dao.domain.MultiTenantPublicObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.OrganizedPublicObject;
@@ -126,6 +127,7 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(implSource.contains(".eq(E_PublicOverrideEntity.domain, domain)"), implSource);
         assertFalse(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.domain, domain)"), implSource);
         assertTrue(implSource.contains("Objects.requireNonNull(domain, E_PublicOverrideEntity.domain + \" 不能为空\")"), implSource);
+        assertTrue(implSource.contains(".notEq(E_PublicOverrideEntity.enable, false)"), implSource);
         assertTrue(implSource.contains(".isNull(E_PublicOverrideEntity.expiredTime)"), implSource);
         assertTrue(implSource.contains(".gte(E_PublicOverrideEntity.expiredTime, LocalDateTime.now())"), implSource);
         assertTrue(implSource.contains(".orderByDescForEqOrNull(true, E_PublicOverrideEntity.userType, userType)"), implSource);
@@ -144,6 +146,7 @@ class SelfOverridableMatchCodegenTest {
                 matchFields, LocalOverrideEntity.class);
 
         assertFalse(implSource.contains(".isNull(E_PublicOverrideEntity.expiredTime)"), implSource);
+        assertFalse(implSource.contains(".notEq(E_PublicOverrideEntity.enable, false)"), implSource);
         assertFalse(implSource.contains("LocalDateTime.now()"), implSource);
     }
 
@@ -258,13 +261,14 @@ class SelfOverridableMatchCodegenTest {
             E_PublicOverrideEntity.userType,
             E_PublicOverrideEntity.orgType
     })
-    static class PublicOverrideEntity implements MultiTenantPublicObject, OrganizedPublicObject, ExpiredObject {
+    static class PublicOverrideEntity implements MultiTenantPublicObject, OrganizedPublicObject, EnableObject, ExpiredObject {
         String tenantId;
         String orgId;
         @Column(nullable = false)
         String domain;
         String userType;
         String orgType;
+        Boolean enable;
         LocalDateTime expiredTime;
 
         @Override
@@ -280,6 +284,11 @@ class SelfOverridableMatchCodegenTest {
         @Override
         public LocalDateTime getExpiredTime() {
             return expiredTime;
+        }
+
+        @Override
+        public boolean isEnable() {
+            return enable;
         }
     }
 

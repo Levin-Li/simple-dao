@@ -135,6 +135,9 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                 .isNullOrEq(E_${entityName}.${field.name}, ${field.name})
 </#if>
 </#list>
+<#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
+                .notEq(E_${entityName}.enable, false)
+</#if>
 <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
                 .or()
                 .isNull(E_${entityName}.expiredTime)

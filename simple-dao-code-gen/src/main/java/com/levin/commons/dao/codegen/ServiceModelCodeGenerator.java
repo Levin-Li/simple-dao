@@ -101,6 +101,7 @@ public final class ServiceModelCodeGenerator {
     public static final String UPDATE_EVT_FTL = "services/req/update_evt.ftl";
 
     public static final String SIMPLE_UPDATE_EVT_FTL = "services/req/simple_update_evt.ftl";
+    public static final String SIMPLE_QUERY_EVT_FTL = "services/req/simple_query_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
     public static final String STAT_EVT_FTL = "biz/bo/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
@@ -1399,9 +1400,17 @@ public final class ServiceModelCodeGenerator {
 
         if ("query".equalsIgnoreCase(type)) {
 
+            final String tempName = "SimpleQuery" + entityClass.getSimpleName() + "Req";
+            genCode(entityClass, SIMPLE_QUERY_EVT_FTL, fields, srcDir, pkgName, tempName, mapConsumer);
+
+            Object reqExtendClass = paramsMap.get("reqExtendClass");
+            paramsMap.put("reqExtendClass", tempName);
+
             //查询
             genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
                     pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+
+            paramsMap.put("reqExtendClass", reqExtendClass);
 
 //            //统计
 //            genCode(entityClass, STAT_EVT_FTL, fields, srcDir,
