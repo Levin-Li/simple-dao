@@ -4209,7 +4209,7 @@ public void delete(Long id) {
 5. 检查默认服务类、默认控制器类、请求对象是否生成或刷新。
 6. 业务扩展写到 Biz 服务或 Biz 控制器，不直接改默认生成类。
 
-查询请求会生成一对可继承的类型：`SimpleQuery<实体名>Req` 负责通用排序和选择列，`Query<实体名>Req` 继承前者并声明实体字段条件。需要只复用通用查询能力时可直接使用前者；默认 CRUD 仍使用后者。
+查询请求会生成一对可继承的类型：`SimpleQuery<实体名>Req<T extends SimpleQuery<实体名>Req<T>>` 负责通用排序和选择列，`Query<实体名>Req` 继承为 `SimpleQuery<实体名>Req<Query<实体名>Req>` 并声明实体字段条件。这样基础查询的链式方法会返回实际子类；`SimpleQuery` 是供具体查询请求继承的泛型基类，默认 CRUD 使用后者。
 
 命令形态：
 

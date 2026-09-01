@@ -65,7 +65,7 @@ import ${imp};
 @Accessors(chain = true)
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
-public class ${className} extends ${reqExtendClass} {
+public class ${className}<T extends ${className}<T>> extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
@@ -107,18 +107,23 @@ public class ${className} extends ${reqExtendClass} {
     @Select(value = C.FIELD_VALUE, alias = C.BLANK_VALUE, condition = "#_isQuery && #isNotEmpty(#_fieldVal)")
     Set<String> selectColumns;
 
-    public ${className} setOrderBy(String orderBy) {
+    public T setOrderBy(String orderBy) {
         //要防止SQL注
         return checkSQLInject(this.orderBy = orderBy);
     }
 
-    public ${className} setSelectColumns(Set<String> selectColumns) {
+    public T setSelectColumns(Set<String> selectColumns) {
         //要防止SQL注
         return checkSQLInject(this.selectColumns = selectColumns);
     }
 
-    public ${className} selectColumns(String... selectColumns) {
+    public T selectColumns(String... selectColumns) {
         return setSelectColumns(Stream.of(selectColumns).filter(Objects::nonNull).collect(Collectors.toSet()));
+    }
+
+    public T setOrderDir(OrderBy.Type orderDir) {
+        this.orderDir = orderDir;
+        return (T) this;
     }
 
     <#-- 查询前的动作 -->

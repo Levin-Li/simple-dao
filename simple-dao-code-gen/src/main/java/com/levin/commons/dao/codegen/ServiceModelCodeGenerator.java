@@ -1400,15 +1400,18 @@ public final class ServiceModelCodeGenerator {
 
         if ("query".equalsIgnoreCase(type)) {
 
-            final String tempName = "SimpleQuery" + entityClass.getSimpleName() + "Req";
-            genCode(entityClass, SIMPLE_QUERY_EVT_FTL, fields, srcDir, pkgName, tempName, mapConsumer);
-
+            final String simpleQueryName = "SimpleQuery" + entityClass.getSimpleName() + "Req";
+            final String queryName = "Query" + entityClass.getSimpleName() + "Req";
             Object reqExtendClass = paramsMap.get("reqExtendClass");
-            paramsMap.put("reqExtendClass", tempName);
+
+            paramsMap.put("reqExtendClass", resolveGenericRequestExtendClass(reqExtendClass, "T"));
+            genCode(entityClass, SIMPLE_QUERY_EVT_FTL, fields, srcDir, pkgName, simpleQueryName, mapConsumer);
+
+            paramsMap.put("reqExtendClass", simpleQueryName + "<" + queryName + ">");
 
             //查询
             genCode(entityClass, QUERY_EVT_FTL, fields, srcDir,
-                    pkgName, "Query" + entityClass.getSimpleName() + "Req", mapConsumer);
+                    pkgName, queryName, mapConsumer);
 
             paramsMap.put("reqExtendClass", reqExtendClass);
 
@@ -1448,6 +1451,11 @@ public final class ServiceModelCodeGenerator {
                     pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
         }
 
+    }
+
+    private static String resolveGenericRequestExtendClass(Object reqExtendClass, String typeParameter) {
+        String extendClass = String.valueOf(reqExtendClass);
+        return extendClass.endsWith("<") ? extendClass + typeParameter + ">" : extendClass;
     }
 
     private static void buildService(Class entityClass, List<FieldModel> fields, Map<String, Object> paramsMap) throws Exception {
