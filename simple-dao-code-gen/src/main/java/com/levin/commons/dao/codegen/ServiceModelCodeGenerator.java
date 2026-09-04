@@ -2538,10 +2538,7 @@ public final class ServiceModelCodeGenerator {
 
             fieldModel.setNotCreate(isDiscriminatorColumn);
 
-            fieldModel.setNotUpdate(fieldModel.isPk()
-                    || notUpdateNames.contains(fieldModel.getName())
-                    || fieldModel.isJpaEntity()
-                    || isDiscriminatorColumn);
+            fieldModel.setNotUpdate(isNotUpdateField(fieldModel, field, isDiscriminatorColumn));
 
             if (fieldModel.isPk()) {
                 fieldModel.setRequired(true);
@@ -2904,6 +2901,19 @@ public final class ServiceModelCodeGenerator {
 
         return Arrays.stream(entityClass.getAnnotationsByType(AttributeOverride.class))
                 .anyMatch(override -> field.getName().equals(override.name()) && !override.column().nullable());
+    }
+
+    static boolean isColumnUpdatable(Field field) {
+        Column column = field.getAnnotation(Column.class);
+        return column == null || column.updatable();
+    }
+
+    static boolean isNotUpdateField(FieldModel fieldModel, Field field, boolean isDiscriminatorColumn) {
+        return fieldModel.isPk()
+                || notUpdateNames.contains(fieldModel.getName())
+                || fieldModel.isJpaEntity()
+                || !isColumnUpdatable(field)
+                || isDiscriminatorColumn;
     }
 
 
