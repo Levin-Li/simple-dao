@@ -1281,21 +1281,19 @@ public final class ServiceModelCodeGenerator {
         List<String> matchFieldNames = new ArrayList<>();
 
         if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
-            // 部分实体通过继承或接口暴露 tenantId，字段模型在生成请求对象时可能不会保留该继承字段。
-            fieldsByName.computeIfAbsent("tenantId", fieldName -> new FieldModel(entityClass)
-                    .setName(fieldName)
-                    .setType(String.class)
-                    .setTypeName(String.class.getSimpleName()));
+            resolveInheritedFieldModel(entityClass, fieldsByName, "tenantId");
             matchFieldNames.add("tenantId");
         }
 
         if (OrganizedObject.class.isAssignableFrom(entityClass)) {
+            resolveInheritedFieldModel(entityClass, fieldsByName, "orgId");
             matchFieldNames.add("orgId");
         }
 
         for (String fieldName : selfOverridable.overrideColumnNames()) {
             Assert.hasText(fieldName, () -> "实体类 " + entityClass.getName()
                     + " 的 @SelfOverridableObject.overrideColumnNames 不能包含空字段名");
+            resolveInheritedFieldModel(entityClass, fieldsByName, fieldName);
             if (!matchFieldNames.contains(fieldName)) {
                 matchFieldNames.add(fieldName);
             }
@@ -1309,6 +1307,30 @@ public final class ServiceModelCodeGenerator {
                     return fieldModel;
                 })
                 .collect(Collectors.toList());
+    }
+
+    private static void resolveInheritedFieldModel(Class<?> entityClass, Map<String, FieldModel> fieldsByName,
+                                                   String fieldName) {
+        if (fieldsByName.containsKey(fieldName)) {
+            return;
+        }
+
+        Field field = ReflectionUtils.findField(entityClass, fieldName);
+        if (field == null || Modifier.isStatic(field.getModifiers())) {
+            return;
+        }
+
+        ResolvableType resolvableType = ResolvableType.forField(field, ResolvableType.forClass(entityClass));
+        Class<?> fieldType = resolvableType.resolve(field.getType());
+        FieldModel fieldModel = new FieldModel(entityClass)
+                .setField(field)
+                .setResolvableType(resolvableType)
+                .setName(fieldName)
+                .setType(fieldType)
+                .setTypeName(com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(resolvableType,
+                        resolvedType -> resolvedType.getSimpleName()))
+                .setRequired(isRequiredField(entityClass, field));
+        fieldsByName.put(fieldName, fieldModel);
     }
 
     private static void genTestCode(Class entityClass, String srcDir, Map<String, Object> entityMapping) throws Exception {

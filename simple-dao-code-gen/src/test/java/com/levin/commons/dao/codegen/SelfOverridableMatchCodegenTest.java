@@ -66,6 +66,30 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
+    void inheritedOrganizationFieldShouldBeSynthesizedForSelfOverridableEntity() throws Exception {
+        List<FieldModel> fields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(
+                        InheritedOrganizationOverrideEntity.class,
+                        fieldsOf(InheritedOrganizationOverrideEntity.class));
+
+        assertEquals(Arrays.asList("orgId", "domain"),
+                fields.stream().map(FieldModel::getName).collect(Collectors.toList()));
+        assertEquals(Long.class, fields.get(0).getType());
+        assertEquals(InheritedOrganizationFields.class, fields.get(0).getField().getDeclaringClass());
+        assertTrue(fields.get(0).isRequired());
+    }
+
+    @Test
+    void inheritedOverrideFieldShouldUseItsActualFieldModel() throws Exception {
+        List<FieldModel> fields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(
+                InheritedOverrideEntity.class, fieldsOf(InheritedOverrideEntity.class));
+
+        assertEquals(Arrays.asList("scopeCode"),
+                fields.stream().map(FieldModel::getName).collect(Collectors.toList()));
+        assertEquals(Integer.class, fields.get(0).getType());
+        assertEquals(InheritedOverrideFields.class, fields.get(0).getField().getDeclaringClass());
+    }
+
+    @Test
     void requiredTenantAndOrganizationFieldsShouldUseExactMatchWithoutPriorityOrdering() throws Exception {
         List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(RequiredContextEntity.class,
                 fieldsOf(RequiredContextEntity.class));
@@ -319,6 +343,29 @@ class SelfOverridableMatchCodegenTest {
         public Serializable getOrgId() {
             return orgId;
         }
+    }
+
+    static class InheritedOrganizationFields {
+        @Column(nullable = false)
+        Long orgId;
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_PublicOverrideEntity.domain})
+    static class InheritedOrganizationOverrideEntity extends InheritedOrganizationFields implements OrganizedObject {
+        String domain;
+
+        @Override
+        public Serializable getOrgId() {
+            return orgId;
+        }
+    }
+
+    static class InheritedOverrideFields {
+        Integer scopeCode;
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {"scopeCode"})
+    static class InheritedOverrideEntity extends InheritedOverrideFields {
     }
 
     static final class E_RequiredContextEntity {
