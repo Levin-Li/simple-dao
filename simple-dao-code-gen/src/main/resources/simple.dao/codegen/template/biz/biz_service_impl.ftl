@@ -128,6 +128,8 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 </#if>
 </#list>
         return simpleDao.selectFrom(${entityName}.class)
+
+ //条件
 <#list selfOverridableMatchFields as field>
 <#if field.required>
                 .eq(E_${entityName}.${field.name}, ${field.name})
@@ -135,19 +137,24 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
                 .isNullOrEq(E_${entityName}.${field.name}, ${field.name})
 </#if>
 </#list>
+
 <#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
                 .notEq(E_${entityName}.enable, false)
 </#if>
+
 <#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
                 .or()
                 .isNull(E_${entityName}.expiredTime)
                 .gte(E_${entityName}.expiredTime, LocalDateTime.now())
                 .end()
 </#if>
+
+ //排序
 <#list selfOverridableMatchFields as field>
 <#if !field.required>
                 .orderByDescForEqOrNull(true, E_${entityName}.${field.name}, ${field.name})
 </#if>
+
 </#list>
                 .findOne(${entityName}Info.class);
     }

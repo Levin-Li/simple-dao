@@ -204,7 +204,12 @@ public class ${className} extends ${reqExtendClass} {
     * @return 需要更新字段返回 true
     */
     public <T extends ${className}> T removeForceUpdateField(String fieldName) {
+
         this.forceUpdateFields.remove(fieldName);
+
+        //要同时移除自动列表，有可能2边都加了
+        this.autoForceUpdateFields.remove(fieldName);
+
         return (T) this;
     }
 
@@ -219,5 +224,13 @@ public class ${className} extends ${reqExtendClass} {
         return (T) this;
     }
 
+
+   public <T extends ${className}> T clearAllForceUpdateFields() {
+
+       this.forceUpdateFields.clear();
+       this.autoForceUpdateFields.clear();
+
+       return (T) this;
+   }
 
 }
