@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -404,6 +403,34 @@ public class UpdateDaoImpl<T>
         }
     }
 
+    protected int testUpdateRows(int maxResult) {
+
+        checkAction(EntityOption.Action.Update, null);
+
+
+        StringBuilder ql = new StringBuilder();
+
+        //没有需要更新的字段
+        if (updateColumns.length() == 0 && throwExWhenNoColumnForUpdate) {
+            throw new StatementBuildException("no columns to update");
+        }
+
+        String whereStatement = genWhereStatement(EntityOption.Action.Update);
+
+        ql.append(" Select 1 From ")
+                .append(genEntityStatement())
+
+                .append(whereStatement)
+                .append(" ").append(lastStatements.isEmpty() ? getLimitStatement() : lastStatements);
+
+        final String jpql = replaceVar(ql.toString());
+
+        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql, QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getLastStatementParamValues()));
+
+        return resultList.size();
+    }
+
+
     /**
      * @return
      */
@@ -411,10 +438,20 @@ public class UpdateDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public boolean singleUpdate() {
 
-        //允许1条，
-        setRowCount(2);
+        // 2026.9.6 修复
+        //因为hibernate bug, 在多表继承的情况下， 更新设置  setRowCount 会报错
+        // 导致 这个方法被注释 加这个设置条件，本意主要是为了避免这个大规模的发生表扫描，或者大规模的这种回滚段事误
+        //  setRowCount(2);
 
-        int n = update();
+        int n = testUpdateRows(2);
+
+        if (n > 1) {
+            throw new IncorrectResultSizeDataAccessException(n + "条记录会被预期更新，预期小于等于1条", 1, n);
+        }
+
+        setRowCount(-1);
+
+        n = update();
 
         if (n > 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期小于等于1条", 1, n);
@@ -430,10 +467,20 @@ public class UpdateDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public void uniqueUpdate() {
 
-        //允许2条，
-        setRowCount(2);
+        // 2026.9.6 修复
+        //因为hibernate bug, 在多表继承的情况下， 更新设置  setRowCount 会报错
+        // 导致 这个方法被注释， 加这个设置条件，本意主要是为了避免这个大规模的发生表扫描，或者大规模的这种回滚段事误
+        // setRowCount(2);
 
-        int n = update();
+        int n = testUpdateRows(2);
+
+        if (n != 1) {
+            throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);
+        }
+
+        setRowCount(-1);
+
+        n = update();
 
         if (n != 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);
