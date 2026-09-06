@@ -34,7 +34,7 @@ public abstract class AbstractBaseEntityObject
 
     private static final long serialVersionUID = -123456789L;
 
-    @Options(dictCode = "platform.framework_domainId")
+    @Options(dictCode = "platform.framework_domainId") //, refTargetType = AbstractPlatformDomain.class
     @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;超过租户的概念；")
     @Column(length = 384)
     protected String domainId;
