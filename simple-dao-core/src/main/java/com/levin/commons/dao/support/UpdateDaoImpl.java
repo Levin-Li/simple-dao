@@ -481,6 +481,7 @@ public class UpdateDaoImpl<T>
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);
         }
 
+
         setRowCount(-1);
         disableSafeMode();
 
