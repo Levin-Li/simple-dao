@@ -39,7 +39,7 @@ import java.time.LocalDateTime;
 public abstract class SimpleTenantOrgObject
         implements MultiTenantObject, OrganizedObject, DomainObject {
 
-    @Options(dictCode = "framework_domainId")
+    @Options(dictCode = "platform.framework_domainId")
     @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;超过租户的概念；")
     @Column(length = 384)
     protected String domainId;
