@@ -450,8 +450,11 @@ public class UpdateDaoImpl<T>
         }
 
         setRowCount(-1);
+        disableSafeMode();
 
         n = update();
+
+        this.safeMode = true;
 
         if (n > 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期小于等于1条", 1, n);
@@ -479,8 +482,11 @@ public class UpdateDaoImpl<T>
         }
 
         setRowCount(-1);
+        disableSafeMode();
 
         n = update();
+
+        this.safeMode = true;
 
         if (n != 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);
