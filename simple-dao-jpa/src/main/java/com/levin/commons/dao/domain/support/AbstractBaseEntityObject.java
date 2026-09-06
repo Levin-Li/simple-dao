@@ -1,24 +1,16 @@
 package com.levin.commons.dao.domain.support;
 
-import com.levin.commons.annotation.GenNameConstant;
-import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.BaseEntityObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.service.domain.InjectVar;
-import com.levin.commons.service.domain.ServiceReq;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-//import org.springframework.data.annotation.CreatedDate;
-//import org.springframework.data.annotation.LastModifiedDate;
 
-import jakarta.persistence.*;
-
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author lilw

@@ -2,13 +2,12 @@ package com.levin.commons.dao.domain.support;
 
 
 import com.levin.commons.dao.domain.TreeObject;
-import com.levin.commons.service.domain.Identifiable;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -16,7 +15,7 @@ import java.util.Set;
 @Accessors(chain = true)
 @FieldNameConstants
 @MappedSuperclass
-public abstract class AbstractTreeObject<ID extends Serializable, T extends AbstractTreeObject<ID,T>>
+public abstract class AbstractTreeObject<ID extends Serializable, T extends AbstractTreeObject<ID, T>>
         extends AbstractNamedEntityObject
         implements TreeObject<T, T>, Serializable {
 

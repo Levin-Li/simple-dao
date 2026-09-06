@@ -3,12 +3,11 @@ package com.levin.commons.dao.domain.support;
 import com.levin.commons.dao.annotation.Contains;
 import com.levin.commons.dao.domain.NamedEntityObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 @Data

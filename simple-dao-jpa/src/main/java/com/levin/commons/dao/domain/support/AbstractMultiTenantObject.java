@@ -7,12 +7,11 @@ import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author lilw

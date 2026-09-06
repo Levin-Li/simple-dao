@@ -8,14 +8,15 @@ import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
-import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
-import java.util.Date;
 
 //1、lobmok get set
 @Data
