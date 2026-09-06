@@ -396,7 +396,7 @@ public class UpdateDaoImpl<T>
         }
 
         try {
-            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            dao.setCurrentThreadMaxLimit(isSafeMode() ? getSafeModeMaxLimit() : -1);
             return dao.update(isNative(), rowStart, rowCount, statement, genFinalParamList());
         } finally {
             dao.setCurrentThreadMaxLimit(null);
@@ -449,12 +449,19 @@ public class UpdateDaoImpl<T>
             throw new IncorrectResultSizeDataAccessException(n + "条记录会被预期更新，预期小于等于1条", 1, n);
         }
 
+        int maxResult = getRowCount();
+
         setRowCount(-1);
         disableSafeMode();
 
-        n = update();
+        try {
+            n = update();
+        } finally {
+            //恢复原值
+            setRowCount(maxResult);
+            this.safeMode = true;
+        }
 
-        this.safeMode = true;
 
         if (n > 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期小于等于1条", 1, n);
@@ -482,12 +489,18 @@ public class UpdateDaoImpl<T>
         }
 
 
+        int maxResult = getRowCount();
+
         setRowCount(-1);
         disableSafeMode();
 
-        n = update();
-
-        this.safeMode = true;
+        try {
+            n = update();
+        } finally {
+            //恢复原值
+            setRowCount(maxResult);
+            this.safeMode = true;
+        }
 
         if (n != 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被更新，预期有且仅有1条", 1, n);

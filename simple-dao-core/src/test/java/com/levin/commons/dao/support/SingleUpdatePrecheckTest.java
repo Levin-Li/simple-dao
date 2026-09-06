@@ -21,7 +21,8 @@ class SingleUpdatePrecheckTest {
         AtomicReference<String> precheckStatement = new AtomicReference<>();
         AtomicInteger updateCalls = new AtomicInteger();
         AtomicInteger updateLimit = new AtomicInteger();
-        UpdateDaoImpl<TestEntity> updateDao = new UpdateDaoImpl<>(stubDao(precheckLimit, precheckStatement, updateCalls, updateLimit), false,
+        AtomicInteger safeModeLimit = new AtomicInteger(-1);
+        UpdateDaoImpl<TestEntity> updateDao = new UpdateDaoImpl<>(stubDao(precheckLimit, precheckStatement, updateCalls, updateLimit, safeModeLimit), false,
                 TestEntity.class, "e");
 
         boolean updated = updateDao
@@ -34,11 +35,12 @@ class SingleUpdatePrecheckTest {
         assertEquals(2, precheckLimit.get());
         assertTrue(precheckStatement.get().startsWith(" Select 1 From "), precheckStatement::get);
         assertTrue(updateLimit.get() <= 0, () -> "UPDATE 不应再携带 MaxResults，实际值=" + updateLimit.get());
+        assertEquals(0, safeModeLimit.get());
         assertEquals(1, updateCalls.get());
     }
 
     private static MiniDao stubDao(AtomicInteger precheckLimit, AtomicReference<String> precheckStatement,
-                                   AtomicInteger updateCalls, AtomicInteger updateLimit) {
+                                   AtomicInteger updateCalls, AtomicInteger updateLimit, AtomicInteger safeModeLimit) {
         return (MiniDao) Proxy.newProxyInstance(SingleUpdatePrecheckTest.class.getClassLoader(),
                 new Class[]{MiniDao.class}, (proxy, method, args) -> {
                     if ("getParamPlaceholder".equals(method.getName())) {
@@ -49,6 +51,12 @@ class SingleUpdatePrecheckTest {
                     }
                     if ("getNamingStrategy".equals(method.getName())) {
                         return PhysicalNamingStrategy.DEFAULT_PHYSICAL_NAMING_STRATEGY;
+                    }
+                    if ("setCurrentThreadMaxLimit".equals(method.getName())) {
+                        if (args[0] != null) {
+                            safeModeLimit.set((Integer) args[0]);
+                        }
+                        return null;
                     }
                     if ("find".equals(method.getName())) {
                         precheckLimit.set((Integer) args[3]);
