@@ -1,9 +1,11 @@
 package com.levin.commons.dao.domain.support;
 
 import com.levin.commons.dao.domain.BaseEntityObject;
+import com.levin.commons.dao.domain.DomainObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
+import com.levin.commons.ui.annotation.Options;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -28,9 +30,14 @@ import java.time.LocalDateTime;
 //})
 //@EntityListeners()
 public abstract class AbstractBaseEntityObject
-        implements BaseEntityObject {
+        implements BaseEntityObject , DomainObject {
 
     private static final long serialVersionUID = -123456789L;
+
+    @Options(dictCode = "framework_domainId")
+    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;超过租户的概念；")
+    @Column(length = 384)
+    protected String domainId;
 
     @Schema(title = "创建者")
     @Column(length = 128)

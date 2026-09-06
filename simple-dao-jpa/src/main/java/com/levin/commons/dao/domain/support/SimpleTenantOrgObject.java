@@ -1,5 +1,6 @@
 package com.levin.commons.dao.domain.support;
 
+import com.levin.commons.dao.domain.DomainObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.rbac.DataMasking;
@@ -7,6 +8,7 @@ import com.levin.commons.rbac.RbacRoleInfo;
 import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.InjectVar;
 import com.levin.commons.service.support.InjectConst;
+import com.levin.commons.ui.annotation.Options;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -35,7 +37,12 @@ import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class SimpleTenantOrgObject
-        implements MultiTenantObject, OrganizedObject {
+        implements MultiTenantObject, OrganizedObject, DomainObject {
+
+    @Options(dictCode = "framework_domainId")
+    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;超过租户的概念；")
+    @Column(length = 384)
+    protected String domainId;
 
     @Schema(title = "租户ID")
     @Column(length = 128)
