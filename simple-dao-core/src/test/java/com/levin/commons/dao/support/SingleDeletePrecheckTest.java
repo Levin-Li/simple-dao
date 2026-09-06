@@ -13,35 +13,32 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SingleUpdatePrecheckTest {
+class SingleDeletePrecheckTest {
 
     @Test
-    void singleUpdateShouldSelectAtMostTwoRowsBeforeUpdating() {
+    void singleDeleteShouldSelectAtMostTwoRowsBeforeDeleting() {
         AtomicInteger precheckLimit = new AtomicInteger();
         AtomicReference<String> precheckStatement = new AtomicReference<>();
-        AtomicInteger updateCalls = new AtomicInteger();
-        AtomicInteger updateLimit = new AtomicInteger();
-        AtomicInteger safeModeLimit = new AtomicInteger(-1);
-        UpdateDaoImpl<TestEntity> updateDao = new UpdateDaoImpl<>(stubDao(precheckLimit, precheckStatement, updateCalls, updateLimit, safeModeLimit), false,
+        AtomicInteger deleteLimit = new AtomicInteger();
+        AtomicInteger safeModeLimit = new AtomicInteger();
+        DeleteDaoImpl<TestEntity> deleteDao = new DeleteDaoImpl<>(stubDao(precheckLimit, precheckStatement, deleteLimit, safeModeLimit), false,
                 TestEntity.class, "e");
 
-        boolean updated = updateDao
-                .set(true, false, false, "value", "after")
+        boolean deleted = deleteDao
                 .where("e.id = 1")
                 .disableSafeMode()
-                .singleUpdate();
+                .singleDelete();
 
-        assertTrue(updated);
+        assertTrue(deleted);
         assertEquals(2, precheckLimit.get());
         assertTrue(precheckStatement.get().startsWith(" Select 1 From "), precheckStatement::get);
-        assertTrue(updateLimit.get() <= 0, () -> "UPDATE 不应再携带 MaxResults，实际值=" + updateLimit.get());
+        assertTrue(deleteLimit.get() <= 0, () -> "DELETE 不应携带 MaxResults，实际值=" + deleteLimit.get());
         assertTrue(safeModeLimit.get() <= 0, () -> "关闭安全模式时的限制值=" + safeModeLimit.get());
-        assertEquals(1, updateCalls.get());
     }
 
     private static MiniDao stubDao(AtomicInteger precheckLimit, AtomicReference<String> precheckStatement,
-                                   AtomicInteger updateCalls, AtomicInteger updateLimit, AtomicInteger safeModeLimit) {
-        return (MiniDao) Proxy.newProxyInstance(SingleUpdatePrecheckTest.class.getClassLoader(),
+                                   AtomicInteger deleteLimit, AtomicInteger safeModeLimit) {
+        return (MiniDao) Proxy.newProxyInstance(SingleDeletePrecheckTest.class.getClassLoader(),
                 new Class[]{MiniDao.class}, (proxy, method, args) -> {
                     if ("getParamPlaceholder".equals(method.getName())) {
                         return ":?";
@@ -64,8 +61,7 @@ class SingleUpdatePrecheckTest {
                         return Collections.singletonList(1);
                     }
                     if ("update".equals(method.getName())) {
-                        updateCalls.incrementAndGet();
-                        updateLimit.set((Integer) args[2]);
+                        deleteLimit.set((Integer) args[2]);
                         return 1;
                     }
                     if (method.getReturnType() == boolean.class) {
@@ -80,6 +76,5 @@ class SingleUpdatePrecheckTest {
 
     @Entity
     static class TestEntity {
-        String value;
     }
 }

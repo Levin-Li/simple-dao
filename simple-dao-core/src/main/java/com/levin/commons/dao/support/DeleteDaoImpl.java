@@ -162,9 +162,24 @@ public class DeleteDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public boolean singleDelete() {
 
-        setRowCount(2);
+        // Hibernate 的多表继承删除在设置 MaxResults 时会触发 CTE limit 参数未绑定缺陷。
+        // 先查询最多两条记录保留单条删除保护，再执行不设置 MaxResults 的删除。
+        int n = testDeleteRows(2);
 
-        int n = delete();
+        if (n > 1) {
+            throw new IncorrectResultSizeDataAccessException(n + "条记录会被预期删除，预期小于等于1条", 1, n);
+        }
+
+        int maxResult = getRowCount();
+        setRowCount(-1);
+        disableSafeMode();
+
+        try {
+            n = delete();
+        } finally {
+            setRowCount(maxResult);
+            this.safeMode = true;
+        }
 
         if (n > 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期小于等于1条", 1, n);
@@ -177,9 +192,24 @@ public class DeleteDaoImpl<T>
     @Transactional(rollbackFor = RuntimeException.class)
     public void uniqueDelete() {
 
-        setRowCount(2);
+        // Hibernate 的多表继承删除在设置 MaxResults 时会触发 CTE limit 参数未绑定缺陷。
+        // 先查询最多两条记录保留唯一删除保护，再执行不设置 MaxResults 的删除。
+        int n = testDeleteRows(2);
 
-        int n = delete();
+        if (n != 1) {
+            throw new IncorrectResultSizeDataAccessException(n + "条记录会被预期删除，预期有且仅有1条", 1, n);
+        }
+
+        int maxResult = getRowCount();
+        setRowCount(-1);
+        disableSafeMode();
+
+        try {
+            n = delete();
+        } finally {
+            setRowCount(maxResult);
+            this.safeMode = true;
+        }
 
         if (n != 1) {
             throw new IncorrectResultSizeDataAccessException(n + "条记录被删除，预期有且仅有1条", 1, n);
@@ -193,11 +223,28 @@ public class DeleteDaoImpl<T>
      */
     int batchDelete(String statement, List paramList) {
         try {
-            dao.setCurrentThreadMaxLimit(getSafeModeMaxLimit());
+            dao.setCurrentThreadMaxLimit(isSafeMode() ? getSafeModeMaxLimit() : -1);
             return dao.update(isNative(), rowStart, rowCount, statement, paramList);
         } finally {
             dao.setCurrentThreadMaxLimit(null);
         }
+    }
+
+    protected int testDeleteRows(int maxResult) {
+
+        EntityOption.Action action = isDisable(EntityOption.Action.Delete)
+                ? EntityOption.Action.LogicalDelete
+                : EntityOption.Action.Delete;
+
+        String jpql = replaceVar(" Select 1 From "
+                + genEntityStatement()
+                + genWhereStatement(action)
+                + " " + (lastStatements.isEmpty() ? getLimitStatement() : lastStatements));
+
+        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql,
+                QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getLastStatementParamValues()));
+
+        return resultList.size();
     }
 
     private void reThrow(Exception ex) {
