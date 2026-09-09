@@ -1304,9 +1304,30 @@ public final class ServiceModelCodeGenerator {
                     FieldModel fieldModel = fieldsByName.get(fieldName);
                     Assert.notNull(fieldModel, () -> "实体类 " + entityClass.getName()
                             + " 的 @SelfOverridableObject 匹配字段不存在: " + fieldName);
-                    return fieldModel;
+                    return copySelfOverridableMatchField(entityClass, fieldModel);
                 })
                 .collect(Collectors.toList());
+    }
+
+    private static FieldModel copySelfOverridableMatchField(Class<?> entityClass, FieldModel source) {
+        Class<?> type = source.getType();
+        String typeName = source.getTypeName();
+
+        if (type != null && type.getEnclosingClass() != null && type.getCanonicalName() != null) {
+            String packageName = type.getPackageName();
+            String canonicalName = type.getCanonicalName();
+            typeName = canonicalName.startsWith(packageName + ".")
+                    ? canonicalName.substring(packageName.length() + 1)
+                    : canonicalName;
+        }
+
+        return new FieldModel(entityClass)
+                .setField(source.getField())
+                .setResolvableType(source.getResolvableType())
+                .setName(source.getName())
+                .setType(type)
+                .setTypeName(typeName)
+                .setRequired(source.isRequired());
     }
 
     private static void resolveInheritedFieldModel(Class<?> entityClass, Map<String, FieldModel> fieldsByName,
