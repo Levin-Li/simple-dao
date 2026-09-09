@@ -8,6 +8,7 @@ import com.levin.commons.dao.domain.MultiTenantPublicObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.OrganizedPublicObject;
 import com.levin.commons.dao.domain.SelfOverridableObject;
+import com.github.javaparser.StaticJavaParser;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.persistence.Column;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -140,8 +142,12 @@ class SelfOverridableMatchCodegenTest {
         String bizImplSource = render("biz/biz_service_impl.ftl", "BizPublicOverrideEntityServiceImpl.java", matchFields);
 
         assertTrue(serviceSource.contains("PublicOverrideEntityInfo findBestMatch("), serviceSource);
+        assertTrue(serviceSource.contains("Object... exQueryObjects"), serviceSource);
+        assertTrue(implSource.contains(".appendByQueryObj(exQueryObjects)"), implSource);
         assertFalse(bizServiceSource.contains("findBestMatch("), bizServiceSource);
         assertFalse(bizImplSource.contains("findBestMatch("), bizImplSource);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(serviceSource), serviceSource);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(implSource), implSource);
         assertTrue(serviceSource.contains("String tenantId,"), serviceSource);
         assertTrue(serviceSource.contains("@NotNull String domain"), serviceSource);
         assertTrue(serviceSource.indexOf("String tenantId") < serviceSource.indexOf("String orgId"), serviceSource);

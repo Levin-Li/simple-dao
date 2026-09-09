@@ -192,8 +192,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     public ${entityName}Info findBestMatch(
 <#list selfOverridableMatchFields as field>
             <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
-</#list>Object...exQueryObject
-    ) {
+</#list>, Object... exQueryObjects) {
 <#list selfOverridableMatchFields as field>
 <#if field.required>
         Objects.requireNonNull(${field.name}, E_${entityName}.${field.name} + " 不能为空");
@@ -227,7 +226,8 @@ public class ${className} extends BaseService<${className}> implements ${service
                 .orderByDescForEqOrNull(true, E_${entityName}.${field.name}, ${field.name})
 </#if>
 
-</#list>        .appendByQueryObj(exQueryObject)
+</#list>
+                .appendByQueryObj(exQueryObjects)
                 .findOne(${entityName}Info.class);
     }
 
