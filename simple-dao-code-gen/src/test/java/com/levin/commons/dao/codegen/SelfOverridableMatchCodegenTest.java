@@ -169,6 +169,18 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
+    void enumMatchFieldShouldBeImportedInStandardService() throws Exception {
+        List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(
+                EnumOverrideEntity.class, fieldsOf(EnumOverrideEntity.class));
+
+        String serviceSource = render("services/service.ftl", "EnumOverrideEntityService.java", matchFields,
+                EnumOverrideEntity.class);
+
+        assertTrue(serviceSource.contains("import " + MatchType.class.getCanonicalName() + ";"), serviceSource);
+        assertTrue(serviceSource.contains("MatchType matchType"), serviceSource);
+    }
+
+    @Test
     void nonExpiredObjectShouldNotGenerateExpirationFiltering() throws Exception {
         List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(
                 LocalOverrideEntity.class, fieldsOf(LocalOverrideEntity.class));
@@ -212,7 +224,9 @@ class SelfOverridableMatchCodegenTest {
 
         Template freemarkerTemplate = configuration.getTemplate("simple.dao/codegen/template/" + template);
         StringWriter output = new StringWriter();
-        freemarkerTemplate.process(templateParameters(matchFields, entityClass), output);
+        Map<String, Object> params = templateParameters(matchFields, entityClass);
+        ServiceModelCodeGenerator.addSelfOverridableMatchImports(params);
+        freemarkerTemplate.process(params, output);
         return output.toString();
     }
 
@@ -271,6 +285,19 @@ class SelfOverridableMatchCodegenTest {
         static final String domain = "domain";
         static final String orgType = "orgType";
         static final String userType = "userType";
+    }
+
+    static final class E_EnumOverrideEntity {
+        static final String matchType = "matchType";
+    }
+
+    enum MatchType {
+        DEFAULT
+    }
+
+    @SelfOverridableObject(overrideColumnNames = {E_EnumOverrideEntity.matchType})
+    static class EnumOverrideEntity {
+        MatchType matchType;
     }
 
     @SelfOverridableObject(overrideColumnNames = {

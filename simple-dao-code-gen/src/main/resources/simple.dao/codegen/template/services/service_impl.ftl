@@ -58,6 +58,13 @@ import ${servicePackageName}.info.*;
 import ${modulePackageName}.*;
 import ${modulePackageName}.services.*;
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+import ${imp};
+</#list>
+////////////////////////////////////
+
 <#list fields as field>
     <#if (field.lzay)??>
 import ${field.classType.package.name}.${field.classType.simpleName};

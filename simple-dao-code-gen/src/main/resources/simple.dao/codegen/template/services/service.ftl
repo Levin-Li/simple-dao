@@ -31,6 +31,12 @@ import ${entityClassPackage}.${entityName}.*;
 
 import static ${modulePackageName}.entities.EntityConst.*;
 
+////////////////////////////////////
+//自动导入列表
+<#list importList as imp>
+import ${imp};
+</#list>
+////////////////////////////////////
 
 /**
  * ${entityTitle}-服务接口

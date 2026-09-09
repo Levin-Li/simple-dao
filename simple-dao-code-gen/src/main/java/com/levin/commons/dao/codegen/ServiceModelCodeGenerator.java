@@ -1499,6 +1499,7 @@ public final class ServiceModelCodeGenerator {
             params.put("serviceName", serviceName);
             params.put("mapperName", mapperName);
             params.putAll(paramsMap);
+            addSelfOverridableMatchImports(params);
             params.put("isService", true);
         };
 
@@ -1524,6 +1525,40 @@ public final class ServiceModelCodeGenerator {
 
         genCode(entityClass, SERVICE_IMPL_FTL, fields, serviceImplDir, pkgName, serviceName + "Impl", genParams);
 
+    }
+
+    static void addSelfOverridableMatchImports(Map<String, Object> params) {
+        Object matchFields = params.get("selfOverridableMatchFields");
+        if (!(matchFields instanceof Collection<?>)) {
+            return;
+        }
+
+        Set<String> importList = new LinkedHashSet<>();
+        Object existingImportList = params.get("importList");
+        if (existingImportList instanceof Collection<?>) {
+            ((Collection<?>) existingImportList).stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .forEach(importList::add);
+        }
+
+        for (Object matchField : (Collection<?>) matchFields) {
+            if (!(matchField instanceof FieldModel)) {
+                continue;
+            }
+
+            Class<?> type = ((FieldModel) matchField).getType();
+            if (type == null || type.isPrimitive() || "java.lang".equals(type.getPackageName())) {
+                continue;
+            }
+
+            String canonicalName = type.getCanonicalName();
+            if (StringUtils.hasText(canonicalName)) {
+                importList.add(canonicalName);
+            }
+        }
+
+        params.put("importList", importList);
     }
 
 
