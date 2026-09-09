@@ -196,6 +196,22 @@ public class FieldModel implements Cloneable {
         return modifiers.stream().map(StringUtils::trimWhitespace).collect(Collectors.joining(" ")) + " ";
     }
 
+    /**
+     * 用于生成服务方法参数类型。嵌套类型保留外层类前缀，避免多个实体均声明 Type、Category
+     * 等内部枚举时在服务接口中产生歧义。
+     */
+    public String getServiceMethodTypeName() {
+        if (type == null || type.getEnclosingClass() == null || type.getCanonicalName() == null) {
+            return typeName;
+        }
+
+        String packageName = type.getPackageName();
+        String canonicalName = type.getCanonicalName();
+        return canonicalName.startsWith(packageName + ".")
+                ? canonicalName.substring(packageName.length() + 1)
+                : canonicalName;
+    }
+
     public boolean isTransient() {
         return field.isAnnotationPresent(Transient.class) || Modifier.isTransient(field.getModifiers());
     }

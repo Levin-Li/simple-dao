@@ -1552,7 +1552,8 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            String canonicalName = type.getCanonicalName();
+            Class<?> importType = type.getEnclosingClass() != null ? type.getEnclosingClass() : type;
+            String canonicalName = importType.getCanonicalName();
             if (StringUtils.hasText(canonicalName)) {
                 importList.add(canonicalName);
             }

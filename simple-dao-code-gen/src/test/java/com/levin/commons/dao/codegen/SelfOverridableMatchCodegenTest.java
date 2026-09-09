@@ -176,8 +176,8 @@ class SelfOverridableMatchCodegenTest {
         String serviceSource = render("services/service.ftl", "EnumOverrideEntityService.java", matchFields,
                 EnumOverrideEntity.class);
 
-        assertTrue(serviceSource.contains("import " + MatchType.class.getCanonicalName() + ";"), serviceSource);
-        assertTrue(serviceSource.contains("MatchType matchType"), serviceSource);
+        assertTrue(serviceSource.contains("import " + EnumOverrideEntity.class.getCanonicalName() + ";"), serviceSource);
+        assertTrue(serviceSource.contains("EnumOverrideEntity.MatchType matchType"), serviceSource);
     }
 
     @Test
@@ -291,12 +291,12 @@ class SelfOverridableMatchCodegenTest {
         static final String matchType = "matchType";
     }
 
-    enum MatchType {
-        DEFAULT
-    }
-
     @SelfOverridableObject(overrideColumnNames = {E_EnumOverrideEntity.matchType})
     static class EnumOverrideEntity {
+        enum MatchType {
+            DEFAULT
+        }
+
         MatchType matchType;
     }
 
