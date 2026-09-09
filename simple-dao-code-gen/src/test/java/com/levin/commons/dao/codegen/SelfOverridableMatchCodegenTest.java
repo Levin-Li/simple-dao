@@ -8,15 +8,15 @@ import com.levin.commons.dao.domain.MultiTenantPublicObject;
 import com.levin.commons.dao.domain.OrganizedObject;
 import com.levin.commons.dao.domain.OrganizedPublicObject;
 import com.levin.commons.dao.domain.SelfOverridableObject;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import jakarta.persistence.Column;
 import jakarta.persistence.AttributeOverride;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
+import java.io.StringWriter;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,9 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SelfOverridableMatchCodegenTest {
-
-    @TempDir
-    Path tempDir;
 
     @Test
     void publicTenantAndOrganizationFieldsShouldPrecedeAnnotationFieldsAndBeDeduplicated() throws Exception {
@@ -94,9 +91,9 @@ class SelfOverridableMatchCodegenTest {
         List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(RequiredContextEntity.class,
                 fieldsOf(RequiredContextEntity.class));
 
-        String serviceSource = render("biz/biz_service.ftl", "BizRequiredContextEntityService.java", matchFields,
+        String serviceSource = render("services/service.ftl", "RequiredContextEntityService.java", matchFields,
                 RequiredContextEntity.class);
-        String implSource = render("biz/biz_service_impl.ftl", "BizRequiredContextEntityServiceImpl.java", matchFields,
+        String implSource = render("services/service_impl.ftl", "RequiredContextEntityServiceImpl.java", matchFields,
                 RequiredContextEntity.class);
 
         assertTrue(serviceSource.contains("@NotNull String tenantId"), serviceSource);
@@ -133,14 +130,18 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
-    void businessServiceTemplatesShouldGenerateElementFilteringAndPriorityOrderingWithEntityConstants() throws Exception {
+    void standardServiceTemplatesShouldGenerateElementFilteringAndPriorityOrderingWithEntityConstants() throws Exception {
         List<FieldModel> fields = fieldsOf(PublicOverrideEntity.class);
         List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(PublicOverrideEntity.class, fields);
 
-        String serviceSource = render("biz/biz_service.ftl", "BizPublicOverrideEntityService.java", matchFields);
-        String implSource = render("biz/biz_service_impl.ftl", "BizPublicOverrideEntityServiceImpl.java", matchFields);
+        String serviceSource = render("services/service.ftl", "PublicOverrideEntityService.java", matchFields);
+        String implSource = render("services/service_impl.ftl", "PublicOverrideEntityServiceImpl.java", matchFields);
+        String bizServiceSource = render("biz/biz_service.ftl", "BizPublicOverrideEntityService.java", matchFields);
+        String bizImplSource = render("biz/biz_service_impl.ftl", "BizPublicOverrideEntityServiceImpl.java", matchFields);
 
         assertTrue(serviceSource.contains("PublicOverrideEntityInfo findBestMatch("), serviceSource);
+        assertFalse(bizServiceSource.contains("findBestMatch("), bizServiceSource);
+        assertFalse(bizImplSource.contains("findBestMatch("), bizImplSource);
         assertTrue(serviceSource.contains("String tenantId,"), serviceSource);
         assertTrue(serviceSource.contains("@NotNull String domain"), serviceSource);
         assertTrue(serviceSource.indexOf("String tenantId") < serviceSource.indexOf("String orgId"), serviceSource);
@@ -166,7 +167,7 @@ class SelfOverridableMatchCodegenTest {
         List<FieldModel> matchFields = ServiceModelCodeGenerator.getSelfOverridableMatchFields(
                 LocalOverrideEntity.class, fieldsOf(LocalOverrideEntity.class));
 
-        String implSource = render("biz/biz_service_impl.ftl", "BizLocalOverrideEntityServiceImpl.java",
+        String implSource = render("services/service_impl.ftl", "LocalOverrideEntityServiceImpl.java",
                 matchFields, LocalOverrideEntity.class);
 
         assertFalse(implSource.contains(".isNull(E_PublicOverrideEntity.expiredTime)"), implSource);
@@ -181,8 +182,8 @@ class SelfOverridableMatchCodegenTest {
         assertEquals(Arrays.asList("tenantId", "code", "domain", "orgType", "userType"),
                 matchFields.stream().map(FieldModel::getName).collect(Collectors.toList()));
 
-        String serviceSource = render("biz/biz_service.ftl", "BizUiSettingService.java", matchFields, UiSetting.class);
-        String implSource = render("biz/biz_service_impl.ftl", "BizUiSettingServiceImpl.java", matchFields, UiSetting.class);
+        String serviceSource = render("services/service.ftl", "UiSettingService.java", matchFields, UiSetting.class);
+        String implSource = render("services/service_impl.ftl", "UiSettingServiceImpl.java", matchFields, UiSetting.class);
 
         assertTrue(serviceSource.contains("@NotNull String code"), serviceSource);
         assertTrue(implSource.contains("Objects.requireNonNull(code, E_UiSetting.code + \" 不能为空\")"), implSource);
@@ -199,9 +200,14 @@ class SelfOverridableMatchCodegenTest {
     }
 
     private String render(String template, String fileName, List<FieldModel> matchFields, Class<?> entityClass) throws Exception {
-        Path output = tempDir.resolve(fileName);
-        ServiceModelCodeGenerator.genFileByTemplate(template, templateParameters(matchFields, entityClass), output.toString());
-        return Files.readString(output);
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+
+        Template freemarkerTemplate = configuration.getTemplate("simple.dao/codegen/template/" + template);
+        StringWriter output = new StringWriter();
+        freemarkerTemplate.process(templateParameters(matchFields, entityClass), output);
+        return output.toString();
     }
 
     private static Map<String, Object> templateParameters(List<FieldModel> matchFields, Class<?> entityClass) {
@@ -225,6 +231,7 @@ class SelfOverridableMatchCodegenTest {
         params.put("classModel", new ClassModel(entityClass));
         params.put("enableDubbo", false);
         params.put("isCacheableEntity", true);
+        params.put("isMultiTenantObject", false);
         return params;
     }
 

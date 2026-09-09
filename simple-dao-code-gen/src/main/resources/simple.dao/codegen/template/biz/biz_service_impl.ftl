@@ -12,7 +12,6 @@ import com.levin.commons.dao.domain.*;
 import jakarta.annotation.*;
 import jakarta.validation.constraints.*;
 import java.util.*;
-import java.time.LocalDateTime;
 import java.util.function.*;
 import java.util.stream.*;
 import org.springframework.cache.annotation.*;
@@ -108,58 +107,6 @@ public class ${className} extends BaseService<${className}> implements Biz${serv
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
-
-<#if selfOverridableMatchFields?has_content>
-    /**
-    * 获取最匹配的${entityTitle}。
-    * <p>
-    * 非空字段必须精确匹配；可空字段允许匹配公共值（null）。随后按字段声明顺序让精确匹配优先于公共值。
-    */
-    @Override
-    @Operation(summary = "获取最匹配的" + E_${entityName}.BIZ_NAME)
-    public ${entityName}Info findBestMatch(
-<#list selfOverridableMatchFields as field>
-            <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
-</#list>
-    ) {
-<#list selfOverridableMatchFields as field>
-<#if field.required>
-        Objects.requireNonNull(${field.name}, E_${entityName}.${field.name} + " 不能为空");
-</#if>
-</#list>
-        return simpleDao.selectFrom(${entityName}.class)
-
- //条件
-<#list selfOverridableMatchFields as field>
-<#if field.required>
-                .eq(E_${entityName}.${field.name}, ${field.name})
-<#else>
-                .isNullOrEq(E_${entityName}.${field.name}, ${field.name})
-</#if>
-</#list>
-
-<#if classModel.isType('com.levin.commons.dao.domain.EnableObject')>
-                .notEq(E_${entityName}.enable, false)
-</#if>
-
-<#if classModel.isType('com.levin.commons.dao.domain.ExpiredObject')>
-                .or()
-                .isNull(E_${entityName}.expiredTime)
-                .gte(E_${entityName}.expiredTime, LocalDateTime.now())
-                .end()
-</#if>
-
- //排序
-<#list selfOverridableMatchFields as field>
-<#if !field.required>
-                .orderByDescForEqOrNull(true, E_${entityName}.${field.name}, ${field.name})
-</#if>
-
-</#list>
-                .findOne(${entityName}Info.class);
-    }
-
-</#if>
 
     /** 参考示例
 
