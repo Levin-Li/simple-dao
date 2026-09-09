@@ -156,7 +156,7 @@ public interface ${className} {
     ${entityName}Info findBestMatch(
 <#list selfOverridableMatchFields as field>
             <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
-</#list>
+</#list>Object...exQueryObject
     );
 
 </#if>
