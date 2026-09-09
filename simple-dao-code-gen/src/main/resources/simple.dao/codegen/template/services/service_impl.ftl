@@ -41,6 +41,8 @@ import cn.hutool.core.lang.*;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 
+import jakarta.validation.constraints.*;
+
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.spring.context.annotation.*;
 <#if !enableDubbo>//</#if>import org.apache.dubbo.config.annotation.*;
 
