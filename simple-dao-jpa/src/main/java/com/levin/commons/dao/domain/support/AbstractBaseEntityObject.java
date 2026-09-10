@@ -36,8 +36,8 @@ public abstract class AbstractBaseEntityObject
 
     //@Options(dictCode = "platform.framework_domainId") //, refTargetType = AbstractPlatformDomain.class
     @Options(refTargetType = AbstractPlatformDomain.class)
-    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;")
-    @Column(length = 384)
+    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;不允许修改")
+    @Column(length = 384, updatable = false)
     protected String domainId;
 
     @Schema(title = "创建者")
