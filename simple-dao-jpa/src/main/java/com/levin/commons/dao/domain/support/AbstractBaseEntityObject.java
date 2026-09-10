@@ -30,12 +30,13 @@ import java.time.LocalDateTime;
 //})
 //@EntityListeners()
 public abstract class AbstractBaseEntityObject
-        implements BaseEntityObject , DomainObject {
+        implements BaseEntityObject, DomainObject {
 
     private static final long serialVersionUID = -123456789L;
 
-    @Options(dictCode = "platform.framework_domainId") //, refTargetType = AbstractPlatformDomain.class
-    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;超过租户的概念；")
+    //@Options(dictCode = "platform.framework_domainId") //, refTargetType = AbstractPlatformDomain.class
+    @Options(refTargetType = AbstractPlatformDomain.class)
+    @Schema(title = "领域标识", description = "全局管理;通常是模块Id或是应用Id，是一个比较大的范围;")
     @Column(length = 384)
     protected String domainId;
 
