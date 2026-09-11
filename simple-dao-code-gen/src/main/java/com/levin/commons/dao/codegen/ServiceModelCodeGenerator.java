@@ -85,6 +85,7 @@ import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -133,6 +134,12 @@ public final class ServiceModelCodeGenerator {
 //    private static Set<Class> collectionsTypes = new HashSet<>();
 
     private static Set<String> notUpdateNames = new HashSet<>();
+
+    /**
+     * 反射读取缺少源码的注解类值时，部分 JVM 会返回 Lcom/example/Type; 描述符。
+     * 生成 Java 注解前必须将它恢复为可编译的类字面量。
+     */
+    private static final Pattern JVM_CLASS_DESCRIPTOR_PATTERN = Pattern.compile("\\bL([\\w/$]+);");
 
     static {
 
@@ -1752,6 +1759,8 @@ public final class ServiceModelCodeGenerator {
         params.put("serialVersionUID", "" + entityClass.getName().hashCode());
 
         params.put("pkField", fields.stream().filter(FieldModel::isPk).findFirst().orElse(null));
+        params.put("hasConfidentialLevelField", fields.stream()
+                .anyMatch(field -> "confidentialLevel".equals(field.getName())));
 
         ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
 
@@ -3145,6 +3154,10 @@ public final class ServiceModelCodeGenerator {
     }
 
     private static String annotationContentReplace(String aTxt) {
+
+        // 先规范化 JVM 类描述符，避免 JavaParser 因非法注解文本拒绝整个生成文件。
+        aTxt = JVM_CLASS_DESCRIPTOR_PATTERN.matcher(aTxt)
+                .replaceAll(match -> match.group(1).replace('/', '.') + ".class");
 
         Map<String, String> map = annotationContentReplaceMap();
 

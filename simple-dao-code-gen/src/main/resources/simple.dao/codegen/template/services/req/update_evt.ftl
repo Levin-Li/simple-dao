@@ -103,7 +103,7 @@ public class ${className} extends ${reqExtendClass} {
         }
     </#if>
 
-    <#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject')>
+    <#if classModel.isType('com.levin.commons.dao.domain.ConfidentialObject') && hasConfidentialLevelField>
         if (confidentialLevel != null
             && get_confidentialDataAccessLevel() != null
             && confidentialLevel > get_confidentialDataAccessLevel()) {
