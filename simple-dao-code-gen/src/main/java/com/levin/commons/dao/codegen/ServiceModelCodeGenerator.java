@@ -2289,7 +2289,7 @@ public final class ServiceModelCodeGenerator {
         //如果不是默认值，则添加
         if (Object.class != injectVar.expectBaseType()) {
             fieldModel.addImport(injectVar.expectBaseType());
-            result.add(String.format("expectBaseType = %s.class", injectVar.expectBaseType().getSimpleName()));
+            result.add(String.format("expectBaseType = %s.class", getJavaTypeReference(injectVar.expectBaseType())));
         }
 
         //如果不是默认值，则添加
@@ -2298,13 +2298,13 @@ public final class ServiceModelCodeGenerator {
                 fieldModel.addImport(expectGenericType);
             }
             result.add(String.format("expectGenericTypes = {%s}"
-                    , Stream.of(injectVar.expectGenericTypes()).filter(Objects::nonNull).map(c -> c.getSimpleName() + ".class").collect(Collectors.joining(","))));
+                    , Stream.of(injectVar.expectGenericTypes()).filter(Objects::nonNull).map(c -> getJavaTypeReference(c) + ".class").collect(Collectors.joining(","))));
         }
 
         //如果不是默认值，则添加
         if (GenericConverter.class != injectVar.converter()) {
             fieldModel.addImport(injectVar.converter());
-            result.add(String.format("converter = %s.class", injectVar.converter().getSimpleName()));
+            result.add(String.format("converter = %s.class", getJavaTypeReference(injectVar.converter())));
         }
 
         return result;
@@ -2598,7 +2598,7 @@ public final class ServiceModelCodeGenerator {
 
                     return resolve.getSimpleName() + "Info";
                 } else {
-                    return resolve.getSimpleName();
+                    return getJavaTypeReference(resolve);
                 }
 
             }));
@@ -2749,7 +2749,7 @@ public final class ServiceModelCodeGenerator {
 
                                             //如果有特别指定类型，则添加expectBaseType
                                             if (!isDefaultType && !isVoidType) {
-                                                parsedParams.add(String.format("expectBaseType = %s.class", fieldType.getSimpleName()));
+                                                parsedParams.add(String.format("expectBaseType = %s.class", getJavaTypeReference(fieldType)));
                                             }
                                             //
 
@@ -2776,13 +2776,13 @@ public final class ServiceModelCodeGenerator {
                                                 annotations.add("@NotEmpty");
                                             }
 
-                                            fieldModel.typeName = injectVar.expectBaseType().getSimpleName();
+                                            fieldModel.typeName = getJavaTypeReference(injectVar.expectBaseType());
 
                                             //基本类型或是集合
                                             fieldModel.setBaseType(BeanUtils.isSimpleProperty(injectVar.expectBaseType())
                                                     || Collection.class.isAssignableFrom(injectVar.expectBaseType()));
 
-                                            String sub = Arrays.stream(injectVar.expectGenericTypes()).map(Class::getSimpleName).collect(Collectors.joining(","));
+                                            String sub = Arrays.stream(injectVar.expectGenericTypes()).map(ServiceModelCodeGenerator::getJavaTypeReference).collect(Collectors.joining(","));
 
                                             if (StringUtils.hasText(sub)) {
                                                 fieldModel.typeName += "<" + sub + ">";
@@ -2910,6 +2910,24 @@ public final class ServiceModelCodeGenerator {
                 annotations.add("@Max(" + field.getAnnotation(Max.class).value() + ")");
                 fieldModel.setTestValue(field.getAnnotation(Max.class).value() + "");
             }*/
+
+            Options fieldOptionsAnnotation = field.getAnnotation(Options.class);
+            if (fieldOptionsAnnotation != null && fieldOptionsAnnotation.refTargetType() != Void.class) {
+                Class<?> refTargetType = fieldOptionsAnnotation.refTargetType();
+                fieldModel.getImports().add(getJavaImportName(refTargetType));
+                String refTargetTypeExpr = getJavaTypeReference(refTargetType) + ".class";
+                annotations.replaceAll(annotation -> annotation.replaceAll(
+                        "refTargetType\\s*=\\s*[^,)]+\\.class", "refTargetType = " + refTargetTypeExpr));
+            }
+
+            Options optionsAnnotation = field.getAnnotation(Options.class);
+            if (optionsAnnotation != null && optionsAnnotation.refTargetType() != Void.class) {
+                Class<?> refTargetType = optionsAnnotation.refTargetType();
+                fieldModel.getImports().add(getJavaImportName(refTargetType));
+                String refTargetTypeExpr = getJavaTypeReference(refTargetType) + ".class";
+                annotations.replaceAll(annotation -> annotation.replaceAll(
+                        "refTargetType\\s*=\\s*[^,)]+\\.class", "refTargetType = " + refTargetTypeExpr));
+            }
 
             fieldModel.getAnnotations().addAll(annotations);
 
@@ -3085,7 +3103,8 @@ public final class ServiceModelCodeGenerator {
 
                                 fm.addImport(Options.class);
 
-                                fm.addAnnotation(Options.class, "refTargetType = " + fieldModel.getType().getSimpleName() + ".class");
+                                fm.getImports().add(getJavaImportName(fieldModel.getType()));
+                                fm.addAnnotation(Options.class, "refTargetType = " + getJavaTypeReference(fieldModel.getType()) + ".class");
 
                             }
 
