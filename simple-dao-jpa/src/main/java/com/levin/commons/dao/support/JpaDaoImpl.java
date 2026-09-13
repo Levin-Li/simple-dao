@@ -168,7 +168,6 @@ public class JpaDaoImpl
         implements JpaDao, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger(JpaDaoImpl.class);
-
     private final String hibernateVersion;
 
     @Autowired

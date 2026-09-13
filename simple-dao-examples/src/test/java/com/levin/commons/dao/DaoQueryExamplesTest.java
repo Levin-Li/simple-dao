@@ -629,6 +629,8 @@ class DaoQueryExamplesTest extends DaoExamplesTestSupport {
     @Test
     public void testNativeSQL() {
 
+        Assumptions.assumeFalse(isPostgreSQL(), "PostgreSQL 不支持 MySQL 风格的 UPDATE ... LIMIT");
+
         EntityType<User> entity = entityManager.getMetamodel().entity(User.class);
 
         int n = dao.updateTo(E_User.E_ENTITY_NAME, "u")
@@ -905,6 +907,14 @@ class DaoQueryExamplesTest extends DaoExamplesTestSupport {
         //以上查询会生成条件，包括map对应的查询条件
 
         System.out.println(r);
+    }
+
+    @SneakyThrows
+    private boolean isPostgreSQL() {
+        return entityManager.unwrap(Session.class).doReturningWork(connection -> {
+            String databaseName = connection.getMetaData().getDatabaseProductName();
+            return databaseName != null && databaseName.toLowerCase(Locale.ROOT).contains("postgresql");
+        });
     }
 
 }
