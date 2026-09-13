@@ -24,10 +24,10 @@ public class UserDTO {
 
     Long id;
 
-    @OrderBy
+    @OrderBy(scope = OrderBy.Scope.OnlyForNotGroupBy)
     String name = "User";
 
-    @OrderBy
+    @OrderBy(scope = OrderBy.Scope.OnlyForNotGroupBy)
     protected Integer orderCode;
 
     @GroupBy
