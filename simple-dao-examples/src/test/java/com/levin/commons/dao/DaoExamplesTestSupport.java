@@ -284,7 +284,7 @@ abstract class DaoExamplesTestSupport {
     public void initTestData2() throws Exception {
 
 
-        if (dao.selectFrom(Group.class).count() >= 15
+        if (dao.selectFrom(Group.class).eq(E_Group.editable, true).count() >= 15
                 && dao.selectFrom(User.class).count() > 0
                 && dao.selectFrom(Task.class).count() > 0) {
             return;
@@ -326,6 +326,7 @@ abstract class DaoExamplesTestSupport {
             //  n++;
 
             Group group = new Group("Group-" + n++, parentId);
+            group.setEditable(true);
 
 //            group.setId((long) n);
 

@@ -4,6 +4,9 @@ import com.levin.commons.dao.DeleteDao;
 import com.levin.commons.dao.exception.StatementBuildException;
 import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.PhysicalNamingStrategy;
+import com.levin.commons.dao.annotation.C;
+import com.levin.commons.dao.annotation.CList;
+import com.levin.commons.dao.annotation.Op;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -110,6 +113,24 @@ class JsonProgrammaticBuilderTest {
     }
 
     @Test
+    void cListConditionsShouldHonorTheirOwnEmptyValueGuards() {
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        String statement = dao.appendByQueryObj(new EmptyStartsWithReq()).genFinalStatement();
+
+        assertTrue(!statement.contains("like"), statement);
+    }
+
+    @Test
+    void cListConditionsShouldKeepActiveInnerConditions() {
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(stubDao(), false, TestUser.class, "u");
+
+        String statement = dao.appendByQueryObj(new EmptyStartsWithReq().setName("active")).genFinalStatement();
+
+        assertTrue(statement.contains("u.name LIKE"), statement);
+    }
+
+    @Test
     void updateDaoShouldBuildJsonMutationExpressions() {
         UpdateDaoImpl<TestUser> dao = new UpdateDaoImpl<>(stubDao(), false, TestUser.class, "u");
 
@@ -165,8 +186,19 @@ class JsonProgrammaticBuilderTest {
 
     static class TestUser {
         Long id;
+        String name;
         String logs;
         List<String> roleList;
+    }
+
+    static class EmptyStartsWithReq {
+        @CList({@C(op = Op.StartsWith)})
+        String name;
+
+        EmptyStartsWithReq setName(String name) {
+            this.name = name;
+            return this;
+        }
     }
 
     private MiniDao stubDao() {

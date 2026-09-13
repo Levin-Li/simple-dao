@@ -51,7 +51,7 @@ public class Task
 
     @Desc("参与者列表，Json List")
     @InjectVar(converter = DefaultJsonConverter.class)
-    @Lob
+    @Column(columnDefinition = "text")
     String actions;
 
 }

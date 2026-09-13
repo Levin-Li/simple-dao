@@ -2374,7 +2374,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             if (annotation instanceof CList) {
                 CList clist = (CList) annotation;
-                daoAnnotations.addAll(Arrays.asList(clist.value()));
+                Arrays.stream(clist.value())
+                        .filter(an -> isValid(an, bean, name, value))
+                        .forEach(daoAnnotations::add);
             } else if (annotation instanceof OrderBy.List) {
                 daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
             } else if (autoConsumerIfListAnnotation(annotation, an -> {

@@ -92,7 +92,7 @@ public class TestRole extends AbstractNamedMultiTenantObject {
     protected OrgDataScope orgDataScope;
 
     @Schema(title = "指定的部门列表", description = "Json数组")
-    @Lob
+    @Column(columnDefinition = "text")
     @InjectVar(
             domain = "dao",
             expectBaseType = List.class,
@@ -102,7 +102,7 @@ public class TestRole extends AbstractNamedMultiTenantObject {
     protected String assignedOrgIdList;
 
     @Schema(title = "资源权限列表", description = "Json数组")
-    @Lob
+    @Column(columnDefinition = "text")
     @Basic(fetch = FetchType.LAZY) // 延迟抓取
     @InjectVar(
             domain = "dao",

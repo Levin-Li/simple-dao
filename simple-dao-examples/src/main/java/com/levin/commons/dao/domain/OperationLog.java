@@ -20,8 +20,7 @@ public class OperationLog  implements Serializable {
     User user;
 
 
-    @Lob
-    @Column(name = "log_text_FieldName")
+    @Column(name = "log_text_FieldName", columnDefinition = "text")
     String logText;
 
     @Temporal(value = TemporalType.TIMESTAMP)
