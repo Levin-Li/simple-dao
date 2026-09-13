@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/oak_base
+    url: jdbc:postgresql://localhost:5432/dao_example
     username: postgres
     password: DbPwd2026
 
