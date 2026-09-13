@@ -268,7 +268,7 @@ public class ModuleWebControllerAspect {
     public List<VariableResolver> tryInjectVar(ProceedingJoinPoint joinPoint) {
 
         final List<VariableResolver> variableResolverList = new ArrayList<>();
-        final Map<String, ?> injectVars = Collections.emptyMap();// injectVarService.getInjectVars();
+        final Map<String, ?> injectVars = Collections.emptyMap();
 
         List<VariableResolver> moduleResolverList = getModuleResolverList(joinPoint);
 

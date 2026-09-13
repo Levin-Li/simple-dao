@@ -31,9 +31,6 @@ public class ModuleVariableResolverConfigurer
     @Autowired
     VariableInjector variableInjector;
 
-//    @Autowired
-//    InjectVarService injectVarService;
-
     @PostConstruct
     void init() {
         log.info("init...");

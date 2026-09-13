@@ -412,9 +412,9 @@ public final class ServiceModelCodeGenerator {
                 , "ModuleWebSocketConfigurer"
         ).forEach(className -> genJavaFile(adminApiDir, "config", className, params));
 
-        Arrays.asList("ModulePlugin"
-                , "ModuleWebInjectVarServiceImpl"
-        ).forEach(className -> genJavaFile(adminApiDir, "", className, params));
+      //  Arrays.asList("ModulePlugin"
+      //          , "ModuleWebInjectVarServiceImpl"
+      //  ).forEach(className -> genJavaFile(adminApiDir, "", className, params));
 
         genJavaFile(adminApiDir, "aspect", "ModuleWebControllerAspect", params);
 
@@ -430,9 +430,9 @@ public final class ServiceModelCodeGenerator {
                     , "ModuleWebSocketConfigurer"
             ).forEach(className -> genJavaFile(clientApiDir, "config", className, params));
 
-            Arrays.asList("ModulePlugin"
-                    , "ModuleWebInjectVarServiceImpl"
-            ).forEach(className -> genJavaFile(clientApiDir, "", className, params));
+            //Arrays.asList("ModulePlugin"
+            //        , "ModuleWebInjectVarServiceImpl"
+           // ).forEach(className -> genJavaFile(clientApiDir, "", className, params));
 
             genJavaFile(clientApiDir, "aspect", "ModuleWebControllerAspect", params);
 
@@ -695,7 +695,6 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(genParams, serviceImplDir, "job", "DemoJob.java");
 
-        //genFileByTemplate(genParams, serviceImplDir, "biz", "InjectVarServiceImpl.java");
 
         genFileByTemplate(genParams, serviceImplDir, "biz", "业务服务类开发规范.md");
 
@@ -703,7 +702,8 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "package-info.java");
         genFileByTemplate(genParams, serviceDir, "services", "ModuleVersion.java");
         genFileByTemplate(genParams, serviceDir, "services", "code-gen.md");
-        genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
+
+//        genFileByTemplate(genParams, serviceDir, "biz", "InjectVarService.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "BaseInfo.java");

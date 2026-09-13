@@ -82,9 +82,6 @@ public class ModuleWebMvcConfigurer implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         //注册拦截器
-//        registry.addInterceptor(new DomainInterceptor((domain) -> injectVarService.clearCache(), (className) -> true))
-//                .addPathPatterns("/**")
-//                .order(Ordered.HIGHEST_PRECEDENCE + 1000);
     }
 
     @Override
