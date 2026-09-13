@@ -28,7 +28,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
-        extends MultiTenantOrgReq<T> {
+        extends MultiTenantOrgReq<T> implements PersonalObject{
 
     @InjectVar(value = InjectConst.USER_ID
             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的

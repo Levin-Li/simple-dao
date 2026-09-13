@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import org.springframework.core.ResolvableType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -48,6 +50,21 @@ class CanonicalClassNameCodegenTest {
         fieldModel.addImport(Outer.NestedValue.class);
 
         assertTrue(fieldModel.getImports().contains(Outer.NestedValue.class.getCanonicalName()));
+        assertTrue(fieldModel.getImports().contains(Outer.class.getCanonicalName()));
+    }
+
+    @Test
+    void genericNestedTypesShouldAlwaysBeCollectedAsFieldImports() throws Exception {
+        Field field = GenericHolder.class.getDeclaredField("opButtonList");
+        FieldModel fieldModel = new FieldModel(GenericHolder.class);
+
+        Method method = ServiceModelCodeGenerator.class.getDeclaredMethod("addResolvableTypeImports",
+                FieldModel.class, ResolvableType.class);
+        method.setAccessible(true);
+        method.invoke(null, fieldModel, ResolvableType.forField(field));
+
+        assertTrue(fieldModel.getImports().contains(MenuItem.OpButton.class.getCanonicalName()));
+        assertTrue(fieldModel.getImports().contains(MenuItem.class.getCanonicalName()));
     }
 
     @SuppressWarnings("unchecked")
@@ -92,5 +109,13 @@ class CanonicalClassNameCodegenTest {
 
         static class NestedValue {
         }
+    }
+
+    static class MenuItem {
+        enum OpButton { Save }
+    }
+
+    static class GenericHolder {
+        java.util.Set<MenuItem.OpButton> opButtonList;
     }
 }

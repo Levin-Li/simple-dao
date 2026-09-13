@@ -25,7 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @ToString(callSuper = true)
 @FieldNameConstants
 public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
-        extends MultiTenantReq<T>{
+        extends MultiTenantReq<T> implements PersonalObject{
 
     //注入逻辑,不能调用方法
     @InjectVar(value = InjectConst.USER_ID

@@ -273,6 +273,11 @@ public abstract class BaseReq implements ServiceReq {
         return domainId != null; //默认情况下, 有指定领域ID的话,也要顺便把无领域ID的数据也一起查出来; 如果仅仅只要查询领域ID为空的数据，则可以填 _OnlyEmptyDomainId_
     }
 
+    public <T extends BaseReq> T setDomainId(String domainId) {
+        this.domainId = domainId;
+        return (T) this;
+    }
+
     public boolean isDomainObject(){
         return (this instanceof DomainObject);
     }

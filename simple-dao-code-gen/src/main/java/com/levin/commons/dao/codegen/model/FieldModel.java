@@ -319,8 +319,10 @@ public class FieldModel implements Cloneable {
             type = type.getComponentType();
         }
 
-        if (!type.isPrimitive() && !"java.lang".equals(type.getPackageName())) {
-            imports.add(getJavaClassName(type));
+        if (!type.isPrimitive()) {
+            for (Class<?> currentType = type; currentType != null; currentType = currentType.getEnclosingClass()) {
+                imports.add(getJavaClassName(currentType));
+            }
 
         }
 

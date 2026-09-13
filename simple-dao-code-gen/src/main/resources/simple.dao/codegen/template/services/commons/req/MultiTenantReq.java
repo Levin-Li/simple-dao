@@ -33,7 +33,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class MultiTenantReq<T extends MultiTenantReq<T>>
-        extends BaseReq {
+        extends BaseReq implements MultiTenantObject {
 
     @Schema(title = "租户ID", hidden = true, description = "租户ID,默认取域名关联的租户，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值，并且检查当前用户都租户和域名关联的租户是否相同")
     @InjectVar(value = InjectConst.TENANT_ID

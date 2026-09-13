@@ -2565,6 +2565,8 @@ public final class ServiceModelCodeGenerator {
             fieldModel.setType(fieldType);
             fieldModel.setEleType(subType);
 
+            addResolvableTypeImports(fieldModel, forField);
+
             fieldModel.setBaseType(isBaseType(forField, fieldType));
 
             fieldModel.setEnumerable(fieldType.isEnum());
@@ -2914,7 +2916,7 @@ public final class ServiceModelCodeGenerator {
             Options fieldOptionsAnnotation = field.getAnnotation(Options.class);
             if (fieldOptionsAnnotation != null && fieldOptionsAnnotation.refTargetType() != Void.class) {
                 Class<?> refTargetType = fieldOptionsAnnotation.refTargetType();
-                fieldModel.getImports().add(getJavaImportName(refTargetType));
+                fieldModel.addImport(refTargetType);
                 String refTargetTypeExpr = getJavaTypeReference(refTargetType) + ".class";
                 annotations.replaceAll(annotation -> annotation.replaceAll(
                         "refTargetType\\s*=\\s*[^,)]+\\.class", "refTargetType = " + refTargetTypeExpr));
@@ -3103,7 +3105,7 @@ public final class ServiceModelCodeGenerator {
 
                                 fm.addImport(Options.class);
 
-                                fm.getImports().add(getJavaImportName(fieldModel.getType()));
+                                fm.addImport(fieldModel.getType());
                                 fm.addAnnotation(Options.class, "refTargetType = " + getJavaTypeReference(fieldModel.getType()) + ".class");
 
                             }
@@ -3116,6 +3118,21 @@ public final class ServiceModelCodeGenerator {
         }
     }
 
+
+    private static void addResolvableTypeImports(FieldModel fieldModel, ResolvableType resolvableType) {
+        if (resolvableType == null || resolvableType == ResolvableType.NONE) {
+            return;
+        }
+
+        Class<?> resolvedType = resolvableType.resolve();
+        if (resolvedType != null) {
+            fieldModel.addImport(resolvedType);
+        }
+
+        for (ResolvableType genericType : resolvableType.getGenerics()) {
+            addResolvableTypeImports(fieldModel, genericType);
+        }
+    }
 
     public static String toJsonStr(String txt) {
 
