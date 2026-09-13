@@ -55,5 +55,7 @@ class PlatformUserTemplateTest {
 
         assertTrue(source.contains("!isPlatformUser()"), source);
         assertFalse(source.contains("!isSaasUser()"), source);
+        assertTrue(source.contains("implements MultiTenantObject"), source);
+        assertFalse(source.contains("implements MultiTenantObject, DomainObject"), source);
     }
 }

@@ -225,7 +225,7 @@ public class FieldModel implements Cloneable {
 
     public void addAnnotation(Class<? extends Annotation> type, String... attrs) {
 
-        imports.add(type.getName());
+        imports.add(getJavaClassName(type));
 
         String attr = String.join(",", attrs);
         if (StringUtils.hasText(attr)) {
@@ -246,7 +246,7 @@ public class FieldModel implements Cloneable {
     public void addAnnotation(Annotation... annotations) {
         Stream.of(annotations)
                 .filter(Objects::nonNull).forEach(an -> {
-                    imports.add(an.annotationType().getName());
+                    imports.add(getJavaClassName(an.annotationType()));
                     this.annotations.add(anToStr(an));
                 });
     }
@@ -319,19 +319,17 @@ public class FieldModel implements Cloneable {
             type = type.getComponentType();
         }
 
-        if (!type.isPrimitive() && !type.getName().startsWith("java.lang.")) {
-            //如果是类中类
-            Class declaringClass = type.getDeclaringClass();
-            if (declaringClass != null) {
-                // ServiceModelCodeGenerator.logger.info("增加导入类： " + type + ",DeclaringClass :" + declaringClass);
-                imports.add(declaringClass.getName() + ".*");
-            } else {
-                imports.add(type.getName());
-            }
+        if (!type.isPrimitive() && !"java.lang".equals(type.getPackageName())) {
+            imports.add(getJavaClassName(type));
 
         }
 
         return this;
+    }
+
+    private static String getJavaClassName(Class<?> type) {
+        String canonicalName = type.getCanonicalName();
+        return StringUtils.hasText(canonicalName) ? canonicalName : type.getName();
     }
 
     @SneakyThrows

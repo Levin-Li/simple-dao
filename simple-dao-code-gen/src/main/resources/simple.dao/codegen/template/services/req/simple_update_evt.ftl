@@ -62,7 +62,7 @@ import ${imp};
 
 //字段更新策略，强制更新时，只要字段被调用set方法，则会被更新，不管是否空值。否则只有值不为[null，空字符串, 空数组，空集合]时才会被更新。
 @Update(condition = "isForceUpdateField(#_fieldName) || #" + C.VALUE_NOT_EMPTY)
-public class ${className} extends ${reqExtendClass} {
+public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 

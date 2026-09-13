@@ -47,7 +47,7 @@ public class ClassModel {
             //加入Json的注解
             if (annotation.annotationType().getPackage()
                     .equals(JsonIgnore.class.getPackage())) {
-                imports.add(annotation.getClass().getName());
+                imports.add(annotation.annotationType().getCanonicalName());
                 annotations.add("@" + annotation.annotationType().getSimpleName());
             }
         }

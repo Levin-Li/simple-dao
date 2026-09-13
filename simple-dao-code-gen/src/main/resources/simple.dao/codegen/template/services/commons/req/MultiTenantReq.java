@@ -33,8 +33,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ToString(callSuper = true)
 public class MultiTenantReq<T extends MultiTenantReq<T>>
-        extends BaseReq
-        implements MultiTenantObject {
+        extends BaseReq implements MultiTenantObject {
 
     @Schema(title = "租户ID", hidden = true, description = "租户ID,默认取域名关联的租户，超管可以设置，其他身份设置无效，服务端将自动覆盖字段值，并且检查当前用户都租户和域名关联的租户是否相同")
     @InjectVar(value = InjectConst.TENANT_ID
@@ -46,7 +45,8 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
 //            , order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID为NULL的排在前面")
     @OrderBy(condition = "isEnableDefaultOrderBy() && #_isQuery && !isPlatformUser() && #isNotEmpty(#_fieldVal) && isContainsPublicData() && !isTenantShared()",
             order = Integer.MIN_VALUE, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是把租户ID不为NULL的排在前面")
-    @OR(autoClose = true)
+
+    @OR(autoClose = true, condition = "isMultiTenantObject()", desc = "只有多租户对象才会启用整个查询条件")
     @Eq
     @IsNull(condition = "#_isQuery && !(isSuperAdmin() || isSaasAdmin()) && isContainsPublicData() && #isNotEmpty(#_fieldVal)", desc = "查询结果包含公共数据(tenantId为NULL的数据)")
     @Eq(condition     = "#_isQuery && !(isSuperAdmin() || isSaasAdmin()) && isTenantShared()", value = "tenantShared", paramExpr = "true", desc = "如果有平台可共享的租户数据，查询结果包括非该租户的数据")

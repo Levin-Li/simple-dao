@@ -19,3 +19,8 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 
 - 本仓库的 git 提交说明默认必须使用中文，包括提交标题、正文说明，以及有实际内容的 git trailers。
 - 继续遵守现有结构化提交协议，但除非用户明确要求其它语言，否则协议中的内容也要翻译成中文。
+
+## 发布规则
+
+- 用户要求发布版本时，发布阶段只允许执行 Maven 的 `deploy` 任务。
+- 不要自动修改版本号、POM、Git 标签或其他任何文件；版本管理由用户显式决定。

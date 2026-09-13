@@ -1161,6 +1161,8 @@ public final class ServiceModelCodeGenerator {
 
                 .put("isOrganizedPublicObject", OrganizedPublicObject.class.isAssignableFrom(entityClass))
                 .put("isOrganizedSharedObject", OrganizedSharedObject.class.isAssignableFrom(entityClass))
+                .put("requestImplementsListStr", getFixedRequestImplements(entityClass).stream()
+                        .collect(Collectors.joining(", ")))
                 //设置请求对象继承的类
                 .put("reqExtendClass", reqExtendClass)
                 .put("infoExtendClass", infoExtendClass)
@@ -1266,6 +1268,31 @@ public final class ServiceModelCodeGenerator {
     static boolean shouldGenerateController(Class<?> entityClass) {
         EntityOption entityOption = AnnotatedElementUtils.findMergedAnnotation(entityClass, EntityOption.class);
         return entityOption == null || !entityOption.innerAccessOnly();
+    }
+
+    static List<String> getFixedRequestImplements(Class<?> entityClass) {
+        return getFixedRequestInterfaceTypes(entityClass).stream()
+                .map(ServiceModelCodeGenerator::getJavaTypeReference)
+                .collect(Collectors.toList());
+    }
+
+    private static List<Class<?>> getFixedRequestInterfaceTypes(Class<?> entityClass) {
+        List<Class<?>> interfaces = new ArrayList<>(4);
+
+        if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(MultiTenantObject.class);
+        }
+        if (OrganizedObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(OrganizedObject.class);
+        }
+        if (PersonalObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(PersonalObject.class);
+        }
+        if (DomainObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(DomainObject.class);
+        }
+
+        return interfaces;
     }
 
     /**
@@ -1745,7 +1772,7 @@ public final class ServiceModelCodeGenerator {
         params.put("modulePackageName", modulePackageName());
 
         params.put("entityClassPackage", entityClass.getPackage().getName());
-        params.put("entityClassName", entityClass.getName());
+        params.put("entityClassName", getJavaClassName(entityClass));
         params.put("entityName", entityClass.getSimpleName());
 
         params.put("packageName", packageName);
@@ -1764,8 +1791,9 @@ public final class ServiceModelCodeGenerator {
 
         ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
 
-        classModel.getImports().add(Serializable.class.getName());
-        classModel.getImplementsList().add("Serializable");
+        classModel.getImports().add(getJavaImportName(Serializable.class));
+        classModel.getImplementsList().add(getJavaTypeReference(Serializable.class));
+        getFixedRequestInterfaceTypes(entityClass).forEach(type -> classModel.getImports().add(getJavaImportName(type)));
 
         Set<Class<?>> visited = new HashSet<>();
 
@@ -1788,7 +1816,7 @@ public final class ServiceModelCodeGenerator {
                 // 解析接口上的泛型实际类型
                 final String genericStr = com.levin.commons.utils.ClassUtils.resolvableType2GenericStr(interfaceType, resolve -> {
 
-                    classModel.getImports().add(resolve.getName());
+                    classModel.getImports().add(getJavaImportName(resolve));
 
                     if (resolve.isAnnotationPresent(Entity.class)) { // || resolve.isAnnotationPresent(MappedSuperclass.class)
 
@@ -1796,7 +1824,7 @@ public final class ServiceModelCodeGenerator {
 
                         return resolve.getSimpleName() + "Info";
                     } else {
-                        return resolve.getSimpleName();
+                        return getJavaTypeReference(resolve);
                     }
 
                 });
@@ -2153,6 +2181,25 @@ public final class ServiceModelCodeGenerator {
 
     }
 
+    private static String getJavaClassName(Class<?> type) {
+        String canonicalName = type.getCanonicalName();
+        return StringUtils.hasText(canonicalName) ? canonicalName : type.getName();
+    }
+
+    private static String getJavaImportName(Class<?> type) {
+        Class<?> importType = type;
+        while (importType.getEnclosingClass() != null) {
+            importType = importType.getEnclosingClass();
+        }
+        return getJavaClassName(importType);
+    }
+
+    private static String getJavaTypeReference(Class<?> type) {
+        String className = getJavaClassName(type);
+        String packagePrefix = type.getPackageName() + ".";
+        return className.startsWith(packagePrefix) ? className.substring(packagePrefix.length()) : className;
+    }
+
     private static String getFirst(String... values) {
         return Arrays.stream(values).filter(StringUtils::hasText).findFirst().orElse(null);
     }
@@ -2396,6 +2443,7 @@ public final class ServiceModelCodeGenerator {
 
         boolean isOrganizedObject = OrganizedObject.class.isAssignableFrom(entityClass);
         boolean isPersonalObject = PersonalObject.class.isAssignableFrom(entityClass);
+        boolean isDomainObject = DomainObject.class.isAssignableFrom(entityClass);
 
         final boolean isQueryObj = "query".equalsIgnoreCase(action);
         final boolean isInfoObj = "info".equalsIgnoreCase(action);
@@ -2457,13 +2505,21 @@ public final class ServiceModelCodeGenerator {
                 continue;
             }
 
-            if (ignoreSpecificField
-                    && isPersonalObject
-                    && field.getName().equals("ownerId")) {
+        if (ignoreSpecificField
+                && isPersonalObject
+                && field.getName().equals("ownerId")) {
                 //多租户字段
                 logger.debug("*** " + entityClass + "[" + action + "] 忽略个人字段 ownerId : " + field + " --> " + fieldType);
-                continue;
-            }
+            continue;
+        }
+
+        if (ignoreSpecificField
+                && isDomainObject
+                && field.getName().equals("domainId")) {
+            //领域字段
+            logger.debug("*** " + entityClass + "[" + action + "] 忽略领域字段 domainId : " + field + " --> " + fieldType);
+            continue;
+        }
 
             boolean isIterable = fieldType.isArray() || Iterable.class.isAssignableFrom(fieldType);
 

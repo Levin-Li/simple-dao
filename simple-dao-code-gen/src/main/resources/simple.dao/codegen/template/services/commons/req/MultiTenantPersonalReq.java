@@ -25,8 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @ToString(callSuper = true)
 @FieldNameConstants
 public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
-        extends MultiTenantReq<T>
-        implements PersonalObject {
+        extends MultiTenantReq<T>{
 
     //注入逻辑,不能调用方法
     @InjectVar(value = InjectConst.USER_ID
@@ -34,8 +33,8 @@ public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
-    @Eq(condition = "#isNotEmpty(#_fieldVal) && !(#_isUpdate) && !canVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
-    @Update(condition = "(#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更数据的拥有者")
+    @Eq(condition = "isPersonalObject() && #isNotEmpty(#_fieldVal) && !(#_isUpdate) && !canVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
+    @Update(condition = "isPersonalObject() && (#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更数据的拥有者")
     protected String ownerId;
 
     /**

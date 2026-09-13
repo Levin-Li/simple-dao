@@ -251,13 +251,42 @@ public abstract class BaseReq implements ServiceReq {
     @IsNull(value = "confidentialLevel", condition = "isUnsafeContext() && isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
     protected Integer _confidentialDataAccessLevel;
 
-
     @Ignore
     @Schema(title = "是否能访问个人数据", description = "", hidden = true)
     @CtxVar
     public boolean canVisitPersonalData() {
         return _confidentialDataAccessLevel != null
                 && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
+    }
+
+    @Schema(title = "领域ID", hidden = true, description = "领域ID，未显式指定时从请求上下文自动注入")
+    @InjectVar(isRequired = "false", isOverride = "false")
+
+    @OR(autoClose = true, condition = "isDomainObject()", desc = "只有实现了领域对象[DomainObject]接口，才加入这个条件")
+
+    @Eq(condition = "#isNotEmpty(#_fieldVal) && #_fieldVal != '_OnlyEmptyDomainId_'") // domainId 为空 查询条件
+    @IsNull(condition = "#_isQuery && isContainsEmptyDomain(#_fieldVal)", desc = "查询结果包含(domainId为NULL的数据)")
+    protected String domainId;
+
+    @Schema(title = "是否包含DomainId为空的数据", hidden = true)
+    public boolean isContainsEmptyDomain(String domainId){
+        return domainId != null; //默认情况下, 有指定领域ID的话,也要顺便把无领域ID的数据也一起查出来; 如果仅仅只要查询领域ID为空的数据，则可以填 _OnlyEmptyDomainId_
+    }
+
+    public boolean isDomainObject(){
+        return (this instanceof DomainObject);
+    }
+
+    public boolean isMultiTenantObject(){
+        return (this instanceof MultiTenantObject);
+    }
+
+    public boolean isOrganizedObject(){
+        return (this instanceof OrganizedObject);
+    }
+
+    public boolean isPersonalObject(){
+        return (this instanceof PersonalObject);
     }
 
     /**

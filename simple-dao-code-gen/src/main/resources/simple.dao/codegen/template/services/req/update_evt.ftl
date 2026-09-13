@@ -56,7 +56,7 @@ import ${imp};
 @FieldNameConstants
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 
-public class ${className} extends ${reqExtendClass} {
+public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
