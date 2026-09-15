@@ -1,4 +1,6 @@
-package ${modulePackageName};
+package $
+
+{modulePackageName};
 
 import cn.hutool.core.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -10,16 +12,16 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- *
  * 支持的必要的时候，阻断新的请求
+ *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
- * 
  */
 @Slf4j
 public class BlockingFilter extends OncePerRequestFilter {
@@ -30,14 +32,16 @@ public class BlockingFilter extends OncePerRequestFilter {
 
     @Autowired
     Environment environment;
-    private int nohupOutFileMaxSize = 5;
+
+    private int nohupOutFileMaxSize = 10;
 
     @Override
     public void afterPropertiesSet() throws ServletException {
 
         log.info("阻断过滤器已经启用，可以在本机执行[curl 127.0.0.1/local/console/stop]阻断新的请求");
 
-        nohupOutFileMaxSize = environment.getProperty("nohupOutFileMaxSize", Integer.class, 5);
+        nohupOutFileMaxSize = environment.getProperty("nohupOutFileMaxSize", Integer.class, 10);
+
     }
 
     @Override
@@ -45,8 +49,12 @@ public class BlockingFilter extends OncePerRequestFilter {
 
         File nohupOutFile = new File("./nohup.out");
         //如果日志文件大于5G
-        if (nohupOutFile.exists() && nohupOutFileMaxSize > 0 && nohupOutFile.length() > nohupOutFileMaxSize * 1_000_000_000L) {
-            FileUtil.writeUtf8String("---日志文件超过5G，自动清除---\n", nohupOutFile);
+        if (nohupOutFile.exists()
+                && nohupOutFileMaxSize > 0
+                && nohupOutFile.length() > nohupOutFileMaxSize * 1_000_000_000L) {
+
+            FileUtil.writeUtf8String("---日志文件超过" + nohupOutFileMaxSize + "G，自动清除---\n", nohupOutFile);
+
         }
 
         final String serverName = request.getServerName();
