@@ -223,7 +223,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         return UNIQUE_CACHE_VERSIONS.computeIfAbsent(String.join("|", propertyNames), ignored -> new AtomicLong()).get();
     }
 
-    protected String uniqueFindCacheKey(String uniqueId, Object... values) {
+    public String uniqueFindCacheKey(String uniqueId, Object... values) {
         String valueKey = Arrays.stream(values).map(value -> value == null ? "<null>" : value.toString().length() + ":" + value).collect(Collectors.joining("|"));
         return UNIQUE_CACHE_KEY_PREFIX + uniqueId + ":" + valueKey;
     }

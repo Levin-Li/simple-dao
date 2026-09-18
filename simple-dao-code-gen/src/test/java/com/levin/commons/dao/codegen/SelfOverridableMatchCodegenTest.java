@@ -288,6 +288,20 @@ class SelfOverridableMatchCodegenTest {
         assertNotNull(cache.get(uniqueIndexPrefix + id2));
     }
 
+    @Test
+    void blockingFilterTemplateShouldRenderAsValidJava() throws Exception {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/bootstrap/BlockingFilter.java")
+                .process(Collections.singletonMap("modulePackageName", "com.example.generated"), output);
+
+        String source = output.toString();
+        assertTrue(source.startsWith("package com.example.generated;"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
+    }
+
     private static void evictRelatedUniqueCacheKeys(Cache cache, String cachePrefix,
                                                      String uniqueKeyPrefix, String uniqueIndexPrefix, String id) {
         String primaryKey = cachePrefix + id;
