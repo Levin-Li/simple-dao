@@ -61,10 +61,6 @@ public interface ${className} {
 
     String SERVICE_BEAN_NAME = PLUGIN_PREFIX + SERVICE_NAME;
 
-<#list classModel.uniqueKeyModels as uniqueKey>
-    String ${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME = CACHE_NAME + CACHE_DELIM + "uk" + CACHE_DELIM + "${uniqueKey.cacheNameSuffix}";
-</#list>
-
     /**
     * 获取实体类
     */

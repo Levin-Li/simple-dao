@@ -117,6 +117,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     )));
     private static final Map<String, Boolean> UNIQUE_CACHE_ENABLED = new ConcurrentHashMap<>();
     private static final Map<String, AtomicLong> UNIQUE_CACHE_VERSIONS = new ConcurrentHashMap<>();
+    private static final String UNIQUE_CACHE_KEY_PREFIX = CK_PREFIX + "UK:";
+    private static final String UNIQUE_CACHE_INDEX_PREFIX = CK_PREFIX + "UKI:";
 </#if>
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
@@ -136,9 +138,20 @@ public class ${className} extends BaseService<${className}> implements ${service
         SpringCacheEventListener.add(this.springCacheEventListener(),
                ${serviceName}.CACHE_NAME, ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict
         );
+<#if classModel.uniqueKeyModels?has_content>
+        SpringCacheEventListener.add(this.uniqueCacheRelationListener(),
+               ${serviceName}.CACHE_NAME, UNIQUE_CACHE_KEY_PREFIX + "*", SpringCacheEventListener.Action.Put
+        );
+</#if>
         if (daoEventBus != null) {
             daoEventBus.addEventConsumer(E_${entityName}.CLASS_NAME + "/**", Object.class,
-                    ignored -> clearUniqueFindCaches());
+                    id -> {
+                        if (id != null) {
+                            getSelfProxy().clearCacheByKeySuffix(String.valueOf(id));
+                        } else {
+                            getSelfProxy().clearAllCache();
+                        }
+                    });
         }
        
     }
@@ -218,23 +231,52 @@ public class ${className} extends BaseService<${className}> implements ${service
         return UNIQUE_CACHE_VERSIONS.computeIfAbsent(String.join("|", propertyNames), ignored -> new AtomicLong()).get();
     }
 
-    protected String uniqueFindCacheKey(Object... values) {
-        return Arrays.stream(values).map(value -> value == null ? "<null>" : value.toString().length() + ":" + value).collect(Collectors.joining("|"));
+    protected String uniqueFindCacheKey(String uniqueId, Object... values) {
+        String valueKey = Arrays.stream(values).map(value -> value == null ? "<null>" : value.toString().length() + ":" + value).collect(Collectors.joining("|"));
+        return UNIQUE_CACHE_KEY_PREFIX + uniqueId + ":" + valueKey;
     }
 
-    public void clearUniqueFindCaches() {
-<#list classModel.uniqueKeyModels as uniqueKey>
-    <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
-        moduleCacheService.clear(${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME);
-</#list>
+    protected String uniqueCacheIndexKey(Object id) {
+        return UNIQUE_CACHE_INDEX_PREFIX + id;
+    }
+
+    protected boolean handleUniqueCacheEvict(Cache cache, SpringCacheEventListener.Action action, Object key) {
+        if (!(key instanceof String) || action != SpringCacheEventListener.Action.Evict) return false;
+        String cacheKey = (String) key;
+        if (cacheKey.startsWith(UNIQUE_CACHE_KEY_PREFIX) || cacheKey.startsWith(UNIQUE_CACHE_INDEX_PREFIX)) return true;
+        if (!cacheKey.startsWith(CK_PREFIX)) return false;
+        Cache.ValueWrapper wrapper = cache.get(uniqueCacheIndexKey(cacheKey.substring(CK_PREFIX.length())));
+        if (wrapper != null && wrapper.get() instanceof Collection<?>) {
+            for (Object uniqueKey : (Collection<?>) wrapper.get()) if (uniqueKey != null) cache.evict(uniqueKey.toString());
+        }
+        cache.evict(uniqueCacheIndexKey(cacheKey.substring(CK_PREFIX.length())));
+        return false;
+    }
+
+    protected SpringCacheEventListener uniqueCacheRelationListener() {
+        return (ctx, cache, action, key, value) -> {
+            if (!(key instanceof String) || !(value instanceof ${entityName}Info)) return;
+            Object id = ((${entityName}Info) value).get${pkField.name?cap_first}();
+            if (id == null) return;
+            String indexKey = uniqueCacheIndexKey(id);
+            Cache.ValueWrapper wrapper = cache.get(indexKey);
+            Set<String> relatedKeys = new LinkedHashSet<>();
+            if (wrapper != null && wrapper.get() instanceof Collection<?>) {
+                for (Object relatedKey : (Collection<?>) wrapper.get()) if (relatedKey != null) relatedKeys.add(relatedKey.toString());
+            }
+            relatedKeys.add(key.toString());
+            cache.put(indexKey, new ArrayList<>(relatedKeys));
+        };
     }
 
 <#list classModel.uniqueKeyModels as uniqueKey>
     <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
+    <#assign propertyNamesExpr = uniqueKey.propertyNames?join("','")>
     @Override
-    <#if !isCacheableEntity>//</#if>@Cacheable(cacheNames = ${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME,
-            condition = "#root.target.isUniqueFindCacheEnabled('<#list uniqueFields as field>${field.name}<#if field_has_next>','</#if></#list>')",
-            key = "#root.target.uniqueFindCacheKey(#root.target.getUniqueFindCacheVersion('<#list uniqueFields as field>${field.name}<#if field_has_next>','</#if></#list>')<#list uniqueFields as field>, #${field.name}</#list>)")
+    <#if !isCacheableEntity>//</#if>@Cacheable(
+            condition = "#root.target.isUniqueFindCacheEnabled('${propertyNamesExpr}')",
+            unless = "#result == null",
+            key = "#root.target.uniqueFindCacheKey('${uniqueKey.id}', #root.target.getUniqueFindCacheVersion('${propertyNamesExpr}')<#list uniqueFields as field>, #${field.name}</#list>)")
     public ${entityName}Info findBy${uniqueKey.methodSuffix}(
 <#list uniqueFields as field>
             ${field.typeName} ${field.name}<#if field_has_next>,</#if>
@@ -461,6 +503,10 @@ public class ${className} extends BaseService<${className}> implements ${service
         //如果缓存发生删除事件，则删除对应的缓存
         return (ctx, cache, action, key, value) -> {
 
+                    if (handleUniqueCacheEvict(cache, action, key)) {
+                        return;
+                    }
+
                     MultiTenantObject multiTenantObject = null;
 
                     if (value instanceof MultiTenantObject) {
@@ -626,7 +672,11 @@ public class ${className} extends BaseService<${className}> implements ${service
      * 缓存事件监听器
      */
     protected SpringCacheEventListener springCacheEventListener() {
-        return (ctx, cache, action, key, value) -> cache.evict("${entityName}List");
+        return (ctx, cache, action, key, value) -> {
+            if (!handleUniqueCacheEvict(cache, action, key)) {
+                cache.evict("${entityName}List");
+            }
+        };
     }
 
     /**

@@ -16,6 +16,9 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 @Entity(name = "simple_dao_test_entity")
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"uniqueGroup", "uniqueName"})
+})
 //@DynamicInsert
 //@DynamicUpdate
 @Data
@@ -92,6 +95,18 @@ public class TestEntity
 
     @Desc("分数")
     Integer score;
+
+    @Schema(title = "单字段唯一编码")
+    @Column(unique = true, length = 64)
+    String uniqueCode;
+
+    @Schema(title = "组合唯一分组")
+    @Column(length = 64)
+    String uniqueGroup;
+
+    @Schema(title = "组合唯一名称")
+    @Column(length = 64)
+    String uniqueName;
 
     @Override
     @Transient

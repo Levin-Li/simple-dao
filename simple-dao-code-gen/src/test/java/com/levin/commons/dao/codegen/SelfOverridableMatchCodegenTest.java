@@ -17,6 +17,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import com.levin.commons.dao.Unique;
 import com.levin.commons.dao.codegen.model.ClassModel.UniqueKeyModel;
+import org.springframework.cache.Cache;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
@@ -24,6 +26,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +34,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -226,7 +231,7 @@ class SelfOverridableMatchCodegenTest {
         assertEquals(Arrays.asList("email", "tenantId|code"), uniqueKeys.stream().map(UniqueKeyModel::getId).collect(Collectors.toList()));
         assertEquals(Arrays.asList("tenantId", "code"), uniqueKeys.get(1).getPropertyNames());
         Map<String, Object> params = templateParameters(fields, UniqueCacheEntity.class);
-        ((ClassModel) params.get("classModel")).setUniqueKeyModels(uniqueKeys);
+        ((ClassModel) params.get("classModel")).setFieldModels(fields).setUniqueKeyModels(uniqueKeys);
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
         configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
@@ -236,11 +241,57 @@ class SelfOverridableMatchCodegenTest {
 
         assertTrue(source.contains("findByEmail("), source);
         assertTrue(source.contains("findByTenantIdAndCode("), source);
-        assertTrue(source.contains("clearUniqueFindCaches()"), source);
+        assertFalse(source.contains("clearUniqueFindCaches()"), source);
         assertTrue(source.contains("TransactionSynchronizationManager"), source);
-        assertTrue(source.contains("moduleCacheService.clear(EMAIL_UNIQUE_CACHE_NAME)"), source);
-        assertTrue(source.contains("moduleCacheService.clear(TENANTIDANDCODE_UNIQUE_CACHE_NAME)"), source);
+        assertTrue(source.contains("UNIQUE_CACHE_INDEX_PREFIX"), source);
+        assertTrue(source.contains("uniqueCacheRelationListener"), source);
+        assertTrue(source.contains("handleUniqueCacheEvict"), source);
+        assertTrue(source.contains("SpringCacheEventListener.Action.Put"), source);
+        assertTrue(source.contains("unless = \"#result == null\""), source);
+        assertFalse(source.contains("EMAIL_UNIQUE_CACHE_NAME"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
+    }
+
+    @Test
+    void idEvictionShouldRemoveOnlyItsRelatedUniqueCacheKeys() {
+        Cache cache = new ConcurrentMapCache("user");
+        String cachePrefix = "user:";
+        String uniqueKeyPrefix = cachePrefix + "UK:";
+        String uniqueIndexPrefix = cachePrefix + "UKI:";
+        String id1 = "1001";
+        String id2 = "1002";
+        String emailKey = uniqueKeyPrefix + "email:a@example.com";
+        String codeKey = uniqueKeyPrefix + "tenant:t1|code:ADMIN";
+        String otherKey = uniqueKeyPrefix + "email:b@example.com";
+
+        cache.put(emailKey, "user-1001");
+        cache.put(codeKey, "user-1001");
+        cache.put(otherKey, "user-1002");
+        cache.put(uniqueIndexPrefix + id1, Arrays.asList(emailKey, codeKey));
+        cache.put(uniqueIndexPrefix + id2, Collections.singletonList(otherKey));
+
+        evictRelatedUniqueCacheKeys(cache, cachePrefix, uniqueKeyPrefix, uniqueIndexPrefix, id1);
+
+        assertNull(cache.get(emailKey));
+        assertNull(cache.get(codeKey));
+        assertNull(cache.get(uniqueIndexPrefix + id1));
+        assertNotNull(cache.get(otherKey));
+        assertNotNull(cache.get(uniqueIndexPrefix + id2));
+    }
+
+    private static void evictRelatedUniqueCacheKeys(Cache cache, String cachePrefix,
+                                                     String uniqueKeyPrefix, String uniqueIndexPrefix, String id) {
+        String primaryKey = cachePrefix + id;
+        String indexKey = uniqueIndexPrefix + primaryKey.substring(cachePrefix.length());
+        Cache.ValueWrapper wrapper = cache.get(indexKey);
+        if (wrapper != null && wrapper.get() instanceof Collection<?>) {
+            for (Object uniqueKey : (Collection<?>) wrapper.get()) {
+                if (uniqueKey != null && uniqueKey.toString().startsWith(uniqueKeyPrefix)) {
+                    cache.evict(uniqueKey.toString());
+                }
+            }
+        }
+        cache.evict(indexKey);
     }
 
     private String render(String template, String fileName, List<FieldModel> matchFields) throws Exception {
