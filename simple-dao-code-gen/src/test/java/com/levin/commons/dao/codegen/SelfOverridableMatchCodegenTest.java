@@ -26,11 +26,14 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -238,6 +241,9 @@ class SelfOverridableMatchCodegenTest {
         StringWriter output = new StringWriter();
         configuration.getTemplate("simple.dao/codegen/template/services/service_impl.ftl").process(params, output);
         String source = output.toString();
+        StringWriter serviceOutput = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/service.ftl").process(params, serviceOutput);
+        String serviceSource = serviceOutput.toString();
 
         assertTrue(source.contains("findByEmail("), source);
         assertTrue(source.contains("findByTenantIdAndCode("), source);
@@ -246,9 +252,14 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(source.contains("UNIQUE_CACHE_INDEX_PREFIX"), source);
         assertTrue(source.contains("uniqueCacheRelationListener"), source);
         assertTrue(source.contains("handleUniqueCacheEvict"), source);
+        assertTrue(source.contains("import org.springframework.cache.Cache;"), source);
         assertTrue(source.contains("SpringCacheEventListener.Action.Put"), source);
         assertTrue(source.contains("unless = \"#result == null\""), source);
         assertFalse(source.contains("EMAIL_UNIQUE_CACHE_NAME"), source);
+        assertFalse(source.contains("daoEventBus.addEventConsumer"), source);
+        assertTrue(source.contains("new EntityEvent(action, null)"), source);
+        assertTrue(serviceSource.contains("findByEmail(String email);"), serviceSource);
+        assertTrue(serviceSource.contains("findByTenantIdAndCode(String tenantId, String code);"), serviceSource);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
 
@@ -264,11 +275,9 @@ class SelfOverridableMatchCodegenTest {
         String codeKey = uniqueKeyPrefix + "tenant:t1|code:ADMIN";
         String otherKey = uniqueKeyPrefix + "email:b@example.com";
 
-        cache.put(emailKey, "user-1001");
-        cache.put(codeKey, "user-1001");
-        cache.put(otherKey, "user-1002");
-        cache.put(uniqueIndexPrefix + id1, Arrays.asList(emailKey, codeKey));
-        cache.put(uniqueIndexPrefix + id2, Collections.singletonList(otherKey));
+        simulateUniqueCachePut(cache, uniqueIndexPrefix, id1, emailKey, "user-1001");
+        simulateUniqueCachePut(cache, uniqueIndexPrefix, id1, codeKey, "user-1001");
+        simulateUniqueCachePut(cache, uniqueIndexPrefix, id2, otherKey, "user-1002");
 
         evictRelatedUniqueCacheKeys(cache, cachePrefix, uniqueKeyPrefix, uniqueIndexPrefix, id1);
 
@@ -292,6 +301,23 @@ class SelfOverridableMatchCodegenTest {
             }
         }
         cache.evict(indexKey);
+    }
+
+    private static void simulateUniqueCachePut(Cache cache, String uniqueIndexPrefix,
+                                               String id, String uniqueKey, Object value) {
+        cache.put(uniqueKey, value);
+        String indexKey = uniqueIndexPrefix + id;
+        Cache.ValueWrapper wrapper = cache.get(indexKey);
+        Set<String> relatedKeys = new LinkedHashSet<>();
+        if (wrapper != null && wrapper.get() instanceof Collection<?>) {
+            for (Object relatedKey : (Collection<?>) wrapper.get()) {
+                if (relatedKey != null) {
+                    relatedKeys.add(relatedKey.toString());
+                }
+            }
+        }
+        relatedKeys.add(uniqueKey);
+        cache.put(indexKey, new ArrayList<>(relatedKeys));
     }
 
     private String render(String template, String fileName, List<FieldModel> matchFields) throws Exception {

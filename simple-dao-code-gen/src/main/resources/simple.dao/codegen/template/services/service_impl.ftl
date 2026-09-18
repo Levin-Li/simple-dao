@@ -24,6 +24,7 @@ import java.util.function.*;
 import org.slf4j.*;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
 import org.springframework.transaction.support.*;
@@ -143,16 +144,6 @@ public class ${className} extends BaseService<${className}> implements ${service
                ${serviceName}.CACHE_NAME, UNIQUE_CACHE_KEY_PREFIX + "*", SpringCacheEventListener.Action.Put
         );
 </#if>
-        if (daoEventBus != null) {
-            daoEventBus.addEventConsumer(E_${entityName}.CLASS_NAME + "/**", Object.class,
-                    id -> {
-                        if (id != null) {
-                            getSelfProxy().clearCacheByKeySuffix(String.valueOf(id));
-                        } else {
-                            getSelfProxy().clearAllCache();
-                        }
-                    });
-        }
        
     }
 
@@ -161,7 +152,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     public boolean handleEvent(boolean ok, EntityOption.Action action, Object id) {
 
         if (ok && action != null && daoEventBus != null) {
-            Runnable sendEvent = () -> daoEventBus.sendEvent(E_${entityName}.CLASS_NAME + "/" + action.name(), id);
+            Object eventPayload = id != null ? id : new EntityEvent(action, null);
+            Runnable sendEvent = () -> daoEventBus.sendEvent(E_${entityName}.CLASS_NAME + "/" + action.name(), eventPayload);
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override

@@ -138,10 +138,7 @@ public interface ${className} {
 <#list classModel.uniqueKeyModels as uniqueKey>
     <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
     @Operation(summary = VIEW_DETAIL_ACTION)
-    ${entityName}Info findBy${uniqueKey.methodSuffix}(
-<#list uniqueFields as field>
-            <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
-</#list>);
+    ${entityName}Info findBy${uniqueKey.methodSuffix}(<#list uniqueFields as field><#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>, </#if></#list>);
 </#list>
 </#if>
 
