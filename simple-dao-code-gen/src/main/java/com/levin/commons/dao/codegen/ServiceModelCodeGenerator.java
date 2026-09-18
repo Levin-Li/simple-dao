@@ -22,12 +22,14 @@ import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.EntityOpConst;
 import com.levin.commons.dao.EntityOption;
+import com.levin.commons.dao.Unique;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
 import com.levin.commons.dao.codegen.model.FieldModel;
+import com.levin.commons.dao.codegen.model.ClassModel.UniqueKeyModel;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.rbac.DataMasking;
@@ -84,6 +86,7 @@ import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1211,6 +1214,7 @@ public final class ServiceModelCodeGenerator {
         String action = "info";
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, action);
+        List<FieldModel> serviceFields = fields;
         params.put("selfOverridableMatchFields", getSelfOverridableMatchFields(entityClass, fields));
 
 //        postProcess(fields, action);
@@ -1254,7 +1258,7 @@ public final class ServiceModelCodeGenerator {
 
         /////////////////////////////////////////////////////////////////
 
-        buildService(entityClass, fields, params);
+        buildService(entityClass, serviceFields, params);
 
         if (shouldGenerateController(entityClass)) {
             buildAdminApiController(entityClass, fields, adminApiDir, params);
@@ -1789,7 +1793,9 @@ public final class ServiceModelCodeGenerator {
         params.put("hasConfidentialLevelField", fields.stream()
                 .anyMatch(field -> "confidentialLevel".equals(field.getName())));
 
-        ClassModel classModel = new ClassModel(entityClass).setFieldModels(fields);
+        ClassModel classModel = new ClassModel(entityClass)
+                .setFieldModels(fields)
+                .setUniqueKeyModels(getUniqueKeyModels(entityClass, fields));
 
         classModel.getImports().add(getJavaImportName(Serializable.class));
         classModel.getImplementsList().add(getJavaTypeReference(Serializable.class));
@@ -1877,6 +1883,30 @@ public final class ServiceModelCodeGenerator {
         multiValueMap.forEach((name, list) -> params.put(name + "_fields", list));
 
         return params;
+    }
+
+    static List<UniqueKeyModel> getUniqueKeyModels(Class<?> entityClass, List<FieldModel> fields) {
+        Map<String, FieldModel> byName = fields.stream().collect(Collectors.toMap(FieldModel::getName, Function.identity(), (a, b) -> a, LinkedHashMap::new));
+        Map<String, LinkedHashSet<String>> groups = new LinkedHashMap<>();
+        Consumer<List<String>> add = names -> {
+            List<String> resolved = names.stream().filter(byName::containsKey).collect(Collectors.toList());
+            if (!resolved.isEmpty()) groups.putIfAbsent(String.join("|", resolved), new LinkedHashSet<>(resolved));
+        };
+        fields.stream().filter(FieldModel::isUk).forEach(field -> add.accept(Collections.singletonList(field.getName())));
+        Table table = entityClass.getAnnotation(Table.class);
+        if (table != null) for (UniqueConstraint constraint : table.uniqueConstraints()) add.accept(Arrays.asList(constraint.columnNames()));
+        Map<String, LinkedHashSet<String>> uniqueGroups = new LinkedHashMap<>();
+        BiConsumer<Field, Unique> collectUnique = (field, unique) -> {
+            List<String> names = Arrays.stream(unique.value()).filter(StringUtils::hasText).collect(Collectors.toList());
+            if (names.isEmpty() && field != null) names = Collections.singletonList(field.getName());
+            if (names.isEmpty()) return;
+            String group = StringUtils.hasText(unique.group()) ? unique.group() : String.join("|", names);
+            uniqueGroups.computeIfAbsent(group, ignored -> new LinkedHashSet<>()).addAll(names);
+        };
+        for (Unique unique : entityClass.getAnnotationsByType(Unique.class)) collectUnique.accept(null, unique);
+        for (FieldModel model : fields) for (Unique unique : model.getField().getAnnotationsByType(Unique.class)) collectUnique.accept(model.getField(), unique);
+        uniqueGroups.values().forEach(names -> add.accept(new ArrayList<>(names)));
+        return groups.values().stream().map(names -> new UniqueKeyModel().setPropertyNames(new ArrayList<>(names))).collect(Collectors.toList());
     }
 
 

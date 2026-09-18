@@ -21,6 +21,24 @@ import java.util.stream.Stream;
 @Accessors(chain = true)
 public class ClassModel {
 
+    @Data
+    @Accessors(chain = true)
+    public static class UniqueKeyModel {
+        private List<String> propertyNames;
+
+        public String getId() {
+            return String.join("|", propertyNames);
+        }
+
+        public String getMethodSuffix() {
+            return propertyNames.stream().map(name -> Character.toUpperCase(name.charAt(0)) + name.substring(1)).collect(Collectors.joining("And"));
+        }
+
+        public String getCacheNameSuffix() {
+            return getMethodSuffix();
+        }
+    }
+
     Class<?> entityType = Void.class;
 
     String name;
@@ -36,6 +54,8 @@ public class ClassModel {
     private final Set<String> implementsList = new LinkedHashSet<>();
 
     List<FieldModel> fieldModels = Collections.emptyList();
+
+    List<UniqueKeyModel> uniqueKeyModels = Collections.emptyList();
 
     public ClassModel(Class<?> entityType) {
 
@@ -130,6 +150,15 @@ public class ClassModel {
         return fieldModels.stream()
                 .filter(f -> attrList.contains(f.getName()))
                 .collect(Collectors.toList());
+    }
+
+    public List<FieldModel> findFields(Collection<String> attrNames) {
+        if (attrNames == null || attrNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<String, FieldModel> fieldsByName = fieldModels.stream()
+                .collect(Collectors.toMap(FieldModel::getName, field -> field, (left, right) -> left));
+        return attrNames.stream().map(fieldsByName::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public long getNextOrderNum() {

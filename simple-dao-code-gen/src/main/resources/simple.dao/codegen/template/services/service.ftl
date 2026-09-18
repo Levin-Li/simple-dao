@@ -61,6 +61,10 @@ public interface ${className} {
 
     String SERVICE_BEAN_NAME = PLUGIN_PREFIX + SERVICE_NAME;
 
+<#list classModel.uniqueKeyModels as uniqueKey>
+    String ${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME = CACHE_NAME + CACHE_DELIM + "uk" + CACHE_DELIM + "${uniqueKey.cacheNameSuffix}";
+</#list>
+
     /**
     * 获取实体类
     */
@@ -129,6 +133,20 @@ public interface ${className} {
     */
     @Operation(summary = VIEW_DETAIL_ACTION, description = "注意性能, 该方法将不会使用缓存")
     ${entityName}Info findById(@NotNull ${entityName}IdReq req);
+</#if>
+
+<#if classModel.uniqueKeyModels?has_content>
+    /** 查询指定唯一属性组合是否启用查找缓存。 */
+    boolean isUniqueFindCacheEnabled(String... propertyNames);
+
+<#list classModel.uniqueKeyModels as uniqueKey>
+    <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
+    @Operation(summary = VIEW_DETAIL_ACTION)
+    ${entityName}Info findBy${uniqueKey.methodSuffix}(
+<#list uniqueFields as field>
+            <#if field.required>@NotNull </#if>${field.typeName} ${field.name}<#if field_has_next>,</#if>
+</#list>);
+</#list>
 </#if>
 
     /**

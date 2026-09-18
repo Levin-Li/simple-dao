@@ -13,6 +13,10 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.persistence.Column;
 import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import com.levin.commons.dao.Unique;
+import com.levin.commons.dao.codegen.model.ClassModel.UniqueKeyModel;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
@@ -213,6 +217,32 @@ class SelfOverridableMatchCodegenTest {
         assertFalse(implSource.contains(".limit(0, 1)"), implSource);
     }
 
+    @Test
+    void uniqueConstraintsShouldGenerateFindersCacheGroupsAndEventInvalidationCode() throws Exception {
+        List<FieldModel> fields = fieldsOf(UniqueCacheEntity.class);
+        fields.stream().filter(field -> field.getName().equals("email")).findFirst().orElseThrow().setUk(true);
+        List<UniqueKeyModel> uniqueKeys = ServiceModelCodeGenerator.getUniqueKeyModels(UniqueCacheEntity.class, fields);
+
+        assertEquals(Arrays.asList("email", "tenantId|code"), uniqueKeys.stream().map(UniqueKeyModel::getId).collect(Collectors.toList()));
+        assertEquals(Arrays.asList("tenantId", "code"), uniqueKeys.get(1).getPropertyNames());
+        Map<String, Object> params = templateParameters(fields, UniqueCacheEntity.class);
+        ((ClassModel) params.get("classModel")).setUniqueKeyModels(uniqueKeys);
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/service_impl.ftl").process(params, output);
+        String source = output.toString();
+
+        assertTrue(source.contains("findByEmail("), source);
+        assertTrue(source.contains("findByTenantIdAndCode("), source);
+        assertTrue(source.contains("clearUniqueFindCaches()"), source);
+        assertTrue(source.contains("TransactionSynchronizationManager"), source);
+        assertTrue(source.contains("moduleCacheService.clear(EMAIL_UNIQUE_CACHE_NAME)"), source);
+        assertTrue(source.contains("moduleCacheService.clear(TENANTIDANDCODE_UNIQUE_CACHE_NAME)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
+    }
+
     private String render(String template, String fileName, List<FieldModel> matchFields) throws Exception {
         return render(template, fileName, matchFields, PublicOverrideEntity.class);
     }
@@ -298,6 +328,13 @@ class SelfOverridableMatchCodegenTest {
         }
 
         MatchType matchType;
+    }
+
+    @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"tenantId", "code"}))
+    static class UniqueCacheEntity {
+        String email;
+        String tenantId;
+        String code;
     }
 
     @SelfOverridableObject(overrideColumnNames = {

@@ -15,6 +15,8 @@ import ${modulePackageName}.cache.ModuleCacheService;
 
 import jakarta.annotation.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.time.*;
 import java.util.stream.*;
 import java.util.function.*;
@@ -24,6 +26,7 @@ import org.slf4j.*;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.cache.annotation.*;
 import org.springframework.transaction.annotation.*;
+import org.springframework.transaction.support.*;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -105,6 +108,16 @@ import ${imp};
 public class ${className} extends BaseService<${className}> implements ${serviceName} {
 
     private static final Logger log = LoggerFactory.getLogger(${className}.class);
+<#if classModel.uniqueKeyModels?has_content>
+    private static final Set<String> UNIQUE_CACHE_IDS = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(
+<#list classModel.uniqueKeyModels as uniqueKey>
+    <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
+            "${uniqueKey.id}"<#if uniqueKey_has_next>,</#if>
+</#list>
+    )));
+    private static final Map<String, Boolean> UNIQUE_CACHE_ENABLED = new ConcurrentHashMap<>();
+    private static final Map<String, AtomicLong> UNIQUE_CACHE_VERSIONS = new ConcurrentHashMap<>();
+</#if>
 
     <#if enableDubbo>@DubboReference<#else>@Autowired</#if>
     ModuleCacheService moduleCacheService;
@@ -123,6 +136,10 @@ public class ${className} extends BaseService<${className}> implements ${service
         SpringCacheEventListener.add(this.springCacheEventListener(),
                ${serviceName}.CACHE_NAME, ${serviceName}.CK_PREFIX + "*", SpringCacheEventListener.Action.Evict
         );
+        if (daoEventBus != null) {
+            daoEventBus.addEventConsumer(E_${entityName}.CLASS_NAME + "/**", Object.class,
+                    ignored -> clearUniqueFindCaches());
+        }
        
     }
 
@@ -131,7 +148,15 @@ public class ${className} extends BaseService<${className}> implements ${service
     public boolean handleEvent(boolean ok, EntityOption.Action action, Object id) {
 
         if (ok && action != null && daoEventBus != null) {
-            daoEventBus.sendEvent(E_${entityName}.CLASS_NAME + "/" + action.name(), id);
+            Runnable sendEvent = () -> daoEventBus.sendEvent(E_${entityName}.CLASS_NAME + "/" + action.name(), id);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() { sendEvent.run(); }
+                });
+            } else {
+                sendEvent.run();
+            }
         }
 
         return ok;
@@ -173,6 +198,55 @@ public class ${className} extends BaseService<${className}> implements ${service
 
         return simpleDao.findUnique(req);
     }
+</#if>
+
+<#if classModel.uniqueKeyModels?has_content>
+    @Override
+    public boolean isUniqueFindCacheEnabled(String... propertyNames) {
+        String id = String.join("|", propertyNames);
+        return ${isCacheableEntity?c} && UNIQUE_CACHE_IDS.contains(id) && UNIQUE_CACHE_ENABLED.getOrDefault(id, true);
+    }
+
+    public static void setUniqueFindCacheEnabled(boolean enabled, String... propertyNames) {
+        String id = String.join("|", propertyNames);
+        if (!UNIQUE_CACHE_IDS.contains(id)) throw new IllegalArgumentException("不是已生成的唯一属性组合: " + id);
+        UNIQUE_CACHE_ENABLED.put(id, enabled);
+        UNIQUE_CACHE_VERSIONS.computeIfAbsent(id, ignored -> new AtomicLong()).incrementAndGet();
+    }
+
+    public long getUniqueFindCacheVersion(String... propertyNames) {
+        return UNIQUE_CACHE_VERSIONS.computeIfAbsent(String.join("|", propertyNames), ignored -> new AtomicLong()).get();
+    }
+
+    protected String uniqueFindCacheKey(Object... values) {
+        return Arrays.stream(values).map(value -> value == null ? "<null>" : value.toString().length() + ":" + value).collect(Collectors.joining("|"));
+    }
+
+    public void clearUniqueFindCaches() {
+<#list classModel.uniqueKeyModels as uniqueKey>
+    <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
+        moduleCacheService.clear(${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME);
+</#list>
+    }
+
+<#list classModel.uniqueKeyModels as uniqueKey>
+    <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
+    @Override
+    <#if !isCacheableEntity>//</#if>@Cacheable(cacheNames = ${uniqueKey.cacheNameSuffix?upper_case}_UNIQUE_CACHE_NAME,
+            condition = "#root.target.isUniqueFindCacheEnabled('<#list uniqueFields as field>${field.name}<#if field_has_next>','</#if></#list>')",
+            key = "#root.target.uniqueFindCacheKey(#root.target.getUniqueFindCacheVersion('<#list uniqueFields as field>${field.name}<#if field_has_next>','</#if></#list>')<#list uniqueFields as field>, #${field.name}</#list>)")
+    public ${entityName}Info findBy${uniqueKey.methodSuffix}(
+<#list uniqueFields as field>
+            ${field.typeName} ${field.name}<#if field_has_next>,</#if>
+</#list>) {
+        return simpleDao.selectFrom(${entityName}.class)
+<#list uniqueFields as field>
+                .eq(E_${entityName}.${field.name}, ${field.name})
+</#list>
+                .findUnique(${entityName}Info.class);
+    }
+
+</#list>
 </#if>
 
     @Operation(summary = QUERY_ACTION)
@@ -299,7 +373,9 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Transactional
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int batchUpdate(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs){
-       return simpleDao.updateByQueryObj(setReq, whereReq, queryObjs);
+       int result = simpleDao.updateByQueryObj(setReq, whereReq, queryObjs);
+       handleEvent(result > 0, EntityOption.Action.Update, null);
+       return result;
     }
 
     @Operation(summary = BATCH_UPDATE_ACTION)
@@ -338,7 +414,9 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int batchDelete(Query${entityName}Req req, Object... queryObjs){
-        return simpleDao.deleteByQueryObj(req, queryObjs);
+        int result = simpleDao.deleteByQueryObj(req, queryObjs);
+        handleEvent(result > 0, EntityOption.Action.Delete, null);
+        return result;
     }
 
     /**

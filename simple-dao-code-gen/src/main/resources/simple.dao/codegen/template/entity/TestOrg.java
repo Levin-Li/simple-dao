@@ -256,7 +256,7 @@ public class TestOrg
     protected String phones;
 
     @Schema(title = "联系邮箱")
-    @Column(length = 32)
+    @Column(unique = true, nullable = false, length = 32)
     protected String emails;
 
     @Schema(title = "联系地址")
