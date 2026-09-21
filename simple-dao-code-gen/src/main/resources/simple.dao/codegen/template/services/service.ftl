@@ -80,6 +80,15 @@ public interface ${className} {
     PagingData<${entityName}Info> query(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs);
 
     /**
+     * 查询记录，并通过回调追加 DAO 查询条件。
+     */
+    @Operation(summary = QUERY_ACTION)
+    default PagingData<${entityName}Info> query(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging,
+                                                 Consumer<SelectDao<${entityName}>> queryCallback) {
+        return query(req, paging, (Object) queryCallback);
+    }
+
+    /**
      * 指定选择列查询
      *
      * @param req
@@ -112,6 +121,15 @@ public interface ${className} {
      */
     @Operation(summary = STAT_ACTION)
     int count(@NotNull SimpleQuery${entityName}Req<?> req, Object... queryObjs);
+
+    /**
+     * 统计记录，并通过回调追加 DAO 查询条件。
+     */
+    @Operation(summary = STAT_ACTION)
+    default int count(@NotNull SimpleQuery${entityName}Req<?> req,
+                      Consumer<SelectDao<${entityName}>> queryCallback) {
+        return count(req, (Object) queryCallback);
+    }
 
 <#if pkField?exists>
     /**
@@ -230,6 +248,16 @@ public interface ${className} {
      */
     @Operation(summary = UPDATE_ACTION)
     int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs);
+
+    /**
+     * 批量更新记录，并通过回调动态追加 UpdateDao 条件或更新内容。
+     * 无条件更新由 DAO 层安全机制保护。
+     */
+    @Operation(summary = UPDATE_ACTION)
+    default int batchUpdate(@NotNull SimpleUpdate${entityName}Req setReq,
+                            Consumer<UpdateDao<${entityName}>>... updateCallbacks) {
+        return batchUpdate(setReq, null, (Object[]) updateCallbacks);
+    }
 
     /**
      * 批量更新记录，并返回更新记录数

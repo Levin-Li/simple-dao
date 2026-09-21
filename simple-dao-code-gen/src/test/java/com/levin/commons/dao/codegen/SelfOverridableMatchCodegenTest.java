@@ -265,6 +265,8 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(serviceSource.contains("findByTenantIdAndCode(String tenantId, String code);"), serviceSource);
         assertTrue(serviceSource.contains("query(@NotNull SimpleQueryUniqueCacheEntityReq<?> req"), serviceSource);
         assertTrue(serviceSource.contains("count(@NotNull SimpleQueryUniqueCacheEntityReq<?> req"), serviceSource);
+        assertTrue(serviceSource.contains("Consumer<UpdateDao<UniqueCacheEntity>>... updateCallbacks"), serviceSource);
+        assertTrue(serviceSource.contains("return batchUpdate(setReq, null, (Object[]) updateCallbacks);"), serviceSource);
         assertTrue(source.contains("query(SimpleQueryUniqueCacheEntityReq<?> req"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
