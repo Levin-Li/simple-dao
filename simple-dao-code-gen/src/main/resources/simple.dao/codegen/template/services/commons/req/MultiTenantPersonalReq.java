@@ -12,6 +12,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
+import java.util.Collection;
+
 
 /**
  * 多租户个人查询对象
@@ -27,15 +29,34 @@ import lombok.experimental.FieldNameConstants;
 public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
         extends MultiTenantReq<T> implements PersonalObject{
 
+    @InjectVar(isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN
+    )
+    @Schema(title = "拥有者ID列表", description = "拥有者ID列表，查询、更新和删除范围条件，本参数优先于ownerId", hidden = true)
+    @In("ownerId")
+    @Where(condition = "isUnsafeContext() && isPersonalObject() && !canVisitPersonalData() && #isEmpty(#_fieldVal) && #isEmpty(ownerId)",
+            paramExpr = "1 = 2", desc = "不允许访问个人数据且ownerIdList、ownerId都为空时，故意设置永远不成立的条件")
+    protected Collection<String> ownerIdList;
+
     //注入逻辑,不能调用方法
     @InjectVar( //value = InjectConst.USER_ID,
               isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员, 那么覆盖必须的
             , isRequired = InjectVar.SPEL_PREFIX + NOT_SUPER_SAAS_TENANT_ADMIN // 如果不是超管 不是SAAS管理员 也不是 租户管理员，那么值是必须的
     )
     @Schema(title = "拥有者Id" , hidden = true)
-    @Eq(condition = "isPersonalObject() && #isNotEmpty(#_fieldVal) && !(#_isUpdate) && !canVisitPersonalData()" , desc = "如果不是更新操作,不能访问个人数据，都加这个条件")
+    @Eq(condition = "isPersonalObject() && #isNotEmpty(#_fieldVal) && #isEmpty(ownerIdList) && !(#_isUpdate) && !canVisitPersonalData()" , desc = "ownerIdList未设置时，如果不是更新操作且不能访问个人数据，都加这个条件")
     @Update(condition = "isPersonalObject() && (#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更数据的拥有者")
     protected String ownerId;
+
+    /**
+     * 设置拥有者ID列表
+     * @param ownerIdList
+     * @return
+     */
+    public T setOwnerIdList(Collection<String> ownerIdList) {
+        this.ownerIdList = ownerIdList;
+        return (T) this;
+    }
 
     /**
      * 设置个人ID
