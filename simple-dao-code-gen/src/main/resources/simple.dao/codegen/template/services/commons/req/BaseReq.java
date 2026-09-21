@@ -24,7 +24,7 @@ import lombok.experimental.*;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,6 +39,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Accessors(chain = true)
 @FieldNameConstants
 public abstract class BaseReq implements ServiceReq {
+
+    /**
+     * 允许普通实体字段、关联属性路径，以及单段 MySQL 风格反引号转义字段。
+     */
+    private static final Pattern SAFE_FIELD_PATH = Pattern.compile(
+            "^(?:[A-Za-z_][A-Za-z0-9_]*|`[A-Za-z_][A-Za-z0-9_]*`)(?:\\.(?:[A-Za-z_][A-Za-z0-9_]*|`[A-Za-z_][A-Za-z0-9_]*`))*$");
 
     public static final String IS_UNSAFE_CONTEXT = " (#" + InjectConst.IS_UNSAFE_CONTEXT + "?:false) ";
 
@@ -325,7 +331,7 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     /**
-     * 简单的防止SQL注检查
+     * 字段路径白名单检查，用于排序字段与选择字段。
      *
      * @param statements
      */
@@ -340,12 +346,14 @@ public abstract class BaseReq implements ServiceReq {
             if (!StringUtils.hasText(statement)) {
                 continue;
             }
-            //简单的防止SQL注检查
-            Assert.isTrue(Stream.of(" from ", " where ", " set ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
+            Assert.isTrue(SAFE_FIELD_PATH.matcher(statement).matches(), "不支持的字段路径：{}", statement);
 
-            Assert.isTrue(Stream.of(" select ", " insert ", " update ", " delete ").noneMatch((" " + statement.toLowerCase())::contains), "不支持的语句：{}", statement);
-            Assert.isTrue(Stream.of("(select ", "(insert ", "(update ", "(delete ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
-            Assert.isTrue(Stream.of("'select ", "'insert ", "'update ", "'delete ").noneMatch(statement.toLowerCase()::contains), "不支持的语句：{}", statement);
+            // 旧的 SQL 关键字黑名单检查保留在此，字段路径白名单已覆盖该场景。
+//            String normalized = statement.toLowerCase(Locale.ROOT);
+//            Assert.isTrue(Stream.of(" from ", " where ", " set ").noneMatch(normalized::contains), "不支持的语句：{}", statement);
+//            Assert.isTrue(Stream.of(" select ", " insert ", " update ", " delete ").noneMatch((" " + normalized)::contains), "不支持的语句：{}", statement);
+//            Assert.isTrue(Stream.of("(select ", "(insert ", "(update ", "(delete ").noneMatch(normalized::contains), "不支持的语句：{}", statement);
+//            Assert.isTrue(Stream.of("'select ", "'insert ", "'update ", "'delete ").noneMatch(normalized::contains), "不支持的语句：{}", statement);
         }
 
         return (T) this;
