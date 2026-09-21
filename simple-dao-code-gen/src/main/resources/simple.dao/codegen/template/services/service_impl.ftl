@@ -169,18 +169,18 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     @Operation(summary = QUERY_ACTION)
     @Override
-    public PagingData<${entityName}Info> query(Query${entityName}Req req, Paging paging, Object... queryObjs) {
+    public PagingData<${entityName}Info> query(SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs) {
         return simpleDao.findPagingDataByQueryObj(req, paging, queryObjs);
     }
 
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    public PagingData<${entityName}Info> selectQuery(Query${entityName}Req req, Paging paging, String... columnNames){
+    public PagingData<${entityName}Info> selectQuery(SimpleQuery${entityName}Req<?> req, Paging paging, String... columnNames){
         return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(${entityName}Info.class, paging);
     }
 
     @Override
     @Operation(summary = STAT_ACTION)
-    public int count(Query${entityName}Req req, Object... queryObjs){
+    public int count(SimpleQuery${entityName}Req<?> req, Object... queryObjs){
         return (int) simpleDao.countByQueryObj(req, queryObjs);
     }
 
@@ -263,12 +263,11 @@ public class ${className} extends BaseService<${className}> implements ${service
 
 <#list classModel.uniqueKeyModels as uniqueKey>
     <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
-    <#assign propertyNamesExpr = uniqueKey.propertyNames?join("','")>
     @Override
     <#if !isCacheableEntity>//</#if>@Cacheable(
-            condition = "#root.target.isUniqueFindCacheEnabled('${propertyNamesExpr}')",
+            condition = "#root.target.isUniqueFindCacheEnabled('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "','" + </#if></#list> + "')",
             unless = "#result == null",
-            key = "#root.target.uniqueFindCacheKey('${uniqueKey.id}', #root.target.getUniqueFindCacheVersion('${propertyNamesExpr}')<#list uniqueFields as field>, #${field.name}</#list>)")
+            key = "#root.target.uniqueFindCacheKey('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "|" + </#if></#list> + "', #root.target.getUniqueFindCacheVersion('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "','" + </#if></#list> + "')<#list uniqueFields as field>, #${field.name}</#list>)")
     public ${entityName}Info findBy${uniqueKey.methodSuffix}(
 <#list uniqueFields as field>
             ${field.typeName} ${field.name}<#if field_has_next>,</#if>
@@ -495,9 +494,11 @@ public class ${className} extends BaseService<${className}> implements ${service
         //如果缓存发生删除事件，则删除对应的缓存
         return (ctx, cache, action, key, value) -> {
 
+<#if classModel.uniqueKeyModels?has_content>
                     if (handleUniqueCacheEvict(cache, action, key)) {
                         return;
                     }
+</#if>
 
                     MultiTenantObject multiTenantObject = null;
 
@@ -665,9 +666,13 @@ public class ${className} extends BaseService<${className}> implements ${service
      */
     protected SpringCacheEventListener springCacheEventListener() {
         return (ctx, cache, action, key, value) -> {
+<#if classModel.uniqueKeyModels?has_content>
             if (!handleUniqueCacheEvict(cache, action, key)) {
                 cache.evict("${entityName}List");
             }
+<#else>
+            cache.evict("${entityName}List");
+</#if>
         };
     }
 

@@ -77,7 +77,7 @@ public interface ${className} {
      * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION)
-    PagingData<${entityName}Info> query(@NotNull Query${entityName}Req req, Paging paging, Object... queryObjs);
+    PagingData<${entityName}Info> query(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs);
 
     /**
      * 指定选择列查询
@@ -88,7 +88,7 @@ public interface ${className} {
      * @return defaultPagingData 分页数据
      */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, String... selectColumnNames);
+    PagingData<${entityName}Info> selectQuery(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, String... selectColumnNames);
 
     /**
     * 指定选择列查询
@@ -99,7 +99,7 @@ public interface ${className} {
     * @return defaultPagingData 分页数据
     */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
-    default PagingData<${entityName}Info> selectQuery(@NotNull Query${entityName}Req req, Paging paging, LambdaMethodAttr<${entityName},?>... selectColumns){
+    default PagingData<${entityName}Info> selectQuery(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, LambdaMethodAttr<${entityName},?>... selectColumns){
         return selectQuery(req, paging, Stream.of(selectColumns).filter(Objects::nonNull).map(LambdaMethodAttr::get).toArray(String[]::new));
     }
 
@@ -111,7 +111,7 @@ public interface ${className} {
      * @return record count
      */
     @Operation(summary = STAT_ACTION)
-    int count(@NotNull Query${entityName}Req req, Object... queryObjs);
+    int count(@NotNull SimpleQuery${entityName}Req<?> req, Object... queryObjs);
 
 <#if pkField?exists>
     /**

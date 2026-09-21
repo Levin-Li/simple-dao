@@ -156,6 +156,7 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(serviceSource.contains("PublicOverrideEntityInfo findBestMatch("), serviceSource);
         assertTrue(serviceSource.contains("Object... exQueryObjects"), serviceSource);
         assertTrue(implSource.contains(".appendByQueryObj(exQueryObjects)"), implSource);
+        assertFalse(implSource.contains("handleUniqueCacheEvict"), implSource);
         assertFalse(bizServiceSource.contains("findBestMatch("), bizServiceSource);
         assertFalse(bizImplSource.contains("findBestMatch("), bizImplSource);
         assertDoesNotThrow(() -> StaticJavaParser.parse(serviceSource), serviceSource);
@@ -258,8 +259,13 @@ class SelfOverridableMatchCodegenTest {
         assertFalse(source.contains("EMAIL_UNIQUE_CACHE_NAME"), source);
         assertFalse(source.contains("daoEventBus.addEventConsumer"), source);
         assertTrue(source.contains("new EntityEvent(action, null)"), source);
+        assertTrue(source.contains("isUniqueFindCacheEnabled('\" + E_UniqueCacheEntity.email"), source);
+        assertTrue(source.contains("E_UniqueCacheEntity.tenantId + \"','\" + E_UniqueCacheEntity.code"), source);
         assertTrue(serviceSource.contains("findByEmail(String email);"), serviceSource);
         assertTrue(serviceSource.contains("findByTenantIdAndCode(String tenantId, String code);"), serviceSource);
+        assertTrue(serviceSource.contains("query(@NotNull SimpleQueryUniqueCacheEntityReq<?> req"), serviceSource);
+        assertTrue(serviceSource.contains("count(@NotNull SimpleQueryUniqueCacheEntityReq<?> req"), serviceSource);
+        assertTrue(source.contains("query(SimpleQueryUniqueCacheEntityReq<?> req"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
 
