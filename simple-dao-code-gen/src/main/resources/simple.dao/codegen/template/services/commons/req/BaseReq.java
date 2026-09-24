@@ -261,8 +261,9 @@ public abstract class BaseReq implements ServiceReq {
     @Schema(title = "是否能访问个人数据", description = "", hidden = true)
     @CtxVar
     public boolean canVisitPersonalData() {
-        return _confidentialDataAccessLevel != null
-                && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code();
+        return isAdmin()
+                || (_confidentialDataAccessLevel != null
+                && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code());
     }
 
     @Schema(title = "领域ID", hidden = true, description = "领域ID，未显式指定时从请求上下文自动注入")

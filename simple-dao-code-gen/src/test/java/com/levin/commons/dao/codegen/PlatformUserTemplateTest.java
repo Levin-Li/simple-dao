@@ -41,6 +41,8 @@ class PlatformUserTemplateTest {
         assertTrue(source.contains("protected boolean isTenantUser = false;"), source);
         assertTrue(source.contains("public boolean isPlatformUser()"), source);
         assertTrue(source.contains("public boolean isTenantUser()"), source);
+        assertTrue(source.contains("return isAdmin()"), source);
+        assertTrue(source.contains("ConfidentialLevel.PERSON_PRIVATE.code()"), source);
         assertTrue(source.contains("@Deprecated\n    @Ignore\n    @Schema(title = \"是否SAAS用户\", hidden = true)\n    public boolean isSaasUser() {\n        return isPlatformUser();"), source);
     }
 

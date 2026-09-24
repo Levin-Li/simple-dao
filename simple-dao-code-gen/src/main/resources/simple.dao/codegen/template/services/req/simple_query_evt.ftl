@@ -94,7 +94,7 @@ public class ${className}<T extends ${className}<T>> extends ${reqExtendClass}<#
 
     //@Ignore
     @Schema(title = "排序方向")
-    @SimpleOrderBy(expr = "(orderBy?:'') + ' ' + (orderDir?:'')", condition = "#isNotEmpty(orderBy)", remark = "生成排序表达式")
+    @SimpleOrderBy(expr = "'" + E_${entityName}.ALIAS + ".' + orderBy + ' ' + (orderDir?:'')", condition = "#isNotEmpty(orderBy)", remark = "生成带实体别名的排序表达式")
 <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
     @OrderBy(value = E_${entityName}.orderCode, condition = "#enableDefaultOrderBy && (#isEmpty(orderBy))", order = Integer.MAX_VALUE - 10000, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "默认按顺序排序")
 </#if>

@@ -4211,6 +4211,49 @@ public void delete(Long id) {
 
 查询请求会生成一对可继承的类型：`SimpleQuery<实体名>Req<T extends SimpleQuery<实体名>Req<T>>` 负责通用排序和选择列，`Query<实体名>Req` 继承为 `SimpleQuery<实体名>Req<Query<实体名>Req>` 并声明实体字段条件。这样基础查询的链式方法会返回实际子类；`SimpleQuery` 是供具体查询请求继承的泛型基类，默认 CRUD 使用后者。
 
+### 19.3 标准 Service 查询扩展
+
+标准 Service 的 `query`、`selectQuery` 和 `count` 接受 `SimpleQuery<实体名>Req<?>`，因此 Controller 仍可传入具体的 `Query<实体名>Req`，业务代码也可以定义自己的查询子类：
+
+```java
+class CustomQuery extends SimpleQueryOrderReq<CustomQuery> {
+
+    @Eq
+    String customerCode;
+}
+
+service.query(new CustomQuery().setCustomerCode("C001"), paging);
+```
+
+标准 Service 还提供类型安全的单 DAO 回调便利方法：
+
+```java
+service.query(req, paging, dao ->
+        dao.eq(Order::getTenantId, tenantId));
+
+service.count(req, dao ->
+        dao.eq(Order::getTenantId, tenantId));
+```
+
+需要批量更新时，可以不构造具体的 `Query<实体名>Req`，直接传入零个、一个或多个 `UpdateDao` 回调；无条件更新是否允许由 DAO 层安全机制决定：
+
+```java
+service.batchUpdate(setReq,
+        dao -> dao.eq(Order::getTenantId, tenantId),
+        dao -> dao.in(Order::getId, orderIds));
+```
+
+### 19.4 唯一约束查询缓存
+
+实体的单字段唯一约束与组合唯一约束会生成 `findByXxx` 或 `findByXxxAndYyy` 方法。唯一查询缓存与主键缓存共用实体默认缓存：
+
+```text
+<CK_PREFIX>UK:<唯一字段组合>:<参数>  唯一查询缓存
+<CK_PREFIX>UKI:<id>                  ID 到唯一缓存 key 的关联索引
+```
+
+唯一查询缓存写入时会记录结果主键 ID；标准 Service 通过 ID 更新或删除时，主键缓存驱逐会自动清理该 ID 关联的全部唯一查询缓存 key。唯一查询结果为 `null` 时不会缓存。
+
 命令形态：
 
 ```bash
@@ -4221,7 +4264,7 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-code
 
 如果通过 JitPack 坐标使用插件，`groupId` 需要按项目实际配置调整。
 
-### 19.3 生成文件边界
+### 19.5 生成文件边界
 
 如果某个目录中存在 `code-gen.md`，表示该目录及子目录由代码生成器维护：
 
@@ -4236,7 +4279,7 @@ mvn com.levin.commons:simple-dao-codegen:4.3.0-SNAPSHOT:gen-code
 - 业务服务类：类名通常是 `Biz<实体名>Service`，接口放 `services` 模块的 `biz` 目录，实现放 `services-impl` 模块的 `biz` 目录。
 - 业务控制器类：类名通常是 `Biz<实体名>Controller`。
 
-### 19.4 生成项目模板
+### 19.6 生成项目模板
 
 在一个空 Maven 项目中配置好插件后，可以执行：
 
