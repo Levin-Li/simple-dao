@@ -58,11 +58,6 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_TENANT_USER = " (#" + InjectConst.IS_TENANT_USER + "?:false) ";
 
-    /**
-     * @deprecated 使用 {@link #IS_PLATFORM_USER} 代替。
-     */
-    @Deprecated
-    public static final String IS_SAAS_USER = " (#" + InjectConst.IS_SAAS_USER + "?:false) ";
 
     public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
@@ -78,12 +73,6 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_TENANT_USER = " !" + IS_TENANT_USER;
 
-    /**
-     * @deprecated 使用 {@link #NOT_PLATFORM_USER} 代替。
-     */
-    @Deprecated
-    public static final String NOT_SAAS_USER = " !" + IS_SAAS_USER;
-
     public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
 
     /// //////////////////////////////////////////////////////////////////////////////////
@@ -94,46 +83,45 @@ public abstract class BaseReq implements ServiceReq {
 
     /////////////////////////////////////////////////////////////////////
 
+    /**
+     * 是否为外部、不可信调用链。
+     * <p>true 表示 Controller、RPC、消息等外部入口，必须执行越权、越范围和危险操作校验；false 表示
+     * 内部可信调用，权限责任由调用方承担。</p>
+     */
     @InjectVar(value = InjectConst.IS_UNSAFE_CONTEXT, isRequired = "true")
     @Ignore
-    @CtxVar
     protected boolean isUnsafeContext = false;
 
     ///////////////////////////////////////////////////
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TOP_SUPER_ADMIN)
     @Ignore
-    @CtxVar
     protected boolean isTopSuperAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
     @Ignore
-    @CtxVar
     protected boolean isSuperAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_ADMIN)
     @Ignore
-    @CtxVar
     protected boolean isSaasAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_PLATFORM_USER)
     @Ignore
-    @CtxVar
     protected boolean isPlatformUser = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_USER)
     @Ignore
-    @CtxVar
     protected boolean isTenantUser = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
     @Ignore
-    @CtxVar
     protected boolean isTenantAdmin = false;
 
     @Schema(title = "跟踪标识", hidden = true)
     @Ignore
     protected String traceId = java.util.UUID.randomUUID().toString().replace("-", "");
 
+    /// //////////////////////////////////////////////////////////////////////////////////////////////
     @Ignore
     @Schema(title = "客户端类型", hidden = true)
     @InjectVar(value = InjectConst.USER_AGENT, isRequired = "false")
@@ -150,23 +138,57 @@ public abstract class BaseReq implements ServiceReq {
     protected String _ipAddr;
 
     @Schema(title = "操作员动作",description = "一般对应控制器的方法或是描述", hidden = true)
-    @InjectVar(value = InjectConst.OPERATOR_ACTION, isRequired = "false")
+    @InjectVar(value = InjectConst.OPERATOR_ACTION, isRequired = "false",remark = "一般对应控制器的方法或是描述")
     @Ignore
     protected String _operatorAction;
 
-    @Schema(title = "操作员ID", hidden = true)
-    @InjectVar(value = InjectConst.USER_ID, isRequired = "false")
+    /// //////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * 当前登录用户 ID。
+     *
+     * <p>替代原 {@code _operatorId} 属性；该值始终表示当前用户身份，不能作为可由请求参数切换的
+     * 数据范围条件。</p>
+     */
+    @Schema(title = "当前用户ID", hidden = true)
+    @InjectVar(remark = "用户ID是必须覆盖也必须注入,如果当前请求未登录,那就是匿名用户ID")
     @Ignore
-    protected String _operatorId;
+    protected String _currentUserId;
 
-    @Schema(title = "操作员名称", hidden = true)
-    @InjectVar(value = InjectConst.USER_NAME, isRequired = "false")
+    /**
+     * 当前登录用户名称。
+     *
+     * <p>替代原 {@code _operatorName} 属性；该值表示当前用户身份，不因请求的数据范围切换而改变。</p>
+     */
+    @Schema(title = "当前用户名称", hidden = true)
+    @InjectVar(remark = "用户名称也是必须的,如果当前请求未登录，那就是匿名用户名称")
     @Ignore
-    protected String _operatorName;
+    protected String _currentUserName;
+
+    /**
+     * 当前登录用户所属组织 ID。
+     *
+     * <p>它表示用户身份上下文，不等同于请求用于筛选或更新的 {@code orgId}/{@code orgIdList}。</p>
+     */
+    @Schema(title = "当前用户组织ID", hidden = true)
+    @InjectVar(isRequired = "false")
+    @Ignore
+    protected String _currentUserOrgId;
+
+    /**
+     * 当前登录用户所属租户 ID。
+     *
+     * <p>它表示用户身份上下文，不等同于请求实际采用的 {@code tenantId}；平台用户选择租户视角时，
+     * 后者可以变化，前者保持当前登录用户的值。</p>
+     */
+    @Schema(title = "当前用户租户ID", hidden = true)
+    @InjectVar(isRequired = "false")
+    @Ignore
+    protected String _currentUserTenantId;
+
+    /// ///////////////////////////////////////////////////////////////////////
 
     @Schema(title = "允许默认排序")
     @Ignore
-    @CtxVar
     protected boolean enableDefaultOrderBy = true;
 
     ////////////////////////////////////////////////////////////////////
@@ -186,7 +208,7 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "是否Top超级管理员", hidden = true)
     public boolean isTopSuperAdmin() {
-        return this.isTopSuperAdmin;
+        return isPlatformUser() && this.isTopSuperAdmin;
     }
 
     @Ignore
@@ -198,7 +220,7 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "是否SAAS管理员", hidden = true)
     public boolean isSaasAdmin() {
-        return this.isSaasAdmin;
+        return isPlatformUser() && this.isSaasAdmin;
     }
 
     @Ignore
@@ -213,36 +235,25 @@ public abstract class BaseReq implements ServiceReq {
         return this.isTenantUser;
     }
 
-    /**
-     * @deprecated 使用 {@link #isPlatformUser()} 代替。
-     */
-    @Deprecated
-    @Ignore
-    @Schema(title = "是否SAAS用户", hidden = true)
-    public boolean isSaasUser() {
-        return isPlatformUser();
-    }
-
     @Ignore
     @Schema(title = "是否租户管理员", hidden = true)
     public boolean isTenantAdmin() {
-        return this.isTenantAdmin;
+        return this.isTenantUser() && this.isTenantAdmin;
     }
 
     @Ignore
     @Schema(title = "是否管理员", description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
-    @CtxVar
     public boolean isAdmin() {
         return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
     }
 
     @Schema(title = "是否是敏感数据", description = "敏感数据需要根据级别进行过滤", hidden = true)
-    @CtxVar
     public boolean isConfidentialObject() {
         return false;
     }
 
     ///////////////////////////////////////////////////////////////////////
+
     @Schema(title = "数据访问级别", hidden = true)
     @InjectVar(value = InjectConst.CONFIDENTIAL_DATA_ACCESS_LEVEL
 
@@ -259,18 +270,16 @@ public abstract class BaseReq implements ServiceReq {
 
     @Ignore
     @Schema(title = "是否能访问个人数据", description = "", hidden = true)
-    @CtxVar
-    public boolean canVisitPersonalData() {
-        return isAdmin()
+    public boolean isCanVisitPersonalData() {
+        return isTopSuperAdmin()
                 || (_confidentialDataAccessLevel != null
                 && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code());
     }
 
     @Schema(title = "领域ID", hidden = true, description = "领域ID，未显式指定时从请求上下文自动注入")
-    @InjectVar(isRequired = "false", isOverride = "false")
+    @InjectVar(isRequired = "false" , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN) // 如果不是TOP超管 那么覆盖必须的
 
     @OR(autoClose = true, condition = "isDomainObject()", desc = "只有实现了领域对象[DomainObject]接口，才加入这个条件")
-
     @Eq(condition = "#isNotEmpty(#_fieldVal) && #_fieldVal != '_OnlyEmptyDomainId_'") // domainId 为空 查询条件
     @IsNull(condition = "#_isQuery && isContainsEmptyDomain(#_fieldVal)", desc = "查询结果包含(domainId为NULL的数据)")
     protected String domainId;
@@ -283,6 +292,12 @@ public abstract class BaseReq implements ServiceReq {
     public <T extends BaseReq> T setDomainId(String domainId) {
         this.domainId = domainId;
         return (T) this;
+    }
+
+    /** 将当前请求整体导出为 DAO 上下文变量，供后续处理对象跨类引用。 */
+    @CtxVar(varName = "_req")
+    public <T extends BaseReq> T getRequestContext() {
+        return (T)this;
     }
 
     public boolean isDomainObject(){

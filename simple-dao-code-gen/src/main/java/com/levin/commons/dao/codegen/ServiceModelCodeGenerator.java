@@ -1286,8 +1286,20 @@ public final class ServiceModelCodeGenerator {
         if (MultiTenantObject.class.isAssignableFrom(entityClass)) {
             interfaces.add(MultiTenantObject.class);
         }
+        if (MultiTenantSharedObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(MultiTenantSharedObject.class);
+        }
+        if (MultiTenantPublicObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(MultiTenantPublicObject.class);
+        }
         if (OrganizedObject.class.isAssignableFrom(entityClass)) {
             interfaces.add(OrganizedObject.class);
+        }
+        if (OrganizedPublicObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(OrganizedPublicObject.class);
+        }
+        if (OrganizedSharedObject.class.isAssignableFrom(entityClass)) {
+            interfaces.add(OrganizedSharedObject.class);
         }
         if (PersonalObject.class.isAssignableFrom(entityClass)) {
             interfaces.add(PersonalObject.class);

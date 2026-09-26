@@ -3,7 +3,11 @@ package com.levin.commons.dao.codegen;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.domain.DomainObject;
 import com.levin.commons.dao.domain.MultiTenantObject;
+import com.levin.commons.dao.domain.MultiTenantPublicObject;
+import com.levin.commons.dao.domain.MultiTenantSharedObject;
 import com.levin.commons.dao.domain.OrganizedObject;
+import com.levin.commons.dao.domain.OrganizedPublicObject;
+import com.levin.commons.dao.domain.OrganizedSharedObject;
 import com.levin.commons.dao.domain.PersonalObject;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +42,9 @@ class DomainRequestFieldCodegenTest {
     void fixedRequestInterfacesShouldOnlyContainTheSupportedEntityInterfaces() {
         assertEquals(List.of("MultiTenantObject", "OrganizedObject", "PersonalObject", "DomainObject"),
                 ServiceModelCodeGenerator.getFixedRequestImplements(AllSupportedEntity.class));
+        assertEquals(List.of("MultiTenantObject", "MultiTenantSharedObject", "MultiTenantPublicObject", "OrganizedObject",
+                        "OrganizedPublicObject", "OrganizedSharedObject"),
+                ServiceModelCodeGenerator.getFixedRequestImplements(SharedTenantOrganizationEntity.class));
         assertEquals(List.of("DomainObject"),
                 ServiceModelCodeGenerator.getFixedRequestImplements(DomainEntity.class));
     }
@@ -88,6 +95,29 @@ class DomainRequestFieldCodegenTest {
 
         @Override
         public String getDomainId() {
+            return null;
+        }
+    }
+
+    static class SharedTenantOrganizationEntity implements MultiTenantSharedObject, MultiTenantPublicObject,
+            OrganizedPublicObject, OrganizedSharedObject {
+        @Override
+        public boolean isTenantShared() {
+            return true;
+        }
+
+        @Override
+        public <TID extends Serializable> TID getTenantId() {
+            return null;
+        }
+
+        @Override
+        public boolean isOrgShared() {
+            return true;
+        }
+
+        @Override
+        public <ORG_ID extends Serializable> ORG_ID getOrgId() {
             return null;
         }
     }

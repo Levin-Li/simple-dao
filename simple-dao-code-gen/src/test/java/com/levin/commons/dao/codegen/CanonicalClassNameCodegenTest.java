@@ -1,6 +1,10 @@
 package com.levin.commons.dao.codegen;
 
 import com.levin.commons.dao.codegen.model.FieldModel;
+import com.levin.commons.dao.domain.MultiTenantPublicObject;
+import com.levin.commons.dao.domain.MultiTenantSharedObject;
+import com.levin.commons.dao.domain.OrganizedPublicObject;
+import com.levin.commons.dao.domain.OrganizedSharedObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -67,6 +71,18 @@ class CanonicalClassNameCodegenTest {
         assertTrue(fieldModel.getImports().contains(MenuItem.class.getCanonicalName()));
     }
 
+    @Test
+    void generatedInfoShouldRetainTheMultiTenantSharedMarker() throws Exception {
+        Map<String, Object> parameters = baseInfoFor(MultiTenantSharedEntity.class);
+
+        assertTrue(((String) parameters.get("implementsListStr"))
+                .contains("MultiTenantSharedObject"));
+
+        String infoSource = renderInfo(parameters);
+        assertTrue(infoSource.contains("implements Serializable, MultiTenantSharedObject, MultiTenantPublicObject, "
+                + "OrganizedPublicObject, OrganizedSharedObject"), infoSource);
+    }
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> baseInfoFor(Class<?> entityClass) throws Exception {
         ServiceModelCodeGenerator.moduleName("canonical-test");
@@ -117,5 +133,28 @@ class CanonicalClassNameCodegenTest {
 
     static class GenericHolder {
         java.util.Set<MenuItem.OpButton> opButtonList;
+    }
+
+    static class MultiTenantSharedEntity implements MultiTenantSharedObject, MultiTenantPublicObject,
+            OrganizedPublicObject, OrganizedSharedObject {
+        @Override
+        public boolean isTenantShared() {
+            return true;
+        }
+
+        @Override
+        public <TID extends java.io.Serializable> TID getTenantId() {
+            return null;
+        }
+
+        @Override
+        public boolean isOrgShared() {
+            return true;
+        }
+
+        @Override
+        public <ORG_ID extends java.io.Serializable> ORG_ID getOrgId() {
+            return null;
+        }
     }
 }

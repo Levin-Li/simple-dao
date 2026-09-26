@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PersonalRequestTemplateTest {
@@ -19,10 +20,15 @@ class PersonalRequestTemplateTest {
         String orgPersonal = render("services/commons/req/MultiTenantOrgPersonalReq.java");
 
         for (String source : new String[]{personal, orgPersonal}) {
-            assertTrue(source.contains("@InjectVar(isOverride = InjectVar.SPEL_PREFIX"), source);
-            assertTrue(source.contains("@In(\"ownerId\")"), source);
+            assertTrue(source.contains("@In(value = \"ownerId\", condition = \"ownerIdListCondition(#_isDelete)\")"), source);
             assertTrue(source.contains("protected Collection<String> ownerIdList;"), source);
-            assertTrue(source.contains("#isEmpty(ownerIdList)"), source);
+            assertFalse(source.contains("paramExpr = \"1 = 2\""), source);
+            assertTrue(source.contains("isCanVisitPersonalData()"), source);
+            assertFalse(source.contains("canVisitPersonalData()"), source);
+            assertTrue(source.contains("protected void checkOwnerScope(boolean isDeleteAction)"), source);
+            assertTrue(source.contains("get_currentUserId()"), source);
+            assertTrue(source.contains("ownerIdCondition(#_isQuery, #_isDelete)"), source);
+            assertTrue(source.contains("if (!isPersonalObject()) return false;"), source);
             assertTrue(source.contains("setOwnerIdList(Collection<String> ownerIdList)"), source);
             assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
         }

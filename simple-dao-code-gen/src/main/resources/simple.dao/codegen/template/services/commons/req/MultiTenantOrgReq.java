@@ -1,5 +1,6 @@
 package ${modulePackageName}.services.commons.req;
 
+import com.levin.commons.dao.CtxVar;
 import com.levin.commons.dao.annotation.*;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
@@ -22,7 +23,15 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 多租户多部门查询对象
+ * 多租户多组织请求对象。
+ *
+ * <p>组织数据访问权限由变量注入提供方预先完成校验。本请求对象不校验 {@code orgIdList} 中的组织是否属于
+ * 当前用户，只将该列表作为查询、更新、删除的组织范围条件。在不安全上下文中，若没有全组织权限且没有
+ * {@code orgIdList}/{@code orgId}，本请求对象会直接抛异常，不能退化为无组织条件查询。</p>
+ *
+ * <p>{@code isAllOrgScope} 表示拥有全部组织权限：当没有 {@code orgIdList} 和 {@code orgId} 时，
+ * 不追加组织条件；当操作者明确提供组织范围时，仍进入组织视角。{@code orgIdList} 优先于单个
+ * {@code orgId}；后者用于列表为空时的单组织查询，并可在更新时作为新的组织归属。</p>
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  */
@@ -37,37 +46,47 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     public static final String IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
     public static final String NOT_ALL_ORG_SCOPE = " !" + IS_ALL_ORG_SCOPE;
 
+
     @Schema(title = "是否能访问所有组织", hidden = true)
     @InjectVar(InjectVar.SPEL_PREFIX + IS_ALL_ORG_SCOPE)
     @Ignore
     protected boolean isAllOrgScope = false;
 
-    //注入当前用户有权限的机构ID列表
+    /**
+     * 注入方已校验通过的可访问组织列表。
+     *
+     * <p>该列表是唯一的组织范围来源，作为查询、更新和删除的 {@code WHERE org_id IN (...)} 条件。
+     * 本类不重复校验列表成员的访问权限；但会在不安全上下文下校验是否存在组织范围。</p>
+     */
     @InjectVar(value = InjectConst.ORG_ID_LIST
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
+            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
     )
-    @Schema(title = "机构ID列表", description = "机构ID列表, 查询条件, 本参数优先于orgId")
+    @Schema(title = "机构ID列表", description = "注入方已授权的组织范围，优先于orgId，并用于查询、更新和删除条件")
 
-    @OrderBy(condition = "isOrganizedObject() && isEnableDefaultOrderBy() && #_isQuery && !isAdmin() && !isAllOrgScope() && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal) && !isOrgShared()", value = InjectConst.ORG_ID,
+    @OrderBy(condition = "isOrganizedObject() && isEnableDefaultOrderBy() && #_isQuery && #isNotEmpty(#_fieldVal) && isContainsOrgPublicData() && !isOrgShared()", value = InjectConst.ORG_ID,
             order = Integer.MIN_VALUE + 1, scope = OrderBy.Scope.OnlyForNotGroupBy, desc = "本排序规则是本部门的数据排第一个，通常用于只取一个数据时，先取自己部门的数据")
 
-    @OR(autoClose = true, condition = "isOrganizedObject()", desc = "查询、更新和删除都会增加这个条件")
+    @OR(autoClose = true, condition = "isOrganizedObject()", desc = "组织范围、组织公共数据和组织共享数据取并集")
 
-    @In(InjectConst.ORG_ID)
-    @Where(condition = "isUnsafeContext() && !isAdmin() && !isAllOrgScope() && #isEmpty(#_fieldVal) && #isEmpty(orgId)" , paramExpr = " 1 = 2 ", desc = "如果是不安全的上下文, 故意设置永远不成立的条件")
-    @IsNull(condition = "#_isQuery && !isAdmin() && !isAllOrgScope() && isContainsOrgPublicData() && #isNotEmpty(#_fieldVal)", value = InjectConst.ORG_ID, desc = "查询结果包含租户内的公共数据(orgId为NULL的数据)，不仅仅是本部门数据")
-    @Eq(condition = "#_isQuery && !isAllOrgScope() && isOrgShared()", value = "orgShared", paramExpr = "true", desc = "如果有可共享的部门数据，允许包括非该部门的数据")
+    @In(value = InjectConst.ORG_ID, condition = "orgIdListCondition()")
+    @IsNull(condition = "orgDataCondition(#_isQuery, true)", value = InjectConst.ORG_ID, desc = "组织视角查询时，结果包含组织ID为空的公共数据")
+    @Eq(condition = "orgDataCondition(#_isQuery, false)", value = "orgShared", paramExpr = "true", desc = "组织视角查询时，结果包含组织共享数据")
     protected Collection<String> orgIdList;
 
-    //注入当前用户有权限的机构ID列表
+    /**
+     * 单个组织 ID。
+     *
+     * <p>查询时仅在 {@code orgIdList} 为空时作为单组织条件；更新时作为新的组织归属值，
+     * 不替代 {@code orgIdList} 对旧记录的范围限制。</p>
+     */
     @InjectVar(value = InjectConst.ORG_ID
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员, 那么覆盖必须的
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE // 如果不是超管 也不是 租户管理员，那么值是必须的
+            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
+            , isRequired = "false"
     )
-    @Schema(title = "机构ID", description = "机构ID, 通常用于创建和更新orgId，机构ID默认从当前用户获取, 做为查询条件时本参数优先级低于orgIdList")
-    @Eq(condition = "isOrganizedObject() && !#_isUpdate && #isNotEmpty(#_fieldVal) && #isEmpty(orgIdList)", desc = "如果不是更新模式,且当前有值,且orgIdList查询条件未设置")
-    @Update(condition = "isOrganizedObject() && (#_isUpdate) && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID") // 正常来说只允许管理员修改部门数据的归属 (isSuperAdmin || isSaasAdmin || isTenantAdmin)
+    @Schema(title = "机构ID", description = "列表为空时的单组织查询条件；更新时可作为新的组织归属，优先级低于orgIdList")
+    @Eq(condition = "orgIdCondition(#_isQuery)", desc = "仅查询且orgIdList为空时，按单个组织ID筛选")
+    @Update(condition = "isOrganizedObject() && #_isUpdate && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID")
     protected String orgId;
 
     @Schema(title = "组织机构名称", hidden = true)
@@ -93,6 +112,41 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     @Schema(title = "请求是否包含组织可共享的数据", hidden = true)
     public boolean isOrgShared() {
         return false;
+    }
+
+    protected void checkOrgScopeParam() {
+        if (isUnsafeContext()
+                && !isAllOrgScope()
+                && (orgIdList == null || orgIdList.isEmpty())
+                && (orgId == null || orgId.isBlank())) {
+            throw new IllegalArgumentException("必须指定组织");
+        }
+    }
+
+    /** 组织列表条件入口：同时在不安全上下文复核组织范围。 */
+    public boolean orgIdListCondition() {
+        checkOrgScopeParam();
+        return orgIdList != null && !orgIdList.isEmpty();
+    }
+
+    /** 列表优先：仅查询且没有组织列表时使用单个组织 ID。 */
+    public boolean orgIdCondition(boolean isQueryAction) {
+        checkOrgScopeParam();
+        return isQueryAction
+                && (orgIdList == null || orgIdList.isEmpty())
+                && orgId != null
+                && !orgId.isBlank();
+    }
+
+    /** 组织公共或共享数据的查询条件入口。 */
+    public boolean orgDataCondition(boolean isQueryAction, boolean isPublicData) {
+        checkOrgScopeParam();
+        boolean hasOrgView = (orgIdList != null && !orgIdList.isEmpty()) || (orgId != null && !orgId.isBlank());
+        return isQueryAction
+                && hasOrgView
+                && (isPublicData
+                ? this instanceof OrganizedPublicObject && isContainsOrgPublicData()
+                : this instanceof OrganizedSharedObject && isOrgShared());
     }
 
     @Schema(title = "是否能访问所有组织", hidden = true)
