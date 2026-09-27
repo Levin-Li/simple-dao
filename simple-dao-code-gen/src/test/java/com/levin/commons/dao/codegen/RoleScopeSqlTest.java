@@ -100,8 +100,8 @@ class RoleScopeSqlTest {
                     public static class PUBLIC extends ScopedReq implements MultiTenantPublicObject {}
                     public static class SHARED extends ScopedReq implements MultiTenantSharedObject {}
                     public static class BOTH extends ScopedReq implements MultiTenantPublicObject, MultiTenantSharedObject {}
-                    public static class LegacyRestrictedReq extends ScopedReq {
-                        @Override public boolean isSaasAdmin() { return false; }
+                    public static class RestrictedReq extends ScopedReq {
+                        @Override public boolean isPlatformAdmin() { return false; }
                     }
                 }
                 """);
@@ -188,11 +188,12 @@ class RoleScopeSqlTest {
     }
 
     @Test
-    void platformRenameMustRespectExistingSaasAdminOverride() throws Exception {
-        Object req = generatedLoader.loadClass(GENERATED_PACKAGE + ".FixtureRequests$LegacyRestrictedReq")
+    void platformAdminOverrideMustRestrictScope() throws Exception {
+        Object req = generatedLoader.loadClass(GENERATED_PACKAGE + ".FixtureRequests$RestrictedReq")
                 .getConstructor().newInstance();
+        setField(req, "isTenantUser", false);
         setField(req, "isPlatformUser", true);
-        setField(req, "isSaasAdmin", true);
+        setField(req, "isPlatformAdmin", true);
         setField(req, "id", ROLE_ID);
         setField(req, "optimisticLock", VERSION);
         assertEquals(false, req.getClass().getMethod("isPlatformAdmin").invoke(req));
@@ -279,7 +280,7 @@ class RoleScopeSqlTest {
         setField(request, "isPlatformUser", !tenantUser);
         setField(request, "isTopSuperAdmin", role == Role.TOP_SUPER);
         setField(request, "isSuperAdmin", role == Role.SUPER);
-        setField(request, "isSaasAdmin", role == Role.PLATFORM_ADMIN);
+        setField(request, "isPlatformAdmin", role == Role.PLATFORM_ADMIN);
         setField(request, "isTenantAdmin", role == Role.TENANT_ADMIN);
         setField(request, "tenantId", tenant);
         setField(request, "_currentUserTenantId", tenantUser ? TENANT : null);

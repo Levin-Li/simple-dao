@@ -66,9 +66,9 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @Schema(title = "租户ID", hidden = true, description = "租户ID：超管与平台管理员不强制覆盖；非平台用户由服务端注入且必须非空")
     @InjectVar(value = InjectConst.TENANT_ID
              // 除超管和平台管理员外，最终值由服务端上下文覆盖。
-             , isOverride = InjectVar.SPEL_PREFIX + NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN
+             , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN
              // 租户用户缺少上下文租户 ID 时，注入阶段必须失败，不能降级为无租户条件。
-             , isRequired = InjectVar.SPEL_PREFIX + NOT_PLATFORM_USER
+             , isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_PLATFORM_USER
     )
 
     // 默认排序仅用于租户用户查询平台公共数据、且不包含共享数据的场景：把当前租户记录排在前面。

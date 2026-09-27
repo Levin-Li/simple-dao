@@ -7,7 +7,6 @@ import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.logic.*;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.rbac.ConfidentialLevel;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
 
@@ -46,52 +45,51 @@ public abstract class BaseReq implements ServiceReq {
     private static final Pattern SAFE_FIELD_PATH = Pattern.compile(
             "^(?:[A-Za-z_][A-Za-z0-9_]*|`[A-Za-z_][A-Za-z0-9_]*`)(?:\\.(?:[A-Za-z_][A-Za-z0-9_]*|`[A-Za-z_][A-Za-z0-9_]*`))*$");
 
-    public static final String IS_UNSAFE_CONTEXT = " (#" + InjectConst.IS_UNSAFE_CONTEXT + "?:false) ";
+    public static final String EXPR_IS_UNSAFE_CONTEXT = " (#" + InjectConst.IS_UNSAFE_CONTEXT + "?:false) ";
 
-    public static final String IS_TOP_SUPER_ADMIN = " (#" + InjectConst.IS_TOP_SUPER_ADMIN + "?:false) ";
+    public static final String EXPR_IS_TOP_SUPER_ADMIN = " (#" + InjectConst.IS_TOP_SUPER_ADMIN + "?:false) ";
 
-    public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
+    public static final String EXPR_IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
 
-    public static final String IS_PLATFORM_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
+    public static final String EXPR_IS_PLATFORM_ADMIN = "(#" + InjectConst.IS_PLATFORM_ADMIN + "?:false) ";
 
-    /** @deprecated 使用 {@link #IS_PLATFORM_ADMIN}。 */
-    @Deprecated
-    public static final String IS_SAAS_ADMIN = IS_PLATFORM_ADMIN;
+    //这个变量必须存在
+    public static final String EXPR_IS_PLATFORM_USER = " (#" + InjectConst.IS_PLATFORM_USER + "?:false) ";
 
-    public static final String IS_PLATFORM_USER = " (#" + InjectConst.IS_PLATFORM_USER + "?:false) ";
-
-    public static final String IS_TENANT_USER = " (#" + InjectConst.IS_TENANT_USER + "?:false) ";
+    //默认认为是租户用户
+    public static final String EXPR_IS_TENANT_USER = " (#" + InjectConst.IS_TENANT_USER + "?:true) ";
 
 
-    public static final String IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
+    public static final String EXPR_IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
+
+    public static final String EXPR_IS_CAN_VISIT_PERSONAL_DATA = " (#isCanVisitPersonalData?:false) ";
 
 
    /// /////////////////////////////////////////////////////////////////////
-    public static final String NOT_TOP_SUPER_ADMIN = " !" + IS_TOP_SUPER_ADMIN;
+    public static final String EXPR_NOT_TOP_SUPER_ADMIN = " !" + EXPR_IS_TOP_SUPER_ADMIN;
 
-    public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
+    public static final String EXPR_NOT_SUPER_ADMIN = " !" + EXPR_IS_SUPER_ADMIN;
 
-    public static final String NOT_PLATFORM_ADMIN = " !" + IS_PLATFORM_ADMIN;
+    public static final String EXPR_NOT_PLATFORM_ADMIN = " !" + EXPR_IS_PLATFORM_ADMIN;
 
-    /** @deprecated 使用 {@link #NOT_PLATFORM_ADMIN}。 */
-    @Deprecated
-    public static final String NOT_SAAS_ADMIN = NOT_PLATFORM_ADMIN;
+    public static final String EXPR_NOT_PLATFORM_USER = " !" + EXPR_IS_PLATFORM_USER;
 
-    public static final String NOT_PLATFORM_USER = " !" + IS_PLATFORM_USER;
+    public static final String EXPR_NOT_TENANT_USER = " !" + EXPR_IS_TENANT_USER;
 
-    public static final String NOT_TENANT_USER = " !" + IS_TENANT_USER;
+    public static final String EXPR_NOT_TENANT_ADMIN = " !" + EXPR_IS_TENANT_ADMIN;
 
-    public static final String NOT_TENANT_ADMIN = " !" + IS_TENANT_ADMIN;
+    public static final String EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA = " !" + EXPR_IS_CAN_VISIT_PERSONAL_DATA;
 
     /// //////////////////////////////////////////////////////////////////////////////////
 
-    public static final String NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_PLATFORM_ADMIN + ") ";
+    public static final String EXPR_NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN = " (" + EXPR_NOT_SUPER_ADMIN + " && " + EXPR_NOT_PLATFORM_ADMIN + ") ";
 
-    /** @deprecated 使用 {@link #NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN}。 */
-    @Deprecated
-    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN = NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN;
-
-    public static final String NOT_SUPER_SAAS_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
+    /**
+     * 注入条件直接读取可信上下文中的 #isSuperAdmin/#isPlatformAdmin/#isTenantAdmin，
+     * 不读取本对象尚未注入的身份字段。入口层须先准备完整身份上下文（TOP 超管也标记为超管），
+     * 再执行字段注入；不能从客户端 DTO 反向构造这些权限变量。
+     */
+    public static final String EXPR_NOT_SUPER_PLATFORM_TENANT_ADMIN = " (" + EXPR_NOT_SUPER_ADMIN + " && " + EXPR_NOT_PLATFORM_ADMIN + " && " + EXPR_NOT_TENANT_ADMIN + ") ";
 
     /////////////////////////////////////////////////////////////////////
 
@@ -100,36 +98,43 @@ public abstract class BaseReq implements ServiceReq {
      * <p>true 表示 Controller、RPC、消息等外部入口，必须执行越权、越范围和危险操作校验；false 表示
      * 内部可信调用，权限责任由调用方承担。</p>
      */
-    @InjectVar(value = InjectConst.IS_UNSAFE_CONTEXT, isRequired = "true")
+    @InjectVar(value = InjectConst.IS_UNSAFE_CONTEXT)
     @Ignore
     protected boolean isUnsafeContext = false;
 
     ///////////////////////////////////////////////////
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_TOP_SUPER_ADMIN)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_TOP_SUPER_ADMIN)
     @Ignore
     protected boolean isTopSuperAdmin = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_SUPER_ADMIN)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_SUPER_ADMIN)
     @Ignore
     protected boolean isSuperAdmin = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_ADMIN)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_PLATFORM_ADMIN)
     @Ignore
-    /** @deprecated 使用 {@link #isPlatformAdmin()}。 */
-    @Deprecated
-    protected boolean isSaasAdmin = false;
+    protected boolean isPlatformAdmin = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_PLATFORM_USER)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_PLATFORM_USER)
     @Ignore
     protected boolean isPlatformUser = false;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_USER)
+    //默认认为是租户用户
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_TENANT_USER)
     @Ignore
-    protected boolean isTenantUser = false;
+    protected boolean isTenantUser = true;
 
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_TENANT_ADMIN)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_TENANT_ADMIN)
     @Ignore
     protected boolean isTenantAdmin = false;
+
+    /**
+     * 上游权限系统计算的个人数据访问授权；始终覆盖请求传入值，缺失授权时为 false。
+     * 本对象不根据管理员身份或保密等级推导授权，只消费可信注入上下文的判断结果。
+     */
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_VISIT_PERSONAL_DATA)
+    @Ignore
+    protected boolean isCanVisitPersonalData = false;
 
     @Schema(title = "跟踪标识", hidden = true)
     @Ignore
@@ -228,27 +233,19 @@ public abstract class BaseReq implements ServiceReq {
     @Ignore
     @Schema(title = "是否超级管理员", hidden = true)
     public boolean isSuperAdmin() {
-        return isTopSuperAdmin() || this.isSuperAdmin;
+        return isTopSuperAdmin() || ( isPlatformUser() && this.isSuperAdmin);
     }
 
     @Ignore
     @Schema(title = "是否平台管理员", hidden = true)
     public boolean isPlatformAdmin() {
-        // 保留已有业务子类对旧方法的覆盖行为，避免改名后绕过其权限收紧逻辑。
-        return isSaasAdmin();
-    }
-
-    /** @deprecated 使用 {@link #isPlatformAdmin()}。 */
-    @Deprecated
-    @Ignore
-    public boolean isSaasAdmin() {
-        return isPlatformUser() && this.isSaasAdmin;
+        return isPlatformUser() && this.isPlatformAdmin;
     }
 
     @Ignore
     @Schema(title = "是否平台用户", hidden = true)
     public boolean isPlatformUser() {
-        return this.isPlatformUser;
+        return this.isPlatformUser && !this.isTenantUser();
     }
 
     @Ignore
@@ -269,20 +266,26 @@ public abstract class BaseReq implements ServiceReq {
         return isSuperAdmin() || isPlatformAdmin() || isTenantAdmin();
     }
 
+    @Ignore
     @Schema(title = "是否是敏感数据", description = "敏感数据需要根据级别进行过滤", hidden = true)
     public boolean isConfidentialObject() {
         return false;
     }
 
+    @Ignore
+    @Schema(title = "是否能访问个人数据", description = "由可信上下文注入；不替代租户、组织及具体操作的范围校验", hidden = true)
+    public boolean isCanVisitPersonalData() {
+        return this.isCanVisitPersonalData;
+    }
     ///////////////////////////////////////////////////////////////////////
 
     @Schema(title = "数据访问级别", hidden = true)
     @InjectVar(value = InjectConst.CONFIDENTIAL_DATA_ACCESS_LEVEL
 
-            , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么覆盖必须的
+            , isOverride = InjectVar.SPEL_PREFIX + "" + EXPR_NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么覆盖必须的
 
             // 用户可以没有数据访问级别
-           // , isRequired = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么值是必须的
+           // , isRequired = InjectVar.SPEL_PREFIX + "" + EXPR_NOT_TOP_SUPER_ADMIN // 如果不是TOP超管 那么值是必须的
               , isRequired = "false"
     )
     @OR(autoClose = true)
@@ -290,16 +293,9 @@ public abstract class BaseReq implements ServiceReq {
     @IsNull(value = "confidentialLevel", condition = "isUnsafeContext() && isConfidentialObject() && !isTopSuperAdmin() ", desc = "保密等级未定义的数据")
     protected Integer _confidentialDataAccessLevel;
 
-    @Ignore
-    @Schema(title = "是否能访问个人数据", description = "", hidden = true)
-    public boolean isCanVisitPersonalData() {
-        return isTopSuperAdmin()
-                || (_confidentialDataAccessLevel != null
-                && _confidentialDataAccessLevel >= ConfidentialLevel.PERSON_PRIVATE.code());
-    }
 
     @Schema(title = "领域ID", hidden = true, description = "领域ID，未显式指定时从请求上下文自动注入")
-    @InjectVar(isRequired = "false" , isOverride = InjectVar.SPEL_PREFIX + "" + NOT_TOP_SUPER_ADMIN) // 如果不是TOP超管 那么覆盖必须的
+    @InjectVar(isRequired = "false" , isOverride = InjectVar.SPEL_PREFIX + "" + EXPR_NOT_TOP_SUPER_ADMIN) // 如果不是TOP超管 那么覆盖必须的
 
     @OR(autoClose = true, condition = "isDomainObject()", desc = "只有实现了领域对象[DomainObject]接口，才加入这个条件")
     @Eq(condition = "#isNotEmpty(#_fieldVal) && #_fieldVal != '_OnlyEmptyDomainId_'") // domainId 为空 查询条件

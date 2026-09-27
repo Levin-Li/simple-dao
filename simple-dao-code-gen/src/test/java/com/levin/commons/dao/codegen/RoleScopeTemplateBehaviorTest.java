@@ -95,10 +95,9 @@ class RoleScopeTemplateBehaviorTest {
     void platformAdminShouldUseSameTenantScopeForReadAndWrite() throws Exception {
         Object request = newRequest();
         setField(request, "isPlatformUser", true);
-        setField(request, "isSaasAdmin", true);
+        setField(request, "isPlatformAdmin", true);
 
         assertTrue((Boolean) requestType.getMethod("isPlatformAdmin").invoke(request));
-        assertTrue((Boolean) requestType.getMethod("isSaasAdmin").invoke(request));
         assertTrue((Boolean) requestType.getMethod("isAdmin").invoke(request));
         assertFalse((Boolean) requestType.getMethod("tenantIsNullCondition", boolean.class).invoke(request, true));
 
@@ -159,7 +158,54 @@ class RoleScopeTemplateBehaviorTest {
     }
 
     private static Object newRequest() throws Exception {
-        return requestType.getConstructor().newInstance();
+        Object request = requestType.getConstructor().newInstance();
+        // 各身份场景显式赋值；平台用户不能依赖请求对象的租户默认值。
+        setField(request, "isTenantUser", false);
+        return request;
+    }
+
+    @Test
+    void platformAdminMustInjectFromNewContextKeyAndRemoveOldConstant() throws Exception {
+        Object request = newRequest();
+        setField(request, "isPlatformUser", true);
+        var adminField = requestType.getSuperclass().getDeclaredField("isPlatformAdmin");
+        adminField.setAccessible(true);
+        SimpleVariableInjector injector = new SimpleVariableInjector() {};
+        injector.injectValue(request, adminField, Map.of(InjectConst.IS_PLATFORM_ADMIN, true));
+        assertTrue((Boolean) requestType.getMethod("isPlatformAdmin").invoke(request));
+        assertThrows(NoSuchMethodException.class, () -> requestType.getMethod("isSaasAdmin"));
+        assertThrows(NoSuchFieldException.class, () -> requestType.getSuperclass().getDeclaredField("isSaasAdmin"));
+        assertEquals("(#isPlatformAdmin?:false)", ((String) requestType.getField("EXPR_IS_PLATFORM_ADMIN").get(null)).trim());
+        assertThrows(NoSuchFieldException.class, () -> requestType.getField("IS_PLATFORM_ADMIN"));
+        assertThrows(NoSuchFieldException.class, () -> requestType.getField("IS_SAAS_ADMIN"));
+        injector.injectValue(request, adminField, Map.of("isSaasAdmin", true));
+        assertFalse((Boolean) requestType.getMethod("isPlatformAdmin").invoke(request), "旧上下文键不能被当作平台管理员权限");
+    }
+
+    @Test
+    void defaultTenantIdentityMustPreventImplicitPlatformPrivileges() throws Exception {
+        Object request = requestType.getConstructor().newInstance();
+        assertTrue((Boolean) requestType.getMethod("isTenantUser").invoke(request));
+        setField(request, "isPlatformUser", true);
+        setField(request, "isTopSuperAdmin", true);
+        setField(request, "isSuperAdmin", true);
+        setField(request, "isPlatformAdmin", true);
+        for (String method : List.of("isPlatformUser", "isTopSuperAdmin", "isSuperAdmin", "isPlatformAdmin")) {
+            assertFalse((Boolean) requestType.getMethod(method).invoke(request), method);
+        }
+        setField(request, "isTenantUser", false);
+        assertTrue((Boolean) requestType.getMethod("isPlatformUser").invoke(request));
+        assertTrue((Boolean) requestType.getMethod("isSuperAdmin").invoke(request));
+        setField(request, "isPlatformUser", false);
+        assertFalse((Boolean) requestType.getMethod("isSuperAdmin").invoke(request));
+
+        var tenantField = requestType.getSuperclass().getDeclaredField("isTenantUser");
+        tenantField.setAccessible(true);
+        SimpleVariableInjector injector = new SimpleVariableInjector() {};
+        injector.injectValue(request, tenantField, Map.of());
+        assertTrue((Boolean) tenantField.get(request), "缺失上下文身份时按租户用户处理");
+        injector.injectValue(request, tenantField, Map.of(InjectConst.IS_TENANT_USER, false));
+        assertFalse((Boolean) tenantField.get(request));
     }
 
     @Test
@@ -177,7 +223,7 @@ class RoleScopeTemplateBehaviorTest {
                     InjectConst.IS_PLATFORM_USER, false,
                     InjectConst.IS_TENANT_USER, true,
                     InjectConst.IS_SUPER_ADMIN, false,
-                    InjectConst.IS_SAAS_ADMIN, false,
+                    InjectConst.IS_PLATFORM_ADMIN, false,
                     InjectConst.IS_TENANT_ADMIN, tenantAdmin,
                     InjectConst.TENANT_ID, "tenant-a"));
             injector.injectValue(request, tenantField, context);

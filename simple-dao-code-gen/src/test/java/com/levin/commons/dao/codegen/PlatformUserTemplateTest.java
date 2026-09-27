@@ -25,7 +25,7 @@ class PlatformUserTemplateTest {
     void injectConstantsShouldExposePlatformAndTenantUsers() throws Exception {
         assertEquals("isPlatformUser", InjectConst.IS_PLATFORM_USER);
         assertEquals("isTenantUser", InjectConst.IS_TENANT_USER);
-        assertTrue(InjectConst.class.getField("IS_SAAS_USER").isAnnotationPresent(Deprecated.class));
+        assertEquals("isPlatformAdmin", InjectConst.IS_PLATFORM_ADMIN);
     }
 
     @Test
@@ -40,7 +40,7 @@ class PlatformUserTemplateTest {
         assertTrue(source.contains("InjectConst.IS_PLATFORM_USER"), source);
         assertTrue(source.contains("InjectConst.IS_TENANT_USER"), source);
         assertTrue(source.contains("protected boolean isPlatformUser = false;"), source);
-        assertTrue(source.contains("protected boolean isTenantUser = false;"), source);
+        assertTrue(source.contains("protected boolean isTenantUser = true;"), source);
         assertTrue(source.contains("public boolean isPlatformUser()"), source);
         assertTrue(source.contains("public boolean isTenantUser()"), source);
         assertTrue(source.contains("protected String _currentUserId;"), source);
@@ -52,7 +52,7 @@ class PlatformUserTemplateTest {
         assertFalse(source.contains("protected String _operatorId;"), source);
         assertFalse(source.contains("protected String _operatorName;"), source);
         assertTrue(source.contains("return isTopSuperAdmin()"), source);
-        assertTrue(source.contains("ConfidentialLevel.PERSON_PRIVATE.code()"), source);
+        assertTrue(source.contains("return this.isCanVisitPersonalData;"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
 

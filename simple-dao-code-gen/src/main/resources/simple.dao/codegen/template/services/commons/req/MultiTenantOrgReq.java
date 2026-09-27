@@ -26,12 +26,13 @@ import java.util.List;
  * 多租户多组织请求对象。
  *
  * <p>组织数据访问权限由变量注入提供方预先完成校验。本请求对象不校验 {@code orgIdList} 中的组织是否属于
- * 当前用户，只将该列表作为查询、更新、删除的组织范围条件。在不安全上下文中，若没有全组织权限且没有
+ * 当前用户；查询、更新和删除优先用该列表限定旧记录范围，列表为空时按下述操作规则处理单个 {@code orgId}。
+ * 在不安全上下文中，若没有全组织权限且没有
  * {@code orgIdList}/{@code orgId}，本请求对象会直接抛异常，不能退化为无组织条件查询。</p>
  *
  * <p>{@code isAllOrgScope} 表示拥有全部组织权限：当没有 {@code orgIdList} 和 {@code orgId} 时，
  * 不追加组织条件；当操作者明确提供组织范围时，仍进入组织视角。{@code orgIdList} 优先于单个
- * {@code orgId}；后者用于列表为空时的单组织查询，并可在更新时作为新的组织归属。</p>
+ * {@code orgId}；后者在查询、删除和非管理员更新时用于单组织筛选，管理员更新时则表示新的组织归属。</p>
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  */
@@ -43,24 +44,24 @@ import java.util.List;
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject{
 
-    public static final String IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
-    public static final String NOT_ALL_ORG_SCOPE = " !" + IS_ALL_ORG_SCOPE;
+    public static final String EXPR_IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
+    public static final String EXPR_NOT_ALL_ORG_SCOPE = " !" + EXPR_IS_ALL_ORG_SCOPE;
 
 
     @Schema(title = "是否能访问所有组织", hidden = true)
-    @InjectVar(InjectVar.SPEL_PREFIX + IS_ALL_ORG_SCOPE)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_ALL_ORG_SCOPE)
     @Ignore
     protected boolean isAllOrgScope = false;
 
     /**
      * 注入方已校验通过的可访问组织列表。
      *
-     * <p>该列表是唯一的组织范围来源，作为查询、更新和删除的 {@code WHERE org_id IN (...)} 条件。
+     * <p>列表作为查询、更新和删除优先采用的 {@code WHERE org_id IN (...)} 条件。
      * 本类不重复校验列表成员的访问权限；但会在不安全上下文下校验是否存在组织范围。</p>
      */
     @InjectVar(value = InjectConst.ORG_ID_LIST
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
-            , isRequired = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
+            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
+            , isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
     )
     @Schema(title = "机构ID列表", description = "注入方已授权的组织范围，优先于orgId，并用于查询、更新和删除条件")
 
@@ -69,7 +70,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
 
     @OR(autoClose = true, condition = "isOrganizedObject()", desc = "组织范围、组织公共数据和组织共享数据取并集")
 
-    @In(value = InjectConst.ORG_ID, condition = "orgIdListCondition()")
+    @In(value = InjectConst.ORG_ID, condition = "orgIdListCondition(#_isUpdate)")
     @IsNull(condition = "orgDataCondition(#_isQuery, true)", value = InjectConst.ORG_ID, desc = "组织视角查询时，结果包含组织ID为空的公共数据")
     @Eq(condition = "orgDataCondition(#_isQuery, false)", value = "orgShared", paramExpr = "true", desc = "组织视角查询时，结果包含组织共享数据")
     protected Collection<String> orgIdList;
@@ -77,15 +78,16 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     /**
      * 单个组织 ID。
      *
-     * <p>查询时仅在 {@code orgIdList} 为空时作为单组织条件；更新时作为新的组织归属值，
-     * 不替代 {@code orgIdList} 对旧记录的范围限制。</p>
+     * <p>查询、删除和非管理员更新时，仅在 {@code orgIdList} 为空时作为单组织条件。
+     * 管理员更新时作为新的组织归属值，不替代列表对旧记录的范围限制。
+     * 因此受限外部管理员更新必须提供旧组织列表；全部组织权限者仍可不限制旧组织范围。</p>
      */
     @InjectVar(value = InjectConst.ORG_ID
-            , isOverride = InjectVar.SPEL_PREFIX + NOT_ALL_ORG_SCOPE
+            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
             , isRequired = "false"
     )
-    @Schema(title = "机构ID", description = "列表为空时的单组织查询条件；更新时可作为新的组织归属，优先级低于orgIdList")
-    @Eq(condition = "orgIdCondition(#_isQuery)", desc = "仅查询且orgIdList为空时，按单个组织ID筛选")
+    @Schema(title = "机构ID", description = "查询、删除和非管理员更新时是列表为空时的筛选条件；管理员更新时是新组织归属")
+    @Eq(condition = "orgIdCondition(#_isQuery, #_isDelete)", desc = "列表为空时，查询、删除及非管理员更新按单个组织ID筛选")
     @Update(condition = "isOrganizedObject() && #_isUpdate && isAdmin() && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更归属的机构ID")
     protected String orgId;
 
@@ -115,6 +117,10 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     }
 
     protected void checkOrgScopeParam() {
+        // 空成员可能被 IN 参数过滤掉，不能让一个无效列表退化为没有组织条件。
+        if (orgIdList != null && orgIdList.stream().anyMatch(id -> id == null || id.isBlank())) {
+            throw new IllegalArgumentException("组织范围列表不能包含空组织ID");
+        }
         if (isUnsafeContext()
                 && !isAllOrgScope()
                 && (orgIdList == null || orgIdList.isEmpty())
@@ -129,13 +135,27 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         return orgIdList != null && !orgIdList.isEmpty();
     }
 
-    /** 列表优先：仅查询且没有组织列表时使用单个组织 ID。 */
+    /** 管理员更新的 orgId 是 SET 新值，不能用于证明旧记录的组织范围已受限。 */
+    public boolean orgIdListCondition(boolean isUpdateAction) {
+        boolean hasOrgList = orgIdListCondition();
+        if (isUpdateAction && isAdmin() && isUnsafeContext() && !isAllOrgScope() && !hasOrgList) {
+            throw new IllegalArgumentException("管理员更新必须指定旧记录的组织范围列表");
+        }
+        return hasOrgList;
+    }
+
+    /** 单组织条件的兼容入口；参数表示当前操作是否允许把单值作为筛选条件。 */
     public boolean orgIdCondition(boolean isQueryAction) {
         checkOrgScopeParam();
         return isQueryAction
                 && (orgIdList == null || orgIdList.isEmpty())
                 && orgId != null
                 && !orgId.isBlank();
+    }
+
+    /** 管理员更新用于 SET；其他场景用于 WHERE。列表始终优先于单值。 */
+    public boolean orgIdCondition(boolean isQueryAction, boolean isDeleteAction) {
+        return orgIdCondition(isQueryAction || isDeleteAction || !isAdmin());
     }
 
     /** 组织公共或共享数据的查询条件入口。 */

@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import com.levin.commons.service.support.SimpleVariableInjector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -54,8 +56,8 @@ class GeneratedTenantScopeJpaTest {
         if (!Files.isDirectory(repository.resolve("simple-dao-code-gen"))) repository = repository.getParent();
         Path templates = repository.resolve("simple-dao-code-gen/src/main/resources/simple.dao/codegen/template/services/commons/req");
         List<java.io.File> sources = new ArrayList<>();
-        for (String name : List.of("BaseReq", "MultiTenantReq")) {
-            // 这两份模板仅包含包名与生成时间占位符；保留所有注解与方法原样编译。
+        for (String name : List.of("BaseReq", "MultiTenantReq", "MultiTenantOrgReq", "MultiTenantPersonalReq", "MultiTenantOrgPersonalReq")) {
+            // 这些模板仅包含包名与生成时间占位符；保留所有注解与方法原样编译。
             String source = Files.readString(templates.resolve(name + ".java"))
                     .replace("${modulePackageName}", "tenant.fixture").replace("${.now}", "test");
             assertFalse(source.contains("${"), "模板新增变量时需要更新测试渲染器");
@@ -189,7 +191,7 @@ class GeneratedTenantScopeJpaTest {
         field(req, "isPlatformUser", !tenantUser);
         field(req, "isTopSuperAdmin", role == Role.TOP_SUPER);
         field(req, "isSuperAdmin", role == Role.SUPER);
-        field(req, "isSaasAdmin", role == Role.PLATFORM_ADMIN);
+        field(req, "isPlatformAdmin", role == Role.PLATFORM_ADMIN);
         field(req, "isTenantAdmin", role == Role.TENANT_ADMIN);
         field(req, "isUnsafeContext", true);
         field(req, "_currentUserTenantId", tenantUser ? "A" : null);
@@ -198,6 +200,35 @@ class GeneratedTenantScopeJpaTest {
         field(req, "includeShared", shared);
         field(req, "enableDefaultOrderBy", false);
         return req;
+    }
+
+    @Test
+    void injectedOwnerScopeMustAllowOwnRecordsAndExcludeOtherOwnersAndTenants() throws Exception {
+        Object req = loader.loadClass("tenant.fixture.services.commons.req.MultiTenantPersonalReq").getConstructor().newInstance();
+        field(req, "isTenantUser", true);
+        field(req, "isUnsafeContext", true);
+        field(req, "tenantId", "A");
+        field(req, "_currentUserTenantId", "A");
+        field(req, "_currentUserId", "user-a");
+        field(req, "ownerId", "forged-owner");
+        field(req, "ownerIdList", List.of("forged-owner", "user-a"));
+        SimpleVariableInjector injector = new SimpleVariableInjector() {};
+        var context = java.util.Map.<String, Object>of("isSuperAdmin", false, "isPlatformAdmin", false, "isTenantAdmin", false,
+                "ownerId", "user-a", "ownerIdList", List.of("user-a"));
+        for (String name : List.of("ownerIdList", "ownerId")) {
+            var ownerField = req.getClass().getDeclaredField(name);
+            ownerField.setAccessible(true);
+            injector.injectValue(req, ownerField, context);
+        }
+        List<TenantScopeRow> rows = dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).find(TenantScopeRow.class);
+        assertEquals(Set.of(91001L), rows.stream().map(row -> row.id).collect(Collectors.toSet()));
+        for (long id : new long[]{91001L, 91002L, 91003L, 91005L}) {
+            int expected = id == 91001L ? 1 : 0;
+            assertEquals(expected, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", id)
+                    .set("label", "owner-updated").update());
+            assertEquals(expected, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", id).delete());
+        }
+        assertEquals(5, dao.selectFrom(TenantScopeRow.class).count());
     }
 
     static void field(Object req, String name, Object value) throws Exception {
@@ -212,6 +243,206 @@ class GeneratedTenantScopeJpaTest {
         throw new NoSuchFieldException(name);
     }
 
+    @Test
+    void singleOrganizationDeleteMustNotDeleteAnotherOrganization() throws Exception {
+        Object req = organizationRequest(false, false, null, "org-a");
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).delete());
+        em.clear();
+        assertNotNull(em.find(TenantScopeRow.class, 91002L));
+        assertEquals(5, dao.selectFrom(TenantScopeRow.class).count());
+    }
+
+    @Test
+    void contextPersonalAccessMustNotBypassTenantIsolation() throws Exception {
+        TenantScopeRow foreign = em.find(TenantScopeRow.class, 91003L);
+        foreign.ownerId = "other-owner";
+        em.flush();
+        em.clear();
+        Object req = loader.loadClass("tenant.fixture.services.commons.req.MultiTenantPersonalReq").getConstructor().newInstance();
+        field(req, "isTenantUser", true);
+        field(req, "isTenantAdmin", true);
+        field(req, "isUnsafeContext", true);
+        field(req, "tenantId", "A");
+        field(req, "_currentUserTenantId", "A");
+        field(req, "_currentUserId", "user-a");
+        field(req, "ownerId", "other-owner");
+        field(req, "ownerIdList", List.of("other-owner"));
+        // 仅具备管理员身份但没有上下文授权，仍不能访问其他拥有者。
+        assertScopeRejected(() -> dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).count());
+        var permissionField = req.getClass().getSuperclass().getSuperclass().getDeclaredField("isCanVisitPersonalData");
+        permissionField.setAccessible(true);
+        new SimpleVariableInjector() {}.injectValue(req, permissionField, java.util.Map.of("isCanVisitPersonalData", true));
+        List<TenantScopeRow> visible = dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).find(TenantScopeRow.class);
+        assertEquals(Set.of(91002L), visible.stream().map(row -> row.id).collect(Collectors.toSet()));
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).set("label", "bad").update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).set("label", "allowed").update());
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+        em.clear();
+        assertEquals("original", em.find(TenantScopeRow.class, 91003L).label);
+    }
+
+    @Test
+    void organizationListMustTakePriorityForDeletion() throws Exception {
+        Object req = organizationRequest(false, false, List.of("org-b"), "org-a");
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+    }
+
+    @Test
+    void restrictedUpdateCannotUseNewOrganizationAsAuthorizationScope() throws Exception {
+        for (List<String> scope : java.util.Arrays.<List<String>>asList(null, List.of(), java.util.Arrays.asList((String) null), List.of(" "))) {
+            Object req = organizationRequest(true, false, scope, "org-b");
+            RuntimeException error = assertThrows(RuntimeException.class, () -> dao.updateTo(TenantScopeRow.class)
+                    .appendByQueryObj(req).eq("id", 91001L).set("label", "bad").update());
+            StringBuilder messages = new StringBuilder();
+            for (Throwable cause = error; cause != null; cause = cause.getCause()) messages.append(cause.getMessage());
+            assertTrue(messages.toString().contains("组织"), messages.toString());
+        }
+        em.clear();
+        TenantScopeRow row = em.find(TenantScopeRow.class, 91001L);
+        assertEquals("org-a", row.orgId);
+        assertEquals("original", row.label);
+    }
+
+    @Test
+    void administratorMustSelectOldOrganizationAndSetNewOrganizationSeparately() throws Exception {
+        Object req = organizationRequest(true, false, List.of("org-a"), "org-b");
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).update());
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).update());
+        em.clear();
+        assertEquals("org-b", em.find(TenantScopeRow.class, 91001L).orgId);
+        assertEquals("org-a", em.find(TenantScopeRow.class, 91003L).orgId);
+    }
+
+    @Test
+    void allOrganizationAccessDoesNotGrantOrganizationReassignment() throws Exception {
+        Object req = organizationRequest(false, true, List.of("org-a"), "org-b");
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).set("label", "changed").update());
+        em.clear();
+        assertEquals("org-a", em.find(TenantScopeRow.class, 91001L).orgId);
+        assertEquals("changed", em.find(TenantScopeRow.class, 91001L).label);
+    }
+
+    @Test
+    void nonAdministratorUpdateMustUseSingleOrganizationAsWhereInsteadOfSet() throws Exception {
+        for (boolean allOrganizations : new boolean[]{false, true}) {
+            Object req = organizationRequest(false, allOrganizations, null, "org-a");
+            assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).set("label", "wrong").update());
+            assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).set("label", "changed").update());
+            em.clear();
+            assertEquals("org-a", em.find(TenantScopeRow.class, 91001L).orgId);
+            assertEquals("org-b", em.find(TenantScopeRow.class, 91002L).orgId);
+            assertEquals("original", em.find(TenantScopeRow.class, 91002L).label);
+        }
+    }
+
+    private static Object organizationRequest(boolean admin, boolean allOrganizations, List<String> organizations, String organization) throws Exception {
+        Object req = loader.loadClass("tenant.fixture.services.commons.req.MultiTenantOrgReq").getConstructor().newInstance();
+        field(req, "isTenantUser", true);
+        field(req, "isTenantAdmin", admin);
+        field(req, "isAllOrgScope", allOrganizations);
+        field(req, "isUnsafeContext", true);
+        field(req, "tenantId", "A");
+        field(req, "_currentUserTenantId", "A");
+        field(req, "orgIdList", organizations);
+        field(req, "orgId", organization);
+        field(req, "enableDefaultOrderBy", false);
+        return req;
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"MultiTenantPersonalReq", "MultiTenantOrgPersonalReq"})
+    void authorizedNonAdminMustUseSingleOwnerForUpdateAndDelete(String template) throws Exception {
+        Object req = personalRequest(template, false, true, null, "other-owner");
+        List<TenantScopeRow> selected = dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).find(TenantScopeRow.class);
+        assertEquals(Set.of(91002L), selected.stream().map(row -> row.id).collect(Collectors.toSet()));
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).set("label", "wrong").update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).set("label", "allowed").update());
+        em.clear();
+        assertEquals("other-owner", em.find(TenantScopeRow.class, 91002L).ownerId);
+        assertEquals("original", em.find(TenantScopeRow.class, 91001L).label);
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"MultiTenantPersonalReq", "MultiTenantOrgPersonalReq"})
+    void ownerListMustTakePriorityAndNonAdminMustNotReassign(String template) throws Exception {
+        Object req = personalRequest(template, false, true, List.of("user-a"), "other-owner");
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).set("label", "wrong").update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).set("label", "allowed").update());
+        em.clear();
+        assertEquals("user-a", em.find(TenantScopeRow.class, 91001L).ownerId);
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).delete());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"MultiTenantPersonalReq", "MultiTenantOrgPersonalReq"})
+    void administratorMustSeparateOldOwnerScopeFromNewOwnership(String template) throws Exception {
+        Object req = personalRequest(template, true, true, List.of("user-a"), "other-owner");
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).update());
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).update());
+        em.clear();
+        assertEquals("other-owner", em.find(TenantScopeRow.class, 91001L).ownerId);
+        assertEquals("user-a", em.find(TenantScopeRow.class, 91003L).ownerId);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"MultiTenantPersonalReq", "MultiTenantOrgPersonalReq"})
+    void restrictedAdministratorCannotUseNewOwnerAsOldRecordScope(String template) throws Exception {
+        Object noOldScope = personalRequest(template, true, false, null, "user-a");
+        assertPersonalScopeRejected(() -> dao.updateTo(TenantScopeRow.class).appendByQueryObj(noOldScope).eq("id", 91002L).update());
+        Object ownScope = personalRequest(template, true, false, List.of("user-a"), "other-owner");
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(ownScope).eq("id", 91002L).update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(ownScope).eq("id", 91001L).update());
+    }
+
+    @Test
+    void personalAuthorizationMustKeepParentOrganizationRestriction() throws Exception {
+        em.find(TenantScopeRow.class, 91001L).ownerId = "other-owner";
+        em.flush();
+        em.clear();
+        Object req = personalRequest("MultiTenantOrgPersonalReq", false, true, null, "other-owner");
+        field(req, "orgIdList", List.of("org-a"));
+        // 两条记录同租户、同拥有者，但分别属于 org-a 与 org-b；组织过滤不能靠租户过滤代为保护。
+        List<TenantScopeRow> selected = dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).find(TenantScopeRow.class);
+        assertEquals(Set.of(91001L), selected.stream().map(row -> row.id).collect(Collectors.toSet()));
+        assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).set("label", "wrong").update());
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).set("label", "allowed").update());
+        assertEquals(0, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91002L).delete());
+        assertEquals(1, dao.deleteFrom(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91001L).delete());
+        em.clear();
+        assertEquals("original", em.find(TenantScopeRow.class, 91002L).label);
+    }
+
+    private static Object personalRequest(String template, boolean admin, boolean access, List<String> owners, String owner) throws Exception {
+        Object req = loader.loadClass("tenant.fixture.services.commons.req." + template).getConstructor().newInstance();
+        field(req, "isTenantUser", true);
+        field(req, "isTenantAdmin", admin);
+        field(req, "isUnsafeContext", true);
+        field(req, "tenantId", "A");
+        field(req, "_currentUserTenantId", "A");
+        field(req, "_currentUserId", "user-a");
+        field(req, "isCanVisitPersonalData", access);
+        field(req, "ownerIdList", owners);
+        field(req, "ownerId", owner);
+        if (template.equals("MultiTenantOrgPersonalReq")) field(req, "orgIdList", List.of("org-a", "org-b"));
+        return req;
+    }
+
+    private static void assertPersonalScopeRejected(org.junit.jupiter.api.function.Executable operation) {
+        RuntimeException error = assertThrows(RuntimeException.class, operation);
+        StringBuilder causes = new StringBuilder();
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) causes.append(cause.getMessage());
+        assertTrue(causes.toString().contains("拥有者") || causes.toString().contains("个人数据"), causes.toString());
+    }
+
     @Entity(name = "GeneratedTenantScopeRow")
     @Table(name = "dao_generated_tenant_scope_test")
     public static class TenantScopeRow {
@@ -219,10 +450,14 @@ class GeneratedTenantScopeJpaTest {
         @Column(name = "tenant_id") public String tenantId;
         @Column(name = "tenant_shared") public boolean tenantShared;
         @Column(name = "optimistic_lock") public int optimisticLock;
+        @Column(name = "owner_id") public String ownerId;
+        @Column(name = "org_id") public String orgId;
         public String label;
         public TenantScopeRow() { }
         TenantScopeRow(Long id, String tenant, boolean shared) {
             this.id = id; tenantId = tenant; tenantShared = shared; label = "original";
+            ownerId = id == 91002L ? "other-owner" : "user-a";
+            orgId = id == 91002L ? "org-b" : "org-a";
         }
     }
 }

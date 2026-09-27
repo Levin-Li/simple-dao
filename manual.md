@@ -4090,6 +4090,21 @@ public void delete(Long id) {
 
 ## 19. 代码生成工作流
 
+个人数据访问授权通过可信上下文键 `isCanVisitPersonalData` 注入，未提供时为 false。
+请求对象只消费上游授权结果，不根据管理员身份或保密级别推导；租户、组织及具体操作校验继续生效。
+
+组织请求中，列表 `orgIdList` 优先限定旧记录范围。列表为空时，`orgId` 可用于查询、删除以及非管理员更新的 WHERE 条件；
+只有管理员更新才把 `orgId` 作为 SET 新归属。受限外部管理员更新必须提供旧组织列表，不能仅凭新的归属值通过权限校验。
+
+个人请求的 `ownerId`、`ownerIdList` 使用同名服务端上下文变量注入。没有个人访问授权时强制覆盖且必填；
+有授权时保留显式值并可从上下文补值。覆盖表达式读取 `#isCanVisitPersonalData` 可信上下文变量，
+不要从正在注入的请求对象反向提供身份，否则会引入顺序依赖及信任边界问题。
+
+拥有者条件入口统一为 `ownerIdListCondition(isQueryAction, isDeleteAction)` 和
+`ownerIdCondition(isQueryAction, isDeleteAction)`。单参数列表入口已移除；查询传 `(true, false)`，
+更新传 `(false, false)`，删除传 `(false, true)`。生成注解使用 `#_isQuery`、`#_isDelete`，由 DAO 自动提供。
+不要用“不是删除”推断“是查询”，避免把更新时的新归属值误作旧记录筛选条件。
+
 生成的 `MultiTenantReq` 会校验租户用户的目标租户与当前用户租户一致。查询可按实体能力及请求开关
 合并公共、共享数据，普通用户更新和删除不继承共享查询权限。普通平台用户未指定租户时仅操作平台数据；
 超管/平台管理员未指定租户时不追加租户条件，指定时基础范围为“指定租户 OR 平台数据”，
