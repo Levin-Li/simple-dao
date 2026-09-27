@@ -131,6 +131,13 @@ public final class ServiceModelCodeGenerator {
 
     public static final String TEMPLATE_PATH = "/simple.dao/codegen/template/";
 
+    private static final List<String> MODULE_INSTRUCTION_TEMPLATES = List.of(
+            "模块开发说明.md",
+            "代码生成说明.md",
+            "后端项目开发规则.md",
+            "请求对象数据范围规则.md"
+    );
+
 
 //    private static Set<Class> baseTypes = new HashSet<>();
 
@@ -216,15 +223,9 @@ public final class ServiceModelCodeGenerator {
                 .put("entities", mavenProject.getArtifact())
                 .build();
 
-        /////////////////////////////生成说明文件///////////////////////////////////
-        String template = "模块开发说明.md";
-
-        genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
-
-        template = "代码生成说明.md";
-        genFileByTemplate(template, params, mavenProject.getBasedir().getParentFile().getAbsolutePath() + File.separator + template);
-
-        ///////////////////////////////////////////////////////////////////////////
+        // 在项目根目录和实体源码模块中均生成说明，保证源码包可独立携带开发指引。
+        genModuleInstructionFiles(params, mavenProject.getBasedir().getParentFile());
+        genModuleInstructionFiles(params, mavenProject.getBasedir());
 
 
         final List<String> modules = new ArrayList<>(2);
@@ -272,6 +273,12 @@ public final class ServiceModelCodeGenerator {
             FileUtils.write(parent, pomContent, "utf-8");
         }
 
+    }
+
+    static void genModuleInstructionFiles(Map<String, Object> params, File targetDir) throws Exception {
+        for (String template : MODULE_INSTRUCTION_TEMPLATES) {
+            genFileByTemplate(template, params, new File(targetDir, template).getAbsolutePath());
+        }
     }
 
 

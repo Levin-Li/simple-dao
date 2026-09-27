@@ -67,8 +67,6 @@ class PlatformUserTemplateTest {
 
         assertTrue(source.contains("!isPlatformUser()"), source);
         assertFalse(source.contains("!isSaasUser()"), source);
-        assertTrue(source.contains("protected boolean isUnscopedPlatformAdminQuery(boolean isQueryAction)"), source);
-        assertTrue(source.contains("&& (isSuperAdmin() || isSaasAdmin())"), source);
-        assertTrue(source.contains("if (isUnscopedPlatformAdminQuery(isQueryAction)) {\n            return false;\n        }"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
 }

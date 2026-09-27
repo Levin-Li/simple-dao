@@ -52,7 +52,11 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String IS_SUPER_ADMIN = " (#" + InjectConst.IS_SUPER_ADMIN + "?:false) ";
 
-    public static final String IS_SAAS_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
+    public static final String IS_PLATFORM_ADMIN = " (#" + InjectConst.IS_SAAS_ADMIN + "?:false) ";
+
+    /** @deprecated 使用 {@link #IS_PLATFORM_ADMIN}。 */
+    @Deprecated
+    public static final String IS_SAAS_ADMIN = IS_PLATFORM_ADMIN;
 
     public static final String IS_PLATFORM_USER = " (#" + InjectConst.IS_PLATFORM_USER + "?:false) ";
 
@@ -67,7 +71,11 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String NOT_SUPER_ADMIN = " !" + IS_SUPER_ADMIN;
 
-    public static final String NOT_SAAS_ADMIN = " !" + IS_SAAS_ADMIN;
+    public static final String NOT_PLATFORM_ADMIN = " !" + IS_PLATFORM_ADMIN;
+
+    /** @deprecated 使用 {@link #NOT_PLATFORM_ADMIN}。 */
+    @Deprecated
+    public static final String NOT_SAAS_ADMIN = NOT_PLATFORM_ADMIN;
 
     public static final String NOT_PLATFORM_USER = " !" + IS_PLATFORM_USER;
 
@@ -77,7 +85,11 @@ public abstract class BaseReq implements ServiceReq {
 
     /// //////////////////////////////////////////////////////////////////////////////////
 
-    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + ") ";
+    public static final String NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_PLATFORM_ADMIN + ") ";
+
+    /** @deprecated 使用 {@link #NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN}。 */
+    @Deprecated
+    public static final String NOT_SUPER_ADMIN_AND_NOT_SAAS_ADMIN = NOT_SUPER_ADMIN_AND_NOT_PLATFORM_ADMIN;
 
     public static final String NOT_SUPER_SAAS_TENANT_ADMIN = " (" + NOT_SUPER_ADMIN + " && " + NOT_SAAS_ADMIN + " && " + NOT_TENANT_ADMIN + ") ";
 
@@ -103,6 +115,8 @@ public abstract class BaseReq implements ServiceReq {
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_SAAS_ADMIN)
     @Ignore
+    /** @deprecated 使用 {@link #isPlatformAdmin()}。 */
+    @Deprecated
     protected boolean isSaasAdmin = false;
 
     @InjectVar(InjectVar.SPEL_PREFIX + IS_PLATFORM_USER)
@@ -218,7 +232,15 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
-    @Schema(title = "是否SAAS管理员", hidden = true)
+    @Schema(title = "是否平台管理员", hidden = true)
+    public boolean isPlatformAdmin() {
+        // 保留已有业务子类对旧方法的覆盖行为，避免改名后绕过其权限收紧逻辑。
+        return isSaasAdmin();
+    }
+
+    /** @deprecated 使用 {@link #isPlatformAdmin()}。 */
+    @Deprecated
+    @Ignore
     public boolean isSaasAdmin() {
         return isPlatformUser() && this.isSaasAdmin;
     }
@@ -242,9 +264,9 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
-    @Schema(title = "是否管理员", description = "超级管理员，SAAS管理员，租户管理员", hidden = true)
+    @Schema(title = "是否管理员", description = "超级管理员，平台管理员，租户管理员", hidden = true)
     public boolean isAdmin() {
-        return isSuperAdmin() || isSaasAdmin() || isTenantAdmin();
+        return isSuperAdmin() || isPlatformAdmin() || isTenantAdmin();
     }
 
     @Schema(title = "是否是敏感数据", description = "敏感数据需要根据级别进行过滤", hidden = true)
