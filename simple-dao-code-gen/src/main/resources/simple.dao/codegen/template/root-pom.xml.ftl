@@ -855,6 +855,14 @@
                             <checkRuntimeClasspath>true</checkRuntimeClasspath>
                             <checkTestClasspath>false</checkTestClasspath>
                             <printEqualFiles>true</printEqualFiles>
+                            <!-- 容器 API 由 Servlet 规范包与嵌入式 Tomcat 同时提供；应用 caffeine 配置覆盖库默认值。 -->
+                            <ignoredClassPatterns>
+                                <ignoredClassPattern>jakarta.servlet.*</ignoredClassPattern>
+                            </ignoredClassPatterns>
+                            <ignoredResourcePatterns>
+                                <ignoredResourcePattern>caffeine.properties</ignoredResourcePattern>
+                                <ignoredResourcePattern>jakarta/servlet/.*</ignoredResourcePattern>
+                            </ignoredResourcePatterns>
                         </configuration>
                     </execution>
                 </executions>
