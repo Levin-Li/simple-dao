@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.dao.*;
 import com.levin.commons.dao.domain.*;
 import com.levin.commons.dao.annotation.*;
-import com.levin.commons.rbac.SimpleOrgScope;
+import com.levin.commons.rbac.DataScope.OrgScope;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.support.*;
 
@@ -118,7 +118,7 @@ public class TestRole
 
     @Schema(title = "组织数据权限", description = "个人的数据范围优先于个角色赋予的数据范围")
     @JdbcTypeCode(SqlTypes.JSON)
-    protected List<SimpleOrgScope> orgScopeList;
+    protected List<OrgScope> orgScopeList;
 
     @Schema(title = "资源权限列表", description = "Json数组")
     @JdbcTypeCode(SqlTypes.JSON)

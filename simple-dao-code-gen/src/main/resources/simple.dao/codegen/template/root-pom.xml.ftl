@@ -43,8 +43,10 @@
         <mapstruct.version>1.6.3</mapstruct.version>
 
         <sa-token.version>1.45.0</sa-token.version>
-        <fastjson.version>2.0.60</fastjson.version>
-        <fastjson2.version>2.0.60</fastjson2.version>
+        <fastjson.version>2.0.61</fastjson.version>
+        <fastjson2.version>2.0.61</fastjson2.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <error-prone-annotations.version>2.43.0</error-prone-annotations.version>
 
         <j2cache.version>4.0.0-SNAPSHOT</j2cache.version>
 
@@ -497,6 +499,18 @@
                 <groupId>com.alibaba.fastjson2</groupId>
                 <artifactId>fastjson2</artifactId>
                 <version>${r"${fastjson2.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${r"${commons-lang3.version}"}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>${r"${error-prone-annotations.version}"}</version>
             </dependency>
 
             <dependency>
