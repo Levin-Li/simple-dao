@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import com.levin.commons.plugins.Utils;
 import com.levin.commons.service.domain.InjectVar;
+import com.levin.commons.service.support.InjectConst;
 import com.levin.commons.service.support.SimpleVariableInjector;
 import com.levin.commons.service.support.VariableInjector;
 import java.lang.reflect.Field;
@@ -68,7 +69,7 @@ class PersonalOwnerInjectionTest {
             assertNotNull(injection, template + "." + name + " 必须声明上下文注入");
             assertArrayEquals(new String[]{"default"}, injection.domain());
             assertTrue(injection.value().isEmpty() || injection.value().equals(name), "使用字段同名上下文键");
-            String restricted = InjectVar.SPEL_PREFIX + type.getField("EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA").get(null);
+            String restricted = InjectVar.SPEL_PREFIX + type.getField("EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL").get(null);
             assertEquals(restricted, injection.isOverride(), "覆盖条件应由可信个人访问权限决定");
             assertEquals(restricted, injection.isRequired(), "必填条件应由可信个人访问权限决定");
         }
@@ -85,23 +86,23 @@ class PersonalOwnerInjectionTest {
                     boolean tenantUser = role.equals("ordinary") || role.equals("isTenantAdmin");
                     // 请求伪造相反的身份及个人访问权限；覆盖判断只能读取可信上下文。
                     for (String identity : List.of("isSuperAdmin", "isPlatformAdmin", "isTenantAdmin")) field(request, identity).set(request, !admin);
-                    field(request, "isCanVisitPersonalData").set(request, !personalAccess);
+                    field(request, "isCanAccessAllPersonal").set(request, !personalAccess);
                     field(request, "ownerId").set(request, "selected-owner");
                     field(request, "ownerIdList").set(request, List.of("selected-owner"));
                     Map<String, Object> context = new java.util.HashMap<>(Map.of(
                             "isSuperAdmin", role.equals("isSuperAdmin"), "isPlatformAdmin", role.equals("isPlatformAdmin"),
                             "isTenantAdmin", role.equals("isTenantAdmin"),
                             "isTenantUser", tenantUser, "isPlatformUser", !tenantUser,
-                            "isCanVisitPersonalData", personalAccess,
+                            InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, personalAccess,
                             "ownerId", "current-user", "ownerIdList", List.of("current-user")));
                     List<String> sequence = ownersFirst
-                            ? List.of("ownerId", "ownerIdList", "isCanVisitPersonalData", "isTenantUser", "isPlatformUser", "isSuperAdmin", "isPlatformAdmin", "isTenantAdmin")
-                            : List.of("isTenantUser", "isPlatformUser", "isSuperAdmin", "isPlatformAdmin", "isTenantAdmin", "isCanVisitPersonalData", "ownerIdList", "ownerId");
+                            ? List.of("ownerId", "ownerIdList", "isCanAccessAllPersonal", "isTenantUser", "isPlatformUser", "isSuperAdmin", "isPlatformAdmin", "isTenantAdmin")
+                            : List.of("isTenantUser", "isPlatformUser", "isSuperAdmin", "isPlatformAdmin", "isTenantAdmin", "isCanAccessAllPersonal", "ownerIdList", "ownerId");
                     inject(request, context, sequence);
                     String expected = personalAccess ? "selected-owner" : "current-user";
                     assertEquals(expected, field(request, "ownerId").get(request), role + " personalAccess=" + personalAccess + " ownersFirst=" + ownersFirst);
                     assertEquals(List.of(expected), field(request, "ownerIdList").get(request));
-                    assertEquals(personalAccess, request.getClass().getMethod("isCanVisitPersonalData").invoke(request));
+                    assertEquals(personalAccess, request.getClass().getMethod("isCanAccessAllPersonal").invoke(request));
                     assertEquals(admin, request.getClass().getMethod("isAdmin").invoke(request), "测试角色必须实际生效：" + role);
                 }
             }
@@ -115,7 +116,7 @@ class PersonalOwnerInjectionTest {
             for (boolean missingPermission : new boolean[]{false, true}) {
                 for (String missing : List.of("ownerId", "ownerIdList")) {
                     Object request = loader.loadClass(PACKAGE + template).getConstructor().newInstance();
-                    field(request, "isCanVisitPersonalData").set(request, true);
+                    field(request, "isCanAccessAllPersonal").set(request, true);
                     field(request, "isTenantUser").set(request, true);
                     field(request, "isTenantAdmin").set(request, admin);
                     assertEquals(admin, request.getClass().getMethod("isAdmin").invoke(request));
@@ -124,7 +125,7 @@ class PersonalOwnerInjectionTest {
                     Map<String, Object> context = new java.util.HashMap<>(Map.of(
                             "isSuperAdmin", false, "isPlatformAdmin", false, "isTenantAdmin", admin,
                             "ownerId", "current-user", "ownerIdList", List.of("current-user")));
-                    if (!missingPermission) context.put("isCanVisitPersonalData", false);
+                    if (!missingPermission) context.put(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, false);
                     context.remove(missing);
                     RuntimeException failure = assertThrows(RuntimeException.class, () -> inject(request, context, List.of(missing)));
                     assertTrue(failure.getMessage().contains(missing), failure.toString());
@@ -137,13 +138,13 @@ class PersonalOwnerInjectionTest {
     @ValueSource(strings = {"MultiTenantPersonalReq", "MultiTenantOrgPersonalReq"})
     void authorizedPersonalAccessMayUseDefaultsOrRemainUnscopedWithoutAdminRole(String template) throws Exception {
         Object request = loader.loadClass(PACKAGE + template).getConstructor().newInstance();
-        Map<String, Object> defaults = Map.of("isCanVisitPersonalData", true, "ownerId", "provided-owner",
+        Map<String, Object> defaults = Map.of(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, true, "ownerId", "provided-owner",
                 "ownerIdList", List.of("provided-owner"));
         inject(request, defaults, List.of("ownerId", "ownerIdList"));
         assertEquals("provided-owner", field(request, "ownerId").get(request));
         assertEquals(List.of("provided-owner"), field(request, "ownerIdList").get(request));
         Object unscoped = loader.loadClass(PACKAGE + template).getConstructor().newInstance();
-        inject(unscoped, Map.of("isCanVisitPersonalData", true), List.of("ownerId", "ownerIdList"));
+        inject(unscoped, Map.of(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, true), List.of("ownerId", "ownerIdList"));
         assertNull(field(unscoped, "ownerId").get(unscoped));
         assertNull(field(unscoped, "ownerIdList").get(unscoped));
     }
@@ -156,17 +157,17 @@ class PersonalOwnerInjectionTest {
         field(request, "isPlatformUser").set(request, true);
         field(request, "isTopSuperAdmin").set(request, true);
         field(request, "_confidentialDataAccessLevel").set(request, Integer.MAX_VALUE);
-        var permission = request.getClass().getMethod("isCanVisitPersonalData");
+        var permission = request.getClass().getMethod("isCanAccessAllPersonal");
         assertEquals(false, permission.invoke(request), "角色和保密级别不能自动授予个人数据访问权限");
 
-        field(request, "isCanVisitPersonalData").set(request, true);
-        inject(request, Map.of("isCanVisitPersonalData", false), List.of("isCanVisitPersonalData"));
+        field(request, "isCanAccessAllPersonal").set(request, true);
+        inject(request, Map.of(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, false), List.of("isCanAccessAllPersonal"));
         assertEquals(false, permission.invoke(request), "服务端 false 必须覆盖请求中的 true");
         field(request, "isTopSuperAdmin").set(request, false);
         field(request, "_confidentialDataAccessLevel").set(request, null);
-        inject(request, Map.of("isCanVisitPersonalData", true), List.of("isCanVisitPersonalData"));
+        inject(request, Map.of(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, true), List.of("isCanAccessAllPersonal"));
         assertEquals(true, permission.invoke(request), "权限由可信上下文独立决定");
-        inject(request, Map.of(), List.of("isCanVisitPersonalData"));
+        inject(request, Map.of(), List.of("isCanAccessAllPersonal"));
         assertEquals(false, permission.invoke(request), "缺失授权必须恢复为 false，不能沿用旧值");
     }
 
@@ -178,14 +179,14 @@ class PersonalOwnerInjectionTest {
         field(request, "_currentUserId").set(request, "current-user");
         field(request, "ownerId").set(request, "current-user");
         field(request, "ownerIdList").set(request, List.of("current-user"));
-        inject(request, Map.of(), List.of("isCanVisitPersonalData"));
+        inject(request, Map.of(), List.of("isCanAccessAllPersonal"));
         var condition = request.getClass().getMethod("ownerIdListCondition", boolean.class, boolean.class);
         assertEquals(true, condition.invoke(request, true, false), "权限 false 仍允许在合法范围内访问自己");
         field(request, "ownerId").set(request, "other-user");
         field(request, "ownerIdList").set(request, List.of("other-user"));
         var denied = assertThrows(java.lang.reflect.InvocationTargetException.class, () -> condition.invoke(request, true, false));
         assertInstanceOf(IllegalStateException.class, denied.getCause());
-        inject(request, Map.of("isCanVisitPersonalData", true), List.of("isCanVisitPersonalData"));
+        inject(request, Map.of(InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, true), List.of("isCanAccessAllPersonal"));
         assertEquals(true, condition.invoke(request, true, false));
         assertEquals(true, condition.invoke(request, false, true), "明确个人访问授权也允许非管理员删除授权范围内记录");
     }
@@ -255,7 +256,7 @@ class PersonalOwnerInjectionTest {
         field(request, "isPlatformUser").set(request, false);
         field(request, "isTenantAdmin").set(request, admin);
         assertEquals(admin, request.getClass().getMethod("isAdmin").invoke(request), "个人范围测试必须使用有效管理员身份");
-        field(request, "isCanVisitPersonalData").set(request, personalAccess);
+        field(request, "isCanAccessAllPersonal").set(request, personalAccess);
         field(request, "_currentUserId").set(request, "current-user");
         field(request, "ownerId").set(request, owner);
         field(request, "ownerIdList").set(request, owners);

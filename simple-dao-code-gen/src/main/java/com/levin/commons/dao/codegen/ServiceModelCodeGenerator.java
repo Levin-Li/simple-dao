@@ -3210,8 +3210,8 @@ public final class ServiceModelCodeGenerator {
                     .forEach(annotation -> {
                         set.add(
                                 annotationContentReplace(annotation)
-                                        .replace("\"R_SA\"", "RbacRoleInfo.SA_ROLE")
-                                        .replace("\"R_SAAS_*\"", "RbacRoleInfo.SAAS_ROLE_PREFIX + \"*\"")
+                                        .replace("\"R_PLATFORM_SA\"", "RbacRoleInfo.PLATFORM_SA")
+                                        .replace("\"R_PLATFORM_*\"", "RbacRoleInfo.PLATFORM_ROLE_PREFIX + \"*\"")
                         );
                     });
 

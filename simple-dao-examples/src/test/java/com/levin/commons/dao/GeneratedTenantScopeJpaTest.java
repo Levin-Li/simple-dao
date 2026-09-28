@@ -271,9 +271,10 @@ class GeneratedTenantScopeJpaTest {
         field(req, "ownerIdList", List.of("other-owner"));
         // 仅具备管理员身份但没有上下文授权，仍不能访问其他拥有者。
         assertScopeRejected(() -> dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).count());
-        var permissionField = req.getClass().getSuperclass().getSuperclass().getDeclaredField("isCanVisitPersonalData");
+        var permissionField = req.getClass().getSuperclass().getSuperclass().getDeclaredField("isCanAccessAllPersonal");
         permissionField.setAccessible(true);
-        new SimpleVariableInjector() {}.injectValue(req, permissionField, java.util.Map.of("isCanVisitPersonalData", true));
+        new SimpleVariableInjector() {}.injectValue(req, permissionField,
+                java.util.Map.of(com.levin.commons.service.support.InjectConst.IS_CAN_ACCESS_ALL_PERSONAL, true));
         List<TenantScopeRow> visible = dao.selectFrom(TenantScopeRow.class).appendByQueryObj(req).find(TenantScopeRow.class);
         assertEquals(Set.of(91002L), visible.stream().map(row -> row.id).collect(Collectors.toSet()));
         assertEquals(0, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req).eq("id", 91003L).set("label", "bad").update());
@@ -344,7 +345,7 @@ class GeneratedTenantScopeJpaTest {
         Object req = loader.loadClass("tenant.fixture.services.commons.req.MultiTenantOrgReq").getConstructor().newInstance();
         field(req, "isTenantUser", true);
         field(req, "isTenantAdmin", admin);
-        field(req, "isAllOrgScope", allOrganizations);
+        field(req, "isCanAccessAllOrg", allOrganizations);
         field(req, "isUnsafeContext", true);
         field(req, "tenantId", "A");
         field(req, "_currentUserTenantId", "A");
@@ -429,7 +430,7 @@ class GeneratedTenantScopeJpaTest {
         field(req, "tenantId", "A");
         field(req, "_currentUserTenantId", "A");
         field(req, "_currentUserId", "user-a");
-        field(req, "isCanVisitPersonalData", access);
+        field(req, "isCanAccessAllPersonal", access);
         field(req, "ownerIdList", owners);
         field(req, "ownerId", owner);
         if (template.equals("MultiTenantOrgPersonalReq")) field(req, "orgIdList", List.of("org-a", "org-b"));

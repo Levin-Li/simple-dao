@@ -30,7 +30,7 @@ import java.util.List;
  * 在不安全上下文中，若没有全组织权限且没有
  * {@code orgIdList}/{@code orgId}，本请求对象会直接抛异常，不能退化为无组织条件查询。</p>
  *
- * <p>{@code isAllOrgScope} 表示拥有全部组织权限：当没有 {@code orgIdList} 和 {@code orgId} 时，
+ * <p>{@code isCanAccessAllOrg} 表示拥有全部组织权限：当没有 {@code orgIdList} 和 {@code orgId} 时，
  * 不追加组织条件；当操作者明确提供组织范围时，仍进入组织视角。{@code orgIdList} 优先于单个
  * {@code orgId}；后者在查询、删除和非管理员更新时用于单组织筛选，管理员更新时则表示新的组织归属。</p>
  *
@@ -44,14 +44,14 @@ import java.util.List;
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject{
 
-    public static final String EXPR_IS_ALL_ORG_SCOPE = " (#" + InjectConst.IS_ALL_ORG_SCOPE + "?:false) ";
-    public static final String EXPR_NOT_ALL_ORG_SCOPE = " !" + EXPR_IS_ALL_ORG_SCOPE;
+    public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = " (#" + InjectConst.IS_CAN_ACCESS_ALL_ORG + "?:false) ";
+    public static final String EXPR_NOT_ALL_ORG_SCOPE = " !" + EXPR_IS_CAN_ACCESS_ALL_ORG;
 
 
     @Schema(title = "是否能访问所有组织", hidden = true)
-    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_ALL_ORG_SCOPE)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)
     @Ignore
-    protected boolean isAllOrgScope = false;
+    protected boolean isCanAccessAllOrg = false;
 
     /**
      * 注入方已校验通过的可访问组织列表。
@@ -122,7 +122,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
             throw new IllegalArgumentException("组织范围列表不能包含空组织ID");
         }
         if (isUnsafeContext()
-                && !isAllOrgScope()
+                && !isCanAccessAllOrg()
                 && (orgIdList == null || orgIdList.isEmpty())
                 && (orgId == null || orgId.isBlank())) {
             throw new IllegalArgumentException("必须指定组织");
@@ -138,7 +138,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     /** 管理员更新的 orgId 是 SET 新值，不能用于证明旧记录的组织范围已受限。 */
     public boolean orgIdListCondition(boolean isUpdateAction) {
         boolean hasOrgList = orgIdListCondition();
-        if (isUpdateAction && isAdmin() && isUnsafeContext() && !isAllOrgScope() && !hasOrgList) {
+        if (isUpdateAction && isAdmin() && isUnsafeContext() && !isCanAccessAllOrg() && !hasOrgList) {
             throw new IllegalArgumentException("管理员更新必须指定旧记录的组织范围列表");
         }
         return hasOrgList;
@@ -170,8 +170,8 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
     }
 
     @Schema(title = "是否能访问所有组织", hidden = true)
-    public boolean isAllOrgScope() {
-        return this.isAllOrgScope;
+    public boolean isCanAccessAllOrg() {
+        return this.isCanAccessAllOrg;
     }
 
     /**

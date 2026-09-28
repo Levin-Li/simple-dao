@@ -254,7 +254,7 @@ class OrgMutationScopeSqlTest {
         field(req, "tenantId", tenant ? TENANT : null);
         field(req, "_currentUserTenantId", tenant ? TENANT : null);
         field(req, "isUnsafeContext", true);
-        field(req, "isAllOrgScope", allOrg);
+        field(req, "isCanAccessAllOrg", allOrg);
         field(req, "orgIdList", orgs);
         field(req, "orgId", org);
         field(req, "enableDefaultOrderBy", false);

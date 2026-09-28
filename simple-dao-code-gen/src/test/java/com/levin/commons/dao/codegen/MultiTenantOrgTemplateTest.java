@@ -28,6 +28,7 @@ class MultiTenantOrgTemplateTest {
         String source = Files.readString(req);
 
         assertTrue(source.contains("组织数据访问权限由变量注入提供方预先完成校验"), source);
+        assertTrue(source.contains("InjectConst.IS_CAN_ACCESS_ALL_ORG"), source);
         assertTrue(source.contains("@In(value = InjectConst.ORG_ID, condition = \"orgIdListCondition(#_isUpdate)\")"), source);
         assertFalse(source.contains("paramExpr = \" 1 = 2 \""), source);
         assertTrue(source.contains("@Eq(condition = \"orgIdCondition(#_isQuery, #_isDelete)\""), source);

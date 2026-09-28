@@ -437,7 +437,7 @@ public class DaoExamplesTest extends DaoExamplesTestSupport {
     public void testInjectForUpdate() {
 
         TestRole role = dao.create(new CreateTestRoleReq()
-                .setCode("R_SA")
+                .setCode("R_PLATFORM_SA")
                 .setName("TestRole1")
                 .setAssignedOrgIdList(Arrays.asList("1", "2", "3"))
                 .setOrgDataScope(TestRole.OrgDataScope.Assigned)

@@ -41,15 +41,15 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
 
     /** 拥有者范围列表，优先于单个 ownerId；不得在受限个人视角扩大到其他用户。 */
     @Schema(title = "拥有者ID列表", description = "拥有者范围列表，优先于ownerId，用于查询、更新和删除条件", hidden = true)
-    @InjectVar(isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA,
-               isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA)
+    @InjectVar(isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL,
+               isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL)
     @In(value = "ownerId", condition = "ownerIdListCondition(#_isQuery, #_isDelete)")
     protected Collection<String> ownerIdList;
 
     /** 单值是列表为空时的筛选条件；管理员更新时仅作 SET 新归属，不能代替旧记录范围。 */
     @Schema(title = "拥有者Id" , hidden = true)
-    @InjectVar(isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA,
-               isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA)
+    @InjectVar(isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL,
+               isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL)
     @Eq(condition = "ownerIdCondition(#_isQuery, #_isDelete)" , desc = "列表为空时，查询、删除及非管理员更新按单个拥有者筛选")
     @Update(condition = "isPersonalObject() && (#_isUpdate) && isAdmin()  && (#isNotEmpty(#_fieldVal) || isForceUpdateField(#_fieldName))", desc = "只有管理员才能变更数据的拥有者")
     protected String ownerId;
@@ -82,7 +82,7 @@ public class MultiTenantOrgPersonalReq<T extends MultiTenantOrgPersonalReq<T>>
     protected void checkOwnerScope(boolean isDeleteAction, boolean isUpdateAction) {
         if (ownerIdList != null && ownerIdList.stream().anyMatch(id -> id == null || id.isBlank()))
             throw new IllegalStateException("非法的越界访问：拥有者列表不能包含空ID");
-        if (!isUnsafeContext() || isCanVisitPersonalData()) return;
+        if (!isUnsafeContext() || isCanAccessAllPersonal()) return;
 
         String currentUserId = get_currentUserId();
         if (currentUserId == null || currentUserId.isBlank())

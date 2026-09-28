@@ -353,7 +353,7 @@ abstract class DaoExamplesTestSupport {
                 user.setGroup(group)
                         .setArea(areas[Math.abs(random.nextInt()) % areas.length]);
 
-                user.setRoleList(Arrays.asList("R_SA", "R_TEST"));
+                user.setRoleList(Arrays.asList("R_PLATFORM_SA", "R_TEST"));
 
                 user.setLogs(Arrays.asList(new OperationLog().setLogText("" + user.hashCode())));
 

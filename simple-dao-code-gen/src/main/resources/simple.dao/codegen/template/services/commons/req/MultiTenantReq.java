@@ -81,7 +81,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @Eq
     @IsNull(condition = "tenantIsNullCondition(#_isQuery)", desc = "")
     @Eq(condition     = "tenantSharedCondition(#_isQuery)", value = "tenantShared", paramExpr = "true", desc = "额外共享分支：普通用户仅查询，超管类查询、更新、删除均可按开关包含其他租户共享数据")
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.SA_ROLE, RbacRoleInfo.SAAS_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_SA, RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
     protected String tenantId;
 
     @Schema(title = "租户名称", hidden = true)

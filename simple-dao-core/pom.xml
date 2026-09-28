@@ -107,4 +107,20 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+        <resources>
+            <!-- 将根文档附带到 simple-dao-core 的主包和源码包，供依赖方离线查阅。 -->
+            <resource>
+                <directory>${project.basedir}/..</directory>
+                <targetPath>META-INF/simple-dao/docs</targetPath>
+                <filtering>false</filtering>
+                <includes>
+                    <include>README.md</include>
+                    <include>quickstart.md</include>
+                    <include>manual.md</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
 </project>

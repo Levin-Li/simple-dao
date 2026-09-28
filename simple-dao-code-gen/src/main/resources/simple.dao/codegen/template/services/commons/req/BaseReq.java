@@ -62,7 +62,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String EXPR_IS_TENANT_ADMIN = " (#" + InjectConst.IS_TENANT_ADMIN + "?:false) ";
 
-    public static final String EXPR_IS_CAN_VISIT_PERSONAL_DATA = " (#isCanVisitPersonalData?:false) ";
+    public static final String EXPR_IS_CAN_ACCESS_ALL_PERSONAL = " (#" + InjectConst.IS_CAN_ACCESS_ALL_PERSONAL + "?:false) ";
 
 
    /// /////////////////////////////////////////////////////////////////////
@@ -78,7 +78,7 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String EXPR_NOT_TENANT_ADMIN = " !" + EXPR_IS_TENANT_ADMIN;
 
-    public static final String EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA = " !" + EXPR_IS_CAN_VISIT_PERSONAL_DATA;
+    public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL = " !" + EXPR_IS_CAN_ACCESS_ALL_PERSONAL;
 
     /// //////////////////////////////////////////////////////////////////////////////////
 
@@ -132,9 +132,9 @@ public abstract class BaseReq implements ServiceReq {
      * 上游权限系统计算的个人数据访问授权；始终覆盖请求传入值，缺失授权时为 false。
      * 本对象不根据管理员身份或保密等级推导授权，只消费可信注入上下文的判断结果。
      */
-    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_VISIT_PERSONAL_DATA)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_PERSONAL)
     @Ignore
-    protected boolean isCanVisitPersonalData = false;
+    protected boolean isCanAccessAllPersonal = false;
 
     @Schema(title = "跟踪标识", hidden = true)
     @Ignore
@@ -274,8 +274,8 @@ public abstract class BaseReq implements ServiceReq {
 
     @Ignore
     @Schema(title = "是否能访问个人数据", description = "由可信上下文注入；不替代租户、组织及具体操作的范围校验", hidden = true)
-    public boolean isCanVisitPersonalData() {
-        return this.isCanVisitPersonalData;
+    public boolean isCanAccessAllPersonal() {
+        return this.isCanAccessAllPersonal;
     }
     ///////////////////////////////////////////////////////////////////////
 

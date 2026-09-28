@@ -23,14 +23,14 @@ class PersonalRequestTemplateTest {
             assertTrue(source.contains("@In(value = \"ownerId\", condition = \"ownerIdListCondition(#_isQuery, #_isDelete)\")"), source);
             assertTrue(source.contains("protected Collection<String> ownerIdList;"), source);
             assertFalse(source.contains("paramExpr = \"1 = 2\""), source);
-            assertTrue(source.contains("isCanVisitPersonalData()"), source);
+            assertTrue(source.contains("isCanAccessAllPersonal()"), source);
             assertFalse(source.contains("canVisitPersonalData()"), source);
             assertTrue(source.contains("protected void checkOwnerScope(boolean isDeleteAction)"), source);
             assertTrue(source.contains("protected void checkOwnerScope(boolean isDeleteAction, boolean isUpdateAction)"), source);
             assertFalse(source.contains("public boolean ownerIdListCondition(boolean isDeleteAction)"), source);
             assertTrue(source.contains("public boolean ownerIdListCondition(boolean isQueryAction, boolean isDeleteAction)"), source);
-            assertTrue(source.contains("isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA"), source);
-            assertTrue(source.contains("isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_VISIT_PERSONAL_DATA"), source);
+            assertTrue(source.contains("isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL"), source);
+            assertTrue(source.contains("isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_PERSONAL"), source);
             assertTrue(source.contains("get_currentUserId()"), source);
             assertTrue(source.contains("ownerIdCondition(#_isQuery, #_isDelete)"), source);
             assertTrue(source.contains("if (!isPersonalObject()) return false;"), source);

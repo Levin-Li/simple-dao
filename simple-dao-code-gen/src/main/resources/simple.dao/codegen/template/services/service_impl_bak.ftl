@@ -170,7 +170,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         }
 
         <#if isOrganizedObject>
-         passed = req.isAllOrgScope();
+         passed = req.isCanAccessAllOrg();
         ///////////////////////部门检查///////////////////
         //如果有组织标识
         if (!passed && isNotEmpty(info.getOrgId())) {

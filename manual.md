@@ -4090,14 +4090,14 @@ public void delete(Long id) {
 
 ## 19. 代码生成工作流
 
-个人数据访问授权通过可信上下文键 `isCanVisitPersonalData` 注入，未提供时为 false。
+个人数据访问授权通过可信上下文键 `isCanAccessAllPersonal` 注入，未提供时为 false。
 请求对象只消费上游授权结果，不根据管理员身份或保密级别推导；租户、组织及具体操作校验继续生效。
 
 组织请求中，列表 `orgIdList` 优先限定旧记录范围。列表为空时，`orgId` 可用于查询、删除以及非管理员更新的 WHERE 条件；
 只有管理员更新才把 `orgId` 作为 SET 新归属。受限外部管理员更新必须提供旧组织列表，不能仅凭新的归属值通过权限校验。
 
 个人请求的 `ownerId`、`ownerIdList` 使用同名服务端上下文变量注入。没有个人访问授权时强制覆盖且必填；
-有授权时保留显式值并可从上下文补值。覆盖表达式读取 `#isCanVisitPersonalData` 可信上下文变量，
+有授权时保留显式值并可从上下文补值。覆盖表达式读取 `#isCanAccessAllPersonal` 可信上下文变量，
 不要从正在注入的请求对象反向提供身份，否则会引入顺序依赖及信任边界问题。
 
 拥有者条件入口统一为 `ownerIdListCondition(isQueryAction, isDeleteAction)` 和

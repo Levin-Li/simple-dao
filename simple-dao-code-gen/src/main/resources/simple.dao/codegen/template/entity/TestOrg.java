@@ -187,7 +187,7 @@ public class TestOrg
     @Schema(title = "租户ID")
     @Column(length = 128)
     @InjectVar(InjectConst.TENANT_ID)
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.SA_ROLE, RbacRoleInfo.SAAS_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_SA, RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "超级管理员才能显示原内容, @CopyToGenCode @*")
     protected String tenantId;
 
     @Schema(title = "部门经理", description = "一个部门只有一个部门经理")
