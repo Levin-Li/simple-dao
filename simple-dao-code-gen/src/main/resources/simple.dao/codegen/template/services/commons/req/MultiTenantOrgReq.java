@@ -45,7 +45,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject{
 
     public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = " (#" + InjectConst.IS_CAN_ACCESS_ALL_ORG + "?:false) ";
-    public static final String EXPR_NOT_ALL_ORG_SCOPE = " !" + EXPR_IS_CAN_ACCESS_ALL_ORG;
+    public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG = " !" + EXPR_IS_CAN_ACCESS_ALL_ORG;
 
 
     @Schema(title = "是否能访问所有组织", hidden = true)
@@ -60,8 +60,8 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
      * 本类不重复校验列表成员的访问权限；但会在不安全上下文下校验是否存在组织范围。</p>
      */
     @InjectVar(value = InjectConst.ORG_ID_LIST
-            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
-            , isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
+            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_ORG
+            , isRequired = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_ORG
     )
     @Schema(title = "机构ID列表", description = "注入方已授权的组织范围，优先于orgId，并用于查询、更新和删除条件")
 
@@ -83,7 +83,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
      * 因此受限外部管理员更新必须提供旧组织列表；全部组织权限者仍可不限制旧组织范围。</p>
      */
     @InjectVar(value = InjectConst.ORG_ID
-            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_ALL_ORG_SCOPE
+            , isOverride = InjectVar.SPEL_PREFIX + EXPR_NOT_IS_CAN_ACCESS_ALL_ORG
             , isRequired = "false"
     )
     @Schema(title = "机构ID", description = "查询、删除和非管理员更新时是列表为空时的筛选条件；管理员更新时是新组织归属")
