@@ -61,7 +61,7 @@
         <knife4j.version>4.5.0</knife4j.version>
         <springdoc.version>3.0.2</springdoc.version>
 
-        <swagger.version>2.2.41</swagger.version>
+        <swagger.version>2.2.43</swagger.version>
         <swagger.enable>true</swagger.enable>
 
         <redission.version>3.19.3</redission.version>
@@ -561,6 +561,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${r"${swagger.version}"}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${r"${springdoc.version}"}</version>
@@ -763,7 +769,7 @@
 
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
             <scope>provided</scope>
         </dependency>
 
