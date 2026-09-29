@@ -157,9 +157,25 @@ class RoleScopeTemplateBehaviorTest {
         assertTrue((Boolean) requestType.getMethod("tenantIsNullCondition", boolean.class).invoke(request, false));
     }
 
+    @Test
+    void missingPlatformAndTenantIdentityMustBeRejected() throws Exception {
+        Object request = newRequest();
+
+        InvocationTargetException exception = assertThrows(InvocationTargetException.class,
+                () -> requestType.getMethod("tenantIsNullCondition", boolean.class).invoke(request, true));
+        assertInstanceOf(IllegalArgumentException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("必须是平台用户或租户用户"));
+
+        exception = assertThrows(InvocationTargetException.class,
+                () -> requestType.getMethod("tenantSharedCondition", boolean.class).invoke(request, true));
+        assertInstanceOf(IllegalArgumentException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("必须是平台用户或租户用户"));
+    }
+
     private static Object newRequest() throws Exception {
         Object request = requestType.getConstructor().newInstance();
-        // 各身份场景显式赋值；平台用户不能依赖请求对象的租户默认值。
+        // 各身份场景模拟外部、不可信入口；平台用户不能依赖请求对象的租户默认值。
+        setField(request, "isUnsafeContext", true);
         setField(request, "isTenantUser", false);
         return request;
     }

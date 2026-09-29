@@ -282,6 +282,7 @@ class RoleScopeSqlTest {
         setField(request, "isSuperAdmin", role == Role.SUPER);
         setField(request, "isPlatformAdmin", role == Role.PLATFORM_ADMIN);
         setField(request, "isTenantAdmin", role == Role.TENANT_ADMIN);
+        setField(request, "isUnsafeContext", true);
         setField(request, "tenantId", tenant);
         setField(request, "_currentUserTenantId", tenantUser ? TENANT : null);
         setField(request, "enableDefaultOrderBy", false);

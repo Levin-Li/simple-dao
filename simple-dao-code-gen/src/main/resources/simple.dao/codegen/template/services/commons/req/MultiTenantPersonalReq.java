@@ -83,34 +83,44 @@ public class MultiTenantPersonalReq<T extends MultiTenantPersonalReq<T>>
     }
 
     protected void checkOwnerScope(boolean isDeleteAction, boolean isUpdateAction) {
+
         if (ownerIdList != null && ownerIdList.stream().anyMatch(id -> id == null || id.isBlank()))
             throw new IllegalStateException("非法的越界访问：拥有者列表不能包含空ID");
+
         if (!isUnsafeContext() || isCanAccessAllPersonal()) return;
 
         String currentUserId = get_currentUserId();
         if (currentUserId == null || currentUserId.isBlank())
             throw new IllegalStateException("非法的越界访问：必须提供当前用户ID");
+
+
         if (ownerIdList != null && !ownerIdList.isEmpty()) {
             // 列表优先：旧记录只能属于本人，不使用管理员更新的 SET 新值校验旧范围。
             if (ownerIdList.stream().anyMatch(id -> !currentUserId.equals(id)))
                 throw new IllegalStateException("非法的越界访问：拥有者列表不能扩大个人数据范围");
             return;
         }
+
         if (isUpdateAction && isAdmin())
             throw new IllegalStateException("非法的越界访问：管理员更新必须指定旧记录的拥有者范围列表");
+
         if (ownerId == null || ownerId.isBlank() || !currentUserId.equals(ownerId))
             throw new IllegalStateException("非法的越界访问：只能操作当前用户的个人数据");
     }
 
     public boolean ownerIdListCondition(boolean isQueryAction, boolean isDeleteAction) {
         if (!isPersonalObject()) return false;
+
         checkOwnerScope(isDeleteAction, !isQueryAction && !isDeleteAction);
+
         return ownerIdList != null && !ownerIdList.isEmpty();
     }
 
     public boolean ownerIdCondition(boolean isQueryAction, boolean isDeleteAction) {
         if (!isPersonalObject()) return false;
+
         checkOwnerScope(isDeleteAction, !isQueryAction && !isDeleteAction);
+
         return ownerId != null && !ownerId.isBlank() && (ownerIdList == null || ownerIdList.isEmpty())
                 && (isQueryAction || isDeleteAction || !isAdmin());
     }

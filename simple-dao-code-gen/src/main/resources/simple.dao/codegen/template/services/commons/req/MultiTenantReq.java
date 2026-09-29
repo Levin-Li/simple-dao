@@ -35,16 +35,17 @@ import lombok.experimental.FieldNameConstants;
  * <tr><td>超管类，指定租户</td><td>指定租户 OR 平台数据，可额外加入共享数据</td>
  *     <td>与查询相同，可额外加入共享数据</td></tr>
  * <tr><td>普通平台用户，未指定租户</td><td>仅平台数据，不追加租户共享条件</td><td>仅平台数据</td></tr>
- * <tr><td>普通平台用户，指定租户</td><td>指定租户，可额外加入公共、共享数据</td><td>拒绝写入租户数据</td></tr>
+ * <tr><td>普通平台用户，指定租户（非安全上下文）</td><td>指定租户，可额外加入公共、共享数据</td><td>拒绝写入租户数据</td></tr>
+ * <tr><td>普通平台用户，指定租户（可信内部调用）</td><td>指定租户，可额外加入公共、共享数据</td><td>指定租户 OR 平台数据；权限责任由调用方承担</td></tr>
  * <tr><td>租户用户，自身租户</td><td>自身租户，可额外加入公共、共享数据</td><td>仅精确匹配自身租户</td></tr>
  * </table>
  * <p>设计理由：租户 ID 是隔离边界，普通用户的可读权限不等于可写权限。超管类原本可操作任意租户，
  * 指定租户及共享开关用于主动收窄已有权限、减少误操作，因此其读写范围一致。
  * 所有租户 OR 分支必须成组，再与主键、乐观锁、组织和个人范围等条件取 AND。</p>
  *
- * <p>租户用户的 {@code tenantId} 是必填的安全边界：注入阶段无法取得值必须抛异常；请求校验阶段也必须
- * 再次校验并抛异常，避免内部调用或构造请求对象时绕过变量注入。租户用户的更新、删除只匹配自身租户，
- * 绝不因公共或共享查询开关而扩大写入范围。普通平台用户不得通过指定租户 ID 写入租户数据。</p>
+ * <p>租户用户的 {@code tenantId} 在非安全上下文中是必填的安全边界：注入阶段无法取得值必须抛异常；DAO
+ * 构建条件时也必须再次校验。可信内部调用的权限责任由调用方承担。租户用户的更新、删除只匹配自身租户，
+ * 绝不因公共或共享查询开关而扩大写入范围。在不安全上下文中，普通平台用户不得通过指定租户 ID 写入租户数据。</p>
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  *
@@ -81,7 +82,7 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     @Eq
     @IsNull(condition = "tenantIsNullCondition(#_isQuery)", desc = "")
     @Eq(condition     = "tenantSharedCondition(#_isQuery)", value = "tenantShared", paramExpr = "true", desc = "额外共享分支：普通用户仅查询，超管类查询、更新、删除均可按开关包含其他租户共享数据")
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_SA, RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
+    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
     protected String tenantId;
 
     @Schema(title = "租户名称", hidden = true)
@@ -92,13 +93,13 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
     /**
      * 在 SpEL 条件计算前复核租户用户的租户 ID。
      *
-     * <p>注入阶段负责覆盖并校验当前租户；这里是条件构建前的第二道防线。即使内部代码绕过
-     * {@link InjectVar} 直接构造请求，只要租户 ID 缺失或不等于当前用户租户，就必须抛错，
-     * 绝不能生成跨租户条件。</p>
+     * <p>注入阶段负责覆盖并校验当前租户；这里是非安全上下文中条件构建前的第二道防线。
+     * 租户 ID 缺失或不等于当前用户租户时必须抛错，绝不能生成跨租户条件；可信内部调用
+     * 不执行该复核，权限责任由调用方承担。</p>
      */
     protected void checkTenantIdParam(){
 
-        if(isTenantUser()){
+        if(isTenantUser() && isUnsafeContext()){
             // 基础租户范围必须是自身租户；额外公共/共享读取权限由查询分支单独控制。
             Assert.notBlank(tenantId, "非法的越界访问-1");
 
@@ -111,15 +112,19 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
      *
      * <p>此方法是 SpEL 的公开入口，详细矩阵及设计理由见类注释。租户用户只在查询且具备公共能力与开关时加入平台公共数据。
      * 超管/平台管理员的查询、更新、删除规则一致：指定租户时加入平台数据，未指定时不追加条件。
-     * 普通平台用户未指定租户时限定为平台数据，指定时只能以租户视角查询，写操作直接拒绝。</p>
+     * 普通平台用户未指定租户时限定为平台数据，指定时只能以租户视角查询；仅在不安全上下文中拒绝其写操作。</p>
      *
      * @param isQueryAction 是否为查询动作
      * @return 是否生成 {@code tenantId IS NULL} 条件
      */
     public boolean tenantIsNullCondition(boolean isQueryAction){
 
-        //优先检查租户用户必须设置租户ID
+        Assert.isTrue(isPlatformUser() || isTenantUser(), "当前用户必须是平台用户或租户用户");
+
+        // 优先检查非安全上下文中的租户用户必须设置租户 ID。
         checkTenantIdParam();
+
+        boolean tenantSpecified = tenantId != null && !tenantId.isBlank();
 
         // 租户身份的边界优先，管理员标志也不能绕过当前租户约束。
         if (isTenantUser()) {
@@ -129,33 +134,22 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
         // 超管和平台管理员在查询、更新、删除时采用同一租户视角：
         // 未指定租户不追加条件；指定租户则由 @Eq 与本 @IsNull 组成“指定租户或平台数据”。
         if (isSuperAdmin() || isPlatformAdmin()) {
-            return tenantId != null && !tenantId.isBlank();
+            return tenantSpecified;
         }
 
-        if(isQueryAction) {
-            //平台用户天然对住户ID为空的数据，也就是平台数据拥有权限;
-            //非平台用户只能对租户共享对象，并且当前请求说要包含共享对象的时候
-
-            if(isPlatformUser()){
-                //无租户Id(那就是平台用户查平台的数据), 或是平台用户用租户的逻辑查询,平台公开并且当前要求查询公开数据
-                return (tenantId == null || tenantId.isBlank()) || ((this instanceof MultiTenantPublicObject) && isContainsPublicData());
-            }else {
-                //当前是租户公开数据，并且当前查询要求包含公开数据
-                return ((this instanceof MultiTenantPublicObject) && isContainsPublicData());
-            }
-
-        }else {
+        if (isQueryAction) {
+            // 默认身份已经在上方按租户用户处理；剩余有效上下文均为平台用户。
+            return !tenantSpecified || (this instanceof MultiTenantPublicObject && isContainsPublicData());
+        } else {
             // 更新、删除采用精确写入范围，不能复用查询的公共/共享数据语义；
             // 租户用户在上方校验后只保留 @Eq 的当前租户条件。
-            // 普通平台用户只能操作 tenant_id 为空的平台数据。
-            if (isPlatformUser()) {
-                Assert.isTrue(tenantId == null || tenantId.isBlank(), "普通平台用户不能写入租户数据");
-                return true;
-            }
-            return false;
+            // 外部、不可信调用中，普通平台用户只能操作 tenant_id 为空的平台数据；
+            // 内部可信调用由调用方承担权限责任，可按指定租户及平台数据范围操作。
+            Assert.isTrue(!isUnsafeContext() || !tenantSpecified, "当前平台用户不能变更租户数据");
+            return true;
         }
-
     }
+
     /**
      * 判断是否生成 {@code tenantShared = true} 分支。
      *
@@ -170,9 +164,12 @@ public class MultiTenantReq<T extends MultiTenantReq<T>>
      */
     public boolean tenantSharedCondition(boolean isQueryAction){
 
+        Assert.isTrue(isPlatformUser() || isTenantUser(), "当前用户必须是平台用户或租户用户");
+
         checkTenantIdParam();
 
-        boolean allowShared = isQueryAction || (!isTenantUser() && (isSuperAdmin() || isPlatformAdmin()));
+        boolean allowShared = isQueryAction || isSuperAdmin() || isPlatformAdmin();
+
         return allowShared && tenantId != null && !tenantId.isBlank()
                 && this instanceof MultiTenantSharedObject && isTenantShared();
     }

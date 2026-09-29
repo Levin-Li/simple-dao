@@ -176,11 +176,22 @@ class GeneratedTenantScopeJpaTest {
         assertEquals("original", em.find(TenantScopeRow.class, 91003L).label);
     }
 
+    @Test
+    void trustedPlatformContextMayMutateSpecifiedTenant() throws Exception {
+        Object req = request(Role.PLATFORM, "A", false, false);
+        field(req, "isUnsafeContext", false);
+
+        assertEquals(1, dao.updateTo(TenantScopeRow.class).appendByQueryObj(req)
+                .eq("id", 91001L).set("label", "changed").update());
+        em.clear();
+        assertEquals("changed", em.find(TenantScopeRow.class, 91001L).label);
+    }
+
     static void assertScopeRejected(org.junit.jupiter.api.function.Executable operation) {
         RuntimeException failure = assertThrows(RuntimeException.class, operation);
         StringBuilder reasons = new StringBuilder();
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) reasons.append(cause.getMessage());
-        assertTrue(reasons.toString().contains("非法的越界访问") || reasons.toString().contains("普通平台用户不能写入租户数据"),
+        assertTrue(reasons.toString().contains("非法的越界访问") || reasons.toString().contains("当前平台用户不能变更租户数据"),
                 "必须因租户范围校验而拒绝：" + reasons);
     }
 

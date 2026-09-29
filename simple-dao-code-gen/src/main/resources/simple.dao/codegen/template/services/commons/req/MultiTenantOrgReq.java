@@ -121,6 +121,7 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         if (orgIdList != null && orgIdList.stream().anyMatch(id -> id == null || id.isBlank())) {
             throw new IllegalArgumentException("组织范围列表不能包含空组织ID");
         }
+
         if (isUnsafeContext()
                 && !isCanAccessAllOrg()
                 && (orgIdList == null || orgIdList.isEmpty())
@@ -137,9 +138,11 @@ public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
 
     /** 管理员更新的 orgId 是 SET 新值，不能用于证明旧记录的组织范围已受限。 */
     public boolean orgIdListCondition(boolean isUpdateAction) {
+
         boolean hasOrgList = orgIdListCondition();
+
         if (isUpdateAction && isAdmin() && isUnsafeContext() && !isCanAccessAllOrg() && !hasOrgList) {
-            throw new IllegalArgumentException("管理员更新必须指定旧记录的组织范围列表");
+            throw new IllegalArgumentException("变更组织归属必须指定原归属组织作为查询条件");
         }
         return hasOrgList;
     }
