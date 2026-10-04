@@ -7,7 +7,6 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.utils.ObjectWrapperUtils;
 
 
 import com.levin.commons.service.support.SpringCacheEventListener;
@@ -169,13 +168,13 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     /** 查询实体时，默认由 MapStruct 转为服务的 Info 类型。 */
     protected SelectDao<${entityName}> newInfoQuery() {
-        return simpleDao.selectFrom(${entityName}.class, E_${entityName}.ALIAS)
-                .setDefaultResultConverter(${entityName}Mapper.INSTANCE::toInfo);
+        SelectDao<${entityName}> queryDao = simpleDao.selectFrom(${entityName}.class, E_${entityName}.ALIAS);
+        return queryDao.setDefaultResultConverter(${entityName}Info.class, entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
     }
 
     protected SelectDao<${entityName}> newInfoQuery(Object queryObj, Object... queryObjs) {
         SelectDao<${entityName}> queryDao = (SelectDao<${entityName}>) simpleDao.newDao(SelectDao.class, queryObj, queryObjs);
-        return queryDao.setDefaultResultConverter(${entityName}Mapper.INSTANCE::toInfo);
+        return queryDao.setDefaultResultConverter(${entityName}Info.class, entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
     }
 
     @Operation(summary = QUERY_ACTION)

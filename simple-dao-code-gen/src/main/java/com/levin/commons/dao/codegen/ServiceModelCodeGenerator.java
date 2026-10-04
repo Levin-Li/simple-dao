@@ -717,6 +717,8 @@ public final class ServiceModelCodeGenerator {
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "BaseReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "BaseInfo.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonObjectMapping.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonArrayMapping.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantInfo.java");
@@ -1558,6 +1560,82 @@ public final class ServiceModelCodeGenerator {
         return extendClass.endsWith("<") ? extendClass + typeParameter + ">" : extendClass;
     }
 
+    static boolean needsJsonObjectMapping(Class<?> entityClass) {
+        return needsJsonMapping(entityClass,
+                injectVar -> injectVar.expectBaseType().getName().equals("com.alibaba.fastjson2.JSONObject"),
+                new HashSet<>());
+    }
+
+    static boolean needsJsonArrayMapping(Class<?> entityClass) {
+        return needsJsonMapping(entityClass,
+                injectVar -> injectVar.expectBaseType() == List.class
+                        && Arrays.equals(injectVar.expectGenericTypes(), new Class<?>[]{String.class}),
+                new HashSet<>());
+    }
+
+    static List<Class<?>> jsonPojoTypes(Class<?> entityClass) {
+        Set<Class<?>> types = new LinkedHashSet<>();
+        collectJsonPojoTypes(entityClass, types, new HashSet<>());
+        return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
+    }
+
+    private static void collectJsonPojoTypes(Class<?> entityClass, Set<Class<?>> types,
+                                             Set<Class<?>> visited) {
+        if (entityClass == null || !visited.add(entityClass)) {
+            return;
+        }
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (field.getType() == String.class && injectVar != null) {
+                Class<?> targetType = injectVar.expectBaseType();
+                if (targetType != Object.class && targetType != Void.class && targetType != void.class
+                        && targetType != List.class
+                        && !targetType.getName().equals("com.alibaba.fastjson2.JSONObject")
+                        && !BeanUtils.isSimpleValueType(targetType)) {
+                    types.add(targetType);
+                }
+            }
+            Class<?> fieldType = field.getType();
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : Collection.class.isAssignableFrom(fieldType)
+                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+            if (relatedType != null && relatedType.isAnnotationPresent(Entity.class)) {
+                collectJsonPojoTypes(relatedType, types, visited);
+            }
+        });
+    }
+
+    private static boolean needsJsonMapping(Class<?> entityClass,
+                                            java.util.function.Predicate<InjectVar> matches,
+                                            Set<Class<?>> visited) {
+        if (entityClass == null || !visited.add(entityClass)) {
+            return false;
+        }
+
+        final boolean[] needed = {false};
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (needed[0] || field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (field.getType() == String.class && injectVar != null && matches.test(injectVar)) {
+                needed[0] = true;
+                return;
+            }
+            Class<?> fieldType = field.getType();
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : Collection.class.isAssignableFrom(fieldType)
+                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+            if (relatedType != null && relatedType.isAnnotationPresent(Entity.class)) {
+                needed[0] = needsJsonMapping(relatedType, matches, visited);
+            }
+        });
+        return needed[0];
+    }
+
     private static void buildService(Class entityClass, List<FieldModel> fields, Map<String, Object> paramsMap) throws Exception {
 
         final String pkgName = servicePackage();
@@ -1577,6 +1655,9 @@ public final class ServiceModelCodeGenerator {
             params.put("serviceName", serviceName);
             params.put("mapperName", mapperName);
             params.putAll(paramsMap);
+            params.put("needsJsonObjectMapping", needsJsonObjectMapping(entityClass));
+            params.put("needsJsonArrayMapping", needsJsonArrayMapping(entityClass));
+            params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
             addSelfOverridableMatchImports(params);
             params.put("isService", true);
         };

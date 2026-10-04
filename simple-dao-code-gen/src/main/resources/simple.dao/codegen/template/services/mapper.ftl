@@ -6,6 +6,9 @@ import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.*;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Context;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
@@ -22,6 +25,12 @@ import com.levin.commons.dao.*;
 import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
+<#if needsJsonObjectMapping!false>
+import ${modulePackageName}.services.commons.mapper.JsonObjectMapping;
+</#if>
+<#if needsJsonArrayMapping!false>
+import ${modulePackageName}.services.commons.mapper.JsonArrayMapping;
+</#if>
 
 import ${modulePackageName}.*;
 import ${modulePackageName}.entities.*;
@@ -38,13 +47,37 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  */
 @Mapper(unmappedTargetPolicy =  ReportingPolicy.IGNORE)
-public interface ${entityName}Mapper {
+<#assign mappingBases = []>
+<#if needsJsonObjectMapping!false><#assign mappingBases = mappingBases + ["JsonObjectMapping"]></#if>
+<#if needsJsonArrayMapping!false><#assign mappingBases = mappingBases + ["JsonArrayMapping"]></#if>
+public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappingBases?join(", ")}</#if> {
 
     ${entityName}Mapper INSTANCE = Mappers.getMapper(${entityName}Mapper.class);
 
-    ${entityName}Info toInfo(${entityName} entity);
+    @Named("defaultEntityToInfo")
+    default ${entityName}Info toInfo(${entityName} entity) {
+        return toInfo(entity, false);
+    }
+
+<#list fields as field>
+<#if field.loadCheckRequired>
+    @Mapping(target = "${field.name}", conditionExpression = "java(com.levin.commons.dao.util.HibernateLazyPropertyUtil.shouldMap(entity, \"${field.name}\", allowLazyLoading))")
+</#if>
+</#list>
+    ${entityName}Info toInfo(${entityName} entity, @Context boolean allowLazyLoading);
 
     ${entityName}Info toInfo(${entityName}Info info);
+
+<#list jsonPojoTypes![] as jsonPojoType>
+    default ${jsonPojoType.canonicalName} fromJsonType${jsonPojoType?index}(String json) {
+        return json == null ? null : com.alibaba.fastjson2.JSON.parseObject(json, ${jsonPojoType.canonicalName}.class);
+    }
+
+    default String toJsonType${jsonPojoType?index}(${jsonPojoType.canonicalName} value) {
+        return value == null ? null : com.alibaba.fastjson2.JSON.toJSONString(value);
+    }
+
+</#list>
     
     ${entityName}Info toInfo(Create${entityName}Req req);
     

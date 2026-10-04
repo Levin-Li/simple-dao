@@ -53,6 +53,19 @@ public interface SelectDao<T> extends
     SelectDao<T> setDefaultResultConverter(Function<? super T, ?> converter);
 
     /**
+     * 设置默认结果转换器及其结果类型。显式查询该类型且未指定查询列时，也使用此转换器。
+     */
+    <R> SelectDao<T> setDefaultResultConverter(Class<R> resultType, Function<? super T, ? extends R> converter);
+
+    /**
+     * 生成的实体 Info Mapper 是否允许读取尚未加载的关联属性，默认 false。
+     * 手动传入的转换器自行决定读取哪些属性。
+     */
+    SelectDao<T> setAllowLazyLoading(boolean allowLazyLoading);
+
+    boolean isAllowLazyLoading();
+
+    /**
      * 设置 having 子句 group by 子句 和 order by 子句 是否使用统计别名
      *
      * @return

@@ -13,6 +13,13 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.persistence.Column;
 import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Basic;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import com.levin.commons.dao.Unique;
@@ -169,7 +176,7 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.tenantId, tenantId)"), implSource);
         assertTrue(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.orgId, orgId)"), implSource);
         assertTrue(implSource.contains(".eq(E_PublicOverrideEntity.domain, domain)"), implSource);
-        assertTrue(implSource.contains(".setDefaultResultConverter(PublicOverrideEntityMapper.INSTANCE::toInfo)"), implSource);
+        assertTrue(implSource.contains(".setDefaultResultConverter(PublicOverrideEntityInfo.class, entity -> PublicOverrideEntityMapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()))"), implSource);
         assertTrue(implSource.contains("return newInfoQuery().eq("), implSource);
         assertTrue(implSource.contains("queryDao.hasSelectColumns()"), implSource);
         assertTrue(implSource.contains("queryDao.hasSelectColumns() ? queryDao.findUnique(PublicOverrideEntityInfo.class) : queryDao.findUnique()"), implSource);
@@ -183,6 +190,39 @@ class SelfOverridableMatchCodegenTest {
         assertFalse(implSource.contains(".orderByDescForEqOrNull(true, E_PublicOverrideEntity.domain, domain)"), implSource);
         assertFalse(implSource.contains(".eq(\"domain\""), implSource);
         assertFalse(implSource.contains(".limit(0, 1)"), implSource);
+    }
+
+    @Test
+    void mapperShouldCheckOnlyComplexEntityPropertiesBeforeReadingThem() throws Exception {
+        List<FieldModel> fields = fieldsOf(LazyMappingEntity.class);
+        Map<String, Object> params = templateParameters(fields, LazyMappingEntity.class);
+        params.put("fields", fields);
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(params, output);
+        String source = output.toString();
+
+        assertTrue(source.contains("@Mapping(target = \"children\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"detail\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"peers\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"labels\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"parent\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"lazyText\", conditionExpression"), source);
+        assertTrue(source.contains("@Mapping(target = \"lazyGetterText\", conditionExpression"), source);
+        assertTrue(source.contains("@Named(\"defaultEntityToInfo\")"), source);
+        assertTrue(source.contains("default LazyMappingEntityInfo toInfo(LazyMappingEntity entity)"), source);
+        assertTrue(source.contains("LazyMappingEntityInfo toInfo(LazyMappingEntity entity, @Context boolean allowLazyLoading)"), source);
+        assertFalse(source.contains("@Mapping(target = \"name\""), source);
+        assertFalse(source.contains("@Mapping(target = \"score\""), source);
+        assertFalse(source.contains("@Mapping(target = \"ignored\""), source);
+        assertFalse(source.contains("@Mapping(target = \"ordinaryDetail\""), source);
+        assertFalse(source.contains("@Mapping(target = \"eagerParent\""), source);
+        assertFalse(source.contains("@Mapping(target = \"eagerDetail\""), source);
+        assertFalse(source.contains("@Mapping(target = \"eagerChildren\""), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
 
     @Test
@@ -411,6 +451,37 @@ class SelfOverridableMatchCodegenTest {
         static final String domain = "domain";
         static final String userType = "userType";
         static final String orgType = "orgType";
+    }
+
+    static class LazyMappingEntity {
+        String name;
+        Integer score;
+        @OneToMany
+        List<LazyMappingEntity> children;
+        @OneToOne(fetch = FetchType.LAZY)
+        LazyMappingEntity detail;
+        @ManyToMany
+        Set<LazyMappingEntity> peers;
+        @ElementCollection
+        Set<String> labels;
+        @ManyToOne(fetch = FetchType.LAZY)
+        LazyMappingEntity parent;
+        @Basic(fetch = FetchType.LAZY)
+        String lazyText;
+        String lazyGetterText;
+        Object ordinaryDetail;
+        @ManyToOne
+        LazyMappingEntity eagerParent;
+        @OneToOne
+        LazyMappingEntity eagerDetail;
+        @OneToMany(fetch = FetchType.EAGER)
+        List<LazyMappingEntity> eagerChildren;
+        final List<String> ignored = List.of();
+
+        @Basic(fetch = FetchType.LAZY)
+        public String getLazyGetterText() {
+            return lazyGetterText;
+        }
     }
 
     static final class E_UiSetting {

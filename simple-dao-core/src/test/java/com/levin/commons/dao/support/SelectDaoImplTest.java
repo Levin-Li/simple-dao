@@ -19,6 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SelectDaoImplTest {
 
     @Test
+    void shouldDisableLazyLoadingForResultMappingByDefault() {
+        SelectDaoImpl<Object> dao = new SelectDaoImpl<>();
+
+        assertEquals(false, dao.isAllowLazyLoading());
+        assertSame(dao, dao.setAllowLazyLoading(true));
+        assertEquals(true, dao.isAllowLazyLoading());
+    }
+
+    @Test
     void defaultResultConverterShouldApplyToListAndSingleResultOnlyOnce() {
         Source source = new Source("dao");
         AtomicInteger calls = new AtomicInteger();
@@ -32,6 +41,41 @@ class SelectDaoImplTest {
         assertEquals("dao", ((TargetDto) dao.findOne()).name);
         assertEquals("dao", ((TargetDto) dao.findUnique()).name);
         assertEquals(3, calls.get());
+    }
+
+    @Test
+    void matchingExplicitResultTypeShouldUseDefaultConverter() {
+        Source source = new Source("dao");
+        AtomicInteger calls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = sourceDao(source);
+        dao.setDefaultResultConverter(TargetDto.class, value -> {
+            calls.incrementAndGet();
+            return new TargetDto(value.name);
+        });
+
+        assertEquals("dao", dao.find(TargetDto.class).get(0).name);
+        assertEquals("dao", dao.findOne(TargetDto.class).name);
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void selectedColumnsShouldKeepProjectionMapping() {
+        AtomicInteger calls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = new SelectDaoImpl<Source>() {
+            @Override
+            public <E> List<E> findList(Class<E> resultClass) {
+                return (List<E>) List.of(new TargetDto("projection"));
+            }
+        };
+        dao.setDefaultResultConverter(TargetDto.class, value -> {
+            calls.incrementAndGet();
+            return new TargetDto(value.name);
+        });
+        dao.selectByStatement(true, "name as name");
+
+        assertEquals("projection", dao.find(TargetDto.class).get(0).name);
+        assertEquals("projection", dao.findOne(TargetDto.class).name);
+        assertEquals(0, calls.get());
     }
 
     @Test

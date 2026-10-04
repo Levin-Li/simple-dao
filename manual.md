@@ -1977,11 +1977,17 @@ List<Map> rows = dao.selectFrom("jpa_dao_test_Group", "g")
 
 ```java
 List<UserInfo> infos = simpleDao.selectFrom(User.class)
-        .setDefaultResultConverter(UserMapper.INSTANCE::toInfo)
+        .setDefaultResultConverter(UserInfo.class, UserMapper.INSTANCE::toInfo)
         .find();
 ```
 
-`find()`、`findOne()`、`findUnique()` 和未显式指定结果类型的 `findPaging(null, paging)` 使用默认转换器。显式传入 `Converter` 的查询优先使用该转换器；显式指定结果类型的查询仍按该类型映射。实体转换器要求查询返回完整实体；使用 `select(...)` 或查询请求的指定列功能时，应使用投影映射。
+`find()`、`findOne()`、`findUnique()` 和未显式指定结果类型的 `findPaging(null, paging)` 使用默认转换器。登记目标类型后，`find(UserInfo.class)`、`findOne(UserInfo.class)` 和相应分页查询也使用它。显式传入 `Converter` 的查询优先使用该转换器；其他结果类型仍按指定类型映射。实体转换器要求查询返回完整实体；指定列查询继续使用投影映射。
+
+`Converter<I, O>` 同时实现标准 `Function<I, O>`：现有的 `convert(I)` 保持不变，`apply(I)` 默认委托给 `convert(I)`，因此也可直接用于 `Stream.map`。
+
+生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
+
+生成器在编译期确定哪些属性需要检查；`setAllowLazyLoading` 是每个 `SelectDao` 的运行时开关，属性是否已加载则在映射每条结果时动态判断。单参数 `toInfo(Entity)` 仍可直接调用，并以 `false` 为默认值；标准服务调用带 `@Context boolean` 参数的映射方法，直接传入当前 DAO 的开关。
 
 ```java
 List<User> users = dao.selectFrom(User.class, "u")

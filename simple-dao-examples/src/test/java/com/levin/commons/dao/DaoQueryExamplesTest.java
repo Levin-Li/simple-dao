@@ -40,6 +40,7 @@ import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.dao.support.SimplePaging;
 import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.util.HibernateLazyPropertyUtil;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
@@ -50,6 +51,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.hibernate.Session;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,6 +76,33 @@ import java.util.stream.Stream;
  * DAO 查询、统计和关联能力的端到端示例。
  */
 class DaoQueryExamplesTest extends DaoExamplesTestSupport {
+    @Test
+    @Transactional
+    void shouldInspectLazyCollectionAndEntityReferenceWithoutInitializingThem() {
+        entityManager.clear();
+        Group entity = dao.selectFrom(Group.class).findOne();
+        Assert.notNull(entity);
+        Assert.isTrue(!Hibernate.isInitialized(entity.getChildren()));
+        Assert.isTrue(!HibernateLazyPropertyUtil.isLoaded(entity, "children"));
+        Assert.isTrue(!HibernateLazyPropertyUtil.shouldMap(entity, "children", false));
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(entity, "children", true));
+        Assert.isTrue(HibernateLazyPropertyUtil.isLoaded(entity, "name"));
+        Assert.isTrue(!Hibernate.isInitialized(entity.getChildren()));
+
+        Group withoutParent = new Group("without-parent");
+        Assert.isTrue(!HibernateLazyPropertyUtil.shouldMap(withoutParent, "parent", false));
+
+        new ArrayList<>(entity.getChildren());
+        Assert.isTrue(Hibernate.isInitialized(entity.getChildren()));
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(entity, "children", false));
+
+        Long id = entity.getId();
+        entityManager.clear();
+        Group reference = entityManager.getReference(Group.class, id);
+        Assert.isTrue(!Hibernate.isInitialized(reference));
+        Assert.isTrue(!HibernateLazyPropertyUtil.isLoaded(reference, "parent"));
+        Assert.isTrue(!Hibernate.isInitialized(reference));
+    }
     @Test
     void defaultResultConverterShouldMapQueriedEntitiesToInfo() {
         Group group = dao.selectFrom(Group.class).findOne();

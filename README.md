@@ -505,11 +505,13 @@ OrderInfo info = dao.findUnique(OrderInfo.class, req);
 ```java
 UserInfo info = dao.selectFrom(User.class)
         .eq(E_User.id, id)
-        .setDefaultResultConverter(UserMapper.INSTANCE::toInfo)
+        .setDefaultResultConverter(UserInfo.class, UserMapper.INSTANCE::toInfo)
         .findUnique();
 ```
 
-列表、单条和分页查询的无参取数方式都会使用该转换器；显式传入查询转换器时以显式转换器为准。指定列查询仍应使用按结果类型的投影映射，不能把部分列的结果交给实体转换器。
+列表、单条和分页查询的无参取数方式都会使用该转换器；显式查询登记的 `UserInfo.class` 时也会使用它。显式传入查询转换器时以显式转换器为准。指定列查询仍使用按结果类型的投影映射。
+
+生成的实体 Mapper 只对 JPA 声明为延迟加载的属性检查实际加载状态，包括默认延迟加载的集合关联以及显式设置 `fetch = LAZY` 的关联或简单字段。已经加载的属性照常映射；尚未加载时 `Info` 中对应字段保持 `null`。需要允许转换时加载它们，可在当前 `SelectDao` 上调用 `setAllowLazyLoading(true)`。这个开关默认是 `false`；手写的转换器需自行决定如何读取关联属性。
 
 ### 唯一更新
 
