@@ -214,7 +214,7 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(source.contains("@Mapping(target = \"lazyGetterText\", conditionExpression"), source);
         assertTrue(source.contains("@Named(\"defaultEntityToInfo\")"), source);
         assertTrue(source.contains("default LazyMappingEntityInfo toInfo(LazyMappingEntity entity)"), source);
-        assertTrue(source.contains("LazyMappingEntityInfo toInfo(LazyMappingEntity entity, @Context boolean allowLazyLoading)"), source);
+        assertTrue(source.contains("LazyMappingEntityInfo toInfo(LazyMappingEntity entity, @Context boolean allowLazyLoading,"), source);
         assertFalse(source.contains("@Mapping(target = \"name\""), source);
         assertFalse(source.contains("@Mapping(target = \"score\""), source);
         assertFalse(source.contains("@Mapping(target = \"ignored\""), source);

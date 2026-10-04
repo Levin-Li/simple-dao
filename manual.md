@@ -1987,6 +1987,8 @@ List<UserInfo> infos = simpleDao.selectFrom(User.class)
 
 生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
 
+每次实体转 `Info` 都使用独立的对象映射缓存；父子节点等已加载的双向关联会复用同一个 `Info` 对象，避免循环递归。
+
 生成器在编译期确定哪些属性需要检查；`setAllowLazyLoading` 是每个 `SelectDao` 的运行时开关，属性是否已加载则在映射每条结果时动态判断。单参数 `toInfo(Entity)` 仍可直接调用，并以 `false` 为默认值；标准服务调用带 `@Context boolean` 参数的映射方法，直接传入当前 DAO 的开关。
 
 ```java
