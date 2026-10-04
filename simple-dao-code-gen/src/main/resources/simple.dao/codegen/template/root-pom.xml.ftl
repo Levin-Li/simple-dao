@@ -94,6 +94,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+
         <!-- 兼容 jdk-21-->
         <!-- <lombok.version>1.18.30</lombok.version> -->
 

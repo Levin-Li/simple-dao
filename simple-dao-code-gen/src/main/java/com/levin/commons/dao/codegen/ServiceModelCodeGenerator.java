@@ -100,6 +100,7 @@ public final class ServiceModelCodeGenerator {
     public static final String BIZ_SERVICE_IMPL_FTL = "biz/biz_service_impl.ftl";
 
     public static final String SERVICE_IMPL_FTL = "services/service_impl.ftl";
+    public static final String MAPPER_FTL = "services/mapper.ftl";
     public static final String CREATE_EVT_FTL = "services/req/create_evt.ftl";
     public static final String SIMPLE_CREATE_EVT_FTL = "services/req/simple_create_evt.ftl";
     public static final String INFO_FTL = "services/info/info.ftl";
@@ -1389,6 +1390,8 @@ public final class ServiceModelCodeGenerator {
 
         //生成通用服务类
         genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, genParams);
+        genCode(entityClass, MAPPER_FTL, fields, serviceDir, pkgName,
+                entityClass.getSimpleName() + "Mapper", genParams);
 
         //生成业务服务类
         genCode(entityClass, BIZ_SERVICE_FTL, fields, serviceDir, bizServicePackage(), "Biz" + serviceName, genParams);

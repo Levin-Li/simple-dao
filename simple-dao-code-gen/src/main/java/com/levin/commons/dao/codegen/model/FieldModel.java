@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ResolvableType;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -181,6 +182,35 @@ public class FieldModel implements Cloneable {
 
     public boolean isIterable() {
         return field.getType().isArray() || Iterable.class.isAssignableFrom(field.getType());
+    }
+
+    /** 只有声明为延迟加载的属性需要在映射前检查实际加载状态。 */
+    public boolean isLoadCheckRequired() {
+        if (Modifier.isFinal(field.getModifiers())) {
+            return false;
+        }
+        Basic basic = getPropertyAnnotation(Basic.class);
+        OneToMany oneToMany = getPropertyAnnotation(OneToMany.class);
+        ManyToMany manyToMany = getPropertyAnnotation(ManyToMany.class);
+        ElementCollection elementCollection = getPropertyAnnotation(ElementCollection.class);
+        ManyToOne manyToOne = getPropertyAnnotation(ManyToOne.class);
+        OneToOne oneToOne = getPropertyAnnotation(OneToOne.class);
+        return (basic != null && basic.fetch() == FetchType.LAZY)
+                || (oneToMany != null && oneToMany.fetch() == FetchType.LAZY)
+                || (manyToMany != null && manyToMany.fetch() == FetchType.LAZY)
+                || (elementCollection != null && elementCollection.fetch() == FetchType.LAZY)
+                || (manyToOne != null && manyToOne.fetch() == FetchType.LAZY)
+                || (oneToOne != null && oneToOne.fetch() == FetchType.LAZY);
+    }
+
+    private <A extends Annotation> A getPropertyAnnotation(Class<A> annotationType) {
+        A annotation = field.getAnnotation(annotationType);
+        if (annotation != null) {
+            return annotation;
+        }
+        java.beans.PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor(entityType, name);
+        return descriptor == null || descriptor.getReadMethod() == null
+                ? null : descriptor.getReadMethod().getAnnotation(annotationType);
     }
 
     public boolean hasIgnoreAnnotation() {

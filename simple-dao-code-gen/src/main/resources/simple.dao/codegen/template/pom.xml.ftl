@@ -58,6 +58,31 @@
 
         <#if moduleType == 'service'>
         <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${r"${mapstruct.version}"}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${r"${mapstruct.version}"}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+            <version>${r"${lombok-mapstruct-binding.version}"}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <artifactId>${entities.artifactId}</artifactId>
             <groupId>${r"${project.groupId}"}</groupId>
             <version>${r"${project.version}"}</version>

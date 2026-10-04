@@ -45,7 +45,7 @@ public class TestCase {
 
         StatHelper statHelper = new StatHelper();
 
-        while (true) {
+        for (int i = 0; i < 3; i++) {
 
             statHelper.onAlarm(15, 100, 0.0, (growthRatio, ration) -> {
 

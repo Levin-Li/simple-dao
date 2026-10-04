@@ -96,7 +96,6 @@ public class DemoJob
      *
      * @return
      */
-    @Override
     protected Executor getExecutor() {
         return executor;
     }

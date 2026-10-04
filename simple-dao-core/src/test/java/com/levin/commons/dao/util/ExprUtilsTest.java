@@ -66,6 +66,7 @@ class ExprUtilsTest {
                 .put(E_Func.value, (Object) "Fun1")
                 .put(E_Func.prefix, "( ")
                 .put(E_Func.params, new String[]{C.ORIGIN_EXPR, "param2"})
+                .put(E_Func.paramDelimiter, ",")
                 .put(E_Func.suffix, " )")
                 .build();
 

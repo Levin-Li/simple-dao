@@ -31,10 +31,12 @@ import com.levin.commons.dao.support.DefaultPagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
 import com.levin.commons.dao.util.ExprUtils;
+import com.levin.commons.dao.util.HibernateLazyPropertyUtil;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.plugin.PluginManager;
 import com.levin.commons.utils.MapUtils;
 import lombok.SneakyThrows;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,34 @@ import java.util.stream.Stream;
 @SpringBootTest(classes = {TestConfiguration.class})
 //@Transactional
 public class DaoExamplesTest {
+
+    @Test
+    @Transactional
+    void defaultConverterShouldRespectAlreadyLoadedLazyCollection() {
+        entityManager.clear();
+        Group group = dao.selectFrom(Group.class).findOne();
+        Assert.notNull(group, "缺少测试组织");
+        Assert.isTrue(!Hibernate.isInitialized(group.getChildren()), "子集合应当尚未加载");
+        Assert.isTrue(!HibernateLazyPropertyUtil.shouldMap(group, "children", false),
+                "未加载集合应被跳过");
+        Assert.isTrue(!Hibernate.isInitialized(group.getChildren()), "状态检查不能触发加载");
+
+        String name = dao.selectFrom(Group.class).eq(E_Group.id, group.getId())
+                .setDefaultResultConverter(Group::getName).findOne();
+        Assert.isTrue(group.getName().equals(name), "默认转换器结果不正确");
+
+        group.getChildren().size();
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(group, "children", false),
+                "已加载集合应被映射");
+
+        Long id = group.getId();
+        entityManager.clear();
+        Group proxy = entityManager.getReference(Group.class, id);
+        Assert.isTrue(!Hibernate.isInitialized(proxy), "实体引用应当尚未加载");
+        Assert.isTrue(!HibernateLazyPropertyUtil.isLoaded(proxy, "parent"),
+                "未加载的实体引用属性应被跳过");
+        Assert.isTrue(!Hibernate.isInitialized(proxy), "检查不应加载实体引用");
+    }
 
     @Autowired
     SimpleDao dao;

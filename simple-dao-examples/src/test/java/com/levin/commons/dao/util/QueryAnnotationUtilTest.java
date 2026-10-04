@@ -6,7 +6,7 @@ import com.levin.commons.dao.DaoFactory;
 import com.levin.commons.dao.SimpleDao;
 import com.levin.commons.dao.UpdateDao;
 import org.h2.engine.User;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -55,7 +55,7 @@ public class QueryAnnotationUtilTest {
     private Map<String, Object> param = new LinkedHashMap<>();
 
 
-    @BeforeAll
+    @BeforeEach
     public void init() {
 
         param.put("Q_name", "llw");
@@ -89,7 +89,7 @@ public class QueryAnnotationUtilTest {
                 //字母是大写
                 .filter(prefix -> implMethodName.length() > prefix.length() && Character.isUpperCase(implMethodName.charAt(prefix.length())))
                 .filter(implMethodName::startsWith)
-                .map(prefix -> Character.toUpperCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length()))
+                .map(prefix -> Character.toLowerCase(implMethodName.charAt(prefix.length())) + implMethodName.substring(prefix.length() + 1))
                 .findFirst()
                 .orElse(implMethodName);
     }
