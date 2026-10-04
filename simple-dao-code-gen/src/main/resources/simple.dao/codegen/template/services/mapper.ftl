@@ -25,6 +25,7 @@ import com.levin.commons.dao.*;
 import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
+import ${modulePackageName}.services.commons.mapper.CycleAvoidingMappingContext;
 <#if needsJsonObjectMapping!false>
 import ${modulePackageName}.services.commons.mapper.JsonObjectMapping;
 </#if>
@@ -59,14 +60,25 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
         return toInfo(entity, false);
     }
 
+    @Named("entryEntityToInfo")
+    default ${entityName}Info toInfo(${entityName} entity, boolean allowLazyLoading) {
+        return toInfo(entity, allowLazyLoading, new CycleAvoidingMappingContext());
+    }
+
 <#list fields as field>
 <#if field.loadCheckRequired>
     @Mapping(target = "${field.name}", conditionExpression = "java(com.levin.commons.dao.util.HibernateLazyPropertyUtil.shouldMap(entity, \"${field.name}\", allowLazyLoading))")
 </#if>
 </#list>
-    ${entityName}Info toInfo(${entityName} entity, @Context boolean allowLazyLoading);
+    ${entityName}Info toInfo(${entityName} entity, @Context boolean allowLazyLoading,
+                             @Context CycleAvoidingMappingContext cycleContext);
 
-    ${entityName}Info toInfo(${entityName}Info info);
+    @Named("entryInfoCopy")
+    default ${entityName}Info toInfo(${entityName}Info info) {
+        return toInfo(info, new CycleAvoidingMappingContext());
+    }
+
+    ${entityName}Info toInfo(${entityName}Info info, @Context CycleAvoidingMappingContext cycleContext);
 
 <#list jsonPojoTypes![] as jsonPojoType>
     default ${jsonPojoType.canonicalName} fromJsonType${jsonPojoType?index}(String json) {

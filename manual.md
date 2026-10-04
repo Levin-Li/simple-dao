@@ -101,6 +101,7 @@ Dao 类逻辑框图，如下图所示。
    `setAllowLazyLoading(false)` 是默认设置：只有 JPA 声明为 `LAZY` 且运行时尚未加载的属性会被跳过，
    已加载的属性正常映射。设为 `true` 时允许映射过程读取这些属性，可能触发额外查询。
    手写的 `Function` 或 `Converter` 自行控制属性读取。
+   每次实体转 `Info` 都使用独立的对象映射缓存；已加载的父子双向关联会复用 `Info` 对象，避免循环递归。
    `Converter<I, O>` 现在也可作为标准 `Function<I, O>` 使用；`apply(I)` 默认调用原有的 `convert(I)`，可直接传给 `Stream.map`。
     
        //1、消费接口定义：java.util.function.Consumer<SelectDao/UpdateDao/DeleteDao>

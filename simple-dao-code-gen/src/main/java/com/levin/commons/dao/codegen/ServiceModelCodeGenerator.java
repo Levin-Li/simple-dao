@@ -686,6 +686,7 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "BaseInfo.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonObjectMapping.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonArrayMapping.java");
+        genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "CycleAvoidingMappingContext.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantInfo.java");
