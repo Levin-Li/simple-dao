@@ -129,12 +129,12 @@ public class ${className} extends BaseService<${className}> implements ${service
     /** 查询完整实体时由生成的 Mapper 转为 Info。 */
     protected SelectDao<${entityName}> newInfoQuery() {
         SelectDao<${entityName}> queryDao = simpleDao.selectFrom(${entityName}.class, E_${entityName}.ALIAS);
-        return queryDao.setDefaultResultConverter(entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
+        return queryDao.setDefaultResultConverter(${entityName}Info.class, entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
     }
 
     protected SelectDao<${entityName}> newInfoQuery(Object queryObj, Object... queryObjs) {
         SelectDao<${entityName}> queryDao = (SelectDao<${entityName}>) simpleDao.newDao(SelectDao.class, queryObj, queryObjs);
-        return queryDao.setDefaultResultConverter(entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
+        return queryDao.setDefaultResultConverter(${entityName}Info.class, entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
     }
 
     @Operation(summary = QUERY_ACTION)

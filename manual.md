@@ -92,11 +92,11 @@ Dao 类逻辑框图，如下图所示。
    `SelectDao` 可以设置当前查询的默认结果转换器：
 
        SelectDao<User> query = dao.selectFrom(User.class)
-               .setDefaultResultConverter(user -> UserMapper.INSTANCE.toInfo(user));
+               .setDefaultResultConverter(UserInfo.class, user -> UserMapper.INSTANCE.toInfo(user));
        List<UserInfo> infos = query.find();
 
    无参 `find()`、`findOne()`、`findUnique()` 及 `findPaging(null, paging)` 使用默认转换器；
-   显式传入转换器时以显式转换器为准，指定列查询仍使用投影映射。
+   登记目标类型后，显式查询该类型也使用转换器。显式传入转换器时以显式转换器为准，指定列查询仍使用投影映射。
    生成的标准服务使用 MapStruct 将完整实体转为 `Info`。
    `setAllowLazyLoading(false)` 是默认设置：只有 JPA 声明为 `LAZY` 且运行时尚未加载的属性会被跳过，
    已加载的属性正常映射。设为 `true` 时允许映射过程读取这些属性，可能触发额外查询。

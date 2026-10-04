@@ -283,6 +283,7 @@
 
    生成的标准服务现在默认通过 MapStruct 把完整实体转换为 `Info`。
    `SelectDao.setDefaultResultConverter(Function)` 可设置单次查询的默认转换器；
+   `setDefaultResultConverter(Info.class, Function)` 还能让显式查询该类型时使用转换器；
    `setAllowLazyLoading(false)` 默认跳过尚未加载的 `LAZY` 属性，已加载的属性照常映射。
    指定列查询继续使用投影映射，详情见 [用户手册](./manual.md)。
      

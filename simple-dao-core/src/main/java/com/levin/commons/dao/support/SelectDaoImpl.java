@@ -99,12 +99,21 @@ public class SelectDaoImpl<T>
     Class defaultResultType;
 
     private Function<? super T, ?> defaultResultConverter;
+    private Class<?> defaultResultConverterType;
 
     private boolean allowLazyLoading;
 
     @Override
     public SelectDao<T> setDefaultResultConverter(Function<? super T, ?> converter) {
         this.defaultResultConverter = converter;
+        this.defaultResultConverterType = null;
+        return this;
+    }
+
+    @Override
+    public <R> SelectDao<T> setDefaultResultConverter(Class<R> resultType, Function<? super T, ? extends R> converter) {
+        this.defaultResultConverter = converter;
+        this.defaultResultConverterType = converter == null ? null : java.util.Objects.requireNonNull(resultType, "resultType");
         return this;
     }
 
@@ -1301,7 +1310,8 @@ public class SelectDaoImpl<T>
 
         boolean noResultType = resultType == null || resultType == Void.class;
 
-        if (noResultType && defaultResultConverter != null) {
+        if (defaultResultConverter != null && !hasSelectColumns()
+                && (noResultType || resultType == defaultResultConverterType)) {
             return findListAndConvert(defaultResultConverter);
         }
 
@@ -1366,7 +1376,8 @@ public class SelectDaoImpl<T>
 
         boolean notResultType = resultType == null || resultType == Void.class;
 
-        if (notResultType && defaultResultConverter != null) {
+        if (defaultResultConverter != null && !hasSelectColumns()
+                && (notResultType || resultType == defaultResultConverterType)) {
             Object data = findOneRaw(isExpectUniqueResult);
             return data == null ? null : (E) defaultResultConverter.apply((T) data);
         }

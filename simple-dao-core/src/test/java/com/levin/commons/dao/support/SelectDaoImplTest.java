@@ -30,6 +30,41 @@ class SelectDaoImplTest {
     }
 
     @Test
+    void matchingExplicitResultTypeShouldUseDefaultConverter() {
+        Source source = new Source("dao");
+        AtomicInteger calls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = sourceDao(source);
+        dao.setDefaultResultConverter(String.class, value -> {
+            calls.incrementAndGet();
+            return value.name;
+        });
+
+        assertEquals(List.of("dao"), dao.find(String.class));
+        assertEquals("dao", dao.findOne(String.class));
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void selectedColumnsShouldKeepProjectionMapping() {
+        AtomicInteger calls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = new SelectDaoImpl<Source>() {
+            @Override
+            public <E> List<E> findList(Class<E> resultClass) {
+                return (List<E>) List.of("projection");
+            }
+        };
+        dao.setDefaultResultConverter(String.class, value -> {
+            calls.incrementAndGet();
+            return value.name;
+        });
+        dao.selectByStatement(true, "name as name");
+
+        assertEquals(List.of("projection"), dao.find(String.class));
+        assertEquals("projection", dao.findOne(String.class));
+        assertEquals(0, calls.get());
+    }
+
+    @Test
     void explicitConverterShouldOverrideDefaultAndReceiveOriginalResult() {
         Source source = new Source("dao");
         AtomicInteger calls = new AtomicInteger();
