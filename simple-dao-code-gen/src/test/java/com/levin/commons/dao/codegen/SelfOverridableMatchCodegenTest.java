@@ -169,6 +169,10 @@ class SelfOverridableMatchCodegenTest {
         assertTrue(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.tenantId, tenantId)"), implSource);
         assertTrue(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.orgId, orgId)"), implSource);
         assertTrue(implSource.contains(".eq(E_PublicOverrideEntity.domain, domain)"), implSource);
+        assertTrue(implSource.contains(".setDefaultResultConverter(PublicOverrideEntityMapper.INSTANCE::toInfo)"), implSource);
+        assertTrue(implSource.contains("return newInfoQuery().eq("), implSource);
+        assertTrue(implSource.contains("queryDao.hasSelectColumns()"), implSource);
+        assertTrue(implSource.contains("queryDao.hasSelectColumns() ? queryDao.findUnique(PublicOverrideEntityInfo.class) : queryDao.findUnique()"), implSource);
         assertFalse(implSource.contains(".isNullOrEq(E_PublicOverrideEntity.domain, domain)"), implSource);
         assertTrue(implSource.contains("Objects.requireNonNull(domain, E_PublicOverrideEntity.domain + \" 不能为空\")"), implSource);
         assertTrue(implSource.contains(".notEq(E_PublicOverrideEntity.enable, false)"), implSource);

@@ -500,6 +500,17 @@ OrderInfo info = dao.findUnique(OrderInfo.class, req);
 
 `findUnique` 表示“最多一条”：没有记录返回 `null`，超过一条抛异常。
 
+查询完整实体后需要用 MapStruct 转为 `Info` 时，可以给当前 `SelectDao` 设置默认结果转换器：
+
+```java
+UserInfo info = dao.selectFrom(User.class)
+        .eq(E_User.id, id)
+        .setDefaultResultConverter(UserMapper.INSTANCE::toInfo)
+        .findUnique();
+```
+
+列表、单条和分页查询的无参取数方式都会使用该转换器；显式传入查询转换器时以显式转换器为准。指定列查询仍应使用按结果类型的投影映射，不能把部分列的结果交给实体转换器。
+
 ### 唯一更新
 
 ```java

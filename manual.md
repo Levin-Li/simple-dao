@@ -1973,6 +1973,16 @@ List<Map> rows = dao.selectFrom("jpa_dao_test_Group", "g")
 
 如果确实不想专门定义 DTO，可以用 `SelectDao`：
 
+完整实体查询可以在 `SelectDao` 上设置默认结果转换器。转换器是标准的 `Function`，仅属于本次创建的查询：
+
+```java
+List<UserInfo> infos = simpleDao.selectFrom(User.class)
+        .setDefaultResultConverter(UserMapper.INSTANCE::toInfo)
+        .find();
+```
+
+`find()`、`findOne()`、`findUnique()` 和未显式指定结果类型的 `findPaging(null, paging)` 使用默认转换器。显式传入 `Converter` 的查询优先使用该转换器；显式指定结果类型的查询仍按该类型映射。实体转换器要求查询返回完整实体；使用 `select(...)` 或查询请求的指定列功能时，应使用投影映射。
+
 ```java
 List<User> users = dao.selectFrom(User.class, "u")
         .select("id", "name", "score")

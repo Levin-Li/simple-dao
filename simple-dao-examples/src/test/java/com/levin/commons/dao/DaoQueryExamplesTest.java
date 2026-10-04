@@ -38,6 +38,7 @@ import com.levin.commons.dao.services.testrole.req.UpdateTestRoleReq;
 import com.levin.commons.dao.support.DefaultPagingData;
 import com.levin.commons.dao.support.PagingQueryHelper;
 import com.levin.commons.dao.support.PagingQueryReq;
+import com.levin.commons.dao.support.SimplePaging;
 import com.levin.commons.dao.util.ExprUtils;
 import com.levin.commons.dao.util.ObjectUtil;
 import com.levin.commons.plugin.PluginManager;
@@ -65,6 +66,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 
@@ -72,6 +74,31 @@ import java.util.stream.Stream;
  * DAO 查询、统计和关联能力的端到端示例。
  */
 class DaoQueryExamplesTest extends DaoExamplesTestSupport {
+    @Test
+    void defaultResultConverterShouldMapQueriedEntitiesToInfo() {
+        Group group = dao.selectFrom(Group.class).findOne();
+        Assert.notNull(group);
+        AtomicInteger conversions = new AtomicInteger();
+
+        SelectDao<Group> query = dao.selectFrom(Group.class)
+                .eq(E_Group.id, group.getId())
+                .setDefaultResultConverter(entity -> {
+                    conversions.incrementAndGet();
+                    return new GroupInfo().setId(entity.<Long>getId().toString()).setName(entity.getName());
+                });
+
+        GroupInfo info = query.findUnique();
+        Assert.isTrue(group.getName().equals(info.getName()));
+        Assert.isTrue(conversions.get() == 1);
+
+        PagingData<GroupInfo> page = dao.selectFrom(Group.class)
+                .eq(E_Group.id, group.getId())
+                .setDefaultResultConverter(entity -> new GroupInfo().setName(entity.getName()))
+                .findPaging(null, new SimplePaging().setRequireTotals(true));
+        Assert.isTrue(page.getTotals() == 1);
+        Assert.isTrue(page.getItems().size() == 1);
+        Assert.isTrue(group.getName().equals(page.getItems().get(0).getName()));
+    }
     @Test
     public void testUpdateDTO() throws Exception {
 

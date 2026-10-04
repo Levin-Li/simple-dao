@@ -3,6 +3,7 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.support.DefaultPagingData;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * 查询接口
@@ -41,6 +42,15 @@ public interface SelectDao<T> extends
      * @return
      */
     SelectDao<T> setDefaultResultType(Class<?> defaultResultType);
+
+    /**
+     * 设置当前查询的默认结果转换器。仅在未指定结果类型或显式转换器时使用。
+     * 转换器接收查询返回的实体；选择部分列的查询不应使用实体转换器。
+     *
+     * @param converter 默认转换器，传入 null 可清除设置
+     * @return 当前查询
+     */
+    SelectDao<T> setDefaultResultConverter(Function<? super T, ?> converter);
 
     /**
      * 设置 having 子句 group by 子句 和 order by 子句 是否使用统计别名

@@ -167,10 +167,25 @@ public class ${className} extends BaseService<${className}> implements ${service
         return ok;
     }
 
+    /** 查询实体时，默认由 MapStruct 转为服务的 Info 类型。 */
+    protected SelectDao<${entityName}> newInfoQuery() {
+        return simpleDao.selectFrom(${entityName}.class, E_${entityName}.ALIAS)
+                .setDefaultResultConverter(${entityName}Mapper.INSTANCE::toInfo);
+    }
+
+    protected SelectDao<${entityName}> newInfoQuery(Object queryObj, Object... queryObjs) {
+        SelectDao<${entityName}> queryDao = (SelectDao<${entityName}>) simpleDao.newDao(SelectDao.class, queryObj, queryObjs);
+        return queryDao.setDefaultResultConverter(${entityName}Mapper.INSTANCE::toInfo);
+    }
+
     @Operation(summary = QUERY_ACTION)
     @Override
     public PagingData<${entityName}Info> query(SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs) {
-        return simpleDao.findPagingDataByQueryObj(req, paging, queryObjs);
+        SelectDao<${entityName}> queryDao = newInfoQuery(req, paging, queryObjs);
+        Paging effectivePaging = paging != null ? paging : new SimplePaging();
+        return queryDao.hasSelectColumns()
+                ? queryDao.findPaging(${entityName}Info.class, effectivePaging)
+                : queryDao.findPaging(null, effectivePaging);
     }
 
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
@@ -192,7 +207,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     //如果要注释缓存注解的代码可以在实体类上加上@jakarta.persistence.Cacheable(false)，然后重新生成代码
     <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
-        return simpleDao.selectFrom(${entityName}.class).eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique(${entityName}Info.class);
+        return newInfoQuery().eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique();
     }
 
     @Operation(summary = VIEW_DETAIL_ACTION, description = "注意性能, 该方法将不会使用缓存")
@@ -201,7 +216,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 
         Assert.${(pkField.typeClsName == 'java.lang.String') ? string('notBlank','notNull')}(req.get${pkField.name?cap_first}(), BIZ_NAME + " ${pkField.name} 不能为空");
 
-        return simpleDao.findUnique(req);
+        return newInfoQuery(req).findUnique();
     }
 </#if>
 
@@ -272,11 +287,11 @@ public class ${className} extends BaseService<${className}> implements ${service
 <#list uniqueFields as field>
             ${field.typeName} ${field.name}<#if field_has_next>,</#if>
 </#list>) {
-        return simpleDao.selectFrom(${entityName}.class)
+        return newInfoQuery()
 <#list uniqueFields as field>
                 .eq(E_${entityName}.${field.name}, ${field.name})
 </#list>
-                .findUnique(${entityName}Info.class);
+                .findUnique();
     }
 
 </#list>
@@ -285,14 +300,16 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Operation(summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findOne(Query${entityName}Req req, Object... queryObjs){
-        return simpleDao.findOneByQueryObj(req, queryObjs);
+        SelectDao<${entityName}> queryDao = newInfoQuery(req, queryObjs);
+        return queryDao.hasSelectColumns() ? queryDao.findOne(${entityName}Info.class) : queryDao.findOne();
     }
 
     @Operation(summary = QUERY_ACTION)
     @Override
     public ${entityName}Info findUnique(Query${entityName}Req req){
         //记录超过一条时抛出异常 throws IncorrectResultSizeDataAccessException
-        return simpleDao.findUnique(req);
+        SelectDao<${entityName}> queryDao = newInfoQuery(req);
+        return queryDao.hasSelectColumns() ? queryDao.findUnique(${entityName}Info.class) : queryDao.findUnique();
     }
 
 <#if selfOverridableMatchFields?has_content>
@@ -312,7 +329,7 @@ public class ${className} extends BaseService<${className}> implements ${service
         Objects.requireNonNull(${field.name}, E_${entityName}.${field.name} + " 不能为空");
 </#if>
 </#list>
-        return simpleDao.selectFrom(${entityName}.class)
+        SelectDao<${entityName}> queryDao = newInfoQuery()
 
  //条件
 <#list selfOverridableMatchFields as field>
@@ -341,8 +358,8 @@ public class ${className} extends BaseService<${className}> implements ${service
 </#if>
 
 </#list>
-                .appendByQueryObj(exQueryObjects)
-                .findOne(${entityName}Info.class);
+                .appendByQueryObj(exQueryObjects);
+        return queryDao.hasSelectColumns() ? queryDao.findOne(${entityName}Info.class) : queryDao.findOne();
     }
 
 </#if>
@@ -458,7 +475,7 @@ public class ${className} extends BaseService<${className}> implements ${service
      */
     protected List<${entityName}Info> loadAll(Consumer<SelectDao<${entityName}>> exDaoConsumer){
 
-       SelectDao<${entityName}> dao = simpleDao.selectFrom(${entityName}.class)
+       SelectDao<${entityName}> dao = newInfoQuery()
 
              //最大缓存记录5万
            .setSafeModeMaxLimit(-1).disableSafeMode().limit(-1, 5_0000);
@@ -467,18 +484,17 @@ public class ${className} extends BaseService<${className}> implements ${service
         exDaoConsumer.accept(dao);
       }
 
-      List<${entityName}Info> result = dao
-
         <#if classModel.isType('com.levin.commons.dao.domain.SortableObject')>
             //排序码排序
-            .orderBy(E_${entityName}.orderCode)
+      dao.orderBy(E_${entityName}.orderCode);
         </#if>
 
         <#if classModel.findFirstAttr('createTime','addTime','occurTime')??>
             //时间倒序
-            .orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')})
+      dao.orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')});
         </#if>
-        .find(${entityName}Info.class);
+
+     List<${entityName}Info> result = dao.hasSelectColumns() ? dao.find(${entityName}Info.class) : dao.find();
 
      return result;
    }

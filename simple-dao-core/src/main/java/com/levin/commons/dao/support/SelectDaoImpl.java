@@ -98,6 +98,14 @@ public class SelectDaoImpl<T>
     @Getter
     Class defaultResultType;
 
+    private Function<? super T, ?> defaultResultConverter;
+
+    @Override
+    public SelectDao<T> setDefaultResultConverter(Function<? super T, ?> converter) {
+        this.defaultResultConverter = converter;
+        return this;
+    }
+
     final ContextHolder<String, Boolean> attrFetchList = ContextHolder.buildThreadContext(true);
 
     {
@@ -1354,7 +1362,7 @@ public class SelectDaoImpl<T>
             throw new IllegalArgumentException("converter is null");
         }
 
-        List<Object> queryResult = this.find();
+        List<Object> queryResult = defaultResultConverter == null ? this.find() : this.findList(null);
 
         if (queryResult == null) {
             return Collections.emptyList();
@@ -1380,6 +1388,10 @@ public class SelectDaoImpl<T>
     public <E> List<E> find(Class<E> resultType, int maxCopyDeep, String... ignoreProperties) {
 
         boolean noResultType = resultType == null || resultType == Void.class;
+
+        if (noResultType && defaultResultConverter != null) {
+            return findListAndConvert(defaultResultConverter);
+        }
 
         //尝试默认的结果类型
         if (noResultType) {
@@ -1442,14 +1454,36 @@ public class SelectDaoImpl<T>
 
         boolean notResultType = resultType == null || resultType == Void.class;
 
-        //是否预期唯一结果
-        //getContext().put("isExpectUniqueResult", isExpectUniqueResult);
+        if (notResultType && defaultResultConverter != null) {
+            Object data = findOneRaw(isExpectUniqueResult);
+            return data == null ? null : (E) defaultResultConverter.apply((T) data);
+        }
 
         if (!notResultType && selectColumns.isEmpty()) {
             //加入选择条件
             appendByQueryObj(resultType);
         }
 
+        E result = (E) findOneRaw(isExpectUniqueResult);
+
+        if (notResultType || result == null) {
+            return result;
+        }
+
+        return tryConvertData(result, resultType, null, maxCopyDeep, ignoreProperties);
+
+    }
+
+    @Override
+    public <I, E> E findOne(boolean isExpectUniqueResult, Converter<I, E> converter) {
+        if (converter == null) {
+            throw new IllegalArgumentException("converter is null");
+        }
+        Object data = findOneRaw(isExpectUniqueResult);
+        return data == null ? null : converter.convert((I) data);
+    }
+
+    private Object findOneRaw(boolean isExpectUniqueResult) {
         //预期唯一结果时，故意允许查询2条记录，如果多余一条记录则视为异常情况
         setRowCount(isExpectUniqueResult ? 2 : 1);
 
@@ -1464,14 +1498,7 @@ public class SelectDaoImpl<T>
             throw new IncorrectResultSizeDataAccessException(1, list.size());
         }
 
-        E result = (E) list.get(0);
-
-        if (notResultType) {
-            return result;
-        }
-
-        return tryConvertData(result, resultType, null, maxCopyDeep, ignoreProperties);
-
+        return list.get(0);
     }
 
     private <E> E tryConvertData(Object data, Class<E> targetType, ValueHolder<List<List<String>>> valueHolder, int maxCopyDeep, String... ignoreProperties) {

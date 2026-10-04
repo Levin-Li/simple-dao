@@ -1,19 +1,71 @@
 package com.levin.commons.dao.support;
 
 import com.levin.commons.dao.MiniDao;
+import com.levin.commons.dao.Converter;
 import com.levin.commons.dao.util.ObjectUtil;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SelectDaoImplTest {
+
+    @Test
+    void defaultResultConverterShouldApplyToListAndSingleResultOnlyOnce() {
+        Source source = new Source("dao");
+        AtomicInteger calls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = sourceDao(source);
+        dao.setDefaultResultConverter(value -> {
+            calls.incrementAndGet();
+            return new TargetDto(value.name);
+        });
+
+        assertEquals("dao", ((TargetDto) dao.find().get(0)).name);
+        assertEquals("dao", ((TargetDto) dao.findOne()).name);
+        assertEquals("dao", ((TargetDto) dao.findUnique()).name);
+        assertEquals(3, calls.get());
+    }
+
+    @Test
+    void explicitConverterShouldReceiveEntityAndOverrideDefault() {
+        Source source = new Source("dao");
+        AtomicInteger defaultCalls = new AtomicInteger();
+        SelectDaoImpl<Source> dao = sourceDao(source);
+        dao.setDefaultResultConverter(value -> {
+            defaultCalls.incrementAndGet();
+            return new TargetDto("default");
+        });
+
+        Converter<Source, String> explicit = value -> value.name;
+        assertEquals(List.of("dao"), dao.find(explicit));
+        assertEquals("dao", dao.findOne(explicit));
+        assertEquals(0, defaultCalls.get());
+    }
+
+    private SelectDaoImpl<Source> sourceDao(Source source) {
+        return new SelectDaoImpl<Source>() {
+            @Override
+            public <E> List<E> findList(Class<E> resultClass) {
+                return (List<E>) List.of(source);
+            }
+        };
+    }
+
+    static class Source {
+        final String name;
+
+        Source(String name) {
+            this.name = name;
+        }
+    }
 
     @Test
     void shouldConvertArrayResultToDtoByAlias() throws Exception {
@@ -63,6 +115,13 @@ class SelectDaoImplTest {
     static class TargetDto {
         String name;
         Integer age;
+
+        TargetDto() {
+        }
+
+        TargetDto(String name) {
+            this.name = name;
+        }
     }
 
     private <T> T convert(SelectDaoImpl<Object> dao, Object data, Class<T> targetType) throws Exception {
