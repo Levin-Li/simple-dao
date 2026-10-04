@@ -170,7 +170,7 @@ public class RepositoryFactoryBean<T>
 
             //集合
             if (isCollection) {
-                return converter != null ? selectDao.find(converter) : selectDao.find(returnType);
+                return converter != null ? selectDao.findListAndConvert(converter) : selectDao.find(returnType);
             } else {
                 return converter != null ? selectDao.findOne(converter) : selectDao.findOne(returnType);
             }

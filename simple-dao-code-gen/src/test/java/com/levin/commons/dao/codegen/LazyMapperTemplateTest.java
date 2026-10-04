@@ -2,10 +2,13 @@ package com.levin.commons.dao.codegen;
 
 import com.github.javaparser.StaticJavaParser;
 import com.levin.commons.dao.codegen.model.FieldModel;
+import com.alibaba.fastjson2.JSONObject;
+import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
 import org.junit.jupiter.api.Test;
 
 import javax.persistence.Basic;
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -53,6 +56,147 @@ class LazyMapperTemplateTest {
         assertFalse(source.contains("@Mapping(target = \"renamedParent\""), source);
         assertTrue(source.contains("default FixtureEntityInfo toInfo(FixtureEntity entity)"), source);
         assertTrue(source.contains("toInfo(FixtureEntity entity, @Context boolean allowLazyLoading)"), source);
+        assertFalse(source.contains("extends JsonObjectMapping"), source);
+        assertFalse(source.contains("extends JsonArrayMapping"), source);
+        assertFalse(source.contains("fromJsonArray"), source);
+        assertFalse(source.contains("toJsonArray"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void sharedJsonObjectMappingShouldOfferBothDirections() throws Exception {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/commons/mapper/JsonObjectMapping.java")
+                .process(Map.of("modulePackageName", "com.example"), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("JSONObject map(String json)"), source);
+        assertTrue(source.contains("String map(JSONObject value)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void nestedEntityJsonFieldsShouldEnableInheritedMapping() throws Exception {
+        assertFalse(ServiceModelCodeGenerator.needsJsonObjectMapping(FixtureEntity.class));
+        assertFalse(ServiceModelCodeGenerator.needsJsonArrayMapping(FixtureEntity.class));
+        assertTrue(ServiceModelCodeGenerator.needsJsonObjectMapping(AccountEntity.class));
+        assertTrue(ServiceModelCodeGenerator.needsJsonArrayMapping(AccountEntity.class));
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(Map.of(
+                "packageName", "com.example.services",
+                "modulePackageName", "com.example",
+                "entityClassPackage", "com.example.entities",
+                "entityClassName", "com.example.entities.FixtureEntity",
+                "entityName", "FixtureEntity",
+                "entityTitle", "测试实体",
+                "importList", Collections.emptyList(),
+                "needsJsonObjectMapping", true,
+                "needsJsonArrayMapping", true,
+                "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping, JsonArrayMapping"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void generatedMapperShouldInheritOnlyJsonObjectMappingWhenArrayIsNotNeeded() throws Exception {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(Map.of(
+                "packageName", "com.example.services",
+                "modulePackageName", "com.example",
+                "entityClassPackage", "com.example.entities",
+                "entityClassName", "com.example.entities.FixtureEntity",
+                "entityName", "FixtureEntity",
+                "entityTitle", "测试实体",
+                "importList", Collections.emptyList(),
+                "needsJsonObjectMapping", true,
+                "needsJsonArrayMapping", false,
+                "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping {"), source);
+        assertFalse(source.contains("extends JsonObjectMapping,"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void generatedMapperShouldInheritJsonArrayConversionWhenNeeded() throws Exception {
+        FieldModel legacyField = new FieldModel(FixtureEntity.class)
+                .setName("permissionList")
+                .setType(String.class)
+                .setTypeName("List<String>");
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(Map.of(
+                "packageName", "com.example.services",
+                "modulePackageName", "com.example",
+                "entityClassPackage", "com.example.entities",
+                "entityClassName", "com.example.entities.FixtureEntity",
+                "entityName", "FixtureEntity",
+                "entityTitle", "测试实体",
+                "importList", Collections.emptyList(),
+                "needsJsonArrayMapping", true,
+                "fields", Collections.singletonList(legacyField)), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("interface FixtureEntityMapper extends JsonArrayMapping"), source);
+        assertFalse(source.contains("default List<String> fromJsonArray"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void sharedJsonArrayMappingShouldOfferBothDirections() throws Exception {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/commons/mapper/JsonArrayMapping.java")
+                .process(Map.of("modulePackageName", "com.example"), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("List<String> fromJsonArray(String json)"), source);
+        assertTrue(source.contains("String toJsonArray(List<String> values)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void nestedJsonPojoFieldShouldGenerateOnlyExactTypeMethods() throws Exception {
+        assertTrue(ServiceModelCodeGenerator.jsonPojoTypes(FixtureEntity.class).isEmpty());
+        assertTrue(ServiceModelCodeGenerator.jsonPojoTypes(AccountEntity.class).contains(BalanceInfo.class));
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
+                .process(Map.of(
+                        "packageName", "com.example.services",
+                        "modulePackageName", "com.example",
+                        "entityClassPackage", "com.example.entities",
+                        "entityClassName", "com.example.entities.FixtureEntity",
+                        "entityName", "FixtureEntity",
+                        "entityTitle", "测试实体",
+                        "importList", Collections.emptyList(),
+                        "jsonPojoTypes", Collections.singletonList(BalanceInfo.class),
+                        "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("BalanceInfo fromJsonType0(String json)"), source);
+        assertTrue(source.contains("String toJsonType0("), source);
+        assertFalse(source.contains("@TargetType"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -71,5 +215,25 @@ class LazyMapperTemplateTest {
         FixtureEntity parent;
         @ManyToOne
         FixtureEntity eagerParent;
+    }
+
+    @Entity
+    static class AccountEntity {
+        @ManyToOne
+        OrgEntity org;
+    }
+
+    @Entity
+    static class OrgEntity {
+        @InjectVar(domain = "dao", expectBaseType = JSONObject.class)
+        String exInfo;
+        @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class})
+        String permissionList;
+        @InjectVar(domain = "dao", expectBaseType = BalanceInfo.class)
+        String balanceInfo;
+    }
+
+    static class BalanceInfo {
+        String currency;
     }
 }
