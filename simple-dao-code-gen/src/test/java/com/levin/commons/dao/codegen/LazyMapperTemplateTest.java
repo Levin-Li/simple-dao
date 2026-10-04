@@ -27,6 +27,8 @@ class LazyMapperTemplateTest {
     void generatedMapperShouldGuardOnlyLazyPropertiesAndKeepSingleArgumentEntry() throws Exception {
         List<FieldModel> fields = Arrays.stream(FixtureEntity.class.getDeclaredFields())
                 .map(this::fieldModel).collect(Collectors.toList());
+        fields.add(new FieldModel(FixtureEntity.class).setName("orgName").setType(String.class));
+        fields.add(fieldModel(FixtureEntity.class.getDeclaredField("parent")).setName("renamedParent"));
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
         configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
@@ -47,6 +49,8 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("@Mapping(target = \"lazyName\", conditionExpression"), source);
         assertFalse(source.contains("@Mapping(target = \"eagerParent\""), source);
         assertFalse(source.contains("@Mapping(target = \"name\""), source);
+        assertFalse(source.contains("@Mapping(target = \"orgName\""), source);
+        assertFalse(source.contains("@Mapping(target = \"renamedParent\""), source);
         assertTrue(source.contains("default FixtureEntityInfo toInfo(FixtureEntity entity)"), source);
         assertTrue(source.contains("toInfo(FixtureEntity entity, @Context boolean allowLazyLoading)"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));

@@ -186,7 +186,7 @@ public class FieldModel implements Cloneable {
 
     /** 只有声明为延迟加载的属性需要在映射前检查实际加载状态。 */
     public boolean isLoadCheckRequired() {
-        if (Modifier.isFinal(field.getModifiers())) {
+        if (field == null || !field.getName().equals(name) || Modifier.isFinal(field.getModifiers())) {
             return false;
         }
         Basic basic = getPropertyAnnotation(Basic.class);

@@ -1186,6 +1186,7 @@ public final class ServiceModelCodeGenerator {
         String action = "info";
 
         List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, false, action);
+        List<FieldModel> infoFields = fields;
 
 //        postProcess(fields, action);
 
@@ -1228,7 +1229,7 @@ public final class ServiceModelCodeGenerator {
 
         /////////////////////////////////////////////////////////////////
 
-        buildService(entityClass, fields, params);
+        buildService(entityClass, fields, infoFields, params);
 
         buildAdminApiController(entityClass, fields, adminApiDir, params);
 
@@ -1367,7 +1368,8 @@ public final class ServiceModelCodeGenerator {
 
     }
 
-    private static void buildService(Class entityClass, List<FieldModel> fields, Map<String, Object> paramsMap) throws Exception {
+    private static void buildService(Class entityClass, List<FieldModel> fields,
+                                     List<FieldModel> infoFields, Map<String, Object> paramsMap) throws Exception {
 
         final String pkgName = servicePackage();
 
@@ -1390,7 +1392,7 @@ public final class ServiceModelCodeGenerator {
 
         //生成通用服务类
         genCode(entityClass, SERVICE_FTL, fields, serviceDir, pkgName, serviceName, genParams);
-        genCode(entityClass, MAPPER_FTL, fields, serviceDir, pkgName,
+        genCode(entityClass, MAPPER_FTL, infoFields, serviceDir, pkgName,
                 entityClass.getSimpleName() + "Mapper", genParams);
 
         //生成业务服务类
