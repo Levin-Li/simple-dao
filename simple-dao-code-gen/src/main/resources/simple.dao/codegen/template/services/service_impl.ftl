@@ -7,7 +7,6 @@ import com.levin.commons.dao.*;
 import com.levin.commons.dao.support.*;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.utils.ObjectWrapperUtils;
 
 
 import com.levin.commons.service.support.SpringCacheEventListener;
@@ -322,10 +321,7 @@ public class ${className} extends BaseService<${className}> implements ${service
       dao.orderBy(E_${entityName}.${classModel.findFirstAttr('createTime','addTime','occurTime')});
         </#if>
 
-      List<${entityName}Info> result = dao.hasSelectColumns() ? dao.find(${entityName}Info.class) : dao.find();
-
-      //转为只读对象
-      return result.stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toUnmodifiableList());
+      return dao.hasSelectColumns() ? dao.find(${entityName}Info.class) : dao.find();
    }
 
 <#if isCacheableEntity>
