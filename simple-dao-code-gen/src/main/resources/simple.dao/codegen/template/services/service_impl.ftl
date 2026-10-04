@@ -299,10 +299,9 @@ public class ${className} extends BaseService<${className}> implements ${service
 
     /**
      * 加载所有数据
-     * @param wrapper2Readonly
      * @param exDaoConsumer
      */
-    protected List<${entityName}Info> loadAll(boolean wrapper2Readonly, Consumer<SelectDao<${entityName}>> exDaoConsumer){
+    protected List<${entityName}Info> loadAll(Consumer<SelectDao<${entityName}>> exDaoConsumer){
 
        SelectDao<${entityName}> dao = newInfoQuery()
 
@@ -326,11 +325,7 @@ public class ${className} extends BaseService<${className}> implements ${service
       List<${entityName}Info> result = dao.hasSelectColumns() ? dao.find(${entityName}Info.class) : dao.find();
 
       //转为只读对象
-      if(wrapper2Readonly){
-        result = result.stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toUnmodifiableList());
-      }
-
-     return result;
+      return result.stream().map(ObjectWrapperUtils::wrapper2Readonly).collect(Collectors.toUnmodifiableList());
    }
 
 <#if isCacheableEntity>
@@ -483,7 +478,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     public List<${entityName}Info> loadCacheListByTenant(String tenantId, Predicate<${entityName}Info> filter) {
 
         List<${entityName}Info> dataList = getSelfProxy().getCache("T@" + null2Empty(tenantId), (key) ->
-                loadAll(true, dao ->
+                loadAll(dao ->
                         dao.isNull(!StringUtils.hasText(tenantId), ${entityName}::getTenantId)
                         .eq(StringUtils.hasText(tenantId), ${entityName}::getTenantId, tenantId)
                  )
@@ -521,7 +516,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     public List<${entityName}Info> loadCacheList(Predicate<${entityName}Info> filter) {
 
-        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List", (key) -> loadAll(true, null) );
+        List<${entityName}Info> dataList = getSelfProxy().getCache("${entityName}List", (key) -> loadAll(null) );
 
         if(dataList == null) {
            clearCacheList();
