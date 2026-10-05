@@ -95,6 +95,7 @@ class DaoQueryExamplesTest extends DaoExamplesTestSupport {
         new ArrayList<>(entity.getChildren());
         Assert.isTrue(Hibernate.isInitialized(entity.getChildren()));
         Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(entity, "children", false));
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(entity, "children", true));
 
         Long id = entity.getId();
         entityManager.clear();
