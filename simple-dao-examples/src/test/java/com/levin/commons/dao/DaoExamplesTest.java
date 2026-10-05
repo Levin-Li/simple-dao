@@ -74,6 +74,8 @@ public class DaoExamplesTest {
         Assert.isTrue(!Hibernate.isInitialized(group.getChildren()), "子集合应当尚未加载");
         Assert.isTrue(!HibernateLazyPropertyUtil.shouldMap(group, "children", false),
                 "未加载集合应被跳过");
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(group, "children", true),
+                "允许延迟加载时应映射集合");
         Assert.isTrue(!Hibernate.isInitialized(group.getChildren()), "状态检查不能触发加载");
 
         String name = dao.selectFrom(Group.class).eq(E_Group.id, group.getId())
@@ -83,6 +85,8 @@ public class DaoExamplesTest {
         group.getChildren().size();
         Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(group, "children", false),
                 "已加载集合应被映射");
+        Assert.isTrue(HibernateLazyPropertyUtil.shouldMap(group, "children", true),
+                "允许延迟加载时也应映射已加载集合");
 
         Long id = group.getId();
         entityManager.clear();
