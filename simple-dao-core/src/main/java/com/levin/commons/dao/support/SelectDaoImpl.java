@@ -1189,6 +1189,16 @@ public class SelectDaoImpl<T>
             throw new StatementBuildException("JPA暂时不支持对统计查询进行二次统计，请使用原生查询");
         }
 
+        if ((rowStart > 0 || rowCount > 0) && (!fetchAttrs.isEmpty()
+                || joinStatement.toString().toLowerCase(Locale.ROOT).contains("fetch")
+                || (fromStatement != null && fromStatement.toLowerCase(Locale.ROOT).contains("fetch")))) {
+            String statement = genQL(false);
+            Long fetchedCount = getDao().countQueryResult(false, statement, genFinalParamList());
+            if (fetchedCount != null) {
+                return fetchedCount;
+            }
+        }
+
         String column = "1";
 
         //如果有指定的查询字段

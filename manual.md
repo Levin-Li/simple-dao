@@ -102,6 +102,16 @@ Dao 类逻辑框图，如下图所示。
    已加载的属性正常映射。设为 `true` 时允许映射过程读取这些属性，可能触发额外查询。
    手写的 `Function` 或 `Converter` 自行控制属性读取。
    每次实体转 `Info` 都使用独立的对象映射缓存；已加载的父子双向关联会复用 `Info` 对象，避免循环递归。
+
+
+#### 集合抓取与分页
+
+在最终 JPA 查询执行层，带 `start/count` 限制的根实体查询如果包含集合 `JOIN FETCH`，自动分两阶段执行。Hibernate 自身判断集合关联并解析原 JPQL，第一阶段按原过滤和排序在数据库查询本页 ID；第二阶段只按本页 ID 抓取完整实体及请求的关联，不分页，再恢复 ID 页顺序。`findPaging` 请求总数时使用对应的 `COUNT(ID)`；空 ID 页不执行关联抓取。较大的 ID 页按每批 500 个 ID 装载。
+
+纯粹用于装载的 LEFT 集合 fetch 不参与 ID 页。普通 JOIN、INNER fetch，以及被过滤或排序引用的抓取别名在 ID 查询中保留普通 JOIN 语义，不自动加 DISTINCT，因此这些连接造成的重复 ID 也按原顺序保留。仅抓取单值关联或没有 fetch 的查询继续使用原执行路径。
+
+自动处理要求单个带别名的根实体、单一非复合主键和根实体结果。集合 fetch 与 DISTINCT、投影、结果别名、分组、HAVING、CTE、集合运算、多根实体或 JPQL 内嵌 LIMIT/OFFSET 同时使用时会明确报错；请使用 DAO 的分页参数。涉及两阶段的一致性要求时，应在同一事务中查询。第二阶段依据第一阶段确定的根 ID 装载完整集合，不重复应用原 WHERE 对集合元素的筛选。
+
    `Converter<I, O>` 现在也可作为标准 `Function<I, O>` 使用；`apply(I)` 默认调用原有的 `convert(I)`，可直接传给 `Stream.map`。
     
        //1、消费接口定义：java.util.function.Consumer<SelectDao/UpdateDao/DeleteDao>

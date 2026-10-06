@@ -381,4 +381,9 @@ public interface MiniDao extends DeepCopier {
      * @return
      */
     <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues);
+
+    /** 统计完整查询的结果行数；返回 null 表示当前实现不支持。 */
+    default Long countQueryResult(boolean isNative, String statement, Object... paramValues) {
+        return null;
+    }
 }

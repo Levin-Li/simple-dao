@@ -1488,6 +1488,13 @@ public class JpaDaoImpl
      */
     @Override
     public <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues) {
+        return withQueryEntityManager(!isNative && (start > 0 || count > 0)
+                        && CollectionFetchQueryPlan.mayContainFetch(statement),
+                em -> executeFind(em, isNative, resultClass, start, count, statement, paramValues));
+    }
+
+    private <T> List<T> executeFind(EntityManager em, boolean isNative, Class<T> resultClass,
+                                    int start, int count, String statement, Object... paramValues) {
 
         checkLimit(count);
 
@@ -1505,7 +1512,6 @@ public class JpaDaoImpl
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList.stream().map(this::toStrAndTrimMax).collect(Collectors.joining(",", "[", "]")));
         }
 
-        EntityManager em = getEntityManager();
 
         Query query = null;
 
@@ -1535,6 +1541,11 @@ public class JpaDaoImpl
 //        query.setHint("org.hibernate.cacheMode", "REFRESH");
 
         setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
+
+        if (!isNative && (start > 0 || count > 0) && CollectionFetchQueryPlan.mayContainFetch(statement)
+                && containsCollectionFetch(em, statement)) {
+            return findCollectionFetchPage(em, query, statement, start, count, paramValueList);
+        }
 
         setRange(query, start, count);
 
@@ -1816,6 +1827,138 @@ public class JpaDaoImpl
         return query;
     }
 
+    private boolean containsCollectionFetch(EntityManager em, String statement) {
+        org.hibernate.engine.spi.SessionImplementor session = em.unwrap(org.hibernate.engine.spi.SessionImplementor.class);
+        org.hibernate.engine.query.spi.HQLQueryPlan plan = session.getFactory().getQueryPlanCache()
+                .getHQLQueryPlan(statement, false, session.getLoadQueryInfluencers().getEnabledFilters());
+        boolean collectionFetch = Arrays.stream(plan.getTranslators())
+                .anyMatch(org.hibernate.hql.spi.QueryTranslator::containsCollectionFetches);
+        if (collectionFetch && (plan.getTranslators().length != 1
+                || plan.getTranslators()[0].getReturnTypes().length != 1
+                || !plan.getTranslators()[0].getReturnTypes()[0].isEntityType())) {
+            throw new IllegalArgumentException("集合抓取分页要求单个根实体结果，不能返回多项结果或拆分多态查询");
+        }
+        return collectionFetch;
+    }
+
+    private <R> R withQueryEntityManager(boolean multiQueryCandidate,
+                                           java.util.function.Function<EntityManager, R> execution) {
+        if (!multiQueryCandidate) {
+            return execution.apply(getEntityManager());
+        }
+        if (defaultEntityManager != null) {
+            if (!(defaultEntityManager instanceof org.springframework.orm.jpa.EntityManagerProxy)) {
+                return execution.apply(defaultEntityManager);
+            }
+            EntityManager target = null;
+            try {
+                target = ((org.springframework.orm.jpa.EntityManagerProxy) defaultEntityManager).getTargetEntityManager();
+            } catch (IllegalStateException noTransaction) {
+                // Spring shared EntityManager 在事务外没有固定的实际会话。
+            }
+            if (target != null) {
+                return execution.apply(target);
+            }
+        }
+        EntityManager transactional = EntityManagerFactoryUtils.getTransactionalEntityManager(entityManagerFactory);
+        if (transactional != null) {
+            return execution.apply(transactional);
+        }
+        EntityManager owned = entityManagerFactory.createEntityManager();
+        try {
+            return execution.apply(owned);
+        } finally {
+            owned.close();
+        }
+    }
+
+    private <T> List<T> findCollectionFetchPage(EntityManager em, Query original, String statement, int start, int count, List parameterValues) {
+        CollectionFetchQueryPlan plan = CollectionFetchQueryPlan.create(
+                CollectionFetchQueryParser.parse(statement), em.getMetamodel());
+        Query idQuery = em.createQuery(plan.idStatement);
+        bindDerivedParameters(idQuery, parameterValues);
+        setRange(idQuery, start, count);
+        autoFlushAndClearBeforeQuery(em);
+        List<?> ids = idQuery.getResultList();
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String idsParameter = "__simpleDaoPageIds";
+        while (hasNamedParameter(original, idsParameter)) {
+            idsParameter += "_";
+        }
+        List<?> uniqueIds = new ArrayList<>(new LinkedHashSet<>(ids));
+        Map<Object, T> entities = new HashMap<>();
+        // 分批装载本页 ID，防止数据库 IN 参数数量限制；第二阶段始终没有结果条数限制。
+        for (int offset = 0; offset < uniqueIds.size(); offset += 500) {
+            Query fetchQuery = em.createQuery(plan.fetchStatement(idsParameter), plan.rootType);
+            bindDerivedParameters(fetchQuery, parameterValues);
+            fetchQuery.setParameter(idsParameter, uniqueIds.subList(offset, Math.min(offset + 500, uniqueIds.size())));
+            for (Object entity : fetchQuery.getResultList()) {
+                entities.put(em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity), (T) entity);
+            }
+        }
+        List<T> result = new ArrayList<>(ids.size());
+        for (Object id : ids) {
+            T entity = entities.get(id);
+            if (entity != null) {
+                result.add(entity);
+            }
+        }
+        return result;
+    }
+
+    private boolean hasNamedParameter(Query query, String name) {
+        return query.getParameters().stream().anyMatch(parameter -> name.equals(parameter.getName()));
+    }
+
+    private void bindDerivedParameters(Query derived, List sourceValues) {
+        // 复用原参数绑定器，保留 ValueHolder、JSON 类型包装及原自动转换语义。
+        List maps = (List) sourceValues.stream().filter(value -> value instanceof Map).collect(Collectors.toList());
+        setParams(false, getParamStartIndex(false), derived, maps);
+        int position = getParamStartIndex(false);
+        for (Object value : sourceValues) {
+            if (value instanceof Map) {
+                continue;
+            }
+            final int currentPosition = position++;
+            boolean present = derived.getParameters().stream().anyMatch(parameter ->
+                    Objects.equals(parameter.getPosition(), currentPosition)
+                            || Integer.toString(currentPosition).equals(parameter.getName()));
+            if (present) {
+                setParams(false, currentPosition, derived, Collections.singletonList(value));
+            }
+        }
+    }
+
+    @Override
+    public Long countQueryResult(boolean isNative, String statement, Object... paramValues) {
+        return withQueryEntityManager(!isNative && CollectionFetchQueryPlan.mayContainFetch(statement),
+                em -> executeCountQueryResult(em, isNative, statement, paramValues));
+    }
+
+    private Long executeCountQueryResult(EntityManager em, boolean isNative, String statement, Object... paramValues) {
+        if (isNative || !CollectionFetchQueryPlan.mayContainFetch(statement)) {
+            return null;
+        }
+        List values = flattenParams(null, paramValues);
+        if (!values.isEmpty()) {
+            statement = replacePlaceholder(false, statement);
+        }
+        if (!containsCollectionFetch(em, statement)) {
+            return null;
+        }
+        Query original = em.createQuery(statement);
+        setParams(false, getParamStartIndex(false), original, values);
+        CollectionFetchQueryPlan plan = CollectionFetchQueryPlan.create(
+                CollectionFetchQueryParser.parse(statement), em.getMetamodel());
+        Query countQuery = em.createQuery(plan.countStatement);
+        bindDerivedParameters(countQuery, values);
+        autoFlushAndClearBeforeQuery(em);
+        return ((Number) countQuery.getSingleResult()).longValue();
+    }
+
     private int setParams(boolean isNative, int pIndex, Query query, List paramValueList) {
 
         Map<Object, Parameter> parameterMap = new LinkedHashMap<>();
@@ -1954,5 +2097,3 @@ public class JpaDaoImpl
     }
 
 }
-
-
