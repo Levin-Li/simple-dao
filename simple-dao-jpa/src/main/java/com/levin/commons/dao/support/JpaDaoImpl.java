@@ -1450,6 +1450,13 @@ public class JpaDaoImpl
      */
     @Override
     public <T> List<T> find(boolean isNative, Class<T> resultClass, int start, int count, String statement, Object... paramValues) {
+        return withQueryEntityManager(!isNative && (start > 0 || count > 0)
+                        && CollectionFetchQueryPlan.mayContainFetch(statement),
+                em -> executeFind(em, isNative, resultClass, start, count, statement, paramValues));
+    }
+
+    private <T> List<T> executeFind(EntityManager em, boolean isNative, Class<T> resultClass,
+                                    int start, int count, String statement, Object... paramValues) {
 
         checkLimit(count);
 
@@ -1467,7 +1474,6 @@ public class JpaDaoImpl
                     + " , StartIndex: " + getParamStartIndex(isNative) + " , Params:" + paramValueList.stream().map(this::toStrAndTrimMax).collect(Collectors.joining(",", "[", "]")));
         }
 
-        EntityManager em = getEntityManager();
 
         Query query = null;
 
@@ -1498,6 +1504,11 @@ public class JpaDaoImpl
 
         setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
 
+        if (!isNative && (start > 0 || count > 0) && CollectionFetchQueryPlan.mayContainFetch(statement)
+                && containsCollectionFetch(query)) {
+            return findCollectionFetchPage(em, query, statement, start, count, paramValueList);
+        }
+
         setRange(query, start, count);
 
         autoFlushAndClearBeforeQuery(em);
@@ -1506,8 +1517,118 @@ public class JpaDaoImpl
 
     }
 
+    private boolean containsCollectionFetch(Query query) {
+        org.hibernate.query.sqm.tree.SqmStatement<?> sqm = query.unwrap(org.hibernate.query.spi.SqmQuery.class).getSqmStatement();
+        if (!(sqm instanceof org.hibernate.query.sqm.tree.select.SqmSelectStatement)) {
+            return false;
+        }
+        org.hibernate.query.sqm.tree.select.SqmSelectStatement<?> select =
+                (org.hibernate.query.sqm.tree.select.SqmSelectStatement<?>) sqm;
+        boolean collectionFetch = select.containsCollectionFetches();
+        if (collectionFetch && select.getQuerySpec().getSelectClause().getSelections().size() != 1) {
+            throw new IllegalArgumentException("集合抓取分页要求单个根实体结果，不能返回多项结果");
+        }
+        return collectionFetch;
+    }
+
+    private <R> R withQueryEntityManager(boolean multiQueryCandidate,
+                                           java.util.function.Function<EntityManager, R> execution) {
+        if (!multiQueryCandidate) {
+            return execution.apply(getEntityManager());
+        }
+        if (defaultEntityManager != null) {
+            if (!(defaultEntityManager instanceof org.springframework.orm.jpa.EntityManagerProxy)) {
+                return execution.apply(defaultEntityManager);
+            }
+            EntityManager target = null;
+            try {
+                target = ((org.springframework.orm.jpa.EntityManagerProxy) defaultEntityManager).getTargetEntityManager();
+            } catch (IllegalStateException noTransaction) {
+                // Spring shared EntityManager 在事务外没有固定的实际会话。
+            }
+            if (target != null) {
+                return execution.apply(target);
+            }
+        }
+        EntityManager transactional = EntityManagerFactoryUtils.getTransactionalEntityManager(entityManagerFactory);
+        if (transactional != null) {
+            return execution.apply(transactional);
+        }
+        EntityManager owned = entityManagerFactory.createEntityManager();
+        try {
+            return execution.apply(owned);
+        } finally {
+            owned.close();
+        }
+    }
+
+    private <T> List<T> findCollectionFetchPage(EntityManager em, Query original, String statement, int start, int count, List parameterValues) {
+        CollectionFetchQueryPlan plan = CollectionFetchQueryPlan.create(
+                CollectionFetchQueryParser.parse(statement), em.getMetamodel());
+        Query idQuery = em.createQuery(plan.idStatement);
+        bindDerivedParameters(idQuery, parameterValues);
+        setRange(idQuery, start, count);
+        autoFlushAndClearBeforeQuery(em);
+        List<?> ids = idQuery.getResultList();
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String idsParameter = "__simpleDaoPageIds";
+        while (hasNamedParameter(original, idsParameter)) {
+            idsParameter += "_";
+        }
+        List<?> uniqueIds = new ArrayList<>(new LinkedHashSet<>(ids));
+        Map<Object, T> entities = new HashMap<>();
+        // 分批装载本页 ID，防止数据库 IN 参数数量限制；第二阶段始终没有结果条数限制。
+        for (int offset = 0; offset < uniqueIds.size(); offset += 500) {
+            Query fetchQuery = em.createQuery(plan.fetchStatement(idsParameter), plan.rootType);
+            bindDerivedParameters(fetchQuery, parameterValues);
+            fetchQuery.setParameter(idsParameter, uniqueIds.subList(offset, Math.min(offset + 500, uniqueIds.size())));
+            for (Object entity : fetchQuery.getResultList()) {
+                entities.put(em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity), (T) entity);
+            }
+        }
+        List<T> result = new ArrayList<>(ids.size());
+        for (Object id : ids) {
+            T entity = entities.get(id);
+            if (entity != null) {
+                result.add(entity);
+            }
+        }
+        return result;
+    }
+
+    private boolean hasNamedParameter(Query query, String name) {
+        return query.getParameters().stream().anyMatch(parameter -> name.equals(parameter.getName()));
+    }
+
+    private void bindDerivedParameters(Query derived, List sourceValues) {
+        // 复用原参数绑定器，保留 ValueHolder、JSON 类型包装及原自动转换语义。
+        List maps = (List) sourceValues.stream().filter(value -> value instanceof Map).collect(Collectors.toList());
+        setParams(false, getParamStartIndex(false), derived, maps);
+        int position = getParamStartIndex(false);
+        for (Object value : sourceValues) {
+            if (value instanceof Map) {
+                continue;
+            }
+            final int currentPosition = position++;
+            boolean present = derived.getParameters().stream().anyMatch(parameter ->
+                    Objects.equals(parameter.getPosition(), currentPosition)
+                            || Integer.toString(currentPosition).equals(parameter.getName()));
+            if (present) {
+                setParams(false, currentPosition, derived, Collections.singletonList(value));
+            }
+        }
+    }
+
     @Override
     public Long countQueryResult(boolean isNative, String statement, Object... paramValues) {
+        return withQueryEntityManager(!isNative && CollectionFetchQueryPlan.mayContainFetch(statement),
+                em -> executeCountQueryResult(em, isNative, statement, paramValues));
+    }
+
+    private Long executeCountQueryResult(EntityManager em, boolean isNative, String statement, Object... paramValues) {
 
         List paramValueList = flattenParams(null, paramValues);
 
@@ -1522,11 +1643,19 @@ public class JpaDaoImpl
                     + " , Params:" + paramValueList.stream().map(this::toStrAndTrimMax).collect(Collectors.joining(",", "[", "]")));
         }
 
-        EntityManager em = getEntityManager();
 
         Query query = isNative ? em.createNativeQuery(statement) : em.createQuery(statement);
 
         setParams(isNative, getParamStartIndex(isNative), query, paramValueList);
+
+        if (!isNative && CollectionFetchQueryPlan.mayContainFetch(statement) && containsCollectionFetch(query)) {
+            CollectionFetchQueryPlan plan = CollectionFetchQueryPlan.create(
+                    CollectionFetchQueryParser.parse(statement), em.getMetamodel());
+            Query countQuery = em.createQuery(plan.countStatement);
+            bindDerivedParameters(countQuery, paramValueList);
+            autoFlushAndClearBeforeQuery(em);
+            return ((Number) countQuery.getSingleResult()).longValue();
+        }
 
         autoFlushAndClearBeforeQuery(em);
 

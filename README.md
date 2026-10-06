@@ -511,6 +511,8 @@ UserInfo info = dao.selectFrom(User.class)
 
 列表、单条和分页查询的无参取数方式都会使用该转换器；显式查询登记的 `UserInfo.class` 时也会使用它。显式传入查询转换器时以显式转换器为准。指定列查询仍使用按结果类型的投影映射。
 
+带条数限制的集合 `JOIN FETCH` 查询在最终 JPA 执行层自动先分页取得 ID，再抓取完整关联并恢复页内顺序，避免 Hibernate 内存分页。单值 fetch 和普通 JOIN 保持原执行路径；适用范围见 [用户手册](./manual.md)。
+
 生成的实体 Mapper 只对 JPA 声明为延迟加载的属性检查实际加载状态，包括默认延迟加载的集合关联以及显式设置 `fetch = LAZY` 的关联或简单字段。已经加载的属性照常映射；尚未加载时 `Info` 中对应字段保持 `null`。需要允许转换时加载它们，可在当前 `SelectDao` 上调用 `setAllowLazyLoading(true)`。这个开关默认是 `false`；手写的转换器需自行决定如何读取关联属性。
 
 ### 唯一更新
