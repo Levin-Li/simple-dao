@@ -262,6 +262,14 @@ public class FieldModel implements Cloneable {
                 || field.isAnnotationPresent(JoinColumns.class);
     }
 
+    public boolean isLocalDateType() {
+        return type == java.time.LocalDate.class;
+    }
+
+    public boolean hasEqAnnotation() {
+        return field.isAnnotationPresent(com.levin.commons.dao.annotation.Eq.class);
+    }
+
     public boolean isDateTimeType() {
         return Date.class.isAssignableFrom(type) || Temporal.class.isAssignableFrom(type);
     }

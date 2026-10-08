@@ -1404,3 +1404,7 @@ Dao 类逻辑框图，如下图所示。
 #### 14.2 联系作者
 
  邮箱：99668980@qq.com
+
+## LocalDate 查询条件生成
+
+实体的 `java.time.LocalDate` 字段生成同名 `@Eq` 精确相等条件，并保留 `betweenXxx`、`gteXxx`、`lteXxx`；已有 `@Eq` 配置继续保留。其他日期／时间类型不新增精确相等条件。
