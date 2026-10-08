@@ -105,6 +105,15 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     </#if>
     <#-- 如果是日期类型 -->
     <#if field.isDateTimeType()>
+    <#if field.isLocalDateType()>
+    @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
+    <#if !field.hasEqAnnotation()>
+    @Eq
+    </#if>
+    <@FieldAnnotationList field = field keyword='@Eq'/>
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+
+    </#if>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
     <@FieldAnnotationList field = field/>

@@ -4118,6 +4118,8 @@ public void delete(Long id) {
 
 ## 19. 代码生成工作流
 
+查询对象模板仅对 `java.time.LocalDate` 字段额外生成同名 `@Eq` 精确相等条件，并保留 `betweenXxx`、`gteXxx`、`lteXxx` 范围条件；其他日期／时间类型维持范围条件。
+
 个人数据访问授权通过可信上下文键 `isCanAccessAllPersonal` 注入，未提供时为 false。
 请求对象只消费上游授权结果，不根据管理员身份或保密级别推导；租户、组织及具体操作校验继续生效。
 
