@@ -1,1 +1,2 @@
 com.levin.commons.dao.support.hibernate.SimpleDaoHibernateAutoConfiguration
+com.levin.commons.dao.support.hibernate.JpaDdlAutoSafetyConfiguration

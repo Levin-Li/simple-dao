@@ -4528,3 +4528,9 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest -Dsurefire.failIfNoSpecif
 `DaoExamplesTest` 位于 `simple-dao-examples/src/test/java/com/levin/commons/dao/DaoExamplesTest.java`，应视为项目的端到端使用契约测试。文档-only 变更可以不跑；但如果同一个工作会话里已经包含代码变更，完成前要跑这个测试，并在结果里说明是否通过。
 
 用一句话总结：Simple DAO 的最佳实践是“实体描述数据结构，DTO 描述查询/更新意图，业务服务编排流程，生成代码提供默认 CRUD 能力”。
+
+## Hibernate 数据库结构安全校验
+
+JPA 模块在 Spring Boot 配置加载完成后、创建容器前校验 `spring.jpa.hibernate.ddl-auto`，仅允许 `none` 或 `update`，未配置时默认 `none`。`create`、`create-drop`、`validate` 等其他值直接导致启动失败。原生 `hibernate.hbm2ddl.auto` 属性也会校验；Hibernate 接收最终属性时再次校验，禁止 JPA schema-generation 的数据库创建／删除动作。
+
+同一早期校验还要求 `spring.jpa.open-in-view=false`，未配置时默认 `false`。显式启用或配置其他值时，在创建 Spring 容器之前抛出异常。
