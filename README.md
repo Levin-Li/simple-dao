@@ -308,6 +308,10 @@
 
 ## Hibernate 数据库结构安全校验
 
-JPA 模块在 Spring Boot 配置加载完成后、创建容器前校验 `spring.jpa.hibernate.ddl-auto`，仅允许 `none` 或 `update`，未配置时默认 `none`。`create`、`create-drop`、`validate` 等其他值直接导致启动失败。原生 `hibernate.hbm2ddl.auto` 属性也会校验；Hibernate 接收最终属性时再次校验，禁止 JPA schema-generation 的数据库创建／删除动作。
+JPA 模块在 Spring Boot 配置加载完成后、创建容器前校验 `spring.jpa.hibernate.ddl-auto`，仅允许 `none` 或 `update`，未配置时默认 `none`。`create`、`create-drop`、`validate` 等其他值直接导致启动失败。原生 `hibernate.hbm2ddl.auto` 属性也会校验；Hibernate 接收最终属性时再次校验，JPA schema-generation 的数据库动作同样只允许 `none` 或 Hibernate 支持的 `update` 扩展，拒绝创建／删除动作。
 
 同一早期校验还要求 `spring.jpa.open-in-view=false`，未配置时默认 `false`。显式启用或配置其他值时，在创建 Spring 容器之前抛出异常。
+
+## 发布流程
+
+默认仅对被修改的模块执行 `clean deploy`；发布失败后，再对整个项目执行 `clean deploy`。发布时不跳过测试，不自动修改版本号。具体步骤见 [发布流程](docs/release-workflow.md)。

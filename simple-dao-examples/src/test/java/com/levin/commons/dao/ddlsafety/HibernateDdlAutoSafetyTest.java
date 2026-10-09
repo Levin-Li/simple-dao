@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -107,6 +108,43 @@ class HibernateDdlAutoSafetyTest {
     }
 
     @Test
+    void defaultsMustNotOverrideConfiguredUpdateAndJpaActionsMustAllowUpdate() throws Exception {
+        Files.writeString(dir.resolve("application.yml"), "spring:\n  jpa:\n    hibernate:\n      ddl-auto: update\n");
+        try (var context = app(MarkerConfiguration.class).run(location())) {
+            assertEquals("update", context.getEnvironment().getProperty("spring.jpa.hibernate.ddl-auto"));
+            assertEquals("false", context.getEnvironment().getProperty("spring.jpa.open-in-view"));
+        }
+        for (String key : new String[]{"jakarta.persistence.schema-generation.database.action",
+                "javax.persistence.schema-generation.database.action"}) {
+            for (String action : new String[]{"create", "drop", "drop-and-create", "validate"}) {
+                CREATED.set(0);
+                RuntimeException error = assertThrows(RuntimeException.class,
+                        () -> app(MarkerConfiguration.class).run(location(), "--spring.jpa.properties." + key + "=" + action));
+                assertTrue(messages(error).contains(key), messages(error));
+                assertEquals(0, CREATED.get());
+            }
+            for (String action : new String[]{"none", "update"}) {
+                Map<String, Object> properties = new HashMap<>();
+                properties.put(key, action);
+                assertDoesNotThrow(() -> JpaDdlAutoSafetyConfiguration.simpleDaoDdlAutoSafetyCustomizer().customize(properties));
+            }
+            // 独立的空数据库 + hbm2ddl none，证明标准参数上的 update 真正执行了结构更新。
+            String url = "jdbc:h2:mem:ddl_guard_" + java.util.UUID.randomUUID().toString().replace("-", "");
+            try (var context = app(HibernateConfiguration.class).run(location(),
+                    "--spring.datasource.url=" + url, "--spring.datasource.driver-class-name=org.h2.Driver",
+                    "--spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+                    "--spring.jpa.hibernate.ddl-auto=none", "--spring.jpa.properties." + key + "=update")) {
+                assertTrue(context.getBean(EntityManagerFactory.class).isOpen());
+                assertEquals("none", context.getEnvironment().getProperty("spring.jpa.hibernate.ddl-auto"));
+                try (var connection = context.getBean(javax.sql.DataSource.class).getConnection();
+                     var tables = connection.getMetaData().getTables(null, null, "DDL_GUARD_PROBE", new String[]{"TABLE"})) {
+                    assertTrue(tables.next(), key + "=update 必须创建实体表");
+                }
+            }
+        }
+    }
+
+    @Test
     void finalHibernateSettingsMustRejectLateOverridesAndJpaSchemaActions() {
         for (String action : new String[]{"create", "create-drop", "validate", "drop"}) {
             Map<String, Object> properties = new HashMap<>();
@@ -143,6 +181,7 @@ class HibernateDdlAutoSafetyTest {
     static class HibernateConfiguration {}
 
     @Entity(name = "DdlGuardEntity")
+    @Table(name = "ddl_guard_probe")
     public static class GuardEntity {
         @Id Long id;
     }
