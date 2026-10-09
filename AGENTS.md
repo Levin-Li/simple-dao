@@ -29,5 +29,9 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 
 ## 发布规则
 
-- 用户要求发布版本时，发布阶段只允许执行 Maven 的 `deploy` 任务。
+- 每次发布必须先执行 `clean`，不允许单独执行 `deploy`。
+
+- 用户要求发布版本时，默认只对被修改的模块执行 Maven `clean deploy`（使用 `-pl`，不默认使用 `-am`）。
+- 若改动模块发布失败，再执行全项目 `clean deploy`。发布时不得跳过测试。
+- 详细步骤见 `docs/release-workflow.md`。
 - 不要自动修改版本号、POM、Git 标签或其他任何文件；版本管理由用户显式决定。

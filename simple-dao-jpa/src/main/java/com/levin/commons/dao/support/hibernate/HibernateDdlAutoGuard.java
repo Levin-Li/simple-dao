@@ -51,10 +51,8 @@ public class HibernateDdlAutoGuard implements EnvironmentPostProcessor, Ordered 
         validate("hibernate.hbm2ddl.auto", properties.get("hibernate.hbm2ddl.auto"));
         for (String key : new String[]{"jakarta.persistence.schema-generation.database.action",
                 "javax.persistence.schema-generation.database.action"}) {
-            Object action = properties.get(key);
-            if (action != null && !"none".equals(action.toString())) {
-                throw new IllegalStateException("Simple DAO 禁止数据库结构生成配置 " + key + "=" + action + "，只允许 none");
-            }
+            // Hibernate 在 JPA 标准属性上也支持 update 扩展，使用同一白名单避免限制过严。
+            validate(key, properties.get(key));
         }
     }
 

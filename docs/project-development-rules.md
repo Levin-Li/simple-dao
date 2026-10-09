@@ -67,3 +67,7 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 4. 能影响使用方式、SQL/JPQL 或数据库行为的能力，必须补 `DaoExamplesTest` 或示例模块的真实执行测试。
 5. README 和 `manual.md` 要补充入口、使用示例、边界说明。
 6. 运行相关模块测试和 `DaoExamplesTest`；全部通过后才能提交、发布或报告完成。
+
+## 发布流程
+
+遵循 [发布流程](release-workflow.md)：每次发布必须先执行 `clean`，不允许单独执行 `deploy`；默认仅对被修改的模块执行 `clean deploy`，失败后再清理并发布整个项目；不跳过测试，不自动修改版本号、POM 或 Git 标签。
