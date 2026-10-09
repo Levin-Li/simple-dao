@@ -305,3 +305,9 @@
 ## LocalDate 查询条件生成
 
 实体的 `java.time.LocalDate` 字段生成同名 `@Eq` 精确相等条件，并保留 `betweenXxx`、`gteXxx`、`lteXxx`；已有 `@Eq` 配置继续保留。其他日期／时间类型不新增精确相等条件。
+
+## Hibernate 数据库结构安全校验
+
+JPA 模块在 Spring Boot 配置加载完成后、创建容器前校验 `spring.jpa.hibernate.ddl-auto`，仅允许 `none` 或 `update`，未配置时默认 `none`。`create`、`create-drop`、`validate` 等其他值直接导致启动失败。原生 `hibernate.hbm2ddl.auto` 属性也会校验；Hibernate 接收最终属性时再次校验，禁止 JPA schema-generation 的数据库创建／删除动作。
+
+同一早期校验还要求 `spring.jpa.open-in-view=false`，未配置时默认 `false`。显式启用或配置其他值时，在创建 Spring 容器之前抛出异常。

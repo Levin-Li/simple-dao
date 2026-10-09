@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.datasource.username=sa", "spring.datasource.password=",
         "spring.datasource.druid.initial-size=1", "spring.datasource.druid.min-idle=1",
-        "spring.jpa.database=H2", "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.database=H2", "spring.jpa.hibernate.ddl-auto=update",
         "spring.jpa.properties.hibernate.query.fail_on_pagination_over_collection_fetch=true",
         "spring.jpa.properties.hibernate.generate_statistics=true",
         "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.levin.commons.dao.CollectionFetchPaginationTest$SqlRecorder",
