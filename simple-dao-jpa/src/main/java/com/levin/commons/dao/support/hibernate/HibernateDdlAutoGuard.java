@@ -32,7 +32,7 @@ public class HibernateDdlAutoGuard implements EnvironmentPostProcessor, Ordered 
     @Override public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         Binder binder = Binder.get(environment);
         String openInView = binder.bind(OPEN_IN_VIEW, String.class).orElse(null);
-        if (openInView != null && !"false".equalsIgnoreCase(openInView)) {
+        if (openInView != null && !"false".equalsIgnoreCase(openInView.trim())) {
             throw new IllegalStateException("Simple DAO 的配置 " + OPEN_IN_VIEW + "=" + openInView
                     + " 不安全，必须为 false");
         }
@@ -57,7 +57,12 @@ public class HibernateDdlAutoGuard implements EnvironmentPostProcessor, Ordered 
     }
 
     static void validate(String key, Object action) {
-        if (action != null && !"none".equals(action.toString()) && !"update".equals(action.toString())) {
+        if (action == null) {
+            return;
+        }
+        // 只对比较值去掉前后空格、忽略大小写，不修改原始配置。
+        String value = action.toString().trim();
+        if (!"none".equalsIgnoreCase(value) && !"update".equalsIgnoreCase(value)) {
             throw new IllegalStateException("Simple DAO 的 Hibernate 配置 " + key + "=" + action
                     + " 不安全，只允许 none 或 update");
         }
