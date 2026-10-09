@@ -28,7 +28,7 @@ class HibernateDdlAutoSafetyTest {
 
     @Test
     void unsafeYamlMustFailBeforeAnySpringBeanIsCreated() throws Exception {
-        for (String action : new String[]{"create", "create-drop", "drop", "validate", "invalid", ""}) {
+        for (String action : new String[]{"create", "create-drop", "drop", "validate", "CrEaTe", "DROP", "VaLiDaTe", "  CREATE  ", "invalid", "", "   "}) {
             CREATED.set(0);
             Files.writeString(dir.resolve("application.yml"), "spring:\n  jpa:\n    hibernate:\n      ddl-auto: '" + action + "'\n");
             RuntimeException error = assertThrows(RuntimeException.class,
@@ -40,7 +40,7 @@ class HibernateDdlAutoSafetyTest {
 
     @Test
     void openInViewMustFailBeforeBeansAndRespectSafeOverride() throws Exception {
-        for (String value : new String[]{"true", "invalid", ""}) {
+        for (String value : new String[]{"true", "TrUe", "invalid", ""}) {
             CREATED.set(0);
             Files.writeString(dir.resolve("application.yml"), "spring:\n  jpa:\n    open-in-view: '" + value + "'\n");
             RuntimeException error = assertThrows(RuntimeException.class,
@@ -84,7 +84,7 @@ class HibernateDdlAutoSafetyTest {
                 assertTrue(messages(error).contains("hibernate.hbm2ddl.auto"), messages(error));
                 assertEquals(0, CREATED.get());
             }
-            for (String action : new String[]{"none", "update"}) {
+            for (String action : new String[]{"none", "update", "NONE", "UpDaTe", "  NoNe  ", "  uPdAtE  "}) {
                 try (var context = app(MarkerConfiguration.class).run(location(), "--" + key + "=" + action)) {
                     assertTrue(context.isActive());
                 }
@@ -123,10 +123,11 @@ class HibernateDdlAutoSafetyTest {
                 assertTrue(messages(error).contains(key), messages(error));
                 assertEquals(0, CREATED.get());
             }
-            for (String action : new String[]{"none", "update"}) {
+            for (String action : new String[]{"none", "update", "NONE", "UpDaTe", "  NoNe  ", "  uPdAtE  "}) {
                 Map<String, Object> properties = new HashMap<>();
                 properties.put(key, action);
                 assertDoesNotThrow(() -> JpaDdlAutoSafetyConfiguration.simpleDaoDdlAutoSafetyCustomizer().customize(properties));
+                assertEquals(action, properties.get(key), "校验不能修改原始配置值");
             }
             // 独立的空数据库 + hbm2ddl none，证明标准参数上的 update 真正执行了结构更新。
             String url = "jdbc:h2:mem:ddl_guard_" + java.util.UUID.randomUUID().toString().replace("-", "");

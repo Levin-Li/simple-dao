@@ -4538,3 +4538,5 @@ JPA 模块在 Spring Boot 配置加载完成后、创建容器前校验 `spring.
 ## 发布流程
 
 默认仅对被修改的模块执行 `clean deploy`；发布失败后，再对整个项目执行 `clean deploy`。发布时不跳过测试，不自动修改版本号。具体步骤见 [发布流程](docs/release-workflow.md)。
+
+JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写及前后空格；检查不修改原始配置值。
