@@ -103,6 +103,7 @@ Dao 类逻辑框图，如下图所示。
    手写的 `Function` 或 `Converter` 自行控制属性读取。
    每次实体转 `Info` 都使用独立的对象映射缓存；已加载的父子双向关联会复用 `Info` 对象，避免循环递归。
    关联实体及集合中的实体元素由各自的 Mapper 转换，并共享该缓存和延迟加载设置。
+   缓存类型为 `simple-dao-core` 提供的 `com.levin.commons.dao.util.CycleAvoidingMappingContext`；代码生成器不再生成模块内的同名类。
 
 
 #### 集合抓取与分页
