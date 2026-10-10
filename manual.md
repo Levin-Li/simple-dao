@@ -104,6 +104,7 @@ Dao 类逻辑框图，如下图所示。
    每次实体转 `Info` 都使用独立的对象映射缓存；已加载的父子双向关联会复用 `Info` 对象，避免循环递归。
    关联实体存在可调用的 Mapper 时，实体和 `Info` 拷贝由该 Mapper 执行，并共享缓存和延迟加载设置；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。
    每个 JPA 实体只生成自己的 Mapper；引用的可复制非实体值对象以及声明了目标类型的字符串 JSON 转换均由该实体 Mapper 处理。`Map<K,V>` 会得到新容器：已知可变非实体 K/V 使用该实体 Mapper 的单对象复制方法，声明为 `Object` 的未知值保留源引用，不做运行时递归类型分派。无法安全创建副本的值类型会在生成阶段报错。
+   只读或重载 setter 字段同样按声明类型处理：简单值（含可空 Boolean）直接复制，Date 克隆，已知值对象使用当前 Mapper 的类型化复制方法；未知可变类型生成时失败。生成的 Mapper 不包含无业务调用的 `copyDynamicValue` 递归入口。
    继承 `@MappedSuperclass` 的泛型字段按具体实体解析；可解析到 JPA 实体时使用对应 Mapper 与同一次映射上下文。若抽象类型确实未绑定，生成阶段明确失败。
    JSON 默认由 Fastjson2 处理。共享接口 `MapperJsonUtils` 只有 `toJson(Object)` 与 `fromJson(String, Type)` 两个静态转换方法，内部使用静态嵌套类 `JsonCodec` 和单个 `AtomicReference<JsonCodec> codec`；`Type` 包含集合/Map 泛型。应用可继承 `JsonCodec` 并在启动时调用 `MapperJsonUtils.codec.set(...)` 配置；测试后恢复保存的实例。配置引用线程安全，两个转换方向使用同一个 codec 实例。
    是否委托不按实体包名判断：本轮要生成的实体视为具备 Mapper；外部实体则检查其 Mapper 的公开 `INSTANCE` 和对应的 `toInfo(实体, boolean, CycleAvoidingMappingContext)` 或 `toInfo(Info, CycleAvoidingMappingContext)` 方法。两条转换路径分别判断。

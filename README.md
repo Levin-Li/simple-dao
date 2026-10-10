@@ -287,6 +287,7 @@
    `setAllowLazyLoading(false)` 默认跳过尚未加载的 `LAZY` 属性，已加载的属性照常映射。
    关联实体存在可调用的 Mapper 时，实体和 `Info` 拷贝交给该 Mapper，并共享延迟加载设置和循环引用缓存；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。
    每个 JPA 实体对应一个 Mapper。它引用的可复制非实体值对象在该 Mapper 内复制；已知类型的 `Map<K,V>` 在新容器中按声明类型复制可变非实体键和值，`Map<String,Object>` 只复制容器、保留原值引用。字符串与声明类型之间的 JSON 转换也在实体 Mapper 内生成。不可安全实例化的值类型在生成阶段报错。
+   只读或 setter 重载的属性按静态类型复制：简单值直接赋值、Date 克隆、已知非实体对象调用本 Mapper 的复制方法；不能安全复制的未知类型在生成时直接报错，不生成运行时递归辅助方法。
    继承 JPA 映射超类的泛型关联会相对具体实体解析；例如树节点 `T parent` 和 `Set<T> children` 可绑定到实际实体，未绑定的抽象类型会明确报错。
    JSON 转换默认使用 Fastjson2；共享接口 `MapperJsonUtils` 提供静态嵌套类 `JsonCodec` 和一个可配置的 `AtomicReference<JsonCodec> codec`。自定义子类可重写 `parse(String, Type)` 与 `stringify(Object)`；通过 `codec.set(...)` 切换，测试后恢复原值。生成的实体 Mapper 调用 `MapperJsonUtils.toJson` 和 `MapperJsonUtils.fromJson`，保留完整的泛型目标类型。
    `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供，代码生成器不再为每个模块生成这三个文件。

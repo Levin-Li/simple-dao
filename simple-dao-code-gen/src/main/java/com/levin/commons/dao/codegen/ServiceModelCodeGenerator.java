@@ -1545,7 +1545,6 @@ public final class ServiceModelCodeGenerator {
             Class<?> valueType = types.get(index);
             List<Map<String, String>> overloadedProperties = new ArrayList<>();
             List<Map<String, String>> inaccessibleProperties = new ArrayList<>();
-            List<Map<String, String>> dynamicProperties = new ArrayList<>();
             List<Map<String, String>> qualifiedProperties = new ArrayList<>();
             for (java.beans.PropertyDescriptor descriptor : BeanUtils.getPropertyDescriptors(valueType)) {
                 Method getter = descriptor.getReadMethod();
@@ -1559,21 +1558,18 @@ public final class ServiceModelCodeGenerator {
                         .collect(Collectors.toList());
                 boolean exactSetter = setters.stream()
                         .anyMatch(method -> method.getParameterTypes()[0] == getter.getReturnType());
-                String copiedValue = Map.class.isAssignableFrom(getter.getReturnType())
-                        ? mapCopyMethod(ResolvableType.forMethodReturnType(getter), mapModels)
-                            + "(source." + getter.getName() + "(), cycleContext)"
-                        : "copyDynamicValue(source." + getter.getName() + "(), cycleContext, \""
-                            + valueType.getSimpleName() + "." + descriptor.getName() + "\")";
                 Field backingField = ReflectionUtils.findField(valueType, descriptor.getName());
                 if (!exactSetter && backingField != null) {
                     if (Modifier.isFinal(backingField.getModifiers())
                             || backingField.getType() != getter.getReturnType()) {
                         throw new IllegalStateException("Cannot safely copy value property: " + getter);
                     }
+                    String copiedValue = valuePropertyCopyExpression(getter, types, mapModels);
                     inaccessibleProperties.add(Map.of("name", descriptor.getName(),
                             "getter", getter.getName(), "copyExpression", copiedValue));
                 }
                 if (setters.size() > 1 && exactSetter) {
+                    String copiedValue = valuePropertyCopyExpression(getter, types, mapModels);
                     overloadedProperties.add(Map.of("name", descriptor.getName(),
                             "getter", getter.getName(),
                             "typeName", getter.getReturnType().getCanonicalName(),
@@ -1595,15 +1591,35 @@ public final class ServiceModelCodeGenerator {
             }
             overloadedProperties.sort(Comparator.comparing(property -> property.get("name")));
             inaccessibleProperties.sort(Comparator.comparing(property -> property.get("name")));
-            dynamicProperties.sort(Comparator.comparing(property -> property.get("name")));
             qualifiedProperties.sort(Comparator.comparing(property -> property.get("name")));
             models.add(Map.of("typeName", valueType.getCanonicalName(),
                     "index", index, "overloadedProperties", overloadedProperties,
                     "inaccessibleProperties", inaccessibleProperties,
-                    "dynamicProperties", dynamicProperties,
                     "qualifiedProperties", qualifiedProperties));
         }
         return models;
+    }
+
+    private static String valuePropertyCopyExpression(Method getter, List<Class<?>> copyTypes,
+                                                      List<Map<String, Object>> mapModels) {
+        String sourceValue = "source." + getter.getName() + "()";
+        Class<?> propertyType = getter.getReturnType();
+        if (Map.class.isAssignableFrom(propertyType)) {
+            return mapCopyMethod(ResolvableType.forMethodReturnType(getter), mapModels)
+                    + "(" + sourceValue + ", cycleContext)";
+        }
+        if (BeanUtils.isSimpleValueType(propertyType) || propertyType.isEnum()) {
+            return sourceValue;
+        }
+        if (java.util.Date.class.isAssignableFrom(propertyType)) {
+            return sourceValue + " == null ? null : (" + propertyType.getCanonicalName() + ") "
+                    + sourceValue + ".clone()";
+        }
+        int copyIndex = copyTypes.indexOf(propertyType);
+        if (copyIndex >= 0) {
+            return "copyValue" + copyIndex + "(" + sourceValue + ", cycleContext)";
+        }
+        throw new IllegalStateException("Cannot safely copy value property: " + getter);
     }
 
     static List<Map<String, String>> valueCopyFields(List<FieldModel> infoFields,

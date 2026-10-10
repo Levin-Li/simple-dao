@@ -395,8 +395,12 @@ class LazyMapperTemplateTest {
         assertFalse(source.contains("copyValueSet" + valueIndex + "("), source);
         assertTrue(source.contains("@Mapping(target = \"occurred\", ignore = true)"), source);
         assertTrue(source.contains("@org.mapstruct.AfterMapping"), source);
-        assertTrue(source.contains("copyDynamicValue(source.getOccurred(), cycleContext"), source);
-        assertTrue(source.contains("copyDynamicValue(source.getStatus(), cycleContext"), source);
+        assertTrue(source.contains("ReflectionUtils.setField(field0, target,"), source);
+        assertTrue(source.contains("source.getOccurred());"), source);
+        assertTrue(source.contains("source.getDisabled());"), source);
+        assertTrue(source.contains("source.getStatus()"), source);
+        assertTrue(source.contains("copyValue" + valueIndex + "(source.getReadonlyNext(), cycleContext)"), source);
+        assertFalse(source.contains("copyDynamicValue("), source);
         assertTrue(source.contains("copyValueAuto" + valueIndex), source);
         assertTrue(source.contains("@Mapping(target = \"extParams\", qualifiedByName = \"copyValueMap\")"), source);
         assertTrue(source.contains("@MapMapping(valueQualifiedByName = \"copyValue" + externalIndex + "\")"), source);
@@ -433,6 +437,15 @@ class LazyMapperTemplateTest {
         FieldModel derived = new FieldModel(OrgEntity.class).setField(selected.get(0).getField())
                 .setResolvableType(selected.get(0).getResolvableType()).setName("derivedExternalValue");
         assertTrue(ServiceModelCodeGenerator.valueCopyTypes(List.of(derived)).isEmpty());
+    }
+
+    @Test
+    void unsupportedReadOnlyMutablePropertyFailsDuringGeneration() {
+        List<Class<?>> types = ServiceModelCodeGenerator.valueCopyTypes(
+                infoFieldModels(UnknownValueEntity.class));
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> ServiceModelCodeGenerator.valueCopyModels(types, List.of()));
+        assertTrue(failure.getMessage().contains("getPayload"));
     }
 
     @Test
@@ -531,6 +544,17 @@ class LazyMapperTemplateTest {
         String values;
     }
 
+    @Entity
+    static class UnknownValueEntity {
+        UnknownValueObject value;
+    }
+
+    public static class UnknownValueObject {
+        private Object payload;
+        public UnknownValueObject() {}
+        public Object getPayload() { return payload; }
+    }
+
     @MappedSuperclass
     abstract static class MappedTreeBase<T extends MappedTreeBase<T>> {
         T parent;
@@ -566,18 +590,22 @@ class LazyMapperTemplateTest {
     public static class ValueObject {
         public ValueObject() {}
         ValueObject next;
+        ValueObject readonlyNext;
         List<ValueObject> peers;
         String occurred;
         String status;
+        Boolean disabled;
         Map<String, Object> extParams;
 
         public ValueObject getNext() { return next; }
         public void setNext(ValueObject next) { this.next = next; }
+        public ValueObject getReadonlyNext() { return readonlyNext; }
         public List<ValueObject> getPeers() { return peers; }
         public void setPeers(List<ValueObject> peers) { this.peers = peers; }
         public String getOccurred() { return occurred; }
         public void setOccurred(java.util.Date occurred) { this.occurred = occurred.toString(); }
         public String getStatus() { return status; }
+        public Boolean getDisabled() { return disabled; }
         public void setStatus(String status) { this.status = status; }
         public void setStatus(java.util.Date status) { this.status = status.toString(); }
         public Map<String, Object> getExtParams() { return extParams; }

@@ -121,9 +121,11 @@ class NestedMapperBehaviorTest {
             params.put("valueCopyModels", List.of(Map.of(
                     "typeName", "com.example.value.Value", "index", 0,
                     "overloadedProperties", List.of(),
-                    "inaccessibleProperties", List.of(Map.of("name", "occurred", "getter", "getOccurred",
-                            "copyExpression", "copyDynamicValue(source.getOccurred(), cycleContext, \"Value.occurred\")")),
-                    "dynamicProperties", List.of(),
+                    "inaccessibleProperties", List.of(
+                            Map.of("name", "occurred", "getter", "getOccurred",
+                                    "copyExpression", "source.getOccurred() == null ? null : (java.util.Date) source.getOccurred().clone()"),
+                            Map.of("name", "disabled", "getter", "getDisabled",
+                                    "copyExpression", "source.getDisabled()")),
                     "qualifiedProperties", List.of(
                             Map.of("name", "ext", "copyMethod", "copyValueMap"),
                             Map.of("name", "children", "copyMethod", "copyMap0")))));
@@ -150,9 +152,11 @@ class NestedMapperBehaviorTest {
                 "package com.example.entities; public class EntityConst {}");
         writeSource(sources, "com/example/value/Value.java", "package com.example.value;"
                 + " public class Value { private java.util.Date occurred;"
+                + " private Boolean disabled;"
                 + " private java.util.Map<String,Object> ext;"
                 + " private java.util.Map<String,Value> children;"
                 + " public java.util.Date getOccurred(){ return occurred; }"
+                + " public Boolean getDisabled(){ return disabled; }"
                 + " public java.util.Map<String,Object> getExt(){ return ext; }"
                 + " public void setExt(java.util.Map<String,Object> ext){ this.ext=ext; }"
                 + " public java.util.Map<String,Value> getChildren(){ return children; }"
@@ -266,6 +270,7 @@ class NestedMapperBehaviorTest {
                 "        || copy.concreteUnknown.get(\"same\") != value)",
                 "      throw new AssertionError(\"unknown concrete Map must be shallow\");",
                 "    if (copy.value.getOccurred() == value.getOccurred()) throw new AssertionError(\"readonly Date alias\");",
+                "    if (copy.value.getDisabled() != null) throw new AssertionError(\"nullable Boolean changed\");",
                 "    if (copy.value.getExt() == ext) throw new AssertionError(\"Map alias\");",
                 "    if (!(copy.value.getExt() instanceof java.util.HashMap)) throw new AssertionError(\"Map type\");",
                 "    if (copy.value.getExt().get(\"self\") != ext) throw new AssertionError(\"unknown Map value must stay shallow\");",
