@@ -59,6 +59,7 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("@Context CycleAvoidingMappingContext cycleContext"), source);
         assertTrue(source.contains("return toInfo(info, cycleContext)"), source);
         assertTrue(source.contains("import com.levin.commons.dao.util.CycleAvoidingMappingContext;"), source);
+        assertFalse(source.contains("import com.example.services.commons.mapper.CycleAvoidingMappingContext;"), source);
         assertTrue(source.contains("@BeforeMapping"), source);
         assertTrue(source.contains("cycleContext.getMappedInstance(source, targetType)"), source);
         assertTrue(source.contains("cycleContext.storeMappedInstance(source, target, targetType)"), source);

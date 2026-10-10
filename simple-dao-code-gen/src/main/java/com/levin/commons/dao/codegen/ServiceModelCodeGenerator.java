@@ -719,6 +719,8 @@ public final class ServiceModelCodeGenerator {
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "BaseInfo.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonObjectMapping.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "JsonArrayMapping.java");
+        // CycleAvoidingMappingContext 已由 simple-dao-core 提供，不再为每个模块生成。
+//        genFileByTemplate(genParams, serviceDir, "services", "commons", "mapper", "CycleAvoidingMappingContext.java");
 
         genFileByTemplate(genParams, serviceDir, "services", "commons", "req", "MultiTenantReq.java");
         genFileByTemplate(genParams, serviceDir, "services", "commons", "info", "MultiTenantInfo.java");
