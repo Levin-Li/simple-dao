@@ -1400,6 +1400,7 @@ public final class ServiceModelCodeGenerator {
                     : Collection.class.isAssignableFrom(fieldType)
                     ? ResolvableType.forField(field).resolveGeneric() : fieldType;
             if (relatedType != null && relatedType != entityClass
+                    && relatedType.getPackage().equals(entityClass.getPackage())
                     && relatedType.isAnnotationPresent(Entity.class)) {
                 types.add(relatedType);
             }

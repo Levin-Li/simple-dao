@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import com.github.javaparser.StaticJavaParser;
 import com.levin.commons.dao.codegen.model.FieldModel;
+import com.levin.commons.dao.codegen.external.ExternalEntity;
 import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
@@ -125,6 +126,7 @@ class LazyMapperTemplateTest {
     @Test
     void nestedEntitiesShouldDelegateToTheirOwnMappers() throws Exception {
         assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(OrgEntity.class));
+        assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(ExternalEntity.class));
         assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(FixtureEntity.class).contains(FixtureEntity.class));
 
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
@@ -260,6 +262,8 @@ class LazyMapperTemplateTest {
     static class AccountEntity {
         @ManyToOne
         OrgEntity org;
+        @ManyToOne
+        ExternalEntity external;
     }
 
     @Entity
