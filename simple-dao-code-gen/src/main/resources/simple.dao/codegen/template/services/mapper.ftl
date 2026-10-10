@@ -29,12 +29,6 @@ import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
 import com.levin.commons.dao.support.CycleAvoidingMappingContext;
-<#if needsJsonObjectMapping!false>
-import com.levin.commons.dao.support.JsonObjectMapping;
-</#if>
-<#if needsJsonArrayMapping!false>
-import com.levin.commons.dao.support.JsonArrayMapping;
-</#if>
 
 import ${modulePackageName}.*;
 import ${modulePackageName}.entities.*;
@@ -51,10 +45,7 @@ import static ${modulePackageName}.entities.EntityConst.*;
  *
  */
 @Mapper(unmappedTargetPolicy =  ReportingPolicy.IGNORE)
-<#assign mappingBases = []>
-<#if needsJsonObjectMapping!false><#assign mappingBases = mappingBases + ["JsonObjectMapping"]></#if>
-<#if needsJsonArrayMapping!false><#assign mappingBases = mappingBases + ["JsonArrayMapping"]></#if>
-public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappingBases?join(", ")}</#if> {
+public interface ${entityName}Mapper {
 
     ${entityName}Mapper INSTANCE = Mappers.getMapper(${entityName}Mapper.class);
 
@@ -78,6 +69,9 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
     @Mapping(target = "${field.name}", conditionExpression = "java(com.levin.commons.dao.util.HibernateLazyPropertyUtil.shouldMap(entity, \"${field.name}\", allowLazyLoading))")
 </#if>
 </#list>
+<#list ignoredUnresolvedCollectionProperties![] as property>
+    @Mapping(target = "${property}", ignore = true)
+</#list>
     ${entityName}Info toInfo(${entityName} entity, @Context boolean allowLazyLoading,
                              @Context CycleAvoidingMappingContext cycleContext);
 
@@ -91,6 +85,12 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
         }
     }
 
+<#list ignoredUnresolvedCollectionProperties![] as property>
+    @Mapping(target = "${property}", ignore = true)
+</#list>
+<#list valueCopyFields![] as field>
+    @Mapping(target = "${field.name}", qualifiedByName = "${field.copyMethod}")
+</#list>
     ${entityName}Info toInfo(${entityName}Info info, @Context CycleAvoidingMappingContext cycleContext);
 
     @BeforeMapping
@@ -138,16 +138,105 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
 
 </#list>
 
-<#list jsonPojoTypes![] as jsonPojoType>
-    default ${jsonPojoType.canonicalName} fromJsonType${jsonPojoType?index}(String json) {
-        return json == null ? null : com.alibaba.fastjson2.JSON.parseObject(json, ${jsonPojoType.canonicalName}.class);
+<#list jsonTargetTypes![] as targetType>
+    default ${targetType} fromJsonType${targetType?index}(String json) {
+        return json == null || json.isEmpty() ? null : com.alibaba.fastjson2.JSON.parseObject(json,
+                new com.alibaba.fastjson2.TypeReference<${targetType}>() {}.getType());
     }
 
-    default String toJsonType${jsonPojoType?index}(${jsonPojoType.canonicalName} value) {
+    default String toJsonType${targetType?index}(${targetType} value) {
         return value == null ? null : com.alibaba.fastjson2.JSON.toJSONString(value);
     }
 
 </#list>
+
+<#list valueCopyModels![] as model>
+    @Named("copyValue${model.index}")
+<#list model.overloadedProperties as property>
+    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) source.${property.getter}())")
+</#list>
+<#list model.inaccessibleProperties as property>
+    @Mapping(target = "${property.name}", ignore = true)
+</#list>
+<#list model.dynamicProperties as property>
+    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) copyDynamicValue(source.${property.getter}(), cycleContext, \"${property.path}\"))")
+</#list>
+<#list model.qualifiedProperties as property>
+    @Mapping(target = "${property.name}", qualifiedByName = "${property.copyMethod}")
+</#list>
+    ${model.typeName} copyValue${model.index}(${model.typeName} source,
+            @Context CycleAvoidingMappingContext cycleContext);
+
+<#if model.inaccessibleProperties?has_content>
+    @org.mapstruct.AfterMapping
+    default void copyValueFields${model.index}(${model.typeName} source,
+            @MappingTarget ${model.typeName} target) {
+<#list model.inaccessibleProperties as property>
+        java.lang.reflect.Field field${property?index} = org.springframework.util.ReflectionUtils.findField(
+                ${model.typeName}.class, "${property.name}");
+        org.springframework.util.ReflectionUtils.makeAccessible(field${property?index});
+        org.springframework.util.ReflectionUtils.setField(field${property?index}, target, source.${property.getter}());
+</#list>
+    }
+</#if>
+
+</#list>
+
+<#if valueCopyModels?has_content>
+    default Object copyDynamicValue(Object source, @Context CycleAvoidingMappingContext cycleContext, String path) {
+        if (source == null || source instanceof String || source instanceof Boolean
+                || source instanceof Character || source instanceof Byte || source instanceof Short
+                || source instanceof Integer || source instanceof Long || source instanceof Float
+                || source instanceof Double || source instanceof java.math.BigDecimal
+                || source instanceof java.math.BigInteger || source instanceof java.util.UUID
+                || source instanceof Enum || source instanceof Class
+                || source.getClass().getName().startsWith("java.time.")) return source;
+        Object cached = cycleContext.getMappedInstance(source, source.getClass());
+        if (cached != null) return cached;
+        if (source instanceof java.util.Date) {
+            Object target = ((java.util.Date) source).clone();
+            cycleContext.storeMappedInstance(source, target, source.getClass());
+            return target;
+        }
+        if (source instanceof Map) {
+            Map<Object, Object> target = new LinkedHashMap<>();
+            cycleContext.storeMappedInstance(source, target, source.getClass());
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) source).entrySet()) {
+                Object key = copyDynamicValue(entry.getKey(), cycleContext, path + ".key");
+                Object value = copyDynamicValue(entry.getValue(), cycleContext, path + "[" + entry.getKey() + "]");
+                target.put(key, value);
+            }
+            return target;
+        }
+        if (source instanceof List) {
+            List<Object> target = new ArrayList<>(((List<?>) source).size());
+            cycleContext.storeMappedInstance(source, target, source.getClass());
+            int index = 0;
+            for (Object value : (List<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[" + index++ + "]"));
+            return target;
+        }
+        if (source instanceof Set) {
+            Set<Object> target = new LinkedHashSet<>();
+            cycleContext.storeMappedInstance(source, target, source.getClass());
+            for (Object value : (Set<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[]"));
+            return target;
+        }
+        if (source.getClass().isArray()) {
+            int size = java.lang.reflect.Array.getLength(source);
+            Object target = java.lang.reflect.Array.newInstance(source.getClass().getComponentType(), size);
+            cycleContext.storeMappedInstance(source, target, source.getClass());
+            for (int index = 0; index < size; index++) {
+                java.lang.reflect.Array.set(target, index,
+                        copyDynamicValue(java.lang.reflect.Array.get(source, index), cycleContext, path + "[" + index + "]"));
+            }
+            return target;
+        }
+<#list valueCopyModels as model>
+        if (source.getClass() == ${model.typeName}.class) return copyValue${model.index}((${model.typeName}) source, cycleContext);
+</#list>
+        throw new IllegalArgumentException("Unsupported mutable value at " + path + ": " + source.getClass().getName());
+    }
+</#if>
 
     ${entityName}Info toInfo(Create${entityName}Req req);
 

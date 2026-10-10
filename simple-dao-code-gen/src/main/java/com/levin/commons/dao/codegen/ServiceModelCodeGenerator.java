@@ -70,9 +70,12 @@ import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -1392,6 +1395,229 @@ public final class ServiceModelCodeGenerator {
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
+    static List<String> jsonListTargetTypes(Class<?> entityClass) {
+        Set<String> types = new LinkedHashSet<>();
+        collectJsonListTargetTypes(entityClass, types, new HashSet<>());
+        return types.stream().sorted().collect(Collectors.toList());
+    }
+
+    static List<String> jsonTargetTypes(Class<?> entityClass) {
+        Set<String> types = new LinkedHashSet<>();
+        collectJsonTargetTypes(entityClass, types, new HashSet<>());
+        return types.stream().sorted().collect(Collectors.toList());
+    }
+
+    private static void collectJsonTargetTypes(Class<?> entityClass, Set<String> types,
+                                               Set<Class<?>> visited) {
+        if (entityClass == null || !visited.add(entityClass)) {
+            return;
+        }
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (field.getType() == String.class && injectVar != null) {
+                Class<?> baseType = injectVar.expectBaseType();
+                String targetType = null;
+                if (baseType == List.class) {
+                    targetType = injectedTypeName(baseType, injectVar.expectGenericTypes(), true);
+                } else if (baseType == Map.class) {
+                    targetType = injectedTypeName(baseType, injectVar.expectGenericTypes(), true);
+                } else if (baseType != Object.class && baseType != Void.class
+                        && baseType != void.class && !BeanUtils.isSimpleValueType(baseType)) {
+                    targetType = baseType.getCanonicalName();
+                }
+                if ((baseType == List.class || baseType == Map.class) && targetType == null) {
+                    throw new IllegalStateException("Unresolved JSON generic type: " + field);
+                }
+                if (targetType != null) {
+                    types.add(targetType);
+                }
+            }
+            Class<?> fieldType = field.getType();
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : Collection.class.isAssignableFrom(fieldType)
+                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+            if (relatedType != null && relatedType.isAnnotationPresent(Entity.class)) {
+                collectJsonTargetTypes(relatedType, types, visited);
+            }
+        });
+    }
+
+    static List<Class<?>> valueCopyTypes(Class<?> entityClass) {
+        Set<Class<?>> types = new LinkedHashSet<>();
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (injectVar != null) {
+                collectValueCopyType(injectVar.expectBaseType(), entityClass, types);
+                for (Class<?> genericType : injectVar.expectGenericTypes()) {
+                    collectValueCopyType(genericType, entityClass, types);
+                }
+            }
+            collectValueCopyType(field.getType(), entityClass, types);
+            for (ResolvableType genericType : ResolvableType.forField(field).getGenerics()) {
+                collectValueCopyType(genericType.resolve(), entityClass, types);
+            }
+        });
+        return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
+    }
+
+    static List<Map<String, Object>> valueCopyModels(Class<?> entityClass) {
+        List<Class<?>> types = valueCopyTypes(entityClass);
+        List<Map<String, Object>> models = new ArrayList<>();
+        for (int index = 0; index < types.size(); index++) {
+            Class<?> valueType = types.get(index);
+            List<Map<String, String>> overloadedProperties = new ArrayList<>();
+            List<Map<String, String>> inaccessibleProperties = new ArrayList<>();
+            List<Map<String, String>> dynamicProperties = new ArrayList<>();
+            List<Map<String, String>> qualifiedProperties = new ArrayList<>();
+            for (java.beans.PropertyDescriptor descriptor : BeanUtils.getPropertyDescriptors(valueType)) {
+                Method getter = descriptor.getReadMethod();
+                if (getter == null || "class".equals(descriptor.getName())) {
+                    continue;
+                }
+                String setterName = "set" + StringUtils.capitalize(descriptor.getName());
+                List<Method> setters = Arrays.stream(valueType.getMethods())
+                        .filter(method -> method.getName().equals(setterName)
+                                && method.getParameterCount() == 1)
+                        .collect(Collectors.toList());
+                boolean exactSetter = setters.stream()
+                        .anyMatch(method -> method.getParameterTypes()[0] == getter.getReturnType());
+                Field backingField = ReflectionUtils.findField(valueType, descriptor.getName());
+                if (!exactSetter && backingField != null) {
+                    if (Modifier.isFinal(backingField.getModifiers())
+                            || backingField.getType() != getter.getReturnType()) {
+                        throw new IllegalStateException("Cannot safely copy value property: " + getter);
+                    }
+                    inaccessibleProperties.add(Map.of("name", descriptor.getName(),
+                            "getter", getter.getName()));
+                }
+                if (setters.size() > 1 && exactSetter) {
+                    overloadedProperties.add(Map.of("name", descriptor.getName(),
+                            "getter", getter.getName(),
+                            "typeName", getter.getReturnType().getCanonicalName()));
+                }
+                if (Map.class.isAssignableFrom(getter.getReturnType())) {
+                    Class<?> mapValueType = ResolvableType.forMethodReturnType(getter).resolveGeneric(1);
+                    if (mapValueType == null || mapValueType == Object.class) {
+                        dynamicProperties.add(Map.of("name", descriptor.getName(),
+                                "getter", getter.getName(),
+                                "typeName", getter.getReturnType().getCanonicalName(),
+                                "path", valueType.getSimpleName() + "." + descriptor.getName()));
+                    }
+                }
+                Class<?> propertyType = getter.getReturnType();
+                if (Collection.class.isAssignableFrom(propertyType)) {
+                    propertyType = ResolvableType.forMethodReturnType(getter).resolveGeneric();
+                }
+                int copyIndex = types.indexOf(propertyType);
+                if (copyIndex >= 0) {
+                    qualifiedProperties.add(Map.of("name", descriptor.getName(),
+                            "copyMethod", "copyValue" + copyIndex));
+                }
+            }
+            overloadedProperties.sort(Comparator.comparing(property -> property.get("name")));
+            inaccessibleProperties.sort(Comparator.comparing(property -> property.get("name")));
+            dynamicProperties.sort(Comparator.comparing(property -> property.get("name")));
+            qualifiedProperties.sort(Comparator.comparing(property -> property.get("name")));
+            models.add(Map.of("typeName", valueType.getCanonicalName(),
+                    "index", index, "overloadedProperties", overloadedProperties,
+                    "inaccessibleProperties", inaccessibleProperties,
+                    "dynamicProperties", dynamicProperties,
+                    "qualifiedProperties", qualifiedProperties));
+        }
+        return models;
+    }
+
+    static List<Map<String, String>> valueCopyFields(Class<?> entityClass) {
+        List<Class<?>> copyTypes = valueCopyTypes(entityClass);
+        List<Map<String, String>> fields = new ArrayList<>();
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            Class<?> elementType = null;
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (injectVar != null && copyTypes.contains(injectVar.expectBaseType())) {
+                elementType = injectVar.expectBaseType();
+            } else if (injectVar != null && Collection.class.isAssignableFrom(injectVar.expectBaseType())
+                    && injectVar.expectGenericTypes().length == 1) {
+                elementType = injectVar.expectGenericTypes()[0];
+            } else if (Collection.class.isAssignableFrom(field.getType())) {
+                elementType = ResolvableType.forField(field).resolveGeneric();
+            } else if (copyTypes.contains(field.getType())) {
+                elementType = field.getType();
+            }
+            int index = copyTypes.indexOf(elementType);
+            if (index >= 0) {
+                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValue" + index));
+            }
+        });
+        return fields;
+    }
+
+    private static void collectValueCopyType(Class<?> type, Class<?> entityClass, Set<Class<?>> types) {
+        if (type == null || type.isAnnotationPresent(Entity.class) || type.isEnum()
+                || type.getPackage() == null
+                || !type.getPackage().getName().startsWith(entityClass.getPackage().getName())) {
+            return;
+        }
+        if (type.isInterface() || Modifier.isAbstract(type.getModifiers())
+                || !Modifier.isPublic(type.getModifiers())
+                || type.getEnclosingClass() != null && !Modifier.isStatic(type.getModifiers())) {
+            throw new IllegalStateException("Unsupported project value type: " + type.getName());
+        }
+        try {
+            type.getConstructor();
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalStateException("No public no-arg constructor for project value type: "
+                    + type.getName(), ex);
+        }
+        if (!types.add(type)) {
+            return;
+        }
+        ReflectionUtils.doWithFields(type, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            collectValueCopyType(field.getType(), entityClass, types);
+            for (ResolvableType genericType : ResolvableType.forField(field).getGenerics()) {
+                collectValueCopyType(genericType.resolve(), entityClass, types);
+            }
+        });
+    }
+
+    static List<String> ignoredUnresolvedCollectionProperties(Class<?> entityClass) {
+        return Arrays.stream(entityClass.getMethods())
+                .filter(method -> method.getDeclaringClass().isInterface()
+                        && method.getParameterCount() == 0
+                        && method.getName().startsWith("get")
+                        && method.getName().length() > 3
+                        && Collection.class.isAssignableFrom(method.getReturnType())
+                        && containsTypeVariable(method.getGenericReturnType()))
+                .map(method -> java.beans.Introspector.decapitalize(method.getName().substring(3)))
+                .filter(name -> ReflectionUtils.findField(entityClass, name) == null)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private static boolean containsTypeVariable(Type type) {
+        if (type instanceof TypeVariable<?>) {
+            return true;
+        }
+        if (type instanceof ParameterizedType) {
+            return Arrays.stream(((ParameterizedType) type).getActualTypeArguments())
+                    .anyMatch(ServiceModelCodeGenerator::containsTypeVariable);
+        }
+        return type instanceof GenericArrayType
+                && containsTypeVariable(((GenericArrayType) type).getGenericComponentType());
+    }
+
     static List<Class<?>> nestedEntityTypes(Class<?> entityClass, Set<Class<?>> generatedEntityTypes) {
         return relatedEntityTypes(entityClass, generatedEntityTypes, true);
     }
@@ -1507,6 +1733,60 @@ public final class ServiceModelCodeGenerator {
         });
     }
 
+    private static void collectJsonListTargetTypes(Class<?> entityClass, Set<String> types,
+                                                   Set<Class<?>> visited) {
+        if (entityClass == null || !visited.add(entityClass)) {
+            return;
+        }
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (field.getType() == String.class && injectVar != null
+                    && injectVar.expectBaseType() == List.class) {
+                String targetType = injectedTypeName(List.class, injectVar.expectGenericTypes(), true);
+                if (targetType != null && !"java.util.List<java.lang.String>".equals(targetType)) {
+                    types.add(targetType);
+                }
+            }
+            Class<?> fieldType = field.getType();
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : Collection.class.isAssignableFrom(fieldType)
+                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+            if (relatedType != null && relatedType.isAnnotationPresent(Entity.class)) {
+                collectJsonListTargetTypes(relatedType, types, visited);
+            }
+        });
+    }
+
+    private static String injectedTypeName(Class<?> baseType, Class<?>[] genericTypes, boolean qualified) {
+        int[] index = {0};
+        String name = renderInjectedType(baseType, genericTypes, index, qualified);
+        return index[0] == genericTypes.length ? name : null;
+    }
+
+    private static String renderInjectedType(Class<?> type, Class<?>[] genericTypes,
+                                             int[] index, boolean qualified) {
+        String name = qualified ? type.getCanonicalName() : type.getSimpleName();
+        if (name == null) {
+            return null;
+        }
+        if (type == List.class) {
+            if (index[0] >= genericTypes.length) return null;
+            String element = renderInjectedType(genericTypes[index[0]++], genericTypes, index, qualified);
+            return element == null ? null : name + "<" + element + ">";
+        }
+        if (type == Map.class) {
+            if (index[0] >= genericTypes.length) return null;
+            String key = renderInjectedType(genericTypes[index[0]++], genericTypes, index, qualified);
+            if (index[0] >= genericTypes.length) return null;
+            String value = renderInjectedType(genericTypes[index[0]++], genericTypes, index, qualified);
+            return key == null || value == null ? null : name + "<" + key + "," + value + ">";
+        }
+        return name;
+    }
+
     private static boolean needsJsonMapping(Class<?> entityClass,
                                             java.util.function.Predicate<InjectVar> matches,
                                             Set<Class<?>> visited) {
@@ -1561,6 +1841,12 @@ public final class ServiceModelCodeGenerator {
             params.put("needsJsonObjectMapping", needsJsonObjectMapping(entityClass));
             params.put("needsJsonArrayMapping", needsJsonArrayMapping(entityClass));
             params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
+            params.put("jsonListTargetTypes", jsonListTargetTypes(entityClass));
+            params.put("jsonTargetTypes", jsonTargetTypes(entityClass));
+            params.put("valueCopyTypes", valueCopyTypes(entityClass));
+            params.put("valueCopyModels", valueCopyModels(entityClass));
+            params.put("valueCopyFields", valueCopyFields(entityClass));
+            params.put("ignoredUnresolvedCollectionProperties", ignoredUnresolvedCollectionProperties(entityClass));
             params.put("nestedEntityTypes", nestedEntityTypes(entityClass, generatedEntityTypes));
             params.put("nestedInfoTypes", nestedInfoTypes(entityClass, generatedEntityTypes));
             params.put("nestedInfoCollectionMappings", nestedInfoCollectionMappings(entityClass, generatedEntityTypes));
@@ -2730,6 +3016,17 @@ public final class ServiceModelCodeGenerator {
                                                     || Collection.class.isAssignableFrom(injectVar.expectBaseType()));
 
                                             String sub = Arrays.stream(injectVar.expectGenericTypes()).map(Class::getSimpleName).collect(Collectors.joining(","));
+
+                                            if (injectVar.expectBaseType() == List.class
+                                                    || injectVar.expectBaseType() == Map.class) {
+                                                String declaredType = injectedTypeName(injectVar.expectBaseType(),
+                                                        injectVar.expectGenericTypes(), false);
+                                                if (declaredType == null) {
+                                                    throw new IllegalStateException("Unresolved JSON generic type: " + field);
+                                                }
+                                                fieldModel.typeName = declaredType;
+                                                sub = "";
+                                            }
 
                                             if (StringUtils.hasText(sub)) {
                                                 fieldModel.typeName += "<" + sub + ">";

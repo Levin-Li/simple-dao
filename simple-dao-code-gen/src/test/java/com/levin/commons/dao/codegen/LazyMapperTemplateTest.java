@@ -116,16 +116,14 @@ class LazyMapperTemplateTest {
                 "entityName", "FixtureEntity",
                 "entityTitle", "测试实体",
                 "importList", Collections.emptyList(),
-                "needsJsonObjectMapping", true,
-                "needsJsonArrayMapping", true,
+                "jsonTargetTypes", List.of("com.alibaba.fastjson2.JSONObject", "java.util.List<java.lang.String>"),
                 "fields", Collections.emptyList()), output);
 
         String source = output.toString();
-        assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping, JsonArrayMapping"), source);
-        assertTrue(source.contains("import com.levin.commons.dao.support.JsonObjectMapping;"), source);
-        assertTrue(source.contains("import com.levin.commons.dao.support.JsonArrayMapping;"), source);
-        assertFalse(source.contains("import com.example.services.commons.mapper.JsonObjectMapping;"), source);
-        assertFalse(source.contains("import com.example.services.commons.mapper.JsonArrayMapping;"), source);
+        assertTrue(source.contains("interface FixtureEntityMapper {"), source);
+        assertFalse(source.contains("extends Json"), source);
+        assertTrue(source.contains("com.alibaba.fastjson2.JSONObject fromJsonType0(String json)"), source);
+        assertTrue(source.contains("java.util.List<java.lang.String> fromJsonType1(String json)"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -209,14 +207,13 @@ class LazyMapperTemplateTest {
                 "entityName", "FixtureEntity",
                 "entityTitle", "测试实体",
                 "importList", Collections.emptyList(),
-                "needsJsonObjectMapping", true,
-                "needsJsonArrayMapping", false,
+                "jsonTargetTypes", List.of("com.alibaba.fastjson2.JSONObject"),
                 "fields", Collections.emptyList()), output);
 
         String source = output.toString();
-        assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping {"), source);
-        assertTrue(source.contains("import com.levin.commons.dao.support.JsonObjectMapping;"), source);
-        assertFalse(source.contains("extends JsonObjectMapping,"), source);
+        assertTrue(source.contains("interface FixtureEntityMapper {"), source);
+        assertTrue(source.contains("com.alibaba.fastjson2.JSONObject fromJsonType0(String json)"), source);
+        assertFalse(source.contains("extends JsonObjectMapping"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -238,13 +235,13 @@ class LazyMapperTemplateTest {
                 "entityName", "FixtureEntity",
                 "entityTitle", "测试实体",
                 "importList", Collections.emptyList(),
-                "needsJsonArrayMapping", true,
+                "jsonTargetTypes", List.of("java.util.List<java.lang.String>"),
                 "fields", Collections.singletonList(legacyField)), output);
 
         String source = output.toString();
-        assertTrue(source.contains("interface FixtureEntityMapper extends JsonArrayMapping"), source);
-        assertTrue(source.contains("import com.levin.commons.dao.support.JsonArrayMapping;"), source);
-        assertFalse(source.contains("default List<String> fromJsonArray"), source);
+        assertTrue(source.contains("interface FixtureEntityMapper {"), source);
+        assertTrue(source.contains("java.util.List<java.lang.String> fromJsonType0(String json)"), source);
+        assertFalse(source.contains("extends JsonArrayMapping"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -266,12 +263,116 @@ class LazyMapperTemplateTest {
                         "entityName", "FixtureEntity",
                         "entityTitle", "测试实体",
                         "importList", Collections.emptyList(),
-                        "jsonPojoTypes", Collections.singletonList(BalanceInfo.class),
+                        "jsonTargetTypes", List.of(BalanceInfo.class.getCanonicalName()),
                         "fields", Collections.emptyList()), output);
 
         String source = output.toString();
-        assertTrue(source.contains("BalanceInfo fromJsonType0(String json)"), source);
+        assertTrue(source.contains(BalanceInfo.class.getCanonicalName() + " fromJsonType0(String json)"), source);
         assertTrue(source.contains("String toJsonType0("), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void nestedTypedJsonListShouldGenerateExactElementConversion() throws Exception {
+        assertTrue(ServiceModelCodeGenerator.jsonListTargetTypes(FixtureEntity.class).isEmpty());
+        assertTrue(ServiceModelCodeGenerator.jsonListTargetTypes(AccountEntity.class)
+                .contains("java.util.List<" + BalanceInfo.class.getCanonicalName() + ">"));
+        assertTrue(ServiceModelCodeGenerator.jsonListTargetTypes(AccountEntity.class)
+                .contains("java.util.List<java.util.List<" + BalanceInfo.class.getCanonicalName() + ">>"));
+        assertFalse(ServiceModelCodeGenerator.jsonListTargetTypes(AccountEntity.class)
+                .contains("java.util.List<java.lang.String>"));
+        assertTrue(ServiceModelCodeGenerator.jsonTargetTypes(AccountEntity.class)
+                .contains("java.util.Map<java.lang.String,java.util.List<"
+                        + BalanceInfo.class.getCanonicalName() + ">>"));
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
+                .process(Map.of(
+                        "packageName", "com.example.services",
+                        "modulePackageName", "com.example",
+                        "entityClassPackage", "com.example.entities",
+                        "entityClassName", "com.example.entities.FixtureEntity",
+                        "entityName", "FixtureEntity",
+                        "entityTitle", "测试实体",
+                        "importList", Collections.emptyList(),
+                        "jsonTargetTypes", List.of(
+                                "java.util.List<" + BalanceInfo.class.getCanonicalName() + ">",
+                                "java.util.List<java.util.List<" + BalanceInfo.class.getCanonicalName() + ">>",
+                                "java.util.Map<java.lang.String,java.util.List<" + BalanceInfo.class.getCanonicalName() + ">>"),
+                        "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("java.util.List<" + BalanceInfo.class.getCanonicalName() + "> fromJsonType0(String json)"), source);
+        assertTrue(source.contains("new com.alibaba.fastjson2.TypeReference<java.util.List<" + BalanceInfo.class.getCanonicalName() + ">>()"), source);
+        assertTrue(source.contains("String toJsonType0(java.util.List<" + BalanceInfo.class.getCanonicalName() + "> value)"), source);
+        assertTrue(source.contains("java.util.List<java.util.List<" + BalanceInfo.class.getCanonicalName() + ">> fromJsonType1(String json)"), source);
+        assertTrue(source.contains("java.util.Map<java.lang.String,java.util.List<"
+                + BalanceInfo.class.getCanonicalName() + ">> fromJsonType2(String json)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void inheritedUnresolvedCollectionShouldBeIgnoredOnlyWithoutConcreteField() throws Exception {
+        assertTrue(ServiceModelCodeGenerator.ignoredUnresolvedCollectionProperties(GenericListEntity.class)
+                .contains("computedList"));
+        assertFalse(ServiceModelCodeGenerator.ignoredUnresolvedCollectionProperties(GenericListEntity.class)
+                .contains("storedList"));
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
+                .process(Map.of(
+                        "packageName", "com.example.services",
+                        "modulePackageName", "com.example",
+                        "entityClassPackage", "com.example.entities",
+                        "entityClassName", "com.example.entities.FixtureEntity",
+                        "entityName", "FixtureEntity",
+                        "entityTitle", "测试实体",
+                        "importList", Collections.emptyList(),
+                        "ignoredUnresolvedCollectionProperties", List.of("computedList"),
+                        "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("@Mapping(target = \"computedList\", ignore = true)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void mutableValueObjectsShouldGetOneCopyMethodAndExplicitOverload() throws Exception {
+        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).contains(ValueObject.class));
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
+                .process(Map.of(
+                        "packageName", "com.example.services",
+                        "modulePackageName", "com.example",
+                        "entityClassPackage", "com.example.entities",
+                        "entityClassName", "com.example.entities.FixtureEntity",
+                        "entityName", "FixtureEntity",
+                        "entityTitle", "测试实体",
+                        "importList", Collections.emptyList(),
+                        "valueCopyModels", ServiceModelCodeGenerator.valueCopyModels(OrgEntity.class),
+                        "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        int valueIndex = ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).indexOf(ValueObject.class);
+        assertTrue(source.contains(ValueObject.class.getCanonicalName() + " copyValue" + valueIndex + "("), source);
+        assertFalse(source.contains("copyValueList" + valueIndex + "("), source);
+        assertFalse(source.contains("copyValueSet" + valueIndex + "("), source);
+        assertTrue(source.contains("@Mapping(target = \"occurred\", ignore = true)"), source);
+        assertTrue(source.contains("@org.mapstruct.AfterMapping"), source);
+        assertTrue(source.contains("ReflectionUtils.setField(field0, target, source.getOccurred())"), source);
+        assertTrue(source.contains("@Mapping(target = \"status\", expression = \"java((java.lang.String) source.getStatus())\")"), source);
+        assertTrue(source.contains("copyDynamicValue(source.getExtParams(), cycleContext"), source);
+        assertTrue(source.contains("@Mapping(target = \"next\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
+        assertTrue(source.contains("@Mapping(target = \"peers\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -319,6 +420,14 @@ class LazyMapperTemplateTest {
         String permissionList;
         @InjectVar(domain = "dao", expectBaseType = BalanceInfo.class)
         String balanceInfo;
+        @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {BalanceInfo.class})
+        String balanceHistory;
+        @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {List.class, BalanceInfo.class})
+        String nestedBalanceHistory;
+        @InjectVar(domain = "dao", expectBaseType = Map.class, expectGenericTypes = {String.class, List.class, BalanceInfo.class})
+        String balancesByRegion;
+        @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {ValueObject.class})
+        String values;
     }
 
     @Entity
@@ -326,7 +435,38 @@ class LazyMapperTemplateTest {
         String name;
     }
 
-    static class BalanceInfo {
+    public static class BalanceInfo {
+        public BalanceInfo() {}
         String currency;
+    }
+
+    public static class ValueObject {
+        public ValueObject() {}
+        ValueObject next;
+        List<ValueObject> peers;
+        String occurred;
+        String status;
+        Map<String, Object> extParams;
+
+        public ValueObject getNext() { return next; }
+        public void setNext(ValueObject next) { this.next = next; }
+        public List<ValueObject> getPeers() { return peers; }
+        public void setPeers(List<ValueObject> peers) { this.peers = peers; }
+        public String getOccurred() { return occurred; }
+        public void setOccurred(java.util.Date occurred) { this.occurred = occurred.toString(); }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        public void setStatus(java.util.Date status) { this.status = status.toString(); }
+        public Map<String, Object> getExtParams() { return extParams; }
+        public void setExtParams(Map<String, Object> extParams) { this.extParams = extParams; }
+    }
+
+    interface GenericLists {
+        default <T> List<T> getComputedList() { return null; }
+        default <T> List<T> getStoredList() { return null; }
+    }
+
+    static class GenericListEntity implements GenericLists {
+        List<String> storedList;
     }
 }
