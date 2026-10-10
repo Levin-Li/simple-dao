@@ -1458,8 +1458,9 @@ public final class ServiceModelCodeGenerator {
                     collectValueCopyType(genericType, entityClass, types);
                 }
             }
-            collectValueCopyType(field.getType(), entityClass, types);
-            for (ResolvableType genericType : ResolvableType.forField(field).getGenerics()) {
+            ResolvableType resolvedField = ResolvableType.forField(field, entityClass);
+            collectValueCopyType(resolvedField.resolve(), entityClass, types);
+            for (ResolvableType genericType : resolvedField.getGenerics()) {
                 collectValueCopyType(genericType.resolve(), entityClass, types);
             }
         });
@@ -1549,14 +1550,14 @@ public final class ServiceModelCodeGenerator {
                     && injectVar.expectGenericTypes().length == 1) {
                 elementType = injectVar.expectGenericTypes()[0];
             } else if (Map.class.isAssignableFrom(field.getType())
-                    && Arrays.stream(ResolvableType.forField(field).getGenerics())
+                    && Arrays.stream(ResolvableType.forField(field, entityClass).getGenerics())
                     .map(ResolvableType::resolve).anyMatch(copyTypes::contains)) {
                 fields.add(Map.of("name", field.getName(), "copyMethod", "copyValueMap"));
                 return;
             } else if (Collection.class.isAssignableFrom(field.getType())) {
-                elementType = ResolvableType.forField(field).resolveGeneric();
-            } else if (copyTypes.contains(field.getType())) {
-                elementType = field.getType();
+                elementType = ResolvableType.forField(field, entityClass).resolveGeneric();
+            } else if (copyTypes.contains(ResolvableType.forField(field, entityClass).resolve())) {
+                elementType = ResolvableType.forField(field, entityClass).resolve();
             }
             int index = copyTypes.indexOf(elementType);
             if (index >= 0) {
@@ -1592,8 +1593,9 @@ public final class ServiceModelCodeGenerator {
             if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
                 return;
             }
-            collectValueCopyType(field.getType(), entityClass, types);
-            for (ResolvableType genericType : ResolvableType.forField(field).getGenerics()) {
+            ResolvableType resolvedField = ResolvableType.forField(field, type);
+            collectValueCopyType(resolvedField.resolve(), entityClass, types);
+            for (ResolvableType genericType : resolvedField.getGenerics()) {
                 collectValueCopyType(genericType.resolve(), entityClass, types);
             }
         });
@@ -1642,10 +1644,14 @@ public final class ServiceModelCodeGenerator {
             if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
                 return;
             }
-            Class<?> fieldType = field.getType();
+            ResolvableType resolvedField = ResolvableType.forField(field, entityClass);
+            Class<?> fieldType = resolvedField.resolve();
+            if (fieldType == null) {
+                return;
+            }
             Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
                     : Collection.class.isAssignableFrom(fieldType)
-                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+                    ? resolvedField.resolveGeneric() : fieldType;
             if (relatedType != null && relatedType != entityClass
                     && relatedType.isAnnotationPresent(Entity.class)
                     && (generatedEntityTypes.contains(relatedType)
@@ -1694,7 +1700,11 @@ public final class ServiceModelCodeGenerator {
             if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
                 return;
             }
-            Class<?> fieldType = field.getType();
+            ResolvableType resolvedField = ResolvableType.forField(field, entityClass);
+            Class<?> fieldType = resolvedField.resolve();
+            if (fieldType == null) {
+                return;
+            }
             String kind = fieldType.isArray() ? "Array"
                     : List.class.isAssignableFrom(fieldType) ? "List"
                     : Set.class.isAssignableFrom(fieldType) ? "Set"
@@ -1703,7 +1713,7 @@ public final class ServiceModelCodeGenerator {
                 return;
             }
             Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
-                    : ResolvableType.forField(field).resolveGeneric();
+                    : resolvedField.resolveGeneric();
             if (relatedType != null && mappableTypes.contains(relatedType)) {
                 mappings.putIfAbsent(relatedType.getName() + "#" + kind,
                         Map.of("entityType", relatedType, "kind", kind));

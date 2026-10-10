@@ -17,6 +17,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.MappedSuperclass;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LazyMapperTemplateTest {
 
@@ -384,6 +386,20 @@ class LazyMapperTemplateTest {
     }
 
     @Test
+    void mappedSuperclassGenericAssociationsResolveToConcreteEntity() {
+        assertFalse(ServiceModelCodeGenerator.valueCopyTypes(MappedTreeEntity.class)
+                .contains(MappedTreeBase.class));
+        assertTrue(ServiceModelCodeGenerator.valueCopyModels(MappedTreeEntity.class).isEmpty());
+        assertTrue(ServiceModelCodeGenerator.nestedInfoCollectionMappings(MappedTreeEntity.class,
+                        Set.of(MappedTreeEntity.class)).stream()
+                .anyMatch(mapping -> mapping.get("entityType") == MappedTreeEntity.class
+                        && "List".equals(mapping.get("kind"))));
+        IllegalStateException unresolved = assertThrows(IllegalStateException.class,
+                () -> ServiceModelCodeGenerator.valueCopyTypes(RawMappedTreeEntity.class));
+        assertTrue(unresolved.getMessage().contains(MappedTreeBase.class.getName()));
+    }
+
+    @Test
     void sameSimpleNameFromDifferentPackagesShouldNotEraseCollectionMethods() throws Exception {
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
@@ -461,6 +477,21 @@ class LazyMapperTemplateTest {
         String balancesByRegion;
         @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {ValueObject.class})
         String values;
+    }
+
+    @MappedSuperclass
+    abstract static class MappedTreeBase<T extends MappedTreeBase<T>> {
+        T parent;
+        List<T> children;
+    }
+
+    @Entity
+    static class MappedTreeEntity extends MappedTreeBase<MappedTreeEntity> {
+    }
+
+    @Entity
+    @SuppressWarnings("rawtypes")
+    static class RawMappedTreeEntity extends MappedTreeBase {
     }
 
     @Entity
