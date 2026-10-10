@@ -10,6 +10,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
 import org.junit.jupiter.api.Test;
+import org.example.value.ExternalValue;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -75,7 +76,7 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("@BeforeMapping"), source);
         assertTrue(source.contains("cycleContext.getMappedInstance(source, targetType)"), source);
         assertTrue(source.contains("cycleContext.storeMappedInstance(source, target, targetType)"), source);
-        assertTrue(source.contains("copyFixtureEntityInfoList(List<"), source);
+        assertTrue(source.contains("copyInfoList0(List<"), source);
         assertFalse(source.contains("extends JsonObjectMapping"), source);
         assertFalse(source.contains("extends JsonArrayMapping"), source);
         assertFalse(source.contains("fromJsonArray"), source);
@@ -185,11 +186,10 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains(".toInfo(entity, allowLazyLoading, cycleContext)"), source);
         assertTrue(source.contains("OrgEntityInfo mapNested("), source);
         assertTrue(source.contains(".toInfo(info, cycleContext)"), source);
-        assertTrue(source.contains("copyOrgEntityInfoList(List<"), source);
-        assertTrue(source.contains("copyOrgEntityInfoSet(Set<"), source);
-        assertTrue(source.contains("copyOrgEntityInfoCollection(Collection<"), source);
-        assertTrue(source.contains("copyOrgEntityInfoArray("), source);
-        assertTrue(source.contains("copyTeamEntityInfoList(List<"), source);
+        assertTrue(source.contains("copyInfoList"), source);
+        assertTrue(source.contains("copyInfoSet"), source);
+        assertTrue(source.contains("copyInfoCollection"), source);
+        assertTrue(source.contains("copyInfoArray"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -344,6 +344,10 @@ class LazyMapperTemplateTest {
     @Test
     void mutableValueObjectsShouldGetOneCopyMethodAndExplicitOverload() throws Exception {
         assertTrue(ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).contains(ValueObject.class));
+        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).contains(ExternalValue.class));
+        assertTrue(ServiceModelCodeGenerator.valueCopyFields(OrgEntity.class).stream()
+                .anyMatch(field -> "externalValues".equals(field.get("name"))
+                        && "copyValueMap".equals(field.get("copyMethod"))));
 
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
@@ -363,16 +367,43 @@ class LazyMapperTemplateTest {
 
         String source = output.toString();
         int valueIndex = ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).indexOf(ValueObject.class);
+        int externalIndex = ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).indexOf(ExternalValue.class);
         assertTrue(source.contains(ValueObject.class.getCanonicalName() + " copyValue" + valueIndex + "("), source);
+        assertTrue(source.contains(ExternalValue.class.getCanonicalName() + " copyValue" + externalIndex + "("), source);
         assertFalse(source.contains("copyValueList" + valueIndex + "("), source);
         assertFalse(source.contains("copyValueSet" + valueIndex + "("), source);
         assertTrue(source.contains("@Mapping(target = \"occurred\", ignore = true)"), source);
         assertTrue(source.contains("@org.mapstruct.AfterMapping"), source);
-        assertTrue(source.contains("ReflectionUtils.setField(field0, target, source.getOccurred())"), source);
-        assertTrue(source.contains("@Mapping(target = \"status\", expression = \"java((java.lang.String) source.getStatus())\")"), source);
+        assertTrue(source.contains("copyDynamicValue(source.getOccurred(), cycleContext"), source);
+        assertTrue(source.contains("copyDynamicValue(source.getStatus(), cycleContext"), source);
+        assertTrue(source.contains("copyValueAuto" + valueIndex), source);
         assertTrue(source.contains("copyDynamicValue(source.getExtParams(), cycleContext"), source);
         assertTrue(source.contains("@Mapping(target = \"next\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertTrue(source.contains("@Mapping(target = \"peers\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void sameSimpleNameFromDifferentPackagesShouldNotEraseCollectionMethods() throws Exception {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(Map.of(
+                "packageName", "com.example.services",
+                "modulePackageName", "com.example",
+                "entityClassPackage", "com.example.entities",
+                "entityName", "Root",
+                "entityTitle", "Root",
+                "nestedInfoCollectionMappings", List.of(
+                        Map.of("kind", "List", "entityType", Map.of("simpleName", "User",
+                                "package", Map.of("name", "com.example.a.entities"))),
+                        Map.of("kind", "List", "entityType", Map.of("simpleName", "User",
+                                "package", Map.of("name", "com.example.b.entities")))),
+                "fields", List.of()), output);
+        String source = output.toString();
+        assertTrue(source.contains("copyInfoList0(List<"), source);
+        assertTrue(source.contains("copyInfoList1(List<"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -414,6 +445,8 @@ class LazyMapperTemplateTest {
 
     @Entity
     static class OrgEntity {
+        ExternalValue externalValue;
+        Map<String, ExternalValue> externalValues;
         @InjectVar(domain = "dao", expectBaseType = JSONObject.class)
         String exInfo;
         @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class})

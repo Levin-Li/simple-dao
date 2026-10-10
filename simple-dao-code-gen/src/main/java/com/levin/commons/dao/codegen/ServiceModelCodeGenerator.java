@@ -1502,13 +1502,10 @@ public final class ServiceModelCodeGenerator {
                             "typeName", getter.getReturnType().getCanonicalName()));
                 }
                 if (Map.class.isAssignableFrom(getter.getReturnType())) {
-                    Class<?> mapValueType = ResolvableType.forMethodReturnType(getter).resolveGeneric(1);
-                    if (mapValueType == null || mapValueType == Object.class) {
-                        dynamicProperties.add(Map.of("name", descriptor.getName(),
-                                "getter", getter.getName(),
-                                "typeName", getter.getReturnType().getCanonicalName(),
-                                "path", valueType.getSimpleName() + "." + descriptor.getName()));
-                    }
+                    dynamicProperties.add(Map.of("name", descriptor.getName(),
+                            "getter", getter.getName(),
+                            "typeName", getter.getReturnType().getCanonicalName(),
+                            "path", valueType.getSimpleName() + "." + descriptor.getName()));
                 }
                 Class<?> propertyType = getter.getReturnType();
                 if (Collection.class.isAssignableFrom(propertyType)) {
@@ -1544,9 +1541,18 @@ public final class ServiceModelCodeGenerator {
             InjectVar injectVar = field.getAnnotation(InjectVar.class);
             if (injectVar != null && copyTypes.contains(injectVar.expectBaseType())) {
                 elementType = injectVar.expectBaseType();
+            } else if (injectVar != null && injectVar.expectBaseType() == Map.class
+                    && Arrays.stream(injectVar.expectGenericTypes()).anyMatch(copyTypes::contains)) {
+                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValueMap"));
+                return;
             } else if (injectVar != null && Collection.class.isAssignableFrom(injectVar.expectBaseType())
                     && injectVar.expectGenericTypes().length == 1) {
                 elementType = injectVar.expectGenericTypes()[0];
+            } else if (Map.class.isAssignableFrom(field.getType())
+                    && Arrays.stream(ResolvableType.forField(field).getGenerics())
+                    .map(ResolvableType::resolve).anyMatch(copyTypes::contains)) {
+                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValueMap"));
+                return;
             } else if (Collection.class.isAssignableFrom(field.getType())) {
                 elementType = ResolvableType.forField(field).resolveGeneric();
             } else if (copyTypes.contains(field.getType())) {
@@ -1562,8 +1568,10 @@ public final class ServiceModelCodeGenerator {
 
     private static void collectValueCopyType(Class<?> type, Class<?> entityClass, Set<Class<?>> types) {
         if (type == null || type.isAnnotationPresent(Entity.class) || type.isEnum()
-                || type.getPackage() == null
-                || !type.getPackage().getName().startsWith(entityClass.getPackage().getName())) {
+                || type == Object.class || type.isArray()
+                || BeanUtils.isSimpleValueType(type)
+                || Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)
+                || type.getPackage() == null) {
             return;
         }
         if (type.isInterface() || Modifier.isAbstract(type.getModifiers())

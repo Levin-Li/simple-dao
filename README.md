@@ -286,6 +286,8 @@
    `setDefaultResultConverter(Info.class, Function)` 还能让显式查询该类型时使用转换器；
    `setAllowLazyLoading(false)` 默认跳过尚未加载的 `LAZY` 属性，已加载的属性照常映射。
    关联实体存在可调用的 Mapper 时，实体和 `Info` 拷贝交给该 Mapper，并共享延迟加载设置和循环引用缓存；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。
+   每个 JPA 实体对应一个 Mapper。它引用的可复制非实体值对象在该 Mapper 内复制，包含 Map 中的值；动态容器共享同一次循环引用缓存。字符串与声明类型之间的 JSON 转换也在实体 Mapper 内生成。不可安全实例化的值类型在生成阶段报错。
+   JSON 转换默认使用 Fastjson2；共享接口 `MapperJsonUtils` 提供静态嵌套类 `JsonCodec` 和一个可配置的 `AtomicReference<JsonCodec> codec`。自定义子类可重写 `parse(String, Type)` 与 `stringify(Object)`；通过 `codec.set(...)` 切换，测试后恢复原值。生成的实体 Mapper 调用 `MapperJsonUtils.toJson` 和 `MapperJsonUtils.fromJson`，保留完整的泛型目标类型。
    `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供，代码生成器不再为每个模块生成这三个文件。
    指定列查询继续使用投影映射，详情见 [用户手册](./manual.md)。
    带条数限制的集合 `JOIN FETCH` 在最终 JPA 执行层自动执行 ID 分页和完整关联抓取，避免 Hibernate 内存分页；单值 fetch 和普通 JOIN 保持原路径。

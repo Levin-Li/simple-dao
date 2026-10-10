@@ -129,10 +129,10 @@ public interface ${entityName}Mapper {
 <#list nestedInfoCollectionMappings![] as mapping>
 <#assign infoType = mapping.entityType.package.name?replace("entities", "services") + "." + mapping.entityType.simpleName?lower_case + ".info." + mapping.entityType.simpleName + "Info">
 <#if mapping.kind == "Array">
-    ${infoType}[] copy${mapping.entityType.simpleName}InfoArray(${infoType}[] infos,
+    ${infoType}[] copyInfoArray${mapping?index}(${infoType}[] infos,
             @Context CycleAvoidingMappingContext cycleContext);
 <#else>
-    ${mapping.kind}<${infoType}> copy${mapping.entityType.simpleName}Info${mapping.kind}(${mapping.kind}<${infoType}> infos,
+    ${mapping.kind}<${infoType}> copyInfo${mapping.kind}${mapping?index}(${mapping.kind}<${infoType}> infos,
             @Context CycleAvoidingMappingContext cycleContext);
 </#if>
 
@@ -140,12 +140,12 @@ public interface ${entityName}Mapper {
 
 <#list jsonTargetTypes![] as targetType>
     default ${targetType} fromJsonType${targetType?index}(String json) {
-        return json == null || json.isEmpty() ? null : com.alibaba.fastjson2.JSON.parseObject(json,
+        return com.levin.commons.dao.support.MapperJsonUtils.fromJson(json,
                 new com.alibaba.fastjson2.TypeReference<${targetType}>() {}.getType());
     }
 
     default String toJsonType${targetType?index}(${targetType} value) {
-        return value == null ? null : com.alibaba.fastjson2.JSON.toJSONString(value);
+        return com.levin.commons.dao.support.MapperJsonUtils.toJson(value);
     }
 
 </#list>
@@ -153,7 +153,7 @@ public interface ${entityName}Mapper {
 <#list valueCopyModels![] as model>
     @Named("copyValue${model.index}")
 <#list model.overloadedProperties as property>
-    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) source.${property.getter}())")
+    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) copyDynamicValue(source.${property.getter}(), cycleContext, \"${model.typeName}.${property.name}\"))")
 </#list>
 <#list model.inaccessibleProperties as property>
     @Mapping(target = "${property.name}", ignore = true)
@@ -167,15 +167,22 @@ public interface ${entityName}Mapper {
     ${model.typeName} copyValue${model.index}(${model.typeName} source,
             @Context CycleAvoidingMappingContext cycleContext);
 
+    default ${model.typeName} copyValueAuto${model.index}(${model.typeName} source,
+            @Context CycleAvoidingMappingContext cycleContext) {
+        return copyValue${model.index}(source, cycleContext);
+    }
+
 <#if model.inaccessibleProperties?has_content>
     @org.mapstruct.AfterMapping
     default void copyValueFields${model.index}(${model.typeName} source,
-            @MappingTarget ${model.typeName} target) {
+            @MappingTarget ${model.typeName} target,
+            @Context CycleAvoidingMappingContext cycleContext) {
 <#list model.inaccessibleProperties as property>
         java.lang.reflect.Field field${property?index} = org.springframework.util.ReflectionUtils.findField(
                 ${model.typeName}.class, "${property.name}");
         org.springframework.util.ReflectionUtils.makeAccessible(field${property?index});
-        org.springframework.util.ReflectionUtils.setField(field${property?index}, target, source.${property.getter}());
+        org.springframework.util.ReflectionUtils.setField(field${property?index}, target,
+                copyDynamicValue(source.${property.getter}(), cycleContext, "${model.typeName}.${property.name}"));
 </#list>
     }
 </#if>
@@ -183,6 +190,14 @@ public interface ${entityName}Mapper {
 </#list>
 
 <#if valueCopyModels?has_content>
+    @Named("copyValueMap")
+    @SuppressWarnings("unchecked")
+    default <K, V> Map<K, V> copyValueMap(Map<K, V> source,
+            @Context CycleAvoidingMappingContext cycleContext) {
+        return (Map<K, V>) copyDynamicValue(source, cycleContext, "map");
+    }
+
+    @SuppressWarnings("unchecked")
     default Object copyDynamicValue(Object source, @Context CycleAvoidingMappingContext cycleContext, String path) {
         if (source == null || source instanceof String || source instanceof Boolean
                 || source instanceof Character || source instanceof Byte || source instanceof Short
@@ -191,16 +206,21 @@ public interface ${entityName}Mapper {
                 || source instanceof java.math.BigInteger || source instanceof java.util.UUID
                 || source instanceof Enum || source instanceof Class
                 || source.getClass().getName().startsWith("java.time.")) return source;
-        Object cached = cycleContext.getMappedInstance(source, source.getClass());
+        Object cached = cycleContext.getMappedInstance(source, Object.class);
         if (cached != null) return cached;
         if (source instanceof java.util.Date) {
             Object target = ((java.util.Date) source).clone();
-            cycleContext.storeMappedInstance(source, target, source.getClass());
+            cycleContext.storeMappedInstance(source, target, Object.class);
             return target;
         }
         if (source instanceof Map) {
-            Map<Object, Object> target = new LinkedHashMap<>();
-            cycleContext.storeMappedInstance(source, target, source.getClass());
+            Map<Object, Object> target;
+            try {
+                target = (Map<Object, Object>) source.getClass().getConstructor().newInstance();
+            } catch (ReflectiveOperationException ex) {
+                target = new LinkedHashMap<>();
+            }
+            cycleContext.storeMappedInstance(source, target, Object.class);
             for (Map.Entry<?, ?> entry : ((Map<?, ?>) source).entrySet()) {
                 Object key = copyDynamicValue(entry.getKey(), cycleContext, path + ".key");
                 Object value = copyDynamicValue(entry.getValue(), cycleContext, path + "[" + entry.getKey() + "]");
@@ -209,22 +229,32 @@ public interface ${entityName}Mapper {
             return target;
         }
         if (source instanceof List) {
-            List<Object> target = new ArrayList<>(((List<?>) source).size());
-            cycleContext.storeMappedInstance(source, target, source.getClass());
+            List<Object> target;
+            try {
+                target = (List<Object>) source.getClass().getConstructor().newInstance();
+            } catch (ReflectiveOperationException ex) {
+                target = new ArrayList<>(((List<?>) source).size());
+            }
+            cycleContext.storeMappedInstance(source, target, Object.class);
             int index = 0;
             for (Object value : (List<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[" + index++ + "]"));
             return target;
         }
         if (source instanceof Set) {
-            Set<Object> target = new LinkedHashSet<>();
-            cycleContext.storeMappedInstance(source, target, source.getClass());
+            Set<Object> target;
+            try {
+                target = (Set<Object>) source.getClass().getConstructor().newInstance();
+            } catch (ReflectiveOperationException ex) {
+                target = new LinkedHashSet<>();
+            }
+            cycleContext.storeMappedInstance(source, target, Object.class);
             for (Object value : (Set<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[]"));
             return target;
         }
         if (source.getClass().isArray()) {
             int size = java.lang.reflect.Array.getLength(source);
             Object target = java.lang.reflect.Array.newInstance(source.getClass().getComponentType(), size);
-            cycleContext.storeMappedInstance(source, target, source.getClass());
+            cycleContext.storeMappedInstance(source, target, Object.class);
             for (int index = 0; index < size; index++) {
                 java.lang.reflect.Array.set(target, index,
                         copyDynamicValue(java.lang.reflect.Array.get(source, index), cycleContext, path + "[" + index + "]"));
@@ -232,7 +262,10 @@ public interface ${entityName}Mapper {
             return target;
         }
 <#list valueCopyModels as model>
-        if (source.getClass() == ${model.typeName}.class) return copyValue${model.index}((${model.typeName}) source, cycleContext);
+        if (source.getClass() == ${model.typeName}.class) {
+            ${model.typeName} mapped = cycleContext.getMappedInstance(source, ${model.typeName}.class);
+            return mapped != null ? mapped : copyValue${model.index}((${model.typeName}) source, cycleContext);
+        }
 </#list>
         throw new IllegalArgumentException("Unsupported mutable value at " + path + ": " + source.getClass().getName());
     }

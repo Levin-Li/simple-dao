@@ -68,11 +68,11 @@ class NestedMapperBehaviorTest {
         assertTrue(mapperSource.contains("ChildMapper.INSTANCE"), mapperSource);
         assertTrue(mapperSource.contains(".toInfo(info, cycleContext)"), mapperSource);
         assertTrue(implementation.contains("mapNested( info.child, cycleContext )"), implementation);
-        assertTrue(implementation.contains("copyChildInfoList( info.children, cycleContext )"), implementation);
+        assertTrue(implementation.matches("(?s).*copyInfoList\\d+\\( info.children, cycleContext \\).*"), implementation);
         String childImplementation = Files.readString(generated.resolve(
                 "com/example/services/child/ChildMapperImpl.java"));
         assertTrue(childImplementation.contains("mapNested( info.grandchild, cycleContext )"), childImplementation);
-        assertTrue(childImplementation.contains("copyGrandchildInfoList( info.grandchildren, cycleContext )"),
+        assertTrue(childImplementation.matches("(?s).*copyInfoList\\d+\\( info.grandchildren, cycleContext \\).*"),
                 childImplementation);
         String grandchildImplementation = Files.readString(generated.resolve(
                 "com/example/services/grandchild/GrandchildMapperImpl.java"));
@@ -102,6 +102,22 @@ class NestedMapperBehaviorTest {
         params.put("nestedEntityTypes", relatedTypes);
         params.put("nestedInfoTypes", relatedTypes);
         params.put("nestedInfoCollectionMappings", collections);
+        if ("Parent".equals(name)) {
+            params.put("jsonTargetTypes", List.of("java.util.List<java.lang.String>"));
+            params.put("valueCopyFields", List.of(
+                    Map.of("name", "value", "copyMethod", "copyValue0"),
+                    Map.of("name", "values", "copyMethod", "copyValueMap")));
+            params.put("valueCopyModels", List.of(Map.of(
+                    "typeName", "com.example.value.Value", "index", 0,
+                    "overloadedProperties", List.of(),
+                    "inaccessibleProperties", List.of(Map.of("name", "occurred", "getter", "getOccurred")),
+                    "dynamicProperties", List.of(
+                            Map.of("name", "ext", "getter", "getExt",
+                                    "typeName", "java.util.Map", "path", "Value.ext"),
+                            Map.of("name", "children", "getter", "getChildren",
+                                    "typeName", "java.util.Map", "path", "Value.children")),
+                    "qualifiedProperties", List.of())));
+        }
         StringWriter output = new StringWriter();
         configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
                 .process(params, output);
@@ -122,6 +138,16 @@ class NestedMapperBehaviorTest {
         writeSource(sources, "com/example/ModuleOption.java", "package com.example; public class ModuleOption {}");
         writeSource(sources, "com/example/entities/EntityConst.java",
                 "package com.example.entities; public class EntityConst {}");
+        writeSource(sources, "com/example/value/Value.java", "package com.example.value;"
+                + " public class Value { private java.util.Date occurred;"
+                + " private java.util.Map<String,Object> ext;"
+                + " private java.util.Map<String,Value> children;"
+                + " public java.util.Date getOccurred(){ return occurred; }"
+                + " public java.util.Map<String,Object> getExt(){ return ext; }"
+                + " public void setExt(java.util.Map<String,Object> ext){ this.ext=ext; }"
+                + " public java.util.Map<String,Value> getChildren(){ return children; }"
+                + " public void setChildren(java.util.Map<String,Value> children){ this.children=children; }"
+                + " public Value withOccurred(java.util.Date date){ this.occurred=date; return this; } }");
         writeSource(sources, "com/example/entities/Parent.java",
                 "package com.example.entities; public class Parent { public Child child;"
                         + " public java.util.List<Child> children; public java.util.Set<Child> peers;"
@@ -136,6 +162,8 @@ class NestedMapperBehaviorTest {
                         + " public Child owner; public String name; }");
         writeSource(sources, "com/example/services/parent/info/ParentInfo.java",
                 "package com.example.services.parent.info; public class ParentInfo {"
+                        + " public com.example.value.Value value;"
+                        + " public java.util.Map<String,com.example.value.Value> values;"
                         + " public com.example.services.child.info.ChildInfo child;"
                         + " public java.util.List<com.example.services.child.info.ChildInfo> children;"
                         + " public java.util.Set<com.example.services.child.info.ChildInfo> peers;"
@@ -166,6 +194,32 @@ class NestedMapperBehaviorTest {
                 "import java.util.*;",
                 "public class NestedCopyProbe {",
                 "  public static void run() {",
+                "    com.levin.commons.dao.support.MapperJsonUtils.JsonCodec originalCodec =",
+                "        com.levin.commons.dao.support.MapperJsonUtils.codec.get();",
+                "    com.levin.commons.dao.support.MapperJsonUtils.codec.set(",
+                "        new com.levin.commons.dao.support.MapperJsonUtils.JsonCodec() {",
+                "      @Override @SuppressWarnings(\"unchecked\")",
+                "      public <T> T parse(String json, java.lang.reflect.Type type) {",
+                "        if (!\"custom\".equals(json) || !\"java.util.List<java.lang.String>\".equals(type.getTypeName()))",
+                "          throw new AssertionError(\"JSON codec did not receive declared generic type\");",
+                "        return (T) java.util.List.of(\"decoded\");",
+                "      }",
+                "      @Override public String stringify(Object value) {",
+                "        if (!java.util.List.of(\"decoded\").equals(value)) throw new AssertionError(\"JSON codec value\");",
+                "        return \"encoded\";",
+                "      }",
+                "    });",
+                "    try {",
+                "      if (ParentMapper.INSTANCE.fromJsonType0(null) != null",
+                "          || ParentMapper.INSTANCE.fromJsonType0(\"\") != null",
+                "          || ParentMapper.INSTANCE.toJsonType0(null) != null)",
+                "        throw new AssertionError(\"generated Mapper JSON null handling\");",
+                "      if (!java.util.List.of(\"decoded\").equals(ParentMapper.INSTANCE.fromJsonType0(\"custom\"))",
+                "          || !\"encoded\".equals(ParentMapper.INSTANCE.toJsonType0(java.util.List.of(\"decoded\"))))",
+                "        throw new AssertionError(\"generated Mapper ignored configured codec\");",
+                "    } finally {",
+                "      com.levin.commons.dao.support.MapperJsonUtils.codec.set(originalCodec);",
+                "    }",
                 "    Parent parent = new Parent(); Child child = new Child();",
                 "    Grandchild grandchild = new Grandchild();",
                 "    parent.child = child; parent.children = List.of(child); parent.peers = Set.of(child);",
@@ -174,7 +228,36 @@ class NestedMapperBehaviorTest {
                 "    child.grandchild = grandchild; child.grandchildren = List.of(grandchild);",
                 "    grandchild.owner = child; grandchild.name = \"grandchild\";",
                 "    ParentInfo original = ParentMapper.INSTANCE.toInfo(parent, false);",
+                "    com.example.value.Value value = new com.example.value.Value().withOccurred(new java.util.Date());",
+                "    java.util.Map<String,Object> ext = new java.util.HashMap<>(); ext.put(\"self\", ext);",
+                "    java.util.List<Object> loop = new java.util.ArrayList<>(); loop.add(loop); ext.put(\"list\", loop);",
+                "    Object[] array = new Object[1]; array[0] = array; ext.put(\"array\", array);",
+                "    java.util.Set<String> shared = new java.util.HashSet<>(java.util.Set.of(\"x\"));",
+                "    ext.put(\"set1\", shared); ext.put(\"set2\", shared);",
+                "    java.util.LinkedList<String> linked = new java.util.LinkedList<>(java.util.List.of(\"x\"));",
+                "    ext.put(\"linked\", linked);",
+                "    value.setExt(ext); original.value = value;",
+                "    original.values = java.util.Map.of(\"same\", value);",
+                "    value.setChildren(java.util.Map.of(\"self\", value));",
                 "    ParentInfo copy = ParentMapper.INSTANCE.toInfo(original);",
+                "    if (copy.value == value) throw new AssertionError(\"value alias\");",
+                "    if (copy.values == original.values || copy.values.get(\"same\") != copy.value)",
+                "      throw new AssertionError(\"typed Map value alias\");",
+                "    if (copy.value.getOccurred() == value.getOccurred()) throw new AssertionError(\"readonly Date alias\");",
+                "    if (copy.value.getExt() == ext) throw new AssertionError(\"Map alias\");",
+                "    if (!(copy.value.getExt() instanceof java.util.HashMap)) throw new AssertionError(\"Map type\");",
+                "    if (copy.value.getExt().get(\"self\") != copy.value.getExt()) throw new AssertionError(\"Map cycle\");",
+                "    java.util.List<?> copiedLoop = (java.util.List<?>) copy.value.getExt().get(\"list\");",
+                "    if (copiedLoop == loop || copiedLoop.get(0) != copiedLoop) throw new AssertionError(\"List cycle\");",
+                "    Object[] copiedArray = (Object[]) copy.value.getExt().get(\"array\");",
+                "    if (copiedArray == array || copiedArray[0] != copiedArray) throw new AssertionError(\"array cycle\");",
+                "    if (copy.value.getExt().get(\"set1\") != copy.value.getExt().get(\"set2\")",
+                "        || copy.value.getExt().get(\"set1\") == shared",
+                "        || !(copy.value.getExt().get(\"set1\") instanceof java.util.HashSet))",
+                "      throw new AssertionError(\"shared Set\");",
+                "    if (!(copy.value.getExt().get(\"linked\") instanceof java.util.LinkedList))",
+                "      throw new AssertionError(\"concrete List type\");",
+                "    if (copy.value.getChildren().get(\"self\") != copy.value) throw new AssertionError(\"Map value alias\");",
                 "    if (copy == original || copy.child == original.child || copy.child.parent != copy",
                 "        || copy.children.get(0) != copy.child || copy.peers.iterator().next() != copy.child",
                 "        || copy.all.iterator().next() != copy.child || copy.childArray[0] != copy.child",
