@@ -9,4 +9,4 @@
 - JSON 字符串与声明的完整 Java 类型可双向转换。
 - 所有生成的 JSON 双向方法统一调用 core 的 `MapperJsonUtils`；仅公开 `toJson(Object)`、`fromJson(String, Type)` 转换入口，默认 Fastjson2，可经同一原子引用替换嵌套 `JsonCodec`。空对象序列化为 Java `null` 字符串，空或 `null` JSON 输入解析为 `null` 对象。
 - 值类型候选必须复用已生成 Info 字段的解析类型，避免与实体泛型解析结果分歧。
-- Map 以外不支持的动态可变类型在运行时显式失败；已知不兼容字段在生成或编译阶段明确失败，不得静默跳过。
+- 只读字段与重载 setter 必须按声明类型使用静态复制方法；nullable `Boolean` 的计算 getter 不能把原始 `null` 变成 `false`。无法安全静态复制的可变字段须在生成阶段明确失败，不得静默共享。没有实际动态映射需求的生成 Mapper 不得输出 `copyDynamicValue(Object)`。

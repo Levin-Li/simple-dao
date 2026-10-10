@@ -5,3 +5,7 @@
 3. 对 JSON 字符串声明的完整目标类型生成 `String` 双向转换，避免原始 List/Map 泛型丢失。转换方法只委托 `simple-dao-core` 的 `MapperJsonUtils.toJson(Object)` 与 `<T>fromJson(String, Type)`；其公开嵌套 `JsonCodec` 经唯一 `AtomicReference` 注入，默认 Fastjson2，保留空值语义。
 4. 对已知值对象和实体 Info 的循环与共享对象使用公共 `CycleAvoidingMappingContext`。未知类型 Map 的值共享是明确契约；其它无法安全复制的动态可变类型显式失败。
 5. 用可执行的生成器、核心 JSON 工具与下游生成编译测试检查 Mapper 方法选择和复制行为。
+
+## 生成代码精简与静态复制
+
+值类存在只读属性或重载 setter 时，生成器按声明类型选择静态复制：不可变标量直接保留，`Date` 克隆，已知值类调用当前 Mapper 的 `copyValueN`。无法安全确定复制方法的其它可变属性在生成阶段明确失败。nullable `Boolean` 字段配 `boolean isXxx()` 计算 getter 时，反射读取原始字段并直接写入副本，保留 `null`。因此无需在每个含值类的 Mapper 中无条件生成运行时 `copyDynamicValue(Object)`；当前规则不生成该动态分派方法。

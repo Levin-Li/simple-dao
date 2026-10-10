@@ -65,6 +65,7 @@ class NestedMapperBehaviorTest {
                 "com/example/services/parent/ParentMapperImpl.java"));
         String mapperSource = Files.readString(sources.resolve(
                 "com/example/services/parent/ParentMapper.java"));
+        assertTrue(!mapperSource.contains("copyDynamicValue("), mapperSource);
         assertTrue(mapperSource.contains("ChildMapper.INSTANCE"), mapperSource);
         assertTrue(mapperSource.contains(".toInfo(info, cycleContext)"), mapperSource);
         assertTrue(implementation.contains("mapNested( info.child, cycleContext )"), implementation);
@@ -122,7 +123,9 @@ class NestedMapperBehaviorTest {
             params.put("valueCopyModels", List.of(Map.of(
                     "typeName", "com.example.value.Value", "index", 0,
                     "overloadedProperties", List.of(),
-                    "inaccessibleProperties", List.of(Map.of("name", "occurred", "getter", "getOccurred")),
+                    "inaccessibleProperties", List.of(
+                            Map.of("name", "occurred", "getter", "getOccurred", "kind", "date"),
+                            Map.of("name", "disabled", "getter", "isDisabled", "kind", "direct")),
                     "qualifiedProperties", List.of(Map.of("name", "children", "copyMethod", "copyMap0")))));
         }
         StringWriter output = new StringWriter();
@@ -147,9 +150,13 @@ class NestedMapperBehaviorTest {
                 "package com.example.entities; public class EntityConst {}");
         writeSource(sources, "com/example/value/Value.java", "package com.example.value;"
                 + " public class Value { private java.util.Date occurred;"
+                + " private Boolean disabled;"
                 + " private java.util.Map<String,Object> ext;"
                 + " private java.util.Map<String,Value> children;"
                 + " public java.util.Date getOccurred(){ return occurred; }"
+                + " public boolean isDisabled(){ return Boolean.TRUE.equals(disabled); }"
+                + " public void setDisabled(Boolean disabled){ this.disabled=disabled; }"
+                + " public Boolean disabledValue(){ return disabled; }"
                 + " public java.util.Map<String,Object> getExt(){ return ext; }"
                 + " public void setExt(java.util.Map<String,Object> ext){ this.ext=ext; }"
                 + " public java.util.Map<String,Value> getChildren(){ return children; }"
@@ -266,6 +273,13 @@ class NestedMapperBehaviorTest {
                 "    original.hashValues = new java.util.HashMap<>(java.util.Map.of(\"same\", value));",
                 "    value.setChildren(java.util.Map.of(\"self\", value));",
                 "    ParentInfo copy = ParentMapper.INSTANCE.toInfo(original);",
+                "    if (copy.value.disabledValue() != null) throw new AssertionError(\"nullable Boolean null\");",
+                "    value.setDisabled(true);",
+                "    if (!Boolean.TRUE.equals(ParentMapper.INSTANCE.toInfo(original).value.disabledValue()))",
+                "      throw new AssertionError(\"nullable Boolean true\");",
+                "    value.setDisabled(false);",
+                "    if (!Boolean.FALSE.equals(ParentMapper.INSTANCE.toInfo(original).value.disabledValue()))",
+                "      throw new AssertionError(\"nullable Boolean false\");",
                 "    if (copy.value == value) throw new AssertionError(\"value alias\");",
                 "    if (copy.values == original.values || copy.values.get(\"same\") != copy.value)",
                 "      throw new AssertionError(\"typed Map value copy\");",

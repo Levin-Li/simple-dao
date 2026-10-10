@@ -1778,17 +1778,28 @@ public final class ServiceModelCodeGenerator {
                 boolean exactSetter = setters.stream()
                         .anyMatch(method -> method.getParameterTypes()[0] == getter.getReturnType());
                 Field backingField = ReflectionUtils.findField(valueType, descriptor.getName());
+                if (getter.getReturnType() == Object.class
+                        && (backingField != null || !setters.isEmpty())) {
+                    throw new IllegalStateException("No safe static copy for value property type: "
+                            + Object.class.getName() + " in " + getter);
+                }
                 if (!exactSetter && backingField != null) {
                     if (Modifier.isFinal(backingField.getModifiers())) {
                         throw new IllegalStateException("Cannot safely copy value property: " + getter);
                     }
-                    inaccessibleProperties.add(Map.of("name", descriptor.getName(),
-                            "getter", getter.getName()));
+                    Map<String, String> property = new LinkedHashMap<>(staticValueCopy(
+                            backingField.getType(), types));
+                    property.put("name", descriptor.getName());
+                    property.put("typeName", backingField.getType().getCanonicalName());
+                    inaccessibleProperties.add(property);
                 }
                 if (setters.size() > 1 && exactSetter) {
-                    overloadedProperties.add(Map.of("name", descriptor.getName(),
-                            "getter", getter.getName(),
-                            "typeName", getter.getReturnType().getCanonicalName()));
+                    Map<String, String> property = new LinkedHashMap<>(staticValueCopy(
+                            getter.getReturnType(), types));
+                    property.put("name", descriptor.getName());
+                    property.put("getter", getter.getName());
+                    property.put("typeName", getter.getReturnType().getCanonicalName());
+                    overloadedProperties.add(property);
                 }
                 Class<?> propertyType = getter.getReturnType();
                 String mapMethod = mapCopyMethod(ResolvableType.forMethodReturnType(getter, valueType), mapModels);
@@ -1814,6 +1825,21 @@ public final class ServiceModelCodeGenerator {
                     "qualifiedProperties", qualifiedProperties));
         }
         return models;
+    }
+
+    private static Map<String, String> staticValueCopy(Class<?> type, List<Class<?>> knownTypes) {
+        if (java.util.Date.class.isAssignableFrom(type)) {
+            return Map.of("kind", "date");
+        }
+        if (type.isPrimitive() || type.isEnum() || BeanUtils.isSimpleValueType(type)
+                || type.getName().startsWith("java.time.")) {
+            return Map.of("kind", "direct");
+        }
+        int index = knownTypes.indexOf(type);
+        if (index >= 0) {
+            return Map.of("kind", "value", "copyMethod", "copyValue" + index);
+        }
+        throw new IllegalStateException("No safe static copy for value property type: " + type.getName());
     }
 
     static List<Map<String, String>> valueCopyFields(List<FieldModel> infoFields, List<Class<?>> copyTypes) {

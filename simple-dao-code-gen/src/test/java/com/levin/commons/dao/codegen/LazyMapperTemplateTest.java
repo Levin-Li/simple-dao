@@ -393,13 +393,24 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("@org.mapstruct.AfterMapping"), source);
         assertTrue(source.contains("ReflectionUtils.getField(field0, source)"), source);
         assertTrue(source.contains("ReflectionUtils.getField(field1, source)"), source);
-        assertTrue(source.contains("copyDynamicValue(source.getStatus(), cycleContext"), source);
+        assertTrue(source.contains("source.getStatus()"), source);
         assertTrue(source.contains("copyValueAuto" + valueIndex), source);
         assertFalse(source.contains("copyDynamicValue(source.getExtParams(), cycleContext"), source);
         assertTrue(source.contains("copyMapAuto"), source);
+        assertFalse(source.contains("copyDynamicValue("), source);
         assertTrue(source.contains("@Mapping(target = \"next\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertTrue(source.contains("@Mapping(target = \"peers\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
+    void unknownMutableReadonlyValueShouldFailDuringGeneration() {
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> ServiceModelCodeGenerator.valueCopyModels(List.of(UnsupportedMutableValue.class)));
+        assertTrue(failure.getMessage().contains("java.lang.Object"), failure.getMessage());
+        IllegalStateException writable = assertThrows(IllegalStateException.class,
+                () -> ServiceModelCodeGenerator.valueCopyModels(List.of(UnsupportedMutableWritableValue.class)));
+        assertTrue(writable.getMessage().contains("java.lang.Object"), writable.getMessage());
     }
 
     @Test
@@ -570,6 +581,17 @@ class LazyMapperTemplateTest {
         public void setExtParams(Map<String, Object> extParams) { this.extParams = extParams; }
         public boolean isDisabled() { return disabled != null && disabled; }
         public void setDisabled(Boolean disabled) { this.disabled = disabled; }
+    }
+
+    public static class UnsupportedMutableValue {
+        Object payload;
+        public Object getPayload() { return payload; }
+    }
+
+    public static class UnsupportedMutableWritableValue {
+        Object payload;
+        public Object getPayload() { return payload; }
+        public void setPayload(Object payload) { this.payload = payload; }
     }
 
     interface GenericLists {

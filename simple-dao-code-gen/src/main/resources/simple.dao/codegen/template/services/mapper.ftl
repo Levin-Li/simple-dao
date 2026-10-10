@@ -181,7 +181,13 @@ public interface ${entityName}Mapper {
 <#list valueCopyModels![] as model>
     @Named("copyValue${model.index}")
 <#list model.overloadedProperties as property>
-    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) copyDynamicValue(source.${property.getter}(), cycleContext, \"${model.typeName}.${property.name}\"))")
+<#if property.kind == "direct">
+    @Mapping(target = "${property.name}", expression = "java(source.${property.getter}())")
+<#elseif property.kind == "date">
+    @Mapping(target = "${property.name}", expression = "java(source.${property.getter}() == null ? null : (${property.typeName}) source.${property.getter}().clone())")
+<#else>
+    @Mapping(target = "${property.name}", expression = "java(${property.copyMethod}(source.${property.getter}(), cycleContext))")
+</#if>
 </#list>
 <#list model.inaccessibleProperties as property>
     @Mapping(target = "${property.name}", ignore = true)
@@ -206,85 +212,20 @@ public interface ${entityName}Mapper {
         java.lang.reflect.Field field${property?index} = org.springframework.util.ReflectionUtils.findField(
                 ${model.typeName}.class, "${property.name}");
         org.springframework.util.ReflectionUtils.makeAccessible(field${property?index});
-        org.springframework.util.ReflectionUtils.setField(field${property?index}, target,
-                copyDynamicValue(org.springframework.util.ReflectionUtils.getField(field${property?index}, source),
-                        cycleContext, "${model.typeName}.${property.name}"));
+        Object raw${property?index} = org.springframework.util.ReflectionUtils.getField(field${property?index}, source);
+<#if property.kind == "direct">
+        Object copied${property?index} = raw${property?index};
+<#elseif property.kind == "date">
+        Object copied${property?index} = raw${property?index} == null ? null : ((java.util.Date) raw${property?index}).clone();
+<#else>
+        Object copied${property?index} = ${property.copyMethod}((${property.typeName}) raw${property?index}, cycleContext);
+</#if>
+        org.springframework.util.ReflectionUtils.setField(field${property?index}, target, copied${property?index});
 </#list>
     }
 </#if>
 
 </#list>
-
-<#if valueCopyModels?has_content>
-    @SuppressWarnings("unchecked")
-    default Object copyDynamicValue(Object source, @Context CycleAvoidingMappingContext cycleContext, String path) {
-        if (source == null || source instanceof String || source instanceof Boolean
-                || source instanceof Character || source instanceof Byte || source instanceof Short
-                || source instanceof Integer || source instanceof Long || source instanceof Float
-                || source instanceof Double || source instanceof java.math.BigDecimal
-                || source instanceof java.math.BigInteger || source instanceof java.util.UUID
-                || source instanceof Enum || source instanceof Class
-                || source.getClass().getName().startsWith("java.time.")) return source;
-        Object cached = cycleContext.getMappedInstance(source, Object.class);
-        if (cached != null) return cached;
-        if (source instanceof java.util.Date) {
-            Object target = ((java.util.Date) source).clone();
-            cycleContext.storeMappedInstance(source, target, Object.class);
-            return target;
-        }
-        if (source instanceof Map) {
-            Map<Object, Object> target;
-            try {
-                target = (Map<Object, Object>) source.getClass().getConstructor().newInstance();
-            } catch (ReflectiveOperationException ex) {
-                target = new LinkedHashMap<>();
-            }
-            cycleContext.storeMappedInstance(source, target, Object.class);
-            target.putAll((Map<?, ?>) source);
-            return target;
-        }
-        if (source instanceof List) {
-            List<Object> target;
-            try {
-                target = (List<Object>) source.getClass().getConstructor().newInstance();
-            } catch (ReflectiveOperationException ex) {
-                target = new ArrayList<>(((List<?>) source).size());
-            }
-            cycleContext.storeMappedInstance(source, target, Object.class);
-            int index = 0;
-            for (Object value : (List<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[" + index++ + "]"));
-            return target;
-        }
-        if (source instanceof Set) {
-            Set<Object> target;
-            try {
-                target = (Set<Object>) source.getClass().getConstructor().newInstance();
-            } catch (ReflectiveOperationException ex) {
-                target = new LinkedHashSet<>();
-            }
-            cycleContext.storeMappedInstance(source, target, Object.class);
-            for (Object value : (Set<?>) source) target.add(copyDynamicValue(value, cycleContext, path + "[]"));
-            return target;
-        }
-        if (source.getClass().isArray()) {
-            int size = java.lang.reflect.Array.getLength(source);
-            Object target = java.lang.reflect.Array.newInstance(source.getClass().getComponentType(), size);
-            cycleContext.storeMappedInstance(source, target, Object.class);
-            for (int index = 0; index < size; index++) {
-                java.lang.reflect.Array.set(target, index,
-                        copyDynamicValue(java.lang.reflect.Array.get(source, index), cycleContext, path + "[" + index + "]"));
-            }
-            return target;
-        }
-<#list valueCopyModels as model>
-        if (source.getClass() == ${model.typeName}.class) {
-            ${model.typeName} mapped = cycleContext.getMappedInstance(source, ${model.typeName}.class);
-            return mapped != null ? mapped : copyValue${model.index}((${model.typeName}) source, cycleContext);
-        }
-</#list>
-        throw new IllegalArgumentException("Unsupported mutable value at " + path + ": " + source.getClass().getName());
-    }
-</#if>
 
     ${entityName}Info toInfo(Create${entityName}Req req);
 
