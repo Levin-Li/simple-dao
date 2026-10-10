@@ -1985,7 +1985,7 @@ List<UserInfo> infos = simpleDao.selectFrom(User.class)
 
 `Converter<I, O>` 同时实现标准 `Function<I, O>`：现有的 `convert(I)` 保持不变，`apply(I)` 默认委托给 `convert(I)`，因此也可直接用于 `Stream.map`。
 
-生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
+生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。关联实体及其集合元素由各自的实体 Mapper 转换，沿用同一个延迟加载设置和循环引用上下文。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
 
 每次实体转 `Info` 都使用独立的对象映射缓存；父子节点等已加载的双向关联会复用同一个 `Info` 对象，避免循环递归。
 

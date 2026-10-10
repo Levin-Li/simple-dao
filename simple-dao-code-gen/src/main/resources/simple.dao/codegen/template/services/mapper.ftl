@@ -93,6 +93,15 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
 
     ${entityName}Info toInfo(${entityName}Info info, @Context CycleAvoidingMappingContext cycleContext);
 
+<#list nestedEntityTypes![] as nestedEntityType>
+    default ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info mapNested(${nestedEntityType.canonicalName} entity,
+            @Context boolean allowLazyLoading, @Context CycleAvoidingMappingContext cycleContext) {
+        return ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.${nestedEntityType.simpleName}Mapper.INSTANCE
+                .toInfo(entity, allowLazyLoading, cycleContext);
+    }
+
+</#list>
+
     @BeforeMapping
     default <T> T getMappedInstance(Object source, @TargetType Class<T> targetType,
                                     @Context CycleAvoidingMappingContext cycleContext) {
