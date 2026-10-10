@@ -1445,30 +1445,32 @@ public final class ServiceModelCodeGenerator {
         });
     }
 
-    static List<Class<?>> valueCopyTypes(Class<?> entityClass) {
+    static List<Class<?>> valueCopyTypes(List<FieldModel> infoFields) {
         Set<Class<?>> types = new LinkedHashSet<>();
-        ReflectionUtils.doWithFields(entityClass, field -> {
-            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
-                return;
+        for (FieldModel fieldModel : infoFields) {
+            Field field = fieldModel.getField();
+            ResolvableType resolvedField = fieldModel.getResolvableType();
+            if (field == null || resolvedField == null || field.isSynthetic()
+                    || !field.getName().equals(fieldModel.getName())
+                    || Modifier.isStatic(field.getModifiers())) {
+                continue;
             }
             InjectVar injectVar = field.getAnnotation(InjectVar.class);
             if (injectVar != null) {
-                collectValueCopyType(injectVar.expectBaseType(), entityClass, types);
+                collectValueCopyType(injectVar.expectBaseType(), types);
                 for (Class<?> genericType : injectVar.expectGenericTypes()) {
-                    collectValueCopyType(genericType, entityClass, types);
+                    collectValueCopyType(genericType, types);
                 }
             }
-            ResolvableType resolvedField = ResolvableType.forField(field, entityClass);
-            collectValueCopyType(resolvedField.resolve(), entityClass, types);
+            collectValueCopyType(resolvedField.resolve(), types);
             for (ResolvableType genericType : resolvedField.getGenerics()) {
-                collectValueCopyType(genericType.resolve(), entityClass, types);
+                collectValueCopyType(genericType.resolve(), types);
             }
-        });
+        }
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
-    static List<Map<String, Object>> valueCopyModels(Class<?> entityClass) {
-        List<Class<?>> types = valueCopyTypes(entityClass);
+    static List<Map<String, Object>> valueCopyModels(List<Class<?>> types) {
         List<Map<String, Object>> models = new ArrayList<>();
         for (int index = 0; index < types.size(); index++) {
             Class<?> valueType = types.get(index);
@@ -1531,12 +1533,15 @@ public final class ServiceModelCodeGenerator {
         return models;
     }
 
-    static List<Map<String, String>> valueCopyFields(Class<?> entityClass) {
-        List<Class<?>> copyTypes = valueCopyTypes(entityClass);
+    static List<Map<String, String>> valueCopyFields(List<FieldModel> infoFields, List<Class<?>> copyTypes) {
         List<Map<String, String>> fields = new ArrayList<>();
-        ReflectionUtils.doWithFields(entityClass, field -> {
-            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
-                return;
+        for (FieldModel fieldModel : infoFields) {
+            Field field = fieldModel.getField();
+            ResolvableType resolvedField = fieldModel.getResolvableType();
+            if (field == null || resolvedField == null || field.isSynthetic()
+                    || !field.getName().equals(fieldModel.getName())
+                    || Modifier.isStatic(field.getModifiers())) {
+                continue;
             }
             Class<?> elementType = null;
             InjectVar injectVar = field.getAnnotation(InjectVar.class);
@@ -1544,30 +1549,30 @@ public final class ServiceModelCodeGenerator {
                 elementType = injectVar.expectBaseType();
             } else if (injectVar != null && injectVar.expectBaseType() == Map.class
                     && Arrays.stream(injectVar.expectGenericTypes()).anyMatch(copyTypes::contains)) {
-                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValueMap"));
-                return;
+                fields.add(Map.of("name", fieldModel.getName(), "copyMethod", "copyValueMap"));
+                continue;
             } else if (injectVar != null && Collection.class.isAssignableFrom(injectVar.expectBaseType())
                     && injectVar.expectGenericTypes().length == 1) {
                 elementType = injectVar.expectGenericTypes()[0];
             } else if (Map.class.isAssignableFrom(field.getType())
-                    && Arrays.stream(ResolvableType.forField(field, entityClass).getGenerics())
+                    && Arrays.stream(resolvedField.getGenerics())
                     .map(ResolvableType::resolve).anyMatch(copyTypes::contains)) {
-                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValueMap"));
-                return;
+                fields.add(Map.of("name", fieldModel.getName(), "copyMethod", "copyValueMap"));
+                continue;
             } else if (Collection.class.isAssignableFrom(field.getType())) {
-                elementType = ResolvableType.forField(field, entityClass).resolveGeneric();
-            } else if (copyTypes.contains(ResolvableType.forField(field, entityClass).resolve())) {
-                elementType = ResolvableType.forField(field, entityClass).resolve();
+                elementType = resolvedField.resolveGeneric();
+            } else if (copyTypes.contains(resolvedField.resolve())) {
+                elementType = resolvedField.resolve();
             }
             int index = copyTypes.indexOf(elementType);
             if (index >= 0) {
-                fields.add(Map.of("name", field.getName(), "copyMethod", "copyValue" + index));
+                fields.add(Map.of("name", fieldModel.getName(), "copyMethod", "copyValue" + index));
             }
-        });
+        }
         return fields;
     }
 
-    private static void collectValueCopyType(Class<?> type, Class<?> entityClass, Set<Class<?>> types) {
+    private static void collectValueCopyType(Class<?> type, Set<Class<?>> types) {
         if (type == null || type.isAnnotationPresent(Entity.class) || type.isEnum()
                 || type == Object.class || type.isArray()
                 || BeanUtils.isSimpleValueType(type)
@@ -1594,9 +1599,9 @@ public final class ServiceModelCodeGenerator {
                 return;
             }
             ResolvableType resolvedField = ResolvableType.forField(field, type);
-            collectValueCopyType(resolvedField.resolve(), entityClass, types);
+            collectValueCopyType(resolvedField.resolve(), types);
             for (ResolvableType genericType : resolvedField.getGenerics()) {
-                collectValueCopyType(genericType.resolve(), entityClass, types);
+                collectValueCopyType(genericType.resolve(), types);
             }
         });
     }
@@ -1851,6 +1856,9 @@ public final class ServiceModelCodeGenerator {
         @SuppressWarnings("unchecked")
         Set<Class<?>> generatedEntityTypes = (Set<Class<?>>) paramsMap.getOrDefault(
                 "generatedEntityTypes", Collections.emptySet());
+        List<Class<?>> copyTypes = valueCopyTypes(infoFields);
+        List<Map<String, Object>> copyModels = valueCopyModels(copyTypes);
+        List<Map<String, String>> copyFields = valueCopyFields(infoFields, copyTypes);
 
         final Consumer<Map<String, Object>> genParams = params -> {
             params.put("servicePackageName", pkgName);
@@ -1861,9 +1869,9 @@ public final class ServiceModelCodeGenerator {
             params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
             params.put("jsonListTargetTypes", jsonListTargetTypes(entityClass));
             params.put("jsonTargetTypes", jsonTargetTypes(entityClass));
-            params.put("valueCopyTypes", valueCopyTypes(entityClass));
-            params.put("valueCopyModels", valueCopyModels(entityClass));
-            params.put("valueCopyFields", valueCopyFields(entityClass));
+            params.put("valueCopyTypes", copyTypes);
+            params.put("valueCopyModels", copyModels);
+            params.put("valueCopyFields", copyFields);
             params.put("ignoredUnresolvedCollectionProperties", ignoredUnresolvedCollectionProperties(entityClass));
             params.put("nestedEntityTypes", nestedEntityTypes(entityClass, generatedEntityTypes));
             params.put("nestedInfoTypes", nestedInfoTypes(entityClass, generatedEntityTypes));

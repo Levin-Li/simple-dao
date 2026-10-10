@@ -10,6 +10,8 @@ import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ResolvableType;
+import org.springframework.util.ReflectionUtils;
 import org.example.value.ExternalValue;
 
 import javax.persistence.Basic;
@@ -20,6 +22,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.MappedSuperclass;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
@@ -345,9 +349,11 @@ class LazyMapperTemplateTest {
 
     @Test
     void mutableValueObjectsShouldGetOneCopyMethodAndExplicitOverload() throws Exception {
-        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).contains(ValueObject.class));
-        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).contains(ExternalValue.class));
-        assertTrue(ServiceModelCodeGenerator.valueCopyFields(OrgEntity.class).stream()
+        List<FieldModel> infoFields = infoFieldModels(OrgEntity.class);
+        List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(infoFields);
+        assertTrue(copyTypes.contains(ValueObject.class));
+        assertTrue(copyTypes.contains(ExternalValue.class));
+        assertTrue(ServiceModelCodeGenerator.valueCopyFields(infoFields, copyTypes).stream()
                 .anyMatch(field -> "externalValues".equals(field.get("name"))
                         && "copyValueMap".equals(field.get("copyMethod"))));
 
@@ -364,12 +370,12 @@ class LazyMapperTemplateTest {
                         "entityName", "FixtureEntity",
                         "entityTitle", "测试实体",
                         "importList", Collections.emptyList(),
-                        "valueCopyModels", ServiceModelCodeGenerator.valueCopyModels(OrgEntity.class),
+                        "valueCopyModels", ServiceModelCodeGenerator.valueCopyModels(copyTypes),
                         "fields", Collections.emptyList()), output);
 
         String source = output.toString();
-        int valueIndex = ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).indexOf(ValueObject.class);
-        int externalIndex = ServiceModelCodeGenerator.valueCopyTypes(OrgEntity.class).indexOf(ExternalValue.class);
+        int valueIndex = copyTypes.indexOf(ValueObject.class);
+        int externalIndex = copyTypes.indexOf(ExternalValue.class);
         assertTrue(source.contains(ValueObject.class.getCanonicalName() + " copyValue" + valueIndex + "("), source);
         assertTrue(source.contains(ExternalValue.class.getCanonicalName() + " copyValue" + externalIndex + "("), source);
         assertFalse(source.contains("copyValueList" + valueIndex + "("), source);
@@ -387,16 +393,30 @@ class LazyMapperTemplateTest {
 
     @Test
     void mappedSuperclassGenericAssociationsResolveToConcreteEntity() {
-        assertFalse(ServiceModelCodeGenerator.valueCopyTypes(MappedTreeEntity.class)
+        List<FieldModel> infoFields = infoFieldModels(MappedTreeEntity.class);
+        List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(infoFields);
+        assertFalse(copyTypes
                 .contains(MappedTreeBase.class));
-        assertTrue(ServiceModelCodeGenerator.valueCopyModels(MappedTreeEntity.class).isEmpty());
+        assertTrue(ServiceModelCodeGenerator.valueCopyModels(copyTypes).isEmpty());
         assertTrue(ServiceModelCodeGenerator.nestedInfoCollectionMappings(MappedTreeEntity.class,
                         Set.of(MappedTreeEntity.class)).stream()
                 .anyMatch(mapping -> mapping.get("entityType") == MappedTreeEntity.class
                         && "List".equals(mapping.get("kind"))));
         IllegalStateException unresolved = assertThrows(IllegalStateException.class,
-                () -> ServiceModelCodeGenerator.valueCopyTypes(RawMappedTreeEntity.class));
+                () -> ServiceModelCodeGenerator.valueCopyTypes(infoFieldModels(RawMappedTreeEntity.class)));
         assertTrue(unresolved.getMessage().contains(MappedTreeBase.class.getName()));
+    }
+
+    @Test
+    void valueCopyMetadataUsesSuppliedInfoFieldModelsOnly() {
+        List<FieldModel> selected = infoFieldModels(OrgEntity.class).stream()
+                .filter(field -> "externalValue".equals(field.getName()))
+                .collect(Collectors.toList());
+        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(selected).contains(ExternalValue.class));
+        assertFalse(ServiceModelCodeGenerator.valueCopyTypes(selected).contains(ValueObject.class));
+        FieldModel derived = new FieldModel(OrgEntity.class).setField(selected.get(0).getField())
+                .setResolvableType(selected.get(0).getResolvableType()).setName("derivedExternalValue");
+        assertTrue(ServiceModelCodeGenerator.valueCopyTypes(List.of(derived)).isEmpty());
     }
 
     @Test
@@ -426,6 +446,18 @@ class LazyMapperTemplateTest {
     private FieldModel fieldModel(Field field) {
         return new FieldModel(FixtureEntity.class).setField(field)
                 .setName(field.getName()).setType(field.getType());
+    }
+
+    private List<FieldModel> infoFieldModels(Class<?> entityClass) {
+        List<FieldModel> fields = new ArrayList<>();
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic()) {
+                fields.add(new FieldModel(entityClass).setField(field)
+                        .setResolvableType(ResolvableType.forField(field, entityClass))
+                        .setName(field.getName()));
+            }
+        });
+        return fields;
     }
 
     static class FixtureEntity {
