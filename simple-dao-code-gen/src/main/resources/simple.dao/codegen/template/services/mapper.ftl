@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.*;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MapMapping;
 import org.mapstruct.BeforeMapping;
 import org.mapstruct.Context;
 import org.mapstruct.MappingTarget;
@@ -153,7 +154,7 @@ public interface ${entityName}Mapper {
 <#list valueCopyModels![] as model>
     @Named("copyValue${model.index}")
 <#list model.overloadedProperties as property>
-    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) copyDynamicValue(source.${property.getter}(), cycleContext, \"${model.typeName}.${property.name}\"))")
+    @Mapping(target = "${property.name}", expression = "java((${property.typeName}) ${property.mappingExpression})")
 </#list>
 <#list model.inaccessibleProperties as property>
     @Mapping(target = "${property.name}", ignore = true)
@@ -182,21 +183,38 @@ public interface ${entityName}Mapper {
                 ${model.typeName}.class, "${property.name}");
         org.springframework.util.ReflectionUtils.makeAccessible(field${property?index});
         org.springframework.util.ReflectionUtils.setField(field${property?index}, target,
-                copyDynamicValue(source.${property.getter}(), cycleContext, "${model.typeName}.${property.name}"));
+                ${property.copyExpression});
 </#list>
     }
 </#if>
 
 </#list>
 
-<#if valueCopyModels?has_content>
+<#list mapCopyModels![] as mapModel>
+    @Named("copyMap${mapModel.index}")
+    @MapMapping(<#if mapModel.keyCopyIndex gte 0>keyQualifiedByName = "copyValue${mapModel.keyCopyIndex}"<#if mapModel.valueCopyIndex gte 0>, </#if></#if><#if mapModel.valueCopyIndex gte 0>valueQualifiedByName = "copyValue${mapModel.valueCopyIndex}"</#if>)
+    ${mapModel.rawTypeName}<${mapModel.keyTypeName}, ${mapModel.valueTypeName}> copyMap${mapModel.index}(
+            ${mapModel.rawTypeName}<${mapModel.keyTypeName}, ${mapModel.valueTypeName}> source,
+            @Context CycleAvoidingMappingContext cycleContext);
+
+</#list>
+
     @Named("copyValueMap")
     @SuppressWarnings("unchecked")
-    default <K, V> Map<K, V> copyValueMap(Map<K, V> source,
+    default <K, V, M extends Map<K, V>> M copyValueMap(M source,
             @Context CycleAvoidingMappingContext cycleContext) {
-        return (Map<K, V>) copyDynamicValue(source, cycleContext, "map");
+        if (source == null) return null;
+        M target;
+        try {
+            target = (M) source.getClass().getConstructor().newInstance();
+        } catch (ReflectiveOperationException ex) {
+            target = (M) new LinkedHashMap<K, V>();
+        }
+        target.putAll(source);
+        return target;
     }
 
+<#if valueCopyModels?has_content>
     @SuppressWarnings("unchecked")
     default Object copyDynamicValue(Object source, @Context CycleAvoidingMappingContext cycleContext, String path) {
         if (source == null || source instanceof String || source instanceof Boolean
@@ -221,11 +239,7 @@ public interface ${entityName}Mapper {
                 target = new LinkedHashMap<>();
             }
             cycleContext.storeMappedInstance(source, target, Object.class);
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) source).entrySet()) {
-                Object key = copyDynamicValue(entry.getKey(), cycleContext, path + ".key");
-                Object value = copyDynamicValue(entry.getValue(), cycleContext, path + "[" + entry.getKey() + "]");
-                target.put(key, value);
-            }
+            target.putAll((Map<?, ?>) source);
             return target;
         }
         if (source instanceof List) {

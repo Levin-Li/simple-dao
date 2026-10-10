@@ -68,6 +68,8 @@ class NestedMapperBehaviorTest {
         assertTrue(mapperSource.contains("ChildMapper.INSTANCE"), mapperSource);
         assertTrue(mapperSource.contains(".toInfo(info, cycleContext)"), mapperSource);
         assertTrue(implementation.contains("mapNested( info.child, cycleContext )"), implementation);
+        assertTrue(implementation.matches("(?s).*copyValue0\\( entry.getValue\\(\\), cycleContext \\).*"),
+                implementation);
         assertTrue(implementation.matches("(?s).*copyInfoList\\d+\\( info.children, cycleContext \\).*"), implementation);
         String childImplementation = Files.readString(generated.resolve(
                 "com/example/services/child/ChildMapperImpl.java"));
@@ -106,17 +108,25 @@ class NestedMapperBehaviorTest {
             params.put("jsonTargetTypes", List.of("java.util.List<java.lang.String>"));
             params.put("valueCopyFields", List.of(
                     Map.of("name", "value", "copyMethod", "copyValue0"),
-                    Map.of("name", "values", "copyMethod", "copyValueMap")));
+                    Map.of("name", "values", "copyMethod", "copyMap0"),
+                    Map.of("name", "concreteValues", "copyMethod", "copyMap1"),
+                    Map.of("name", "concreteUnknown", "copyMethod", "copyValueMap")));
+            params.put("mapCopyModels", List.of(
+                    Map.of("index", 0, "rawTypeName", "java.util.Map",
+                            "keyTypeName", "java.lang.String", "valueTypeName", "com.example.value.Value",
+                            "keyCopyIndex", -1, "valueCopyIndex", 0),
+                    Map.of("index", 1, "rawTypeName", "java.util.HashMap",
+                            "keyTypeName", "java.lang.String", "valueTypeName", "com.example.value.Value",
+                            "keyCopyIndex", -1, "valueCopyIndex", 0)));
             params.put("valueCopyModels", List.of(Map.of(
                     "typeName", "com.example.value.Value", "index", 0,
                     "overloadedProperties", List.of(),
-                    "inaccessibleProperties", List.of(Map.of("name", "occurred", "getter", "getOccurred")),
-                    "dynamicProperties", List.of(
-                            Map.of("name", "ext", "getter", "getExt",
-                                    "typeName", "java.util.Map", "path", "Value.ext"),
-                            Map.of("name", "children", "getter", "getChildren",
-                                    "typeName", "java.util.Map", "path", "Value.children")),
-                    "qualifiedProperties", List.of())));
+                    "inaccessibleProperties", List.of(Map.of("name", "occurred", "getter", "getOccurred",
+                            "copyExpression", "copyDynamicValue(source.getOccurred(), cycleContext, \"Value.occurred\")")),
+                    "dynamicProperties", List.of(),
+                    "qualifiedProperties", List.of(
+                            Map.of("name", "ext", "copyMethod", "copyValueMap"),
+                            Map.of("name", "children", "copyMethod", "copyMap0")))));
         }
         StringWriter output = new StringWriter();
         configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
@@ -164,6 +174,8 @@ class NestedMapperBehaviorTest {
                 "package com.example.services.parent.info; public class ParentInfo {"
                         + " public com.example.value.Value value;"
                         + " public java.util.Map<String,com.example.value.Value> values;"
+                        + " public java.util.HashMap<String,com.example.value.Value> concreteValues;"
+                        + " public java.util.HashMap<String,Object> concreteUnknown;"
                         + " public com.example.services.child.info.ChildInfo child;"
                         + " public java.util.List<com.example.services.child.info.ChildInfo> children;"
                         + " public java.util.Set<com.example.services.child.info.ChildInfo> peers;"
@@ -238,22 +250,31 @@ class NestedMapperBehaviorTest {
                 "    ext.put(\"linked\", linked);",
                 "    value.setExt(ext); original.value = value;",
                 "    original.values = java.util.Map.of(\"same\", value);",
+                "    original.concreteValues = new java.util.HashMap<>();",
+                "    original.concreteValues.put(\"same\", value);",
+                "    original.concreteUnknown = new java.util.HashMap<>();",
+                "    original.concreteUnknown.put(\"same\", value);",
                 "    value.setChildren(java.util.Map.of(\"self\", value));",
                 "    ParentInfo copy = ParentMapper.INSTANCE.toInfo(original);",
                 "    if (copy.value == value) throw new AssertionError(\"value alias\");",
                 "    if (copy.values == original.values || copy.values.get(\"same\") != copy.value)",
                 "      throw new AssertionError(\"typed Map value alias\");",
+                "    if (copy.concreteValues == original.concreteValues",
+                "        || copy.concreteValues.get(\"same\") != copy.value)",
+                "      throw new AssertionError(\"concrete Map value alias\");",
+                "    if (copy.concreteUnknown == original.concreteUnknown",
+                "        || copy.concreteUnknown.get(\"same\") != value)",
+                "      throw new AssertionError(\"unknown concrete Map must be shallow\");",
                 "    if (copy.value.getOccurred() == value.getOccurred()) throw new AssertionError(\"readonly Date alias\");",
                 "    if (copy.value.getExt() == ext) throw new AssertionError(\"Map alias\");",
                 "    if (!(copy.value.getExt() instanceof java.util.HashMap)) throw new AssertionError(\"Map type\");",
-                "    if (copy.value.getExt().get(\"self\") != copy.value.getExt()) throw new AssertionError(\"Map cycle\");",
+                "    if (copy.value.getExt().get(\"self\") != ext) throw new AssertionError(\"unknown Map value must stay shallow\");",
                 "    java.util.List<?> copiedLoop = (java.util.List<?>) copy.value.getExt().get(\"list\");",
-                "    if (copiedLoop == loop || copiedLoop.get(0) != copiedLoop) throw new AssertionError(\"List cycle\");",
+                "    if (copiedLoop != loop) throw new AssertionError(\"unknown List value must stay shallow\");",
                 "    Object[] copiedArray = (Object[]) copy.value.getExt().get(\"array\");",
-                "    if (copiedArray == array || copiedArray[0] != copiedArray) throw new AssertionError(\"array cycle\");",
-                "    if (copy.value.getExt().get(\"set1\") != copy.value.getExt().get(\"set2\")",
-                "        || copy.value.getExt().get(\"set1\") == shared",
-                "        || !(copy.value.getExt().get(\"set1\") instanceof java.util.HashSet))",
+                "    if (copiedArray != array) throw new AssertionError(\"unknown array value must stay shallow\");",
+                "    if (copy.value.getExt().get(\"set1\") != shared",
+                "        || copy.value.getExt().get(\"set2\") != shared)",
                 "      throw new AssertionError(\"shared Set\");",
                 "    if (!(copy.value.getExt().get(\"linked\") instanceof java.util.LinkedList))",
                 "      throw new AssertionError(\"concrete List type\");",

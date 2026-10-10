@@ -1470,7 +1470,76 @@ public final class ServiceModelCodeGenerator {
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
-    static List<Map<String, Object>> valueCopyModels(List<Class<?>> types) {
+    static List<Map<String, Object>> mapCopyModels(List<FieldModel> infoFields, List<Class<?>> copyTypes) {
+        Map<String, Map<String, Object>> models = new LinkedHashMap<>();
+        for (FieldModel fieldModel : infoFields) {
+            Field field = fieldModel.getField();
+            if (field == null || !field.getName().equals(fieldModel.getName())) {
+                continue;
+            }
+            InjectVar injectVar = field.getAnnotation(InjectVar.class);
+            if (injectVar != null && injectVar.expectBaseType() == Map.class
+                    && injectVar.expectGenericTypes().length == 2) {
+                addMapCopyModel(ResolvableType.forClassWithGenerics(Map.class,
+                        injectVar.expectGenericTypes()), copyTypes, models);
+            } else {
+                addMapCopyModel(fieldModel.getResolvableType(), copyTypes, models);
+            }
+        }
+        for (Class<?> valueType : copyTypes) {
+            for (java.beans.PropertyDescriptor descriptor : BeanUtils.getPropertyDescriptors(valueType)) {
+                Method getter = descriptor.getReadMethod();
+                if (getter != null && Map.class.isAssignableFrom(getter.getReturnType())) {
+                    addMapCopyModel(ResolvableType.forMethodReturnType(getter), copyTypes, models);
+                }
+            }
+        }
+        return new ArrayList<>(models.values());
+    }
+
+    private static void addMapCopyModel(ResolvableType mapType, List<Class<?>> copyTypes,
+                                        Map<String, Map<String, Object>> models) {
+        if (mapType == null || mapType.resolve() == null
+                || !Map.class.isAssignableFrom(mapType.resolve())) {
+            return;
+        }
+        Class<?> keyType = mapType.resolveGeneric(0);
+        Class<?> valueType = mapType.resolveGeneric(1);
+        if (keyType == null || valueType == null || keyType.getCanonicalName() == null
+                || valueType.getCanonicalName() == null) {
+            return;
+        }
+        int keyCopyIndex = copyTypes.indexOf(keyType);
+        int valueCopyIndex = copyTypes.indexOf(valueType);
+        if (keyCopyIndex < 0 && valueCopyIndex < 0) {
+            return;
+        }
+        String identity = mapType.resolve().getName() + "<" + keyType.getName() + "," + valueType.getName() + ">";
+        models.computeIfAbsent(identity, ignored -> Map.of(
+                "index", models.size(), "rawTypeName", mapType.resolve().getCanonicalName(),
+                "keyTypeName", keyType.getCanonicalName(), "valueTypeName", valueType.getCanonicalName(),
+                "keyCopyIndex", keyCopyIndex, "valueCopyIndex", valueCopyIndex));
+    }
+
+    private static String mapCopyMethod(ResolvableType mapType, List<Map<String, Object>> mapModels) {
+        if (mapType != null && mapType.resolve() != null && Map.class.isAssignableFrom(mapType.resolve())) {
+            Class<?> keyType = mapType.resolveGeneric(0);
+            Class<?> valueType = mapType.resolveGeneric(1);
+            for (Map<String, Object> model : mapModels) {
+                if (mapType.resolve().getCanonicalName().equals(model.get("rawTypeName"))
+                        && keyType != null && keyType.getCanonicalName() != null
+                        && keyType.getCanonicalName().equals(model.get("keyTypeName"))
+                        && valueType != null && valueType.getCanonicalName() != null
+                        && valueType.getCanonicalName().equals(model.get("valueTypeName"))) {
+                    return "copyMap" + model.get("index");
+                }
+            }
+        }
+        return "copyValueMap";
+    }
+
+    static List<Map<String, Object>> valueCopyModels(List<Class<?>> types,
+                                                      List<Map<String, Object>> mapModels) {
         List<Map<String, Object>> models = new ArrayList<>();
         for (int index = 0; index < types.size(); index++) {
             Class<?> valueType = types.get(index);
@@ -1490,6 +1559,11 @@ public final class ServiceModelCodeGenerator {
                         .collect(Collectors.toList());
                 boolean exactSetter = setters.stream()
                         .anyMatch(method -> method.getParameterTypes()[0] == getter.getReturnType());
+                String copiedValue = Map.class.isAssignableFrom(getter.getReturnType())
+                        ? mapCopyMethod(ResolvableType.forMethodReturnType(getter), mapModels)
+                            + "(source." + getter.getName() + "(), cycleContext)"
+                        : "copyDynamicValue(source." + getter.getName() + "(), cycleContext, \""
+                            + valueType.getSimpleName() + "." + descriptor.getName() + "\")";
                 Field backingField = ReflectionUtils.findField(valueType, descriptor.getName());
                 if (!exactSetter && backingField != null) {
                     if (Modifier.isFinal(backingField.getModifiers())
@@ -1497,18 +1571,17 @@ public final class ServiceModelCodeGenerator {
                         throw new IllegalStateException("Cannot safely copy value property: " + getter);
                     }
                     inaccessibleProperties.add(Map.of("name", descriptor.getName(),
-                            "getter", getter.getName()));
+                            "getter", getter.getName(), "copyExpression", copiedValue));
                 }
                 if (setters.size() > 1 && exactSetter) {
                     overloadedProperties.add(Map.of("name", descriptor.getName(),
                             "getter", getter.getName(),
-                            "typeName", getter.getReturnType().getCanonicalName()));
+                            "typeName", getter.getReturnType().getCanonicalName(),
+                            "mappingExpression", copiedValue.replace("\"", "\\\"")));
                 }
                 if (Map.class.isAssignableFrom(getter.getReturnType())) {
-                    dynamicProperties.add(Map.of("name", descriptor.getName(),
-                            "getter", getter.getName(),
-                            "typeName", getter.getReturnType().getCanonicalName(),
-                            "path", valueType.getSimpleName() + "." + descriptor.getName()));
+                    qualifiedProperties.add(Map.of("name", descriptor.getName(),
+                            "copyMethod", mapCopyMethod(ResolvableType.forMethodReturnType(getter), mapModels)));
                 }
                 Class<?> propertyType = getter.getReturnType();
                 if (Collection.class.isAssignableFrom(propertyType)) {
@@ -1533,7 +1606,9 @@ public final class ServiceModelCodeGenerator {
         return models;
     }
 
-    static List<Map<String, String>> valueCopyFields(List<FieldModel> infoFields, List<Class<?>> copyTypes) {
+    static List<Map<String, String>> valueCopyFields(List<FieldModel> infoFields,
+                                                      List<Class<?>> copyTypes,
+                                                      List<Map<String, Object>> mapModels) {
         List<Map<String, String>> fields = new ArrayList<>();
         for (FieldModel fieldModel : infoFields) {
             Field field = fieldModel.getField();
@@ -1547,17 +1622,19 @@ public final class ServiceModelCodeGenerator {
             InjectVar injectVar = field.getAnnotation(InjectVar.class);
             if (injectVar != null && copyTypes.contains(injectVar.expectBaseType())) {
                 elementType = injectVar.expectBaseType();
-            } else if (injectVar != null && injectVar.expectBaseType() == Map.class
-                    && Arrays.stream(injectVar.expectGenericTypes()).anyMatch(copyTypes::contains)) {
-                fields.add(Map.of("name", fieldModel.getName(), "copyMethod", "copyValueMap"));
+            } else if (injectVar != null && injectVar.expectBaseType() == Map.class) {
+                ResolvableType mapType = injectVar.expectGenericTypes().length == 2
+                        ? ResolvableType.forClassWithGenerics(Map.class, injectVar.expectGenericTypes())
+                        : null;
+                fields.add(Map.of("name", fieldModel.getName(),
+                        "copyMethod", mapCopyMethod(mapType, mapModels)));
                 continue;
             } else if (injectVar != null && Collection.class.isAssignableFrom(injectVar.expectBaseType())
                     && injectVar.expectGenericTypes().length == 1) {
                 elementType = injectVar.expectGenericTypes()[0];
-            } else if (Map.class.isAssignableFrom(field.getType())
-                    && Arrays.stream(resolvedField.getGenerics())
-                    .map(ResolvableType::resolve).anyMatch(copyTypes::contains)) {
-                fields.add(Map.of("name", fieldModel.getName(), "copyMethod", "copyValueMap"));
+            } else if (Map.class.isAssignableFrom(field.getType())) {
+                fields.add(Map.of("name", fieldModel.getName(),
+                        "copyMethod", mapCopyMethod(resolvedField, mapModels)));
                 continue;
             } else if (Collection.class.isAssignableFrom(field.getType())) {
                 elementType = resolvedField.resolveGeneric();
@@ -1857,8 +1934,9 @@ public final class ServiceModelCodeGenerator {
         Set<Class<?>> generatedEntityTypes = (Set<Class<?>>) paramsMap.getOrDefault(
                 "generatedEntityTypes", Collections.emptySet());
         List<Class<?>> copyTypes = valueCopyTypes(infoFields);
-        List<Map<String, Object>> copyModels = valueCopyModels(copyTypes);
-        List<Map<String, String>> copyFields = valueCopyFields(infoFields, copyTypes);
+        List<Map<String, Object>> mapModels = mapCopyModels(infoFields, copyTypes);
+        List<Map<String, Object>> copyModels = valueCopyModels(copyTypes, mapModels);
+        List<Map<String, String>> copyFields = valueCopyFields(infoFields, copyTypes, mapModels);
 
         final Consumer<Map<String, Object>> genParams = params -> {
             params.put("servicePackageName", pkgName);
@@ -1870,6 +1948,7 @@ public final class ServiceModelCodeGenerator {
             params.put("jsonListTargetTypes", jsonListTargetTypes(entityClass));
             params.put("jsonTargetTypes", jsonTargetTypes(entityClass));
             params.put("valueCopyTypes", copyTypes);
+            params.put("mapCopyModels", mapModels);
             params.put("valueCopyModels", copyModels);
             params.put("valueCopyFields", copyFields);
             params.put("ignoredUnresolvedCollectionProperties", ignoredUnresolvedCollectionProperties(entityClass));

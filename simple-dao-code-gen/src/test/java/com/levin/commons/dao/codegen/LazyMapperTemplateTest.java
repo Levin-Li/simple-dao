@@ -351,10 +351,22 @@ class LazyMapperTemplateTest {
     void mutableValueObjectsShouldGetOneCopyMethodAndExplicitOverload() throws Exception {
         List<FieldModel> infoFields = infoFieldModels(OrgEntity.class);
         List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(infoFields);
+        List<Map<String, Object>> mapModels = ServiceModelCodeGenerator.mapCopyModels(infoFields, copyTypes);
         assertTrue(copyTypes.contains(ValueObject.class));
         assertTrue(copyTypes.contains(ExternalValue.class));
-        assertTrue(ServiceModelCodeGenerator.valueCopyFields(infoFields, copyTypes).stream()
+        assertTrue(copyTypes.contains(ActionLog.class));
+        assertTrue(mapModels.stream().anyMatch(model -> ActionLog.class.getCanonicalName()
+                .equals(model.get("valueTypeName")) && (int) model.get("valueCopyIndex") >= 0));
+        assertTrue(mapModels.stream().anyMatch(model -> java.util.HashMap.class.getCanonicalName()
+                .equals(model.get("rawTypeName"))
+                && ActionLog.class.getCanonicalName().equals(model.get("valueTypeName"))));
+        assertTrue(mapModels.stream().anyMatch(model -> ActionLog.class.getCanonicalName()
+                .equals(model.get("keyTypeName")) && (int) model.get("keyCopyIndex") >= 0));
+        assertTrue(ServiceModelCodeGenerator.valueCopyFields(infoFields, copyTypes, mapModels).stream()
                 .anyMatch(field -> "externalValues".equals(field.get("name"))
+                        && field.get("copyMethod").startsWith("copyMap")));
+        assertTrue(ServiceModelCodeGenerator.valueCopyFields(infoFields, copyTypes, mapModels).stream()
+                .anyMatch(field -> "unknownValues".equals(field.get("name"))
                         && "copyValueMap".equals(field.get("copyMethod"))));
 
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
@@ -370,7 +382,8 @@ class LazyMapperTemplateTest {
                         "entityName", "FixtureEntity",
                         "entityTitle", "测试实体",
                         "importList", Collections.emptyList(),
-                        "valueCopyModels", ServiceModelCodeGenerator.valueCopyModels(copyTypes),
+                        "valueCopyModels", ServiceModelCodeGenerator.valueCopyModels(copyTypes, mapModels),
+                        "mapCopyModels", mapModels,
                         "fields", Collections.emptyList()), output);
 
         String source = output.toString();
@@ -385,7 +398,10 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("copyDynamicValue(source.getOccurred(), cycleContext"), source);
         assertTrue(source.contains("copyDynamicValue(source.getStatus(), cycleContext"), source);
         assertTrue(source.contains("copyValueAuto" + valueIndex), source);
-        assertTrue(source.contains("copyDynamicValue(source.getExtParams(), cycleContext"), source);
+        assertTrue(source.contains("@Mapping(target = \"extParams\", qualifiedByName = \"copyValueMap\")"), source);
+        assertTrue(source.contains("@MapMapping(valueQualifiedByName = \"copyValue" + externalIndex + "\")"), source);
+        assertTrue(source.contains("default <K, V, M extends Map<K, V>> M copyValueMap"), source);
+        assertTrue(source.contains("target.putAll(source);"), source);
         assertTrue(source.contains("@Mapping(target = \"next\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertTrue(source.contains("@Mapping(target = \"peers\", qualifiedByName = \"copyValue" + valueIndex + "\")"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
@@ -397,7 +413,7 @@ class LazyMapperTemplateTest {
         List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(infoFields);
         assertFalse(copyTypes
                 .contains(MappedTreeBase.class));
-        assertTrue(ServiceModelCodeGenerator.valueCopyModels(copyTypes).isEmpty());
+        assertTrue(ServiceModelCodeGenerator.valueCopyModels(copyTypes, List.of()).isEmpty());
         assertTrue(ServiceModelCodeGenerator.nestedInfoCollectionMappings(MappedTreeEntity.class,
                         Set.of(MappedTreeEntity.class)).stream()
                 .anyMatch(mapping -> mapping.get("entityType") == MappedTreeEntity.class
@@ -495,6 +511,10 @@ class LazyMapperTemplateTest {
     static class OrgEntity {
         ExternalValue externalValue;
         Map<String, ExternalValue> externalValues;
+        Map<String, ActionLog> actionLogs;
+        Map<ActionLog, String> keyedLogs;
+        java.util.HashMap<String, ActionLog> concreteLogs;
+        Map<String, Object> unknownValues;
         @InjectVar(domain = "dao", expectBaseType = JSONObject.class)
         String exInfo;
         @InjectVar(domain = "dao", expectBaseType = List.class, expectGenericTypes = {String.class})
@@ -534,6 +554,13 @@ class LazyMapperTemplateTest {
     public static class BalanceInfo {
         public BalanceInfo() {}
         String currency;
+    }
+
+    public static class ActionLog {
+        public ActionLog() {}
+        private java.util.Date occurred;
+        public java.util.Date getOccurred() { return occurred; }
+        public void setOccurred(java.util.Date occurred) { this.occurred = occurred; }
     }
 
     public static class ValueObject {
