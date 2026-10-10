@@ -1390,6 +1390,24 @@ public final class ServiceModelCodeGenerator {
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
+    static List<Class<?>> nestedEntityTypes(Class<?> entityClass) {
+        Set<Class<?>> types = new LinkedHashSet<>();
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            Class<?> fieldType = field.getType();
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : Collection.class.isAssignableFrom(fieldType)
+                    ? ResolvableType.forField(field).resolveGeneric() : fieldType;
+            if (relatedType != null && relatedType != entityClass
+                    && relatedType.isAnnotationPresent(Entity.class)) {
+                types.add(relatedType);
+            }
+        });
+        return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
+    }
+
     private static void collectJsonPojoTypes(Class<?> entityClass, Set<Class<?>> types,
                                              Set<Class<?>> visited) {
         if (entityClass == null || !visited.add(entityClass)) {
@@ -1470,6 +1488,7 @@ public final class ServiceModelCodeGenerator {
             params.put("needsJsonObjectMapping", needsJsonObjectMapping(entityClass));
             params.put("needsJsonArrayMapping", needsJsonArrayMapping(entityClass));
             params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
+            params.put("nestedEntityTypes", nestedEntityTypes(entityClass));
             params.put("isService", true);
         };
 

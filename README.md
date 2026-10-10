@@ -285,6 +285,7 @@
    `SelectDao.setDefaultResultConverter(Function)` 可设置单次查询的默认转换器；
    `setDefaultResultConverter(Info.class, Function)` 还能让显式查询该类型时使用转换器；
    `setAllowLazyLoading(false)` 默认跳过尚未加载的 `LAZY` 属性，已加载的属性照常映射。
+   关联实体及集合中的实体元素交给各自的 Mapper 转换，共享本次转换的延迟加载设置和循环引用缓存。
    指定列查询继续使用投影映射，详情见 [用户手册](./manual.md)。
    带条数限制的集合 `JOIN FETCH` 在最终 JPA 执行层自动执行 ID 分页和完整关联抓取，避免 Hibernate 内存分页；单值 fetch 和普通 JOIN 保持原路径。
      

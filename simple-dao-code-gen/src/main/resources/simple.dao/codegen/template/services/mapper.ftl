@@ -80,6 +80,15 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
 
     ${entityName}Info toInfo(${entityName}Info info, @Context CycleAvoidingMappingContext cycleContext);
 
+<#list nestedEntityTypes![] as nestedEntityType>
+    default ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info mapNested(${nestedEntityType.canonicalName} entity,
+            @Context boolean allowLazyLoading, @Context CycleAvoidingMappingContext cycleContext) {
+        return ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.${nestedEntityType.simpleName}Mapper.INSTANCE
+                .toInfo(entity, allowLazyLoading, cycleContext);
+    }
+
+</#list>
+
 <#list jsonPojoTypes![] as jsonPojoType>
     default ${jsonPojoType.canonicalName} fromJsonType${jsonPojoType?index}(String json) {
         return json == null ? null : com.alibaba.fastjson2.JSON.parseObject(json, ${jsonPojoType.canonicalName}.class);

@@ -126,6 +126,30 @@ class LazyMapperTemplateTest {
     }
 
     @Test
+    void nestedEntitiesShouldDelegateToTheirOwnMappers() throws Exception {
+        assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(OrgEntity.class));
+        assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(FixtureEntity.class).contains(FixtureEntity.class));
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl").process(Map.of(
+                "packageName", "com.example.services",
+                "modulePackageName", "com.example",
+                "entityClassPackage", "com.example.entities",
+                "entityName", "AccountEntity",
+                "entityTitle", "测试实体",
+                "nestedEntityTypes", ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class),
+                "fields", Collections.emptyList()), output);
+
+        String source = output.toString();
+        assertTrue(source.contains("OrgEntityMapper.INSTANCE"), source);
+        assertTrue(source.contains(".toInfo(entity, allowLazyLoading, cycleContext)"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    }
+
+    @Test
     void generatedMapperShouldInheritOnlyJsonObjectMappingWhenArrayIsNotNeeded() throws Exception {
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
