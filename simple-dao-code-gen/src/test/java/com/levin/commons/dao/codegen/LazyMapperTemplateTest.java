@@ -3,6 +3,9 @@ package com.levin.commons.dao.codegen;
 import com.github.javaparser.StaticJavaParser;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.codegen.external.ExternalEntity;
+import com.levin.commons.dao.codegen.external.IncompleteExternalEntity;
+import com.levin.commons.dao.codegen.external.MappedExternalEntity;
+import com.levin.commons.dao.codegen.external.NoInstanceExternalEntity;
 import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
@@ -48,7 +51,8 @@ class LazyMapperTemplateTest {
                 "entityName", "FixtureEntity",
                 "entityTitle", "测试实体",
                 "importList", Collections.emptyList(),
-                "nestedInfoCollectionMappings", ServiceModelCodeGenerator.nestedInfoCollectionMappings(FixtureEntity.class),
+                "nestedInfoCollectionMappings", ServiceModelCodeGenerator.nestedInfoCollectionMappings(
+                        FixtureEntity.class, Set.of(FixtureEntity.class)),
                 "fields", fields), output);
 
         String source = output.toString();
@@ -127,11 +131,23 @@ class LazyMapperTemplateTest {
 
     @Test
     void nestedEntitiesShouldDelegateToTheirOwnMappers() throws Exception {
-        assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(OrgEntity.class));
-        assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(TeamEntity.class));
-        assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(ExternalEntity.class));
-        assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(FixtureEntity.class).contains(FixtureEntity.class));
-        List<Map<String, Object>> collectionMappings = ServiceModelCodeGenerator.nestedInfoCollectionMappings(AccountEntity.class);
+        Set<Class<?>> generatedEntities = Set.of(AccountEntity.class, OrgEntity.class, TeamEntity.class);
+        List<Class<?>> nestedTypes = ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class, generatedEntities);
+        List<Class<?>> nestedInfoTypes = ServiceModelCodeGenerator.nestedInfoTypes(AccountEntity.class, generatedEntities);
+        assertTrue(nestedTypes.contains(OrgEntity.class));
+        assertTrue(nestedTypes.contains(TeamEntity.class));
+        assertTrue(nestedTypes.contains(MappedExternalEntity.class));
+        assertFalse(nestedTypes.contains(ExternalEntity.class));
+        assertFalse(nestedTypes.contains(NoInstanceExternalEntity.class));
+        assertTrue(nestedTypes.contains(IncompleteExternalEntity.class));
+        assertTrue(nestedInfoTypes.contains(MappedExternalEntity.class));
+        assertFalse(nestedInfoTypes.contains(ExternalEntity.class));
+        assertFalse(nestedInfoTypes.contains(NoInstanceExternalEntity.class));
+        assertFalse(nestedInfoTypes.contains(IncompleteExternalEntity.class));
+        assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(FixtureEntity.class,
+                Set.of(FixtureEntity.class)).contains(FixtureEntity.class));
+        List<Map<String, Object>> collectionMappings = ServiceModelCodeGenerator.nestedInfoCollectionMappings(
+                AccountEntity.class, generatedEntities);
         assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
                 && "List".equals(mapping.get("kind"))));
         assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
@@ -142,7 +158,10 @@ class LazyMapperTemplateTest {
                 && "Array".equals(mapping.get("kind"))));
         assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == TeamEntity.class
                 && "List".equals(mapping.get("kind"))));
-        assertFalse(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == ExternalEntity.class));
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == MappedExternalEntity.class
+                && "List".equals(mapping.get("kind"))));
+        assertFalse(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == ExternalEntity.class
+                || mapping.get("entityType") == IncompleteExternalEntity.class));
 
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
@@ -154,13 +173,17 @@ class LazyMapperTemplateTest {
                 "entityClassPackage", "com.example.entities",
                 "entityName", "AccountEntity",
                 "entityTitle", "测试实体",
-                "nestedEntityTypes", ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class),
+                "nestedEntityTypes", nestedTypes,
+                "nestedInfoTypes", nestedInfoTypes,
                 "nestedInfoCollectionMappings", collectionMappings,
                 "fields", Collections.emptyList()), output);
 
         String source = output.toString();
         assertTrue(source.contains("OrgEntityMapper.INSTANCE"), source);
         assertTrue(source.contains("TeamEntityMapper.INSTANCE"), source);
+        assertTrue(source.contains("MappedExternalEntityMapper.INSTANCE"), source);
+        assertTrue(source.contains("IncompleteExternalEntityMapper.INSTANCE"), source);
+        assertFalse(source.contains("IncompleteExternalEntityInfo info,"), source);
         assertTrue(source.contains(".toInfo(entity, allowLazyLoading, cycleContext)"), source);
         assertTrue(source.contains("OrgEntityInfo mapNested("), source);
         assertTrue(source.contains(".toInfo(info, cycleContext)"), source);
@@ -282,6 +305,10 @@ class LazyMapperTemplateTest {
         TeamEntity team;
         List<TeamEntity> teams;
         List<ExternalEntity> externals;
+        MappedExternalEntity mappedExternal;
+        List<MappedExternalEntity> mappedExternals;
+        IncompleteExternalEntity incompleteExternal;
+        NoInstanceExternalEntity noInstanceExternal;
     }
 
     @Entity

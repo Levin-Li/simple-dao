@@ -102,8 +102,8 @@ Dao 类逻辑框图，如下图所示。
    已加载的属性正常映射。设为 `true` 时允许映射过程读取这些属性，可能触发额外查询。
    手写的 `Function` 或 `Converter` 自行控制属性读取。
    每次实体转 `Info` 都使用独立的对象映射缓存；已加载的父子双向关联会复用 `Info` 对象，避免循环递归。
-   关联实体及集合中的实体元素由各自的 Mapper 转换，并共享该缓存和延迟加载设置。
-   `Info → Info` 拷贝同样把关联的子 `Info` 和集合元素交给对应实体的 Mapper，并共享循环引用缓存。
+   关联实体存在可调用的 Mapper 时，实体和 `Info` 拷贝由该 Mapper 执行，并共享缓存和延迟加载设置；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。
+   是否委托不按实体包名判断：本轮要生成的实体视为具备 Mapper；外部实体则检查其 Mapper 的公开 `INSTANCE` 和对应的 `toInfo(实体, boolean, CycleAvoidingMappingContext)` 或 `toInfo(Info, CycleAvoidingMappingContext)` 方法。两条转换路径分别判断。
    `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 统一由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供；生成器不再生成模块内副本。原 `com.levin.commons.dao.util.CycleAvoidingMappingContext` 保留兼容已有生成代码。
 
 

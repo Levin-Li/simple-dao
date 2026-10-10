@@ -285,8 +285,7 @@
    `SelectDao.setDefaultResultConverter(Function)` 可设置单次查询的默认转换器；
    `setDefaultResultConverter(Info.class, Function)` 还能让显式查询该类型时使用转换器；
    `setAllowLazyLoading(false)` 默认跳过尚未加载的 `LAZY` 属性，已加载的属性照常映射。
-   关联实体及集合中的实体元素交给各自的 Mapper 转换，共享本次转换的延迟加载设置和循环引用缓存。
-   `Info` 拷贝时，关联的子 `Info` 和集合元素也由对应实体的 Mapper 递归拷贝。
+   关联实体存在可调用的 Mapper 时，实体和 `Info` 拷贝交给该 Mapper，并共享延迟加载设置和循环引用缓存；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。
    `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供，代码生成器不再为每个模块生成这三个文件。
    指定列查询继续使用投影映射，详情见 [用户手册](./manual.md)。
    带条数限制的集合 `JOIN FETCH` 在最终 JPA 执行层自动执行 ID 分页和完整关联抓取，避免 Hibernate 内存分页；单值 fetch 和普通 JOIN 保持原路径。
