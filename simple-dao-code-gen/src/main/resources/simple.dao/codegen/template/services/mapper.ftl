@@ -7,9 +7,12 @@ import io.swagger.v3.oas.annotations.tags.*;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.BeforeMapping;
 import org.mapstruct.Context;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
 import org.mapstruct.factory.Mappers;
 
 import java.util.*;
@@ -25,7 +28,7 @@ import com.levin.commons.dao.*;
 import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
-import ${modulePackageName}.services.commons.mapper.CycleAvoidingMappingContext;
+import com.levin.commons.dao.util.CycleAvoidingMappingContext;
 <#if needsJsonObjectMapping!false>
 import ${modulePackageName}.services.commons.mapper.JsonObjectMapping;
 </#if>
@@ -62,7 +65,12 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
 
     @Named("entryEntityToInfo")
     default ${entityName}Info toInfo(${entityName} entity, boolean allowLazyLoading) {
-        return toInfo(entity, allowLazyLoading, new CycleAvoidingMappingContext());
+        CycleAvoidingMappingContext cycleContext = new CycleAvoidingMappingContext();
+        try {
+            return toInfo(entity, allowLazyLoading, cycleContext);
+        } finally {
+            cycleContext.clear();
+        }
     }
 
 <#list fields as field>
@@ -75,10 +83,28 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
 
     @Named("entryInfoCopy")
     default ${entityName}Info toInfo(${entityName}Info info) {
-        return toInfo(info, new CycleAvoidingMappingContext());
+        CycleAvoidingMappingContext cycleContext = new CycleAvoidingMappingContext();
+        try {
+            return toInfo(info, cycleContext);
+        } finally {
+            cycleContext.clear();
+        }
     }
 
     ${entityName}Info toInfo(${entityName}Info info, @Context CycleAvoidingMappingContext cycleContext);
+
+    @BeforeMapping
+    default <T> T getMappedInstance(Object source, @TargetType Class<T> targetType,
+                                    @Context CycleAvoidingMappingContext cycleContext) {
+        return cycleContext.getMappedInstance(source, targetType);
+    }
+
+    @BeforeMapping
+    default void storeMappedInstance(Object source, @MappingTarget Object target,
+                                     @TargetType Class<?> targetType,
+                                     @Context CycleAvoidingMappingContext cycleContext) {
+        cycleContext.storeMappedInstance(source, target, targetType);
+    }
 
 <#list jsonPojoTypes![] as jsonPojoType>
     default ${jsonPojoType.canonicalName} fromJsonType${jsonPojoType?index}(String json) {

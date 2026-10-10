@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSONObject;
 import com.levin.commons.service.domain.InjectVar;
 import freemarker.template.Configuration;
 import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -55,29 +54,18 @@ class LazyMapperTemplateTest {
         assertFalse(source.contains("@Mapping(target = \"orgName\""), source);
         assertTrue(source.contains("default FixtureEntityInfo toInfo(FixtureEntity entity)"), source);
         assertTrue(source.contains("default FixtureEntityInfo toInfo(FixtureEntity entity, boolean allowLazyLoading)"), source);
-        assertTrue(source.contains("return toInfo(entity, allowLazyLoading, new CycleAvoidingMappingContext())"), source);
+        assertTrue(source.contains("return toInfo(entity, allowLazyLoading, cycleContext)"), source);
+        assertTrue(source.contains("finally {\n            cycleContext.clear();"), source);
         assertTrue(source.contains("@Context CycleAvoidingMappingContext cycleContext"), source);
-        assertTrue(source.contains("return toInfo(info, new CycleAvoidingMappingContext())"), source);
+        assertTrue(source.contains("return toInfo(info, cycleContext)"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.util.CycleAvoidingMappingContext;"), source);
+        assertTrue(source.contains("@BeforeMapping"), source);
+        assertTrue(source.contains("cycleContext.getMappedInstance(source, targetType)"), source);
+        assertTrue(source.contains("cycleContext.storeMappedInstance(source, target, targetType)"), source);
         assertFalse(source.contains("extends JsonObjectMapping"), source);
         assertFalse(source.contains("extends JsonArrayMapping"), source);
         assertFalse(source.contains("fromJsonArray"), source);
         assertFalse(source.contains("toJsonArray"), source);
-        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
-    }
-
-    @Test
-    void cycleContextTemplateShouldCacheSourceIdentityBeforeMappingChildren() throws Exception {
-        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
-        configuration.setDefaultEncoding("UTF-8");
-        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
-        StringWriter output = new StringWriter();
-        configuration.getTemplate("simple.dao/codegen/template/services/commons/mapper/CycleAvoidingMappingContext.java")
-                .process(Map.of("modulePackageName", "com.example"), output);
-
-        String source = output.toString();
-        assertTrue(source.contains("new IdentityHashMap<>()"), source);
-        assertTrue(source.contains("getMappedInstance(Object source, @TargetType Class<T> targetType)"), source);
-        assertTrue(source.contains("storeMappedInstance(Object source, @MappingTarget Object target,"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -215,7 +203,6 @@ class LazyMapperTemplateTest {
         String source = output.toString();
         assertTrue(source.contains("BalanceInfo fromJsonType0(String json)"), source);
         assertTrue(source.contains("String toJsonType0("), source);
-        assertFalse(source.contains("@TargetType"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
