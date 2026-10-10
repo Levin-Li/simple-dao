@@ -113,6 +113,25 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
                 .toInfo(entity, allowLazyLoading, cycleContext);
     }
 
+    default ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info mapNested(
+            ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info info,
+            @Context CycleAvoidingMappingContext cycleContext) {
+        return ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.${nestedEntityType.simpleName}Mapper.INSTANCE
+                .toInfo(info, cycleContext);
+    }
+
+</#list>
+
+<#list nestedInfoCollectionMappings![] as mapping>
+<#assign infoType = mapping.entityType.package.name?replace("entities", "services") + "." + mapping.entityType.simpleName?lower_case + ".info." + mapping.entityType.simpleName + "Info">
+<#if mapping.kind == "Array">
+    ${infoType}[] copy${mapping.entityType.simpleName}InfoArray(${infoType}[] infos,
+            @Context CycleAvoidingMappingContext cycleContext);
+<#else>
+    ${mapping.kind}<${infoType}> copy${mapping.entityType.simpleName}Info${mapping.kind}(${mapping.kind}<${infoType}> infos,
+            @Context CycleAvoidingMappingContext cycleContext);
+</#if>
+
 </#list>
 
 <#list jsonPojoTypes![] as jsonPojoType>

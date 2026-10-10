@@ -1406,6 +1406,32 @@ public final class ServiceModelCodeGenerator {
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
+    static List<Map<String, Object>> nestedInfoCollectionMappings(Class<?> entityClass) {
+        Set<Class<?>> mappableTypes = new HashSet<>(nestedEntityTypes(entityClass));
+        mappableTypes.add(entityClass);
+        Map<String, Map<String, Object>> mappings = new TreeMap<>();
+        ReflectionUtils.doWithFields(entityClass, field -> {
+            if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
+                return;
+            }
+            Class<?> fieldType = field.getType();
+            String kind = fieldType.isArray() ? "Array"
+                    : List.class.isAssignableFrom(fieldType) ? "List"
+                    : Set.class.isAssignableFrom(fieldType) ? "Set"
+                    : Collection.class.isAssignableFrom(fieldType) ? "Collection" : null;
+            if (kind == null) {
+                return;
+            }
+            Class<?> relatedType = fieldType.isArray() ? fieldType.getComponentType()
+                    : ResolvableType.forField(field).resolveGeneric();
+            if (relatedType != null && mappableTypes.contains(relatedType)) {
+                mappings.putIfAbsent(relatedType.getName() + "#" + kind,
+                        Map.of("entityType", relatedType, "kind", kind));
+            }
+        });
+        return new ArrayList<>(mappings.values());
+    }
+
     private static void collectJsonPojoTypes(Class<?> entityClass, Set<Class<?>> types,
                                              Set<Class<?>> visited) {
         if (entityClass == null || !visited.add(entityClass)) {
@@ -1487,6 +1513,7 @@ public final class ServiceModelCodeGenerator {
             params.put("needsJsonArrayMapping", needsJsonArrayMapping(entityClass));
             params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
             params.put("nestedEntityTypes", nestedEntityTypes(entityClass));
+            params.put("nestedInfoCollectionMappings", nestedInfoCollectionMappings(entityClass));
             params.put("isService", true);
         };
 

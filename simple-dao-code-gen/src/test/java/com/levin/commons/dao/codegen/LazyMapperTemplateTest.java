@@ -17,8 +17,10 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -46,6 +48,7 @@ class LazyMapperTemplateTest {
                 "entityName", "FixtureEntity",
                 "entityTitle", "测试实体",
                 "importList", Collections.emptyList(),
+                "nestedInfoCollectionMappings", ServiceModelCodeGenerator.nestedInfoCollectionMappings(FixtureEntity.class),
                 "fields", fields), output);
 
         String source = output.toString();
@@ -68,6 +71,7 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("@BeforeMapping"), source);
         assertTrue(source.contains("cycleContext.getMappedInstance(source, targetType)"), source);
         assertTrue(source.contains("cycleContext.storeMappedInstance(source, target, targetType)"), source);
+        assertTrue(source.contains("copyFixtureEntityInfoList(List<"), source);
         assertFalse(source.contains("extends JsonObjectMapping"), source);
         assertFalse(source.contains("extends JsonArrayMapping"), source);
         assertFalse(source.contains("fromJsonArray"), source);
@@ -124,8 +128,21 @@ class LazyMapperTemplateTest {
     @Test
     void nestedEntitiesShouldDelegateToTheirOwnMappers() throws Exception {
         assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(OrgEntity.class));
+        assertTrue(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(TeamEntity.class));
         assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class).contains(ExternalEntity.class));
         assertFalse(ServiceModelCodeGenerator.nestedEntityTypes(FixtureEntity.class).contains(FixtureEntity.class));
+        List<Map<String, Object>> collectionMappings = ServiceModelCodeGenerator.nestedInfoCollectionMappings(AccountEntity.class);
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
+                && "List".equals(mapping.get("kind"))));
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
+                && "Set".equals(mapping.get("kind"))));
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
+                && "Collection".equals(mapping.get("kind"))));
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == OrgEntity.class
+                && "Array".equals(mapping.get("kind"))));
+        assertTrue(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == TeamEntity.class
+                && "List".equals(mapping.get("kind"))));
+        assertFalse(collectionMappings.stream().anyMatch(mapping -> mapping.get("entityType") == ExternalEntity.class));
 
         Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
         configuration.setDefaultEncoding("UTF-8");
@@ -138,11 +155,20 @@ class LazyMapperTemplateTest {
                 "entityName", "AccountEntity",
                 "entityTitle", "测试实体",
                 "nestedEntityTypes", ServiceModelCodeGenerator.nestedEntityTypes(AccountEntity.class),
+                "nestedInfoCollectionMappings", collectionMappings,
                 "fields", Collections.emptyList()), output);
 
         String source = output.toString();
         assertTrue(source.contains("OrgEntityMapper.INSTANCE"), source);
+        assertTrue(source.contains("TeamEntityMapper.INSTANCE"), source);
         assertTrue(source.contains(".toInfo(entity, allowLazyLoading, cycleContext)"), source);
+        assertTrue(source.contains("OrgEntityInfo mapNested("), source);
+        assertTrue(source.contains(".toInfo(info, cycleContext)"), source);
+        assertTrue(source.contains("copyOrgEntityInfoList(List<"), source);
+        assertTrue(source.contains("copyOrgEntityInfoSet(Set<"), source);
+        assertTrue(source.contains("copyOrgEntityInfoCollection(Collection<"), source);
+        assertTrue(source.contains("copyOrgEntityInfoArray("), source);
+        assertTrue(source.contains("copyTeamEntityInfoList(List<"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -249,6 +275,13 @@ class LazyMapperTemplateTest {
         OrgEntity org;
         @ManyToOne
         ExternalEntity external;
+        List<OrgEntity> orgs;
+        Set<OrgEntity> peers;
+        Collection<OrgEntity> all;
+        OrgEntity[] relatedArray;
+        TeamEntity team;
+        List<TeamEntity> teams;
+        List<ExternalEntity> externals;
     }
 
     @Entity
@@ -259,6 +292,11 @@ class LazyMapperTemplateTest {
         String permissionList;
         @InjectVar(domain = "dao", expectBaseType = BalanceInfo.class)
         String balanceInfo;
+    }
+
+    @Entity
+    static class TeamEntity {
+        String name;
     }
 
     static class BalanceInfo {
