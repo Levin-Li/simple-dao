@@ -2,6 +2,8 @@
 
 This repository is a public Simple DAO component. Follow the project development rules in `docs/project-development-rules.md`.
 
+4.3.0 实体 Mapper 值对象复制规范：[设计](openspec/changes/c20261010-2100-deep-copy-entity-mappers/design.md)、[验收规范](openspec/changes/c20261010-2100-deep-copy-entity-mappers/specs/simple-dao-codegen/spec.md)、[任务](openspec/changes/c20261010-2100-deep-copy-entity-mappers/tasks.md)。
+
 ## 项目边界
 
 - 当前工作区之外的任何文件、相邻仓库、独立前端仓库、依赖源码目录和本机其它项目默认均不属于本项目。

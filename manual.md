@@ -1989,7 +1989,9 @@ List<UserInfo> infos = simpleDao.selectFrom(User.class)
 
 是否委托不按实体包名判断：本轮要生成的实体视为具备 Mapper；外部实体则检查其 Mapper 的公开 `INSTANCE` 和对应的 `toInfo(实体, boolean, CycleAvoidingMappingContext)` 或 `toInfo(Info, CycleAvoidingMappingContext)` 方法。两条转换路径分别判断。
 
-`CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 统一由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供；生成器不再生成模块内副本。原 `com.levin.commons.dao.util.CycleAvoidingMappingContext` 保留兼容已有生成代码。
+`CycleAvoidingMappingContext` 和 `MapperJsonUtils` 统一由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供；生成器不再生成模块内副本。原 `com.levin.commons.dao.util.CycleAvoidingMappingContext` 保留兼容已有生成代码。每个 JPA 实体只生成一个 Mapper；非实体值类的复制方法生成在引用它的实体 Mapper 内。已知类型的 List/Set 元素递归复制；Map 总是新建容器，键和值均有明确静态类型时通过单对象复制方法复制已知可变值，`Map<String,Object>` 等未知值则保留原键值引用。复制后的键再插入目标 Map，按目标 Map 的相等性和哈希规则处理。
+
+实体字段的 JSON 字符串转换使用声明的完整 `Type`，包括嵌套集合和 Map 泛型。生成方法统一调用 `MapperJsonUtils.fromJson(String, Type)` 和 `MapperJsonUtils.toJson(Object)`；`null` 或空 JSON 字符串解析为 `null`，`null` 对象序列化为 Java `null`。默认 `JsonCodec` 使用 Fastjson2；应用可继承嵌套类 `MapperJsonUtils.JsonCodec`，在启动时通过 `MapperJsonUtils.codec.set(...)` 配置解析和序列化实现。自定义 codec 应同时处理两个方向，测试中替换后应恢复原实例。
 
 每次实体转 `Info` 都使用独立的对象映射缓存；父子节点等已加载的双向关联会复用同一个 `Info` 对象，避免循环递归。
 

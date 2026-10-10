@@ -515,7 +515,7 @@ UserInfo info = dao.selectFrom(User.class)
 
 生成的实体 Mapper 只对 JPA 声明为延迟加载的属性检查实际加载状态，包括默认延迟加载的集合关联以及显式设置 `fetch = LAZY` 的关联或简单字段。已经加载的属性照常映射；尚未加载时 `Info` 中对应字段保持 `null`。关联实体存在可调用的 Mapper 时，由该 Mapper 转换其实体和 `Info`，并共享本次转换的延迟加载设置与循环引用上下文；缺少相应 Mapper 或方法时由 MapStruct 在当前 Mapper 中生成转换。需要允许转换时加载关联属性，可在当前 `SelectDao` 上调用 `setAllowLazyLoading(true)`。这个开关默认是 `false`；手写的转换器需自行决定如何读取关联属性。
 
-生成的 Mapper 使用 `simple-dao-core` 的 `com.levin.commons.dao.support` 包中的 `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping`，不再为每个模块生成这三个文件。
+生成的 Mapper 使用 `simple-dao-core` 的 `CycleAvoidingMappingContext` 和 `MapperJsonUtils`，不再生成模块内副本。每个 JPA 实体对应一个 Mapper；引用的非实体值对象由该 Mapper 复制。已知值类型的 List/Set 元素与 Map 键值按静态类型复制，`Map<String,Object>` 等未知值类型只新建 Map 容器、保留键值引用。声明为 JSON 字符串的字段使用完整泛型类型双向转换；`MapperJsonUtils.codec` 默认 Fastjson2，可替换为自定义 `JsonCodec`。
 
 ### 唯一更新
 
