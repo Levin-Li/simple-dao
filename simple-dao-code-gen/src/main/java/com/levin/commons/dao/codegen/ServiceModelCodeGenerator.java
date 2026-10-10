@@ -76,6 +76,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -734,6 +735,10 @@ public final class ServiceModelCodeGenerator {
 
         ///////////////////////////////////////////////
         List<String> ignoreEntities = ignoreEntities();
+        Set<Class<?>> generatedEntityTypes = classList.stream()
+                .filter(clazz -> ignoreEntities.stream().noneMatch(regex -> clazz.getName().matches(regex)))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        genParams.put("generatedEntityTypes", generatedEntityTypes);
 
         for (Class<?> clazz : classList) {
 
@@ -1577,7 +1582,17 @@ public final class ServiceModelCodeGenerator {
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
-    static List<Class<?>> nestedEntityTypes(Class<?> entityClass) {
+    static List<Class<?>> nestedEntityTypes(Class<?> entityClass, Set<Class<?>> generatedEntityTypes) {
+        return relatedEntityTypes(entityClass, generatedEntityTypes, true);
+    }
+
+    static List<Class<?>> nestedInfoTypes(Class<?> entityClass, Set<Class<?>> generatedEntityTypes) {
+        return relatedEntityTypes(entityClass, generatedEntityTypes, false);
+    }
+
+    private static List<Class<?>> relatedEntityTypes(Class<?> entityClass,
+                                                     Set<Class<?>> generatedEntityTypes,
+                                                     boolean entityToInfo) {
         Set<Class<?>> types = new LinkedHashSet<>();
         ReflectionUtils.doWithFields(entityClass, field -> {
             if (field.isSynthetic() || Modifier.isStatic(field.getModifiers())) {
@@ -1588,15 +1603,47 @@ public final class ServiceModelCodeGenerator {
                     : Collection.class.isAssignableFrom(fieldType)
                     ? ResolvableType.forField(field).resolveGeneric() : fieldType;
             if (relatedType != null && relatedType != entityClass
-                    && relatedType.isAnnotationPresent(Entity.class)) {
+                    && relatedType.isAnnotationPresent(Entity.class)
+                    && (generatedEntityTypes.contains(relatedType)
+                    || hasUsableMapper(entityClass, relatedType, entityToInfo))) {
                 types.add(relatedType);
             }
         });
         return types.stream().sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
     }
 
-    static List<Map<String, Object>> nestedInfoCollectionMappings(Class<?> entityClass) {
-        Set<Class<?>> mappableTypes = new HashSet<>(nestedEntityTypes(entityClass));
+    private static boolean hasUsableMapper(Class<?> entityClass, Class<?> relatedType,
+                                           boolean entityToInfo) {
+        String packageName = relatedType.getPackage().getName().replace("entities", "services")
+                + "." + relatedType.getSimpleName().toLowerCase();
+        String simpleName = relatedType.getSimpleName();
+        ClassLoader classLoader = entityClass.getClassLoader();
+        try {
+            Class<?> mapperType = Class.forName(packageName + "." + simpleName + "Mapper", false, classLoader);
+            Class<?> infoType = Class.forName(packageName + ".info." + simpleName + "Info", false, classLoader);
+            Class<?> contextType = Class.forName("com.levin.commons.dao.support.CycleAvoidingMappingContext",
+                    false, classLoader);
+            if (!Modifier.isPublic(mapperType.getModifiers())) {
+                return false;
+            }
+            Field instanceField = mapperType.getField("INSTANCE");
+            if (!Modifier.isStatic(instanceField.getModifiers())
+                    || !mapperType.isAssignableFrom(instanceField.getType())
+                    || !mapperType.isInstance(instanceField.get(null))) {
+                return false;
+            }
+            Method mapping = entityToInfo
+                    ? mapperType.getMethod("toInfo", relatedType, boolean.class, contextType)
+                    : mapperType.getMethod("toInfo", infoType, contextType);
+            return infoType.isAssignableFrom(mapping.getReturnType());
+        } catch (ReflectiveOperationException | LinkageError | SecurityException ex) {
+            return false;
+        }
+    }
+
+    static List<Map<String, Object>> nestedInfoCollectionMappings(Class<?> entityClass,
+                                                                   Set<Class<?>> generatedEntityTypes) {
+        Set<Class<?>> mappableTypes = new HashSet<>(nestedInfoTypes(entityClass, generatedEntityTypes));
         mappableTypes.add(entityClass);
         Map<String, Map<String, Object>> mappings = new TreeMap<>();
         ReflectionUtils.doWithFields(entityClass, field -> {
@@ -1691,6 +1738,9 @@ public final class ServiceModelCodeGenerator {
 
         final String serviceName = entityClass.getSimpleName() + "Service";
         final String mapperName = entityClass.getSimpleName() + "Mapper";
+        @SuppressWarnings("unchecked")
+        Set<Class<?>> generatedEntityTypes = (Set<Class<?>>) paramsMap.getOrDefault(
+                "generatedEntityTypes", Collections.emptySet());
 
         final Consumer<Map<String, Object>> genParams = params -> {
             params.put("servicePackageName", pkgName);
@@ -1700,8 +1750,9 @@ public final class ServiceModelCodeGenerator {
             params.put("needsJsonObjectMapping", needsJsonObjectMapping(entityClass));
             params.put("needsJsonArrayMapping", needsJsonArrayMapping(entityClass));
             params.put("jsonPojoTypes", jsonPojoTypes(entityClass));
-            params.put("nestedEntityTypes", nestedEntityTypes(entityClass));
-            params.put("nestedInfoCollectionMappings", nestedInfoCollectionMappings(entityClass));
+            params.put("nestedEntityTypes", nestedEntityTypes(entityClass, generatedEntityTypes));
+            params.put("nestedInfoTypes", nestedInfoTypes(entityClass, generatedEntityTypes));
+            params.put("nestedInfoCollectionMappings", nestedInfoCollectionMappings(entityClass, generatedEntityTypes));
             addSelfOverridableMatchImports(params);
             params.put("isService", true);
         };

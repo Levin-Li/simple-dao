@@ -100,6 +100,10 @@ public interface ${entityName}Mapper<#if mappingBases?size gt 0> extends ${mappi
                 .toInfo(entity, allowLazyLoading, cycleContext);
     }
 
+</#list>
+
+<#list nestedInfoTypes![] as nestedEntityType>
+
     default ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info mapNested(
             ${nestedEntityType.package.name?replace("entities", "services")}.${nestedEntityType.simpleName?lower_case}.info.${nestedEntityType.simpleName}Info info,
             @Context CycleAvoidingMappingContext cycleContext) {

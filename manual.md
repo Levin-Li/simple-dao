@@ -1985,7 +1985,9 @@ List<UserInfo> infos = simpleDao.selectFrom(User.class)
 
 `Converter<I, O>` 同时实现标准 `Function<I, O>`：现有的 `convert(I)` 保持不变，`apply(I)` 默认委托给 `convert(I)`，因此也可直接用于 `Stream.map`。
 
-生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。关联实体及其集合元素由各自的实体 Mapper 转换，沿用同一个延迟加载设置和循环引用上下文。`Info → Info` 拷贝同样把关联的子 `Info` 和集合元素交给对应实体的 Mapper，并共享循环引用上下文。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
+生成的 `EntityMapper.toInfo` 只对 JPA 声明为 `LAZY` 的属性检查实际加载状态：`@OneToMany`、`@ManyToMany`、`@ElementCollection` 默认是 `LAZY`；`@ManyToOne`、`@OneToOne` 和 `@Basic` 可显式设置为 `LAZY`。已经加载的属性照常映射；尚未加载时跳过，目标 `Info` 属性保持 `null`，源实体不变。关联实体存在可调用的 Mapper 时，实体转 `Info` 和 `Info → Info` 拷贝由该 Mapper 执行，并沿用同一个延迟加载设置和循环引用上下文。缺少相应 Mapper 或方法时，由 MapStruct 在当前 Mapper 中生成转换。标准服务创建的 `SelectDao` 默认不允许转换时延迟加载；需要允许时，对该查询调用 `setAllowLazyLoading(true)`。自定义 `Function` 或 `Converter` 中的属性读取由调用方负责。
+
+是否委托不按实体包名判断：本轮要生成的实体视为具备 Mapper；外部实体则检查其 Mapper 的公开 `INSTANCE` 和对应的 `toInfo(实体, boolean, CycleAvoidingMappingContext)` 或 `toInfo(Info, CycleAvoidingMappingContext)` 方法。两条转换路径分别判断。
 
 `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping` 统一由 `simple-dao-core` 的 `com.levin.commons.dao.support` 包提供；生成器不再生成模块内副本。原 `com.levin.commons.dao.util.CycleAvoidingMappingContext` 保留兼容已有生成代码。
 

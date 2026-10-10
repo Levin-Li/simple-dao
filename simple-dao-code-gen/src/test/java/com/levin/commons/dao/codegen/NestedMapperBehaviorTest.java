@@ -97,8 +97,10 @@ class NestedMapperBehaviorTest {
         params.put("entityName", name);
         params.put("entityTitle", name);
         params.put("fields", List.of());
-        params.put("nestedEntityTypes", related.stream()
-                .map(NestedMapperBehaviorTest::entity).collect(Collectors.toList()));
+        List<Map<String, Object>> relatedTypes = related.stream()
+                .map(NestedMapperBehaviorTest::entity).collect(Collectors.toList());
+        params.put("nestedEntityTypes", relatedTypes);
+        params.put("nestedInfoTypes", relatedTypes);
         params.put("nestedInfoCollectionMappings", collections);
         StringWriter output = new StringWriter();
         configuration.getTemplate("simple.dao/codegen/template/services/mapper.ftl")
