@@ -316,6 +316,28 @@ class SelfOverridableMatchCodegenTest {
     }
 
     @Test
+    void nonCacheableUniqueEntityShouldGenerateParseableFinderWithoutCacheAnnotation() throws Exception {
+        List<FieldModel> fields = fieldsOf(UniqueCacheEntity.class);
+        fields.stream().filter(field -> field.getName().equals("email")).findFirst().orElseThrow().setUk(true);
+        Map<String, Object> params = templateParameters(fields, UniqueCacheEntity.class);
+        ((ClassModel) params.get("classModel")).setFieldModels(fields)
+                .setUniqueKeyModels(ServiceModelCodeGenerator.getUniqueKeyModels(UniqueCacheEntity.class, fields));
+        params.put("isCacheableEntity", false);
+
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
+        StringWriter output = new StringWriter();
+        configuration.getTemplate("simple.dao/codegen/template/services/service_impl.ftl").process(params, output);
+        String source = output.toString();
+
+        assertTrue(source.contains("findByEmail("), source);
+        assertTrue(source.contains("findByTenantIdAndCode("), source);
+        assertFalse(source.contains("//@Cacheable(\n"), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
+    }
+
+    @Test
     void idEvictionShouldRemoveOnlyItsRelatedUniqueCacheKeys() {
         Cache cache = new ConcurrentMapCache("user");
         String cachePrefix = "user:";

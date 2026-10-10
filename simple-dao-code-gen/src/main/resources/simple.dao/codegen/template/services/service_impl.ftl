@@ -278,10 +278,12 @@ public class ${className} extends BaseService<${className}> implements ${service
 <#list classModel.uniqueKeyModels as uniqueKey>
     <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
     @Override
-    <#if !isCacheableEntity>//</#if>@Cacheable(
+<#if isCacheableEntity>
+    @Cacheable(
             condition = "#root.target.isUniqueFindCacheEnabled('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "','" + </#if></#list> + "')",
             unless = "#result == null",
             key = "#root.target.uniqueFindCacheKey('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "|" + </#if></#list> + "', #root.target.getUniqueFindCacheVersion('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "','" + </#if></#list> + "')<#list uniqueFields as field>, #${field.name}</#list>)")
+</#if>
     public ${entityName}Info findBy${uniqueKey.methodSuffix}(
 <#list uniqueFields as field>
             ${field.typeName} ${field.name}<#if field_has_next>,</#if>
