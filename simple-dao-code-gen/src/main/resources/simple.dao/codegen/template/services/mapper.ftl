@@ -28,12 +28,12 @@ import com.levin.commons.dao.*;
 import ${entityClassPackage}.*;
 import ${packageName}.req.*;
 import ${packageName}.info.*;
-import com.levin.commons.dao.util.CycleAvoidingMappingContext;
+import com.levin.commons.dao.support.CycleAvoidingMappingContext;
 <#if needsJsonObjectMapping!false>
-import ${modulePackageName}.services.commons.mapper.JsonObjectMapping;
+import com.levin.commons.dao.support.JsonObjectMapping;
 </#if>
 <#if needsJsonArrayMapping!false>
-import ${modulePackageName}.services.commons.mapper.JsonArrayMapping;
+import com.levin.commons.dao.support.JsonArrayMapping;
 </#if>
 
 import ${modulePackageName}.*;

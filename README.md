@@ -515,6 +515,8 @@ UserInfo info = dao.selectFrom(User.class)
 
 生成的实体 Mapper 只对 JPA 声明为延迟加载的属性检查实际加载状态，包括默认延迟加载的集合关联以及显式设置 `fetch = LAZY` 的关联或简单字段。已经加载的属性照常映射；尚未加载时 `Info` 中对应字段保持 `null`。关联实体及其集合元素由各自的实体 Mapper 转换，并共享本次转换的延迟加载设置与循环引用上下文。需要允许转换时加载它们，可在当前 `SelectDao` 上调用 `setAllowLazyLoading(true)`。这个开关默认是 `false`；手写的转换器需自行决定如何读取关联属性。
 
+生成的 Mapper 使用 `simple-dao-core` 的 `com.levin.commons.dao.support` 包中的 `CycleAvoidingMappingContext`、`JsonObjectMapping` 和 `JsonArrayMapping`，不再为每个模块生成这三个文件。
+
 ### 唯一更新
 
 ```java

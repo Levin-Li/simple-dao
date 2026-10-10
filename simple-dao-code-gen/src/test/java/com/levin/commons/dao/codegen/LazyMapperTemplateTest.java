@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LazyMapperTemplateTest {
@@ -58,7 +59,8 @@ class LazyMapperTemplateTest {
         assertTrue(source.contains("finally {\n            cycleContext.clear();"), source);
         assertTrue(source.contains("@Context CycleAvoidingMappingContext cycleContext"), source);
         assertTrue(source.contains("return toInfo(info, cycleContext)"), source);
-        assertTrue(source.contains("import com.levin.commons.dao.util.CycleAvoidingMappingContext;"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.support.CycleAvoidingMappingContext;"), source);
+        assertFalse(source.contains("import com.levin.commons.dao.util.CycleAvoidingMappingContext;"), source);
         assertFalse(source.contains("import com.example.services.commons.mapper.CycleAvoidingMappingContext;"), source);
         assertTrue(source.contains("@BeforeMapping"), source);
         assertTrue(source.contains("cycleContext.getMappedInstance(source, targetType)"), source);
@@ -71,18 +73,11 @@ class LazyMapperTemplateTest {
     }
 
     @Test
-    void sharedJsonObjectMappingShouldOfferBothDirections() throws Exception {
-        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
-        configuration.setDefaultEncoding("UTF-8");
-        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
-        StringWriter output = new StringWriter();
-        configuration.getTemplate("simple.dao/codegen/template/services/commons/mapper/JsonObjectMapping.java")
-                .process(Map.of("modulePackageName", "com.example"), output);
-
-        String source = output.toString();
-        assertTrue(source.contains("JSONObject map(String json)"), source);
-        assertTrue(source.contains("String map(JSONObject value)"), source);
-        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
+    void shouldNotPackageModuleSpecificJsonMappingTemplates() {
+        assertNull(ServiceModelCodeGenerator.class.getResource(
+                "/simple.dao/codegen/template/services/commons/mapper/JsonObjectMapping.java"));
+        assertNull(ServiceModelCodeGenerator.class.getResource(
+                "/simple.dao/codegen/template/services/commons/mapper/JsonArrayMapping.java"));
     }
 
     @Test
@@ -110,6 +105,10 @@ class LazyMapperTemplateTest {
 
         String source = output.toString();
         assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping, JsonArrayMapping"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.support.JsonObjectMapping;"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.support.JsonArrayMapping;"), source);
+        assertFalse(source.contains("import com.example.services.commons.mapper.JsonObjectMapping;"), source);
+        assertFalse(source.contains("import com.example.services.commons.mapper.JsonArrayMapping;"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
@@ -157,6 +156,7 @@ class LazyMapperTemplateTest {
 
         String source = output.toString();
         assertTrue(source.contains("interface FixtureEntityMapper extends JsonObjectMapping {"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.support.JsonObjectMapping;"), source);
         assertFalse(source.contains("extends JsonObjectMapping,"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
@@ -185,22 +185,8 @@ class LazyMapperTemplateTest {
 
         String source = output.toString();
         assertTrue(source.contains("interface FixtureEntityMapper extends JsonArrayMapping"), source);
+        assertTrue(source.contains("import com.levin.commons.dao.support.JsonArrayMapping;"), source);
         assertFalse(source.contains("default List<String> fromJsonArray"), source);
-        assertDoesNotThrow(() -> StaticJavaParser.parse(source));
-    }
-
-    @Test
-    void sharedJsonArrayMappingShouldOfferBothDirections() throws Exception {
-        Configuration configuration = new Configuration(Configuration.VERSION_2_3_28);
-        configuration.setDefaultEncoding("UTF-8");
-        configuration.setClassForTemplateLoading(ServiceModelCodeGenerator.class, "/");
-        StringWriter output = new StringWriter();
-        configuration.getTemplate("simple.dao/codegen/template/services/commons/mapper/JsonArrayMapping.java")
-                .process(Map.of("modulePackageName", "com.example"), output);
-
-        String source = output.toString();
-        assertTrue(source.contains("List<String> fromJsonArray(String json)"), source);
-        assertTrue(source.contains("String toJsonArray(List<String> values)"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source));
     }
 
