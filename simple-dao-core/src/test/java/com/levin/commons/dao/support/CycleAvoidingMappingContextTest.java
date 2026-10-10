@@ -1,9 +1,10 @@
-package com.levin.commons.dao.util;
+package com.levin.commons.dao.support;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CycleAvoidingMappingContextTest {
 
@@ -25,5 +26,11 @@ class CycleAvoidingMappingContextTest {
         context.clear();
         assertNull(context.getMappedInstance(firstSource, Object.class));
         assertNull(context.getMappedInstance(firstSource, String.class));
+    }
+
+    @Test
+    void legacyUtilTypeShouldRemainUsable() {
+        assertTrue(new com.levin.commons.dao.util.CycleAvoidingMappingContext()
+                instanceof CycleAvoidingMappingContext);
     }
 }

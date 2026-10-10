@@ -1,6 +1,7 @@
-package ${modulePackageName}.services.commons.mapper;
+package com.levin.commons.dao.support;
 
 import com.alibaba.fastjson2.JSON;
+
 import java.util.List;
 
 /** MapStruct 复用的 JSON 字符串数组转换。 */

@@ -1,4 +1,4 @@
-package ${modulePackageName}.services.commons.mapper;
+package com.levin.commons.dao.support;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
