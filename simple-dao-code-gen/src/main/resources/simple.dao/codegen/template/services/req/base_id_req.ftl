@@ -60,6 +60,9 @@ import ${imp};
 @ToString
 @Accessors(chain = true)
 @FieldNameConstants
+<#list classModel.rbacInheritedAnnotations(false) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
@@ -96,6 +99,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @Eq(require = true)
     @Id//主键标识
     <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
+    <#list classModel.rbacAnnotations(pkField.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     protected ${pkField.typeName} ${pkField.name};
 
     public ${className}(${pkField.typeName} ${pkField.name}) {

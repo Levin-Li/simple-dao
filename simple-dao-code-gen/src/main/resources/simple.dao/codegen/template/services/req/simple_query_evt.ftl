@@ -64,6 +64,9 @@ import ${imp};
 @ToString(callSuper = true)
 @Accessors(chain = true)
 @FieldNameConstants
+<#list classModel.rbacInheritedAnnotations(false) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS, resultClass = ${entityName}Info.class)
 public class ${className}<T extends ${className}<T>> extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 

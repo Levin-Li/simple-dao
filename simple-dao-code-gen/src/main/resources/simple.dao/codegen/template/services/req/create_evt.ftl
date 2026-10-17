@@ -51,6 +51,9 @@ import ${imp};
 //${(fields?size > 0) ? string('','//')}@AllArgsConstructor
 @NoArgsConstructor
 //@Builder
+<#list classModel.rbacInheritedAnnotations(false) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
@@ -64,6 +67,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#list field.annotations as annotation>
     <#--  默认创建请求不处理 -->
     ${(false)?string('//', '')}${annotation}
+    </#list>
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
     </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}; //参考默认值 ${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!}
 

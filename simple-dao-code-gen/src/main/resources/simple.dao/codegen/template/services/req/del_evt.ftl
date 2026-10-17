@@ -59,6 +59,9 @@ import ${imp};
 @ToString(callSuper = true)
 @Accessors(chain = true)
 @FieldNameConstants
+<#list classModel.rbacInheritedAnnotations(false) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
@@ -84,6 +87,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @In(E_${entityName}.${pkField.name})
     @NotEmpty
     @Id//主键标识
+    <#list classModel.rbacAnnotations(pkField.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${pkField.typeName}[] ${pkField.name}List;
 
     public ${className}(${pkField.typeName}... ${pkField.name}List) {

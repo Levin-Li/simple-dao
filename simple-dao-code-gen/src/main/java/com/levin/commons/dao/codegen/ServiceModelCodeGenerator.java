@@ -3004,6 +3004,10 @@ public final class ServiceModelCodeGenerator {
 
 
     protected static boolean isMatch(String content, String action) {
+        // Permission groups are normalized from compiled source metadata, never copied verbatim.
+        if (content.matches("(?s)@(?:com\\.levin\\.commons\\.rbac\\.)?RbacDataAttrGroup(?:s|[.$]RbacDataAttrGroups)?(?:\\s|\\(|$).*")) {
+            return false;
+        }
 
         boolean anyMatch = keepAnnotationList().stream().filter(StringUtils::hasText).anyMatch(p -> PatternMatchUtils.simpleMatch(p, content));
 

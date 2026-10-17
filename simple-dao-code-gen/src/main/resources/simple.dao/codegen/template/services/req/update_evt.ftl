@@ -65,6 +65,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#if pkField.typeName == 'String' >@NotBlank<#else>@NotNull</#if>
     @Eq(require = true)
     @Id//主键标识
+    <#list classModel.rbacAnnotations(pkField.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${pkField.typeName} ${pkField.name};
 
     public ${className}() {

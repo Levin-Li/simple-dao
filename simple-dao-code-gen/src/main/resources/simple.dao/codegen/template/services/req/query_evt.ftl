@@ -73,6 +73,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @Schema(title = ${pkField.schemaTitle} + "集合")
     @In(E_${entityName}.${pkField.name})
     @Id//主键标识
+    <#list classModel.rbacAnnotations(pkField.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     List<${pkField.typeName}> ${pkField.name}List;
 
 </#if>
@@ -100,6 +103,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#if field.hasBetweenAnnotation() || field.isDateTimeType() >
     @Schema(title = ${field.schemaTitle} + "范围", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-范围"</#if>)
     @Between
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}String between${field.name?cap_first};
 
     </#if>
@@ -111,23 +117,35 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @Eq
     </#if>
     <@FieldAnnotationList field = field keyword='@Eq'/>
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
     <@FieldAnnotationList field = field/>
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} gte${field.name?cap_first};
 
     @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "小于等于"</#if>)
     @Lte
     <@FieldAnnotationList field = field/>
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} lte${field.name?cap_first};
 
     <#-- 非关联对象 -->
     <#elseif !field.hasJpaJoinColumn()>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
     <@FieldAnnotationList field = field  keyword='@Options'/>
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
     <#-- 模糊匹配 -->
     <#if field.contains>
@@ -139,6 +157,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @ForceSplitCondition
         </#if>
     @${field.extras.nameSuffix}(<#if field.isJsonColumn() && field.isSimpleCollectionType()>jsonPath="$[*]"</#if>)
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
@@ -147,17 +168,26 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-包含匹配"</#if>)
     @In
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> in${field.name?cap_first};
 
     <@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-不包含匹配"</#if>)
     @NotIn
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> notIn${field.name?cap_first};
     </#if>
     <#if field.lazy!>
 
     @Schema(title = "是否加载" + ${field.schemaTitle})
     @Fetch(attrs = E_${entityName}.${field.name}, condition = "#_fieldVal == true")
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     Boolean load${field.name?cap_first};
     </#if>
     <#-- 字段结束 -->

@@ -46,6 +46,9 @@ import ${imp};
 <#list classModel.annotations as annotation>
 ${annotation}
 </#list>
+<#list classModel.rbacInheritedAnnotations(true) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 public class ${className}
         extends ${infoExtendClass}
@@ -63,6 +66,9 @@ public class ${className}
    </#list>
 <#--    @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.required!?string(', required = true, requiredMode = REQUIRED', '')})-->
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>)
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 </#list>
 

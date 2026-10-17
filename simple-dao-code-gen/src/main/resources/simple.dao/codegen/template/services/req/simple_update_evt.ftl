@@ -58,6 +58,9 @@ import ${imp};
 @ToString(callSuper = true)
 @Accessors(chain = true)
 @FieldNameConstants
+<#list classModel.rbacInheritedAnnotations(false) as groupAnnotation>
+${groupAnnotation}
+</#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
 
 //字段更新策略，强制更新时，只要字段被调用set方法，则会被更新，不管是否空值。否则只有值不为[null，空字符串, 空数组，空集合]时才会被更新。
@@ -108,6 +111,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 <#--        </#if>-->
     </#list>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if> ${field.hidden?string(' , hidden = true', '')})
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>
@@ -126,6 +132,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @Update(incrementMode = true, paramExpr = "1", condition = "", desc = "乐观锁版本号 + 1")
     </#if>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''> , description = ${field.schemaDesc}</#if>${field.hidden?string(' , hidden = true', '')})
+    <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
+    ${groupAnnotation}
+    </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
 
     </#if>

@@ -37,3 +37,7 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 - 若改动模块发布失败，再执行全项目 `clean deploy`。发布时不得跳过测试。
 - 详细步骤见 `docs/release-workflow.md`。
 - 不要自动修改版本号、POM、Git 标签或其他任何文件；版本管理由用户显式决定。
+
+属性权限生成传递：[设计](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/design.md)、[任务](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/tasks.md)、[实现](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/implementation.md)。
+
+包内使用说明：[RBAC 数据属性分组生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。
