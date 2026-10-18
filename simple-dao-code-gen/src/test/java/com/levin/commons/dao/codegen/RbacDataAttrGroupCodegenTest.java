@@ -6,6 +6,9 @@ import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.rbac.RbacDataAttrGroup;
 import com.levin.commons.rbac.RbacDataAttrGroupMetadata;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import com.levin.commons.rbac.RbacDataAttrMetadata;
 import org.junit.jupiter.api.io.TempDir;
 
 import javax.tools.ToolProvider;
@@ -23,14 +26,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class RbacDataAttrGroupCodegenTest {
     @TempDir Path dir;
 
-    @Test
-    void compiledEntityGroupsMustSurviveAllModelsAndDerivedQueryFields() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void compiledEntityGroupsMustSurviveAllModelsAndDerivedQueryFields(boolean enumScope) throws Exception {
         Path entity = source("input/probe/entities/Contract.java", """
                 package probe.entities;
                 import com.levin.commons.rbac.RbacDataAttrGroup;
                 import io.swagger.v3.oas.annotations.media.Schema;
                 @RbacDataAttrGroup(name="财务", attrList={"amount"}, confidentialLevel=100)
                 @RbacDataAttrGroup(name="日期", attrList={"day"})
+                @jakarta.persistence.Entity
+                @jakarta.persistence.Access(jakarta.persistence.AccessType.FIELD)
                 public class Contract extends Parent implements com.levin.commons.dao.domain.MultiTenantObject {
                     @RbacDataAttrGroup @Schema(title="租户身份") public String tenantId;
                     public <T extends java.io.Serializable> T getTenantId() { return (T)tenantId; }
@@ -43,11 +49,16 @@ class RbacDataAttrGroupCodegenTest {
                     @RbacDataAttrGroup(name="财务", confidentialLevel=300, remark="结算\\\"说明")
                     public java.math.BigDecimal getAmount() { return amount; }
                     public String plain;
+                    public enum Kind { CUSTOMER, SUPPLIER }
+                    %s @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING) public Kind kind;
                 }
+                @jakarta.persistence.MappedSuperclass
                 class Parent {
                     @RbacDataAttrGroup(name="继承") @Schema(title="父级备注") public String inherited;
+                    %s @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING) public Contract.Kind inheritedKind;
                 }
-                """);
+                """.formatted(enumScope ? "@com.levin.commons.rbac.RbacDataAttr" : "",
+                        enumScope ? "@com.levin.commons.rbac.RbacDataAttr" : ""));
         Path entityClasses = dir.resolve("entity-classes");
         compile(List.of(entity), entityClasses, System.getProperty("java.class.path"));
         Path jar = dir.resolve("entity-without-sources.jar");
@@ -106,7 +117,7 @@ class RbacDataAttrGroupCodegenTest {
                 assertEquals(first, Files.readString(output).replaceAll("@time: .*?, 代码", "@time: stable, 代码"));
                 generated.add(output);
             }
-            generated.add(source("generated/probe/entities/E_Contract.java", "package probe.entities; public class E_Contract { public static final String ALIAS=\"c\", tenantId=\"tenantId\", tenantName=\"tenantName\", id=\"id\", amount=\"amount\", account=\"account\", label=\"label\", day=\"day\", attachment=\"attachment\", inherited=\"inherited\", plain=\"plain\"; }"));
+            generated.add(source("generated/probe/entities/E_Contract.java", "package probe.entities; public class E_Contract { public static final String ALIAS=\"c\", tenantId=\"tenantId\", tenantName=\"tenantName\", id=\"id\", amount=\"amount\", account=\"account\", label=\"label\", day=\"day\", attachment=\"attachment\", inherited=\"inherited\", plain=\"plain\", kind=\"kind\", inheritedKind=\"inheritedKind\"; }"));
             generated.add(source("generated/probe/entities/EntityConst.java", "package probe.entities; public class EntityConst { public static final String CREATE_ACTION=\"新增\", UPDATE_ACTION=\"修改\", QUERY_ACTION=\"查询\", DELETE_ACTION=\"删除\", BIZ_NAME=\"合同\"; }"));
             generated.add(source("generated/probe/services/commons/req/BaseReq.java", "package probe.services.commons.req; public class BaseReq { public String tenantId; public <T extends java.io.Serializable> T getTenantId() {return (T)tenantId;} protected <T> T checkSQLInject(Object... values) {return (T)this;} protected boolean isNotBlank(Object value) {return value != null;} }"));
             generated.add(source("generated/probe/services/commons/info/BaseInfo.java", "package probe.services.commons.info; public class BaseInfo { public String tenantId; public String tenantName; public <T extends java.io.Serializable> T getTenantId() {return (T)tenantId;} }"));
@@ -117,6 +128,9 @@ class RbacDataAttrGroupCodegenTest {
                 for (String name : templates.keySet()) {
                     Class<?> model = loader.loadClass((name.contains("Info") ? "probe.services.info." : "probe.services.req.") + name);
                     assertEquals(sourceType, model.getAnnotation(TargetOption.class).entityClass());
+                    assertEquals(!enumScope, RbacDataAttrMetadata.forType(sourceType).isEmpty());
+                    assertTrue(RbacDataAttrMetadata.forType(model).isEmpty(), "range annotations belong only to the source entity");
+                    assertTrue(Arrays.stream(model.getDeclaredFields()).noneMatch(f -> f.getName().startsWith("allowed")), name);
                     if (name.equals("SimpleQueryContractReq")) {
                         assertTrue(RbacDataAttrGroupMetadata.forType(model).getGroupsForAttribute("amount").isEmpty(), "source columns stay on TargetOption, not phantom DTO fields");
                         assertFalse(RbacDataAttrGroupMetadata.forType(model).getGroupsForAttribute("tenantId").isEmpty());

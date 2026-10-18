@@ -736,11 +736,46 @@ public class JpaDaoImpl
         return entityOrDtoList;
     }
 
+    private Class<?> mandatoryEntityType(Object entity) {
+        return entity instanceof org.hibernate.proxy.HibernateProxy
+                ? ((org.hibernate.proxy.HibernateProxy) entity).getHibernateLazyInitializer().getPersistentClass()
+                : ClassUtils.getUserClass(entity);
+    }
+
+    private void rejectScopedDirectWrite(Object entity, EntityOption.Action action) {
+        if (!MandatoryConditions.resolve(mandatoryEntityType(entity), action).isUnrestricted())
+            throw new DaoSecurityException("Scoped entity requires conditional UPDATE/DELETE; direct entity write is unsupported");
+    }
+
+    private void checkMandatoryCreate(Object entity) {
+        Class<?> type = mandatoryEntityType(entity);
+        MandatoryCondition condition = MandatoryConditions.resolve(type, EntityOption.Action.Create);
+        if (condition.isUnrestricted()) return;
+        if (!condition.isDenied()) {
+            org.springframework.beans.BeanWrapper bean = org.springframework.beans.PropertyAccessorFactory.forBeanPropertyAccess(entity);
+            for (Map<String, List<?>> branch : condition.getBranches()) {
+                boolean allowed = true;
+                for (Map.Entry<String, List<?>> entry : branch.entrySet()) {
+                    Object value;
+                    Field field = ReflectionUtils.findField(type, entry.getKey());
+                    if (field == null || !field.getType().isEnum())
+                        throw new DaoSecurityException("Mandatory scope property is not enum: " + entry.getKey());
+                    if (bean.isReadableProperty(entry.getKey())) value = bean.getPropertyValue(entry.getKey());
+                    else { ReflectionUtils.makeAccessible(field); value = ReflectionUtils.getField(field, entity); }
+                    if (!entry.getValue().contains(value)) { allowed = false; break; }
+                }
+                if (allowed) return;
+            }
+        }
+        throw new DaoSecurityException("Entity values are outside mandatory create scope");
+    }
+
     @Override
     @Transactional
     public <E> E create(Object entityOrDto, boolean isCheckUniqueValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
+        checkMandatoryCreate(entity);
 
         if (isCheckUniqueValue) {
             //查询重复
@@ -754,10 +789,12 @@ public class JpaDaoImpl
 //        checkAccessLevel(entity, EntityOption.AccessLevel.Creatable);
         //如果有ID对象，将会抛出异常
         EntityManager em = getEntityManager();
+        if (em.contains(entity)) rejectScopedDirectWrite(entity, EntityOption.Action.Update);
 
         try {
             em.persist(entity);
         } catch (EntityExistsException ex) {
+            rejectScopedDirectWrite(entity, EntityOption.Action.Update);
 
             if (getEntityId(entity) != null) {
                 entity = em.merge(entity);
@@ -780,6 +817,7 @@ public class JpaDaoImpl
     public <E> E save(Object entityOrDto, boolean isCheckUniqueValue) {
 
         E entity = tryConvertToEntityObject(entityOrDto, true);
+        rejectScopedDirectWrite(entity, EntityOption.Action.Update);
 
         //简单检查树形对象,防止循环
         if (entity instanceof TreeObject) {
@@ -853,6 +891,7 @@ public class JpaDaoImpl
     @Override
     @Transactional(rollbackFor = PersistenceException.class)
     public void delete(Object entity) {
+        if (entity != null) rejectScopedDirectWrite(entity, EntityOption.Action.Delete);
 
         EntityManager em = getEntityManager();
 
@@ -869,6 +908,12 @@ public class JpaDaoImpl
 
     @Override
     public boolean deleteById(Class entityClass, Object id) {
+        if (!MandatoryConditions.resolve(entityClass, EntityOption.Action.Delete).isUnrestricted()) {
+            if (id == null) return false;
+            DeleteDao<?> deleteDao = deleteFrom(entityClass);
+            deleteDao.eq(getEntityIdAttrName(entityClass), id);
+            return deleteDao.delete() > 0;
+        }
 
 //        if (id != null) {
 //            checkAccessLevel(entityClass, EntityOption.AccessLevel.Deletable);
@@ -982,6 +1027,10 @@ public class JpaDaoImpl
 
     @Override
     public <T> T find(Class<T> entityClass, Object id) {
+        if (!MandatoryConditions.resolve(entityClass, EntityOption.Action.Read).isUnrestricted()) {
+            if (id == null) return null;
+            return selectFrom(entityClass).eq(getEntityIdAttrName(entityClass), id).findOne();
+        }
 
         EntityManager em = getEntityManager();
 

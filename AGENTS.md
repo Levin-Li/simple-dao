@@ -41,3 +41,6 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 属性权限生成传递：[设计](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/design.md)、[任务](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/tasks.md)、[实现](openspec/changes/c20261017-1940-rbac-data-attr-group-codegen/implementation.md)。
 
 包内使用说明：[RBAC 数据属性分组生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。
+
+强制条件扩展：[设计](openspec/changes/c20261018-1227-mandatory-enum-scope/design.md)、[任务](openspec/changes/c20261018-1227-mandatory-enum-scope/tasks.md)。
+强制条件扩展实现：[模块落点与验证](openspec/changes/c20261018-1227-mandatory-enum-scope/implementation.md)。

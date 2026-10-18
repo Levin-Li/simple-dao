@@ -176,7 +176,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         this.tableName = null;
         this.nativeQL = (isNative);
         this.alias = alias;
-
+        prepareMandatoryCondition();
     }
 
     public ConditionBuilderImpl(MiniDao miniDao, boolean isNative, String tableName, String alias) {
@@ -190,6 +190,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         this.alias = alias;
 
         setTableName(tableName);
+        prepareMandatoryCondition();
     }
 
 
@@ -1551,6 +1552,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
         beforeWalkMethod(methodOwnerBean, method, args);
+        prepareMandatoryCondition();
 
         for (int i = 0; i < parameterTypes.length; i++) {
 
@@ -1621,6 +1623,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         );
 
         if (queryObjList.isEmpty()) {
+            prepareMandatoryCondition();
             return;
         }
 
@@ -1635,6 +1638,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 .map(c -> AnnotatedElementUtils.findMergedAnnotation(c, TargetOption.class))
                 .forEachOrdered(a -> setTargetOption(null, a));
 
+        prepareMandatoryCondition();
         for (Object queryValueObj : queryObjList) {
 
             if (queryValueObj == null) {
@@ -2845,12 +2849,111 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         }
     }
 
-    /**
-     * 获取查询条件
-     *
-     * @param action 动作
-     * @return
-     */
+    /** 独立强制条件参数，不参与业务安全模式定位条件。 */
+    private List<Object> mandatoryParamValues = Collections.emptyList();
+    private Class<?> mandatoryEntity;
+    private MandatoryCondition boundMandatoryCondition;
+
+    private EntityOption.Action mandatoryAction() {
+        return this instanceof UpdateDao ? EntityOption.Action.Update
+                : this instanceof DeleteDao ? EntityOption.Action.Delete : EntityOption.Action.Read;
+    }
+
+    private MandatoryCondition prepareMandatoryCondition() {
+        if (mandatoryEntity != entityClass) {
+            mandatoryEntity = entityClass;
+            boundMandatoryCondition = null;
+        }
+        MandatoryCondition current = MandatoryConditions.resolve(entityClass, mandatoryAction());
+        if (boundMandatoryCondition != null && !boundMandatoryCondition.equals(current))
+            throw new DaoSecurityException("Mandatory scope changed; create a new DAO builder for the current context");
+        if (boundMandatoryCondition == null) boundMandatoryCondition = current;
+        // 等价范围即使分支顺序不同，也沿用原顺序，确保SQL与参数严格对应。
+        return boundMandatoryCondition;
+    }
+
+
+    /** 强制参数独立于业务树；公开API先取参数或先取语句均使用同一份范围。 */
+    protected final List<Object> getMandatoryParamValues() {
+        renderMandatoryScope(mandatoryAction());
+        return mandatoryParamValues;
+    }
+
+    protected Map<String, Object> mandatoryAssignments(MandatoryCondition condition) {
+        return Collections.emptyMap();
+    }
+
+    private String mandatoryExpression(MandatoryCondition condition, Map<String, Object> assignments, List<Object> params) {
+        if (condition.isUnrestricted()) return "";
+        if (condition.isDenied()) return "1 = 0";
+        List<String> branches = new ArrayList<>();
+        List<Object> allParams = new ArrayList<>();
+        for (Map<String, List<?>> branch : condition.getBranches()) {
+            List<String> predicates = new ArrayList<>();
+            List<Object> branchParams = new ArrayList<>();
+            boolean impossible = false;
+            for (Map.Entry<String, List<?>> entry : branch.entrySet()) {
+                String property = entry.getKey();
+                ResolvableType type = getFieldType(entityClass, property, null);
+                Class<?> fieldType = type == null ? null : type.resolve();
+                if (fieldType == null || !fieldType.isEnum())
+                    throw new DaoSecurityException("Mandatory scope property is not enum: " + property);
+                if (entry.getValue().stream().anyMatch(value -> !fieldType.isInstance(value)))
+                    throw new DaoSecurityException("Mandatory scope enum type mismatch: " + property);
+                if (assignments.containsKey(property)) {
+                    if (!entry.getValue().contains(assignments.get(property))) { impossible = true; break; }
+                    continue;
+                }
+                predicates.add(aroundColumnPrefix(property) + " IN (" + String.join(", ", Collections.nCopies(entry.getValue().size(), getParamPlaceholder())) + ")");
+                ResolvableType paramType = tryGetFieldTypeByAttrExpr(entityClass, null, property, null);
+                Class<?> conversionType = paramType == null ? fieldType : paramType.resolve();
+                for (Object value : entry.getValue()) {
+                    Object boundValue = value;
+                    if (isNative()) {
+                        // JPA枚举存储使用name/ordinal，不能使用EnumDesc业务code或展示toString。
+                        if (conversionType == String.class) boundValue = ((Enum<?>) value).name();
+                        else if (conversionType != null && Number.class.isAssignableFrom(conversionType))
+                            boundValue = ObjectUtil.convert(((Enum<?>) value).ordinal(), conversionType);
+                        else boundValue = ObjectUtil.convert(value, conversionType);
+                    }
+                    branchParams.add(boundValue);
+                }
+            }
+            if (!impossible) {
+                if (predicates.isEmpty()) return "1 = 1";
+                branches.add("(" + String.join(" AND ", predicates) + ")");
+                allParams.addAll(branchParams);
+            }
+        }
+        params.addAll(allParams);
+        return branches.isEmpty() ? "1 = 0" : "(" + String.join(" OR ", branches) + ")";
+    }
+
+    private String renderMandatoryScope(EntityOption.Action action) {
+        MandatoryCondition condition = prepareMandatoryCondition();
+        List<Object> params = new ArrayList<>();
+        String scope = mandatoryExpression(condition, Collections.emptyMap(), params);
+        if (!condition.isUnrestricted() && action == EntityOption.Action.Update) {
+            Map<String, Object> assignments = mandatoryAssignments(condition);
+            if (!assignments.isEmpty()) {
+                String postScope = mandatoryExpression(condition, assignments, params);
+                scope = "(" + scope + ") AND (" + postScope + ")";
+            }
+        }
+        mandatoryParamValues = Collections.unmodifiableList(params);
+        return scope;
+    }
+
+    private String appendMandatoryWhere(String businessWhere, EntityOption.Action action) {
+        String scope = renderMandatoryScope(action);
+        if (scope.isEmpty()) return businessWhere;
+        String business = businessWhere.trim();
+        if (business.isEmpty()) return " Where (" + scope + ") ";
+        // 原方法固定输出WHERE前缀，将业务OR整体括起再与权限范围取交集。
+        return " Where (" + business.substring(5).trim() + ") AND (" + scope + ") ";
+    }
+
+    /** 生成业务与强制范围共同组成的WHERE，安全模式仍只检查原业务条件。 */
     protected final String genWhereStatement(EntityOption.Action action) {
 
         if (isDisable(action)) {
@@ -2864,7 +2967,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         EntityOption entityOption = getEntityOption();
 
         if (entityOption == null) {
-            return whereStatement;
+            return appendMandatoryWhere(whereStatement, action);
         }
 
         whereExprRootNode.switchCurrentNodeToSelf();
@@ -2895,7 +2998,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
         }
 
-        return getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " ");
+        return appendMandatoryWhere(getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " "), action);
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {

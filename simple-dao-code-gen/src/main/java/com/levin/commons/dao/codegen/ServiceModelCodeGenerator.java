@@ -1125,6 +1125,8 @@ public final class ServiceModelCodeGenerator {
 
         logger.info(" ***提示*** 可以通过源码注释中包含 @CopyToGenCode @* 关键字，原样复制字段上的注解到生成的代码之中，还可以区分目标类型，如：@CopyToGenCode @query 表示复制到查询对象");
 
+        // 在生成任何模型之前校验完整实体，错误配置不能留下部分更新的生成结果。
+        com.levin.commons.rbac.RbacDataAttrMetadata.forType(entityClass);
         entityClass(entityClass);
 
         if (entityMapping == null) {
@@ -3004,6 +3006,10 @@ public final class ServiceModelCodeGenerator {
 
 
     protected static boolean isMatch(String content, String action) {
+        // 枚举范围属于源实体约束，不能作为 DTO 属性可见性注解复制。
+        if (content.matches("(?s)@(?:com\\.levin\\.commons\\.rbac\\.)?RbacDataAttr(?:\\s|\\(|$).*")) {
+            return false;
+        }
         // Permission groups are normalized from compiled source metadata, never copied verbatim.
         if (content.matches("(?s)@(?:com\\.levin\\.commons\\.rbac\\.)?RbacDataAttrGroup(?:s|[.$]RbacDataAttrGroups)?(?:\\s|\\(|$).*")) {
             return false;

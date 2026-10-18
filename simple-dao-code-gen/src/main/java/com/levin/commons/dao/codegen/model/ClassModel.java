@@ -4,6 +4,7 @@ package com.levin.commons.dao.codegen.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.alibaba.fastjson2.JSON;
 import com.levin.commons.rbac.RbacDataAttrGroupMetadata;
+import com.levin.commons.rbac.RbacDataAttrMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
@@ -45,6 +46,9 @@ public class ClassModel {
 
     private final RbacDataAttrGroupMetadata dataAttrGroupMetadata;
 
+    /** 实体枚举访问范围存在时，共享读取缓存不得跳过 DAO 权限条件。 */
+    private final boolean rbacDataAttrControlled;
+
     String name;
 
     //类的短名称
@@ -65,6 +69,8 @@ public class ClassModel {
 
         this.entityType = entityType;
         this.dataAttrGroupMetadata = RbacDataAttrGroupMetadata.forType(entityType);
+        // 从完整实体（包括继承属性）校验严格 Java 枚举，不依赖表单 options/enumerable。
+        this.rbacDataAttrControlled = !RbacDataAttrMetadata.forType(entityType).isEmpty();
 
         this.imports.add("java.time.*");
 

@@ -96,7 +96,7 @@ public class DeleteDaoImpl<T>
 
         List flattenParams = QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
-                , whereParamValues, getLastStatementParamValues());
+                , whereParamValues, getMandatoryParamValues(), getLastStatementParamValues());
 
         if (isLogicDelete) {
             flattenParams.add(0, convertLogicDeleteValue(getEntityOption()));
@@ -242,7 +242,7 @@ public class DeleteDaoImpl<T>
                 + " " + (lastStatements.isEmpty() ? getLimitStatement() : lastStatements));
 
         List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql,
-                QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getLastStatementParamValues()));
+                QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getMandatoryParamValues(), getLastStatementParamValues()));
 
         return resultList.size();
     }

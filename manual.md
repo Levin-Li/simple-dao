@@ -4552,3 +4552,34 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 ## API 数据属性权限元数据生成
 
 实体上的 `RbacDataAttrGroup` 可规范化传递至创建、修改、查询和 Info 模型；配置样例、兼容边界及验证见[生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。运行时授权由 API 接入方执行。
+
+## 受信的枚举记录范围（MandatoryCondition）
+
+应用启动时注册 `MandatoryConditions.setProvider(...)`。提供器接收目标实体和 `EntityOption.Action`，从应用自己的可信请求上下文计算范围；该SPI不依赖Servlet和具体RBAC实现，也不读取普通 `DaoContext`/`setContext` 数据。
+
+```java
+MandatoryConditionProvider previous = MandatoryConditions.setProvider((entity, action) -> {
+    if (entity != Partner.class) return MandatoryCondition.unrestricted();
+    // 示例仅表示结构。生产中必须从可信身份和本次操作的完整角色授权计算。
+    return MandatoryCondition.ofBranches(List.of(
+        Map.of("type", List.of(PartnerType.Customer), "region", List.of(Region.East)),
+        Map.of("type", List.of(PartnerType.Supplier), "region", List.of(Region.South))));
+});
+// 应用受控销毁时恢复previous；禁止按请求替换全局提供器。
+```
+
+字段必须是直接实体枚举属性，值必须是该枚举常量。分支间OR、分支内字段AND、同字段值IN。静态元数据和身份缓存由应用负责；提供器必须对受控实体缺少可信身份的情况返回 `deny()`。`ofBranches(emptyList)` 和空值集合表示无许可；空映射分支表示该分支不限制字段，集成方不得误把未授权配置映射为空映射。
+
+条件在明确目标实体的构建器初始化或请求对象目标解析后准备，独立保存在强制条件结构中；最终WHERE以外层AND叠加。COUNT（包括原生、分组、fetch路径）、列表、更新/删除预检查和实际语句均使用匹配参数。强制条件不计入安全模式的业务定位条件，因此不能让未指定目标的UPDATE/DELETE通过原有安全检查。构建器属于一次操作，不得跨请求或线程复用。
+
+更新同时约束旧记录和写入后状态。部分更新中，已赋值的受控字段代入分支校验，未更新的受控字段继续由数据库谓词约束。直接绑定枚举值或NULL可判定；受控字段上的CASE、函数、增量等未知表达式拒绝执行。无注解/不受控实体由提供器返回不限制，保持旧行为。
+
+JPA的 `find(Class,id)`、`deleteById(Class,id)` 在存在强制范围时通过条件构建器执行。`create` 检查新值，禁止受控实体隐式合并或持久化已有受管对象。直接 `save`/`delete(Object)` 对受限实体明确拒绝，请使用条件UPDATE/DELETE；这是为了不把实体生命周期回调、锁和隐式merge行为悄悄改成另一种实现。
+
+支持范围是具有明确目标实体的结构化DAO路径。任意原生SQL/JPQL字符串、外部EntityManager、关联对象懒加载和已返回对象的直接受管修改不能由此SPI自动改写。集成方必须审计并限制这些旁路，不得声称注册提供器即自动保护所有JPA使用方式。服务层共享缓存命中同样不会经过DAO，受控实体必须独立禁用或在返回前执行可信范围检查。
+
+最小验证：使用两字段两角色交叉授权检查COUNT/列表一致；尝试把合法记录部分修改为非法组合，数据库影响行数应为0；无许可时COUNT为0；无业务定位条件的更新仍被安全模式拒绝。可运行 `MandatoryConditionTest` 和 `MandatoryScopeExamplesTest`，并通过三个Examples兼容性测试。
+
+语句生成和参数读取时都会再次向可信提供器核对当前范围。若DAO在另一用户、嵌套业务操作或上下文结束后被复用，且有效范围已变化，明确抛出 `DaoSecurityException`，要求创建新构建器。等价分支顺序变化仍使用原有渲染顺序，避免SQL与参数错配。多个可信提供器可通过 `MandatoryCondition.and(other)` 取交集；不会把现有应用的数据限制覆盖掉。
+
+原生强制范围参数遵循JPA标准枚举映射：STRING使用 `Enum.name()`，ORDINAL使用 `Enum.ordinal()`，与展示 `toString()` 或 `EnumDesc.code()` 无关。自定义AttributeConverter（含autoApply）不在自动推断承诺内，集成方必须限制这些字段或提供与实际存储一致的扩展；不能把业务枚举编码当作持久化序号。

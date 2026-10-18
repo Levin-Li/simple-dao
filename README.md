@@ -760,3 +760,7 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 ## API 数据属性权限元数据生成
 
 实体上的 `RbacDataAttrGroup` 可规范化传递至创建、修改、查询和 Info 模型；配置样例、兼容边界及验证见[生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。运行时授权由 API 接入方执行。
+
+### 应用级强制枚举记录范围
+
+`MandatoryConditionProvider` 为结构化DAO统一提供枚举DNF范围，独立于普通业务条件与表达式上下文。接入、三态语义、更新新旧值校验、JPA旁路限制见[完整手册](manual.md#受信的枚举记录范围mandatorycondition)。

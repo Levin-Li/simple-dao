@@ -342,6 +342,71 @@ public class UpdateDaoImpl<T>
         return this;
     }
 
+    /** 受控更新不接受一段表达式偷偷携带多个赋值或注释吞掉后续WHERE。 */
+    private boolean isSingleScopedAssignment(String expression) {
+        int depth = 0;
+        char quote = 0;
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+            if (quote != 0) {
+                if (c == quote) {
+                    if (i + 1 < expression.length() && expression.charAt(i + 1) == quote) i++;
+                    else quote = 0;
+                } else if (c == '\\' && i + 1 < expression.length()) i++;
+                continue;
+            }
+            if (c == '\'' || c == '"' || c == '`') quote = c;
+            else if (c == '(') depth++;
+            else if (c == ')') { if (--depth < 0) return false; }
+            else if (c == ';' || c == '#') return false;
+            else if (c == ',' && depth == 0) return false;
+            else if (i + 1 < expression.length()
+                    && (c == '-' && expression.charAt(i + 1) == '-'
+                    || c == '/' && expression.charAt(i + 1) == '*')) return false;
+        }
+        return quote == 0 && depth == 0;
+    }
+
+    @Override
+    protected Map<String, Object> mandatoryAssignments(MandatoryCondition condition) {
+        Map<String, Object> assignments = new java.util.HashMap<>();
+        java.util.Set<String> protectedProperties = new java.util.HashSet<>();
+        condition.getBranches().forEach(branch -> protectedProperties.addAll(branch.keySet()));
+        Map<String, String> columns = new java.util.HashMap<>();
+        for (Class<?> type = entityClass; type != null && type != Object.class; type = type.getSuperclass()) {
+            for (java.lang.reflect.Field field : type.getDeclaredFields()) {
+                if (!java.lang.reflect.Modifier.isStatic(field.getModifiers()))
+                    columns.put(aroundColumnPrefix(field.getName()).replaceAll("\\s+", ""), field.getName());
+            }
+        }
+        List<String> expressions = updateColumns.getList();
+        for (int index = 0; index < expressions.size(); index++) {
+            String expression = expressions.get(index);
+            if (!isSingleScopedAssignment(expression))
+                throw new com.levin.commons.dao.exception.DaoSecurityException("Cannot verify compound update expression for scoped entity");
+            int equals = expression.indexOf('=');
+            String lhs = equals < 0 ? "" : expression.substring(0, equals).replaceAll("\\s+", "");
+            String property = columns.get(lhs);
+            if (property == null)
+                throw new com.levin.commons.dao.exception.DaoSecurityException("Cannot verify update expression for scoped entity");
+            if (!protectedProperties.contains(property)) continue;
+            String rhs = expression.substring(equals + 1).trim();
+            List<?> parameters = QueryAnnotationUtil.flattenParams(null, updateParamValues.get(index));
+            Object value;
+            if (rhs.equalsIgnoreCase("NULL") && parameters.isEmpty()) value = null;
+            else if (rhs.equals(getParamPlaceholder()) && parameters.size() == 1) {
+                value = parameters.get(0);
+                if (value instanceof PrimitiveValueWrapper) value = ((PrimitiveValueWrapper<?>) value).get();
+                ResolvableType type = QueryAnnotationUtil.getFieldType(entityClass, property, null);
+                value = com.levin.commons.dao.util.ObjectUtil.convert(value, type.resolve());
+            } else throw new com.levin.commons.dao.exception.DaoSecurityException("Cannot verify scoped property assignment: " + property);
+            if (assignments.containsKey(property))
+                throw new com.levin.commons.dao.exception.DaoSecurityException("Repeated scoped property assignment: " + property);
+            assignments.put(property, value);
+        }
+        return assignments;
+    }
+
     @Override
     public String genFinalStatement() {
 
@@ -379,7 +444,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public List genFinalParamList() {
-        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, getLastStatementParamValues());
+        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, getMandatoryParamValues(), getLastStatementParamValues());
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
@@ -425,7 +490,7 @@ public class UpdateDaoImpl<T>
 
         final String jpql = replaceVar(ql.toString());
 
-        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql, QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getLastStatementParamValues()));
+        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql, QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getMandatoryParamValues(), getLastStatementParamValues()));
 
         return resultList.size();
     }

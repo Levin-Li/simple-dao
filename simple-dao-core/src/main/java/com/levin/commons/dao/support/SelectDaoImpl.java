@@ -1275,13 +1275,13 @@ public class SelectDaoImpl<T>
 
         if (isNative()) {
             return count("Select Count(*) From (" + genQL(true) + ") AS cnt_tmp"
-                    , getDaoContextValues(), whereParamValues, havingParamValues, getLastStatementParamValues());
+                    , getDaoContextValues(), whereParamValues, getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
         }
 
         if (hasStatColumns()) {
 
             Long resultCount = getDao().countQueryResult(false, genQL(true, true)
-                    , getDaoContextValues(), selectParamValues, whereParamValues, groupByParamValues, havingParamValues, getLastStatementParamValues());
+                    , getDaoContextValues(), selectParamValues, whereParamValues, getMandatoryParamValues(), groupByParamValues, havingParamValues, getLastStatementParamValues());
 
             if (resultCount != null) {
                 return resultCount;
@@ -1315,7 +1315,7 @@ public class SelectDaoImpl<T>
         }
 
         return count("Select Count(" + column + ") " + genQL(true)
-                , getDaoContextValues(), whereParamValues, havingParamValues, getLastStatementParamValues());
+                , getDaoContextValues(), whereParamValues, getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
     }
 
     /**
@@ -1347,6 +1347,7 @@ public class SelectDaoImpl<T>
                 , getDaoContextValues()
                 , selectParamValues
                 , whereParamValues
+                , getMandatoryParamValues()
                 , groupByParamValues
                 , havingParamValues
                 , orderByParamValues

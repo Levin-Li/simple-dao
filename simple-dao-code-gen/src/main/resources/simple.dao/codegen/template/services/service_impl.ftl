@@ -204,7 +204,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     //Spring 缓存变量可以使用Spring 容器里面的bean名称，SpEL支持使用@符号来引用Bean。
     //调用本方法会导致不会对租户ID进行过滤，如果需要调用方对租户ID进行核查
     //如果要注释缓存注解的代码可以在实体类上加上@jakarta.persistence.Cacheable(false)，然后重新生成代码
-    <#if !pkField?exists || !isCacheableEntity>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
+    <#if classModel.rbacDataAttrControlled>//枚举记录范围需要每次进入 DAO，不能按 ID 共享返回数据。
+    </#if><#if !pkField?exists || !isCacheableEntity || classModel.rbacDataAttrControlled>//</#if>@Cacheable(condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#${pkField.name})", key = CK_PREFIX_EXPR + "#${pkField.name}") //默认允许空值缓存 unless = "#result == null ",
     public ${entityName}Info findById(${pkField.typeName} ${pkField.name}) {
         return newInfoQuery().eq(E_${entityName}.${pkField.name}, ${pkField.name}).findUnique();
     }
@@ -223,7 +224,7 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Override
     public boolean isUniqueFindCacheEnabled(String... propertyNames) {
         String id = String.join("|", propertyNames);
-        return ${isCacheableEntity?c} && UNIQUE_CACHE_IDS.contains(id) && UNIQUE_CACHE_ENABLED.getOrDefault(id, true);
+        return ${(isCacheableEntity && !classModel.rbacDataAttrControlled)?c} && UNIQUE_CACHE_IDS.contains(id) && UNIQUE_CACHE_ENABLED.getOrDefault(id, true);
     }
 
     public static void setUniqueFindCacheEnabled(boolean enabled, String... propertyNames) {
@@ -278,7 +279,7 @@ public class ${className} extends BaseService<${className}> implements ${service
 <#list classModel.uniqueKeyModels as uniqueKey>
     <#assign uniqueFields = classModel.findFields(uniqueKey.propertyNames)>
     @Override
-<#if isCacheableEntity>
+<#if isCacheableEntity && !classModel.rbacDataAttrControlled>
     @Cacheable(
             condition = "#root.target.isUniqueFindCacheEnabled('" + <#list uniqueFields as field>E_${entityName}.${field.name}<#if field_has_next> + "','" + </#if></#list> + "')",
             unless = "#result == null",
@@ -751,7 +752,8 @@ public class ${className} extends BaseService<${className}> implements ${service
     * @return 缓存数据
     */
     @Operation(summary = GET_CACHE_ACTION, description = "完整的缓存key")
-    @Cacheable(unless = "#valueLoader == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
+    <#if classModel.rbacDataAttrControlled>//枚举范围实体的加载器也不能通过共享缓存返回其它用户的数据。
+    //</#if>@Cacheable(unless = "#valueLoader == null ", condition = "@${cacheSpelUtilsBeanName}.isNotEmpty(#key)", key = "#key")  //默认允许空值缓存 unless = "#result == null ",
     public <T> T getCache(String key, Function<String,T> valueLoader){
         Assert.notBlank(key, "key is empty");
         return valueLoader == null ? null : valueLoader.apply(key);
