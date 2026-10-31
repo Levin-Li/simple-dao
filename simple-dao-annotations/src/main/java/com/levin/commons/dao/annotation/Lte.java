@@ -18,6 +18,9 @@ import java.lang.annotation.*;
 //小于等于
 public @interface Lte {
 
+    /** 条件所属的 DAO 逻辑组；空值表示不指定组。 */
+    String group() default "";
+
 
     /**
      *

@@ -17,6 +17,9 @@ import java.lang.annotation.*;
 //存在
 public @interface Exists {
 
+    /** 条件所属的 DAO 逻辑组；空值表示不指定组。 */
+    String group() default "";
+
 
     /**
      *

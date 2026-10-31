@@ -86,6 +86,44 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     final List whereParamValues = new ArrayList(5);
 
+    /** 同名组复用首次出现的表达式节点。 */
+    private final Map<String, NamedLogicGroup> namedWhereGroups = new LinkedHashMap<>();
+    private NamedLogicGroup activeNamedGroup;
+    private boolean activeNamedGroupValid = true;
+
+    private static final class NamedLogicGroup {
+        final String name;
+        final String op;
+        final ExprNode node;
+
+        NamedLogicGroup(String name, String op, ExprNode node) {
+            this.name = name;
+            this.op = op;
+            this.node = node;
+        }
+    }
+
+    private static final class WhereCondition implements java.io.Serializable {
+        final String expression;
+        final Object params;
+        final boolean primary;
+
+        WhereCondition(String expression, Object params) {
+            this(expression, params, true);
+        }
+
+        WhereCondition(String expression, Object params, boolean primary) {
+            this.expression = expression;
+            this.params = params;
+            this.primary = primary;
+        }
+
+        @Override
+        public String toString() {
+            return expression;
+        }
+    }
+
     //加到最后的语句
     final SimpleList<String> lastStatements = new SimpleList<>(true, new ArrayList(2), " ");
 
@@ -97,6 +135,30 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
 
     private final ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
+    private ExprNode activeWhereRoot = whereExprRootNode;
+    private String activeFieldConditionGroup;
+    private final Map<String, RuntimeLogicGroup> fieldLogicGroups = new LinkedHashMap<>();
+    private final Map<String, List<ExprNode>> logicGroupMembers = new LinkedHashMap<>();
+    private final Set<String> requiredLogicGroupNames = new LinkedHashSet<>();
+
+    private static final class RuntimeLogicGroup {
+        final DaoLogicGroup definition;
+        final ExprNode node;
+        final Object root;
+        final Object value;
+        final String fieldName;
+        final List<ExprNode> members = new ArrayList<>();
+        final List<RuntimeLogicGroup> children = new ArrayList<>();
+        Boolean boundEnabled;
+
+        RuntimeLogicGroup(DaoLogicGroup definition, ExprNode node, Object root, Object value, String fieldName) {
+            this.definition = definition;
+            this.node = node;
+            this.root = root;
+            this.value = value;
+            this.fieldName = fieldName;
+        }
+    }
 
     private Map<String, Object> context;
 
@@ -1693,6 +1755,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             List<?> contexts = isClassCurrQueryObj ? null : DaoContext.getDaoContexts(queryValueObj);
 
+            registerClassLogicGroups(typeClass, isClassCurrQueryObj ? null : queryValueObj);
+
             final String pkgStartsWith = BASE_PACKAGE_NAME + ".";
 
             //查找类上的注解
@@ -1707,7 +1771,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             for (Field field : fields) {
 
                 //忽略字段
-                if (isIgnore(field)) {
+                if (isIgnore(field) && field.getAnnotationsByType(DaoLogicGroup.class).length == 0) {
                     continue;
                 }
 
@@ -2023,6 +2087,29 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     public void processAttrWithLogic(final Object bean, final AnnotatedElement fieldOrMethod, String name, Annotation[] varAnnotations, final ResolvableType valueType, Object value) {
 
+        DaoLogicGroup[] fieldDefinitions = fieldOrMethod == null ? new DaoLogicGroup[0]
+                : fieldOrMethod.getAnnotationsByType(DaoLogicGroup.class);
+        if (fieldDefinitions.length > 1)
+            throw new StatementBuildException("Only one DAO logic group may be declared on a query field: " + name);
+        DaoLogicGroup fieldDefinition = fieldDefinitions.length == 0 ? null : fieldDefinitions[0];
+        if (fieldDefinition != null) {
+            validateLogicGroupDefinition(fieldDefinition);
+            String groupName = fieldDefinition.name().trim();
+            if (fieldLogicGroups.containsKey(groupName))
+                throw new StatementBuildException("Duplicate DAO logic group definition: " + groupName);
+            boolean enabled = evalTrueExpr(bean, value, name, fieldDefinition.condition());
+            ExprNode node;
+            if (hasText(fieldDefinition.parent())) {
+                node = new ExprNode(fieldDefinition.logicOp().name(), enabled);
+            } else {
+                node = whereExprRootNode.beginGroup(fieldDefinition.logicOp().name(), enabled);
+                whereExprRootNode.endGroup(true);
+            }
+            RuntimeLogicGroup group = new RuntimeLogicGroup(fieldDefinition, node, bean, value, name);
+            group.boundEnabled = enabled;
+            fieldLogicGroups.put(groupName, group);
+        }
+
         //如果是包括忽略注解，则直接忽略
         if (isIgnore(fieldOrMethod, varAnnotations)) {
             return;
@@ -2034,6 +2121,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             // Assert.isTrue(valueType.resolve().isAssignableFrom(value.getClass()), "value[{}] is not instance of {}", value.getClass(), valueType);
         }
 
+        NamedLogicGroup previousNamedGroup = activeNamedGroup;
+        boolean previousNamedGroupValid = activeNamedGroupValid;
+        ExprNode previousNode = activeWhereRoot.currentNode();
+        ExprNode previousWhereRoot = activeWhereRoot;
+        String previousFieldConditionGroup = activeFieldConditionGroup;
+        ExprNode groupedFieldRoot = null;
+        String groupedFieldName = null;
+        boolean enteredNamedGroup = false;
         try {
 
             //设置脚本执行功能函数
@@ -2044,6 +2139,25 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             //支持多个注解
             List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
+
+            Set<String> conditionGroups = conditionGroupNames(varAnnotations);
+            if (!conditionGroups.isEmpty() && !logicAnnotations.isEmpty()) {
+                if (conditionGroups.size() != 1 || logicAnnotations.stream().anyMatch(this::isNamedLogicGroup))
+                    throw new StatementBuildException("A local logic group requires one DAO condition group: " + name);
+                if (logicAnnotations.stream().anyMatch(annotation -> !isLogicGroupAutoClose(annotation))
+                        && findFirstMatched(varAnnotations, END.class) == null)
+                    throw new StatementBuildException("Grouped local logic must close on the same field: " + name);
+                activeFieldConditionGroup = conditionGroups.iterator().next();
+                groupedFieldName = activeFieldConditionGroup;
+                groupedFieldRoot = new ExprNode(AND.class.getSimpleName(), true);
+                activeWhereRoot = groupedFieldRoot;
+            }
+
+            if (logicAnnotations.size() > 1 && logicAnnotations.stream().anyMatch(this::isNamedLogicGroup)) {
+                throw new StatementBuildException("Named logic group cannot share a field with another logic annotation: " + name);
+            }
+
+            enteredNamedGroup = logicAnnotations.stream().anyMatch(this::isNamedLogicGroup);
 
             logicAnnotations.forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
 
@@ -2060,7 +2174,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 }
 
                 //当前节点是否有效
-                if (!whereExprRootNode.currentNode().isValid()) {
+                if (!activeNamedGroupValid || !activeWhereRoot.currentNode().isValid()) {
                     return;
                 }
 
@@ -2074,7 +2188,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
                 //部分自动关闭
                 logicAnnotations.stream()
-                        .filter(this::isLogicGroupAutoClose)
+                        .filter(annotation -> !isNamedLogicGroup(annotation) && isLogicGroupAutoClose(annotation))
                         .forEachOrdered(logicAnnotation -> end());
 
                 endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
@@ -2083,8 +2197,29 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             //结束逻辑分组
 
         } finally {
+            if (enteredNamedGroup) activeWhereRoot.switchCurrentNodeTo(previousNode);
+            activeNamedGroup = previousNamedGroup;
+            activeNamedGroupValid = previousNamedGroupValid;
             elEvalFuncThreadLocal.set(null);
+            activeWhereRoot = previousWhereRoot;
+            activeFieldConditionGroup = previousFieldConditionGroup;
+            if (groupedFieldRoot != null)
+                logicGroupMembers.computeIfAbsent(groupedFieldName, key -> new ArrayList<>())
+                        .add(groupedFieldRoot);
         }
+    }
+
+    private Set<String> conditionGroupNames(Annotation[] annotations) {
+        Set<String> names = new LinkedHashSet<>();
+        if (annotations == null) return names;
+        for (Annotation annotation : annotations) {
+            if (!QueryAnnotationUtil.isSamePackage(annotation, Eq.class)) continue;
+            String group = ClassUtils.getValue(annotation, "group", false);
+            if (hasText(group)) names.add(group.trim());
+            Object value = ClassUtils.getValue(annotation, "value", false);
+            if (value instanceof Annotation[]) names.addAll(conditionGroupNames((Annotation[]) value));
+        }
+        return names;
     }
 
     protected boolean isQueryObject(AnnotatedElement fieldOrMethod, Object value) {
@@ -2367,6 +2502,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //合并组件的闭包
         final Consumer<Annotation> addAnnotationConsumer = annotation -> {
 
+            requiredLogicGroupNames.addAll(conditionGroupNames(new Annotation[]{annotation}));
+
             //如果有任何一个 Dao 注解
             hasAnyDaoAnnotation.set(true);
 
@@ -2426,6 +2563,24 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         /////////////////////////////////////////////////////////////////////////////////////////////
 
         for (Annotation annotation : daoAnnotations) {
+
+            if (annotation instanceof DaoAlwaysFalse) {
+                String groupName = ((DaoAlwaysFalse) annotation).group().trim();
+                if (hasText(groupName)) {
+                    if (groupName.equals(activeFieldConditionGroup)) {
+                        activeWhereRoot.currentNode().add(false,
+                                new WhereCondition("1=2", Collections.emptyList(), false));
+                    } else {
+                        ExprNode predicate = new ExprNode(AND.class.getSimpleName(), true);
+                        predicate.add(false, new WhereCondition("1=2", Collections.emptyList(), false));
+                        logicGroupMembers.computeIfAbsent(groupName, key -> new ArrayList<>()).add(predicate);
+                    }
+                } else {
+                    activeWhereRoot.currentNode().add(false,
+                            new WhereCondition("1=2", Collections.emptyList(), false));
+                }
+                continue;
+            }
 
             String entityFieldName = tryGetJpaEntityFieldName(annotation, tryGetEntityClass(annotation), name);
 
@@ -2565,7 +2720,29 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         if (QueryAnnotationUtil.isSamePackage(opAnnotation, Eq.class)) {
             //处理where条件
-            processWhereCondition(bean, fieldOrMethod, entityAttrType, name, valueType, value, isWrapperParamValue, opAnnotation, varAnnotations);
+            String groupName = ClassUtils.getValue(opAnnotation, "group", false);
+            if (hasText(groupName)) {
+                if (Boolean.TRUE.equals(ClassUtils.getValue(opAnnotation, E_C.having, false)))
+                    throw new StatementBuildException("DAO logic group condition cannot use HAVING: " + name);
+                if (groupName.trim().equals(activeFieldConditionGroup)) {
+                    processWhereCondition(bean, fieldOrMethod, entityAttrType, name, valueType, value,
+                            isWrapperParamValue, opAnnotation, varAnnotations);
+                    return;
+                }
+                ExprNode predicate = new ExprNode(AND.class.getSimpleName(), true);
+                ExprNode previousRoot = activeWhereRoot;
+                activeWhereRoot = predicate;
+                try {
+                    processWhereCondition(bean, fieldOrMethod, entityAttrType, name, valueType, value,
+                            isWrapperParamValue, opAnnotation, varAnnotations);
+                } finally {
+                    activeWhereRoot = previousRoot;
+                }
+                logicGroupMembers.computeIfAbsent(groupName.trim(), key -> new ArrayList<>()).add(predicate);
+            } else {
+                processWhereCondition(bean, fieldOrMethod, entityAttrType, name, valueType, value,
+                        isWrapperParamValue, opAnnotation, varAnnotations);
+            }
         }
 
     }
@@ -2601,14 +2778,94 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void appendToWhere(String expr, Object value, boolean addToFirst) {
+        if (hasText(expr)) activeWhereRoot.currentNode().add(addToFirst, new WhereCondition(expr, value));
+    }
 
-        if (hasText(expr)
-                && whereExprRootNode.currentNode().add(addToFirst, expr)) {
-            if (addToFirst) {
-                whereParamValues.add(0, value);
-            } else {
-                whereParamValues.add(value);
-            }
+    protected final List<Object> getWhereParamValues() {
+        renderRuntimeLogicGroups();
+        List<Object> values = new ArrayList<>();
+        values.addAll(autoWhereConditions().params);
+        collectWhereParams(whereExprRootNode, values);
+        values.addAll(whereParamValues);
+        return values;
+    }
+
+    private boolean hasPrimaryWhereCondition(ExprNode node) {
+        if (!node.isValid()) return false;
+        for (Object child : node.getSubNodes()) {
+            if (child instanceof WhereCondition && ((WhereCondition) child).primary) return true;
+            if (child instanceof ExprNode && hasPrimaryWhereCondition((ExprNode) child)) return true;
+        }
+        return false;
+    }
+
+    private void renderRuntimeLogicGroups() {
+        for (String name : requiredLogicGroupNames)
+            if (!fieldLogicGroups.containsKey(name))
+                throw new StatementBuildException("DAO logic group is not defined: " + name);
+        for (RuntimeLogicGroup group : fieldLogicGroups.values()) group.members.clear();
+        for (Map.Entry<String, List<ExprNode>> entry : logicGroupMembers.entrySet()) {
+            RuntimeLogicGroup group = fieldLogicGroups.get(entry.getKey());
+            if (group == null)
+                throw new StatementBuildException("DAO logic group is not defined: " + entry.getKey());
+            group.members.addAll(entry.getValue());
+        }
+        for (RuntimeLogicGroup group : fieldLogicGroups.values()) group.children.clear();
+        for (RuntimeLogicGroup group : fieldLogicGroups.values()) {
+            String parentName = group.definition.parent().trim();
+            if (parentName.isEmpty()) continue;
+            RuntimeLogicGroup parent = fieldLogicGroups.get(parentName);
+            if (parent == null)
+                throw new StatementBuildException("DAO logic group parent does not exist: " + parentName);
+            parent.children.add(group);
+        }
+        Set<String> visiting = new HashSet<>();
+        Set<String> rendered = new HashSet<>();
+        for (RuntimeLogicGroup group : fieldLogicGroups.values())
+            if (!hasText(group.definition.parent()))
+                renderRuntimeLogicGroup(group, visiting, rendered, true);
+        for (RuntimeLogicGroup group : fieldLogicGroups.values())
+            if (!rendered.contains(group.definition.name().trim()))
+                renderRuntimeLogicGroup(group, visiting, rendered, true);
+    }
+
+    private void renderRuntimeLogicGroup(RuntimeLogicGroup group, Set<String> visiting,
+                                         Set<String> rendered, boolean parentEnabled) {
+        String name = group.definition.name().trim();
+        if (rendered.contains(name)) return;
+        if (!visiting.add(name))
+            throw new StatementBuildException("Recursive DAO logic group parent: " + name);
+        boolean enabled = parentEnabled && Boolean.TRUE.equals(group.boundEnabled);
+        for (RuntimeLogicGroup child : group.children)
+            renderRuntimeLogicGroup(child, visiting, rendered, enabled);
+        group.node.getSubNodes().clear();
+        if (!enabled) {
+            visiting.remove(name);
+            rendered.add(name);
+            return;
+        }
+        long activeMembers = group.members.stream().filter(this::hasPrimaryWhereCondition).count()
+                + group.children.stream().filter(child -> child.node.isValid()
+                        && !child.node.getSubNodes().isEmpty()).count();
+        if (activeMembers >= group.definition.minConditions()) {
+            group.members.stream().filter(member -> !member.getSubNodes().isEmpty())
+                    .forEach(group.node::attachSubtree);
+            group.children.stream().filter(child -> !child.node.getSubNodes().isEmpty())
+                    .forEach(child -> group.node.attachSubtree(child.node));
+        } else if (hasText(group.definition.unless())) {
+            group.node.add(false, new WhereCondition(group.definition.unless(), Collections.emptyList(), false));
+        } else if (group.definition.minConditions() > 0) {
+            throw new StatementBuildException("DAO logic group has too few active conditions: " + group.definition.name());
+        }
+        visiting.remove(name);
+        rendered.add(name);
+    }
+
+    private void collectWhereParams(ExprNode node, List<Object> values) {
+        if (!node.isValid()) return;
+        for (Object child : node.getSubNodes()) {
+            if (child instanceof WhereCondition) values.add(((WhereCondition) child).params);
+            else if (child instanceof ExprNode) collectWhereParams((ExprNode) child, values);
         }
     }
 
@@ -2667,6 +2924,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
             //变成 having 字句，只针对 SelectDao 有效
             if (Boolean.TRUE.equals(having) && this instanceof SelectDao) {
+                if (activeNamedGroup != null)
+                    throw new StatementBuildException("Named logic groups currently support WHERE only: " + activeNamedGroup.name);
                 having(expr, holder.value);
             } else {
                 where(expr, holder.value);
@@ -2872,6 +3131,46 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return boundMandatoryCondition;
     }
 
+    private void registerClassLogicGroups(Class<?> queryClass, Object queryObject) {
+        Map<String, DaoLogicGroup> definitions = new LinkedHashMap<>();
+        for (Class<?> type = queryClass; type != null && type != Object.class; type = type.getSuperclass()) {
+            Set<String> namesOnType = new HashSet<>();
+            for (DaoLogicGroup definition : type.getDeclaredAnnotationsByType(DaoLogicGroup.class)) {
+                validateLogicGroupDefinition(definition);
+                String name = definition.name().trim();
+                if (!namesOnType.add(name))
+                    throw new StatementBuildException("Duplicate DAO logic group on request class: " + name);
+                if (definitions.putIfAbsent(name, definition) != null)
+                    throw new StatementBuildException("Duplicate DAO logic group definition: " + name);
+            }
+        }
+        for (DaoLogicGroup definition : definitions.values()) {
+            String name = definition.name().trim();
+            if (fieldLogicGroups.containsKey(name))
+                throw new StatementBuildException("Duplicate DAO logic group definition: " + name);
+            boolean enabled = evalTrueExpr(queryObject, null, name, definition.condition());
+            ExprNode node;
+            if (hasText(definition.parent())) {
+                node = new ExprNode(definition.logicOp().name(), enabled);
+            } else {
+                node = whereExprRootNode.beginGroup(definition.logicOp().name(), enabled);
+                whereExprRootNode.endGroup(true);
+            }
+            RuntimeLogicGroup group = new RuntimeLogicGroup(definition, node, queryObject, null, name);
+            group.boundEnabled = enabled;
+            fieldLogicGroups.put(name, group);
+        }
+    }
+
+    private void validateLogicGroupDefinition(DaoLogicGroup definition) {
+        if (!hasText(definition.name()) || definition.minConditions() < 0)
+            throw new StatementBuildException("Invalid DAO logic group definition: " + definition.name());
+        if (definition.name().trim().equals(definition.parent().trim()))
+            throw new StatementBuildException("DAO logic group cannot be its own parent: " + definition.name());
+        if (definition.unless().contains("?") || definition.unless().contains("${"))
+            throw new StatementBuildException("DAO logic group unless cannot contain parameter placeholders: " + definition.name());
+    }
+
 
     /** 强制参数独立于业务树；公开API先取参数或先取语句均使用同一份范围。 */
     protected final List<Object> getMandatoryParamValues() {
@@ -2953,6 +3252,37 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return " Where (" + business.substring(5).trim() + ") AND (" + scope + ") ";
     }
 
+    private static final class AutoWhereConditions {
+        final List<String> expressions = new ArrayList<>(2);
+        final List<Object> params = new ArrayList<>(2);
+
+        void addFirst(String expression, Object value) {
+            expressions.add(0, expression);
+            params.add(0, value);
+        }
+    }
+
+    private AutoWhereConditions autoWhereConditions() {
+        AutoWhereConditions result = new AutoWhereConditions();
+        EntityOption option = getEntityOption();
+        if (option == null) return result;
+
+        if (autoAppendOperationCondition) {
+            if (this instanceof UpdateDao && hasText(option.updateCondition()))
+                result.addFirst(option.updateCondition(), Collections.emptyList());
+            else if (this instanceof DeleteDao && hasText(option.deleteCondition()))
+                result.addFirst(option.deleteCondition(), Collections.emptyList());
+        }
+        if (filterLogicDeletedData && hasLogicDeleteField(option)) {
+            String expr = genLogicDeleteExpr(option, Op.NotEq);
+            String property = option.logicalDeleteFieldName().trim();
+            if (isNullable(entityClass, property))
+                expr = " ( " + aroundColumnPrefix(property) + " IS NULL OR " + expr + " ) ";
+            result.addFirst(expr, convertLogicDeleteValue(option));
+        }
+        return result;
+    }
+
     /** 生成业务与强制范围共同组成的WHERE，安全模式仍只检查原业务条件。 */
     protected final String genWhereStatement(EntityOption.Action action) {
 
@@ -2960,45 +3290,20 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             throw new DaoSecurityException(" " + entityClass + " disable " + action + " action");
         }
 
+        renderRuntimeLogicGroups();
         String whereStatement = getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " ");
 
         checkSafeMode(whereStatement);
 
-        EntityOption entityOption = getEntityOption();
-
-        if (entityOption == null) {
-            return appendMandatoryWhere(whereStatement, action);
-        }
-
         whereExprRootNode.switchCurrentNodeToSelf();
-
-        if (autoAppendOperationCondition) {
-
-            if (this instanceof UpdateDao
-                    && hasText(entityOption.updateCondition())) {
-                appendToWhere(entityOption.updateCondition(), Collections.emptyList(), true);
-            } else if (this instanceof DeleteDao
-                    && hasText(entityOption.deleteCondition())) {
-                appendToWhere(entityOption.deleteCondition(), Collections.emptyList(), true);
-            }
+        AutoWhereConditions auto = autoWhereConditions();
+        if (!auto.expressions.isEmpty()) {
+            String automatic = String.join(" AND ", auto.expressions);
+            String business = whereStatement.trim();
+            whereStatement = business.isEmpty() ? " Where " + automatic + " "
+                    : " Where " + automatic + " AND " + business.substring(5).trim() + " ";
         }
-
-        //如果过滤逻辑删除的数据
-        if (filterLogicDeletedData
-                && hasLogicDeleteField(entityOption)) {
-
-            String expr = genLogicDeleteExpr(entityOption, Op.NotEq);
-
-            String propertyName = entityOption.logicalDeleteFieldName().trim();
-
-            if (isNullable(entityClass, propertyName)) {
-                expr = " ( " + aroundColumnPrefix(propertyName) + " IS NULL OR " + expr + " ) ";
-            }
-
-            appendToWhere(expr, convertLogicDeleteValue(entityOption), true);
-        }
-
-        return appendMandatoryWhere(getDefaultTextIfEmpty(whereExprRootNode.toString(), " Where ", " ", " "), action);
+        return appendMandatoryWhere(whereStatement, action);
     }
 
     protected String genLogicDeleteExpr(EntityOption entityOption, Op op) {
@@ -3195,16 +3500,49 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
     private void beginLogicGroup(Object bean, Annotation logicAnnotation, String name, Object value) {
         if (logicAnnotation != null
                 && !(logicAnnotation instanceof END)) {
+            if (isNamedLogicGroup(logicAnnotation)) {
+                if (activeWhereRoot != whereExprRootNode)
+                    throw new StatementBuildException("Cannot nest legacy named AND/OR in DAO logic group field: " + name);
+                if (activeNamedGroup != null) {
+                    throw new StatementBuildException("Nested named logic groups are not supported: " + name);
+                }
+                String groupName = ((String) ClassUtils.getValue(logicAnnotation, "group", false)).trim();
+                String op = logicAnnotation.annotationType().getSimpleName();
+                boolean valid = isValid(logicAnnotation, bean, name, value)
+                        && whereExprRootNode.currentNode().isValid();
+                activeNamedGroupValid = valid;
+                if (!valid) return;
+                NamedLogicGroup group = namedWhereGroups.get(groupName);
+                if (group == null) {
+                    ExprNode node = whereExprRootNode.beginGroup(op, true);
+                    group = new NamedLogicGroup(groupName, op, node);
+                    namedWhereGroups.put(groupName, group);
+                }
+                if (!group.op.equals(op)) {
+                    throw new StatementBuildException("Named logic group cannot mix AND and OR: " + groupName);
+                }
+                activeNamedGroup = group;
+                whereExprRootNode.switchCurrentNodeTo(group.node);
+                return;
+            }
+            if (activeNamedGroup != null) {
+                throw new StatementBuildException("Unnamed logic group cannot be nested in named group: " + name);
+            }
             beginLogic(logicAnnotation.annotationType().getSimpleName(), isValid(logicAnnotation, bean, name, value));
         }
     }
 
+    private boolean isNamedLogicGroup(Annotation annotation) {
+        if (!(annotation instanceof AND) && !(annotation instanceof OR)) return false;
+        return hasText((String) ClassUtils.getValue(annotation, "group", false));
+    }
+
     protected void beginLogic(String op, boolean valid) {
-        whereExprRootNode.beginGroup(op, valid);
+        activeWhereRoot.beginGroup(op, valid);
     }
 
     protected void endLogic(boolean isContainLastField) {
-        whereExprRootNode.endGroup(isContainLastField);
+        activeWhereRoot.endGroup(isContainLastField);
     }
 
     private void endLogicGroup(Object bean, Annotation logicAnnotation, Object value) {

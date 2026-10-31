@@ -22,6 +22,9 @@ import java.lang.annotation.*;
  */
 public @interface AND {
 
+    /** 同名条件合并为一个 AND 组；空值保持原有的顺序分组语义。 */
+    String group() default "";
+
     /**
      * 在统一个字段上是否自动闭合逻辑组
      *

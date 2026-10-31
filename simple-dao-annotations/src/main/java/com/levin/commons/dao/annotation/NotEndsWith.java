@@ -17,6 +17,9 @@ import java.lang.annotation.*;
 @Inherited
 public @interface NotEndsWith {
 
+    /** 条件所属的 DAO 逻辑组；空值表示不指定组。 */
+    String group() default "";
+
 
     /**
      *

@@ -578,7 +578,7 @@ DTO 上也可以声明：
 
 查询对象模板仅对 `java.time.LocalDate` 字段额外生成同名 `@Eq` 精确相等条件，并保留 `betweenXxx`、`gteXxx`、`lteXxx` 范围条件；其他日期／时间类型维持范围条件。
 
-`simple-dao-codegen` 是 Maven 插件，可以基于实体生成默认服务、默认控制器、请求对象和项目模板。查询请求会同时生成自限定泛型的 `SimpleQuery<实体名>Req<T>` 与继承它的 `Query<实体名>Req`：前者承载通用排序和选择列能力，并保持链式调用的实际子类类型；后者补充实体字段条件。
+`simple-dao-codegen` 是 Maven 插件，可以基于实体生成默认服务、默认控制器、请求对象和项目模板。查询请求会同时生成自限定泛型的 `SimpleQuery<实体名>Req<T>` 与继承它的 `Query<实体名>Req`：前者承载通用排序和选择列，并保持链式调用的实际子类类型；后者补充实体字段条件。两者从实体专属 `XxxBaseRequest` 继承分组过滤字段。
 
 插件配置示例：
 
@@ -764,3 +764,15 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 ### 应用级强制枚举记录范围
 
 `MandatoryConditionProvider` 为结构化DAO统一提供枚举DNF范围，独立于普通业务条件与表达式上下文。接入、三态语义、更新新旧值校验、JPA旁路限制见[完整手册](manual.md#受信的枚举记录范围mandatorycondition)。
+
+### 实体专属请求父类
+
+代码生成器每轮生成 `XxxBaseRequest<T>`，放在 commons 请求基类与实体的查询、更新、删除、ID 请求之间；创建请求维持直接继承原 commons 基类。继承链见[手册](manual.md#实体专属请求父类)。
+
+### 运行时 DAO 逻辑组
+
+在任意请求对象的类或字段上用 `@DaoLogicGroup` 定义组，再用 `@Eq(group = "名称")`、`@In(group = "名称")` 等条件注解加入组。`condition` 控制整个组是否启用；组启用后，成立的直接子元素少于 `minConditions` 时使用 `unless`，未配置则报错。`parent` 可建立子组。完整示例和计数规则见[运行时 DAO 逻辑组](manual.md#运行时-dao-逻辑组)。
+
+### 实体字段逻辑分组生成
+
+`@DaoLogicGroup` 在请求对象类或字段上唯一地定义一个组；`@Eq(group = "...")`、`@In(group = "...")` 等 WHERE 条件注解引用该组。运行时不要求请求对象继承特定基类。生成器默认把实体类上的组定义和带 `group` 的过滤字段生成到 `XxxBaseRequest`，供继承它的请求对象使用；过滤字段以比较操作符为前缀，例如 `eqSalesUserId`、`inSalesOrgIdList`，条件注解的 `value` 使用 `E_实体.字段` 常量。`@GenDaoLogicGroup` 的 `injectOverride`、`injectRequired` 分别传给生成字段上 `@InjectVar` 的 `isOverride`、`isRequired`，默认分别为 `"true"` 和 `"false"`。`parent` 默认为空，表示顶层组；非空时指向父组，生成和运行时都检查缺失、自引用与循环。用法见[手册](manual.md#实体字段逻辑分组生成)。

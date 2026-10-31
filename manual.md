@@ -4269,7 +4269,7 @@ public void delete(Long id) {
 5. 检查默认服务类、默认控制器类、请求对象是否生成或刷新。
 6. 业务扩展写到 Biz 服务或 Biz 控制器，不直接改默认生成类。
 
-查询请求会生成一对可继承的类型：`SimpleQuery<实体名>Req<T extends SimpleQuery<实体名>Req<T>>` 负责通用排序和选择列，`Query<实体名>Req` 继承为 `SimpleQuery<实体名>Req<Query<实体名>Req>` 并声明实体字段条件。这样基础查询的链式方法会返回实际子类；`SimpleQuery` 是供具体查询请求继承的泛型基类，默认 CRUD 使用后者。
+查询请求会生成一对可继承的类型：`SimpleQuery<实体名>Req<T extends SimpleQuery<实体名>Req<T>>` 负责通用排序和选择列，`Query<实体名>Req` 继承为 `SimpleQuery<实体名>Req<Query<实体名>Req>` 并声明实体字段条件；分组过滤字段由两者共同继承的 `XxxBaseRequest` 提供。这样基础查询的链式方法会返回实际子类；`SimpleQuery` 是供具体查询请求继承的泛型基类，默认 CRUD 使用后者。
 
 ### 19.3 标准 Service 查询扩展
 
@@ -4583,3 +4583,103 @@ JPA的 `find(Class,id)`、`deleteById(Class,id)` 在存在强制范围时通过�
 语句生成和参数读取时都会再次向可信提供器核对当前范围。若DAO在另一用户、嵌套业务操作或上下文结束后被复用，且有效范围已变化，明确抛出 `DaoSecurityException`，要求创建新构建器。等价分支顺序变化仍使用原有渲染顺序，避免SQL与参数错配。多个可信提供器可通过 `MandatoryCondition.and(other)` 取交集；不会把现有应用的数据限制覆盖掉。
 
 原生强制范围参数遵循JPA标准枚举映射：STRING使用 `Enum.name()`，ORDINAL使用 `Enum.ordinal()`，与展示 `toString()` 或 `EnumDesc.code()` 无关。自定义AttributeConverter（含autoApply）不在自动推断承诺内，集成方必须限制这些字段或提供与实际存储一致的扩展；不能把业务枚举编码当作持久化序号。
+
+## 运行时 DAO 逻辑组
+
+`@DaoLogicGroup` 可直接标在任意请求对象的类或字段上，定义一个具名 AND/OR 组；不要求请求对象继承生成的 `XxxBaseRequest`。WHERE 条件注解通过各自的 `group` 属性引用组，定义注解只写一次：
+
+```java
+@DaoLogicGroup(name = "match", logicOp = DaoLogicGroup.LogicOp.OR,
+        minConditions = 1, unless = "1=2")
+class QueryRecordReq {
+    @In(value = "orgId", group = "match")
+    List<String> orgIds;
+
+    @Eq(value = "userId", group = "match")
+    String userId;
+
+    @Eq("state")
+    String state;
+}
+
+QueryRecordReq req = new QueryRecordReq();
+req.orgIds = List.of("O1", "O2");
+req.state = "OPEN";
+dao.selectFrom(Record.class, "r").appendByQueryObj(req).count();
+```
+
+当 `orgIds` 和 `userId` 都有值时，条件语义是 `(r.orgId IN (?, ?) OR r.userId = ?) AND r.state = ?`。本例的 `userId` 为空，因此不生成它的条件。组定义也可放在请求字段上，字段本身可以同时引用这个组：
+
+```java
+class QueryRecordReq {
+    @DaoLogicGroup(name = "match", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    @Eq(value = "orgId", group = "match")
+    String orgId;
+
+    @Eq(value = "userId", group = "match")
+    String userId;
+}
+```
+
+子组通过 `parent` 引用父组，成员仍通过条件注解的 `group` 引用定义：
+
+```java
+@DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+        minConditions = 1, unless = "1=2")
+@DaoLogicGroup(name = "pair", parent = "visible", logicOp = DaoLogicGroup.LogicOp.AND,
+        minConditions = 2, unless = "1=2")
+class QueryRecordReq {
+    @Eq(value = "orgId", group = "pair") String orgId;
+    @Eq(value = "userId", group = "pair") String userId;
+    @Eq(value = "state", group = "visible") String state;
+}
+```
+
+类级定义在首个字段之前创建组节点，字段级定义在该字段的位置创建。`parent` 默认空字符串；非空时把子组放入具名父组。一个子组在父组里算一个直接子元素，普通条件、局部逻辑子树也分别算一个。`IN` 的多个绑定值仍只算一个。子组产生了正常条件或 `unless` 表达式，都算父组的一个子元素；被忽略或没有产生条件的子组算零个。
+
+组的 `condition` 在定义时求值一次：类级定义可读取请求对象属性（例如 `condition = "#enabled"`），字段级定义可读取当前字段值（例如 `condition = "#_fieldVal != null"`）。为假时组节点标记为忽略，成员和子组都不进入 SQL，且不执行 `unless`。组已启用、直接子元素数量少于 `minConditions` 时，使用无参数的原样 `unless` 表达式；没有 `unless` 则报错。`minConditions` 在构建查询时计数，不检查 SQL 最终匹配了多少数据库记录。
+
+组定义和成员只属于当前 DAO 实例：同名重复定义、条件引用不存在的组、缺失父组、自引用或循环父组均报错。新的 DAO 实例可以重新使用同一个组名。只有传入并解析了对应请求对象的 DAO 操作才使用这些组；单独传目标实体类不会读取其 `@DaoLogicGroup`。
+
+## 实体字段逻辑分组生成
+
+`com.levin.commons.dao.DaoLogicGroup` 是组定义，单个 DAO 实例中每个组名只能定义一次；普通 WHERE 条件通过各自的 `group` 属性引用组。实体类上的组定义供生成器读取：可匹配到源码时，将 `@DaoLogicGroup` 的原始注解文本复制到 `XxxBaseRequest`，保留其中的换行和表达式；无法匹配源码时按编译后的注解元数据生成同等配置。运行时只读取请求对象类和字段上的定义，不直接读取目标实体类的定义。组属性包括 `name`、`parent`、`logicOp`、`condition`、`minConditions`、`unless` 和 `remark`；`parent` 默认 `""`，表示顶层组。实体业务字段的 `@GenDaoLogicGroup` 指定组名、`filterOp`、`injectVarName`、`injectOverride` 和 `injectRequired`，生成器为实体专属 `XxxBaseRequest` 生成带 `group` 属性的过滤字段。`filterOp` 默认 `Eq.class`，支持 `Eq/NotEq/Gt/Gte/Lt/Lte/Like/NotLike/Contains/NotContains/StartsWith/NotStartsWith/EndsWith/NotEndsWith/In/NotIn`。生成字段名使用比较注解的小驼峰前缀，并将实体字段首字母大写，例如 `Eq` 对应 `eqSalesUserId`，`In` 对应 `inSalesOrgIdList`。`In.class`、`NotIn.class` 生成 `List<字段类型>` 并保留 `List` 后缀；条件注解的 `value` 使用实体字段常量（例如 `E_Settlement.salesOrgId`），默认注入变量名仍使用原实体字段名。生成前会检查组名、父组、自引用、间接循环及字段类型。
+
+```java
+@DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+        minConditions = 1, unless = "1=2", remark = "可见范围")
+@DaoLogicGroup(name = "sales", parent = "visible", logicOp = DaoLogicGroup.LogicOp.AND,
+        minConditions = 1, unless = "1=2")
+class Settlement {
+    @GenDaoLogicGroup(name = "visible", filterOp = In.class, injectVarName = "accessibleOrgIds")
+    String salesOrgId;
+
+    @GenDaoLogicGroup(name = "sales", injectVarName = "currentUserId")
+    String salesUserId;
+}
+```
+
+生成的 `SettlementBaseRequest` 定义 `visible` 和 `sales` 两个类级组，并声明 `inSalesOrgIdList` 和 `eqSalesUserId`，分别使用 `@In(value = E_Settlement.salesOrgId, group = "visible")` 和 `@Eq(value = E_Settlement.salesUserId, group = "sales")`；两者均带 `@InjectVar`，不再重复写 `@DaoLogicGroup`。`SimpleQuerySettlementReq`、`QuerySettlementReq` 和其他继承该基类的请求对象通过继承获得这些字段。运行时在处理请求对象第一个字段前登记类级定义，再把各条件放入所引用的组；普通 WHERE 留在组外。生成字段用 `@JsonIgnore` 和隐藏的 Schema 标记，不作为客户端输入字段公开。
+
+`@DaoLogicGroup` 的 `remark` 可以包含 `@CopyToGenCode @*` 标记；该注解未写标记时也会自动复制，带标记时不会重复生成。当前类级 `@DaoLogicGroup` 由其生成逻辑处理，现有通用标记复制逻辑仍用于字段注解。
+
+`@GenDaoLogicGroup.injectOverride` 与 `injectRequired` 均为字符串，直接传给生成字段的 `@InjectVar`，默认分别为 `"true"` 和 `"false"`。例如 `@GenDaoLogicGroup(name = "visible", injectVarName = "accessibleOrgIds", injectOverride = "false", injectRequired = "false")` 会生成 `@InjectVar(value = "accessibleOrgIds", isOverride = "false", isRequired = "false")`。两个属性可分别设置。
+
+生成的 `@InjectVar` 使用默认注入域 `default`。应用的默认域注入器需要先处理请求对象，再交给 DAO；若直接调用 DAO，应先完成注入或设置字段值。DAO 内置的 `dao` 域注入器不会处理默认域注解。
+
+请求类级组在第一个字段之前的位置建立；字段级顶层组在定义字段的位置建立。建组时先求值 `condition`，之后不重复求值。条件注解的 `group` 可在定义字段之前引用组；子组通过 `parent` 挂到父组。缺失定义、重复定义、缺失父组、自引用或间接循环会报错。多个顶层组与普通 WHERE 按所在位置组合，SQL 和参数从同一表达式树提取。`condition` 为假时，组节点仍创建但标记为忽略，其所有子组和成员条件都不进入 SQL，也不执行 `unless`。`minConditions` 统计当前组中成立的直接子元素：一个直接条件节点或局部逻辑子树算一个；子组只要生成有效条件（包括 `unless` 兜底表达式）就算一个。`IN` 绑定多个值仍只算一个子元素；被忽略或没有生成条件的子组不计数。组已启用但计数不足时，有 `unless` 就使用这个无参数原样表达式，否则报错。同一 DAO 中即使定义来自不同请求对象或继承链，同名组仍视为重复定义。
+
+`@DaoLogicGroup` 可直接标在任意请求对象类或字段上，运行时不要求继承 `XxxBaseRequest`。只有该请求对象被 DAO 解析时，组条件才生效。生成器默认把实体类上的组注解复制到 `XxxBaseRequest`，供生成的请求对象继承；这只是模板的用法，不限制手写请求对象。
+
+生成逻辑组只会增加查询条件，不会撤销 `MultiTenantOrgReq` 已有的固定 `orgId` 限制。需要以多组织字段取代该限制的实体，应显式选择合适的查询请求基类和授权策略，不能由通用分组注解自动放宽原权限。
+
+### 恒假条件
+
+运行时 `@DaoAlwaysFalse` 在自身 `condition` 成立时直接加入 `1=2`，不读取所标字段、不生成参数。它可以和 `@In` 一起放在原有的 `@OR(autoClose = true)` 局部分组内，例如在列表为空时使用 `@DaoAlwaysFalse(condition = C.VALUE_EMPTY)`，防止空列表让条件完全消失。也可写 `@DaoAlwaysFalse(group = "match", condition = C.VALUE_EMPTY)` 将它放入已定义的 `DaoLogicGroup`；该恒假谓词不计入 `minConditions` 的成立直接子元素。条件不成立时该注解不产生谓词。
+
+## 实体专属请求父类
+
+每轮 `gen-code` 都为实体 `Xxx` 生成一个 `XxxBaseRequest<T extends XxxBaseRequest<T>>`，位于实体服务的 `req` 包，继承该实体原先选中的 commons 请求基类。`SimpleQueryXxxReq`、`SimpleUpdateXxxReq`、`DeleteXxxReq`、`XxxIdReq` 通过该类继承 commons 基类；`QueryXxxReq` 和 `UpdateXxxReq` 继续分别继承对应的 `Simple*Req`。`CreateXxxReq` 保持直接继承原 commons 基类，不经过 `XxxBaseRequest`。Info 模型的继承关系不变。
+
+`XxxBaseRequest` 是每轮重新生成的文件，不作为手工扩展点。生成器继续遵守已有哈希保护规则；若有人手改生成文件，生成过程可能因保护规则拒绝覆盖。实体所属模块发生变更时，先编译实体模块，再运行 `gen-code`，不要直接修改生成目录。

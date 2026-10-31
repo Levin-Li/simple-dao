@@ -19,6 +19,9 @@ import java.lang.annotation.*;
 //等于
 public @interface IsNotNull {
 
+    /** 条件所属的 DAO 逻辑组；空值表示不指定组。 */
+    String group() default "";
+
 
     /**
      *

@@ -20,6 +20,7 @@ import com.google.googlejavaformat.java.ImportOrderer;
 import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
+import com.levin.commons.dao.DaoLogicGroup;
 import com.levin.commons.dao.EntityOpConst;
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.Unique;
@@ -28,6 +29,7 @@ import com.levin.commons.dao.annotation.misc.PrimitiveValue;
 import com.levin.commons.dao.annotation.update.Update;
 import com.levin.commons.dao.codegen.db.util.CommentUtils;
 import com.levin.commons.dao.codegen.model.ClassModel;
+import com.levin.commons.dao.codegen.model.DaoLogicGroupField;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import com.levin.commons.dao.codegen.model.ClassModel.UniqueKeyModel;
 import com.levin.commons.dao.domain.*;
@@ -111,6 +113,7 @@ public final class ServiceModelCodeGenerator {
     public static final String SIMPLE_UPDATE_EVT_FTL = "services/req/simple_update_evt.ftl";
     public static final String SIMPLE_QUERY_EVT_FTL = "services/req/simple_query_evt.ftl";
     public static final String QUERY_EVT_FTL = "services/req/query_evt.ftl";
+    public static final String BASE_REQUEST_FTL = "services/req/base_request.ftl";
     public static final String STAT_EVT_FTL = "biz/bo/stat_evt.ftl";
     public static final String BASE_ID_EVT_FTL = "services/req/base_id_req.ftl";
 
@@ -1127,6 +1130,7 @@ public final class ServiceModelCodeGenerator {
 
         // 在生成任何模型之前校验完整实体，错误配置不能留下部分更新的生成结果。
         com.levin.commons.rbac.RbacDataAttrMetadata.forType(entityClass);
+        DaoLogicGroupField.forType(entityClass);
         entityClass(entityClass);
 
         if (entityMapping == null) {
@@ -1239,41 +1243,7 @@ public final class ServiceModelCodeGenerator {
         //info 对象按完整的字段生成
         buildInfo(entityClass, fields, serviceDir, params);
 
-        //////////////////////////////////////////////////////////////
-        action = "query";
-
-        //请求对象会忽略继承的属性
-        fields = buildFieldModel(entityClass, entityMapping, true, action);
-//        postProcess(fields, action);
-
-        //查询相关的独立处理
-        buildEvt(entityClass, fields, serviceDir, params, action);
-
-        /////////////////////////////////////////////////////////////////////////////////
-        action = "create";
-
-        fields = buildFieldModel(entityClass, entityMapping, true, action);
-//        postProcess(fields, action);
-
-        buildEvt(entityClass, fields, serviceDir, params, action);
-
-        ////////////////////////////////////////////////////////
-        action = "update";
-
-        fields = buildFieldModel(entityClass, entityMapping, true, action);
-//        postProcess(fields, action);
-
-        buildEvt(entityClass, fields, serviceDir, params, action);
-
-        ////////////////////////////////////////////////////////
-        action = "delete";
-
-        fields = buildFieldModel(entityClass, entityMapping, true, action);
-//        postProcess(fields, action);
-
-        buildEvt(entityClass, fields, serviceDir, params, action);
-
-        /////////////////////////////////////////////////////////////////
+        fields = buildRequests(entityClass, entityMapping, serviceDir, params, serviceFields);
 
         buildService(entityClass, serviceFields, params);
 
@@ -1284,6 +1254,36 @@ public final class ServiceModelCodeGenerator {
             logger.info("实体类 {} 标记为仅内部访问，跳过控制器生成", entityClass.getName());
         }
 
+    }
+
+    /** 按原有动作顺序生成请求类，并插入每轮刷新的实体专属父类。 */
+    private static List<FieldModel> buildRequests(Class<?> entityClass, Map<String, Object> entityMapping,
+                                                   String serviceDir, Map<String, Object> params,
+                                                   List<FieldModel> infoFields) throws Exception {
+        Object commonsRequestBase = params.get("reqExtendClass");
+        String entityBaseRequestName = entityClass.getSimpleName() + "BaseRequest";
+        buildBaseRequest(entityClass, infoFields, serviceDir, params, entityBaseRequestName);
+        params.put("reqExtendClass", entityBaseRequestName + "<");
+
+        String action = "query";
+        List<FieldModel> fields = buildFieldModel(entityClass, entityMapping, true, action);
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        // 创建请求维持原有的 commons 父类。
+        params.put("reqExtendClass", commonsRequestBase);
+        action = "create";
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        params.put("reqExtendClass", entityBaseRequestName + "<");
+        action = "update";
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+        buildEvt(entityClass, fields, serviceDir, params, action);
+
+        action = "delete";
+        fields = buildFieldModel(entityClass, entityMapping, true, action);
+        buildEvt(entityClass, fields, serviceDir, params, action);
+        return fields;
     }
 
     static boolean shouldGenerateController(Class<?> entityClass) {
@@ -1510,6 +1510,10 @@ public final class ServiceModelCodeGenerator {
 
         if ("query".equalsIgnoreCase(type)) {
 
+            List<DaoLogicGroupField> logicGroupFields = DaoLogicGroupField.forType(entityClass);
+            paramsMap.put("daoLogicGroupNames", logicGroupFields.stream()
+                    .map(DaoLogicGroupField::getSourceFieldName).collect(Collectors.toList()));
+
             final String simpleQueryName = "SimpleQuery" + entityClass.getSimpleName() + "Req";
             final String queryName = "Query" + entityClass.getSimpleName() + "Req";
             Object reqExtendClass = paramsMap.get("reqExtendClass");
@@ -1561,6 +1565,45 @@ public final class ServiceModelCodeGenerator {
                     pkgName, entityClass.getSimpleName() + "IdReq", mapConsumer);
         }
 
+    }
+
+    private static void buildBaseRequest(Class<?> entityClass, List<FieldModel> fields, String serviceDir,
+                                         Map<String, Object> paramsMap, String className) throws Exception {
+        Object commonsBase = paramsMap.get("reqExtendClass");
+        genCode(entityClass, BASE_REQUEST_FTL, fields, serviceDir, servicePackage() + ".req", className, map -> {
+            map.putAll(paramsMap);
+            map.put("daoLogicGroupFields", DaoLogicGroupField.forType(entityClass));
+            Set<String> groupImports = new LinkedHashSet<>();
+            map.put("daoLogicGroupClassAnnotations", copiedDaoLogicGroupAnnotations(entityClass, groupImports));
+            map.put("daoLogicGroupClassImports", groupImports);
+            map.put("reqExtendClass", resolveGenericRequestExtendClass(commonsBase, "T"));
+            EntityCategory category = entityClass.getAnnotation(EntityCategory.class);
+            map.put("reqExtendClassImport", category != null && category.queryObjectExtendType() != Void.class
+                    ? category.queryObjectExtendType().getCanonicalName() : "");
+        });
+    }
+
+    private static List<String> copiedDaoLogicGroupAnnotations(Class<?> entityClass, Set<String> imports) {
+        Map<String, DaoLogicGroup> definitions = DaoLogicGroupField.definitionsForType(entityClass);
+        Map<String, String> source = new LinkedHashMap<>();
+        for (Class<?> type = entityClass; type != null && type != Object.class; type = type.getSuperclass()) {
+            CUnit unit = srcFileCompilationMap == null ? null : srcFileCompilationMap.get(type.getName());
+            if (unit == null) continue;
+            List<AnnotationExpr> annotations = (List<AnnotationExpr>) unit.type.getAnnotations().stream()
+                    .filter(annotation -> ((AnnotationExpr) annotation).getNameAsString().matches("(?:.*\\.)?DaoLogicGroup"))
+                    .collect(Collectors.toList());
+            DaoLogicGroup[] declared = type.getDeclaredAnnotationsByType(DaoLogicGroup.class);
+            if (annotations.size() != declared.length) continue;
+            for (int i = 0; i < declared.length; i++) {
+                AnnotationExpr annotation = annotations.get(i);
+                source.putIfAbsent(declared[i].name().trim(),
+                        annotation.getTokenRange().map(Object::toString).orElseGet(annotation::toString));
+            }
+            imports.addAll(getImportList(unit.compilationUnit));
+        }
+        return definitions.entrySet().stream()
+                .map(entry -> source.getOrDefault(entry.getKey(), DaoLogicGroupField.annotationSource(entry.getValue())))
+                .collect(Collectors.toList());
     }
 
     private static String resolveGenericRequestExtendClass(Object reqExtendClass, String typeParameter) {
@@ -3006,6 +3049,10 @@ public final class ServiceModelCodeGenerator {
 
 
     protected static boolean isMatch(String content, String action) {
+        // 仅由实体元数据驱动查询条件生成，不能原样复制标记注解到请求/Info 模型。
+        if (content.matches("(?s)@(?:com\\.levin\\.commons\\.dao\\.)?GenDaoLogicGroup(?:\\s|\\(|$).*")) {
+            return false;
+        }
         // 枚举范围属于源实体约束，不能作为 DTO 属性可见性注解复制。
         if (content.matches("(?s)@(?:com\\.levin\\.commons\\.rbac\\.)?RbacDataAttr(?:\\s|\\(|$).*")) {
             return false;

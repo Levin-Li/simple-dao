@@ -98,6 +98,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 </#macro>
 <#--  注解宏结束 -->
 <#list fields as field>
+<#if !(daoLogicGroupNames![])?seq_contains(field.name)>
 
    <#-- 是否有between注解 -->
     <#if field.hasBetweenAnnotation() || field.isDateTimeType() >
@@ -191,6 +192,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     Boolean load${field.name?cap_first};
     </#if>
     <#-- 字段结束 -->
+</#if>
 </#list>
 
 <#if pkField?exists>

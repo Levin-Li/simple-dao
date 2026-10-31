@@ -444,7 +444,7 @@ public class UpdateDaoImpl<T>
 
     @Override
     public List genFinalParamList() {
-        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, whereParamValues, getMandatoryParamValues(), getLastStatementParamValues());
+        return QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), updateParamValues, getWhereParamValues(), getMandatoryParamValues(), getLastStatementParamValues());
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
@@ -490,7 +490,7 @@ public class UpdateDaoImpl<T>
 
         final String jpql = replaceVar(ql.toString());
 
-        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql, QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), whereParamValues, getMandatoryParamValues(), getLastStatementParamValues()));
+        List<Object> resultList = dao.find(isNative(), null, 0, maxResult, jpql, QueryAnnotationUtil.flattenParams(null, getDaoContextValues(), getWhereParamValues(), getMandatoryParamValues(), getLastStatementParamValues()));
 
         return resultList.size();
     }

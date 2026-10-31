@@ -1275,13 +1275,13 @@ public class SelectDaoImpl<T>
 
         if (isNative()) {
             return count("Select Count(*) From (" + genQL(true) + ") AS cnt_tmp"
-                    , getDaoContextValues(), whereParamValues, getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
+                    , getDaoContextValues(), getWhereParamValues(), getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
         }
 
         if (hasStatColumns()) {
 
             Long resultCount = getDao().countQueryResult(false, genQL(true, true)
-                    , getDaoContextValues(), selectParamValues, whereParamValues, getMandatoryParamValues(), groupByParamValues, havingParamValues, getLastStatementParamValues());
+                    , getDaoContextValues(), selectParamValues, getWhereParamValues(), getMandatoryParamValues(), groupByParamValues, havingParamValues, getLastStatementParamValues());
 
             if (resultCount != null) {
                 return resultCount;
@@ -1315,7 +1315,7 @@ public class SelectDaoImpl<T>
         }
 
         return count("Select Count(" + column + ") " + genQL(true)
-                , getDaoContextValues(), whereParamValues, getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
+                , getDaoContextValues(), getWhereParamValues(), getMandatoryParamValues(), havingParamValues, getLastStatementParamValues());
     }
 
     /**
@@ -1346,7 +1346,7 @@ public class SelectDaoImpl<T>
         return QueryAnnotationUtil.flattenParams(null
                 , getDaoContextValues()
                 , selectParamValues
-                , whereParamValues
+                , getWhereParamValues()
                 , getMandatoryParamValues()
                 , groupByParamValues
                 , havingParamValues

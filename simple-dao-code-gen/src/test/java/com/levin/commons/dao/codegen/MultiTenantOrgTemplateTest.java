@@ -20,15 +20,27 @@ class MultiTenantOrgTemplateTest {
 
     @Test
     void generatedRequestShouldDelegateOrganizationAuthorizationToTheInjector() throws Exception {
+        Path base = tempDir.resolve("BaseReq.java");
+        Utils.copyAndReplace(tempDir.toString(), true,
+                "simple.dao/codegen/template/services/commons/req/BaseReq.java", base.toFile(),
+                Map.of("modulePackageName", "com.example.generated"));
         Path req = tempDir.resolve("MultiTenantOrgReq.java");
         Utils.copyAndReplace(tempDir.toString(), true,
                 "simple.dao/codegen/template/services/commons/req/MultiTenantOrgReq.java", req.toFile(),
                 Map.of("modulePackageName", "com.example.generated"));
 
         String source = Files.readString(req);
+        String baseSource = Files.readString(base);
 
         assertTrue(source.contains("组织数据访问权限由变量注入提供方预先完成校验"), source);
-        assertTrue(source.contains("InjectConst.IS_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(baseSource.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG"), baseSource);
+        assertTrue(baseSource.contains("InjectConst.IS_CAN_ACCESS_ALL_ORG"), baseSource);
+        assertTrue(baseSource.contains("public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG"), baseSource);
+        assertTrue(baseSource.contains("protected boolean isCanAccessAllOrg = false;"), baseSource);
+        assertTrue(baseSource.contains("@InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)"), baseSource);
+        assertFalse(source.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG"), source);
+        assertFalse(source.contains("protected boolean isCanAccessAllOrg = false;"), source);
+        assertTrue(source.contains("EXPR_NOT_IS_CAN_ACCESS_ALL_ORG"), source);
         assertTrue(source.contains("@In(value = InjectConst.ORG_ID, condition = \"orgIdListCondition(#_isUpdate)\")"), source);
         assertFalse(source.contains("paramExpr = \" 1 = 2 \""), source);
         assertTrue(source.contains("@Eq(condition = \"orgIdCondition(#_isQuery, #_isDelete)\""), source);
@@ -43,5 +55,6 @@ class MultiTenantOrgTemplateTest {
         assertFalse(source.contains("orgPublicCondition("), source);
         assertFalse(source.contains("orgSharedCondition("), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
+        assertDoesNotThrow(() -> StaticJavaParser.parse(baseSource), baseSource);
     }
 }

@@ -198,6 +198,24 @@ public class ExprNode<OP extends Serializable, E extends Serializable>
         return this;
     }
 
+    /** 临时进入已存在的分组节点，用于合并不相邻的同名条件。 */
+    ExprNode<OP, E> switchCurrentNodeTo(ExprNode<OP, E> node) {
+        ExprNode<OP, E> cursor = Objects.requireNonNull(node, "node");
+        while (cursor != this && cursor.parentNode != null) cursor = cursor.parentNode;
+        if (cursor != this) throw new IllegalArgumentException("node does not belong to this expression tree");
+        currentNode = node;
+        return this;
+    }
+
+    /** 把尚未挂入主树的局部条件子树接入逻辑组。 */
+    void attachSubtree(ExprNode<OP, E> child) {
+        if (child.parentNode != null && child.parentNode != this)
+            throw new IllegalArgumentException("expression subtree already belongs to another parent");
+        child.parentNode = this;
+        subNodes.add(child);
+    }
+
+
     /**
      * 获取根节点
      *
