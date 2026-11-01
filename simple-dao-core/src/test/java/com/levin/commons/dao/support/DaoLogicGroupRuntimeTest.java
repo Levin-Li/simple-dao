@@ -364,14 +364,20 @@ class DaoLogicGroupRuntimeTest {
     }
 
     @Test
-    void minimumCountsLogicalChildrenRatherThanPredicatesOrParameters() {
-        for (Object request : List.of(new LocalOrIsOneChild(), new OneInWithTwoValues())) {
-            SelectDaoImpl<Record> query = select(Record.class);
-            query.appendByQueryObj(request);
-            String sql = query.genFinalStatement();
-            assertTrue(sql.contains("1=2"), sql);
-            assertTrue(query.genFinalParamList().stream().noneMatch(String.class::isInstance));
-        }
+    void minimumCountsDetachedConditionsIndividuallyButInAsOne() {
+        SelectDaoImpl<Record> detached = select(Record.class);
+        detached.appendByQueryObj(new LocalOrIsOneChild());
+        String sql = detached.genFinalStatement();
+        assertTrue(sql.contains("r.userId ="), sql);
+        assertTrue(sql.contains("r.userId IS NULL"), sql);
+        assertFalse(sql.contains("1=2"), sql);
+        assertEquals(List.of("U1"), detached.genFinalParamList().stream()
+                .filter(String.class::isInstance).toList());
+
+        SelectDaoImpl<Record> in = select(Record.class);
+        in.appendByQueryObj(new OneInWithTwoValues());
+        assertTrue(in.genFinalStatement().contains("1=2"));
+        assertTrue(in.genFinalParamList().stream().noneMatch(String.class::isInstance));
     }
 
     @Test
@@ -396,11 +402,12 @@ class DaoLogicGroupRuntimeTest {
     }
 
     @Test
-    void localOrOnOneFieldRemainsNestedWithinNamedAndGroup() {
+    void groupedConditionsLeaveLocalOrAndJoinNamedAndGroupSeparately() {
         SelectDaoImpl<Record> query = select(Record.class);
         query.appendByQueryObj(new LocalOrWithinAndReq());
         String sql = query.genFinalStatement();
-        assertTrue(sql.contains(" OR "), sql);
+        assertTrue(sql.contains(" AND "), sql);
+        assertFalse(sql.contains(" OR "), sql);
         assertTrue(sql.contains("r.userId IS NULL"), sql);
         assertEquals(List.of("U1"), query.genFinalParamList().stream()
                 .filter(String.class::isInstance).toList());

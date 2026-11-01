@@ -4640,6 +4640,20 @@ class QueryRecordReq {
 
 组的 `condition` 在定义时求值一次：类级定义可读取请求对象属性（例如 `condition = "#enabled"`），字段级定义可读取当前字段值（例如 `condition = "#_fieldVal != null"`）。为假时组节点标记为忽略，成员和子组都不进入 SQL，且不执行 `unless`。组已启用、直接子元素数量少于 `minConditions` 时，使用无参数的原样 `unless` 表达式；没有 `unless` 则报错。`minConditions` 在构建查询时计数，不检查 SQL 最终匹配了多少数据库记录。
 
+条件注解指定 `group` 时，该条件独立加入目标组，不受字段所在的 `@AND` / `@OR` 节点及其 `condition` 控制；条件注解自身的 `condition` 仍然生效。未指定 `group` 的条件继续遵循原有逻辑节点。目标组及父组仍分别按自身配置决定是否生成。同一字段上的条件可以分别引用不同组。
+
+```java
+@DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR)
+class QueryRecordReq {
+    @OR(autoClose = true, condition = "false")
+    @Eq(value = "userId", group = "visible")
+    @Eq("state")
+    String value;
+}
+```
+
+在此例中，`userId` 满足自身条件时仍进入 `visible`；`state` 留在原位置，因局部 `@OR` 不成立而被忽略。
+
 组定义和成员只属于当前 DAO 实例：同名重复定义、条件引用不存在的组、缺失父组、自引用或循环父组均报错。新的 DAO 实例可以重新使用同一个组名。只有传入并解析了对应请求对象的 DAO 操作才使用这些组；单独传目标实体类不会读取其 `@DaoLogicGroup`。
 
 ## 实体字段逻辑分组生成

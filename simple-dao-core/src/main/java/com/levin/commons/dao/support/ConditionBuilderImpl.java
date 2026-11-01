@@ -136,7 +136,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     private final ExprNode whereExprRootNode = new ExprNode(AND.class.getSimpleName(), true);
     private ExprNode activeWhereRoot = whereExprRootNode;
-    private String activeFieldConditionGroup;
     private final Map<String, RuntimeLogicGroup> fieldLogicGroups = new LinkedHashMap<>();
     private final Map<String, List<ExprNode>> logicGroupMembers = new LinkedHashMap<>();
     private final Set<String> requiredLogicGroupNames = new LinkedHashSet<>();
@@ -2125,9 +2124,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         boolean previousNamedGroupValid = activeNamedGroupValid;
         ExprNode previousNode = activeWhereRoot.currentNode();
         ExprNode previousWhereRoot = activeWhereRoot;
-        String previousFieldConditionGroup = activeFieldConditionGroup;
-        ExprNode groupedFieldRoot = null;
-        String groupedFieldName = null;
         boolean enteredNamedGroup = false;
         try {
 
@@ -2140,19 +2136,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             //支持多个注解
             List<Annotation> logicAnnotations = QueryAnnotationUtil.getLogicAnnotation(name, varAnnotations);
 
-            Set<String> conditionGroups = conditionGroupNames(varAnnotations);
-            if (!conditionGroups.isEmpty() && !logicAnnotations.isEmpty()) {
-                if (conditionGroups.size() != 1 || logicAnnotations.stream().anyMatch(this::isNamedLogicGroup))
-                    throw new StatementBuildException("A local logic group requires one DAO condition group: " + name);
-                if (logicAnnotations.stream().anyMatch(annotation -> !isLogicGroupAutoClose(annotation))
-                        && findFirstMatched(varAnnotations, END.class) == null)
-                    throw new StatementBuildException("Grouped local logic must close on the same field: " + name);
-                activeFieldConditionGroup = conditionGroups.iterator().next();
-                groupedFieldName = activeFieldConditionGroup;
-                groupedFieldRoot = new ExprNode(AND.class.getSimpleName(), true);
-                activeWhereRoot = groupedFieldRoot;
-            }
-
             if (logicAnnotations.size() > 1 && logicAnnotations.stream().anyMatch(this::isNamedLogicGroup)) {
                 throw new StatementBuildException("Named logic group cannot share a field with another logic annotation: " + name);
             }
@@ -2160,6 +2143,8 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             enteredNamedGroup = logicAnnotations.stream().anyMatch(this::isNamedLogicGroup);
 
             logicAnnotations.forEach(logicAnnotation -> beginLogicGroup(bean, logicAnnotation, name, value));
+            ExprNode fieldNode = activeWhereRoot.currentNode();
+            int fieldNodeSize = fieldNode.getSubNodes().size();
 
             //可以多次逻辑组
             try {
@@ -2173,15 +2158,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                     return;
                 }
 
-                //当前节点是否有效
-                if (!activeNamedGroupValid || !activeWhereRoot.currentNode().isValid()) {
-                    return;
-                }
-
-                if (isQueryObject(fieldOrMethod, value)) {
+                // 显式指定组的条件不属于当前位置的逻辑节点，即使该节点无效也要处理。
+                boolean currentNodeValid = activeNamedGroupValid && activeWhereRoot.currentNode().isValid();
+                if (currentNodeValid && isQueryObject(fieldOrMethod, value)) {
                     reAppendByQueryObj(value);
-                } else {
+                } else if (currentNodeValid) {
                     processAttrWithoutLogic(bean, fieldOrMethod, varAnnotations, name, valueType, value);
+                } else if (!conditionGroupNames(varAnnotations).isEmpty()) {
+                    processAttrWithoutLogic(bean, fieldOrMethod, varAnnotations, name, valueType, value, true);
                 }
 
             } finally {
@@ -2191,7 +2175,16 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                         .filter(annotation -> !isNamedLogicGroup(annotation) && isLogicGroupAutoClose(annotation))
                         .forEachOrdered(logicAnnotation -> end());
 
-                endLogicGroup(bean, findFirstMatched(varAnnotations, END.class), value);
+                END endAnnotation = findFirstMatched(varAnnotations, END.class);
+                if (endAnnotation != null && !endAnnotation.containCurrentField()
+                        && !conditionGroupNames(varAnnotations).isEmpty()
+                        && fieldNode == activeWhereRoot.currentNode()
+                        && fieldNode.getSubNodes().size() == fieldNodeSize) {
+                    // 当前字段只有已抽离的条件，不能把前一个字段移到父节点。
+                    endLogic(true);
+                } else {
+                    endLogicGroup(bean, endAnnotation, value);
+                }
             }
 
             //结束逻辑分组
@@ -2202,10 +2195,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             activeNamedGroupValid = previousNamedGroupValid;
             elEvalFuncThreadLocal.set(null);
             activeWhereRoot = previousWhereRoot;
-            activeFieldConditionGroup = previousFieldConditionGroup;
-            if (groupedFieldRoot != null)
-                logicGroupMembers.computeIfAbsent(groupedFieldName, key -> new ArrayList<>())
-                        .add(groupedFieldRoot);
         }
     }
 
@@ -2469,6 +2458,11 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
      */
     protected void processAttrWithoutLogic(final Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, final String name
             , final ResolvableType valueType, Object value) {
+        processAttrWithoutLogic(bean, fieldOrMethod, varAnnotations, name, valueType, value, false);
+    }
+
+    private void processAttrWithoutLogic(final Object bean, AnnotatedElement fieldOrMethod, Annotation[] varAnnotations, final String name
+            , final ResolvableType valueType, Object value, boolean groupedOnly) {
 
         if (isIgnore(fieldOrMethod, varAnnotations)) {
             return;
@@ -2502,7 +2496,11 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         //合并组件的闭包
         final Consumer<Annotation> addAnnotationConsumer = annotation -> {
 
-            requiredLogicGroupNames.addAll(conditionGroupNames(new Annotation[]{annotation}));
+            Set<String> groupNames = conditionGroupNames(new Annotation[]{annotation});
+            requiredLogicGroupNames.addAll(groupNames);
+            if (groupedOnly && groupNames.isEmpty()) {
+                return;
+            }
 
             //如果有任何一个 Dao 注解
             hasAnyDaoAnnotation.set(true);
@@ -2516,12 +2514,14 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             if (annotation instanceof CList) {
                 CList clist = (CList) annotation;
                 Arrays.stream(clist.value())
-                        .filter(an -> isValid(an, bean, name, value))
+                        .filter(an -> (!groupedOnly || !conditionGroupNames(new Annotation[]{an}).isEmpty())
+                                && isValid(an, bean, name, value))
                         .forEach(daoAnnotations::add);
             } else if (annotation instanceof OrderBy.List) {
                 daoAnnotations.addAll(Arrays.asList(((OrderBy.List) annotation).value()));
             } else if (autoConsumerIfListAnnotation(annotation, an -> {
-                if (isValid(an, bean, name, value)) {
+                if ((!groupedOnly || !conditionGroupNames(new Annotation[]{an}).isEmpty())
+                        && isValid(an, bean, name, value)) {
                     daoAnnotations.add(an);
                 }
             })) {
@@ -2536,13 +2536,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         findNeedProcessDaoAnnotations(fieldOrMethod, varAnnotations).forEach(addAnnotationConsumer);
 
         //如果字段没有注解，则尝试获取类上面的注解
-        if (!hasAnyDaoAnnotation.get() && bean != null) {
+        if (!groupedOnly && !hasAnyDaoAnnotation.get() && bean != null) {
             //扫描类级别注解, 只考虑当前类,不考层级
             findNeedProcessDaoAnnotations(fieldOrMethod, bean.getClass().getAnnotations()).forEach(addAnnotationConsumer);
         }
 
         //如果没有注解,特殊情况
-        if (!hasAnyDaoAnnotation.get() && value != null) {
+        if (!groupedOnly && !hasAnyDaoAnnotation.get() && value != null) {
 
             if (wrapperParamValueByAnno || isArray || isIterable || isSimpleValueType || isMap) {
 
@@ -2564,17 +2564,16 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
         for (Annotation annotation : daoAnnotations) {
 
+            if (groupedOnly && !hasText(ClassUtils.getValue(annotation, "group", false))) {
+                continue;
+            }
+
             if (annotation instanceof DaoAlwaysFalse) {
                 String groupName = ((DaoAlwaysFalse) annotation).group().trim();
                 if (hasText(groupName)) {
-                    if (groupName.equals(activeFieldConditionGroup)) {
-                        activeWhereRoot.currentNode().add(false,
-                                new WhereCondition("1=2", Collections.emptyList(), false));
-                    } else {
-                        ExprNode predicate = new ExprNode(AND.class.getSimpleName(), true);
-                        predicate.add(false, new WhereCondition("1=2", Collections.emptyList(), false));
-                        logicGroupMembers.computeIfAbsent(groupName, key -> new ArrayList<>()).add(predicate);
-                    }
+                    ExprNode predicate = new ExprNode(AND.class.getSimpleName(), true);
+                    predicate.add(false, new WhereCondition("1=2", Collections.emptyList(), false));
+                    logicGroupMembers.computeIfAbsent(groupName, key -> new ArrayList<>()).add(predicate);
                 } else {
                     activeWhereRoot.currentNode().add(false,
                             new WhereCondition("1=2", Collections.emptyList(), false));
@@ -2724,11 +2723,6 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             if (hasText(groupName)) {
                 if (Boolean.TRUE.equals(ClassUtils.getValue(opAnnotation, E_C.having, false)))
                     throw new StatementBuildException("DAO logic group condition cannot use HAVING: " + name);
-                if (groupName.trim().equals(activeFieldConditionGroup)) {
-                    processWhereCondition(bean, fieldOrMethod, entityAttrType, name, valueType, value,
-                            isWrapperParamValue, opAnnotation, varAnnotations);
-                    return;
-                }
                 ExprNode predicate = new ExprNode(AND.class.getSimpleName(), true);
                 ExprNode previousRoot = activeWhereRoot;
                 activeWhereRoot = predicate;

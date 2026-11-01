@@ -771,7 +771,7 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 
 ### 运行时 DAO 逻辑组
 
-在任意请求对象的类或字段上用 `@DaoLogicGroup` 定义组，再用 `@Eq(group = "名称")`、`@In(group = "名称")` 等条件注解加入组。`condition` 控制整个组是否启用；组启用后，成立的直接子元素少于 `minConditions` 时使用 `unless`，未配置则报错。`parent` 可建立子组。完整示例和计数规则见[运行时 DAO 逻辑组](manual.md#运行时-dao-逻辑组)。
+在任意请求对象的类或字段上用 `@DaoLogicGroup` 定义组，再用 `@Eq(group = "名称")`、`@In(group = "名称")` 等条件注解加入组。指定 `group` 的条件独立进入目标组，不受字段所在 `AND` / `OR` 节点控制，条件自身及目标组的 `condition` 仍然生效。`condition` 控制整个组是否启用；组启用后，成立的直接子元素少于 `minConditions` 时使用 `unless`，未配置则报错。`parent` 可建立子组。完整示例和计数规则见[运行时 DAO 逻辑组](manual.md#运行时-dao-逻辑组)。
 
 ### 实体字段逻辑分组生成
 
