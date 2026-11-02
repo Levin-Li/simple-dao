@@ -3192,7 +3192,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             comparisons.add("@ != $" + variable);
             passing.add(getParamPlaceholder() + " as " + variable);
         }
-        String document = "cast(" + column + " as String)";
+        String document = "cast(" + column + " as json)";
         return "json_exists(" + document + ", '$[*]') AND not json_exists(" + document
                 + ", '$[*]?(@.type() != \"string\" || (" + String.join(" && ", comparisons) + "))' passing "
                 + String.join(", ", passing) + ")";

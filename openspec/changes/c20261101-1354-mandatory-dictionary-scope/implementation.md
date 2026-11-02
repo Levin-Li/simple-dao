@@ -17,3 +17,6 @@
 
 1. Simple DAO 不查字典目录；接入方负责验证字典 key、当前租户、禁用状态、实际字典码、字段映射及角色完整许可。`@MandatoryJsonStringArray` 只声明强制范围语义，仍须把实体字段实际映射为 JSON 列。
 2. JSON 全成员谓词仅在本地 PostgreSQL/Hibernate 7 真实执行过；其它方言、任意原生 SQL、外部 EntityManager、共享缓存及关联对象懒加载不在自动保护范围。配置错误或方言不支持时必须失败，不退化为宽松查询。
+## PostgreSQL JSON 输入兼容修复（2026-11-02）
+
+JSON 查询和强制列表范围将文档输入转换为 Hibernate JSON 类型，避免 PostgreSQL 的 `jsonb_path_exists` 接收到 varchar；该方式同时支持原生 JSON 和 Hypersistence 列表映射。隔离 PostgreSQL 16 回归：核心测试 35 项及示例测试 116 项无失败，其中 MySQL 专属 `UPDATE LIMIT` 场景在 PostgreSQL 按前置条件跳过。

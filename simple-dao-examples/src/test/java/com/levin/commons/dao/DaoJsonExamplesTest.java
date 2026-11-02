@@ -1376,7 +1376,7 @@ class DaoJsonExamplesTest extends DaoExamplesTestSupport {
                         .setHasLog(Boolean.TRUE))
                 .genFinalStatement();
 
-        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"),
+        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as json), '$[*]?(@ == $value)' passing :? as value)"),
                 "Contains 注解的 wildcard JSON 路径应生成数组元素精确匹配条件");
         Assert.isTrue(statement.contains("json_exists(") && statement.contains("'$[0].logText'"), "Exists 注解应生成 json_exists");
         Assert.isTrue(statement.contains("COALESCE(cast(json_query(") && statement.contains("json_value("), "Select 注解应同时兼容对象/数组和标量 JSON 路径");
@@ -1436,7 +1436,7 @@ class DaoJsonExamplesTest extends DaoExamplesTestSupport {
                 .genFinalStatement();
 
         Assert.isTrue(statement.contains("u.logs = json_set(u.logs, '$[0].logText'"), "Update 注解应生成 json_set 更新语句");
-        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as String), '$[*]?(@ == $value)' passing :? as value)"),
+        Assert.isTrue(statement.contains("json_exists(cast(u.roleList as json), '$[*]?(@ == $value)' passing :? as value)"),
                 "Update 场景的 Contains 注解应支持数组元素精确匹配");
     }
 

@@ -12,12 +12,12 @@ public abstract class JsonExprSupport {
             = "https://docs.jboss.org/hibernate/orm/7.0/javadocs/org/hibernate/dialect/function/json/package-summary.html";
 
     /**
-     * 将实体 JSON 字段转换为 Hibernate JSON 查询函数可接受的文本表达式。
+     * 将实体 JSON 字段转换为 Hibernate JSON 查询函数可接受的 JSON 表达式。
      * 来源文档：Hibernate ORM 7 User Guide 的 HQL JSON 函数章节要求开启并使用 Hibernate 标准 JSON 函数；
      * 参考：{@value #HIBERNATE_USER_GUIDE_JSON_FUNCTIONS}。
      */
     private static String queryJsonExpr(String fieldExpr) {
-        return "cast(" + fieldExpr + " as String)";
+        return "cast(" + fieldExpr + " as json)";
     }
 
     /**

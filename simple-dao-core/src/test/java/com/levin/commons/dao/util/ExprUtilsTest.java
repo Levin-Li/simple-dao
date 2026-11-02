@@ -163,11 +163,11 @@ class ExprUtilsTest {
         assertEquals("json_object('name' value u.name)",
                 JsonExprSupport.jsonObjectExpr(JsonExprSupport.jsonObjectEntryExpr("'name'", "u.name")));
         assertEquals("json_array(:?,:?)", JsonExprSupport.jsonArrayExpr(":?", ":?"));
-        assertEquals("json_value(cast(u.ext as String), '$.name' returning String null on error)",
+        assertEquals("json_value(cast(u.ext as json), '$.name' returning String null on error)",
                 JsonExprSupport.jsonValueExpr("u.ext", "$.name", "returning String", "null on error"));
-        assertEquals("json_query(cast(u.ext as String), '$.items' with wrapper)",
+        assertEquals("json_query(cast(u.ext as json), '$.items' with wrapper)",
                 JsonExprSupport.jsonQueryExpr("u.ext", "$.items", "with wrapper"));
-        assertEquals("json_exists(cast(u.ext as String), '$.items[0]' false on error)",
+        assertEquals("json_exists(cast(u.ext as json), '$.items[0]' false on error)",
                 JsonExprSupport.jsonExistsExpr("u.ext", "$.items[0]", "false on error"));
         assertEquals("json_set(u.ext, '$.name', :?)", JsonExprSupport.jsonSetExpr("u.ext", "$.name", ":?"));
         assertEquals("json_remove(u.ext, '$.name', '$.age')", JsonExprSupport.jsonRemoveExpr("u.ext", "$.name", "$.age"));
