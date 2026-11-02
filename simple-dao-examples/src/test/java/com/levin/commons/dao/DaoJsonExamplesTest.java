@@ -6,6 +6,9 @@ import cn.hutool.core.map.MapUtil;
 import com.google.gson.Gson;
 import com.levin.commons.dao.annotation.C;
 import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.Eq;
+import com.levin.commons.dao.annotation.logic.OR;
+import com.levin.commons.dao.annotation.misc.ForceSplitCondition;
 import com.levin.commons.dao.annotation.Op;
 import com.levin.commons.dao.annotation.Where;
 import com.levin.commons.dao.annotation.order.OrderBy;
@@ -74,6 +77,33 @@ import java.util.stream.Stream;
  * DAO JSON 能力的端到端示例。
  */
 class DaoJsonExamplesTest extends DaoExamplesTestSupport {
+
+    @Data
+    @Accessors(chain = true)
+    @TargetOption(entityClass = User.class, alias = "u")
+    static class JsonArrayEqQuery {
+        @ForceSplitCondition
+        @OR(autoClose = true)
+        @Eq(value = "roleList", jsonPath = "$[*]")
+        List<String> roles;
+    }
+
+    @Test
+    public void testWildcardEqAnnotationMatchesArrayElementsInDatabase() {
+        // 使用实际 JSON 字符串数组和包含引号、反斜杠的参数验证精确匹配。
+        dao.deleteFrom(Task.class).disableSafeMode().delete();
+        dao.deleteFrom(User.class).disableSafeMode().delete();
+        dao.deleteFrom(Group.class).disableSafeMode().delete();
+        String value = "R_'quoted\\value_" + System.nanoTime();
+        User user = prepareJsonPathUser(value, null);
+
+        Assert.isTrue(dao.selectFrom(User.class, "u").appendByQueryObj(new JsonArrayEqQuery().setRoles(List.of(value)))
+                .eq(User::getId, user.getId()).count() == 1, "单值应精确命中 JSON 数组元素");
+        Assert.isTrue(dao.selectFrom(User.class, "u").appendByQueryObj(new JsonArrayEqQuery().setRoles(List.of("missing", value)))
+                .eq(User::getId, user.getId()).count() == 1, "多值应按 OR 命中任一元素");
+        Assert.isTrue(dao.selectFrom(User.class, "u").appendByQueryObj(new JsonArrayEqQuery().setRoles(List.of(value.substring(1))))
+                .eq(User::getId, user.getId()).count() == 0, "部分字符串不能误匹配");
+    }
     @Test
     public void testIncrementModeUpdateDTO() throws Exception {
 

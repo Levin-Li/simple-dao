@@ -4,6 +4,7 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.PhysicalNamingStrategy;
 import com.levin.commons.dao.PrimitiveValueWrapper;
 import com.levin.commons.dao.annotation.Contains;
+import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.logic.OR;
 import com.levin.commons.dao.annotation.misc.ForceSplitCondition;
 import com.levin.commons.dao.annotation.misc.PrimitiveValue;
@@ -20,6 +21,28 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JsonPrimitiveAnnotationQueryTest {
+
+    @Test
+    void equalWildcardSplitsIntoExactJsonElementConditions() {
+        JpaDaoImpl jpaDao = new JpaDaoImpl();
+        SelectDaoImpl<TestUser> dao = new SelectDaoImpl<>(primitiveAwareStub(jpaDao), false, TestUser.class, "u");
+        String statement = dao.appendByQueryObj(new EqualArrayQuery().setValues(List.of("exact", "quote'\\test")))
+                .genFinalStatement();
+        assertEquals(2, countOccurrences(statement, "json_exists("), statement);
+        assertFalse(statement.contains("json_query("), statement);
+        assertTrue(statement.toLowerCase().contains(" or "), statement);
+        assertTrue(dao.genFinalParamList().stream()
+                .map(value -> value instanceof PrimitiveValueWrapper<?> wrapper ? wrapper.get() : value)
+                .anyMatch("quote'\\test"::equals));
+    }
+
+    static class EqualArrayQuery {
+        @ForceSplitCondition
+        @OR(autoClose = true)
+        @Eq(value = "domainList", jsonPath = "$[*]")
+        List<String> values;
+        EqualArrayQuery setValues(List<String> values) { this.values = values; return this; }
+    }
 
     @Test
     void queryWithoutPrimitiveValueStillTreatsJdbcTypeCodeCollectionAsWholeParameter() throws Exception {

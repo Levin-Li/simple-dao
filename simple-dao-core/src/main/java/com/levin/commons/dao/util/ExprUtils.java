@@ -187,7 +187,8 @@ public abstract class ExprUtils {
 
             if (!incrementUpdate) {
                 if (jsonPathSpec.isWildcard()) {
-                    if (Op.Contains.equals(op) || Op.NotContains.equals(op)) {
+                    if (Op.Contains.equals(op) || Op.NotContains.equals(op) || Op.Eq.equals(op)) {
+                        // 数组通配路径的相等表示任一元素精确相等，不能把多值 JSON 结果作为标量比较。
                         jsonArrayContainsFieldExpr = fieldExpr;
                     } else {
                         fieldExpr = JsonExprSupport.jsonQueryExpr(fieldExpr, jsonPathSpec.getRawPath());

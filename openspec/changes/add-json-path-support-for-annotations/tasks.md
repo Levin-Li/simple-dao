@@ -21,3 +21,5 @@
 - [x] 4.1 补充 OpenSpec change 文档与 runtime spec delta
 - [x] 4.2 执行 `openspec validate`
 - [x] 4.3 执行核心单测与 examples JSON 路径集成测试
+- [x] 修复 `@Eq(jsonPath="$[*]")` 的 JSON 数组元素精确匹配，覆盖生成 DTO 的单值、多值 OR、特殊字符及真实 PostgreSQL 查询。
+  - 2026-11-03：隔离 PostgreSQL 验证单值、多值 OR、带引号和反斜杠参数及非精确值；核心测试 29 项和示例测试 114 项通过，示例中 1 项 MySQL 专有语法在 PostgreSQL 按条件跳过。

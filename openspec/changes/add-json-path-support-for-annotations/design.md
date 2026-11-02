@@ -68,5 +68,5 @@
 ## Risks / Trade-offs
 
 - `@Select` 的非 wildcard 路径同时包一层 `json_query/json_value`，表达式会比单纯标量提取更长，但能兼容对象、数组与标量结果。
-- wildcard where 统一走 `json_query`，不同数据库对返回值再参与 like/eq 的细节可能存在差异，但当前运行边界是 Hibernate 7 负责下推。
+- wildcard 精确相等 `@Eq` 按数组元素包含生成 `json_exists`，避免将集合子查询作为标量及将普通字符串绑定为 JSON；其他原有操作仍保持既有规则。配合 `@ForceSplitCondition` 保持多个候选的既有逻辑分组语义。
 - examples 集成测试依赖当前 Boot 4 测试基线，若后续示例模块继续裁剪测试依赖，需要同步维护这些最小测试依赖。

@@ -3773,6 +3773,8 @@ List<User> admins = dao.findByQueryObj(
 
 含义：在 `roleList` JSON 数组中匹配包含 `admin` 的元素。
 
+`@Eq(value = "roleList", jsonPath = "$[*]")` 同样按数组元素精确相等匹配，参数使用普通字符串，不需要自行编码成 JSON。对于多选条件，可配合 `@ForceSplitCondition` 和 `@OR(autoClose = true)`；多个候选值命中任意一个即匹配。该规则适用于注解路径中的 `[*]`，不改变 `@Eq` 的普通字段比较。
+
 ### 15.2 JSON 字段存在性查询
 
 ```java

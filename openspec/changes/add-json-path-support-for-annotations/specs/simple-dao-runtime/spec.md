@@ -33,3 +33,11 @@
 - **THEN** JSON 路径相关主代码和测试代码必须能够通过编译
 - **AND** 运行时必须直接使用 Hibernate 7 标准 JSON 函数
 - **AND** 示例模块必须具备执行 JSON 路径集成测试所需的最小测试依赖
+### Requirement: JSON 通配路径相等按元素精确匹配
+
+`@Eq(jsonPath="$[*]")` MUST 判断数组任意元素与参数精确相等，不得把多行 JSON 结果当作标量或要求调用者传入 JSON 字面量。
+
+#### Scenario: 生成查询对象多值条件
+
+- **WHEN** 带 `@ForceSplitCondition` 和 `@OR` 的 `@Eq(jsonPath="$[*]")` 接收多个字符串
+- **THEN** 任一数组元素与任一候选精确相等的记录可匹配，参数中的特殊字符安全绑定。
