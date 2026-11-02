@@ -1,8 +1,13 @@
 package com.levin.commons.dao.domain;
 
 import com.levin.commons.dao.EntityOption;
+import com.levin.commons.dao.MandatoryJsonStringArray;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.List;
 
 /** Executable example for application-provided mandatory enum scopes. */
 @Data
@@ -26,5 +31,10 @@ public class ScopePartner {
     @Enumerated(EnumType.STRING) private Region region;
     @Enumerated(EnumType.ORDINAL) private Rating rating;
     private String name;
+    private String categoryCode;
+    private Integer tier;
+    @MandatoryJsonStringArray
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> industries;
     private Boolean deleted = false;
 }

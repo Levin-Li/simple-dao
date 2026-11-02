@@ -4,9 +4,9 @@ import java.util.*;
 
 /**
  * 受信的不可变记录范围。
- * <p>各分支之间取并集，同一分支内各枚举属性取交集；空许可不得解释为不限制。</p>
+ * <p>各分支之间取并集，同一分支内各受控属性取交集；空许可不得解释为不限制。</p>
  */
-@io.swagger.v3.oas.annotations.media.Schema(description = "服务端强制枚举数据范围，分支OR、属性AND、值IN；不属于客户端请求模型")
+@io.swagger.v3.oas.annotations.media.Schema(description = "服务端强制数据范围，分支OR、属性AND、值IN；不属于客户端请求模型")
 public final class MandatoryCondition {
     private enum State { UNRESTRICTED, DENY, LIMITED }
     private static final MandatoryCondition UNRESTRICTED = new MandatoryCondition(State.UNRESTRICTED, List.of());
@@ -66,9 +66,9 @@ public final class MandatoryCondition {
     }
 
     /**
-     * 复制并规范化枚举授权分支。
+     * 复制并规范化枚举及受信字典标量授权分支。
      * <p>空列表或仅含空值集合的分支表示拒绝；空映射表示无字段限制。
-     * 属性仅允许直接实体属性名，值必须为枚举常量。</p>
+     * 属性仅允许直接实体属性名，值必须为同类型枚举常量或不可变标量。</p>
      */
     public static MandatoryCondition ofBranches(List<? extends Map<String, ? extends Collection<?>>> branches) {
         Objects.requireNonNull(branches, "branches");
@@ -84,10 +84,21 @@ public final class MandatoryCondition {
                     throw new IllegalArgumentException("Mandatory condition requires a direct entity property: " + field);
                 Collection<?> values = Objects.requireNonNull(entry.getValue(), "values");
                 if (values.isEmpty()) { impossible = true; break; }
-                // 仅接受不可变枚举常量，客户端文本不能被解释为SQL。
-                if (values.stream().anyMatch(value -> !(value instanceof Enum<?>)))
-                    throw new IllegalArgumentException("Mandatory condition values must be enum constants");
-                List<?> ordered = values.stream().distinct().sorted(Comparator.comparing(value -> ((Enum<?>) value).name())).toList();
+                // 值只能由受信提供器给出；严格限制类型并阻断混合类型和可变对象。
+                Class<?> valueType = null;
+                for (Object value : values) {
+                    if (value == null || !(value instanceof Enum<?> || value instanceof String
+                            || value instanceof Integer || value instanceof Long))
+                        throw new IllegalArgumentException("Mandatory condition value type is unsupported");
+                    Class<?> currentType = value instanceof Enum<?> ? ((Enum<?>) value).getDeclaringClass() : value.getClass();
+                    if (valueType != null && valueType != currentType)
+                        throw new IllegalArgumentException("Mandatory condition values must share one type");
+                    if (value instanceof String && ((String) value).isBlank())
+                        throw new IllegalArgumentException("Mandatory condition string value is blank");
+                    valueType = currentType;
+                }
+                List<?> ordered = values.stream().distinct().sorted(Comparator.comparing(value ->
+                        value instanceof Enum<?> ? ((Enum<?>) value).name() : String.valueOf(value))).toList();
                 copy.put(field, ordered);
             }
             if (!impossible) result.add(Collections.unmodifiableMap(copy));

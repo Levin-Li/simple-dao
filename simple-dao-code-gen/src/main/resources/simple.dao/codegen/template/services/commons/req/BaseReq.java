@@ -320,7 +320,22 @@ public abstract class BaseReq implements ServiceReq {
         return (T) this;
     }
 
-    /** 将当前请求整体导出为 DAO 上下文变量，供后续处理对象跨类引用。 */
+    /**
+     * 将当前请求对象导出为 DAO 上下文变量 {@code _req}。
+     * 同一个 DAO 构建过程中，先追加本请求，再追加其他查询、统计或更新对象，
+     * 后续对象的注解表达式即可通过 {@code #_req} 读取本请求的属性或方法。例如：
+     * <pre>
+     * dao.selectFrom(Entity.class).appendByQueryObj(request).appendByQueryObj(otherQuery);
+     *
+     * // otherQuery 中的字段：
+     * &#64;Eq(value = "ownerId", condition = "#_req.isTenantUser()",
+     *     paramExpr = "#_req.get_currentUserId()")
+     * boolean onlyCurrentUser;
+     * </pre>
+     * {@code _req} 是整个请求对象；条件参数应读取其中具体的属性值。
+     * 该变量属于当前 DAO 构建上下文，其他 DAO 实例需要各自追加请求对象。
+     * 请求自身的表达式可直接引用自身属性或方法。
+     */
     @CtxVar(varName = "_req")
     public <T extends BaseReq> T getRequestContext() {
         return (T)this;

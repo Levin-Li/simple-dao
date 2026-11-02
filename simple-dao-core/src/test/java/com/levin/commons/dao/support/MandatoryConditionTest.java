@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MandatoryConditionTest {
     enum Kind { Customer, Supplier }
     enum Region { East, South }
-    @Entity static class Partner { Long id; Kind kind; Region region; String name; }
+    @Entity static class Partner { Long id; Kind kind; Region region; String name; Integer tier; @MandatoryJsonStringArray List<String> tags; List<String> unmarkedTags; @MandatoryJsonStringArray List<Integer> invalidTags; }
     @AfterEach void clear() { MandatoryConditions.setProvider(null); }
     private MandatoryCondition scope() {
         return MandatoryCondition.ofBranches(List.of(Map.of("kind",List.of(Kind.Customer),"region",List.of(Region.East)),
@@ -22,13 +22,50 @@ class MandatoryConditionTest {
         SelectDaoImpl<Partner> dao = new SelectDaoImpl<>(mini(), false, Partner.class,"p");
         dao.disableSafeMode(); return dao;
     }
-    @Test void immutableDnfRetainsCombinationsAndRejectsNonEnums() {
+    @Test void immutableDnfRetainsCombinationsAndRejectsUnsupportedValues() {
         Map<String,Collection<?>> branch = new HashMap<>(); branch.put("kind",new ArrayList<>(List.of(Kind.Customer)));
         MandatoryCondition value = MandatoryCondition.ofBranches(List.of(branch,branch));
         branch.clear(); assertEquals(1,value.getBranches().size());
         assertThrows(UnsupportedOperationException.class,()->value.getBranches().clear());
-        assertThrows(IllegalArgumentException.class,()->MandatoryCondition.ofBranches(List.of(Map.of("kind",List.of("Customer")))));
+        assertEquals(List.of("Customer"), MandatoryCondition.ofBranches(List.of(Map.of("name", List.of("Customer")))).getBranches().get(0).get("name"));
+        assertEquals(List.of(1), MandatoryCondition.ofBranches(List.of(Map.of("tier", List.of(1)))).getBranches().get(0).get("tier"));
+        assertThrows(IllegalArgumentException.class,()->MandatoryCondition.ofBranches(List.of(Map.of("kind",List.of(new Object())))));
+        assertThrows(IllegalArgumentException.class,()->MandatoryCondition.ofBranches(List.of(Map.of("tier",List.of(1, "2")))));
         assertTrue(MandatoryCondition.ofBranches(List.of(Map.of("kind",List.of()))).isDenied());
+    }
+    @Test void scalarDictionaryValuesUseBoundParametersAndEntityTypes() {
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(
+                Map.of("name", List.of("Customer", "Supplier"), "tier", List.of(1, 2)))));
+        SelectDaoImpl<Partner> dao = select();
+        String statement = dao.genFinalStatement();
+        assertTrue(statement.contains("p.name IN"), statement);
+        assertTrue(statement.contains("p.tier IN"), statement);
+        assertEquals(List.of("Customer", "Supplier", 1, 2), values(dao.genFinalParamList()));
+    }
+    @Test void scalarDictionaryValueTypeMustMatchEntityProperty() {
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(Map.of("tier", List.of("1")))));
+        assertThrows(DaoSecurityException.class, () -> select().genFinalStatement());
+    }
+    @Test void jsonStringListRequiresEveryStoredMemberToBeAllowed() {
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(Map.of("tags", List.of("A", "B")))));
+        SelectDaoImpl<Partner> dao = select();
+        String statement = dao.genFinalStatement();
+        assertTrue(statement.contains("json_exists"), statement);
+        assertTrue(statement.contains("not json_exists"), statement);
+        assertEquals(List.of("A", "B"), values(dao.genFinalParamList()));
+    }
+    @Test void jsonListRequiresExplicitMarkerAndStringElements() {
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(Map.of("unmarkedTags", List.of("A")))));
+        assertThrows(DaoSecurityException.class, () -> select().genFinalStatement());
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(Map.of("invalidTags", List.of("A")))));
+        assertThrows(DaoSecurityException.class, () -> select().genFinalStatement());
+    }
+    @Test void scalarDictionaryValuesRemainBoundParameters() {
+        String adversarial = "x' OR 1=1 --";
+        MandatoryConditions.setProvider((entity, action) -> MandatoryCondition.ofBranches(List.of(Map.of("name", List.of(adversarial)))));
+        SelectDaoImpl<Partner> dao = select();
+        assertFalse(dao.genFinalStatement().contains(adversarial));
+        assertEquals(List.of(adversarial), values(dao.genFinalParamList()));
     }
     @Test void independentProvidersIntersectWithoutFlatteningBranches() {
         MandatoryCondition left=scope();

@@ -758,11 +758,28 @@ public class JpaDaoImpl
                 for (Map.Entry<String, List<?>> entry : branch.entrySet()) {
                     Object value;
                     Field field = ReflectionUtils.findField(type, entry.getKey());
-                    if (field == null || !field.getType().isEnum())
-                        throw new DaoSecurityException("Mandatory scope property is not enum: " + entry.getKey());
+                    if (field == null)
+                        throw new DaoSecurityException("Mandatory scope property does not exist: " + entry.getKey());
+                    Class<?> fieldType = org.springframework.util.ClassUtils.resolvePrimitiveIfNecessary(field.getType());
+                    boolean jsonArray = field.isAnnotationPresent(MandatoryJsonStringArray.class)
+                            && java.util.List.class.isAssignableFrom(fieldType)
+                            && ResolvableType.forField(field).getGeneric(0).resolve() == String.class;
+                    if (!jsonArray && fieldType != String.class && fieldType != Integer.class
+                            && fieldType != Long.class && !fieldType.isEnum())
+                        throw new DaoSecurityException("Mandatory scope property type is unsupported: " + entry.getKey());
+                    if (entry.getValue().stream().anyMatch(item ->
+                            jsonArray ? !(item instanceof String) : !fieldType.isInstance(item)))
+                        throw new DaoSecurityException("Mandatory scope value type mismatch: " + entry.getKey());
                     if (bean.isReadableProperty(entry.getKey())) value = bean.getPropertyValue(entry.getKey());
                     else { ReflectionUtils.makeAccessible(field); value = ReflectionUtils.getField(field, entity); }
-                    if (!entry.getValue().contains(value)) { allowed = false; break; }
+                    if (jsonArray) {
+                        if (!(value instanceof List<?>) || ((List<?>) value).isEmpty()
+                                || ((List<?>) value).stream().anyMatch(item ->
+                                !(item instanceof String) || !entry.getValue().contains(item))) {
+                            allowed = false;
+                            break;
+                        }
+                    } else if (!entry.getValue().contains(value)) { allowed = false; break; }
                 }
                 if (allowed) return;
             }

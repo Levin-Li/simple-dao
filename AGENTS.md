@@ -44,3 +44,5 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 
 强制条件扩展：[设计](openspec/changes/c20261018-1227-mandatory-enum-scope/design.md)、[任务](openspec/changes/c20261018-1227-mandatory-enum-scope/tasks.md)。
 强制条件扩展实现：[模块落点与验证](openspec/changes/c20261018-1227-mandatory-enum-scope/implementation.md)。
+
+受信字典标量与 JSON 字符串列表强制范围：[需求](openspec/changes/c20261101-1354-mandatory-dictionary-scope/proposal.md)、[设计](openspec/changes/c20261101-1354-mandatory-dictionary-scope/design.md)、[验收规范](openspec/changes/c20261101-1354-mandatory-dictionary-scope/specs/mandatory-dictionary-scope/spec.md)、[任务](openspec/changes/c20261101-1354-mandatory-dictionary-scope/tasks.md)、[实现与验证](openspec/changes/c20261101-1354-mandatory-dictionary-scope/implementation.md)、[使用说明](manual.md#受信的枚举记录范围mandatorycondition)。

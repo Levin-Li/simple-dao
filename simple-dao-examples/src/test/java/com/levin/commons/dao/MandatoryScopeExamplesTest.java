@@ -16,6 +16,16 @@ class MandatoryScopeExamplesTest extends DaoExamplesTestSupport {
         ScopePartner entity = new ScopePartner(); entity.setKind(kind); entity.setRegion(region); entity.setName("scope-"+kind+region);
         return dao.create(entity,false);
     }
+    private ScopePartner createWithDictionary(String code, Integer tier, List<String> industries) {
+        ScopePartner entity = new ScopePartner();
+        entity.setKind(Kind.Customer);
+        entity.setRegion(Region.East);
+        entity.setName("dictionary-" + code);
+        entity.setCategoryCode(code);
+        entity.setTier(tier);
+        entity.setIndustries(industries);
+        return dao.create(entity, false);
+    }
     private void enableScope() {
         MandatoryCondition scope=MandatoryCondition.ofBranches(List.of(
                 Map.of("kind",List.of(Kind.Customer),"region",List.of(Region.East)),
@@ -67,5 +77,47 @@ class MandatoryScopeExamplesTest extends DaoExamplesTestSupport {
         assertEquals(0,dao.selectFrom(ScopePartner.class).disableSafeMode().count());
         assertEquals(0,dao.selectFrom(ScopePartner.class).disableSafeMode().find().size());
         assertEquals(0,dao.updateTo(ScopePartner.class).eq("name","anything").set("name","changed").update());
+    }
+
+    @Test @Transactional void scalarDictionaryScopeFiltersAndChecksWrites() {
+        ScopePartner visible = createWithDictionary("Customer", 1, null);
+        ScopePartner hidden = createWithDictionary("Supplier", 2, null);
+        MandatoryConditions.setProvider((entity, action) -> entity == ScopePartner.class
+                ? MandatoryCondition.ofBranches(List.of(Map.of("categoryCode", List.of("Customer"), "tier", List.of(1))))
+                : MandatoryCondition.unrestricted());
+
+        assertEquals(1, dao.selectFrom(ScopePartner.class).disableSafeMode().count());
+        assertEquals(1, dao.selectFrom(dao.getTableName(ScopePartner.class)).disableSafeMode().count());
+        assertNull(dao.find(ScopePartner.class, hidden.getId()));
+        assertEquals(0, dao.updateTo(ScopePartner.class).eq("id", visible.getId()).set("tier", 2).update());
+        assertEquals(0, dao.deleteFrom(ScopePartner.class).eq("id", hidden.getId()).delete());
+        assertThrows(DaoSecurityException.class, () -> createWithDictionary("Supplier", 1, null));
+    }
+
+    @Test @Transactional void jsonDictionaryScopeRequiresAllStoredMembers() {
+        ScopePartner visible = createWithDictionary("visible", 1, List.of("A"));
+        ScopePartner mixed = createWithDictionary("mixed", 1, List.of("A", "B"));
+        ScopePartner empty = createWithDictionary("empty", 1, List.of());
+        ScopePartner malformed = createWithDictionary("malformed", 1, List.of("A"));
+        entityManager.flush();
+        entityManager.createNativeQuery("update scope_partner set industries = cast(:json as jsonb) where id = :id")
+                .setParameter("json", "[\"A\",1]").setParameter("id", malformed.getId()).executeUpdate();
+        entityManager.clear();
+        MandatoryConditions.setProvider((entity, action) -> entity == ScopePartner.class
+                ? MandatoryCondition.ofBranches(List.of(Map.of("industries", List.of("A"))))
+                : MandatoryCondition.unrestricted());
+
+        assertEquals(1, dao.selectFrom(ScopePartner.class).disableSafeMode().count());
+        assertNotNull(dao.find(ScopePartner.class, visible.getId()));
+        assertNull(dao.find(ScopePartner.class, mixed.getId()));
+        assertNull(dao.find(ScopePartner.class, empty.getId()));
+        assertNull(dao.find(ScopePartner.class, malformed.getId()));
+        assertThrows(DaoSecurityException.class, () ->
+                dao.selectFrom(dao.getTableName(ScopePartner.class)).disableSafeMode().count());
+        assertEquals(0, dao.updateTo(ScopePartner.class).eq("id", mixed.getId()).set("name", "denied").update());
+        assertEquals(0, dao.updateTo(ScopePartner.class).eq("id", visible.getId()).set("industries", List.of("A", "B")).update());
+        assertEquals(1, dao.updateTo(ScopePartner.class).eq("id", visible.getId()).set("industries", List.of("A")).update());
+        assertNotNull(createWithDictionary("new", 1, List.of("A")));
+        assertThrows(DaoSecurityException.class, () -> createWithDictionary("new", 1, List.of("A", "B")));
     }
 }

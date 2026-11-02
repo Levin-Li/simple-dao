@@ -3176,6 +3176,28 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return Collections.emptyMap();
     }
 
+    /** 仅显式标记的 List<String> 可按 JSON 数组执行全部成员范围。 */
+    private boolean isMandatoryJsonStringArray(String property, ResolvableType type) {
+        Field field = ReflectionUtils.findField(entityClass, property);
+        return field != null && field.isAnnotationPresent(MandatoryJsonStringArray.class)
+                && List.class.isAssignableFrom(field.getType()) && type.getGeneric(0).resolve() == String.class;
+    }
+
+    /** JSON 数组不得含任何未获准成员，参数名和路径都由框架固定生成。 */
+    private String mandatoryJsonAllExpression(String column, int valueCount) {
+        List<String> comparisons = new ArrayList<>();
+        List<String> passing = new ArrayList<>();
+        for (int index = 0; index < valueCount; index++) {
+            String variable = "allowed" + index;
+            comparisons.add("@ != $" + variable);
+            passing.add(getParamPlaceholder() + " as " + variable);
+        }
+        String document = "cast(" + column + " as String)";
+        return "json_exists(" + document + ", '$[*]') AND not json_exists(" + document
+                + ", '$[*]?(@.type() != \"string\" || (" + String.join(" && ", comparisons) + "))' passing "
+                + String.join(", ", passing) + ")";
+    }
+
     private String mandatoryExpression(MandatoryCondition condition, Map<String, Object> assignments, List<Object> params) {
         if (condition.isUnrestricted()) return "";
         if (condition.isDenied()) return "1 = 0";
@@ -3189,12 +3211,32 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 String property = entry.getKey();
                 ResolvableType type = getFieldType(entityClass, property, null);
                 Class<?> fieldType = type == null ? null : type.resolve();
-                if (fieldType == null || !fieldType.isEnum())
-                    throw new DaoSecurityException("Mandatory scope property is not enum: " + property);
-                if (entry.getValue().stream().anyMatch(value -> !fieldType.isInstance(value)))
-                    throw new DaoSecurityException("Mandatory scope enum type mismatch: " + property);
+                boolean jsonArray = type != null && isMandatoryJsonStringArray(property, type);
+                Class<?> checkedType = fieldType != null && fieldType.isPrimitive()
+                        ? org.springframework.util.ClassUtils.resolvePrimitiveIfNecessary(fieldType) : fieldType;
+                if (!jsonArray && checkedType != String.class && checkedType != Integer.class
+                        && checkedType != Long.class && (checkedType == null || !checkedType.isEnum()))
+                    throw new DaoSecurityException("Mandatory scope property type is unsupported: " + property);
+                if (entry.getValue().stream().anyMatch(value ->
+                        jsonArray ? !(value instanceof String) : !checkedType.isInstance(value)))
+                    throw new DaoSecurityException("Mandatory scope value type mismatch: " + property);
                 if (assignments.containsKey(property)) {
-                    if (!entry.getValue().contains(assignments.get(property))) { impossible = true; break; }
+                    Object assigned = assignments.get(property);
+                    if (jsonArray) {
+                        if (!(assigned instanceof List<?>) || ((List<?>) assigned).isEmpty()
+                                || ((List<?>) assigned).stream().anyMatch(value ->
+                                !(value instanceof String) || !entry.getValue().contains(value))) {
+                            impossible = true;
+                            break;
+                        }
+                    } else if (!entry.getValue().contains(assigned)) { impossible = true; break; }
+                    continue;
+                }
+                if (jsonArray) {
+                    if (isNative())
+                        throw new DaoSecurityException("Mandatory JSON array scope requires an entity query: " + property);
+                    predicates.add("(" + mandatoryJsonAllExpression(aroundColumnPrefix(property), entry.getValue().size()) + ")");
+                    branchParams.addAll(entry.getValue());
                     continue;
                 }
                 predicates.add(aroundColumnPrefix(property) + " IN (" + String.join(", ", Collections.nCopies(entry.getValue().size(), getParamPlaceholder())) + ")");
@@ -3202,7 +3244,7 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
                 Class<?> conversionType = paramType == null ? fieldType : paramType.resolve();
                 for (Object value : entry.getValue()) {
                     Object boundValue = value;
-                    if (isNative()) {
+                    if (isNative() && value instanceof Enum<?>) {
                         // JPA枚举存储使用name/ordinal，不能使用EnumDesc业务code或展示toString。
                         if (conversionType == String.class) boundValue = ((Enum<?>) value).name();
                         else if (conversionType != null && Number.class.isAssignableFrom(conversionType))

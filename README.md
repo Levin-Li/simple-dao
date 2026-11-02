@@ -763,7 +763,7 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 
 ### 应用级强制枚举记录范围
 
-`MandatoryConditionProvider` 为结构化DAO统一提供枚举DNF范围，独立于普通业务条件与表达式上下文。接入、三态语义、更新新旧值校验、JPA旁路限制见[完整手册](manual.md#受信的枚举记录范围mandatorycondition)。
+`MandatoryConditionProvider` 为结构化 DAO 统一提供枚举及受信字典标量的 DNF 范围；显式标记的 JSON 字符串列表还可使用“所有成员均获准”范围。它独立于普通业务条件与表达式上下文。接入、三态语义、更新新旧值校验、JPA 旁路限制与 JSON 方言边界见[完整手册](manual.md#受信的枚举记录范围mandatorycondition)。
 
 ### 实体专属请求父类
 
