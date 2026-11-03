@@ -3653,6 +3653,9 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
 
     public List<Map<String, ? extends Object>> getDaoContextValues() {
 
+        if (com.levin.commons.utils.ExpressionUtils.isRestrictedExpressionScope()) {
+            return new ArrayList<>(Collections.singletonList((this.context != null) ? this.context : Collections.emptyMap()));
+        }
         return Arrays.asList(
                 DaoContext.getGlobalContext(),
                 DaoContext.getThreadContext(),

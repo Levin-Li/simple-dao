@@ -4703,3 +4703,5 @@ class Settlement {
 每轮 `gen-code` 都为实体 `Xxx` 生成一个 `XxxBaseRequest<T extends XxxBaseRequest<T>>`，位于实体服务的 `req` 包，继承该实体原先选中的 commons 请求基类。`SimpleQueryXxxReq`、`SimpleUpdateXxxReq`、`DeleteXxxReq`、`XxxIdReq` 通过该类继承 commons 基类；`QueryXxxReq` 和 `UpdateXxxReq` 继续分别继承对应的 `Simple*Req`。`CreateXxxReq` 保持直接继承原 commons 基类，不经过 `XxxBaseRequest`。Info 模型的继承关系不变。
 
 `XxxBaseRequest` 是每轮重新生成的文件，不作为手工扩展点。生成器继续遵守已有哈希保护规则；若有人手改生成文件，生成过程可能因保护规则拒绝覆盖。实体所属模块发生变更时，先编译实体模块，再运行 `gen-code`，不要直接修改生成目录。
+
+严格表达式作用域：[使用指南](docs/严格表达式求值作用域.md)。

@@ -961,14 +961,15 @@ public abstract class ExprUtils {
     public static <T> T evalSpEL(final Object rootObject, String expression, List<Map<String, ?>> contexts) {
 
         if (contexts == null) {
-            contexts = Arrays.asList(DaoContext.getGlobalContext(), DaoContext.getThreadContext());
+            contexts = ExpressionUtils.isRestrictedExpressionScope() ? Collections.emptyList()
+                    : Arrays.asList(DaoContext.getGlobalContext(), DaoContext.getThreadContext());
         }
 
         //类型转换
         final Object temp = contexts;
 
         return ExpressionUtils.evalSpEL(rootObject, expression, ctx -> {
-            if (SpringContextHolder.getBeanFactory() != null) {
+            if (!ExpressionUtils.isRestrictedExpressionScope() && SpringContextHolder.getBeanFactory() != null) {
                 ctx.setBeanResolver(new BeanFactoryResolver(SpringContextHolder.getBeanFactory()));
             }
         }, (List<Map<String, Object>>) temp);

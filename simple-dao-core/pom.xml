@@ -121,11 +121,74 @@
                 <targetPath>META-INF/simple-dao/docs</targetPath>
                 <filtering>false</filtering>
                 <includes>
-                    <include>README.md</include>
                     <include>quickstart.md</include>
                     <include>manual.md</include>
+                    <include>docs/严格表达式求值作用域.md</include>
+                    <include>public/img.png</include>
+                    <include>public/img_1.png</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>${project.basedir}/package-docs</directory>
+                <targetPath>META-INF/simple-dao/docs</targetPath>
+                <filtering>false</filtering>
+            </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>verify-packaged-documentation</id>
+                        <phase>verify</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <property name="docgate.dir" value="${project.build.directory}/documentation-gate"/>
+                                <delete dir="${docgate.dir}"/>
+                                <mkdir dir="${docgate.dir}/main"/>
+                                <mkdir dir="${docgate.dir}/sources"/>
+                                <unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${docgate.dir}/main"/>
+                                <unzip src="${project.build.directory}/${project.build.finalName}-sources.jar" dest="${docgate.dir}/sources"/>
+                                <available file="${docgate.dir}/main/META-INF/simple-dao/docs/AGENTS.md" property="docgate.main.agent"/>
+                                <available file="${docgate.dir}/main/META-INF/simple-dao/docs/README.md" property="docgate.main.readme"/>
+                                <available file="${docgate.dir}/main/META-INF/simple-dao/docs/manual.md" property="docgate.main.manual"/>
+                                <available file="${docgate.dir}/main/META-INF/simple-dao/docs/quickstart.md" property="docgate.main.quickstart"/>
+                                <available file="${docgate.dir}/main/META-INF/simple-dao/docs/docs/严格表达式求值作用域.md" property="docgate.main.guide"/>
+                                <available file="${docgate.dir}/sources/META-INF/simple-dao/docs/AGENTS.md" property="docgate.sources.agent"/>
+                                <available file="${docgate.dir}/sources/META-INF/simple-dao/docs/README.md" property="docgate.sources.readme"/>
+                                <available file="${docgate.dir}/sources/META-INF/simple-dao/docs/manual.md" property="docgate.sources.manual"/>
+                                <available file="${docgate.dir}/sources/META-INF/simple-dao/docs/quickstart.md" property="docgate.sources.quickstart"/>
+                                <available file="${docgate.dir}/sources/META-INF/simple-dao/docs/docs/严格表达式求值作用域.md" property="docgate.sources.guide"/>
+                                <fail unless="docgate.main.agent" message="主包缺少 AGENTS.md"/>
+                                <fail unless="docgate.main.readme" message="主包缺少 README.md"/>
+                                <fail unless="docgate.main.manual" message="主包缺少 manual.md"/>
+                                <fail unless="docgate.main.quickstart" message="主包缺少 quickstart.md"/>
+                                <fail unless="docgate.main.guide" message="主包缺少严格表达式使用指南"/>
+                                <fail unless="docgate.sources.agent" message="源码包缺少 AGENTS.md"/>
+                                <fail unless="docgate.sources.readme" message="源码包缺少 README.md"/>
+                                <fail unless="docgate.sources.manual" message="源码包缺少 manual.md"/>
+                                <fail unless="docgate.sources.quickstart" message="源码包缺少 quickstart.md"/>
+                                <fail unless="docgate.sources.guide" message="源码包缺少严格表达式使用指南"/>
+                                <loadfile property="docgate.readme" srcFile="${docgate.dir}/main/META-INF/simple-dao/docs/README.md" encoding="UTF-8"/>
+                                <loadfile property="docgate.agent" srcFile="${docgate.dir}/main/META-INF/simple-dao/docs/AGENTS.md" encoding="UTF-8"/>
+                                <loadfile property="docgate.sources.readme.text" srcFile="${docgate.dir}/sources/META-INF/simple-dao/docs/README.md" encoding="UTF-8"/>
+                                <loadfile property="docgate.sources.agent.text" srcFile="${docgate.dir}/sources/META-INF/simple-dao/docs/AGENTS.md" encoding="UTF-8"/>
+                                <condition property="docgate.readme.link"><contains string="${docgate.readme}" substring="docs/严格表达式求值作用域.md"/></condition>
+                                <condition property="docgate.agent.link"><contains string="${docgate.agent}" substring="docs/严格表达式求值作用域.md"/></condition>
+                                <condition property="docgate.sources.readme.link"><contains string="${docgate.sources.readme.text}" substring="docs/严格表达式求值作用域.md"/></condition>
+                                <condition property="docgate.sources.agent.link"><contains string="${docgate.sources.agent.text}" substring="docs/严格表达式求值作用域.md"/></condition>
+                                <fail unless="docgate.readme.link" message="主包 README 未索引严格表达式指南"/>
+                                <fail unless="docgate.agent.link" message="主包 AGENTS 未索引严格表达式指南"/>
+                                <fail unless="docgate.sources.readme.link" message="源码包 README 未索引严格表达式指南"/>
+                                <fail unless="docgate.sources.agent.link" message="源码包 AGENTS 未索引严格表达式指南"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>

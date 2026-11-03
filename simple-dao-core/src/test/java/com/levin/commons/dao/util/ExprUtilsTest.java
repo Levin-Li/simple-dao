@@ -24,6 +24,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExprUtilsTest {
 
+    @Test
+    void restrictedScopeIgnoresAmbientDaoContextsAndProtectsFunctions() {
+        String key = "strict_scope_test_secret";
+        Map<String, Object> global = com.levin.commons.dao.DaoContext.globalContext.getAll(false);
+        Map<String, Object> thread = com.levin.commons.dao.DaoContext.threadContext.getAll(false);
+        boolean hadGlobal = global.containsKey(key), hadThread = thread.containsKey(key);
+        Object previousGlobal = global.get(key), previousThread = thread.get(key);
+        try {
+            global.put(key, "global-secret"); thread.put(key, "thread-secret");
+            assertEquals("thread-secret", ExprUtils.evalSpEL(null, "#" + key, null));
+            com.levin.commons.utils.ExpressionUtils.withRestrictedVariableResolvers(java.util.List.of(), () -> {
+                org.junit.jupiter.api.Assertions.assertNull(ExprUtils.evalSpEL(null, "#" + key, null));
+                assertEquals("local", ExprUtils.evalSpEL(null, "#local", java.util.List.of(Map.of("local", "local"))));
+                assertEquals(Boolean.TRUE, ExprUtils.evalSpEL(null, "#isEmpty(#x)", java.util.List.of(Map.of("isEmpty", "poison", "x", java.util.List.of()))));
+                return null;
+            });
+            assertEquals("thread-secret", ExprUtils.evalSpEL(null, "#" + key, null));
+        } finally {
+            if (hadGlobal) global.put(key, previousGlobal); else global.remove(key);
+            if (hadThread) thread.put(key, previousThread); else thread.remove(key);
+        }
+    }
+
     private C newCTestAnnotation(Op op, String value, String domain, String jsonPath) {
         return (C) ClassUtils.newAnnotation(C.class, null, MapUtils
                 .put("op", (Object) op)

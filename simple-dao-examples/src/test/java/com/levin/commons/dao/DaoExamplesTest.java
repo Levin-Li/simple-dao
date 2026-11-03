@@ -87,6 +87,30 @@ public class DaoExamplesTest extends DaoExamplesTestSupport {
 
     }
 
+    @Test
+    public void restrictedDaoScopeExcludesAmbientContextAndExecutesQuery() {
+        String key = "strict_scope_integration_secret";
+        java.util.Map<String, Object> global = com.levin.commons.dao.DaoContext.globalContext.getAll(false);
+        java.util.Map<String, Object> thread = com.levin.commons.dao.DaoContext.threadContext.getAll(false);
+        Object oldGlobal = global.get(key), oldThread = thread.get(key);
+        boolean hadGlobal = global.containsKey(key), hadThread = thread.containsKey(key);
+        try {
+            global.put(key, "global"); thread.put(key, "thread");
+            var query = dao.selectFrom(Group.class);
+            var builder = (com.levin.commons.dao.support.ConditionBuilderImpl<?, ?>) query;
+            org.junit.jupiter.api.Assertions.assertTrue(builder.getDaoContextValues().stream().anyMatch(map -> map.containsKey(key)));
+            com.levin.commons.utils.ExpressionUtils.withRestrictedVariableResolvers(java.util.List.of(), () -> {
+                org.junit.jupiter.api.Assertions.assertTrue(builder.getDaoContextValues().stream().noneMatch(map -> map.containsKey(key)));
+                org.junit.jupiter.api.Assertions.assertNotNull(dao.selectFrom(Group.class).count());
+                return null;
+            });
+            org.junit.jupiter.api.Assertions.assertTrue(builder.getDaoContextValues().stream().anyMatch(map -> map.containsKey(key)));
+        } finally {
+            if (hadGlobal) global.put(key, oldGlobal); else global.remove(key);
+            if (hadThread) thread.put(key, oldThread); else thread.remove(key);
+        }
+    }
+
     @SneakyThrows
     @Test
     public void testUniqueTestObj() {
