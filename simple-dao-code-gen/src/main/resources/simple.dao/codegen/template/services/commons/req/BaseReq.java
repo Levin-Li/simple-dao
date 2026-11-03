@@ -64,9 +64,6 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String EXPR_IS_CAN_ACCESS_ALL_PERSONAL = " (#" + InjectConst.IS_CAN_ACCESS_ALL_PERSONAL + "?:false) ";
 
-    public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = " (#" + InjectConst.IS_CAN_ACCESS_ALL_ORG + "?:false) ";
-    public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG = " !" + EXPR_IS_CAN_ACCESS_ALL_ORG;
-
 
    /// /////////////////////////////////////////////////////////////////////
     public static final String EXPR_NOT_TOP_SUPER_ADMIN = " !" + EXPR_IS_TOP_SUPER_ADMIN;
@@ -138,11 +135,6 @@ public abstract class BaseReq implements ServiceReq {
     @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_PERSONAL)
     @Ignore
     protected boolean isCanAccessAllPersonal = false;
-
-    @Schema(title = "是否能访问所有组织", hidden = true)
-    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)
-    @Ignore
-    protected boolean isCanAccessAllOrg = false;
 
     @Schema(title = "跟踪标识", hidden = true)
     @Ignore

@@ -44,6 +44,14 @@ import java.util.List;
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject{
 
+    public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = " (#" + InjectConst.IS_CAN_ACCESS_ALL_ORG + "?:false) ";
+    public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG = " !" + EXPR_IS_CAN_ACCESS_ALL_ORG;
+
+    @Schema(title = "是否能访问所有组织", hidden = true)
+    @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)
+    @Ignore
+    protected boolean isCanAccessAllOrg = false;
+
     /**
      * 注入方已校验通过的可访问组织列表。
      *

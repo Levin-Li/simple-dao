@@ -33,13 +33,13 @@ class MultiTenantOrgTemplateTest {
         String baseSource = Files.readString(base);
 
         assertTrue(source.contains("组织数据访问权限由变量注入提供方预先完成校验"), source);
-        assertTrue(baseSource.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG"), baseSource);
-        assertTrue(baseSource.contains("InjectConst.IS_CAN_ACCESS_ALL_ORG"), baseSource);
-        assertTrue(baseSource.contains("public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG"), baseSource);
-        assertTrue(baseSource.contains("protected boolean isCanAccessAllOrg = false;"), baseSource);
-        assertTrue(baseSource.contains("@InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)"), baseSource);
-        assertFalse(source.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG"), source);
-        assertFalse(source.contains("protected boolean isCanAccessAllOrg = false;"), source);
+        assertTrue(source.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(source.contains("InjectConst.IS_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(source.contains("public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(source.contains("protected boolean isCanAccessAllOrg = false;"), source);
+        assertTrue(source.contains("@InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_CAN_ACCESS_ALL_ORG)"), source);
+        assertFalse(baseSource.contains("EXPR_IS_CAN_ACCESS_ALL_ORG"), baseSource);
+        assertFalse(baseSource.contains("isCanAccessAllOrg"), baseSource);
         assertTrue(source.contains("EXPR_NOT_IS_CAN_ACCESS_ALL_ORG"), source);
         assertTrue(source.contains("@In(value = InjectConst.ORG_ID, condition = \"orgIdListCondition(#_isUpdate)\")"), source);
         assertFalse(source.contains("paramExpr = \" 1 = 2 \""), source);
