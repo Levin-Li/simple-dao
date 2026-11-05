@@ -11,6 +11,9 @@ import com.levin.commons.dao.GenDaoLogicGroup;
 import com.levin.commons.dao.codegen.model.DaoLogicGroupField;
 import com.levin.commons.dao.codegen.model.FieldModel;
 import freemarker.template.Configuration;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.ResolvableType;
@@ -55,6 +58,22 @@ class DaoLogicGroupCodegenTest {
     @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR)
     static class PrimitiveId {
         @GenDaoLogicGroup(name = "visible", filterOp = In.class) int orgId;
+    }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    @Entity
+    static class ScalarPrimaryKey {
+        @Id
+        @GenDaoLogicGroup(name = "visible", filterOp = In.class, injectVarName = "allowedOrgIds")
+        String id;
+    }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR)
+    static class CompositePrimaryKey {
+        @EmbeddedId
+        @GenDaoLogicGroup(name = "visible", filterOp = In.class)
+        Object id;
     }
 
     @DaoLogicGroup(name = "optional", logicOp = DaoLogicGroup.LogicOp.OR)
@@ -170,6 +189,44 @@ class DaoLogicGroupCodegenTest {
         DaoLogicGroupField primitive = DaoLogicGroupField.forType(PrimitiveId.class).get(0);
         assertEquals("inOrgIdList", primitive.getQueryFieldName());
         assertEquals("java.util.List<java.lang.Integer>", primitive.getQueryTypeName());
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(CompositePrimaryKey.class));
+    }
+
+    @Test
+    void scalarPrimaryKeyGeneratesTrustedGroupedInFilter(@TempDir Path output) throws Exception {
+        String source = renderBaseRequest(ScalarPrimaryKey.class,
+                DaoLogicGroupField.forType(ScalarPrimaryKey.class));
+        var type = StaticJavaParser.parse(source).getClassByName("ScalarPrimaryKeyBaseRequest").orElseThrow();
+        String filter = type.getFieldByName("inIdList").orElseThrow().toString();
+        assertTrue(filter.contains("@In(value = E_ScalarPrimaryKey.id, group = \"visible\")"), filter);
+        assertTrue(filter.contains("@InjectVar(value = \"allowedOrgIds\""), filter);
+
+        ServiceModelCodeGenerator.moduleName("probe");
+        ServiceModelCodeGenerator.modulePackageName("probe");
+        Method buildEvt = ServiceModelCodeGenerator.class.getDeclaredMethod("buildEvt",
+                Class.class, List.class, String.class, Map.class, String.class);
+        buildEvt.setAccessible(true);
+        Map<String, Object> params = new HashMap<>();
+        params.put("reqExtendClass", "BaseReq");
+        params.put("daoLogicGroupNames", List.of("id"));
+        List<FieldModel> fields = fieldModels(ScalarPrimaryKey.class);
+        FieldModel idField = fields.stream().filter(field -> "id".equals(field.getName())).findFirst().orElseThrow();
+        idField.setPk(true);
+        params.put("pkField", idField);
+        Class<?> previous = ServiceModelCodeGenerator.entityClass(ScalarPrimaryKey.class);
+        try {
+            buildEvt.invoke(null, ScalarPrimaryKey.class, fields,
+                    output.toString(), params, "query");
+        } finally {
+            ServiceModelCodeGenerator.entityClass(previous);
+        }
+        try (var generated = Files.walk(output)) {
+            String query = Files.readString(generated
+                    .filter(path -> path.getFileName().toString().equals("QueryScalarPrimaryKeyReq.java"))
+                    .findFirst().orElseThrow());
+            assertTrue(query.contains("this.idList = java.util.Collections.singletonList(id);"), query);
+            assertFalse(query.contains("this.id = id;"), query);
+        }
     }
 
     @Test

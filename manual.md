@@ -4664,7 +4664,7 @@ class QueryRecordReq {
 
 ## 实体字段逻辑分组生成
 
-`com.levin.commons.dao.DaoLogicGroup` 是组定义，单个 DAO 实例中每个组名只能定义一次；普通 WHERE 条件通过各自的 `group` 属性引用组。实体类上的组定义供生成器读取：可匹配到源码时，将 `@DaoLogicGroup` 的原始注解文本复制到 `XxxBaseRequest`，保留其中的换行和表达式；无法匹配源码时按编译后的注解元数据生成同等配置。运行时只读取请求对象类和字段上的定义，不直接读取目标实体类的定义。组属性包括 `name`、`parent`、`logicOp`、`condition`、`minConditions`、`unless` 和 `remark`；`parent` 默认 `""`，表示顶层组。实体业务字段的 `@GenDaoLogicGroup` 指定组名、`filterOp`、`injectVarName`、`injectOverride` 和 `injectRequired`，生成器为实体专属 `XxxBaseRequest` 生成带 `group` 属性的过滤字段。`filterOp` 默认 `Eq.class`，支持 `Eq/NotEq/Gt/Gte/Lt/Lte/Like/NotLike/Contains/NotContains/StartsWith/NotStartsWith/EndsWith/NotEndsWith/In/NotIn`。生成字段名使用比较注解的小驼峰前缀，并将实体字段首字母大写，例如 `Eq` 对应 `eqSalesUserId`，`In` 对应 `inSalesOrgIdList`。`In.class`、`NotIn.class` 生成 `List<字段类型>` 并保留 `List` 后缀；条件注解的 `value` 使用实体字段常量（例如 `E_Settlement.salesOrgId`），默认注入变量名仍使用原实体字段名。生成前会检查组名、父组、自引用、间接循环及字段类型。
+`com.levin.commons.dao.DaoLogicGroup` 是组定义，单个 DAO 实例中每个组名只能定义一次；普通 WHERE 条件通过各自的 `group` 属性引用组。实体类上的组定义供生成器读取：可匹配到源码时，将 `@DaoLogicGroup` 的原始注解文本复制到 `XxxBaseRequest`，保留其中的换行和表达式；无法匹配源码时按编译后的注解元数据生成同等配置。运行时只读取请求对象类和字段上的定义，不直接读取目标实体类的定义。组属性包括 `name`、`parent`、`logicOp`、`condition`、`minConditions`、`unless` 和 `remark`；`parent` 默认 `""`，表示顶层组。实体业务字段的 `@GenDaoLogicGroup` 指定组名、`filterOp`、`injectVarName`、`injectOverride` 和 `injectRequired`，生成器为实体专属 `XxxBaseRequest` 生成带 `group` 属性的过滤字段。标量 `@Id` 字段也可标记，适合以授权 ID 集合过滤记录；`@EmbeddedId`、非持久字段和非标量字段仍不支持。`filterOp` 默认 `Eq.class`，支持 `Eq/NotEq/Gt/Gte/Lt/Lte/Like/NotLike/Contains/NotContains/StartsWith/NotStartsWith/EndsWith/NotEndsWith/In/NotIn`。生成字段名使用比较注解的小驼峰前缀，并将实体字段首字母大写，例如 `Eq` 对应 `eqSalesUserId`，`In` 对应 `inSalesOrgIdList`。`In.class`、`NotIn.class` 生成 `List<字段类型>` 并保留 `List` 后缀；条件注解的 `value` 使用实体字段常量（例如 `E_Settlement.salesOrgId`），默认注入变量名仍使用原实体字段名。生成前会检查组名、父组、自引用、间接循环及字段类型。
 
 ```java
 @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
@@ -4681,6 +4681,8 @@ class Settlement {
 ```
 
 生成的 `SettlementBaseRequest` 定义 `visible` 和 `sales` 两个类级组，并声明 `inSalesOrgIdList` 和 `eqSalesUserId`，分别使用 `@In(value = E_Settlement.salesOrgId, group = "visible")` 和 `@Eq(value = E_Settlement.salesUserId, group = "sales")`；两者均带 `@InjectVar`，不再重复写 `@DaoLogicGroup`。`SimpleQuerySettlementReq`、`QuerySettlementReq` 和其他继承该基类的请求对象通过继承获得这些字段。运行时在处理请求对象第一个字段前登记类级定义，再把各条件放入所引用的组；普通 WHERE 留在组外。生成字段用 `@JsonIgnore` 和隐藏的 Schema 标记，不作为客户端输入字段公开。
+
+实体的标量 `@Id` 使用 `@GenDaoLogicGroup(filterOp = In.class)` 时，生成的隐藏范围字段为 `inIdList`；普通查询对象原有的 `idList` 仍是显式业务筛选，两者取交集。查询对象的单 ID 便捷构造函数会设置 `idList`，避免引用已被逻辑组移到基类的 `id` 字段。
 
 `@DaoLogicGroup` 的 `remark` 可以包含 `@CopyToGenCode @*` 标记；该注解未写标记时也会自动复制，带标记时不会重复生成。当前类级 `@DaoLogicGroup` 由其生成逻辑处理，现有通用标记复制逻辑仍用于字段注解。
 

@@ -5,7 +5,6 @@ import com.levin.commons.dao.DaoLogicGroup;
 import com.levin.commons.dao.GenDaoLogicGroup;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ReflectionUtils;
@@ -39,9 +38,9 @@ public final class DaoLogicGroupField {
         Class<? extends Annotation> filterOp = generation.filterOp();
         if (!FILTERS.contains(filterOp))
             throw new IllegalArgumentException("Unsupported DAO logic group filterOp: " + filterOp);
-        if (field.isAnnotationPresent(Id.class) || field.isAnnotationPresent(EmbeddedId.class)
+        if (field.isAnnotationPresent(EmbeddedId.class)
                 || field.isAnnotationPresent(Transient.class) || Modifier.isTransient(field.getModifiers()))
-            throw new IllegalArgumentException("DAO logic group requires a persistent non-ID field: " + field);
+            throw new IllegalArgumentException("DAO logic group requires a persistent scalar field: " + field);
         Class<?> fieldType = field.getType();
         if (!BeanUtils.isSimpleValueType(fieldType) && !fieldType.isEnum())
             throw new IllegalArgumentException("DAO logic group requires a scalar field: " + field);

@@ -198,7 +198,11 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 <#if pkField?exists>
     <#-- 构造函数-->
     public ${className}(${pkField.typeName} ${pkField.name}) {
+        <#if (daoLogicGroupNames![])?seq_contains(pkField.name)>
+        this.${pkField.name}List = java.util.Collections.singletonList(${pkField.name});
+        <#else>
         this.${pkField.name} = ${pkField.name};
+        </#if>
     }
 
 </#if>

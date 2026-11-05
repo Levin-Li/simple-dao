@@ -775,6 +775,6 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 
 ### 实体字段逻辑分组生成
 
-`@DaoLogicGroup` 在请求对象类或字段上唯一地定义一个组；`@Eq(group = "...")`、`@In(group = "...")` 等 WHERE 条件注解引用该组。运行时不要求请求对象继承特定基类。生成器默认把实体类上的组定义和带 `group` 的过滤字段生成到 `XxxBaseRequest`，供继承它的请求对象使用；过滤字段以比较操作符为前缀，例如 `eqSalesUserId`、`inSalesOrgIdList`，条件注解的 `value` 使用 `E_实体.字段` 常量。`@GenDaoLogicGroup` 的 `injectOverride`、`injectRequired` 分别传给生成字段上 `@InjectVar` 的 `isOverride`、`isRequired`，默认分别为 `"true"` 和 `"false"`。`parent` 默认为空，表示顶层组；非空时指向父组，生成和运行时都检查缺失、自引用与循环。用法见[手册](manual.md#实体字段逻辑分组生成)。
+`@DaoLogicGroup` 在请求对象类或字段上唯一地定义一个组；`@Eq(group = "...")`、`@In(group = "...")` 等 WHERE 条件注解引用该组。运行时不要求请求对象继承特定基类。生成器默认把实体类上的组定义和带 `group` 的过滤字段生成到 `XxxBaseRequest`，供继承它的请求对象使用；过滤字段以比较操作符为前缀，例如 `eqSalesUserId`、`inSalesOrgIdList`，条件注解的 `value` 使用 `E_实体.字段` 常量。标量 `@Id` 可作为过滤字段，复合主键不可用。`@GenDaoLogicGroup` 的 `injectOverride`、`injectRequired` 分别传给生成字段上 `@InjectVar` 的 `isOverride`、`isRequired`，默认分别为 `"true"` 和 `"false"`。`parent` 默认为空，表示顶层组；非空时指向父组，生成和运行时都检查缺失、自引用与循环。用法见[手册](manual.md#实体字段逻辑分组生成)。
 
 严格表达式作用域：[使用指南](docs/严格表达式求值作用域.md)。
