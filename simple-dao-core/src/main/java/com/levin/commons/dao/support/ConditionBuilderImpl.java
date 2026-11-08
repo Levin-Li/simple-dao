@@ -2442,6 +2442,18 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
         return (hasPrimitiveAnnotation(varAnnotations)) || (hasPrimitiveAnnotationOnFieldOrMethod(fieldOrMethod));
     }
 
+    /** An ID marker on a collection request field identifies its target, not an atomic IN value. */
+    private boolean isCollectionIdMembership(AnnotatedElement fieldOrMethod, Annotation[] varAnnotations,
+                                             Op op, boolean isArray, boolean isIterable) {
+        if (!(isArray || isIterable) || (op != Op.In && op != Op.NotIn)
+                || !fieldOrMethod.isAnnotationPresent(Id.class)) return false;
+        Annotation[] otherAnnotations = Stream.concat(Arrays.stream(varAnnotations),
+                        Arrays.stream(fieldOrMethod.getAnnotations()))
+                .filter(annotation -> annotation.annotationType() != Id.class)
+                .toArray(Annotation[]::new);
+        return !hasPrimitiveAnnotation(otherAnnotations);
+    }
+
     /**
      * 核心方法
      * <p>
@@ -2589,13 +2601,13 @@ public abstract class ConditionBuilderImpl<T extends ConditionBuilder<T, DOMAIN>
             final AtomicBoolean isWrapper = new AtomicBoolean(false);
             final ResolvableType entityAttrType = getFieldTypeByEntityAttrName(null, entityFieldName, isWrapper);
 
+            Op op = getOp(annotation);
+
             final boolean wrapperParamValue = isWrapper.get()
-                    || wrapperParamValueByAnno
+                    || (wrapperParamValueByAnno
+                        && !isCollectionIdMembership(fieldOrMethod, varAnnotations, op, isArray, isIterable))
                     //如果属性类型是实体字段的类型, 而当前值类型和属性值类型一致并且不是简单类型, 则需要包装
                     || (!isSimpleValueType && entityAttrType != null && (entityAttrType.isInstance(value) || entityAttrType.isAssignableFrom(ObjUtil.defaultIfNull(valueType, ResolvableType.NONE))));
-
-            //如果是扩展参数的操作 或是 不是迭代类型
-            Op op = getOp(annotation);
 
             if (op == Op.None) {
                 continue;

@@ -255,14 +255,14 @@ public class EntityBaseRequestCodegenTest {
             buildRequests.invoke(null, UserOrder.class, new HashMap<>(), services,
                     new HashMap<>(Map.of("reqExtendClass", "BaseReq")), infoFields);
             assertExtends(output, "UserOrderBaseRequest.java", "extends BaseReq");
-            assertExtends(output, "SimpleUpdateUserOrderReq.java", "extends UserOrderBaseRequest<SimpleUpdateUserOrderReq>");
+            assertExtends(output, "SimpleUpdateUserOrderReq.java", "extends BaseReq");
             assertExtends(output, "SimpleQueryUserOrderReq.java", "extends UserOrderBaseRequest<T>");
             assertExtends(output, "QueryUserOrderReq.java", "extends SimpleQueryUserOrderReq<QueryUserOrderReq>");
             try (var generated = Files.walk(output)) {
                 Path baseFile = generated.filter(path -> path.getFileName().toString().equals("UserOrderBaseRequest.java"))
                         .findFirst().orElseThrow();
                 String source = Files.readString(baseFile);
-                assertFalse(source.contains("@DaoLogicGroup("), source);
+                assertTrue(source.contains("@DaoLogicGroup("), source);
                 assertTrue(source.contains("checkAfterSalesOrgId"), source);
             }
             Path review = Path.of("target/generated-scope-review");
@@ -389,8 +389,8 @@ public class EntityBaseRequestCodegenTest {
             Class<?> base = loader.loadClass("probe.services.userorder.req.UserOrderBaseRequest");
             Class<?> simple = loader.loadClass("probe.services.userorder.req.SimpleQueryUserOrderReq");
             Class<?> query = loader.loadClass("probe.services.userorder.req.QueryUserOrderReq");
-            assertEquals(0, base.getDeclaredAnnotationsByType(com.levin.commons.dao.DaoLogicGroup.class).length);
-            assertEquals(1, simple.getDeclaredAnnotationsByType(com.levin.commons.dao.DaoLogicGroup.class).length);
+            assertEquals(1, base.getDeclaredAnnotationsByType(com.levin.commons.dao.DaoLogicGroup.class).length);
+            assertEquals(0, simple.getDeclaredAnnotationsByType(com.levin.commons.dao.DaoLogicGroup.class).length);
             List<String> sourceFields = List.of("afterSalesOrgId", "afterSalesUserId",
                     "customerOrgId", "customerUserId", "preSalesOrgId", "preSalesUserId",
                     "salesOrgId", "salesUserId");
@@ -409,10 +409,10 @@ public class EntityBaseRequestCodegenTest {
                         .filter(candidate -> candidate.getName().equals(generatedName)).count());
                 if (org) {
                     assertEquals(List.class, field.getType());
-                    assertEquals(sourceField, simple.getDeclaredField("scopeAlias" + Character.toUpperCase(generatedName.charAt(0)) + generatedName.substring(1)).getAnnotation(In.class).value());
+                    assertEquals(sourceField, field.getAnnotation(In.class).value());
                 } else {
                     assertEquals(List.class, field.getType());
-                    assertEquals(sourceField, simple.getDeclaredField("scopeAlias" + Character.toUpperCase(generatedName.charAt(0)) + generatedName.substring(1)).getAnnotation(In.class).value());
+                    assertEquals(sourceField, field.getAnnotation(In.class).value());
                 }
                 InjectVar inject = field.getAnnotation(InjectVar.class);
                 assertEquals(org ? "accessibleOrgIds" : "accessibleOwnerIds", inject.value());
@@ -548,7 +548,8 @@ public class EntityBaseRequestCodegenTest {
         Class<?> deleteType = loader.loadClass("probe.services.userorder.req.DeleteUserOrderReq");
         Class<?> idType = loader.loadClass("probe.services.userorder.req.UserOrderIdReq");
         Class<?> createType = loader.loadClass("probe.services.userorder.req.CreateUserOrderReq");
-        assertTrue(base.isAssignableFrom(updateType));
+        assertFalse(base.isAssignableFrom(updateType),
+                "单条更新独立持有同一范围组，避免批量 setReq 与 whereReq 重复定义组");
         assertEquals(1, updateType.getDeclaredAnnotationsByType(com.levin.commons.dao.DaoLogicGroup.class).length);
         assertTrue(base.isAssignableFrom(deleteType));
         assertTrue(base.isAssignableFrom(idType));
@@ -573,7 +574,7 @@ public class EntityBaseRequestCodegenTest {
         assertEquals("NEW-U", updateField.get(update));
         injectVisibilityConditions(update, conditions, injector, context);
         injectUpdateGuards(update, injector, context);
-        Field scopeField = base.getDeclaredField("inSalesUserIdList");
+        Field scopeField = updateType.getDeclaredField("inSalesUserIdList");
         scopeField.setAccessible(true);
         assertEquals(List.of("U1"), scopeField.get(update));
         assertEquals("NEW-U", updateField.get(update));
@@ -733,8 +734,8 @@ public class EntityBaseRequestCodegenTest {
             assertThrows(NoSuchFieldException.class, () -> simpleType.getDeclaredField("oldOrgGuardSalesOrgId"));
             Class<?> entityBase = simpleType.getSuperclass();
             assertThrows(NoSuchMethodException.class,
-                    () -> entityBase.getDeclaredMethod("checkUpdateOwnerTarget", String.class, String.class));
-            var ownerCheck = entityBase.getSuperclass().getDeclaredMethod("checkUpdateOwnerTarget", String.class, String.class);
+                    () -> simpleType.getDeclaredMethod("checkUpdateOwnerTarget", String.class, String.class));
+            var ownerCheck = entityBase.getDeclaredMethod("checkUpdateOwnerTarget", String.class, String.class);
             assertTrue(java.lang.reflect.Modifier.isProtected(ownerCheck.getModifiers()));
             var check = salesScope.getDeclaringClass().getDeclaredMethod("checkSalesOrgId", String.class);
             check.setAccessible(true);
@@ -813,10 +814,13 @@ public class EntityBaseRequestCodegenTest {
     private static void injectVisibilityConditions(Object request, List<Field> conditions,
                                                    SimpleVariableInjector injector,
                                                    Map<String, Object> context) throws Exception {
-        for (Field condition : conditions) {
-            Field target = condition.getDeclaringClass().isInstance(request)
-                    ? condition : request.getClass().getDeclaredField(condition.getName());
-            injector.injectValue(request, target, context);
+        Set<String> names = conditions.stream().map(Field::getName).collect(java.util.stream.Collectors.toSet());
+        for (Class<?> type = request.getClass(); type != Object.class; type = type.getSuperclass()) {
+            for (Field field : type.getDeclaredFields()) {
+                if (field.isAnnotationPresent(InjectVar.class)
+                        && (names.contains(field.getName()) || field.getName().startsWith("updateScope")))
+                    injector.injectValue(request, field, context);
+            }
         }
     }
 

@@ -37,6 +37,8 @@ class MultiTenantOrgTemplateTest {
         assertTrue(baseSource.contains("protected static final String SPEL_NOT_CAN_ACCESS_ALL_ORG = \" !\" + SPEL_CAN_ACCESS_ALL_ORG"), baseSource);
         assertFalse(source.contains("static final String SPEL_CAN_ACCESS_ALL_ORG"), source);
         assertFalse(source.contains("static final String SPEL_NOT_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(source.contains("public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = SPEL_CAN_ACCESS_ALL_ORG"), source);
+        assertTrue(source.contains("public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG = SPEL_NOT_CAN_ACCESS_ALL_ORG"), source);
         assertTrue(baseSource.contains("protected boolean isCanAccessAllOrg = false;"), baseSource);
         assertFalse(source.contains("protected boolean isCanAccessAllOrg"), source);
         assertTrue(baseSource.contains("public boolean isCanAccessAllOrg()"), baseSource);

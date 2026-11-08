@@ -3,10 +3,12 @@ package com.levin.commons.dao;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.In;
 import com.levin.commons.dao.domain.ClassGroupRecord;
+import com.levin.commons.dao.domain.StringScopeRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,6 +29,103 @@ class DaoLogicGroupJpaTest extends DaoExamplesTestSupport {
     @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
             minConditions = 1, unless = "1=2")
     static class EmptyScope { }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "'恒假条件原因'='没有组织访问权限'")
+    static class DiagnosticFallbackScope { }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=1")
+    static class AlwaysTrueFallbackScope { }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+            condition = "!(#isCanAccessAllOrg?:false)", minConditions = 1,
+            unless = "'恒假条件原因'='没有组织访问权限'")
+    static class ConditionalParticipantScope {
+        @In(value = "orgId", group = "visible") List<String> orgIds;
+        @Eq(value = "userId", group = "visible") String ownerId;
+
+        ConditionalParticipantScope(List<String> orgIds, String ownerId) {
+            this.orgIds = orgIds;
+            this.ownerId = ownerId;
+        }
+    }
+
+    @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    static class VisibleStringIdsScope {
+        @In(value = "orgId", group = "visible") List<String> orgIds;
+        @In("id") @jakarta.persistence.Id List<String> idList;
+
+        VisibleStringIdsScope(List<String> orgIds, List<String> idList) {
+            this.orgIds = orgIds;
+            this.idList = idList;
+        }
+    }
+
+    static class SingleStringIdScope {
+        @Eq("id") @jakarta.persistence.Id String id;
+        SingleStringIdScope(String id) { this.id = id; }
+    }
+
+    @Test
+    @Transactional
+    void idAnnotatedStringListExpandsAndIntersectsAuthorizedScope() {
+        StringScopeRecord first = stringRecord("first", "O1");
+        StringScopeRecord second = stringRecord("second", "O1");
+        StringScopeRecord hidden = stringRecord("hidden", "O2");
+
+        assertEquals(List.of(first.getId()), stringIds(new VisibleStringIdsScope(
+                List.of("O1"), List.of(first.getId()))));
+        assertEquals(List.of(first.getId()), stringIds(new VisibleStringIdsScope(
+                List.of("O1"), List.of(first.getId(), hidden.getId()))));
+        assertEquals(java.util.Set.of(first.getId(), second.getId()),
+                java.util.Set.copyOf(stringIds(new VisibleStringIdsScope(
+                        List.of("O1"), List.of(first.getId(), second.getId())))));
+        assertTrue(stringIds(new VisibleStringIdsScope(List.of("O1"), List.of(hidden.getId()))).isEmpty());
+        assertEquals(List.of(first.getId()), dao.selectFrom(StringScopeRecord.class, "r")
+                .appendByQueryObj(new SingleStringIdScope(first.getId()))
+                .find(StringScopeRecord.class).stream().map(StringScopeRecord::getId).toList());
+    }
+
+    private StringScopeRecord stringRecord(String prefix, String orgId) {
+        StringScopeRecord record = new StringScopeRecord();
+        record.setId(prefix + "-" + java.util.UUID.randomUUID());
+        record.setOrgId(orgId);
+        dao.create(record);
+        return record;
+    }
+
+    private List<String> stringIds(VisibleStringIdsScope scope) {
+        return dao.selectFrom(StringScopeRecord.class, "r")
+                .appendByQueryObj(scope).find(StringScopeRecord.class).stream()
+                .map(StringScopeRecord::getId).toList();
+    }
+
+    @Test
+    @Transactional
+    void conditionalParticipantGroupKeepsOrgOwnerUnionAndTrustedAllOrgSwitch() {
+        record("O1", "U2", "OPEN");
+        record("O2", "U1", "OPEN");
+        record("O2", "U3", "OPEN");
+        record("O3", "U4", "CLOSED");
+        assertEquals(1, dao.selectFrom(ClassGroupRecord.class, "r")
+                .setContext(Map.of("isCanAccessAllOrg", false))
+                .appendByQueryObj(new ConditionalParticipantScope(List.of("O1"), null)).count());
+        assertEquals(1, dao.selectFrom(ClassGroupRecord.class, "r")
+                .setContext(Map.of("isCanAccessAllOrg", false))
+                .appendByQueryObj(new ConditionalParticipantScope(List.of(), "U1")).count());
+        assertEquals(2, dao.selectFrom(ClassGroupRecord.class, "r")
+                .setContext(Map.of("isCanAccessAllOrg", false))
+                .appendByQueryObj(new ConditionalParticipantScope(List.of("O1"), "U1")).count());
+        assertEquals(0, dao.selectFrom(ClassGroupRecord.class, "r")
+                .setContext(Map.of("isCanAccessAllOrg", false))
+                .appendByQueryObj(new ConditionalParticipantScope(List.of(), null)).count());
+        assertEquals(3, dao.selectFrom(ClassGroupRecord.class, "r")
+                .setContext(Map.of("isCanAccessAllOrg", true))
+                .appendByQueryObj(new ConditionalParticipantScope(List.of(), null))
+                .eq("state", "OPEN").count());
+    }
 
     @DaoLogicGroup(name = "disabled", logicOp = DaoLogicGroup.LogicOp.OR,
             condition = "false", minConditions = 1, unless = "1=2")
@@ -87,6 +186,10 @@ class DaoLogicGroupJpaTest extends DaoExamplesTestSupport {
         assertNotNull(dao.find(ClassGroupRecord.class, visible.getId()));
         assertEquals(0, dao.selectFrom(ClassGroupRecord.class, "r")
                 .appendByQueryObj(new EmptyScope()).count());
+        assertEquals(0, dao.selectFrom(ClassGroupRecord.class, "r")
+                .appendByQueryObj(new DiagnosticFallbackScope()).count());
+        assertEquals(2, dao.selectFrom(ClassGroupRecord.class, "r")
+                .appendByQueryObj(new AlwaysTrueFallbackScope()).count());
         assertEquals(2, dao.selectFrom(ClassGroupRecord.class, "r")
                 .appendByQueryObj(new DisabledWithUnlessScope()).count());
         assertEquals(2, dao.selectFrom(ClassGroupRecord.class, "r")

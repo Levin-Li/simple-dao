@@ -1282,7 +1282,7 @@ public final class ServiceModelCodeGenerator {
         buildEvt(entityClass, fields, serviceDir, params, action);
 
         params.put("reqExtendClass", entityBaseRequestName + "<");
-        params.put("simpleUpdateCommonsBase", hasScopes ? entityBaseRequestName + "<" : commonsRequestBase);
+        params.put("simpleUpdateCommonsBase", commonsRequestBase);
         action = "update";
         fields = buildFieldModel(entityClass, entityMapping, true, action);
         buildEvt(entityClass, fields, serviceDir, params, action);

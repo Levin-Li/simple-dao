@@ -4683,6 +4683,7 @@ class Settlement {
 生成的 `SettlementBaseRequest` 定义 `visible` 和 `sales` 两个类级组，并声明 `inSalesOrgIdList` 和 `eqSalesUserId`，分别使用 `@In(value = E_Settlement.salesOrgId, group = "visible")` 和 `@Eq(value = E_Settlement.salesUserId, group = "sales")`；两者均带 `@InjectVar`，不再重复写 `@DaoLogicGroup`。`SimpleQuerySettlementReq`、`QuerySettlementReq` 和其他继承该基类的请求对象通过继承获得这些字段。运行时在处理请求对象第一个字段前登记类级定义，再把各条件放入所引用的组；普通 WHERE 留在组外。生成字段用 `@JsonIgnore` 和隐藏的 Schema 标记，不作为客户端输入字段公开。
 
 实体的标量 `@Id` 使用 `@GenDaoLogicGroup(filterOp = In.class)` 时，生成的隐藏范围字段为 `inIdList`；普通查询对象原有的 `idList` 仍是显式业务筛选，两者取交集。查询对象的单 ID 便捷构造函数会设置 `idList`，避免引用已被逻辑组移到基类的 `id` 字段。
+查询对象的 `@In @Id List<String> idList` 会按集合成员生成 `IN` 参数；字段上的 JPA `@Id` 只标识目标 ID，不把整个列表包装成单个原子参数。标量 `@Id` 的等值条件保持原有处理。
 
 `@DaoLogicGroup` 的 `remark` 可以包含 `@CopyToGenCode @*` 标记；该注解未写标记时也会自动复制，带标记时不会重复生成。当前类级 `@DaoLogicGroup` 由其生成逻辑处理，现有通用标记复制逻辑仍用于字段注解。
 
@@ -4692,13 +4693,13 @@ class Settlement {
 
 请求类级组在第一个字段之前的位置建立；字段级顶层组在定义字段的位置建立。建组时先求值 `condition`，之后不重复求值。条件注解的 `group` 可在定义字段之前引用组；子组通过 `parent` 挂到父组。缺失定义、重复定义、缺失父组、自引用或间接循环会报错。多个顶层组与普通 WHERE 按所在位置组合，SQL 和参数从同一表达式树提取。`condition` 为假时，组节点仍创建但标记为忽略，其所有子组和成员条件都不进入 SQL，也不执行 `unless`。`minConditions` 统计当前组中成立的直接子元素：一个直接条件节点或局部逻辑子树算一个；子组只要生成有效条件（包括 `unless` 兜底表达式）就算一个。`IN` 绑定多个值仍只算一个子元素；被忽略或没有生成条件的子组不计数。组已启用但计数不足时，有 `unless` 就使用这个无参数原样表达式，否则报错。同一 DAO 中即使定义来自不同请求对象或继承链，同名组仍视为重复定义。
 
-`@DaoLogicGroup` 可直接标在任意请求对象类或字段上，运行时不要求继承 `XxxBaseRequest`。只有该请求对象被 DAO 解析时，组条件才生效。生成器把实体类上的组注解复制到 `XxxBaseRequest`，供查询、删除等请求对象继承；单条 `UpdateXxxReq` 自行生成同一组的定义和字段，`SimpleUpdateXxxReq` 不带该组，避免批量更新同时追加 `setReq` 和 `whereReq` 时重复定义组。
+`@DaoLogicGroup` 可直接标在任意请求对象类或字段上，运行时不要求继承 `XxxBaseRequest`。只有该请求对象被 DAO 解析时，组条件才生效。生成器把实体类上的组注解和范围字段复制到 `XxxBaseRequest`，供生成的查询、删除、ID 请求及手写子类继承；这些具体请求不再重复定义组。单条 `UpdateXxxReq` 自行生成同一组的定义和字段；批量使用的 `SimpleUpdateXxxReq` 继承公共请求基类，只保留 SET 和更新目标校验所需的注入字段，不带可见范围组，避免与 `whereReq` 重复定义。
 
 生成逻辑组只会增加查询条件，不会撤销 `MultiTenantOrgReq` 已有的固定 `orgId` 限制。需要以多组织字段取代该限制的实体，应显式选择合适的查询请求基类和授权策略，不能由通用分组注解自动放宽原权限。
 
 ### 多参与方组织与负责人范围
 
-实体有多个参与组织或负责人字段时，在同一个顶层、无附加条件的 `OR` 组内，给每个参与字段标记明确的 `scopeRole`。组织和负责人字段均为持久化的 `String`，使用 `In.class`；组需配置 `minConditions = 1, unless = "1=2"`。生成器会拒绝混入未标记字段、子组或不覆盖注入值的配置，避免范围条件被其它分支绕过。
+实体有多个参与组织或负责人字段时，在同一个顶层 `OR` 组内，给每个参与字段标记明确的 `scopeRole`。组织字段为持久化的 `String` 并使用 `In.class`；负责人字段为持久化的 `String`，可按上下文数据形态使用 `Eq.class`（单个 `ownerId`）或 `In.class`（负责人 ID 列表）。组需配置 `minConditions >= 1`。生成器会拒绝混入未标记字段、子组或不受信的注入覆盖配置，避免范围条件被其它分支绕过。`unless` 由业务方填写，生成器原样传递，不限定为 `1=2`，也不判断表达式的真假。
 
 ```java
 @DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
@@ -4715,11 +4716,15 @@ class UserOrder {
 }
 ```
 
-应用必须先从可信上下文提供已授权的组织和个人可见 ID 集合，再把生成的请求交给 DAO；客户端传来的同名范围不构成授权。生成的 `XxxBaseRequest` 对各组织、负责人字段产生 `@In(group = "visible")` 条件：任一参与方命中即可见；范围均为空时组退化为 `1=2`。可信的全部组织权限会停用参与方可见范围组，即使所有组织字段都为空也可以访问；租户条件仍独立生效。租户范围仍由原租户请求基类独立约束，与参与方 `OR` 组取交集。负责人不要求属于命中的组织。
+应用必须先从可信上下文提供已授权的组织和个人可见 ID 集合，再把生成的请求交给 DAO；客户端传来的同名范围不构成授权。生成的请求对象对组织字段产生 `@In(group = "visible")`，对负责人字段按配置产生 `@Eq` 或 `@In` 条件：任一参与方命中即可见；范围均为空时使用业务配置的 `unless`。例如 `unless = "'恒假条件原因'='没有组织访问权限'"` 会在 SQL 中保留诊断文字，并在支持该字符串比较语法的数据库中为假。`unless = "1=1"` 会放行，空或未知表达式的效果也取决于现有 DAO 与数据库行为；框架不替业务方证明它安全或跨方言有效。配置了下述全部组织权限 `condition` 时，可信权限成立会停用参与方可见范围组，即使所有组织字段都为空也可以访问；租户条件仍独立生效。租户范围仍由原租户请求基类独立约束，与参与方 `OR` 组取交集。负责人不要求属于命中的组织。
+
+`scopeRole = ORG` 标记组织字段，`scopeRole = OWNER` 标记负责人字段；组织字段使用同一个可信组织范围来源。`injectOverride` 可保持 `"true"`，或使用可信权限表达式 `InjectVar.SPEL_PREFIX + " !(#isCanAccessAllOrg?:false) "`（ORG）、`InjectVar.SPEL_PREFIX + " !(#isCanAccessAllPersonal?:false) "`（OWNER）；普通 `"false"` 仍被拒绝。参与方组不设置 `parent`，`condition` 可留空，或使用 `"!(#isCanAccessAllOrg?:false)"`：后一种写法在可信全部组织权限成立时停用整个组，保留业务已有的全部组织语义。组被停用时 `unless` 不生效，因此该权限变量必须来自可信上下文。若要允许只有组织或只有负责人分支，应把另一分支的 `injectRequired` 设为 `"false"`；必填注入仍按业务配置执行。普通未标记 `scopeRole` 的逻辑组不受这些参与方配置约束。`unless` 中使用特定数据库函数或未知表达式时，数据库可能拒绝执行；现有运行时仍禁止在 `unless` 中放参数占位符。
 
 基本请求对象提供接收字段标题、组织 ID 和范围列表的检查方法；`XxxBaseRequest` 复用已有的可信组织列表，为每个组织字段提供一个检查入口。不安全上下文中，更新前检查非空组织 ID；空值或全部组织权限跳过检查，以支持强制清空。非空目标不在范围内时抛出异常。每个被修改的负责人字段仍生成旧值 `@Eq(当前用户 ID)` 条件，非管理员只能转交自己原本负责的记录；新负责人不要求在个人可见列表中。个人全部可见权限不授予转交权限。
 
 单条 `update(UpdateXxxReq, queryObjs)` 由 `UpdateXxxReq` 提供记录可见范围和目标组织检查。批量 `batchUpdate(SimpleUpdateXxxReq, QueryXxxReq, queryObjs)` 由 `whereReq` 提供可见范围，`setReq` 使用自己已有的范围列表进行目标组织检查并提供 SET 和负责人旧值条件；含参与方角色的实体必须传入非空 `whereReq`。未标记 `scopeRole` 的普通逻辑组仍按原有通用生成规则处理；原单方请求对象的权限约定不因这些角色标记而改变。租户和平台域类型目前在生成时拒绝，尚未实现其范围语义。
+
+服务内部通过 `new XxxIdReq(...)` 等方式创建的请求对象不经过 Web 入口对方法参数的变量注入。DAO 构建条件时读取请求对象现有字段，不会自动对这些新对象执行 `default` 域注入；仅在线程中保留变量解析器也不会填充新对象的参与方范围。调用方须在交给 DAO 或生成服务前，使用应用的受信变量注入器注入该新请求。缺少注入时参与方组按配置的 `unless` 拒绝访问，不能以直接设置权限布尔值或去掉范围条件替代注入。
 
 ### 恒假条件
 

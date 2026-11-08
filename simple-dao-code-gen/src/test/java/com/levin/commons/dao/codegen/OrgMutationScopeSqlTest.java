@@ -79,6 +79,8 @@ class OrgMutationScopeSqlTest {
                 import com.levin.commons.dao.domain.OrganizedSharedObject;
                 public class FixtureReq extends MultiTenantOrgReq<FixtureReq>
                         implements OrganizedPublicObject, OrganizedSharedObject {
+                    public static final String LEGACY_ALL_ORG = EXPR_IS_CAN_ACCESS_ALL_ORG;
+                    public static final String LEGACY_NOT_ALL_ORG = EXPR_NOT_IS_CAN_ACCESS_ALL_ORG;
                     @Eq public String id;
                     @Eq public Integer optimisticLock;
                     @Ignore public boolean includePublic;

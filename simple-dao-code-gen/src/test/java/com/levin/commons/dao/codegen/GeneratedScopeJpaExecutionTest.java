@@ -4,6 +4,8 @@ import com.levin.commons.dao.MiniDao;
 import com.levin.commons.dao.PhysicalNamingStrategy;
 import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.support.UpdateDaoImpl;
+import com.levin.commons.dao.support.SelectDaoImpl;
+import com.levin.commons.dao.support.DeleteDaoImpl;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -26,9 +28,68 @@ import java.util.Map;
 import javax.tools.ToolProvider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Executes the rendered request classes against Hibernate and H2. */
 class GeneratedScopeJpaExecutionTest {
+
+    @Test
+    void handwrittenBaseRequestSubclassKeepsVisibilityForAllActions(@TempDir Path output) throws Exception {
+        generateRequests(output);
+        var registry = new StandardServiceRegistryBuilder()
+                .applySetting(AvailableSettings.URL, "jdbc:h2:mem:handwritten_scope_jpa;DB_CLOSE_DELAY=-1")
+                .applySetting(AvailableSettings.USER, "sa")
+                .applySetting(AvailableSettings.PASS, "")
+                .applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
+                .build();
+        try (SessionFactory factory = new MetadataSources(registry).addAnnotatedClass(UserOrder.class)
+                .buildMetadata().buildSessionFactory();
+             URLClassLoader loader = new URLClassLoader(new URL[]{output.resolve("compiled").toUri().toURL()},
+                     getClass().getClassLoader())) {
+            try (Session session = factory.openSession()) {
+                session.beginTransaction();
+                for (String id : List.of("visible", "hidden")) {
+                    UserOrder row = new UserOrder();
+                    row.id = id;
+                    row.salesOrgId = id.equals("visible") ? "D1" : "OTHER";
+                    row.salesUserId = "OTHER";
+                    session.persist(row);
+                }
+                session.getTransaction().commit();
+            }
+            Class<?> customType = loader.loadClass("probe_jpa.services.userorder.req.CustomUserOrderReq");
+            Object visible = customType.getConstructor().newInstance();
+            field(customType, "id").set(visible, "visible");
+            field(customType, "note").set(visible, "updated");
+            injectScope(visible, customType.getSuperclass(), null);
+            assertEquals(1, select(factory, visible));
+            assertEquals(1, execute(factory, visible));
+
+            Object hidden = customType.getConstructor().newInstance();
+            field(customType, "id").set(hidden, "hidden");
+            field(customType, "note").set(hidden, "blocked");
+            injectScope(hidden, customType.getSuperclass(), null);
+            assertEquals(0, select(factory, hidden));
+            assertEquals(0, execute(factory, hidden));
+            assertEquals(0, delete(factory, hidden));
+
+            Object empty = customType.getConstructor().newInstance();
+            field(customType, "id").set(empty, "hidden");
+            field(customType, "note").set(empty, "blocked");
+            SelectDaoImpl<UserOrder> emptyQuery = new SelectDaoImpl<>(miniDao(), false, UserOrder.class, "r");
+            emptyQuery.appendByQueryObj(empty);
+            assertTrue(emptyQuery.genFinalStatement().contains("1=2"));
+            assertEquals(0, select(factory, empty));
+            assertEquals(0, execute(factory, empty));
+            assertEquals(0, delete(factory, empty));
+            try (Session session = factory.openSession()) {
+                assertEquals("updated", session.find(UserOrder.class, "visible").note);
+                assertEquals(null, session.find(UserOrder.class, "hidden").note);
+            }
+        } finally {
+            StandardServiceRegistryBuilder.destroy(registry);
+        }
+    }
 
     @Test
     void generatedSingleAndBatchUpdatesKeepTenantAndParticipantConditions(@TempDir Path output) throws Exception {
@@ -59,6 +120,23 @@ class GeneratedScopeJpaExecutionTest {
             Class<?> updateType = loader.loadClass("probe_jpa.services.userorder.req.UpdateUserOrderReq");
             Class<?> simpleType = loader.loadClass("probe_jpa.services.userorder.req.SimpleUpdateUserOrderReq");
             Class<?> queryType = loader.loadClass("probe_jpa.services.userorder.req.QueryUserOrderReq");
+            Class<?> idType = loader.loadClass("probe_jpa.services.userorder.req.UserOrderIdReq");
+            Object internalIdRequest = idType.getConstructor(String.class).newInstance("a-own");
+            try {
+                com.levin.commons.service.support.VariableInjector.setVariableResolversForCurrentThread(
+                        List.of(com.levin.commons.service.support.VariableInjector.newResolverByMap(null,
+                                Map.of("accessibleOrgIds", List.of("D1"), "accessibleOwnerIds", List.of("U1")))));
+                assertEquals(0, select(factory, internalIdRequest),
+                        "仅设置线程解析器不会给服务内部新建的请求注入范围");
+            } finally {
+                com.levin.commons.service.support.VariableInjector.setVariableResolversForCurrentThread(null);
+            }
+            injectScope(internalIdRequest, idType.getSuperclass(), null);
+            assertEquals(1, select(factory, internalIdRequest));
+            org.junit.jupiter.api.Assertions.assertThrows(NoSuchFieldException.class,
+                    () -> simpleType.getDeclaredField("preSalesOrgId"));
+            org.junit.jupiter.api.Assertions.assertThrows(NoSuchFieldException.class,
+                    () -> simpleType.getDeclaredField("preSalesUserId"));
 
             Object single = updateType.getConstructor(String.class).newInstance("a-own");
             field(simpleType, "salesUserId").set(single, "SINGLE");
@@ -70,6 +148,11 @@ class GeneratedScopeJpaExecutionTest {
             injectScope(wrongTenant, simpleType.getSuperclass(), simpleType);
             assertEquals(0, execute(factory, wrongTenant, new TenantWhere("A")));
 
+            Object remarkOnly = updateType.getConstructor(String.class).newInstance("a-own");
+            field(simpleType, "remark").set(remarkOnly, "remark-updated");
+            injectScope(remarkOnly, simpleType.getSuperclass(), simpleType);
+            assertEquals(1, execute(factory, remarkOnly, new TenantWhere("A")));
+
             Object set = simpleType.getConstructor().newInstance();
             field(simpleType, "salesUserId").set(set, "BATCH");
             injectScope(set, simpleType.getSuperclass(), simpleType);
@@ -79,6 +162,7 @@ class GeneratedScopeJpaExecutionTest {
 
             try (Session session = factory.openSession()) {
                 assertEquals("SINGLE", session.find(UserOrder.class, "a-own").salesUserId);
+                assertEquals("remark-updated", session.find(UserOrder.class, "a-own").remark);
                 assertEquals("BATCH", session.find(UserOrder.class, "b-own").salesUserId);
                 assertEquals("OTHER", session.find(UserOrder.class, "a-foreign").salesUserId);
             }
@@ -141,6 +225,11 @@ class GeneratedScopeJpaExecutionTest {
                         + " public boolean isForceUpdateField(String name) { return false; } }"));
         sources.add(write(stubs, "probe_jpa/services/userorder/info/UserOrderInfo.java",
                 "package probe_jpa.services.userorder.info; public class UserOrderInfo {}"));
+        sources.add(write(stubs, "probe_jpa/services/userorder/req/CustomUserOrderReq.java",
+                "package probe_jpa.services.userorder.req;"
+                        + " public class CustomUserOrderReq extends UserOrderBaseRequest<CustomUserOrderReq> {"
+                        + " @com.levin.commons.dao.annotation.Eq public String id;"
+                        + " @com.levin.commons.dao.annotation.update.Update public String note; }"));
         try (var generated = Files.walk(output.resolve("services"))) {
             sources.addAll(generated.filter(p -> p.toString().endsWith(".java")).toList());
         }
@@ -169,9 +258,10 @@ class GeneratedScopeJpaExecutionTest {
     }
 
     private static void injectScope(Object request, Class<?> visibilityType, Class<?> updateType) throws Exception {
-        if (visibilityType != null) {
-            for (Field f : visibilityType.getDeclaredFields()) {
-                if (f.getName().startsWith("in") && f.getName().endsWith("List")) {
+        for (Class<?> type = request.getClass(); type != Object.class; type = type.getSuperclass()) {
+            for (Field f : type.getDeclaredFields()) {
+                if ((f.getName().startsWith("in") && f.getName().endsWith("List"))
+                        || f.getName().startsWith("updateScope")) {
                     f.setAccessible(true);
                     f.set(request, f.getName().contains("Org") ? List.of("D1") : List.of("U1"));
                 }
@@ -197,6 +287,45 @@ class GeneratedScopeJpaExecutionTest {
             int changed = query.executeUpdate();
             session.getTransaction().commit();
             return changed;
+        }
+    }
+
+    private static int select(SessionFactory factory, Object request) {
+        SelectDaoImpl<UserOrder> builder = new SelectDaoImpl<>(miniDao(), false, UserOrder.class, "r");
+        builder.appendByQueryObj(request);
+        String hql = builder.genFinalStatement();
+        List<String> values = builder.genFinalParamList().stream().filter(String.class::isInstance)
+                .map(String.class::cast).toList();
+        for (int i = 0; i < values.size(); i++) hql = hql.replaceFirst(":\\?", "?" + (i + 1));
+        try (Session session = factory.openSession()) {
+            var query = session.createQuery(hql, UserOrder.class);
+            for (int i = 0; i < values.size(); i++) query.setParameter(i + 1, values.get(i));
+            return query.getResultList().size();
+        }
+    }
+
+    private static int delete(SessionFactory factory, Object request) {
+        DeleteDaoImpl<UserOrder> builder = new DeleteDaoImpl<>(miniDao(), false, UserOrder.class, "r");
+        builder.appendByQueryObj(request);
+        builder.limit(0, 10);
+        String hql;
+        try {
+            Method physical = DeleteDaoImpl.class.getDeclaredMethod("genFinalStatement", boolean.class);
+            physical.setAccessible(true);
+            hql = (String) physical.invoke(builder, false);
+        } catch (ReflectiveOperationException error) {
+            throw new RuntimeException(error);
+        }
+        List<String> values = builder.genFinalParamList(false).stream().filter(String.class::isInstance)
+                .map(String.class::cast).toList();
+        for (int i = 0; i < values.size(); i++) hql = hql.replaceFirst(":\\?", "?" + (i + 1));
+        try (Session session = factory.openSession()) {
+            session.beginTransaction();
+            var query = session.createMutationQuery(hql);
+            for (int i = 0; i < values.size(); i++) query.setParameter(i + 1, values.get(i));
+            int count = query.executeUpdate();
+            session.getTransaction().commit();
+            return count;
         }
     }
 

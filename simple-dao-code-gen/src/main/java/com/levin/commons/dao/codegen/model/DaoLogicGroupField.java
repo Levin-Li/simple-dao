@@ -65,14 +65,22 @@ public final class DaoLogicGroupField {
         if (scopeRole == GenDaoLogicGroup.ScopeRole.TENANT || scopeRole == GenDaoLogicGroup.ScopeRole.PLATFORM_DOMAIN)
             throw new IllegalArgumentException("Tenant and platform-domain scope generation is not supported yet: " + field);
         if (scopeRole != GenDaoLogicGroup.ScopeRole.NONE) {
-            if (filterOp != In.class || fieldType != String.class
-                    || !"true".equals(generation.injectOverride().trim())
+            String override = generation.injectOverride().replaceAll("\\s+", "");
+            String expectedPermission = scopeRole == GenDaoLogicGroup.ScopeRole.ORG
+                    ? "isCanAccessAllOrg" : "isCanAccessAllPersonal";
+            boolean trustedOverride = "true".equals(override)
+                    || ("#!spel:!(#" + expectedPermission + "?:false)").equals(override);
+            String groupCondition = groupDefinition.condition().replaceAll("\\s+", "");
+            boolean trustedGroupCondition = groupCondition.isEmpty()
+                    || "!(#isCanAccessAllOrg?:false)".equals(groupCondition);
+            if ((scopeRole == GenDaoLogicGroup.ScopeRole.ORG ? filterOp != In.class
+                    : filterOp != In.class && filterOp != Eq.class) || fieldType != String.class
+                    || !trustedOverride
                     || groupDefinition.logicOp() != DaoLogicGroup.LogicOp.OR
                     || groupDefinition.minConditions() < 1
-                    || !"1=2".equals(groupDefinition.unless().replaceAll("\\s+", ""))
-                    || StringUtils.hasText(groupDefinition.condition())
+                    || !trustedGroupCondition
                     || StringUtils.hasText(groupDefinition.parent()))
-                throw new IllegalArgumentException("Participant scope requires a root, fail-closed OR/IN group on a String field: " + field);
+                throw new IllegalArgumentException("Participant scope requires trusted injection and a root OR group on a String field: " + field);
         }
     }
 

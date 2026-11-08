@@ -2,6 +2,7 @@ package com.levin.commons.dao.codegen;
 
 import com.github.javaparser.StaticJavaParser;
 import com.levin.commons.dao.annotation.In;
+import com.levin.commons.dao.annotation.Eq;
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.annotation.NotIn;
 import com.levin.commons.dao.annotation.StartsWith;
@@ -46,6 +47,79 @@ class DaoLogicGroupCodegenTest {
         @GenDaoLogicGroup(name = "participants", filterOp = In.class,
                 injectVarName = "accessibleOwnerIds", scopeRole = GenDaoLogicGroup.ScopeRole.OWNER)
         String salesUserId;
+    }
+
+    private static final String LIMITED_ORG = com.levin.commons.service.domain.InjectVar.SPEL_PREFIX
+            + " !(#isCanAccessAllOrg?:false) ";
+    private static final String LIMITED_PERSONAL = com.levin.commons.service.domain.InjectVar.SPEL_PREFIX
+            + " !(#isCanAccessAllPersonal?:false) ";
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            condition = "!(#isCanAccessAllOrg?:false)", minConditions = 1,
+            unless = "'恒假条件原因'='没有组织访问权限'")
+    static class ExistingPermissionStyle {
+        @GenDaoLogicGroup(name = "participants", scopeRole = GenDaoLogicGroup.ScopeRole.ORG,
+                filterOp = In.class, injectVarName = "orgIdList", injectOverride = LIMITED_ORG)
+        String salesOrgId;
+        @GenDaoLogicGroup(name = "participants", scopeRole = GenDaoLogicGroup.ScopeRole.OWNER,
+                filterOp = Eq.class, injectVarName = "ownerId", injectOverride = LIMITED_PERSONAL)
+        String salesUserId;
+    }
+
+    @Test
+    void participantScopeAcceptsTrustedPermissionGatesAndSingleOwnerEquality() throws Exception {
+        List<DaoLogicGroupField> fields = DaoLogicGroupField.forType(ExistingPermissionStyle.class);
+        assertEquals(List.of("inSalesOrgIdList", "eqSalesUserId"),
+                fields.stream().map(DaoLogicGroupField::getQueryFieldName).toList());
+        String source = renderBaseRequest(ExistingPermissionStyle.class, fields);
+        assertTrue(source.contains("@In(value = E_ExistingPermissionStyle.salesOrgId"), source);
+        assertTrue(source.contains("@Eq(value = E_ExistingPermissionStyle.salesUserId"), source);
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "'恒假条件原因'='没有组织访问权限'")
+    static class DiagnosticUnlessScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOrgIds", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=1")
+    static class AlwaysTrueUnlessScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOrgIds", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "jsonb_typeof(payload) = 'object'")
+    static class DialectUnlessScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOrgIds", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "mystery_predicate()")
+    static class UnknownUnlessScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOrgIds", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @Test
+    void participantScopePreservesConfiguredUnlessWithoutInterpretingIt() throws Exception {
+        for (Class<?> type : List.of(DiagnosticUnlessScope.class, AlwaysTrueUnlessScope.class,
+                DialectUnlessScope.class, UnknownUnlessScope.class)) {
+            List<DaoLogicGroupField> fields = DaoLogicGroupField.forType(type);
+            assertEquals(1, fields.size());
+            String source = renderBaseRequest(type, fields);
+            String unless = type.getAnnotation(DaoLogicGroup.class).unless();
+            assertTrue(DaoLogicGroupField.annotationSource(type.getAnnotation(DaoLogicGroup.class))
+                    .contains("unless = \"" + unless + "\""));
+            assertTrue(source.contains("group = \"participants\""), source);
+        }
     }
 
     @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR, minConditions = 1, unless = "1=2")
@@ -422,6 +496,18 @@ class DaoLogicGroupCodegenTest {
                         .findFirst().orElseThrow();
                 String source = Files.readString(baseReq);
                 assertTrue(source.contains("@DaoLogicGroup(name = \"visible\", logicOp = DaoLogicGroup.LogicOp.OR, minConditions = 1, unless = \"1\" + \"=2\")"), source);
+            }
+            Files.writeString(sourceFile, Files.readString(sampleSource)
+                    .replace("unless = \"1=2\"", "unless = \"'恒假条件原因'='没有组织访问权限'\""));
+            sourceMap.set(null, parse.invoke(null, sourceRoot.toFile()));
+            Path diagnosticOutput = output.resolve("diagnostic");
+            buildBase.invoke(null, Sample.class, fieldModels(Sample.class), diagnosticOutput.toString(),
+                    new HashMap<>(Map.of("reqExtendClass", "BaseReq")), "SampleBaseRequest");
+            try (var generated = Files.walk(diagnosticOutput)) {
+                Path baseReq = generated.filter(path -> path.getFileName().toString().equals("SampleBaseRequest.java"))
+                        .findFirst().orElseThrow();
+                assertTrue(Files.readString(baseReq).contains(
+                        "unless = \"'恒假条件原因'='没有组织访问权限'\""));
             }
         } finally {
             sourceMap.set(null, previousMap);

@@ -68,21 +68,6 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     private static final long serialVersionUID = ${serialVersionUID}L;
 
 <#if hasRoleScopeFields!false>
-<#if hasRoleScopeFields!false>
-<#list daoLogicGroupFields![] as f>
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @com.levin.commons.dao.annotation.update.Update(condition = "false")
-    @${f.filterAnnotationName}(value = E_${entityName}.${f.sourceFieldName}, group = ${f.groupLiteral})
-    ${f.queryTypeName} scopeAlias${f.queryFieldName?cap_first};
-</#list>
-    @jakarta.annotation.PostConstruct
-    public void initScopeAliases() {
-<#list daoLogicGroupFields![] as f>
-        scopeAlias${f.queryFieldName?cap_first} = ${f.queryFieldName};
-</#list>
-    }
-</#if>
-<#else>
 <#list daoLogicGroupFields![] as logicField>
     @Schema(title = ${logicField.titleLiteral}, hidden = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
@@ -90,23 +75,14 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     @InjectVar(value = ${logicField.injectVarLiteral},
             isOverride = ${logicField.injectOverrideLiteral},
             isRequired = ${logicField.injectRequiredLiteral})
+    @com.levin.commons.dao.annotation.update.Update(condition = "false")
     @${logicField.filterAnnotationName}(value = E_${entityName}.${logicField.sourceFieldName}, group = ${logicField.groupLiteral})
     ${logicField.queryTypeName} ${logicField.queryFieldName};
 
 </#list>
 
 
-<#if hasRoleScopeFields!false>
-    @Override
-    protected java.util.Collection<String> resolveOrgScope(String fieldName) {
-<#list daoLogicGroupFields![] as f><#if f.scopeRole?string == 'ORG'>
-        if (E_${entityName}.${f.sourceFieldName}.equals(fieldName)) return ${f.queryFieldName};
-</#if></#list>
-        throw new IllegalArgumentException("未知组织字段");
-    }
 </#if>
-
- </#if>
 
 <#if pkField?exists>
     @Schema(title = ${pkField.schemaTitle}, required = true, requiredMode = REQUIRED)

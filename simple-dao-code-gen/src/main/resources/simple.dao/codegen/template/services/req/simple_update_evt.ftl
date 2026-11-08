@@ -69,6 +69,39 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#assign updatableScopeFields = []>
+<#list (fields![]) + (UPDATE_fields![]) as updateField>
+    <#if !updateField.notUpdate && !updateField.jpaEntity && !updateField.hasJpaJoinColumn()>
+        <#list daoLogicGroupFields![] as roleField>
+            <#if roleField.sourceFieldName == updateField.name>
+                <#assign updatableScopeFields = updatableScopeFields + [roleField]>
+            </#if>
+        </#list>
+    </#if>
+</#list>
+
+<#if hasRoleScopeFields!false>
+<#list updatableScopeFields as f>
+    @Schema(title = ${f.titleLiteral}, hidden = true)
+    @JsonIgnore
+    @Setter(AccessLevel.NONE)
+    @InjectVar(value = ${f.injectVarLiteral},
+            isOverride = ${f.injectOverrideLiteral},
+            isRequired = ${f.injectRequiredLiteral})
+    @Ignore
+    protected ${f.queryTypeName} updateScope${f.queryFieldName?cap_first};
+    <#if f.scopeRole?string == 'ORG'>
+    protected void check${f.sourceFieldName?cap_first}(String value) {
+        checkUpdateOrgTarget(E_${entityName}.L_${f.sourceFieldName}, value, updateScope${f.queryFieldName?cap_first});
+    }
+    <#elseif f.scopeRole?string == 'OWNER' || f.scopeRole?string == 'USER'>
+    protected void check${f.sourceFieldName?cap_first}(String value) {
+        checkUpdateOwnerTarget(E_${entityName}.L_${f.sourceFieldName}, value);
+    }
+    </#if>
+</#list>
+</#if>
+
 <#macro ScopeUpdateGuard field>
 <#list daoLogicGroupFields![] as roleField>
 <#if roleField.sourceFieldName == field.name && (roleField.scopeRole?string == 'OWNER' || roleField.scopeRole?string == 'USER')>
@@ -180,7 +213,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 
 @PostConstruct //@PreUpdate
     public void preUpdate() {
-<#list daoLogicGroupFields![] as f><#if f.scopeRole?string == 'ORG'>
+<#list updatableScopeFields as f><#if f.scopeRole?string == 'ORG'>
         check${f.sourceFieldName?cap_first}(${f.sourceFieldName});
 </#if><#if f.scopeRole?string == 'OWNER' || f.scopeRole?string == 'USER'>
         check${f.sourceFieldName?cap_first}(${f.sourceFieldName});

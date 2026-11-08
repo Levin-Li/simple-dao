@@ -44,6 +44,13 @@ import java.util.List;
 public class MultiTenantOrgReq<T extends MultiTenantOrgReq<T>>
         extends MultiTenantReq<T> implements OrganizedObject, OrganizedScopeObject{
 
+    /** 兼容既有生成请求对子类常量的引用。 */
+    @Deprecated
+    public static final String EXPR_IS_CAN_ACCESS_ALL_ORG = SPEL_CAN_ACCESS_ALL_ORG;
+
+    @Deprecated
+    public static final String EXPR_NOT_IS_CAN_ACCESS_ALL_ORG = SPEL_NOT_CAN_ACCESS_ALL_ORG;
+
     /**
      * 注入方已校验通过的可访问组织列表。
      *

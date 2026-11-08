@@ -7,6 +7,7 @@ import com.levin.commons.dao.annotation.In;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 
 @Entity
 @EntityOption(innerAccessOnly = true)
@@ -20,6 +21,10 @@ public class UserOrder {
     String id;
 
     String tenantId;
+
+    String remark;
+
+    String note;
 
     @Schema(title = "销售部门ID")
     @GenDaoLogicGroup(name = "visible", filterOp = In.class, injectVarName = "accessibleOrgIds",
@@ -58,12 +63,14 @@ public class UserOrder {
     String afterSalesUserId;
 
     @Schema(title = "售前部门ID")
+    @Column(updatable = false)
     @GenDaoLogicGroup(name = "visible", filterOp = In.class, injectVarName = "accessibleOrgIds",
             scopeRole = GenDaoLogicGroup.ScopeRole.ORG,
             injectOverride = "true", injectRequired = "false")
     String preSalesOrgId;
 
     @Schema(title = "售前负责人ID")
+    @Column(updatable = false)
     @GenDaoLogicGroup(name = "visible", filterOp = In.class, injectVarName = "accessibleOwnerIds",
             scopeRole = GenDaoLogicGroup.ScopeRole.OWNER,
             injectOverride = "true", injectRequired = "false")

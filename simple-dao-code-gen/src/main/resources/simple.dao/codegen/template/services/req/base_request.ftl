@@ -24,11 +24,9 @@ import ${imp};
  *
  * @author Auto gen by simple-dao-codegen, @time: ${.now}, 代码生成哈希校验码：[]，请不要修改和删除此行内容。
  */
-<#if !(hasRoleScopeFields!false)>
 <#list daoLogicGroupClassAnnotations![] as groupAnnotation>
 ${groupAnnotation}
 </#list>
-</#if>
 public abstract class ${className}<T extends ${className}<T>> extends ${reqExtendClass} {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
@@ -39,7 +37,8 @@ public abstract class ${className}<T extends ${className}<T>> extends ${reqExten
     @InjectVar(value = ${logicField.injectVarLiteral},
             isOverride = ${logicField.injectOverrideLiteral},
             isRequired = ${logicField.injectRequiredLiteral})
-    <#if hasRoleScopeFields!false>@Ignore<#else>@${logicField.filterAnnotationName}(value = E_${entityName}.${logicField.sourceFieldName}, group = ${logicField.groupLiteral})</#if>
+    @com.levin.commons.dao.annotation.update.Update(condition = "false")
+    @${logicField.filterAnnotationName}(value = E_${entityName}.${logicField.sourceFieldName}, group = ${logicField.groupLiteral})
     <#list classModel.rbacAnnotations(logicField.sourceFieldName) as groupAnnotation>
     ${groupAnnotation}
     </#list>
