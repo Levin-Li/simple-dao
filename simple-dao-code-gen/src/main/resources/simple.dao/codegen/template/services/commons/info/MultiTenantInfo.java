@@ -2,9 +2,6 @@ package ${modulePackageName}.services.commons.info;
 
 import com.levin.commons.dao.annotation.Ignore;
 import com.levin.commons.dao.domain.*;
-import com.levin.commons.rbac.DataMasking;
-import com.levin.commons.rbac.RbacRoleInfo;
-import com.levin.commons.rbac.ResAuthorize;
 import com.levin.commons.service.domain.*;
 import com.levin.commons.service.support.*;
 
@@ -36,11 +33,9 @@ public class MultiTenantInfo
 
     @Ignore
     @RefInject(refObjectType = "Tenant", idExpr = InjectConst.TENANT_ID, valueExpr = "name")
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_SA, RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
     @Schema(title = "租户名称")
     String tenantName = ""; // 默认值, Jackson序列化时默认不会处理null值，所以特意设置了空串
 
-    @DataMasking(showAuthorize = @ResAuthorize(anyRoles = {RbacRoleInfo.PLATFORM_SA, RbacRoleInfo.PLATFORM_ROLE_PREFIX + "*"}), remark = "平台管理员才能显示")
     @Size(max = 128)
     @Schema(title = "租户Id")
     String tenantId;

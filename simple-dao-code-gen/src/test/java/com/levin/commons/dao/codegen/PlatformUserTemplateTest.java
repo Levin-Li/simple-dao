@@ -70,7 +70,8 @@ class PlatformUserTemplateTest {
         String source = Files.readString(multiTenantReq);
 
         assertTrue(source.contains("!isPlatformUser()"), source);
-        assertTrue(source.contains("RbacRoleInfo.PLATFORM_ROLE_PREFIX + \"*\""), source);
+        assertFalse(source.contains("DataMasking"), source);
+        assertFalse(source.contains("RbacRoleInfo.PLATFORM_ROLE_PREFIX + \"*\""), source);
         assertFalse(source.contains("!isSaasUser()"), source);
         assertDoesNotThrow(() -> StaticJavaParser.parse(source), source);
     }
