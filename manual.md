@@ -4692,9 +4692,34 @@ class Settlement {
 
 请求类级组在第一个字段之前的位置建立；字段级顶层组在定义字段的位置建立。建组时先求值 `condition`，之后不重复求值。条件注解的 `group` 可在定义字段之前引用组；子组通过 `parent` 挂到父组。缺失定义、重复定义、缺失父组、自引用或间接循环会报错。多个顶层组与普通 WHERE 按所在位置组合，SQL 和参数从同一表达式树提取。`condition` 为假时，组节点仍创建但标记为忽略，其所有子组和成员条件都不进入 SQL，也不执行 `unless`。`minConditions` 统计当前组中成立的直接子元素：一个直接条件节点或局部逻辑子树算一个；子组只要生成有效条件（包括 `unless` 兜底表达式）就算一个。`IN` 绑定多个值仍只算一个子元素；被忽略或没有生成条件的子组不计数。组已启用但计数不足时，有 `unless` 就使用这个无参数原样表达式，否则报错。同一 DAO 中即使定义来自不同请求对象或继承链，同名组仍视为重复定义。
 
-`@DaoLogicGroup` 可直接标在任意请求对象类或字段上，运行时不要求继承 `XxxBaseRequest`。只有该请求对象被 DAO 解析时，组条件才生效。生成器默认把实体类上的组注解复制到 `XxxBaseRequest`，供生成的请求对象继承；这只是模板的用法，不限制手写请求对象。
+`@DaoLogicGroup` 可直接标在任意请求对象类或字段上，运行时不要求继承 `XxxBaseRequest`。只有该请求对象被 DAO 解析时，组条件才生效。生成器把实体类上的组注解复制到 `XxxBaseRequest`，供查询、删除等请求对象继承；单条 `UpdateXxxReq` 自行生成同一组的定义和字段，`SimpleUpdateXxxReq` 不带该组，避免批量更新同时追加 `setReq` 和 `whereReq` 时重复定义组。
 
 生成逻辑组只会增加查询条件，不会撤销 `MultiTenantOrgReq` 已有的固定 `orgId` 限制。需要以多组织字段取代该限制的实体，应显式选择合适的查询请求基类和授权策略，不能由通用分组注解自动放宽原权限。
+
+### 多参与方组织与负责人范围
+
+实体有多个参与组织或负责人字段时，在同一个顶层、无附加条件的 `OR` 组内，给每个参与字段标记明确的 `scopeRole`。组织和负责人字段均为持久化的 `String`，使用 `In.class`；组需配置 `minConditions = 1, unless = "1=2"`。生成器会拒绝混入未标记字段、子组或不覆盖注入值的配置，避免范围条件被其它分支绕过。
+
+```java
+@DaoLogicGroup(name = "visible", logicOp = DaoLogicGroup.LogicOp.OR,
+        minConditions = 1, unless = "1=2")
+class UserOrder {
+    @GenDaoLogicGroup(name = "visible", scopeRole = GenDaoLogicGroup.ScopeRole.ORG,
+            filterOp = In.class, injectVarName = "accessibleOrgIds")
+    String salesOrgId;
+
+    @GenDaoLogicGroup(name = "visible", scopeRole = GenDaoLogicGroup.ScopeRole.OWNER,
+            filterOp = In.class, injectVarName = "accessibleOwnerIds")
+    String salesUserId;
+    // 其他参与方以相同方式标记。
+}
+```
+
+应用必须先从可信上下文提供已授权的组织和个人可见 ID 集合，再把生成的请求交给 DAO；客户端传来的同名范围不构成授权。生成的 `XxxBaseRequest` 对各组织、负责人字段产生 `@In(group = "visible")` 条件：任一参与方命中即可见；范围均为空时组退化为 `1=2`。可信的全部组织权限会停用参与方可见范围组，即使所有组织字段都为空也可以访问；租户条件仍独立生效。租户范围仍由原租户请求基类独立约束，与参与方 `OR` 组取交集。负责人不要求属于命中的组织。
+
+基本请求对象提供接收字段标题、组织 ID 和范围列表的检查方法；`XxxBaseRequest` 复用已有的可信组织列表，为每个组织字段提供一个检查入口。不安全上下文中，更新前检查非空组织 ID；空值或全部组织权限跳过检查，以支持强制清空。非空目标不在范围内时抛出异常。每个被修改的负责人字段仍生成旧值 `@Eq(当前用户 ID)` 条件，非管理员只能转交自己原本负责的记录；新负责人不要求在个人可见列表中。个人全部可见权限不授予转交权限。
+
+单条 `update(UpdateXxxReq, queryObjs)` 由 `UpdateXxxReq` 提供记录可见范围和目标组织检查。批量 `batchUpdate(SimpleUpdateXxxReq, QueryXxxReq, queryObjs)` 由 `whereReq` 提供可见范围，`setReq` 使用自己已有的范围列表进行目标组织检查并提供 SET 和负责人旧值条件；含参与方角色的实体必须传入非空 `whereReq`。未标记 `scopeRole` 的普通逻辑组仍按原有通用生成规则处理；原单方请求对象的权限约定不因这些角色标记而改变。租户和平台域类型目前在生成时拒绝，尚未实现其范围语义。
 
 ### 恒假条件
 
@@ -4702,7 +4727,7 @@ class Settlement {
 
 ## 实体专属请求父类
 
-每轮 `gen-code` 都为实体 `Xxx` 生成一个 `XxxBaseRequest<T extends XxxBaseRequest<T>>`，位于实体服务的 `req` 包，继承该实体原先选中的 commons 请求基类。`SimpleQueryXxxReq`、`SimpleUpdateXxxReq`、`DeleteXxxReq`、`XxxIdReq` 通过该类继承 commons 基类；`QueryXxxReq` 和 `UpdateXxxReq` 继续分别继承对应的 `Simple*Req`。`CreateXxxReq` 保持直接继承原 commons 基类，不经过 `XxxBaseRequest`。Info 模型的继承关系不变。
+每轮 `gen-code` 都为实体 `Xxx` 生成 `XxxBaseRequest<T extends XxxBaseRequest<T>>`。存在参与方范围字段时，受保护的字段检查方法和可信范围列表直接生成在 `XxxBaseRequest` 中。`SimpleQueryXxxReq`、`DeleteXxxReq`、`XxxIdReq` 继承实体基本请求；`UpdateXxxReq` 继承 `SimpleUpdateXxxReq` 并生成实体逻辑组。创建请求继承原 commons 基类，Info 模型的继承关系不变。
 
 `XxxBaseRequest` 是每轮重新生成的文件，不作为手工扩展点。生成器继续遵守已有哈希保护规则；若有人手改生成文件，生成过程可能因保护规则拒绝覆盖。实体所属模块发生变更时，先编译实体模块，再运行 `gen-code`，不要直接修改生成目录。
 

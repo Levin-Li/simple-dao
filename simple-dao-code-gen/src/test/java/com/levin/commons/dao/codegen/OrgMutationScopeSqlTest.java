@@ -67,6 +67,10 @@ class OrgMutationScopeSqlTest {
                     source, Map.of("modulePackageName", "com.example.orgsql"));
             sources.add(source);
         }
+        Path review = Path.of("target/generated-scope-review");
+        Files.createDirectories(review);
+        Files.copy(packageDir.resolve("BaseReq.java"), review.resolve("BaseReq.java"),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         Path fixture = packageDir.resolve("FixtureReq.java");
         Files.writeString(fixture, "package " + PACKAGE + ";\n" + """
                 import com.levin.commons.dao.annotation.Eq;
@@ -102,6 +106,29 @@ class OrgMutationScopeSqlTest {
     @AfterAll
     static void closeLoader() throws Exception {
         if (loader != null) loader.close();
+    }
+
+    @Test
+    void actualBaseRequestChecksOnlyNonblankOrgInUnsafeRestrictedContext() throws Exception {
+        Object req = loader.loadClass(PACKAGE + ".FixtureReq").getConstructor().newInstance();
+        var base = loader.loadClass(PACKAGE + ".BaseReq");
+        var check = base.getDeclaredMethod("checkUpdateOrgTarget", String.class, String.class, Collection.class);
+        check.setAccessible(true);
+        assertTrue(java.lang.reflect.Modifier.isProtected(check.getModifiers()));
+        assertThrows(NoSuchMethodException.class, () -> base.getDeclaredMethod("checkScopeValue", Collection.class, Object.class, String.class));
+        field(req, "isUnsafeContext", false);
+        assertDoesNotThrow(() -> check.invoke(req, "销售部门", "outside", null));
+        field(req, "isUnsafeContext", true);
+        assertDoesNotThrow(() -> check.invoke(req, "销售部门", null, null));
+        assertDoesNotThrow(() -> check.invoke(req, "销售部门", "  ", null));
+        assertDoesNotThrow(() -> check.invoke(req, "销售部门", "allowed", List.of("allowed")));
+        var denied = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> check.invoke(req, "销售部门", "outside", List.of("allowed")));
+        assertEquals("更新 销售部门：组织ID不在授权范围内", denied.getCause().getMessage());
+        assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> check.invoke(req, "销售部门", "outside", null));
+        field(req, "isCanAccessAllOrg", true);
+        assertDoesNotThrow(() -> check.invoke(req, "销售部门", "outside", null));
     }
 
     @TestFactory

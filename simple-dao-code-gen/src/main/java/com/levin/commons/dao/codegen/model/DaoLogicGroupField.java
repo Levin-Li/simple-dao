@@ -33,6 +33,7 @@ public final class DaoLogicGroupField {
     private final String injectOverride;
     private final String injectRequired;
     private final String title;
+    private final GenDaoLogicGroup.ScopeRole scopeRole;
 
     private DaoLogicGroupField(Field field, DaoLogicGroup groupDefinition, GenDaoLogicGroup generation) {
         Class<? extends Annotation> filterOp = generation.filterOp();
@@ -51,7 +52,7 @@ public final class DaoLogicGroupField {
                 + StringUtils.capitalize(field.getName())
                 + ((filterOp == In.class || filterOp == NotIn.class) ? "List" : "");
         this.queryTypeName = (filterOp == In.class || filterOp == NotIn.class)
-                ? "java.util.List<" + queryType.getCanonicalName() + ">" : queryType.getCanonicalName();
+                ? (queryType == String.class && generation.scopeRole() != GenDaoLogicGroup.ScopeRole.NONE ? "List<String>" : "java.util.List<" + queryType.getCanonicalName() + ">") : queryType.getCanonicalName();
         this.groupDefinition = groupDefinition;
         this.filterAnnotationName = filterOp.getSimpleName();
         this.injectVarName = StringUtils.hasText(generation.injectVarName())
@@ -60,6 +61,19 @@ public final class DaoLogicGroupField {
         this.injectRequired = generation.injectRequired();
         Schema schema = field.getAnnotation(Schema.class);
         this.title = schema != null && StringUtils.hasText(schema.title()) ? schema.title() : field.getName();
+        this.scopeRole = generation.scopeRole();
+        if (scopeRole == GenDaoLogicGroup.ScopeRole.TENANT || scopeRole == GenDaoLogicGroup.ScopeRole.PLATFORM_DOMAIN)
+            throw new IllegalArgumentException("Tenant and platform-domain scope generation is not supported yet: " + field);
+        if (scopeRole != GenDaoLogicGroup.ScopeRole.NONE) {
+            if (filterOp != In.class || fieldType != String.class
+                    || !"true".equals(generation.injectOverride().trim())
+                    || groupDefinition.logicOp() != DaoLogicGroup.LogicOp.OR
+                    || groupDefinition.minConditions() < 1
+                    || !"1=2".equals(groupDefinition.unless().replaceAll("\\s+", ""))
+                    || StringUtils.hasText(groupDefinition.condition())
+                    || StringUtils.hasText(groupDefinition.parent()))
+                throw new IllegalArgumentException("Participant scope requires a root, fail-closed OR/IN group on a String field: " + field);
+        }
     }
 
     public static List<DaoLogicGroupField> forType(Class<?> entityClass) {
@@ -83,6 +97,36 @@ public final class DaoLogicGroupField {
                 throw new IllegalArgumentException("Generated DAO logic field name conflicts: " + model.queryFieldName);
             result.add(model);
         });
+        Set<String> protectedGroups = new HashSet<>();
+        long orgScopeSources = result.stream()
+                .filter(model -> model.scopeRole == GenDaoLogicGroup.ScopeRole.ORG)
+                .map(model -> model.injectVarName).distinct().count();
+        if (orgScopeSources > 1)
+            throw new IllegalArgumentException("Participant organizations must share the same trusted scope source");
+        result.stream().filter(model -> model.scopeRole != GenDaoLogicGroup.ScopeRole.NONE)
+                .forEach(model -> protectedGroups.add(model.groupDefinition.name().trim()));
+        for (Field field : fields.values()) {
+            GenDaoLogicGroup marker = field.getAnnotation(GenDaoLogicGroup.class);
+            if (marker != null && protectedGroups.contains(marker.name().trim())
+                    && marker.scopeRole() == GenDaoLogicGroup.ScopeRole.NONE)
+                throw new IllegalArgumentException("Untrusted condition in participant scope group: " + field);
+            for (Annotation annotation : field.getAnnotations()) {
+                if (annotation instanceof GenDaoLogicGroup) continue;
+                try {
+                    Object group = annotation.annotationType().getMethod("group").invoke(annotation);
+                    if (group instanceof String && protectedGroups.contains(((String) group).trim()))
+                        throw new IllegalArgumentException("Extra condition in participant scope group: " + field);
+                } catch (NoSuchMethodException ignored) {
+                    // Other annotations do not contribute to a named DAO group.
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalArgumentException("Cannot inspect participant scope annotation: " + field, e);
+                }
+            }
+        }
+        for (DaoLogicGroup group : definitions.values()) {
+            if (protectedGroups.contains(group.parent().trim()))
+                throw new IllegalArgumentException("Participant scope group cannot have a child group: " + group.name());
+        }
         return List.copyOf(result);
     }
 
@@ -149,9 +193,11 @@ public final class DaoLogicGroupField {
     public String getQueryFieldName() { return queryFieldName; }
     public String getQueryTypeName() { return queryTypeName; }
     public String getFilterAnnotationName() { return filterAnnotationName; }
+    public String getGroupName() { return groupDefinition.name().trim(); }
     public String getGroupLiteral() { return literal(groupDefinition.name().trim()); }
     public String getInjectVarLiteral() { return literal(injectVarName); }
     public String getInjectOverrideLiteral() { return literal(injectOverride); }
     public String getInjectRequiredLiteral() { return literal(injectRequired); }
     public String getTitleLiteral() { return literal(title); }
+    public GenDaoLogicGroup.ScopeRole getScopeRole() { return scopeRole; }
 }

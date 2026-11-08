@@ -21,6 +21,7 @@ import com.google.googlejavaformat.java.JavaFormatterOptions;
 import com.google.googlejavaformat.java.RemoveUnusedImports;
 import com.levin.commons.dao.EntityCategory;
 import com.levin.commons.dao.DaoLogicGroup;
+import com.levin.commons.dao.GenDaoLogicGroup;
 import com.levin.commons.dao.EntityOpConst;
 import com.levin.commons.dao.EntityOption;
 import com.levin.commons.dao.Unique;
@@ -1179,6 +1180,8 @@ public final class ServiceModelCodeGenerator {
                 .put("isMultiTenantObject", isMultiTenant)
                 .put("isOrganizedObject", isOrg)
                 .put("isPersonalObject", isPersonal)
+                .put("hasRoleScopeFields", DaoLogicGroupField.forType(entityClass).stream()
+                        .anyMatch(field -> field.getScopeRole() != com.levin.commons.dao.GenDaoLogicGroup.ScopeRole.NONE))
 
                 .put("isMultiTenantSharedObject", MultiTenantSharedObject.class.isAssignableFrom(entityClass))
                 .put("isMultiTenantPublicObject", MultiTenantPublicObject.class.isAssignableFrom(entityClass))
@@ -1262,6 +1265,9 @@ public final class ServiceModelCodeGenerator {
                                                    List<FieldModel> infoFields) throws Exception {
         Object commonsRequestBase = params.get("reqExtendClass");
         String entityBaseRequestName = entityClass.getSimpleName() + "BaseRequest";
+        boolean hasScopes = DaoLogicGroupField.forType(entityClass).stream()
+                .anyMatch(field -> field.getScopeRole() != GenDaoLogicGroup.ScopeRole.NONE);
+        params.put("hasRoleScopeFields", hasScopes);
         buildBaseRequest(entityClass, infoFields, serviceDir, params, entityBaseRequestName);
         params.put("reqExtendClass", entityBaseRequestName + "<");
 
@@ -1276,6 +1282,7 @@ public final class ServiceModelCodeGenerator {
         buildEvt(entityClass, fields, serviceDir, params, action);
 
         params.put("reqExtendClass", entityBaseRequestName + "<");
+        params.put("simpleUpdateCommonsBase", hasScopes ? entityBaseRequestName + "<" : commonsRequestBase);
         action = "update";
         fields = buildFieldModel(entityClass, entityMapping, true, action);
         buildEvt(entityClass, fields, serviceDir, params, action);
@@ -1508,6 +1515,12 @@ public final class ServiceModelCodeGenerator {
             map.put("servicePackageName", servicePackage());
         };
 
+        if (Boolean.TRUE.equals(paramsMap.get("hasRoleScopeFields"))) {
+            paramsMap.put("daoLogicGroupFields", DaoLogicGroupField.forType(entityClass));
+            Set<String> imports = new LinkedHashSet<>();
+            paramsMap.put("daoLogicGroupClassAnnotations", copiedDaoLogicGroupAnnotations(entityClass, imports));
+            paramsMap.put("daoLogicGroupClassImports", imports);
+        }
         if ("query".equalsIgnoreCase(type)) {
 
             List<DaoLogicGroupField> logicGroupFields = DaoLogicGroupField.forType(entityClass);
@@ -1542,18 +1555,24 @@ public final class ServiceModelCodeGenerator {
 
         } else if ("update".equalsIgnoreCase(type)) {
 
+            paramsMap.put("daoLogicGroupFields", DaoLogicGroupField.forType(entityClass));
+            paramsMap.put("hasRoleScopeFields", DaoLogicGroupField.forType(entityClass).stream()
+                    .anyMatch(field -> field.getScopeRole() != GenDaoLogicGroup.ScopeRole.NONE));
+
+            Object entityBase = paramsMap.get("reqExtendClass");
+            paramsMap.put("reqExtendClass", paramsMap.get("simpleUpdateCommonsBase"));
             final String tempName = "SimpleUpdate" + entityClass.getSimpleName() + "Req";
             genCode(entityClass, SIMPLE_UPDATE_EVT_FTL, fields, srcDir, pkgName, tempName, mapConsumer);
 
-
-            Object reqExtendClass = paramsMap.get("reqExtendClass");
-
             paramsMap.put("reqExtendClass", tempName);
+            Set<String> updateGroupImports = new LinkedHashSet<>();
+            paramsMap.put("daoLogicGroupClassAnnotations", copiedDaoLogicGroupAnnotations(entityClass, updateGroupImports));
+            paramsMap.put("daoLogicGroupClassImports", updateGroupImports);
 
             genCode(entityClass, UPDATE_EVT_FTL, fields, srcDir,
                     pkgName, "Update" + entityClass.getSimpleName() + "Req", mapConsumer);
 
-            paramsMap.put("reqExtendClass", reqExtendClass);
+            paramsMap.put("reqExtendClass", entityBase);
 
         } else if ("delete".equalsIgnoreCase(type)) {
 
@@ -1573,6 +1592,8 @@ public final class ServiceModelCodeGenerator {
         genCode(entityClass, BASE_REQUEST_FTL, fields, serviceDir, servicePackage() + ".req", className, map -> {
             map.putAll(paramsMap);
             map.put("daoLogicGroupFields", DaoLogicGroupField.forType(entityClass));
+            map.put("hasRoleScopeFields", DaoLogicGroupField.forType(entityClass).stream()
+                    .anyMatch(field -> field.getScopeRole() != GenDaoLogicGroup.ScopeRole.NONE));
             Set<String> groupImports = new LinkedHashSet<>();
             map.put("daoLogicGroupClassAnnotations", copiedDaoLogicGroupAnnotations(entityClass, groupImports));
             map.put("daoLogicGroupClassImports", groupImports);
@@ -1601,8 +1622,14 @@ public final class ServiceModelCodeGenerator {
             }
             imports.addAll(getImportList(unit.compilationUnit));
         }
+        Set<String> participantGroups = DaoLogicGroupField.forType(entityClass).stream()
+                .filter(field -> field.getScopeRole() == GenDaoLogicGroup.ScopeRole.ORG)
+                .map(DaoLogicGroupField::getGroupName).collect(Collectors.toSet());
         return definitions.entrySet().stream()
-                .map(entry -> source.getOrDefault(entry.getKey(), DaoLogicGroupField.annotationSource(entry.getValue())))
+                .map(entry -> participantGroups.contains(entry.getKey())
+                        ? DaoLogicGroupField.annotationSource(entry.getValue()).replace(
+                                "condition = \"\"", "condition = \"!(#isCanAccessAllOrg?:false)\"")
+                        : source.getOrDefault(entry.getKey(), DaoLogicGroupField.annotationSource(entry.getValue())))
                 .collect(Collectors.toList());
     }
 

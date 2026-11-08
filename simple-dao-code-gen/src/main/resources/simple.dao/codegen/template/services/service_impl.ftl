@@ -425,6 +425,9 @@ public class ${className} extends BaseService<${className}> implements ${service
     @Transactional
     <#if !pkField?exists || !isCacheableEntity>//</#if>@CacheEvict(allEntries = true, condition = "#result > 0")
     public int batchUpdate(SimpleUpdate${entityName}Req setReq, Query${entityName}Req whereReq, Object... queryObjs){
+       if (<#if hasRoleScopeFields!false>whereReq == null<#else>setReq.isUnsafeContext() && whereReq == null</#if>) {
+           throw new IllegalArgumentException("外部批量更新必须提供包含可信范围的查询请求");
+       }
        int result = simpleDao.updateByQueryObj(setReq, whereReq, queryObjs);
        handleEvent(result > 0, EntityOption.Action.Update, null);
        return result;

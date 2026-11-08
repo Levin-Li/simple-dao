@@ -64,6 +64,9 @@ public abstract class BaseReq implements ServiceReq {
 
     public static final String EXPR_IS_CAN_ACCESS_ALL_PERSONAL = " (#" + InjectConst.IS_CAN_ACCESS_ALL_PERSONAL + "?:false) ";
 
+    protected static final String SPEL_CAN_ACCESS_ALL_ORG = " (#" + InjectConst.IS_CAN_ACCESS_ALL_ORG + "?:false) ";
+
+    protected static final String SPEL_NOT_CAN_ACCESS_ALL_ORG = " !" + SPEL_CAN_ACCESS_ALL_ORG;
 
    /// /////////////////////////////////////////////////////////////////////
     public static final String EXPR_NOT_TOP_SUPER_ADMIN = " !" + EXPR_IS_TOP_SUPER_ADMIN;
@@ -127,6 +130,10 @@ public abstract class BaseReq implements ServiceReq {
     @InjectVar(InjectVar.SPEL_PREFIX + EXPR_IS_TENANT_ADMIN)
     @Ignore
     protected boolean isTenantAdmin = false;
+
+    @InjectVar(InjectVar.SPEL_PREFIX + SPEL_CAN_ACCESS_ALL_ORG)
+    @Ignore
+    protected boolean isCanAccessAllOrg = false;
 
     /**
      * 上游权限系统计算的个人数据访问授权；始终覆盖请求传入值，缺失授权时为 false。
@@ -273,6 +280,12 @@ public abstract class BaseReq implements ServiceReq {
     }
 
     @Ignore
+    @Schema(title = "是否能访问所有组织", description = "由可信上下文注入；不替代租户及具体操作的范围校验", hidden = true)
+    public boolean isCanAccessAllOrg() {
+        return this.isCanAccessAllOrg;
+    }
+
+    @Ignore
     @Schema(title = "是否能访问个人数据", description = "由可信上下文注入；不替代租户、组织及具体操作的范围校验", hidden = true)
     public boolean isCanAccessAllPersonal() {
         return this.isCanAccessAllPersonal;
@@ -368,6 +381,20 @@ public abstract class BaseReq implements ServiceReq {
     protected boolean isNotBlank(Object value) {
         return value != null
                 && (!(value instanceof CharSequence) || StringUtils.hasText((CharSequence) value));
+    }
+
+    protected void checkUpdateOrgTarget(String fieldTitle, String orgId, Collection<?> allowedValues) {
+        if (!isUnsafeContext() || isCanAccessAllOrg() || orgId == null || orgId.isBlank()) return;
+        if (allowedValues == null || !allowedValues.contains(orgId)) {
+            throw new IllegalArgumentException("更新 " + fieldTitle + "：组织ID不在授权范围内");
+        }
+    }
+
+    protected void checkUpdateOwnerTarget(String fieldTitle, String ownerId) {
+        if (!isUnsafeContext() || isAdmin() || ownerId == null || ownerId.isBlank()) return;
+        if (get_currentUserId() == null || get_currentUserId().isBlank()) {
+            throw new IllegalArgumentException("更新 " + fieldTitle + "：缺少当前用户ID");
+        }
     }
 
     protected <T extends BaseReq> T checkSQLInject(String... statements) {

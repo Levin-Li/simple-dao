@@ -15,8 +15,14 @@ import java.lang.annotation.Target;
 @Documented
 public @interface GenDaoLogicGroup {
 
+    /** Trusted participant scope used by generated request and update guards. */
+    enum ScopeRole { NONE, ORG, OWNER, USER, TENANT, PLATFORM_DOMAIN }
+
     /** 对应实体类上的 {@link DaoLogicGroup#name()}。 */
     String name();
+
+    /** Explicit role; field names and injection variable names are not authority metadata. */
+    ScopeRole scopeRole() default ScopeRole.NONE;
 
     Class<? extends Annotation> filterOp() default Eq.class;
 

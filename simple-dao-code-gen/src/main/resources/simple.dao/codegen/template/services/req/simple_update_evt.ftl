@@ -69,6 +69,34 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 
     private static final long serialVersionUID = ${serialVersionUID}L;
 
+<#macro ScopeUpdateGuard field>
+<#list daoLogicGroupFields![] as roleField>
+<#if roleField.sourceFieldName == field.name && (roleField.scopeRole?string == 'OWNER' || roleField.scopeRole?string == 'USER')>
+    @Schema(hidden = true)
+    @JsonIgnore
+    @Setter(AccessLevel.NONE)
+    @InjectVar(value = "_currentUserId", isOverride = "true", isRequired = "false")
+    @Update(condition = "false")
+    @Eq(value = E_${entityName}.${field.name}, condition = "ownerUpdateGuard(\"${field.name}\", ${field.name}, oldOwnerGuard${field.name?cap_first}, #_isUpdate)", desc = "更新 ${field.name}：非管理员只能转交本人原有记录")
+    protected String oldOwnerGuard${field.name?cap_first};
+</#if>
+</#list>
+</#macro>
+
+<#if hasRoleScopeFields!false>
+    protected boolean isUpdatingScopeField(String fieldName, String value) {
+        return isForceUpdateField(fieldName) || (value != null && !value.isEmpty());
+    }
+
+    public boolean ownerUpdateGuard(String fieldName, String newValue, String oldOwnerGuard, boolean updateAction) {
+        if (!updateAction || !isUnsafeContext() || !isUpdatingScopeField(fieldName, newValue) || isAdmin()) return false;
+        if (get_currentUserId() == null || get_currentUserId().isBlank()
+                || !get_currentUserId().equals(oldOwnerGuard))
+            throw new IllegalArgumentException("更新 " + fieldName + "：缺少可信的旧负责人约束");
+        return true;
+    }
+</#if>
+
     ///////////////////////////强制更新的字段列表///////////////////////////////////////
     @Schema(title = "自动强制更新字段", description = "自动增加强制更新字段为true时，只要字段的set方法被调用(对应客户端来说只要上传了参数)，字段会被加入强制更新列表。")
     @Ignore //dao 忽略
@@ -115,6 +143,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     ${groupAnnotation}
     </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    <@ScopeUpdateGuard field=field />
 
     </#if>
 </#list>
@@ -136,6 +165,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     ${groupAnnotation}
     </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name};
+    <@ScopeUpdateGuard field=field />
 
     </#if>
 </#list>
@@ -148,8 +178,13 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
         this.autoForceUpdateField = autoForceUpdateField;
     }
 
-    @PostConstruct //@PreUpdate
+@PostConstruct //@PreUpdate
     public void preUpdate() {
+<#list daoLogicGroupFields![] as f><#if f.scopeRole?string == 'ORG'>
+        check${f.sourceFieldName?cap_first}(${f.sourceFieldName});
+</#if><#if f.scopeRole?string == 'OWNER' || f.scopeRole?string == 'USER'>
+        check${f.sourceFieldName?cap_first}(${f.sourceFieldName});
+</#if></#list>
 
 <#list fields as field>
     <#if classModel.isDefaultUpdateTime(field.name)>

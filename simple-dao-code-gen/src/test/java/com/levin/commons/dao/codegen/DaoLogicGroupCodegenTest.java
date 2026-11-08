@@ -37,6 +37,85 @@ class DaoLogicGroupCodegenTest {
         String salesOrgId;
     }
 
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    static class ParticipantScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOrgIds", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectVarName = "accessibleOwnerIds", scopeRole = GenDaoLogicGroup.ScopeRole.OWNER)
+        String salesUserId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR, minConditions = 1, unless = "1=2")
+    static class DifferentOrgSources {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class, injectVarName = "first", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String firstOrgId;
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class, injectVarName = "second", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String secondOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR)
+    static class UnsafeParticipantScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    static class MixedParticipantScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class)
+        String untrustedId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    @DaoLogicGroup(name = "child", parent = "participants", logicOp = DaoLogicGroup.LogicOp.OR)
+    static class NestedParticipantScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "participants", logicOp = DaoLogicGroup.LogicOp.OR,
+            minConditions = 1, unless = "1=2")
+    static class NonOverridingParticipantScope {
+        @GenDaoLogicGroup(name = "participants", filterOp = In.class,
+                injectOverride = "false", scopeRole = GenDaoLogicGroup.ScopeRole.ORG)
+        String salesOrgId;
+    }
+
+    @DaoLogicGroup(name = "scope", logicOp = DaoLogicGroup.LogicOp.OR, minConditions = 1, unless = "1=2")
+    static class UnsupportedTenantScope {
+        @GenDaoLogicGroup(name = "scope", filterOp = In.class, scopeRole = GenDaoLogicGroup.ScopeRole.TENANT)
+        String tenantId;
+    }
+    @DaoLogicGroup(name = "scope", logicOp = DaoLogicGroup.LogicOp.OR, minConditions = 1, unless = "1=2")
+    static class UnsupportedPlatformScope {
+        @GenDaoLogicGroup(name = "scope", filterOp = In.class, scopeRole = GenDaoLogicGroup.ScopeRole.PLATFORM_DOMAIN)
+        String domainId;
+    }
+
+    @Test
+    void participantScopesRequireFailClosedGroupAndGenerateAllOrgBranch() throws Exception {
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(DifferentOrgSources.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(UnsupportedTenantScope.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(UnsupportedPlatformScope.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(UnsafeParticipantScope.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(MixedParticipantScope.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(NestedParticipantScope.class));
+        assertThrows(IllegalArgumentException.class, () -> DaoLogicGroupField.forType(NonOverridingParticipantScope.class));
+        String source = renderBaseRequest(ParticipantScope.class, DaoLogicGroupField.forType(ParticipantScope.class));
+        var type = StaticJavaParser.parse(source).getClassByName("ParticipantScopeBaseRequest").orElseThrow();
+        assertTrue(type.getFieldByName("scopeAllSalesOrgId").isEmpty());
+        assertTrue(type.getFieldByName("scopeAllSalesUserId").isEmpty());
+    }
+
     @DaoLogicGroup(name = "excluded", parent = "visible", logicOp = DaoLogicGroup.LogicOp.AND)
     static class Settlement extends Parent {
         @GenDaoLogicGroup(name = "visible", injectVarName = "viewerId")

@@ -63,9 +63,29 @@ import ${imp};
 ${groupAnnotation}
 </#list>
 @TargetOption(entityClass = ${entityName}.class, alias = E_${entityName}.ALIAS)
+<#if hasRoleScopeFields!false>
+<#list daoLogicGroupClassAnnotations![] as groupAnnotation>
+${groupAnnotation}
+</#list>
+</#if>
 public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr?has_content> implements ${requestImplementsListStr}</#if> {
 
     private static final long serialVersionUID = ${serialVersionUID}L;
+<#if hasRoleScopeFields!false>
+<#list daoLogicGroupFields![] as f>
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.levin.commons.dao.annotation.update.Update(condition = "false")
+    @${f.filterAnnotationName}(value = E_${entityName}.${f.sourceFieldName}, group = ${f.groupLiteral})
+    ${f.queryTypeName} scopeAlias${f.queryFieldName?cap_first};
+</#list>
+    @jakarta.annotation.PostConstruct
+    public void initScopeAliases() {
+<#list daoLogicGroupFields![] as f>
+        scopeAlias${f.queryFieldName?cap_first} = ${f.queryFieldName};
+</#list>
+    }
+</#if>
+
 
 <#if classModel.isType('com.levin.commons.dao.domain.EditableObject')>
     @Schema(description = "可编辑条件，如果是web环境需要增加可编辑的过滤条件" , hidden = true)
