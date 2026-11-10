@@ -3,6 +3,7 @@ package com.levin.commons.dao.codegen.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.alibaba.fastjson2.JSON;
+import com.levin.commons.rbac.RbacDataAttrGroup;
 import com.levin.commons.rbac.RbacDataAttrGroupMetadata;
 import com.levin.commons.rbac.RbacDataAttrMetadata;
 import lombok.Data;
@@ -73,6 +74,9 @@ public class ClassModel {
         this.rbacDataAttrControlled = !RbacDataAttrMetadata.forType(entityType).isEmpty();
 
         this.imports.add("java.time.*");
+        if (!dataAttrGroupMetadata.getGroups().isEmpty()) {
+            this.imports.add(RbacDataAttrGroup.class.getName());
+        }
 
         for (Annotation annotation : this.entityType.getAnnotations()) {
             //加入Json的注解
@@ -133,7 +137,7 @@ public class ClassModel {
     private static String rbacAnnotation(RbacDataAttrGroupMetadata.Group group, List<String> attributes) {
         String attrs = attributes.isEmpty() ? "" : ", attrList = {" + attributes.stream()
                 .map(ClassModel::javaString).collect(Collectors.joining(", ")) + "}";
-        return "@com.levin.commons.rbac.RbacDataAttrGroup(name = " + javaString(group.getName())
+        return "@RbacDataAttrGroup(name = " + javaString(group.getName())
                 + attrs + ", confidentialLevel = " + group.getConfidentialLevel()
                 + ", remark = " + javaString(group.getRemark()) + ")";
     }

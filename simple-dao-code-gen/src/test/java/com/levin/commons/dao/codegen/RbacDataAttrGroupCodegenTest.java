@@ -115,6 +115,12 @@ class RbacDataAttrGroupCodegenTest {
                 String first = Files.readString(output).replaceAll("@time: .*?, 代码", "@time: stable, 代码");
                 ServiceModelCodeGenerator.genFileByTemplate(template.getValue(), params, output.toString());
                 assertEquals(first, Files.readString(output).replaceAll("@time: .*?, 代码", "@time: stable, 代码"));
+                if (name.equals("QueryContractReq")) {
+                    String querySource = Files.readString(output);
+                    assertTrue(querySource.contains("import com.levin.commons.rbac.RbacDataAttrGroup;"));
+                    assertTrue(querySource.contains("@RbacDataAttrGroup(name = \"财务\""));
+                    assertFalse(querySource.contains("@com.levin.commons.rbac.RbacDataAttrGroup("));
+                }
                 generated.add(output);
             }
             generated.add(source("generated/probe/entities/E_Contract.java", "package probe.entities; public class E_Contract { public static final String ALIAS=\"c\", tenantId=\"tenantId\", tenantName=\"tenantName\", id=\"id\", amount=\"amount\", account=\"account\", label=\"label\", day=\"day\", attachment=\"attachment\", inherited=\"inherited\", plain=\"plain\", kind=\"kind\", inheritedKind=\"inheritedKind\"; }"));
