@@ -71,7 +71,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
     ${groupAnnotation}
     </#list>
-    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}; //参考默认值 ${field.hasDefaultValue?string(' = ', '')}${field.defaultValue!}
+    ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.name}; //参考默认值<#if field.hasDefaultValue> =${(field.defaultValue!'')?trim?has_content?then(' '+(field.defaultValue!'')?trim, '')}</#if>
 
     </#if>
 </#list>

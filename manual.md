@@ -4381,7 +4381,7 @@ public class Area extends AbstractNamedEntityObject {
 
 - 表名通过 `@Entity(name = ...)` 设置，不建议通过 `@Table(name = ...)` 设置。
 - 字段名通常由命名策略转换成物理列名，不建议在 `@Column(name = "...")` 中硬编码列名。
-- 关联字段的 `@JoinColumn(name = "...")` 应写 Java 字段名，并按项目规范设置 `insertable`、`updatable`。
+- 如果 `Employee` 使用 `orgId` 字段存储外键，关联属性使用 `@JoinColumn(name = E_Employee.orgId, insertable = false, updatable = false)`。该常量取值为 Java 字段名，数据库列名仍由命名策略转换。
 - 枚举字段应使用 `@Enumerated(EnumType.STRING)`，数据库存枚举常量名，不存 ordinal。
 
 ## 21. 常见业务场景速查

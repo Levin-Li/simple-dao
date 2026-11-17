@@ -117,7 +117,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#if !field.hasEqAnnotation()>
     @Eq
     </#if>
-    <@FieldAnnotationList field = field keyword='@Eq'/>
+<@FieldAnnotationList field = field keyword='@Eq'/>
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
     ${groupAnnotation}
     </#list>
@@ -126,7 +126,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     </#if>
     @Schema(title = ${field.schemaTitle} + "开始" , description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "大于等于"</#if>)
     @Gte
-    <@FieldAnnotationList field = field/>
+<@FieldAnnotationList field = field/>
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
     ${groupAnnotation}
     </#list>
@@ -134,7 +134,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
 
     @Schema(title = ${field.schemaTitle} + "结束", description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "小于等于"</#if>)
     @Lte
-    <@FieldAnnotationList field = field/>
+<@FieldAnnotationList field = field/>
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
     ${groupAnnotation}
     </#list>
@@ -143,7 +143,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#-- 非关联对象 -->
     <#elseif !field.hasJpaJoinColumn()>
     @Schema(title = ${field.schemaTitle}<#if field.desc != ''>, description = ${field.schemaDesc}</#if>)
-    <@FieldAnnotationList field = field  keyword='@Options'/>
+<@FieldAnnotationList field = field  keyword='@Options'/>
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
     ${groupAnnotation}
     </#list>
@@ -152,7 +152,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     <#if field.contains>
 
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-模糊匹配"</#if>)
-    <@FieldAnnotationList field = field ignoreInjectVar = true />
+<@FieldAnnotationList field = field ignoreInjectVar = true />
         <#if field.isIterable()>
     @OR(autoClose = true)
     @ForceSplitCondition
@@ -164,9 +164,9 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}${field.typeName} ${field.extras.nameSuffix?uncap_first}${field.name?cap_first};
     </#if>
     </#if>
-    <#if field.enumerable!>  <#-- 可枚举的 -->
+    <#if field.enumerable!><#-- 可枚举的 -->
 
-    <@FieldAnnotationList field = field keyword='@Options'/>
+<@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-包含匹配"</#if>)
     @In
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>
@@ -174,7 +174,7 @@ public class ${className} extends ${reqExtendClass}<#if requestImplementsListStr
     </#list>
     ${(field.modifiersPrefix!?trim!?length > 0)?string(field.modifiersPrefix, '')}List<${field.typeName}> in${field.name?cap_first};
 
-    <@FieldAnnotationList field = field keyword='@Options'/>
+<@FieldAnnotationList field = field keyword='@Options'/>
     @Schema(title = ${field.schemaTitle}, description = <#if field.desc != ''>${field.schemaDesc}<#else>${field.schemaTitle} + "-不包含匹配"</#if>)
     @NotIn
     <#list classModel.rbacAnnotations(field.name) as groupAnnotation>

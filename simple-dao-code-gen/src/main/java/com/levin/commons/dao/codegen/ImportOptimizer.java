@@ -86,6 +86,7 @@ public class ImportOptimizer {
                 .orElse(""));
 
         Set<String> usedTypeSimpleNames = new HashSet<>();
+        Set<String> unqualifiedTypeSimpleNames = new HashSet<>();
         Set<String> usedPotentialTypeQualifierNames = new HashSet<>();
         Set<String> packageQualifiedTypeSimpleNames = new HashSet<>();
         Set<String> usedLikelyStaticMemberNames = new HashSet<>();
@@ -95,6 +96,7 @@ public class ImportOptimizer {
                 .forEach(annotationExpr -> {
                     String simpleName = annotationExpr.getName().getIdentifier();
                     usedTypeSimpleNames.add(simpleName);
+                    unqualifiedTypeSimpleNames.add(simpleName);
 
                     if (isPackageQualifiedName(annotationExpr.getNameAsString())) {
                         packageQualifiedTypeSimpleNames.add(simpleName);
@@ -104,6 +106,10 @@ public class ImportOptimizer {
                 .forEach(type -> {
                     String simpleName = type.getName().getIdentifier();
                     usedTypeSimpleNames.add(simpleName);
+                    // 限定内部类型只依赖外层类型导入，不能将内部简单名视为导入使用。
+                    if (!type.getScope().isPresent()) {
+                        unqualifiedTypeSimpleNames.add(simpleName);
+                    }
 
                     type.getScope().ifPresent(scope -> {
                         String rootScopeName = getRootScopeIdentifier(scope);
@@ -219,7 +225,7 @@ public class ImportOptimizer {
                         return false;
                     }
 
-                    return usedTypeSimpleNames.contains(simpleName)
+                    return unqualifiedTypeSimpleNames.contains(simpleName)
                             || effectiveTypeQualifierNames.contains(simpleName);
                 })
                 .collect(Collectors.toList());
@@ -404,10 +410,7 @@ public class ImportOptimizer {
 
         if (scope.isFieldAccessExpr()) {
             FieldAccessExpr fieldAccessExpr = scope.asFieldAccessExpr();
-            String name = fieldAccessExpr.getName().getIdentifier();
-            if (isLikelyTypeName(name)) {
-                out.add(name);
-            }
+            // 限定表达式只有根名称可能依赖导入，中间的内部类型名称不能视为独立引用。
             collectPotentialTypeNamesFromScope(fieldAccessExpr.getScope(), out);
         }
     }

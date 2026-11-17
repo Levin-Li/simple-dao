@@ -60,7 +60,8 @@ class RbacDataAttrGroupCodegenTest {
                 """.formatted(enumScope ? "@com.levin.commons.rbac.RbacDataAttr" : "",
                         enumScope ? "@com.levin.commons.rbac.RbacDataAttr" : ""));
         Path entityClasses = dir.resolve("entity-classes");
-        compile(List.of(entity), entityClasses, System.getProperty("java.class.path"));
+        Path constants = source("input/probe/entities/E_Contract.java", "package probe.entities; public class E_Contract { public static final String tenantId = \"tenantId\", tenantName = \"tenantName\"; }");
+        compile(List.of(entity, constants), entityClasses, System.getProperty("java.class.path"));
         Path jar = dir.resolve("entity-without-sources.jar");
         try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar));
              var paths = Files.walk(entityClasses)) {
@@ -115,6 +116,10 @@ class RbacDataAttrGroupCodegenTest {
                 String first = Files.readString(output).replaceAll("@time: .*?, 代码", "@time: stable, 代码");
                 ServiceModelCodeGenerator.genFileByTemplate(template.getValue(), params, output.toString());
                 assertEquals(first, Files.readString(output).replaceAll("@time: .*?, 代码", "@time: stable, 代码"));
+                if (name.equals("ContractInfo")) {
+                    String infoSource = Files.readString(output);
+                    assertTrue(infoSource.contains("attrList = {probe.entities.E_Contract.tenantId, \"tenantName\"}"));
+                }
                 if (name.equals("QueryContractReq")) {
                     String querySource = Files.readString(output);
                     assertTrue(querySource.contains("import com.levin.commons.rbac.RbacDataAttrGroup;"));
@@ -166,6 +171,22 @@ class RbacDataAttrGroupCodegenTest {
                 assertEquals(Set.of("银行账号", "付款"), Arrays.stream(info.getDeclaredField("account").getAnnotationsByType(RbacDataAttrGroup.class)).map(RbacDataAttrGroup::name).collect(java.util.stream.Collectors.toSet()));
                 Class<?> update = loader.loadClass("probe.services.req.UpdateContractReq");
                 assertFalse(RbacDataAttrGroupMetadata.forType(update).getGroupsForAttribute("account").isEmpty());
+            }
+        }
+    }
+
+    @Test
+    void attributesWithoutMatchingCompileTimeConstantsStayLiteral() throws Exception {
+        Path entity = source("fallback/probe/Fallback.java", "package probe; public class Fallback { public String tenantId, orgId, ownerId, domainId; }");
+        Path constants = source("fallback/probe/E_Fallback.java", "package probe; public class E_Fallback { public static final String tenantId = new String(\"tenantId\"), orgId = \"different\"; private static final String ownerId = \"ownerId\"; }");
+        Path classes = dir.resolve("fallback-classes");
+        compile(List.of(entity, constants), classes, System.getProperty("java.class.path"));
+        try (URLClassLoader loader = new URLClassLoader(new java.net.URL[]{classes.toUri().toURL()}, getClass().getClassLoader())) {
+            ClassModel model = new ClassModel(loader.loadClass("probe.Fallback"));
+            Method expression = ClassModel.class.getDeclaredMethod("attributeExpression", String.class);
+            expression.setAccessible(true);
+            for (String attribute : List.of("tenantId", "orgId", "ownerId", "domainId", "tenantName")) {
+                assertEquals("\"" + attribute + "\"", expression.invoke(model, attribute), attribute);
             }
         }
     }

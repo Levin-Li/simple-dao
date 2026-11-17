@@ -134,12 +134,39 @@ public class ClassModel {
         return result;
     }
 
-    private static String rbacAnnotation(RbacDataAttrGroupMetadata.Group group, List<String> attributes) {
+    private String rbacAnnotation(RbacDataAttrGroupMetadata.Group group, List<String> attributes) {
         String attrs = attributes.isEmpty() ? "" : ", attrList = {" + attributes.stream()
-                .map(ClassModel::javaString).collect(Collectors.joining(", ")) + "}";
+                .map(this::attributeExpression).collect(Collectors.joining(", ")) + "}";
         return "@RbacDataAttrGroup(name = " + javaString(group.getName())
                 + attrs + ", confidentialLevel = " + group.getConfidentialLevel()
                 + ", remark = " + javaString(group.getRemark()) + ")";
+    }
+
+    private String attributeExpression(String attribute) {
+        // DTO-only aliases must retain their own names, even if an E_ field happens to match.
+        if (ReflectionUtils.findField(entityType, attribute) == null) return javaString(attribute);
+        String constantType = entityType.getPackage().getName() + ".E_" + entityType.getSimpleName();
+        String resource = constantType.replace('.', '/') + ".class";
+        try (java.io.InputStream in = entityType.getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) return javaString(attribute);
+            final boolean[] match = {false};
+            new org.springframework.asm.ClassReader(in).accept(new org.springframework.asm.ClassVisitor(org.springframework.asm.Opcodes.ASM9) {
+                private boolean publicClass;
+                @Override public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+                    publicClass = (access & org.springframework.asm.Opcodes.ACC_PUBLIC) != 0;
+                }
+                @Override public org.springframework.asm.FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+                    int required = org.springframework.asm.Opcodes.ACC_PUBLIC | org.springframework.asm.Opcodes.ACC_STATIC | org.springframework.asm.Opcodes.ACC_FINAL;
+                    if (publicClass && (access & required) == required && name.equals(attribute)
+                            && "Ljava/lang/String;".equals(descriptor) && attribute.equals(value)) match[0] = true;
+                    return null;
+                }
+            }, org.springframework.asm.ClassReader.SKIP_CODE | org.springframework.asm.ClassReader.SKIP_DEBUG | org.springframework.asm.ClassReader.SKIP_FRAMES);
+            if (match[0]) return constantType + "." + attribute;
+        } catch (java.io.IOException | IllegalArgumentException ignored) {
+            // Missing or unreadable constants are safely represented as literals.
+        }
+        return javaString(attribute);
     }
 
     private static String javaString(String value) {

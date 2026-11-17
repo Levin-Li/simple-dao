@@ -482,6 +482,42 @@ public final class ServiceModelCodeGenerator {
         simpleGen("starter/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports", params, mavenProject);
     }
 
+    static String removeConflictingImports(String fileName, String source) {
+        try {
+            // 只在存在不同全限定名的同名单类型导入时调整，保留其余生成格式。
+            CompilationUnit original = StaticJavaParser.parse(source);
+            Map<String, Set<String>> bySimpleName = original.getImports().stream()
+                    .filter(imp -> !imp.isStatic() && !imp.isAsterisk())
+                    .map(imp -> imp.getNameAsString())
+                    .collect(Collectors.groupingBy(name -> name.substring(name.lastIndexOf('.') + 1),
+                            Collectors.toSet()));
+            Set<String> conflicts = bySimpleName.values().stream()
+                    .filter(names -> names.size() > 1)
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            if (conflicts.isEmpty()) {
+                return source;
+            }
+
+            // 依据优化器的使用分析，仅移除不再需要的冲突导入。
+            CompilationUnit optimized = ImportOptimizer.optimizeImports(fileName, original);
+            Set<String> retained = optimized.getImports().stream()
+                    .filter(imp -> !imp.isStatic() && !imp.isAsterisk())
+                    .map(imp -> imp.getNameAsString())
+                    .collect(Collectors.toSet());
+            for (String name : conflicts) {
+                if (!retained.contains(name)) {
+                    source = source.replaceAll("(?m)^[\\t ]*import[\\t ]+" + Pattern.quote(name)
+                            + "[\\t ]*;[\\t ]*(?:\\r?\\n|$)", "");
+                }
+            }
+            return source;
+        } catch (Exception e) {
+            logger.warn("[{}] 冲突导入分析失败，保留原始内容：{}", fileName, e.getMessage());
+            return source;
+        }
+    }
+
     public static void simpleGen(final String templatePath, Map<String, Object> params, MavenProject mavenProject) throws Exception {
 
         int idx = templatePath.indexOf("/");
@@ -2824,6 +2860,9 @@ public final class ServiceModelCodeGenerator {
         String fileContent = stringWriter.toString();
 
         if (isJavaSrcFile) {
+
+            // 模板可能引入多个同名内部类型，先清除未使用的冲突导入。
+            fileContent = removeConflictingImports(path, fileContent);
 
             try {
                 //google-format 并不会移除 .* 的导入

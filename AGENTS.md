@@ -48,3 +48,9 @@ mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQu
 受信字典标量与 JSON 字符串列表强制范围：[需求](openspec/changes/c20261101-1354-mandatory-dictionary-scope/proposal.md)、[设计](openspec/changes/c20261101-1354-mandatory-dictionary-scope/design.md)、[验收规范](openspec/changes/c20261101-1354-mandatory-dictionary-scope/specs/mandatory-dictionary-scope/spec.md)、[任务](openspec/changes/c20261101-1354-mandatory-dictionary-scope/tasks.md)、[实现与验证](openspec/changes/c20261101-1354-mandatory-dictionary-scope/implementation.md)、[使用说明](manual.md#受信的枚举记录范围mandatorycondition)。
 
 严格表达式作用域：[使用指南](docs/严格表达式求值作用域.md)。
+
+限定内部类型导入修复：[需求](openspec/changes/c20261117-0100-qualified-type-imports/proposal.md)、[规范](openspec/changes/c20261117-0100-qualified-type-imports/specs/codegen-imports/spec.md)、[任务](openspec/changes/c20261117-0100-qualified-type-imports/tasks.md)。
+
+属性分组常量引用：[需求](openspec/changes/c20261117-0200-rbac-group-constant-reference/proposal.md)、[验收规范](openspec/changes/c20261117-0200-rbac-group-constant-reference/specs/codegen/spec.md)、[任务](openspec/changes/c20261117-0200-rbac-group-constant-reference/tasks.md)。
+
+关联列字段常量：[模板规范](simple-dao-code-gen/src/main/resources/simple.dao/codegen/template/entity/实体类开发规范.md)、[验收规范](openspec/changes/c20261117-1333-join-column-field-constant-guidance/specs/simple-dao-codegen/spec.md)、[任务](openspec/changes/c20261117-1333-join-column-field-constant-guidance/tasks.md)。
