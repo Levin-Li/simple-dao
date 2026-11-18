@@ -10,3 +10,4 @@
 - 所有生成的 JSON 双向方法统一调用 core 的 `MapperJsonUtils`；仅公开 `toJson(Object)`、`fromJson(String, Type)` 转换入口，默认 Fastjson2，可经同一原子引用替换嵌套 `JsonCodec`。空对象序列化为 Java `null` 字符串，空或 `null` JSON 输入解析为 `null` 对象。
 - 值类型候选必须复用已生成 Info 字段的解析类型，避免与实体泛型解析结果分歧。
 - 只读字段与重载 setter 必须按声明类型使用静态复制方法；nullable `Boolean` 的计算 getter 不能把原始 `null` 变成 `false`。无法安全静态复制的可变字段须在生成阶段明确失败，不得静默共享。没有实际动态映射需求的生成 Mapper 不得输出 `copyDynamicValue(Object)`。
+- 对通过 `@InjectVar` 声明两个具体类作为键值类型的 JSON Map，Info 到 Info 的复制使用转换后声明的 Map 类型，遵循相同的容器与已知值复制规则。实体到 Info 的 JSON 转换仍使用完整泛型类型。

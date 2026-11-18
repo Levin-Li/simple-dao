@@ -7,3 +7,4 @@
 - [x] 按 core 再 codegen 的顺序发布变更模块：`simple-dao-core:4.3.0-20261010.163804-82`、`simple-dao-codegen:4.3.0-20261010.163819-133`；推送见本次 Git 交付。
 - [x] 将只读/重载值属性改为静态复制并移除无用动态分派；覆盖 nullable Boolean 三态、Date 独立副本、未知可变字段（有/无 setter）生成失败。
 - [x] 验证生成器和示例兼容测试；6.0 下游 86 个实体重新生成无实体错误，生成 Mapper 的 `copyDynamicValue` 数量为 0，`GeneratedValueCopyContractTest` 3/3、`OrgMapperCycleTest` 1/1 通过。仅发布 codegen 新快照 `4.3.0-20261010.171445-134` 并推送 4.3.0。
+- [x] 回归验证并补齐 JSON Map 在 Info 到 Info 复制时使用注解声明的类型。生成器 681 项通过，含 MapStruct 编译执行的实体 JSON 转换与 Info 复制检查；示例 111 项执行，110 项通过，1 项既有跳过。

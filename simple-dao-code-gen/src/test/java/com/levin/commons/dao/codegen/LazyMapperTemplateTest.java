@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -349,6 +350,18 @@ class LazyMapperTemplateTest {
     }
 
     @Test
+    void injectedJsonMapShouldUseDeclaredTypeForInfoCopy() {
+        List<FieldModel> fields = infoFieldModels(InjectedMapEntity.class);
+        List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(fields);
+        List<Map<String, Object>> mapModels = ServiceModelCodeGenerator.mapCopyModels(fields, copyTypes);
+
+        assertEquals(List.of("copyValue" + copyTypes.indexOf(ExternalValue.class)),
+                mapModels.stream().map(model -> model.get("valueCopy")).toList());
+        assertEquals(List.of(Map.of("name", "values", "copyMethod", "copyMap0")),
+                ServiceModelCodeGenerator.valueCopyFields(fields, copyTypes, mapModels));
+    }
+
+    @Test
     void mutableValueObjectsShouldGetOneCopyMethodAndExplicitOverload() throws Exception {
         List<FieldModel> infoFields = infoFieldModels(OrgEntity.class);
         List<Class<?>> copyTypes = ServiceModelCodeGenerator.valueCopyTypes(infoFields);
@@ -511,6 +524,13 @@ class LazyMapperTemplateTest {
         List<MappedExternalEntity> mappedExternals;
         IncompleteExternalEntity incompleteExternal;
         NoInstanceExternalEntity noInstanceExternal;
+    }
+
+    @Entity
+    static class InjectedMapEntity {
+        @InjectVar(domain = "dao", expectBaseType = Map.class,
+                expectGenericTypes = {String.class, ExternalValue.class})
+        String values;
     }
 
     @Entity

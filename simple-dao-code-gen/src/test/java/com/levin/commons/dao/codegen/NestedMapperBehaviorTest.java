@@ -104,10 +104,12 @@ class NestedMapperBehaviorTest {
         params.put("nestedInfoTypes", relatedTypes);
         params.put("nestedInfoCollectionMappings", collections);
         if ("Parent".equals(name)) {
-            params.put("jsonTargetTypes", List.of("java.util.List<java.lang.String>"));
+            params.put("jsonTargetTypes", List.of("java.util.List<java.lang.String>",
+                    "java.util.Map<java.lang.String,com.example.value.Value>"));
             params.put("valueCopyFields", List.of(
                     Map.of("name", "value", "copyMethod", "copyValue0"),
                     Map.of("name", "values", "copyMethod", "copyMap0"),
+                    Map.of("name", "jsonValues", "copyMethod", "copyMap0"),
                     Map.of("name", "keyValues", "copyMethod", "copyMap1"),
                     Map.of("name", "hashValues", "copyMethod", "copyMap2")));
             params.put("mapCopyModels", List.of(Map.of(
@@ -165,6 +167,7 @@ class NestedMapperBehaviorTest {
         writeSource(sources, "com/example/entities/Parent.java",
                 "package com.example.entities; public class Parent { public Child child;"
                         + " public com.example.value.Value value;"
+                        + " public String jsonValues;"
                         + " public java.util.Map<String,com.example.value.Value> values;"
                         + " public java.util.Map<com.example.value.Value,com.example.value.Value> keyValues;"
                         + " public java.util.HashMap<String,com.example.value.Value> hashValues;"
@@ -181,6 +184,7 @@ class NestedMapperBehaviorTest {
         writeSource(sources, "com/example/services/parent/info/ParentInfo.java",
                 "package com.example.services.parent.info; public class ParentInfo {"
                         + " public com.example.value.Value value;"
+                        + " public java.util.Map<String,com.example.value.Value> jsonValues;"
                         + " public java.util.Map<String,com.example.value.Value> values;"
                         + " public java.util.Map<com.example.value.Value,com.example.value.Value> keyValues;"
                         + " public java.util.HashMap<String,com.example.value.Value> hashValues;"
@@ -251,7 +255,10 @@ class NestedMapperBehaviorTest {
                 "    parent.values = java.util.Map.of(\"known\", parent.value);",
                 "    parent.keyValues = java.util.Map.of(parent.value, parent.value);",
                 "    parent.hashValues = new java.util.HashMap<>(java.util.Map.of(\"known\", parent.value));",
+                "    parent.jsonValues = ParentMapper.INSTANCE.toJsonType1(parent.values);",
                 "    ParentInfo original = ParentMapper.INSTANCE.toInfo(parent, false);",
+                "    if (!(original.jsonValues.get(\"known\") instanceof com.example.value.Value))",
+                "      throw new AssertionError(\"JSON Map lost its value type\");",
                 "    if (original.value == parent.value || original.values == parent.values",
                 "        || original.values.get(\"known\") != original.value)",
                 "      throw new AssertionError(\"Entity to Info Map value copy\");",
@@ -273,6 +280,9 @@ class NestedMapperBehaviorTest {
                 "    original.hashValues = new java.util.HashMap<>(java.util.Map.of(\"same\", value));",
                 "    value.setChildren(java.util.Map.of(\"self\", value));",
                 "    ParentInfo copy = ParentMapper.INSTANCE.toInfo(original);",
+                "    if (copy.jsonValues == original.jsonValues",
+                "        || copy.jsonValues.get(\"known\") == original.jsonValues.get(\"known\"))",
+                "      throw new AssertionError(\"JSON Map Info copy aliases source\");",
                 "    if (copy.value.disabledValue() != null) throw new AssertionError(\"nullable Boolean null\");",
                 "    value.setDisabled(true);",
                 "    if (!Boolean.TRUE.equals(ParentMapper.INSTANCE.toInfo(original).value.disabledValue()))",

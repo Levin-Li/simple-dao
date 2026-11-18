@@ -1777,7 +1777,7 @@ public final class ServiceModelCodeGenerator {
         for (FieldModel field : infoFields) {
             if (field.getField() != null && field.getResolvableType() != null
                     && field.getName().equals(field.getField().getName())) {
-                addMapCopyModel(field.getResolvableType(), copyTypes, models);
+                addMapCopyModel(infoMapCopyType(field), copyTypes, models);
             }
         }
         for (Class<?> valueType : copyTypes) {
@@ -1795,6 +1795,21 @@ public final class ServiceModelCodeGenerator {
             result.add(indexed);
         }
         return result;
+    }
+
+    private static ResolvableType infoMapCopyType(FieldModel fieldModel) {
+        Field field = fieldModel.getField();
+        InjectVar injectVar = field.getAnnotation(InjectVar.class);
+
+        // JSON 字段在实体上是字符串，Info 之间复制时应使用转换后的键值类型。
+        if (field.getType() == String.class && injectVar != null && injectVar.expectBaseType() == Map.class) {
+            Class<?>[] genericTypes = injectVar.expectGenericTypes();
+            if (genericTypes.length == 2 && injectedTypeName(Map.class, genericTypes, true) != null) {
+                return ResolvableType.forClassWithGenerics(Map.class, genericTypes);
+            }
+        }
+
+        return fieldModel.getResolvableType();
     }
 
     private static void addMapCopyModel(ResolvableType type, List<Class<?>> copyTypes,
@@ -1966,7 +1981,7 @@ public final class ServiceModelCodeGenerator {
                     || Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
-            String mapMethod = mapCopyMethod(resolvedField, mapModels);
+            String mapMethod = mapCopyMethod(infoMapCopyType(fieldModel), mapModels);
             if (mapMethod != null) {
                 fields.add(Map.of("name", fieldModel.getName(), "copyMethod", mapMethod));
                 continue;
