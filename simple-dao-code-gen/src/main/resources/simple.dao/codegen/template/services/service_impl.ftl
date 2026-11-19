@@ -177,6 +177,10 @@ public class ${className} extends BaseService<${className}> implements ${service
         return queryDao.setDefaultResultConverter(${entityName}Info.class, entity -> ${entityName}Mapper.INSTANCE.toInfo(entity, queryDao.isAllowLazyLoading()));
     }
 
+    /**
+     * 主请求、分页和可变参数中的普通查询对象/DAO 回调由 newInfoQuery 一并解析。
+     * paging 为 null 时采用默认分页；主请求设置 selectColumns 后仅投影指定列。
+     */
     @Operation(summary = QUERY_ACTION)
     @Override
     public PagingData<${entityName}Info> query(SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs) {
@@ -187,6 +191,7 @@ public class ${className} extends BaseService<${className}> implements ${service
                 : queryDao.findPaging(null, effectivePaging);
     }
 
+    /** 此签名仅接收列名；附加查询条件请通过 query(req, paging, queryObjs) 传入。 */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
     public PagingData<${entityName}Info> selectQuery(SimpleQuery${entityName}Req<?> req, Paging paging, String... columnNames){
         return simpleDao.forSelect(${entityName}Info.class, req, paging).select(columnNames).findPaging(${entityName}Info.class, paging);

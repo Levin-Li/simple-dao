@@ -69,18 +69,39 @@ public interface ${className} {
     }
 
     /**
-     * 查询记录
+     * 按查询对象分页查询。主请求、分页参数和可变参数中的附加条件会交给同一个 DAO 查询处理。
      *
-     * @param req
-     * @param paging 分页设置，可空
-     * @param queryObjs 扩展的查询对象，可以是 Consumer<SelectDao<?>> 对象
-     * @return defaultPagingData 分页数据
+     * <p>{@code req} 是必传的主查询对象，通常为生成的 {@code Query${entityName}Req}；
+     * {@code paging} 接受 {@code Paging} 实现（通常为 {@code SimplePaging}），传 {@code null}
+     * 时使用默认的 {@code SimplePaging}。分页请放在独立的 {@code paging} 参数中。</p>
+     * <p>{@code queryObjs} 可同时包含多个普通的注解查询对象和
+     * {@code Consumer<SelectDao<${entityName}>>} 条件回调，用于扩展主请求的筛选条件。
+     * 回调必须使用明确的 {@code Consumer<SelectDao<${entityName}>>} 类型，不能把未授权的
+     * 客户端查询对象、租户或组织范围直接当作可信条件。</p>
+     * <p>示例：</p>
+     * <pre>{@code
+     * SimplePaging page = new SimplePaging();
+     * page.setPageIndex(1);
+     * page.setPageSize(20);
+     * page.setRequireTotals(true);
+     * Query${entityName}Req extraFilter = new Query${entityName}Req(); // 按需设置额外的注解查询字段
+     * Consumer<SelectDao<${entityName}>> scope = dao -> dao.eq(E_${entityName}.id, allowedId);
+     * service.query(req, page, extraFilter, scope);
+     * req.selectColumns(E_${entityName}.id);
+     * service.query(req, page, extraFilter, scope); // 同时指定查询列
+     * }</pre>
+     *
+     * @param req 必传的主查询对象
+     * @param paging 分页设置，可空；通常使用 SimplePaging
+     * @param queryObjs 附加的普通查询对象和/或 Consumer&lt;SelectDao&lt;${entityName}&gt;&gt; 回调
+     * @return 分页数据
      */
     @Operation(summary = QUERY_ACTION)
     PagingData<${entityName}Info> query(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, Object... queryObjs);
 
     /**
-     * 查询记录，并通过回调追加 DAO 查询条件。
+     * 只追加一个 DAO 条件回调的便捷入口；分页及主请求与上面的 {@code query} 相同。
+     * 需要同时传普通附加查询对象和回调时，使用 {@code query(req, paging, extraFilter, callback)}。
      */
     @Operation(summary = QUERY_ACTION)
     default PagingData<${entityName}Info> query(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging,
@@ -89,12 +110,14 @@ public interface ${className} {
     }
 
     /**
-     * 指定选择列查询
+     * 按主查询对象查询指定列；此签名的可变参数只表示列名，不接受附加查询对象或 DAO 回调。
+     * 需要扩展筛选条件时，先用 {@code req.selectColumns(...)} 指定服务端允许的列，
+     * 再调用 {@code query(req, paging, extraFilter, callback)}。
      *
-     * @param req
+     * @param req 必传的主查询对象
      * @param paging 分页设置，可空
-     * @param selectColumnNames 列名
-     * @return defaultPagingData 分页数据
+     * @param selectColumnNames 服务端确认的列名
+     * @return 分页数据
      */
     @Operation(summary = QUERY_ACTION + "-指定列", description = "通常用于字段过多的情况，提升性能")
     PagingData<${entityName}Info> selectQuery(@NotNull SimpleQuery${entityName}Req<?> req, Paging paging, String... selectColumnNames);
