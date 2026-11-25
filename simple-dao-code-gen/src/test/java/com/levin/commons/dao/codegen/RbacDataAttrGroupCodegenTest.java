@@ -124,6 +124,8 @@ class RbacDataAttrGroupCodegenTest {
                     String querySource = Files.readString(output);
                     assertTrue(querySource.contains("import com.levin.commons.rbac.RbacDataAttrGroup;"));
                     assertTrue(querySource.contains("@RbacDataAttrGroup(name = \"财务\""));
+                    assertTrue(querySource.contains("confidentialLevel = 300"));
+                    assertFalse(querySource.contains("confidentialLevel = -2147483648"));
                     assertFalse(querySource.contains("@com.levin.commons.rbac.RbacDataAttrGroup("));
                 }
                 generated.add(output);

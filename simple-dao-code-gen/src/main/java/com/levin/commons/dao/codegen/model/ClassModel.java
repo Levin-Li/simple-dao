@@ -3,6 +3,7 @@ package com.levin.commons.dao.codegen.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.alibaba.fastjson2.JSON;
+import com.levin.commons.rbac.ConfidentialLevel;
 import com.levin.commons.rbac.RbacDataAttrGroup;
 import com.levin.commons.rbac.RbacDataAttrGroupMetadata;
 import com.levin.commons.rbac.RbacDataAttrMetadata;
@@ -137,8 +138,10 @@ public class ClassModel {
     private String rbacAnnotation(RbacDataAttrGroupMetadata.Group group, List<String> attributes) {
         String attrs = attributes.isEmpty() ? "" : ", attrList = {" + attributes.stream()
                 .map(this::attributeExpression).collect(Collectors.joining(", ")) + "}";
+        String level = group.getConfidentialLevel() == ConfidentialLevel.PLATFORM_PUBLIC_CODE
+                ? "" : ", confidentialLevel = " + group.getConfidentialLevel();
         return "@RbacDataAttrGroup(name = " + javaString(group.getName())
-                + attrs + ", confidentialLevel = " + group.getConfidentialLevel()
+                + attrs + level
                 + ", remark = " + javaString(group.getRemark()) + ")";
     }
 
