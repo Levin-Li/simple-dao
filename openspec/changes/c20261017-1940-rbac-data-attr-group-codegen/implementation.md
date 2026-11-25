@@ -6,11 +6,14 @@
 
 `ServiceModelCodeGenerator.isMatch` 排除原始分组及容器注解，即使用户扩展 `keepAnnotationList` 也不重复或错误复制 attrList。八类模板覆盖 Create、SimpleUpdate/Update、SimpleQuery/Query、Info、通用 IdReq、DeleteReq。查询派生字段显式输出组，公共 Req/Info 基类承接的字段使用类级实际属性列表；SimpleQuery 的业务列规则经 TargetOption 源实体提供给 API。
 
+`ClassModel.rbacAnnotation` 在规范化机密级别等于 `ConfidentialLevel.PLATFORM_PUBLIC_CODE`（`Integer.MIN_VALUE`）时省略 `confidentialLevel`，其余级别仍显式输出。生成后的注解依靠自身默认值保持平台公开语义，分组授权规则不变。
+
 ## 验证方式
 
 - `mvn -pl simple-dao-code-gen -am install -P '!01-跳过测试'`：生成器 649 项测试通过，上游 annotations/core 通过；插件已安装到本地 Maven 仓库。
 - `RbacDataAttrGroupCodegenTest`：先编译实体并封装无源码 JAR，再走实际字段模型构建和八类模板，启用 Lombok 真编译后反射验证。覆盖同名合并、重复注解、getter 默认组名、等级取高、Java 字符串转义、父类字段、公共 tenantId/tenantName、查询派生和重复生成稳定。
-- 兼容门禁已通过（109 项，0 失败、0 错误，1 项既有方言条件跳过）：`mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQueryExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'`。PostgreSQL 条件跳过已有 MySQL UPDATE LIMIT 测试属于测试内显式方言假设，须在报告中说明。
+- 2026-11-25 默认机密级别省略回归：断言生成源码不含 `confidentialLevel = -2147483648`，非默认 `confidentialLevel = 300` 仍保留；`mvn -pl simple-dao-code-gen clean deploy -P '!01-跳过测试'` 成功，三项示例兼容性测试通过。
+- 兼容门禁已通过（111 项，0 失败、0 错误，1 项既有方言条件跳过）：`mvn -pl simple-dao-examples -am -Dtest=DaoExamplesTest,DaoJsonExamplesTest,DaoQueryExamplesTest -Dsurefire.failIfNoSpecifiedTests=false test -P '!01-跳过测试'`。PostgreSQL 条件跳过已有 MySQL UPDATE LIMIT 测试属于测试内显式方言假设，须在报告中说明。
 - JAR 内容检查包含 `AGENTS.md`、`README.md` 和 `RBAC数据属性分组生成指南.md`；包内链接均可解析。
 
 ## 边界

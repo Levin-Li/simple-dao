@@ -4553,7 +4553,7 @@ JPA 安全配置的 `none`、`update`、`false` 白名单比较忽略大小写�
 
 ## API 数据属性权限元数据生成
 
-实体上的 `RbacDataAttrGroup` 可规范化传递至创建、修改、查询和 Info 模型；配置样例、兼容边界及验证见[生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。运行时授权由 API 接入方执行。
+实体上的 `RbacDataAttrGroup` 可规范化传递至创建、修改、查询和 Info 模型；生成注解仅在机密级别不是默认的平台公开级别时显式输出 `confidentialLevel`。配置样例、兼容边界及验证见[生成指南](simple-dao-code-gen/src/main/resources/RBAC数据属性分组生成指南.md)。运行时授权由 API 接入方执行。
 
 ## 受信的枚举记录范围（MandatoryCondition）
 

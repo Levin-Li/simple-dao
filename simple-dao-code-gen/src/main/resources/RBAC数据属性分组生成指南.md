@@ -16,7 +16,9 @@ class Contract {
 
 可标注类、字段及 JavaBean getter，可重复标注；同名组取属性并集、最低等级取最高值。默认组名在源实体属性的 `Schema.title` 上解析。生成器通过共享 `RbacDataAttrGroupMetadata` 规范化已编译实体，包括继承和无源码依赖，不依赖源码注解复制白名单。
 
-创建请求、SimpleUpdate/Update、SimpleQuery/Query、Info、通用 IdReq 和删除请求 保持 `TargetOption.entityClass`。实际生成属性输出显式名称、最低等级和备注；`betweenDay`、`gteDay`、`inStatus`、`loadAttachment` 等条件/加载参数承接原属性分组，不从派生字段的新标题重新命名。源实体类级 `attrList` 不会原样复制到不存在同名属性的查询类型。
+创建请求、SimpleUpdate/Update、SimpleQuery/Query、Info、通用 IdReq 和删除请求保持 `TargetOption.entityClass`。实际生成属性输出显式名称和备注；最低机密级别为注解默认值 `ConfidentialLevel.PLATFORM_PUBLIC_CODE`（`Integer.MIN_VALUE`）时省略 `confidentialLevel`，非默认值才显式输出。省略参数仍表示平台公开，不改变分组授权要求。`betweenDay`、`gteDay`、`inStatus`、`loadAttachment` 等条件/加载参数承接原属性分组，不从派生字段的新标题重新命名。源实体类级 `attrList` 不会原样复制到不存在同名属性的查询类型。
+
+例如，默认级别生成 `@RbacDataAttrGroup(name = "制作", remark = "制作组织及人员分派使用同一字段组授权")`；若规范化后的级别为 `300`，生成注解则保留 `confidentialLevel = 300`。
 
 请求及 Info 公共基类承接的租户、组织、个人属性使用生成类型级的实际属性列表；租户/组织/个人显示名称承接对应 ID 的组。SimpleQuery 不包含业务条件属性，保留 `TargetOption` 供 API 通用处理读取源实体规则检查 `selectColumns`、`orderBy` 等字段引用，不伪造业务属性。
 

@@ -11,6 +11,10 @@
 - **WHEN** 实体没有有效分组
 - **THEN** 不生成分组注解。
 
+#### Scenario: 默认机密级别
+- **WHEN** 规范化分组的机密级别等于 `ConfidentialLevel.PLATFORM_PUBLIC_CODE`
+- **THEN** 生成的 `RbacDataAttrGroup` MUST 省略 `confidentialLevel`，由注解默认值保持平台公开语义；非默认级别 MUST 显式输出。
+
 #### Scenario: 基础查询
 - **WHEN** SimpleQuery 不含源业务属性
 - **THEN** 仅保留 TargetOption 供 API 从源实体获取选择列和排序规则，不生成引用不存在属性的 attrList。
